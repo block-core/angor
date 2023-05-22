@@ -1,4 +1,6 @@
 ﻿@page "/counter"
+@using Angor.Shared.Networks
+@using NBitcoin
 
 <PageTitle>Counter</PageTitle>
 
@@ -15,4 +17,17 @@
     {
         currentCount++;
     }
+
+    protected override Task OnInitializedAsync()
+    {
+        var network = Angor.Shared.Networks.Networks.Bitcoin.Mainnet();
+        var a =new Blockcore.NBitcoin.uint256();
+        var b = new NBitcoin.uint256();
+
+
+        var net1 = NBitcoin.Bitcoin.Instance.Mainnet;
+
+        return Task.CompletedTask;
+    }
+
 }
