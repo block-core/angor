@@ -1,0 +1,391 @@
+@page "/wallet"
+@using Blockcore.Consensus.BlockInfo
+@using Blockcore.NBitcoin
+@using Blockcore.NBitcoin.BIP32
+@using Angor.Client.Shared.Models
+@using Angor.Client.Shared.Types
+@using Angor.Shared
+@using Blockcore.Networks
+
+@inject HttpClient Http
+@inject IClientStorage storage;
+@inject IHdOperations HdOperations;
+@inject ILogger<Wallet> Logger;
+@inject INetworkConfiguration _networkConfiguration;
+
+<PageTitle>Wallet and balances</PageTitle>
+
+<h1>Wallet and balances</h1>
+
+
+
+<p>Beta app only use test wallets!!!!!</p>
+
+<p>Wallet Words.</p>
+
+<p><strong>@(hasWallet ? "Wallet Found" : "No Wallet Found")</strong></p>
+<textarea class="form-control" rows="3" @bind="walletWords" />
+<button class="btn btn-primary mb-3 mt-3" @onclick="SaveWallet">Save Wallet</button>
+<button class="btn btn-primary mb-3 mt-3" @onclick="ShowWallet">Show Wallet</button>
+
+<br/>
+@*<select @bind="selectedNetwork"   type="text" @onchange="Callback" >*@
+<p class="text-info mb-3 mt-3 fw-bold" >Select network:</p>
+
+<button class="btn btn-primary" disabled="@busy" @onclick="Fetch">Refresh Balance</button>
+<button class="btn btn-warning" @onclick="ClearAccount">Clear Balance</button>
+
+<br/>
+<p>@loadingStatus</p>
+@if (localAccountInfo != null)
+{
+    <p> Account path @localAccountInfo.Path</p>
+    <p> Total balance @Money.Satoshis(localAccountInfo.TotalBalance) @selectedNetwork</p>
+    <p> Addressed scanned @scannedAcount</p>
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Address</th>
+            <th>Change</th>
+            <th>Amount</th>
+        </tr>
+        </thead>
+        <tbody>
+        
+        @foreach (var addressItem in localAccountInfo.UtxoItems)
+        {
+            foreach (var addressUtxoItem in addressItem.Value)
+            {
+                <tr>
+                    <td>@addressUtxoItem.address</td>
+                    <td>False</td>
+                    <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @selectedNetwork</td>
+                </tr>
+            }
+        }
+        
+        @foreach (var addressItem in localAccountInfo.UtxoChangeItems)
+        {
+            foreach (var addressUtxoItem in addressItem.Value)
+            {
+                <tr>
+                    <td>@addressUtxoItem.address</td>
+                    <td>True</td>
+                    <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @selectedNetwork</td>
+                </tr>
+            }
+        }
+
+        </tbody>
+    </table>
+   
+}
+
+@code {
+    private bool busy = false;
+    private string walletWords;
+    private bool hasWallet;
+    public string link { get; set; } = string.Empty;
+    public int blockheight;
+    public string outputs;
+    Block block;
+    Network network;
+    private AccountInfo? localAccountInfo;
+
+    string loadingStatus = string.Empty;
+
+    List<string> NetworkList;
+    string selectedNetwork;
+    int scannedAcount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (storage.GetWalletWords() != null)
+        {
+            hasWallet = true;
+        }
+    }
+
+    private async Task Fetch()
+    {
+        if (busy) return;
+        busy = true;
+        try
+        {
+            ExtKey.UseBCForHMACSHA512 = true;
+            Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+            scannedAcount = 0;
+            localAccountInfo = null;
+
+            loadingStatus = "Loading key...";
+            StateHasChanged();
+            await Task.Delay(1);
+
+            Network network = _networkConfiguration.GetNetwork();
+            var coinType = network.Consensus.CoinType;
+            var accountIndex = 0; // for now only account 0
+            var purpose = 44; // for now only legacy
+
+            //var indexer = await storage.Indexer(selectedNetwork);
+
+            AccountInfo accountInfo = storage.GetAccountInfo(selectedNetwork);
+
+            if (accountInfo == null)
+            {
+                accountInfo = new AccountInfo();
+
+                ExtKey extendedKey;
+                try
+                {
+                    extendedKey = HdOperations.GetExtendedKey(walletWords);
+                }
+                catch (NotSupportedException ex)
+                {
+                    Console.WriteLine("Exception occurred: {0}", ex.ToString());
+
+                    if (ex.Message == "Unknown")
+                        throw new Exception("Please make sure you enter valid mnemonic words.");
+
+                    throw;
+                }
+
+                loadingStatus = "Deriving keys...";
+                StateHasChanged();
+                await Task.Delay(1);
+
+                string accountHdPath = HdOperations.GetAccountHdPath(purpose, coinType, accountIndex);
+                Key privateKey = extendedKey.PrivateKey;
+                storage.SetWalletPubkey(privateKey.PubKey.ToHex());
+                storage.SetWalletPrivkey(extendedKey.ToString(network)!);
+                ExtPubKey accountExtPubKeyTostore = HdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
+
+                accountInfo.ExtPubKey = accountExtPubKeyTostore.ToString(network);
+                accountInfo.Path = accountHdPath;
+            }
+
+            localAccountInfo = accountInfo;
+
+            loadingStatus = "Checking Addresses...";
+            StateHasChanged();
+            await Task.Delay(1);
+
+            await this.CheckExistingAddresses(localAccountInfo);
+
+            ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, network);
+
+            loadingStatus = "Fetching Addresses...";
+            StateHasChanged();
+            await Task.Delay(1);
+
+
+            var scanIndex = accountInfo.LastFetchIndex;
+            var gap = 5;
+            while (gap > 0)
+            {
+                scannedAcount += 1;
+                PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, false);
+                var adddress = pubkey.GetAddress(network).ToString();
+                var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, false, scanIndex);
+                var result = await FetchUtxos(adddress);
+                foreach (var utxoData in result.data) utxoData.hdPath = path;
+                accountInfo.UtxoItems.Remove(adddress);
+                accountInfo.UtxoItems.Add(adddress, result.data);
+                accountInfo.TotalBalance += result.data.Sum(s => s.value);
+                scanIndex++;
+
+                if (result.noHistory)
+                {
+                    gap--;
+                    continue;
+                }
+
+                accountInfo.LastFetchIndex = scanIndex;
+                StateHasChanged();
+                await Task.Delay(1);
+            }
+
+            scanIndex = accountInfo.LastFetchChangeIndex;
+            gap = 5;
+            while (gap > 0)
+            {
+                scannedAcount += 1;
+                PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, true);
+                var adddressChange = pubkeyChange.GetAddress(network).ToString();
+                var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, true, scanIndex);
+                var resulChange = await FetchUtxos(adddressChange);
+                foreach (var utxoData in resulChange.data) utxoData.hdPath = path;
+                accountInfo.UtxoChangeItems.Remove(adddressChange);
+                accountInfo.UtxoChangeItems.Add(adddressChange, resulChange.data);
+                accountInfo.TotalBalance += resulChange.data.Sum(s => s.value);
+                scanIndex++;
+
+                if (resulChange.noHistory)
+                {
+                    gap--;
+                    continue;
+                }
+
+                accountInfo.LastFetchChangeIndex = scanIndex;
+                StateHasChanged();
+                await Task.Delay(1);
+            }
+
+
+            accountInfo.TotalBalance = accountInfo.UtxoItems.SelectMany(s => s.Value).Sum(s => s.value) 
+                                       + accountInfo.UtxoChangeItems.SelectMany(s => s.Value).Sum(s => s.value);
+
+            storage.SetAccountInfo(selectedNetwork, accountInfo);
+
+            loadingStatus = string.Empty;
+        }
+        finally
+        {
+            busy = false;
+        }
+
+    }
+
+    private async Task CheckExistingAddresses(AccountInfo accountInfo)
+    {
+        foreach (var item in accountInfo.UtxoItems)
+        {
+            if (item.Value.Any())
+            {
+                var result = await FetchUtxos(item.Key);
+
+                if (result.data.Count == item.Value.Count)
+                {
+                    for (int i = 0; i < result.data.Count - 1; i++)
+                    {
+                        if (result.data[i].outpoint.transactionId != item.Value[i].outpoint.transactionId)
+                        {
+                            item.Value.Clear();
+                            item.Value.AddRange(result.data);
+                            break;
+                        }
+
+                    }
+                }
+                else
+                {
+                    item.Value.Clear();
+                    item.Value.AddRange(result.data);
+                }
+            }
+        }
+
+        foreach (var item in accountInfo.UtxoChangeItems)
+        {
+            if (item.Value.Any())
+            {
+                var result = await FetchUtxos(item.Key);
+
+                if (result.data.Count == item.Value.Count)
+                {
+                    for (int i = 0; i < result.data.Count - 1; i++)
+                    {
+                        if (result.data[i].outpoint.transactionId != item.Value[i].outpoint.transactionId)
+                        {
+                            item.Value.Clear();
+                            item.Value.AddRange(result.data);
+                            break;
+                        }
+
+                    }
+                }
+                else
+                {
+                    item.Value.Clear();
+                    item.Value.AddRange(result.data);
+                }
+            }
+        }
+    }
+
+    private async Task<(bool noHistory, List<UtxoData> data)> FetchUtxos( string adddress)
+    {
+        var limit = 10;
+        var offset = 0;
+        List<UtxoData> allItems = new();
+
+        var urlBalance = $"/query/address/{adddress}";
+        IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
+        var addressBalance = await Http.GetFromJsonAsync<AddressBalance>(indexer.Url + urlBalance);
+
+        if (addressBalance?.balance == 0 && (addressBalance.totalReceivedCount + addressBalance.totalSentCount) == 0)
+        {
+            return (true, allItems);
+        }
+
+        int fetchCount = 10; // for the demo we just scan 50 addresses
+
+        for (int i = 0; i < fetchCount; i++)
+        {
+            // this is inefficient look at headers to know when to stop
+
+            var url = $"/query/address/{adddress}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
+
+            Console.WriteLine($"fetching {url}");
+
+            var response = await Http.GetAsync(indexer.Url + url);
+            var utxo = await response.Content.ReadFromJsonAsync<List<UtxoData>>();
+
+            if (utxo == null || !utxo.Any())
+                break;
+
+            allItems.AddRange(utxo);
+
+            offset += limit;
+        }
+
+        return (false, allItems);
+    }
+
+    private async Task SaveWallet()
+    {
+        storage.SaveWalletWords(walletWords);
+        await ClearAccount();
+    }
+
+    private async Task ShowWallet()
+    {
+        walletWords = storage.GetWalletWords();
+    }
+
+    private async Task ClearAccount()
+    {
+        var account = storage.GetAccountInfo(selectedNetwork);
+        if (account != null)
+        {
+            account.TotalBalance = 0;
+            account.LastFetchChangeIndex = 0;
+            account.LastFetchIndex = 0;
+            account.UtxoItems.Clear();
+            account.UtxoChangeItems.Clear();
+            storage.SetAccountInfo(selectedNetwork, account);
+            localAccountInfo = account;
+        }
+    }
+
+
+
+    private void Callback(ChangeEventArgs obj)
+    {
+        selectedNetwork = obj.Value.ToString();
+
+        var accountInfo = storage.GetAccountInfo(selectedNetwork);
+        scannedAcount = 0;
+        if (accountInfo != null)
+        {
+            this.localAccountInfo = accountInfo;
+        }
+        else
+        {
+            this.localAccountInfo = null;
+        }
+
+        Console.WriteLine($"Account info balance {this.localAccountInfo?.TotalBalance ?? 0}");
+
+    }
+
+}
