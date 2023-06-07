@@ -5,6 +5,8 @@
 @using Angor.Client.Shared.Models
 @using Angor.Client.Shared.Types
 @using Angor.Shared
+@using Blockcore.Consensus.ScriptInfo
+@using Blockcore.Consensus.TransactionInfo
 @using Blockcore.Networks
 
 @inject HttpClient Http
@@ -39,6 +41,16 @@
 <p>@loadingStatus</p>
 @if (localAccountInfo != null)
 {
+    <p class="text-info mb-3 mt-3 fw-bold">Send:</p>
+
+    <input class="form-control mb-3 mt-3" @bind="sendToAddress" />
+    <input class="form-control mb-3 mt-3" @bind="sendAmount" />
+    <button class="btn btn-primary" disabled="@busy" @onclick="Send">Send</button>
+    <br />
+    <br />
+
+    <p class="text-info mb-3 mt-3 fw-bold">Outputs:</p>
+
     <p> Account path @localAccountInfo.Path</p>
     <p> Total balance @Money.Satoshis(localAccountInfo.TotalBalance) @selectedNetwork</p>
     <p> Addressed scanned @scannedAcount</p>
@@ -83,6 +95,9 @@
 
 @code {
     private bool busy = false;
+    private string sendToAddress;
+    private decimal sendAmount;
+
     private string walletWords;
     private bool hasWallet;
     public string link { get; set; } = string.Empty;
@@ -103,6 +118,95 @@
         if (storage.GetWalletWords() != null)
         {
             hasWallet = true;
+        }
+    }
+
+    private async Task Send()
+    {
+        Network network = _networkConfiguration.GetNetwork();
+        var coinType = network.Consensus.CoinType;
+        var accountIndex = 0; // for now only account 0
+        var purpose = 84; // for now only legacy
+
+        AccountInfo accountInfo = storage.GetAccountInfo(selectedNetwork);
+
+        var utxos = new List<UtxoData>();
+        utxos.AddRange(accountInfo.UtxoItems.Values.SelectMany(_ => _));
+        utxos.AddRange(accountInfo.UtxoChangeItems.Values.SelectMany(_ => _));
+
+        var utxosToSpend = new List<UtxoData>();
+
+        long ToSendSats = Money.Coins(sendAmount).Satoshi;
+
+        long total = 0;
+        foreach (var utxoData in utxos.OrderByDescending(o => o.value))
+        {
+            utxosToSpend.Add(utxoData);
+
+            total += utxoData.value;
+
+            if (total > ToSendSats)
+            {
+                break;
+            }
+        }
+
+
+        if (total < ToSendSats)
+        {
+            loadingStatus = "not enough funds";
+            throw new Exception("not enough funds");
+        }
+
+        ExtKey extendedKey;
+        try
+        {
+            extendedKey = HdOperations.GetExtendedKey(walletWords);
+        }
+        catch (NotSupportedException ex)
+        {
+            Console.WriteLine("Exception occurred: {0}", ex.ToString());
+
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid mnemonic words.");
+
+            throw;
+        }
+
+
+        var coins = new List<Coin>();
+        var keys = new List<Key>();
+
+        foreach (var utxoData in utxosToSpend)
+        {
+            coins.Add(new Coin(uint256.Parse(utxoData.outpoint.transactionId), (uint)utxoData.outpoint.outputIndex, Money.Satoshis(utxoData.value), Script.FromHex(utxoData.scriptHex)));
+
+            // derive the private key
+            var extKey = extendedKey.Derive(new KeyPath(utxoData.hdPath));
+            Key privateKey = extKey.PrivateKey;
+            keys.Add(privateKey);
+        }
+
+        var builder = new TransactionBuilder(network)
+            .Send(BitcoinWitPubKeyAddress.Create(sendToAddress, network), Money.Coins(sendAmount))
+            .AddCoins(coins)
+            .AddKeys(keys.ToArray())
+            .SetChange(BitcoinWitPubKeyAddress.Create("tb1qk4pq0rh75qtph47wlufhyss43flhvhvwe4zt8a", network));
+            
+
+        var signedTransaction = builder.BuildTransaction(true);
+
+        var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
+
+        var sendUrl = $"/command/send";
+        IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
+        var res = await Http.PostAsync(indexer.Url + sendUrl, new StringContent(hex));
+
+        if (!res.IsSuccessStatusCode)
+        {
+            loadingStatus = res.ReasonPhrase;
+            throw new Exception("faild to post");
+
         }
     }
 
