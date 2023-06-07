@@ -124,7 +124,7 @@
             Network network = _networkConfiguration.GetNetwork();
             var coinType = network.Consensus.CoinType;
             var accountIndex = 0; // for now only account 0
-            var purpose = 44; // for now only legacy
+            var purpose = 84; // for now only legacy
 
             //var indexer = await storage.Indexer(selectedNetwork);
 
@@ -184,7 +184,7 @@
             {
                 scannedAcount += 1;
                 PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, false);
-                var adddress = pubkey.GetAddress(network).ToString();
+                var adddress = pubkey.GetSegwitAddress(network).ToString();
                 var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, false, scanIndex);
                 var result = await FetchUtxos(adddress);
                 foreach (var utxoData in result.data) utxoData.hdPath = path;

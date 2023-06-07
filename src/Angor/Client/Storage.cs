@@ -1,6 +1,5 @@
 using Angor.Client.Shared.Models;
 using Blazored.LocalStorage;
-using Blockcore.Networks;
 
 namespace Angor.Client
 {

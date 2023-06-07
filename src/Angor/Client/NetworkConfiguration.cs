@@ -20,7 +20,7 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public IndexerUrl getIndexerUrl()
     {
-        return new IndexerUrl{Symbol = "", Url = "http://localhost:9910"};
+        return new IndexerUrl{Symbol = "", Url = "http://10.22.156.163:9910/api"};
     }
 
     public class BitcoinMain : Network
@@ -30,7 +30,7 @@ public class NetworkConfiguration : INetworkConfiguration
             {
                 this.Name = "Signet";
                 this.AdditionalNames = new List<string> { "bitcoin-signet","btc-signet" };
-                this.NetworkType = NetworkType.Mainnet;
+                this.NetworkType = NetworkType.Testnet;
 
                 // The message start string is designed to be unlikely to occur in normal data.
                 // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -64,7 +64,7 @@ public class NetworkConfiguration : INetworkConfiguration
                     // SupportTaproot = true,
                     consensusFactory: consensusFactory,
                     consensusOptions: new ConsensusOptions(), // Default - set to Bitcoin params.
-                    coinType: 0,
+                    coinType: 1,
                     hashGenesisBlock: null,
                     subsidyHalvingInterval: 210000,
                     majorityEnforceBlockUpgrade: 750,

@@ -1,6 +1,6 @@
 ﻿@page "/counter"
 @using Angor.Shared.Networks
-@using NBitcoin
+@using Blockcore.NBitcoin
 
 <PageTitle>Counter</PageTitle>
 
@@ -22,10 +22,7 @@
     {
         var network = Angor.Shared.Networks.Networks.Bitcoin.Mainnet();
         var a =new Blockcore.NBitcoin.uint256();
-        var b = new NBitcoin.uint256();
-
-
-        var net1 = NBitcoin.Bitcoin.Instance.Mainnet;
+        var b = new uint256();
 
         return Task.CompletedTask;
     }
