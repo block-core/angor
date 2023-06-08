@@ -291,7 +291,8 @@
                 var adddress = pubkey.GetSegwitAddress(network).ToString();
                 var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, false, scanIndex);
                 var result = await FetchUtxos(adddress);
-                foreach (var utxoData in result.data) utxoData.hdPath = path;
+                foreach (var utxoData in result.data) 
+                    utxoData.hdPath = path;
                 accountInfo.UtxoItems.Remove(adddress);
                 accountInfo.UtxoItems.Add(adddress, result.data);
                 accountInfo.TotalBalance += result.data.Sum(s => s.value);
@@ -317,7 +318,8 @@
                 var adddressChange = pubkeyChange.GetAddress(network).ToString();
                 var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, true, scanIndex);
                 var resulChange = await FetchUtxos(adddressChange);
-                foreach (var utxoData in resulChange.data) utxoData.hdPath = path;
+                foreach (var utxoData in resulChange.data) 
+                    utxoData.hdPath = path;
                 accountInfo.UtxoChangeItems.Remove(adddressChange);
                 accountInfo.UtxoChangeItems.Add(adddressChange, resulChange.data);
                 accountInfo.TotalBalance += resulChange.data.Sum(s => s.value);
@@ -408,7 +410,7 @@
 
     private async Task<(bool noHistory, List<UtxoData> data)> FetchUtxos( string adddress)
     {
-        var limit = 10;
+        var limit = 50;
         var offset = 0;
         List<UtxoData> allItems = new();
 
@@ -421,7 +423,7 @@
             return (true, allItems);
         }
 
-        int fetchCount = 10; // for the demo we just scan 50 addresses
+        int fetchCount = 50; // for the demo we just scan 50 addresses
 
         for (int i = 0; i < fetchCount; i++)
         {
