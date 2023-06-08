@@ -11,8 +11,10 @@ namespace Angor.Client
 
         public void SetWalletPubkey(string pubkey);
         AccountInfo GetAccountInfo(string network);
-        public void SetWalletPrivkey(string privkey);
         public void SetAccountInfo(string network, AccountInfo items);
+        public void DeleteWalletWords();
+
+        public void DeleteAccountInfo(string network);
     }
     
     public class Storage : IClientStorage
@@ -34,6 +36,11 @@ namespace Angor.Client
             return _storage.GetItemAsString("mnemonic");
         }
 
+        public void DeleteWalletWords()
+        {
+            _storage.RemoveItem("mnemonic");
+        }
+
         public void SetWalletPubkey(string pubkey)
         {
             _storage.SetItemAsString("pubkey", pubkey);
@@ -44,16 +51,6 @@ namespace Angor.Client
             return _storage.GetItemAsString("pubkey");
         }
 
-        public void SetWalletPrivkey(string privkey)
-        {
-            _storage.SetItemAsString("privkey", privkey);
-        }
-
-        public string? GetWalletPrivkey()
-        {
-            return _storage.GetItemAsString("privkey");
-        }
-
         public AccountInfo GetAccountInfo(string network)
         {
             return _storage.GetItem<AccountInfo>($"utxo:{network}");
@@ -62,6 +59,11 @@ namespace Angor.Client
         public void SetAccountInfo(string network, AccountInfo items)
         {
             _storage.SetItem($"utxo:{network}", items);
+        }
+
+        public void DeleteAccountInfo(string network)
+        {
+            _storage.RemoveItem($"utxo:{network}");
         }
 
         public void DeleteSwaps()

@@ -7,6 +7,7 @@
 @using Angor.Shared
 @using Blockcore.Consensus.ScriptInfo
 @using Blockcore.Consensus.TransactionInfo
+@using Blockcore.NBitcoin.BIP39
 @using Blockcore.Networks
 
 @inject HttpClient Http
@@ -19,16 +20,24 @@
 
 <h1>Wallet and balances</h1>
 
-
-
-<p>Beta app only use test wallets!!!!!</p>
+<p class="alert-warning">Beta app only use test wallets!!!!!</p>
 
 <p>Wallet Words.</p>
 
-<p><strong>@(hasWallet ? "Wallet Found" : "No Wallet Found")</strong></p>
 <textarea class="form-control" rows="3" @bind="walletWords" />
-<button class="btn btn-primary mb-3 mt-3" @onclick="SaveWallet">Save Wallet</button>
-<button class="btn btn-primary mb-3 mt-3" @onclick="ShowWallet">Show Wallet</button>
+
+@if (hasWallet)
+{
+    <p><strong>Wallet Found</strong></p>
+    <button class="btn btn-primary mb-3 mt-3" @onclick="ShowWallet">Show Wallet</button>
+    <button class="btn btn-danger mb-3 mt-3" @onclick="DeleteWallet">Delete Wallet</button>
+}
+else
+{
+    <p><strong>No Wallet Found</strong></p>
+    <button class="btn btn-primary mb-3 mt-3" @onclick="CreateWallet">Generate Wallet</button>    
+    <button class="btn btn-primary mb-3 mt-3" @onclick="RestoreWallet">Restore Wallet</button>
+}
 
 <br/>
 @*<select @bind="selectedNetwork"   type="text" @onchange="Callback" >*@
@@ -38,7 +47,9 @@
 <button class="btn btn-warning" @onclick="ClearAccount">Clear Balance</button>
 
 <br/>
-<p>@loadingStatus</p>
+<p class="alert-info">@loadingStatus</p>
+<p class="alert-danger">@erroMessage</p>
+
 @if (localAccountInfo != null)
 {
     <p class="text-info mb-3 mt-3 fw-bold">Send:</p>
@@ -47,7 +58,18 @@
     <input class="form-control mb-3 mt-3" @bind="sendAmount" />
     <button class="btn btn-primary" disabled="@busy" @onclick="Send">Send</button>
     <br />
-    <br />
+
+
+    <p class="text-info mb-3 mt-3 fw-bold">Receive:</p>
+
+    @foreach (var item in @localAccountInfo.UtxoItems)
+    {
+        if (@item.Value.Count == 0)
+        {
+            <p >@item.Key</p>
+            break;
+        }
+    }
 
     <p class="text-info mb-3 mt-3 fw-bold">Outputs:</p>
 
@@ -108,6 +130,7 @@
     private AccountInfo? localAccountInfo;
 
     string loadingStatus = string.Empty;
+    string erroMessage = string.Empty;
 
     List<string> NetworkList;
     string selectedNetwork;
@@ -123,90 +146,118 @@
 
     private async Task Send()
     {
-        Network network = _networkConfiguration.GetNetwork();
-        var coinType = network.Consensus.CoinType;
-        var accountIndex = 0; // for now only account 0
-        var purpose = 84; // for now only legacy
-
-        AccountInfo accountInfo = storage.GetAccountInfo(selectedNetwork);
-
-        var utxos = new List<UtxoData>();
-        utxos.AddRange(accountInfo.UtxoItems.Values.SelectMany(_ => _));
-        utxos.AddRange(accountInfo.UtxoChangeItems.Values.SelectMany(_ => _));
-
-        var utxosToSpend = new List<UtxoData>();
-
-        long ToSendSats = Money.Coins(sendAmount).Satoshi;
-
-        long total = 0;
-        foreach (var utxoData in utxos.OrderByDescending(o => o.value))
-        {
-            utxosToSpend.Add(utxoData);
-
-            total += utxoData.value;
-
-            if (total > ToSendSats)
-            {
-                break;
-            }
-        }
-
-
-        if (total < ToSendSats)
-        {
-            loadingStatus = "not enough funds";
-            throw new Exception("not enough funds");
-        }
-
-        ExtKey extendedKey;
+        if (busy) return;
+        busy = true;
         try
         {
-            extendedKey = HdOperations.GetExtendedKey(walletWords);
+            erroMessage = string.Empty;
+            loadingStatus = $"Sending {sendAmount} coins to {sendToAddress}";
+            StateHasChanged();
+            await Task.Delay(1);
+
+            Network network = _networkConfiguration.GetNetwork();
+            var coinType = network.Consensus.CoinType;
+            var accountIndex = 0; // for now only account 0
+            var purpose = 84; // for now only legacy
+
+            AccountInfo accountInfo = storage.GetAccountInfo(selectedNetwork);
+
+            var utxos = new List<UtxoData>();
+            utxos.AddRange(accountInfo.UtxoItems.Values.SelectMany(_ => _));
+            utxos.AddRange(accountInfo.UtxoChangeItems.Values.SelectMany(_ => _));
+
+            var utxosToSpend = new List<UtxoData>();
+
+            long ToSendSats = Money.Coins(sendAmount).Satoshi;
+
+            long total = 0;
+            foreach (var utxoData in utxos.OrderBy(o => o.blockIndex).ThenByDescending(o => o.value))
+            {
+                utxosToSpend.Add(utxoData);
+
+                total += utxoData.value;
+
+                if (total > ToSendSats)
+                {
+                    break;
+                }
+            }
+
+            if (total < ToSendSats)
+            {
+                erroMessage = "not enough funds";
+                StateHasChanged();
+                await Task.Delay(1);
+                throw new Exception("not enough funds");
+            }
+
+            ExtKey extendedKey;
+            try
+            {
+                extendedKey = HdOperations.GetExtendedKey(walletWords ?? storage.GetWalletWords());
+            }
+            catch (NotSupportedException ex)
+            {
+                Console.WriteLine("Exception occurred: {0}", ex.ToString());
+
+                if (ex.Message == "Unknown")
+                    throw new Exception("Please make sure you enter valid mnemonic words.");
+
+                throw;
+            }
+
+            var coins = new List<Coin>();
+            var keys = new List<Key>();
+
+            foreach (var utxoData in utxosToSpend)
+            {
+                coins.Add(new Coin(uint256.Parse(utxoData.outpoint.transactionId), (uint)utxoData.outpoint.outputIndex, Money.Satoshis(utxoData.value), Script.FromHex(utxoData.scriptHex)));
+
+                // derive the private key
+                var extKey = extendedKey.Derive(new KeyPath(utxoData.hdPath));
+                Key privateKey = extKey.PrivateKey;
+                keys.Add(privateKey);
+            }
+
+            var change = accountInfo.UtxoChangeItems.First(f => f.Value.Count == 0).Key;
+
+            var builder = new TransactionBuilder(network)
+                .Send(BitcoinWitPubKeyAddress.Create(sendToAddress, network), Money.Coins(sendAmount))
+                .AddCoins(coins)
+                .AddKeys(keys.ToArray())
+                .SetChange(BitcoinWitPubKeyAddress.Create(change, network))
+                .SendFees(Money.Satoshis(1000));
+
+            var signedTransaction = builder.BuildTransaction(true);
+
+            var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
+
+            var sendUrl = $"/command/send";
+            IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
+            var res = await Http.PostAsync(indexer.Url + sendUrl, new StringContent(hex));
+
+            if (!res.IsSuccessStatusCode)
+            {
+                var content = await res.Content.ReadAsStringAsync();
+                erroMessage = res.ReasonPhrase + content;
+                StateHasChanged();
+                await Task.Delay(1);
+                throw new Exception(res.ReasonPhrase + content);
+            }
+            else
+            {
+                erroMessage = string.Empty;
+                loadingStatus = $"Transaction Sent! - {sendAmount} coins to {sendToAddress} - trxid = {signedTransaction.GetHash()}";
+            }
         }
-        catch (NotSupportedException ex)
+        catch (Exception ex)
         {
-            Console.WriteLine("Exception occurred: {0}", ex.ToString());
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
+            erroMessage = ex.Message;
             throw;
         }
-
-
-        var coins = new List<Coin>();
-        var keys = new List<Key>();
-
-        foreach (var utxoData in utxosToSpend)
+        finally
         {
-            coins.Add(new Coin(uint256.Parse(utxoData.outpoint.transactionId), (uint)utxoData.outpoint.outputIndex, Money.Satoshis(utxoData.value), Script.FromHex(utxoData.scriptHex)));
-
-            // derive the private key
-            var extKey = extendedKey.Derive(new KeyPath(utxoData.hdPath));
-            Key privateKey = extKey.PrivateKey;
-            keys.Add(privateKey);
-        }
-
-        var builder = new TransactionBuilder(network)
-            .Send(BitcoinWitPubKeyAddress.Create(sendToAddress, network), Money.Coins(sendAmount))
-            .AddCoins(coins)
-            .AddKeys(keys.ToArray())
-            .SetChange(BitcoinWitPubKeyAddress.Create("tb1qk4pq0rh75qtph47wlufhyss43flhvhvwe4zt8a", network));
-            
-
-        var signedTransaction = builder.BuildTransaction(true);
-
-        var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
-
-        var sendUrl = $"/command/send";
-        IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
-        var res = await Http.PostAsync(indexer.Url + sendUrl, new StringContent(hex));
-
-        if (!res.IsSuccessStatusCode)
-        {
-            loadingStatus = res.ReasonPhrase;
-            throw new Exception("faild to post");
-
+            busy = false;
         }
     }
 
@@ -222,6 +273,8 @@
             localAccountInfo = null;
 
             loadingStatus = "Loading key...";
+            erroMessage = string.Empty;
+
             StateHasChanged();
             await Task.Delay(1);
 
@@ -241,7 +294,7 @@
                 ExtKey extendedKey;
                 try
                 {
-                    extendedKey = HdOperations.GetExtendedKey(walletWords);
+                    extendedKey = HdOperations.GetExtendedKey(walletWords ?? storage.GetWalletWords());
                 }
                 catch (NotSupportedException ex)
                 {
@@ -260,7 +313,7 @@
                 string accountHdPath = HdOperations.GetAccountHdPath(purpose, coinType, accountIndex);
                 Key privateKey = extendedKey.PrivateKey;
                 storage.SetWalletPubkey(privateKey.PubKey.ToHex());
-                storage.SetWalletPrivkey(extendedKey.ToString(network)!);
+                //storage.SetWalletPrivkey(extendedKey.ToString(network)!);
                 ExtPubKey accountExtPubKeyTostore = HdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
 
                 accountInfo.ExtPubKey = accountExtPubKeyTostore.ToString(network);
@@ -315,7 +368,7 @@
             {
                 scannedAcount += 1;
                 PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, true);
-                var adddressChange = pubkeyChange.GetAddress(network).ToString();
+                var adddressChange = pubkeyChange.GetSegwitAddress(network).ToString();
                 var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, true, scanIndex);
                 var resulChange = await FetchUtxos(adddressChange);
                 foreach (var utxoData in resulChange.data) 
@@ -342,7 +395,13 @@
 
             storage.SetAccountInfo(selectedNetwork, accountInfo);
 
+            erroMessage = String.Empty;
             loadingStatus = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            erroMessage = ex.Message;
+            throw;
         }
         finally
         {
@@ -365,6 +424,8 @@
                     {
                         if (result.data[i].outpoint.transactionId != item.Value[i].outpoint.transactionId)
                         {
+                            result.data.ForEach(f => f.hdPath = item.Value[0].hdPath);
+
                             item.Value.Clear();
                             item.Value.AddRange(result.data);
                             break;
@@ -374,6 +435,7 @@
                 }
                 else
                 {
+                    result.data.ForEach(f => f.hdPath = item.Value[0].hdPath);
                     item.Value.Clear();
                     item.Value.AddRange(result.data);
                 }
@@ -447,10 +509,24 @@
         return (false, allItems);
     }
 
-    private async Task SaveWallet()
+    private async Task RestoreWallet()
     {
+        if (walletWords == string.Empty)
+        {
+            erroMessage = "no wallet words found";
+            StateHasChanged();
+            await Task.Delay(1);
+            return;
+        }
+
         storage.SaveWalletWords(walletWords);
         await ClearAccount();
+        hasWallet = true;
+
+        loadingStatus = string.Empty;
+        erroMessage = string.Empty;
+        StateHasChanged();
+        await Task.Delay(1);
     }
 
     private async Task ShowWallet()
@@ -473,8 +549,6 @@
         }
     }
 
-
-
     private void Callback(ChangeEventArgs obj)
     {
         selectedNetwork = obj.Value.ToString();
@@ -494,4 +568,36 @@
 
     }
 
+    private async Task CreateWallet()
+    {
+        var count = (WordCount)12;
+        var mnemonic = new Mnemonic(Wordlist.English, count);
+        walletWords = mnemonic.ToString();
+
+        await RestoreWallet();
+
+        localAccountInfo = null;
+
+        loadingStatus = string.Empty;
+        erroMessage = string.Empty;
+        StateHasChanged();
+        await Task.Delay(1);
+    }
+
+    private async Task DeleteWallet()
+    {
+        //Network network = _networkConfiguration.GetNetwork();
+       
+        storage.DeleteAccountInfo(selectedNetwork);
+        storage.DeleteWalletWords();
+        
+        walletWords = string.Empty;
+        localAccountInfo = null;
+        hasWallet = false;
+
+        loadingStatus = string.Empty;
+        erroMessage = string.Empty;
+        StateHasChanged();
+        await Task.Delay(1);
+    }
 }
