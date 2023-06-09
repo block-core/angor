@@ -96,6 +96,48 @@ a, .btn-link {
     inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
 }
 
-    .loading-progress-text:after {
-        content: var(--blazor-load-percentage-text, "Loading");
-    }
+.loading-progress-text:after {
+    content: var(--blazor-load-percentage-text, "Loading");
+}
+
+.inner-table {
+    border-collapse: collapse; /* Collapses the table borders */
+    margin: 10px 0;
+    width: 100%;
+}
+
+.inner-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    text-align: left; /* Aligns text to the left */
+}
+
+.inner-table-rounded {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.inner-table-inner-div {
+    background-color: gainsboro;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow for a "lifted" effect */
+}
+
+/* Styling the clickable row */
+tr[style*="cursor: pointer;"] {
+    background-color: #f2f2f2;
+    transition: background-color 0.2s ease; /* Animates the color change */
+}
+
+tr[style*="cursor: pointer;"]:hover {
+    background-color: #e6e6e6; /* Changes background color on hover */
+}
+
+/* Adding a bit of styling to the <p> elements */
+.inner-table-inner-div p {
+    margin-bottom: 5px; /* Adds a little bit of space between the <p> elements */
+    color: #333; /* Dark gray color */
+    font-size: 0.9em; /* Slightly smaller font size */
+}

@@ -76,11 +76,11 @@ else
     <p> Account path @localAccountInfo.Path</p>
     <p> Total balance @Money.Satoshis(localAccountInfo.TotalBalance) @selectedNetwork</p>
     <p> Addressed scanned @scannedAcount</p>
+
     <table class="table table-bordered">
         <thead>
         <tr>
             <th>Address</th>
-            <th>Change</th>
             <th>Amount</th>
         </tr>
         </thead>
@@ -88,25 +88,86 @@ else
         
         @foreach (var addressItem in localAccountInfo.UtxoItems)
         {
-            foreach (var addressUtxoItem in addressItem.Value)
+            var total = addressItem.Value.Sum(s => s.value);
+            var count = addressItem.Value.Count();
+
+            if (total > 0)
             {
-                <tr>
-                    <td>@addressUtxoItem.address</td>
-                    <td>False</td>
-                    <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @selectedNetwork</td>
+                var firstItem = addressItem.Value.FirstOrDefault();
+
+                <tr @onclick="(_ => ShowRow(addressItem.Key))" style="cursor: pointer;">
+                    <td >@addressItem.Key</td>
+                    <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @selectedNetwork</td>
                 </tr>
+             
+                @if (collapses.ContainsKey(addressItem.Key))
+                {
+                    <tr>
+                        <td colspan="2" >
+                            <div class="inner-table-inner-div">
+                                <p>Path = @firstItem?.hdPath</p>
+                                <p>Total outputs = @count</p>
+                                    <table class="table inner-table inner-table-rounded">
+                                    <tbody>
+                                    @foreach (var addressUtxoItem in addressItem.Value)
+                                    {
+                                        <tr>
+                                            <td>@($"{addressUtxoItem.outpoint.transactionId}-{addressUtxoItem.outpoint.outputIndex}")</td>
+                                            <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @selectedNetwork </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                }
             }
         }
-        
+        </tbody>
+        <thead>
+        <tr>
+            <th>Address - change</th>
+            <th>Amount</th>
+        </tr>
+        </thead>
+        <tbody>
         @foreach (var addressItem in localAccountInfo.UtxoChangeItems)
         {
-            foreach (var addressUtxoItem in addressItem.Value)
+            var total = addressItem.Value.Sum(s => s.value);
+            var count = addressItem.Value.Count();
+
+            if (total > 0)
             {
-                <tr>
-                    <td>@addressUtxoItem.address</td>
-                    <td>True</td>
-                    <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @selectedNetwork</td>
+                var firstItem = addressItem.Value.FirstOrDefault();
+
+                <tr @onclick="(_ => ShowRow(addressItem.Key))" style="cursor: pointer;">
+                    <td>@addressItem.Key</td>
+                    <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @selectedNetwork</td>
                 </tr>
+
+                @if (collapses.ContainsKey(addressItem.Key))
+                {
+                    <tr>
+                        <td colspan="2" >
+                            <div class="inner-table-inner-div">
+                                <p>Path = @firstItem?.hdPath</p>
+                                <p>Total outputs = @count</p>
+                                    <table class="table inner-table inner-table-rounded">
+                                    <tbody>
+                                        @foreach (var addressUtxoItem in addressItem.Value)
+                                        {
+                                            <tr>
+                                                <td>@($"{addressUtxoItem.outpoint.transactionId}-{addressUtxoItem.outpoint.outputIndex}")</td>
+                                                <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @selectedNetwork </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                }
             }
         }
 
@@ -600,4 +661,15 @@ else
         StateHasChanged();
         await Task.Delay(1);
     }
+
+    Dictionary<string, string> collapses = new();
+
+    private void ShowRow(string address)
+    {
+        if (collapses.ContainsKey(address))
+            collapses.Remove(address);
+        else
+            collapses.Add(address, null);
+    }
+
 }
