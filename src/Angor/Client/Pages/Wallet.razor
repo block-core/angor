@@ -15,6 +15,7 @@
 @inject IHdOperations HdOperations;
 @inject ILogger<Wallet> Logger;
 @inject INetworkConfiguration _networkConfiguration;
+@inject IJSRuntime JsRuntime
 
 <PageTitle>Wallet and balances</PageTitle>
 
@@ -282,12 +283,19 @@ else
 
             var change = accountInfo.UtxoChangeItems.First(f => f.Value.Count == 0).Key;
 
+            var fee = await GetFeeEstimationAsync();
+            
+            bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"The fee is {fee}, continue?");
+
+            if (!confirmed)
+                return;
+            
             var builder = new TransactionBuilder(network)
                 .Send(BitcoinWitPubKeyAddress.Create(sendToAddress, network), Money.Coins(sendAmount))
                 .AddCoins(coins)
                 .AddKeys(keys.ToArray())
                 .SetChange(BitcoinWitPubKeyAddress.Create(change, network))
-                .SendFees(Money.Satoshis(1000));
+                .SendFees(Money.Satoshis(fee));
 
             var signedTransaction = builder.BuildTransaction(true);
 
@@ -672,4 +680,32 @@ else
             collapses.Add(address, null);
     }
 
+
+    private async Task<long> GetFeeEstimationAsync()
+    {
+        var blocks = 10;
+
+        try
+        {
+            IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
+            
+            var url = $"/stats/fee?confirmations={blocks}";
+
+            Console.WriteLine($"fetching fee estimation for blocks - {blocks}");
+
+            var response = await Http.GetAsync(indexer.Url + url);
+            
+            var feeEstimations = await response.Content.ReadFromJsonAsync<FeeEstimations>();
+
+            if (feeEstimations == null || (!feeEstimations.Fees?.Any() ?? true))
+                return 1000;
+
+            return feeEstimations.Fees.Single().FeeRateet;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
 }
