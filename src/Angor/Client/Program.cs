@@ -1,4 +1,5 @@
 using Angor.Client;
+using Angor.Client.Services;
 using Angor.Shared;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Web;
@@ -14,6 +15,7 @@ builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddTransient<INetworkConfiguration, NetworkConfiguration>();
 builder.Services.AddTransient<IHdOperations, HdOperations>();
-builder.Services.AddTransient<IClientStorage, Storage>();
+builder.Services.AddTransient <IClientStorage, Storage>();
+builder.Services.AddTransient<IWalletOperations, WalletOperations>();
 
 await builder.Build().RunAsync();
