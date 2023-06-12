@@ -141,3 +141,9 @@ tr[style*="cursor: pointer;"]:hover {
     color: #333; /* Dark gray color */
     font-size: 0.9em; /* Slightly smaller font size */
 }
+
+
+.qrcode {
+    width: 150px;
+    height: 150px;
+}

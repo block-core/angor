@@ -1,0 +1,275 @@
+@page "/wallet1"
+@using Blockcore.Consensus.BlockInfo
+@using Blockcore.NBitcoin
+@using Blockcore.NBitcoin.BIP32
+@using Angor.Client.Shared.Models
+@using Angor.Client.Shared.Types
+@using Angor.Shared
+@using Blockcore.Consensus.ScriptInfo
+@using Blockcore.Consensus.TransactionInfo
+@using Blockcore.NBitcoin.BIP39
+@using Blockcore.Networks
+
+@inject HttpClient Http
+@inject IClientStorage storage;
+@inject IHdOperations HdOperations;
+@inject ILogger<Wallet> Logger;
+@inject INetworkConfiguration _networkConfiguration;
+
+<PageTitle>Wallet and balances</PageTitle>
+
+<div class="container my-4">
+    <h1>Wallet and balances</h1>
+
+    <!-- This part of the page is visible only if the wallet is found -->
+    @if (!hasWallet)
+    {
+        <!-- No Wallet found -->
+        <div class="row mt-4">
+            <div class="col">
+                <div class="alert alert-danger" role="alert">No Wallet Found</div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Section 1 -->
+        <div class="row mt-4">
+            <div class="col">
+
+                <div class="mb-3">
+                    <span class="fs-4">Confirmed balance: </span>
+                    <span class="fs-3"><strong>0.00 BTC</strong></span> <!-- replace this with actual balance -->
+                </div>
+
+                <div class="mb-3">
+                    <span class="fs-6">Unconfirmed balance: </span>
+                    <span class="fs-5">0.00 BTC</span> <!-- replace this with actual unconfirmed balance -->
+                </div>
+
+                <!-- Replace '#' in 'data-bs-target' with the id of your modal -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#walletWordsModal">
+                    Show Wallet Words
+                </button>
+            </div>
+            
+            <!-- Wallet Words Modal -->
+            <div class="modal fade" id="walletWordsModal" tabindex="-1" aria-labelledby="walletWordsModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="walletWordsModalLabel">Wallet Words</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Wallet words will be shown here -->
+                            <p>Wallet words placeholder</p>
+                
+                            <!-- Show words button with warning -->
+                            <div class="mb-3">
+                                <button class="btn btn-warning">Show Words</button>
+                                <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
+                            </div>
+                
+                            <!-- Delete wallet button -->
+                            <div class="mb-3">
+                                <button class="btn btn-danger">Delete Wallet</button>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+      
+
+
+
+        <!-- Section 2 -->
+        <div class="container mt-4">
+            <div class="row mt-4">
+                <div class="col-lg-12">
+                    <h2>Receive</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <h4 class="card-title">Receive Address</h4>
+                                    <p id="receive-address" class="card-text">1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa</p>
+                                    <button class="btn btn-primary" onclick="copyToClipboard()">Copy Address</button>
+                                </div>
+                                <div class="col-lg-6">
+                                    <h4 class="card-title">QR Code</h4>
+                                    <!-- Replace the src with your actual QR code -->
+                                    <img src="https://via.placeholder.com/150" class="card-img-top qrcode" alt="QR Code" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Section 3 -->
+        <div class="container my-4">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 class="mb-3">Send</h2>
+
+                    <form>
+                        <div class="mb-3">
+                            <label for="sendToAddress" class="form-label">Send to Address</label>
+                            <input type="text" class="form-control" id="sendToAddress" placeholder="Enter address">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="sendAmount" class="form-label">Amount</label>
+                            <input type="text" class="form-control" id="sendAmount" placeholder="Enter amount">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Fee</label>
+                            <input type="range" class="form-range" id="feeRange">
+                        </div>
+
+                        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#coinControlModal">Coin Control</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coin Control Modal -->
+        <div class="modal fade" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- The tick boxes and amounts will go here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Save changes</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Coin Control Modal -->
+            <div class="modal fade" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- The tick boxes and amounts will go here -->
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+       
+
+
+        <!-- Section 4 -->
+        <div class="container my-4">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 class="mb-3">Addresses and Amounts</h2>
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Address</th>
+                                <th scope="col">Amount</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr data-bs-toggle="collapse" data-bs-target="#collapseExample1" aria-expanded="false" aria-controls="collapseExample1">
+                                <td>Address 1</td>
+                                <td>Amount 1</td>
+                                <td>
+                                    <button class="btn btn-primary">Expand</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">
+                                    <div class="collapse" id="collapseExample1">
+                                        <div class="card card-body">
+                                            <!-- Inner table goes here -->
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">Coin</th>
+                                                        <th scope="col">Amount</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>Coin 1</td>
+                                                        <td>Amount 1</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- More rows go here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+
+
+
+@code {
+    private bool busy = false;
+
+
+    private string walletWords;
+    private bool hasWallet;
+   
+
+    string loadingStatus = string.Empty;
+    string erroMessage = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (storage.GetWalletWords() != null)
+        {
+            hasWallet = true;
+        }
+    }
+
+
+   
+
+  
+
+   
+
+  
+
+}
