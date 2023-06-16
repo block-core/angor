@@ -11,6 +11,6 @@ public interface IWalletOperations
     string GenerateWalletWords();
     Task<(bool, string)> SendAmountToAddress(decimal sendAmount, long selectedFee, string sendToAddress);
     void BuildAccountInfoForWalletWords();
-    Task UpdateAccountInfo();
+    Task<AccountInfo> UpdateAccountInfo();
     Task<(bool noHistory, List<UtxoData> data)> FetchUtxos(string adddress);
 }
