@@ -9,12 +9,15 @@
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin.BIP39
 @using Blockcore.Networks
+@using Angor.Client.Services
 
 @inject HttpClient Http
 @inject IClientStorage storage;
 @inject IHdOperations HdOperations;
 @inject ILogger<Wallet> Logger;
 @inject INetworkConfiguration _networkConfiguration;
+@inject IWalletOperations _walletOperations
+@inject IClipboardService _clipboardService
 
 <PageTitle>Wallet and balances</PageTitle>
 
@@ -28,6 +31,42 @@
         <div class="row mt-4">
             <div class="col">
                 <div class="alert alert-danger" role="alert">No Wallet Found</div>
+                <!-- Adding a button to create a wallet -->
+                @*<button class="btn btn-primary mt-2" @onclick="CreateWallet">Create Wallet</button>*@
+
+                <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#walletWordsCreateModal">Create Wallet</button>
+
+            </div>
+
+            <!-- Wallet Words Create Modal -->
+            <div class="modal fade" id="walletWordsCreateModal" tabindex="-1" aria-labelledby="walletWordsCreateModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="walletWordsCreateModalLabel">Create Wallet</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="WalletWordsClose" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="walletWordsTextArea">Paste your wallet words here or generate a new wallet:</label>
+                                <textarea class="form-control" id="walletWordsTextArea" rows="3" @bind="newWalletWords"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="additionalPassphraseInput">Additional Passphrase (optional):</label>
+                                <input type="text" class="form-control" id="additionalPassphraseInput" @bind="newWalletWordsPassphrase" />
+                            </div>
+                            <div class="mb-3">
+                                <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
+                            </div>
+                            <div class="mb-3">
+                                <button class="btn btn-success" @onclick="CreateWallet" data-bs-dismiss="modal">Create Wallet</button>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="WalletWordsClose" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     }
@@ -72,36 +111,55 @@
                 }
 
             </div>
-            
+
             <!-- Wallet Words Modal -->
             <div class="modal fade" id="walletWordsModal" tabindex="-1" aria-labelledby="walletWordsModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="walletWordsModalLabel">Wallet Words</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="WalletWordsClose" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <!-- Wallet words will be shown here -->
-                            <p>Wallet words placeholder</p>
-                
-                            <!-- Show words button with warning -->
-                            <div class="mb-3">
-                                <button class="btn btn-warning">Show Words</button>
-                                <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
-                            </div>
-                
+                          
+                            @if (string.IsNullOrEmpty(walletWords))
+                            {
+                                <!-- Show words button with warning -->
+                                <div class="mb-3">
+                                    <button class="btn btn-warning" @onclick="ShowWords">Show Words</button>
+                                    <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <!-- Wallet words will be shown here -->
+                                <p>@walletWords</p>
+
+                                if (!string.IsNullOrEmpty(walletWordsPassphrase))
+                                {
+                                    <p>This wallet has a pass phrase!</p>
+                                }
+
+                                <!-- Copy words to clipboard -->
+                                <div class="mb-3">
+                                    <button class="btn btn-danger" @onclick="CopyWordsToClibboard">Copy To clipboard</button>
+                                    <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
+                                </div>
+                            }
+
                             <!-- Delete wallet button -->
                             <div class="mb-3">
-                                <button class="btn btn-danger">Delete Wallet</button>
+                                <button class="btn btn-danger" @onclick="DeleteWallet" data-bs-dismiss="modal">Delete Wallet</button>
                             </div>
+
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary" @onclick="WalletWordsClose" data-bs-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
 
       
@@ -267,7 +325,10 @@
     private bool busy = false;
 
 
-    private string walletWords;
+    private string? walletWords;
+    private string? walletWordsPassphrase;
+    private string? newWalletWords;
+    private string? newWalletWordsPassphrase;
     private bool hasWallet;
    
     private bool isLoading;
@@ -277,12 +338,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (storage.GetWalletWords() != null)
-        {
-            hasWallet = true;
-        }
+        hasWallet = _walletOperations.HasWallet();
     }
-    
 
     private async Task RefreshBalance()
     {
@@ -307,11 +364,62 @@
         StateHasChanged();  // This will cause Blazor to re-render the page
     }
    
+    private void CreateWallet()
+    {
+        if (string.IsNullOrEmpty(newWalletWords)) throw new ArgumentNullException();
 
-  
+        WalletWords data = new WalletWords { Words = newWalletWords, PassPhrase = newWalletWordsPassphrase };
+        _walletOperations.CreateWallet(data);
+        hasWallet = _walletOperations.HasWallet();
+        newWalletWords = null;
+        newWalletWordsPassphrase = null;
+        newWalletWords = null;
+        newWalletWordsPassphrase = null;
+        StateHasChanged();
+    }
 
-   
+    private void ShowWords()
+    {
+        var data  = _walletOperations.GetWallet();
+        walletWords = data.Words;
+        walletWordsPassphrase = data.PassPhrase;
+        StateHasChanged();
+    }
 
-  
+    private void CopyWordsToClibboard()
+    {
+        if (string.IsNullOrEmpty(walletWords))
+        {
+            throw new InvalidOperationException();
+        }
+
+        _clipboardService.WriteTextAsync(walletWords);
+        walletWords = null;
+        walletWordsPassphrase = null;
+        newWalletWords = null;
+        newWalletWordsPassphrase = null;
+        StateHasChanged();
+    }
+
+    private void WalletWordsClose()
+    {
+        walletWords = null;
+    }
+
+    private void DeleteWallet()
+    {
+       _walletOperations.DeleteWallet();
+        hasWallet = _walletOperations.HasWallet();
+        walletWords = null; // in case we showed it
+        walletWordsPassphrase = null;
+        newWalletWords = null;
+        newWalletWordsPassphrase = null;
+        StateHasChanged();
+    }
+
+    private void GenerateNewWalletWords()
+    {
+        newWalletWords = _walletOperations.GenerateWalletWords();
+    }
 
 }

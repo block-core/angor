@@ -17,5 +17,6 @@ builder.Services.AddTransient<INetworkConfiguration, NetworkConfiguration>();
 builder.Services.AddTransient<IHdOperations, HdOperations>();
 builder.Services.AddTransient <IClientStorage, Storage>();
 builder.Services.AddTransient<IWalletOperations, WalletOperations>();
+builder.Services.AddScoped<IClipboardService, ClipboardService>();
 
 await builder.Build().RunAsync();

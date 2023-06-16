@@ -6,6 +6,7 @@ using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP32;
+using Blockcore.NBitcoin.BIP39;
 using Blockcore.Networks;
 
 namespace Angor.Client.Services;
@@ -25,6 +26,49 @@ public class WalletOperations : IWalletOperations
         _hdOperations = hdOperations;
         _logger = logger;
         _networkConfiguration = networkConfiguration;
+    }
+
+    public bool HasWallet()
+    {
+        return _storage.GetWalletWords() != null;
+    }
+
+    public void CreateWallet(WalletWords walletWords)
+    {
+        if (_storage.GetWalletWords() != null)
+        {
+            throw new ArgumentNullException("Wallet already exists!");
+        }
+
+        var data = walletWords.ConvertToString();
+
+        _storage.SaveWalletWords(data);
+    }
+
+    public void DeleteWallet()
+    {
+        _storage.DeleteWalletWords();
+    }
+
+    public WalletWords GetWallet()
+    {
+        var words = _storage.GetWalletWords();
+
+        if (string.IsNullOrEmpty(words))
+        {
+            throw new ArgumentNullException("Wallet not found!");
+
+        }
+
+        return WalletWords.ConvertFromString(words);
+    }
+
+    public string GenerateWalletWords()
+    {
+        var count = (WordCount)12;
+        var mnemonic = new Mnemonic(Wordlist.English, count);
+        string walletWords = mnemonic.ToString();
+        return walletWords;
     }
 
     public async Task<(bool, string)> SendAmountToAddress(decimal sendAmount, long selectedFee, string sendToAddress)
