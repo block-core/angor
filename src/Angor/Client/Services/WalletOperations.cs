@@ -206,7 +206,7 @@ public class WalletOperations : IWalletOperations
         _storage.SetAccountInfo(network.Name, accountInfo);
     }
 
-    public async Task UpdateAccountInfo()
+    public async Task<AccountInfo> UpdateAccountInfo()
     {
         ExtKey.UseBCForHMACSHA512 = true;
         Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
@@ -236,6 +236,8 @@ public class WalletOperations : IWalletOperations
         }
 
         _storage.SetAccountInfo(network.Name, accountInfo);
+
+        return accountInfo;
     }
 
     private async Task CheckExistingAddresses(AccountInfo accountInfo) //TODO make this a public call

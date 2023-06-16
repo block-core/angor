@@ -350,7 +350,7 @@ else
             //
             // storage.SetAccountInfo(selectedNetwork, accountInfo);
 
-            await _walletOperations.UpdateAccountInfo();
+            localAccountInfo = await _walletOperations.UpdateAccountInfo();
             
             erroMessage = String.Empty;
             loadingStatus = string.Empty;
