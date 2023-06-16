@@ -97,7 +97,7 @@ public class WalletOperations : IWalletOperations
             .AddCoins(coins)
             .AddKeys(keys.ToArray())
             .SetChange(BitcoinWitPubKeyAddress.Create(change, network))
-            .SendFees(Money.Satoshis(selectedFee));
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(selectedFee)));
 
         var signedTransaction = builder.BuildTransaction(true);
 
