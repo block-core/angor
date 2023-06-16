@@ -23,6 +23,13 @@
 
 <div class="container my-4">
     <h1>Wallet and balances</h1>
+    
+    @if (isLoading)
+    {
+        <div class="loader-wrapper">
+            <div class="loader"></div>
+        </div>
+    }
 
     <!-- This part of the page is visible only if the wallet is found -->
     @if (!hasWallet)
@@ -91,12 +98,7 @@
                 
                 <button class="btn btn-primary" @onclick="RefreshBalance">Refresh Balance</button>
                 
-                @if (isLoading)
-                {
-                    <div class="loader-wrapper">
-                        <div class="loader"></div>
-                    </div>
-                }
+             
                 
                 @if (!string.IsNullOrEmpty(errorMessage))
                 {
@@ -166,30 +168,39 @@
 
 
 
-        <!-- Section 2 -->
-        <div class="container mt-4">
-            <div class="row mt-4">
-                <div class="col-lg-12">
-                    <h2>Receive</h2>
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-lg-6">
-                                    <h4 class="card-title">Receive Address</h4>
-                                    <p id="receive-address" class="card-text">1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa</p>
-                                    <button class="btn btn-primary" onclick="copyToClipboard()">Copy Address</button>
-                                </div>
-                                <div class="col-lg-6">
-                                    <h4 class="card-title">QR Code</h4>
-                                    <!-- Replace the src with your actual QR code -->
-                                    <img src="https://via.placeholder.com/150" class="card-img-top qrcode" alt="QR Code" />
+        @if (localAccountInfo != null)
+        {
+            var nextAddress = @localAccountInfo.GetNextReceiveAddress();
+
+            if (nextAddress != null)
+            {
+                <!-- Section 2 -->
+                <div class="container mt-4">
+                    <div class="row mt-4">
+                        <div class="col-lg-12">
+                            <h2>Receive</h2>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <h4 class="card-title">Receive Address</h4>
+                                            <p id="receive-address" class="card-text">@nextAddress</p>
+                                            <button class="btn btn-primary" onclick="@CopyNextReceiveAddress">Copy Address</button>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <h4 class="card-title">QR Code</h4>
+                                            <!-- Replace the src with your actual QR code -->
+                                            <img src="https://via.placeholder.com/150" class="card-img-top qrcode" alt="QR Code" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            }
+        }
+        
 
 
         <!-- Section 3 -->
@@ -322,23 +333,31 @@
 
 
 @code {
-    private bool busy = false;
+    
+    private bool hasWallet;
 
+    private bool busy = false;
 
     private string? walletWords;
     private string? walletWordsPassphrase;
     private string? newWalletWords;
     private string? newWalletWordsPassphrase;
-    private bool hasWallet;
    
     private bool isLoading;
     string loadingStatus = string.Empty;
     string errorMessage = string.Empty;
 
+    private AccountInfo? localAccountInfo;
 
     protected override async Task OnInitializedAsync()
     {
         hasWallet = _walletOperations.HasWallet();
+
+        if (hasWallet)
+        {
+            Network network = _networkConfiguration.GetNetwork();
+            localAccountInfo = storage.GetAccountInfo(network.Name);
+        }
     }
 
     private async Task RefreshBalance()
@@ -346,7 +365,7 @@
         isLoading = true;
         // Add your balance refreshing logic here.
         
-        await Task.Delay(1000);
+        await _walletOperations.UpdateAccountInfo();
 
         isLoading = false;
 
@@ -364,17 +383,27 @@
         StateHasChanged();  // This will cause Blazor to re-render the page
     }
    
-    private void CreateWallet()
+    private async Task CreateWallet()
     {
         if (string.IsNullOrEmpty(newWalletWords)) throw new ArgumentNullException();
 
-        WalletWords data = new WalletWords { Words = newWalletWords, PassPhrase = newWalletWordsPassphrase };
+        isLoading = true;
+        StateHasChanged();
+
+        WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
         _walletOperations.CreateWallet(data);
+        _walletOperations.BuildAccountInfoForWalletWords();
+        await _walletOperations.UpdateAccountInfo();
+        
         hasWallet = _walletOperations.HasWallet();
         newWalletWords = null;
         newWalletWordsPassphrase = null;
         newWalletWords = null;
         newWalletWordsPassphrase = null;
+        Network network = _networkConfiguration.GetNetwork();
+        localAccountInfo = storage.GetAccountInfo(network.Name);
+
+        isLoading = false;
         StateHasChanged();
     }
 
@@ -382,7 +411,7 @@
     {
         var data  = _walletOperations.GetWallet();
         walletWords = data.Words;
-        walletWordsPassphrase = data.PassPhrase;
+        walletWordsPassphrase = data.Passphrase;
         StateHasChanged();
     }
 
@@ -420,6 +449,11 @@
     private void GenerateNewWalletWords()
     {
         newWalletWords = _walletOperations.GenerateWalletWords();
+    }
+
+    public void CopyNextReceiveAddress()
+    {
+        _clipboardService.WriteTextAsync(localAccountInfo.GetNextReceiveAddress());
     }
 
 }
