@@ -74,8 +74,8 @@ public class WalletOperations : IWalletOperations
         ExtKey extendedKey;
         try
         {
-            extendedKey = _hdOperations.GetExtendedKey(_walletStorage.GetWalletWords() ??
-                                                       throw new ArgumentNullException("Wallet words not found"));
+            var data = _walletStorage.GetWallet();
+            extendedKey = _hdOperations.GetExtendedKey(data.Words, data.Passphrase);
         }
         catch (NotSupportedException ex)
         {

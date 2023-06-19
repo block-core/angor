@@ -6,6 +6,7 @@
 @using Blockcore.Networks
 @using Angor.Client.Services
 @using Angor.Client.Storage
+@using System.Globalization
 
 @inject HttpClient Http
 @inject IClientStorage storage;
@@ -207,20 +208,24 @@
                 <form>
                     <div class="mb-3">
                         <label for="sendToAddress" class="form-label">Send to Address</label>
-                        <input type="text" class="form-control" id="sendToAddress" placeholder="Enter address">
+                        <input type="text" class="form-control" id="sendToAddress" @bind="SendToAddress" onclick="@RefreshFee" placeholder="Enter address">
                     </div>
 
                     <div class="mb-3">
                         <label for="sendAmount" class="form-label">Amount</label>
-                        <input type="text" class="form-control" id="sendAmount" placeholder="Enter amount">
+                        <input type="text" class="form-control" id="sendAmount" @bind="SendAmount" onclick="@RefreshFee" placeholder="Enter amount">
                     </div>
 
                     <div class="mb-3">
-                        <label for="feeRange" class="form-label">Fee</label>
-                        <input type="range" class="form-range" id="feeRange">
+                        <label for="feeRange" class="form-label">Feerate for @FeeBlockCount blocks is @FeeRate BTC</label>
+                        <input type="range" class="form-range" id="feeRange" @bind="FeePosition" @oninput="FeeRangeChanged" min="@FeeMin" max="@FeeMax">
                     </div>
 
                     <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#coinControlModal">Coin Control</button>
+                    
+                    <!-- New Send button that triggers a confirmation dialog -->
+                    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#sendConfirmModal">Send</button>
+
                 </form>
             </div>
             
@@ -234,10 +239,46 @@
                         </div>
                         <div class="modal-body">
                             <!-- The tick boxes and amounts will go here -->
+
+                            <p>Total amount selected  = @Money.Satoshis(sendInfo.SendUtxos.Sum(s => s.Value.value)).ToUnit(MoneyUnit.BTC) BTC</p>
+
+                            @foreach (var (address, addressInfo) in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
+                            {
+                                @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                {
+                                    bool isTicked = sendInfo.SendUtxos.ContainsKey(addressUtxoItem.outpoint.ToString());
+
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="@isTicked" id="@addressUtxoItem" @onclick="() => HandleCheckboxChange(addressUtxoItem)">
+                                        <label class="form-check-label" for="@addressUtxoItem">
+                                            @($"{addressUtxoItem.outpoint} - {Money.Satoshis(@addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} BTC")
+                                        </label>
+                                    </div>
+                                }
+                            }
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Send Confirmation Modal -->
+            <div class="modal fade" id="sendConfirmModal" tabindex="-1" aria-labelledby="sendConfirmModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="sendConfirmModalLabel">Confirmation</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to send <strong>@SendAmount BTC</strong> to <strong> @SendToAddress?</strong>
+                            The fee for this transaction will be <strong>@FeeRate</strong>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary"  data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="@SendCoins">Confirm</button>
                         </div>
                     </div>
                 </div>
@@ -263,47 +304,47 @@
                     </thead>
                     <tbody>
                     
-                    @foreach (var (address, addressInfo) in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
-                    {
-                        var total = addressInfo.Balance;
-                        var count = addressInfo.UtxoData.Count();
-
-                        if (total > 0)
+                        @foreach (var (address, addressInfo) in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
                         {
-                            <tr data-bs-toggle="collapse" class="clickable-row" data-bs-target="#@address" aria-expanded="false" aria-controls="collapseExample1">
-                                <td>@address</td>
-                                <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) BTC</td>
-                                <td>@addressInfo.HdPath</td>
-                                <td>@count</td>
-                            </tr>
-                            <tr>
-                                <td colspan="3">
-                                        <div class="collapse" id="@address">
-                                        <div class="card card-body">
-                                            <!-- Inner table goes here -->
-                                            <table class="table table-sm">
-                                                <thead>
-                                                    <tr>
-                                                        <th scope="col">Coin</th>
-                                                        <th scope="col">Amount</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                @foreach (var addressUtxoItem in addressInfo.UtxoData)
-                                                {
-                                                    <tr>
-                                                        <td>@($"{addressUtxoItem.outpoint.transactionId}-{addressUtxoItem.outpoint.outputIndex}")</td>
-                                                        <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) BTC </td>
-                                                    </tr>
-                                                }
-                                                </tbody>
-                                            </table>
+                            var total = addressInfo.Balance;
+                            var count = addressInfo.UtxoData.Count();
+
+                            if (total > 0)
+                            {
+                                <tr data-bs-toggle="collapse" class="clickable-row" data-bs-target="#@address" aria-expanded="false" aria-controls="collapseExample1">
+                                    <td>@address</td>
+                                    <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) BTC</td>
+                                    <td>@addressInfo.HdPath</td>
+                                    <td>@count</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3">
+                                            <div class="collapse" id="@address">
+                                            <div class="card card-body">
+                                                <!-- Inner table goes here -->
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th scope="col">Coin</th>
+                                                            <th scope="col">Amount</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                                    {
+                                                        <tr>
+                                                            <td>@($"{addressUtxoItem.outpoint}")</td>
+                                                            <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) BTC </td>
+                                                        </tr>
+                                                    }
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
+                            }
                         }
-                    }
                     <!-- More rows go here -->
                     </tbody>
                 </table>
@@ -330,6 +371,23 @@
     string errorMessage = string.Empty;
 
     private AccountInfo localAccountInfo = new();
+
+    private int feeRange = 0;
+
+    private SendInfo sendInfo = new ();
+    public string SendToAddress { get; set; }
+    public decimal SendAmount { get; set; }
+    public decimal FeePosition { get; set; }
+
+    private FeeEstimations FeeEstimations = new ();
+
+    int FeeBlockCount = 1;
+    decimal FeeRate = 0;
+
+    // Max index for the range input
+    private int FeeMin = 1;
+    private int FeeMax = 3;
+    DateTime LastFeeRefresh = DateTime.MinValue;
 
     protected override async Task OnInitializedAsync()
     {
@@ -443,6 +501,101 @@
             return;
         }
         await _clipboardService.WriteTextAsync(address);
+    }
+    
+    
+
+    private async Task RefreshFee()
+    {
+        // refresh fee if last refresh was 60 seconds ago
+
+        if (LastFeeRefresh.AddSeconds(60) < DateTime.UtcNow)
+        {
+            var fees = await _walletOperations.GetFeeEstimationAsync();
+
+            FeeEstimations.Fees = fees.ToList();
+
+            FeeMax = FeeEstimations.Fees.Count;
+
+            var feeItem = FeeEstimations?.Fees.MinBy(c => c.Confirmations);
+
+            if (feeItem != null)
+            {
+                FeeBlockCount = feeItem.Confirmations;
+                FeeRate = Money.Satoshis(feeItem.FeeRateet).ToUnit(MoneyUnit.BTC);
+            }
+
+            LastFeeRefresh = DateTime.UtcNow;
+        }
+    }
+
+    private async Task SendCoins()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        var (success, message) = await _walletOperations.SendAmountToAddress(SendAmount,Money.Coins(FeeRate).Satoshi, SendToAddress);
+
+        isLoading = false;
+        StateHasChanged();
+
+        if (!success)
+        {
+            await ShowErrorMessage($"Error: {message}");
+
+            StateHasChanged();
+            await Task.Delay(1);
+            //throw new Exception(message);
+            return;
+        }
+
+        SendAmount = 0;
+        SendToAddress = string.Empty;
+        sendInfo = new SendInfo();
+
+        //erroMessage = string.Empty;
+        //loadingStatus = $"Transaction Sent! - {sendAmount} coins to {sendToAddress} - trxid = {message}";
+    }
+
+    private void HandleCheckboxChange(UtxoData addressUtxoItem)
+    {
+        // Here you can handle the change
+        // Note: replace AddressUtxoItem with the actual type of addressUtxoItem
+        
+        if (sendInfo.SendUtxos.ContainsKey(addressUtxoItem.outpoint.ToString()))
+        {
+            sendInfo.SendUtxos.Remove(addressUtxoItem.outpoint.ToString());
+        }
+        else
+        {
+            sendInfo.SendUtxos.Add(addressUtxoItem.outpoint.ToString(), addressUtxoItem);
+        }
+
+        //var sum = sendInfo.SendUtxos.Sum(s => s.Value.value);
+        //sendInfo.SendAmount = Money.Satoshis(sendInfo.SendUtxos.Sum(s => s.Value.value)).ToUnit(MoneyUnit.BTC);
+
+    }
+
+    private void FeeRangeChanged(ChangeEventArgs e)
+    {
+        // Here you can handle the fee range change
+        // The new value is in e.Value
+
+        var selected = e.Value?.ToString();
+
+        if (selected != null)
+        {
+            if (int.TryParse(selected, out int res))
+            {
+                if (res <= FeeEstimations.Fees.Count)
+                {
+                    var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+
+                    FeeBlockCount = estimationsFee.Confirmations;
+                    FeeRate = Money.Satoshis(estimationsFee.FeeRateet).ToUnit(MoneyUnit.BTC);
+                }
+            }
+        }
     }
 
 }
