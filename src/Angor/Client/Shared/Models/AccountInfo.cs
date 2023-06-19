@@ -7,17 +7,17 @@ public class AccountInfo
     public int LastFetchIndex { get; set; }
     public int LastFetchChangeIndex { get; set; }
     public long TotalBalance { get; set; }
-    public Dictionary<string, List<UtxoData>> UtxoItems { get; set; } = new();
-    public Dictionary<string, List<UtxoData>> UtxoChangeItems { get; set; } = new();
+    public Dictionary<string, AddressInfo> AddressesInfo { get; set; }
+    public Dictionary<string, AddressInfo> ChangeAddressesInfo { get; set; }
 
     public string GetNextReceiveAddress()
     {
         string? lastAddress = null;
-        foreach (var item in this.UtxoItems)
+        foreach (var (address, addressInfo) in AddressesInfo)
         {
-            lastAddress = item.Key;
+            lastAddress = address;
 
-            if (item.Value.Count == 0)
+            if (!addressInfo.HasHistory)
             {
                 break;
             }

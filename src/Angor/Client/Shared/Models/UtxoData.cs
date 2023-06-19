@@ -9,5 +9,4 @@ public class UtxoData
     public int blockIndex { get; set; }
     public bool coinBase { get; set; }
     public bool coinStake { get; set; }
-    public string hdPath { get; set; }
 }

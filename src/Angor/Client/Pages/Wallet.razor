@@ -65,9 +65,9 @@ else
 
     <p class="text-info mb-3 mt-3 fw-bold">Receive:</p>
 
-    @foreach (var item in @localAccountInfo.UtxoItems)
+    @foreach (var item in @localAccountInfo.AddressesInfo)
     {
-        if (@item.Value.Count == 0)
+        if (!@item.Value.HasHistory)
         {
             <p >@item.Key</p>
             break;
@@ -89,30 +89,28 @@ else
         </thead>
         <tbody>
         
-        @foreach (var addressItem in localAccountInfo.UtxoItems)
+        @foreach (var (Address, addressInfo) in localAccountInfo.AddressesInfo)
         {
-            var total = addressItem.Value.Sum(s => s.value);
-            var count = addressItem.Value.Count();
+            var total = addressInfo.Balance;
+            var count = addressInfo.UtxoData.Count();
 
             if (total > 0)
             {
-                var firstItem = addressItem.Value.FirstOrDefault();
-
-                <tr @onclick="(_ => ShowRow(addressItem.Key))" style="cursor: pointer;">
-                    <td >@addressItem.Key</td>
+                <tr @onclick="(_ => ShowRow(Address))" style="cursor: pointer;">
+                    <td >@Address</td>
                     <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @selectedNetwork</td>
                 </tr>
              
-                @if (collapses.ContainsKey(addressItem.Key))
+                @if (collapses.ContainsKey(Address))
                 {
                     <tr>
                         <td colspan="2" >
                             <div class="inner-table-inner-div">
-                                <p>Path = @firstItem?.hdPath</p>
+                                <p>Path = @addressInfo.HdPath</p>
                                 <p>Total outputs = @count</p>
                                     <table class="table inner-table inner-table-rounded">
                                     <tbody>
-                                    @foreach (var addressUtxoItem in addressItem.Value)
+                                    @foreach (var addressUtxoItem in addressInfo.UtxoData)
                                     {
                                         <tr>
                                             <td>@($"{addressUtxoItem.outpoint.transactionId}-{addressUtxoItem.outpoint.outputIndex}")</td>
@@ -135,30 +133,28 @@ else
         </tr>
         </thead>
         <tbody>
-        @foreach (var addressItem in localAccountInfo.UtxoChangeItems)
+        @foreach (var (address, addressInfo) in localAccountInfo.ChangeAddressesInfo)
         {
-            var total = addressItem.Value.Sum(s => s.value);
-            var count = addressItem.Value.Count();
+            var total = addressInfo.Balance;
+            var count = addressInfo.UtxoData.Count();
 
             if (total > 0)
             {
-                var firstItem = addressItem.Value.FirstOrDefault();
-
-                <tr @onclick="(_ => ShowRow(addressItem.Key))" style="cursor: pointer;">
-                    <td>@addressItem.Key</td>
+                <tr @onclick="(_ => ShowRow(address))" style="cursor: pointer;">
+                    <td>@address</td>
                     <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @selectedNetwork</td>
                 </tr>
 
-                @if (collapses.ContainsKey(addressItem.Key))
+                @if (collapses.ContainsKey(address))
                 {
                     <tr>
                         <td colspan="2" >
                             <div class="inner-table-inner-div">
-                                <p>Path = @firstItem?.hdPath</p>
+                                <p>Path = @addressInfo.Balance</p>
                                 <p>Total outputs = @count</p>
                                     <table class="table inner-table inner-table-rounded">
                                     <tbody>
-                                        @foreach (var addressUtxoItem in addressItem.Value)
+                                        @foreach (var addressUtxoItem in addressInfo.UtxoData)
                                         {
                                             <tr>
                                                 <td>@($"{addressUtxoItem.outpoint.transactionId}-{addressUtxoItem.outpoint.outputIndex}")</td>
@@ -371,60 +367,51 @@ else
 
     private async Task CheckExistingAddresses(AccountInfo accountInfo)
     {
-        foreach (var item in accountInfo.UtxoItems)
+        foreach (var (address, addressInfo) in accountInfo.AddressesInfo)
         {
-            if (item.Value.Any())
+            if (!addressInfo.UtxoData.Any()) continue;
+            
+            var result = await FetchUtxos(address);
+
+            if (result.data.Count == addressInfo.UtxoData.Count)
             {
-                var result = await FetchUtxos(item.Key);
-
-                if (result.data.Count == item.Value.Count)
+                for (var i = 0; i < result.data.Count - 1; i++)
                 {
-                    for (int i = 0; i < result.data.Count - 1; i++)
-                    {
-                        if (result.data[i].outpoint.transactionId != item.Value[i].outpoint.transactionId)
-                        {
-                            result.data.ForEach(f => f.hdPath = item.Value[0].hdPath);
-
-                            item.Value.Clear();
-                            item.Value.AddRange(result.data);
-                            break;
-                        }
-
-                    }
+                    if (result.data[i].outpoint.transactionId == addressInfo.UtxoData[i].outpoint.transactionId) 
+                        continue;
+                    addressInfo.UtxoData.Clear();
+                    addressInfo.UtxoData.AddRange(result.data);
+                    break;
                 }
-                else
-                {
-                    result.data.ForEach(f => f.hdPath = item.Value[0].hdPath);
-                    item.Value.Clear();
-                    item.Value.AddRange(result.data);
-                }
+            }
+            else
+            {
+                addressInfo.UtxoData.Clear();
+                addressInfo.UtxoData.AddRange(result.data);
             }
         }
 
-        foreach (var item in accountInfo.UtxoChangeItems)
+        foreach (var (changeAddress, addressInfo) in accountInfo.ChangeAddressesInfo)
         {
-            if (item.Value.Any())
+            if (!addressInfo.HasHistory) continue;
+            
+            var result = await FetchUtxos(changeAddress);
+
+            if (result.data.Count == addressInfo.UtxoData.Count)
             {
-                var result = await FetchUtxos(item.Key);
-
-                if (result.data.Count == item.Value.Count)
+                for (var i = 0; i < result.data.Count - 1; i++)
                 {
-                    for (int i = 0; i < result.data.Count - 1; i++)
-                    {
-                        if (result.data[i].outpoint.transactionId != item.Value[i].outpoint.transactionId)
-                        {
-                            item.Value.Clear();
-                            item.Value.AddRange(result.data);
-                            break;
-                        }
-
-                    }
+                    if (result.data[i].outpoint.transactionId == addressInfo.UtxoData[i].outpoint.transactionId) 
+                        continue;
+                    addressInfo.UtxoData.Clear();
+                    addressInfo.UtxoData.AddRange(result.data);
+                    break;
                 }
-                else
-                {
-                    item.Value.Clear();
-                    item.Value.AddRange(result.data);
-                }
+            }
+            else
+            {
+                addressInfo.UtxoData.Clear();
+                addressInfo.UtxoData.AddRange(result.data);
             }
         }
     }
@@ -502,8 +489,8 @@ else
             account.TotalBalance = 0;
             account.LastFetchChangeIndex = 0;
             account.LastFetchIndex = 0;
-            account.UtxoItems.Clear();
-            account.UtxoChangeItems.Clear();
+            account.AddressesInfo.Clear();
+            account.ChangeAddressesInfo.Clear();
             storage.SetAccountInfo(selectedNetwork, account);
             localAccountInfo = account;
         }

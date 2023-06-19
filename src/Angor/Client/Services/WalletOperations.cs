@@ -48,20 +48,23 @@ public class WalletOperations : IWalletOperations
 
         AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
 
-        var utxos = new List<UtxoData>();
-        utxos.AddRange(accountInfo.UtxoItems.SelectMany(_ => _.Value));
-        utxos.AddRange(accountInfo.UtxoChangeItems.SelectMany(_ => _.Value));
+        var utxos = new List<AddressInfo>();
+        utxos.AddRange(accountInfo.AddressesInfo.Values);
+        utxos.AddRange(accountInfo.ChangeAddressesInfo.Values);
 
-        var utxosToSpend = new List<UtxoData>();
+        var utxosToSpend = new List<(string,UtxoData)>();
 
         long ToSendSats = Money.Coins(sendAmount).Satoshi;
 
         long total = 0;
-        foreach (var utxoData in utxos.OrderBy(o => o.blockIndex).ThenByDescending(o => o.value))
+        foreach (var utxoData in utxos.SelectMany(_ => _.UtxoData
+                         .Select(u =>  new{path = _.HdPath, utxo = u }))
+                     .OrderBy(o => o.utxo.blockIndex)
+                     .ThenByDescending(o => o.utxo.value))
         {
-            utxosToSpend.Add(utxoData);
+            utxosToSpend.Add((utxoData.path,utxoData.utxo));
 
-            total += utxoData.value;
+            total += utxoData.utxo.value;
 
             if (total > ToSendSats)
             {
@@ -91,18 +94,18 @@ public class WalletOperations : IWalletOperations
         var coins = new List<Coin>();
         var keys = new List<Key>();
 
-        foreach (var utxoData in utxosToSpend)
+        foreach (var (hdPath, utxo) in utxosToSpend)
         {
-            coins.Add(new Coin(uint256.Parse(utxoData.outpoint.transactionId), (uint)utxoData.outpoint.outputIndex,
-                Money.Satoshis(utxoData.value), Script.FromHex(utxoData.scriptHex)));
+            coins.Add(new Coin(uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
+                Money.Satoshis(utxo.value), Script.FromHex(utxo.scriptHex)));
 
             // derive the private key
-            var extKey = extendedKey.Derive(new KeyPath(utxoData.hdPath));
+            var extKey = extendedKey.Derive(new KeyPath(hdPath));
             Key privateKey = extKey.PrivateKey;
             keys.Add(privateKey);
         }
 
-        var change = accountInfo.UtxoChangeItems.First(f => f.Value.Count == 0).Key;
+        var change = accountInfo.ChangeAddressesInfo.First(f => f.Value.HasHistory == false).Key;
 
         var builder = new TransactionBuilder(network)
             .Send(BitcoinWitPubKeyAddress.Create(sendToAddress, network), Money.Coins(sendAmount))
@@ -187,21 +190,21 @@ public class WalletOperations : IWalletOperations
         var (index, items) = await FetchUtxoForAddressAsync(accountInfo.LastFetchIndex, accountInfo.ExtPubKey, network, false);
 
         accountInfo.LastFetchIndex = index;
-        foreach (var (address, utxoData) in items)
+        foreach (var (address, addressInfo) in items)
         {
-            accountInfo.UtxoItems.Remove(address);
-            accountInfo.UtxoItems.Add(address, utxoData);
-            accountInfo.TotalBalance += utxoData.Sum(s => s.value);
+            accountInfo.AddressesInfo.Remove(address);
+            accountInfo.AddressesInfo.Add(address, addressInfo);
+            accountInfo.TotalBalance += addressInfo.Balance;
         }
         
         var (changeIndex, changeItems) = await FetchUtxoForAddressAsync(accountInfo.LastFetchChangeIndex, accountInfo.ExtPubKey, network, true);
 
         accountInfo.LastFetchChangeIndex = changeIndex;
-        foreach (var (address, utxoData) in changeItems)
+        foreach (var (address, changeAddressInfo) in changeItems)
         {
-            accountInfo.UtxoChangeItems.Remove(address);
-            accountInfo.UtxoChangeItems.Add(address, utxoData);
-            accountInfo.TotalBalance += utxoData.Sum(s => s.value);
+            accountInfo.AddressesInfo.Remove(address);
+            accountInfo.AddressesInfo.Add(address, changeAddressInfo);
+            accountInfo.TotalBalance += changeAddressInfo.Balance;
         }
 
         _storage.SetAccountInfo(network.Name, accountInfo);
@@ -209,71 +212,11 @@ public class WalletOperations : IWalletOperations
         return accountInfo;
     }
 
-    private async Task CheckExistingAddresses(AccountInfo accountInfo) //TODO make this a public call
-    {
-        foreach (var item in accountInfo.UtxoItems)
-        {
-            if (item.Value.Any())
-            {
-                var result = await FetchUtxos(item.Key);
-
-                if (result.data.Count == item.Value.Count)
-                {
-                    for (int i = 0; i < result.data.Count - 1; i++)
-                    {
-                        if (result.data[i].outpoint.transactionId != item.Value[i].outpoint.transactionId)
-                        {
-                            result.data.ForEach(f => f.hdPath = item.Value[0].hdPath);
-
-                            item.Value.Clear();
-                            item.Value.AddRange(result.data);
-                            break;
-                        }
-
-                    }
-                }
-                else
-                {
-                    result.data.ForEach(f => f.hdPath = item.Value[0].hdPath);
-                    item.Value.Clear();
-                    item.Value.AddRange(result.data);
-                }
-            }
-        }
-
-        foreach (var item in accountInfo.UtxoChangeItems)
-        {
-            if (item.Value.Any())
-            {
-                var result = await FetchUtxos(item.Key);
-
-                if (result.data.Count == item.Value.Count)
-                {
-                    for (int i = 0; i < result.data.Count - 1; i++)
-                    {
-                        if (result.data[i].outpoint.transactionId != item.Value[i].outpoint.transactionId)
-                        {
-                            item.Value.Clear();
-                            item.Value.AddRange(result.data);
-                            break;
-                        }
-
-                    }
-                }
-                else
-                {
-                    item.Value.Clear();
-                    item.Value.AddRange(result.data);
-                }
-            }
-        }
-    }
-    
-    private async Task<(int,Dictionary<string,List<UtxoData>>)> FetchUtxoForAddressAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
+    private async Task<(int,Dictionary<string,AddressInfo>)> FetchUtxoForAddressAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
     {
         ExtPubKey accountExtPubKey = ExtPubKey.Parse(ExtendedPubKey, network);
         
-        var UtxoItems = new Dictionary<string,List<UtxoData>>();
+        var addressesInfo = new Dictionary<string,AddressInfo>();
         var accountIndex = 0; // for now only account 0
         var purpose = 84; // for now only legacy
         
@@ -285,11 +228,8 @@ public class WalletOperations : IWalletOperations
             
             var address = pubkey.GetSegwitAddress(network).ToString();
             var result = await FetchUtxos(address);
-            
-            foreach (var utxoData in result.data)
-                utxoData.hdPath = path;
-            
-            UtxoItems.Add(address, result.data);
+
+            addressesInfo.Add(address, new AddressInfo{HdPath = path,UtxoData = result.data, HasHistory = !result.noHistory});
             scanIndex++;
 
             if (!result.noHistory) continue;
@@ -297,13 +237,12 @@ public class WalletOperations : IWalletOperations
             gap--;
         }
 
-        return (scanIndex, UtxoItems);
+        return (scanIndex, addressesInfo);
     }
 
-    private async Task<(int, string, List<UtxoData>)> FetchUtxoForAddressAsync(int scanIndex,
+    private async Task<(int, string, AddressInfo)> FetchUtxoForAddressAsync(int scanIndex,
         ExtPubKey accountExtPubKey, Network network, bool isChange)
     {
-        var UtxoItems = new Dictionary<string, List<UtxoData>>();
         var accountIndex = 0; // for now only account 0
         var purpose = 84; // for now only legacy
 
@@ -313,10 +252,7 @@ public class WalletOperations : IWalletOperations
         var address = pubkey.GetSegwitAddress(network).ToString();
         var result = await FetchUtxos(address);
 
-        foreach (var utxoData in result.data)
-            utxoData.hdPath = path;
-
-        return (scanIndex++, address, result.data);
+        return (scanIndex++, address, new AddressInfo{HdPath = path,UtxoData = result.data});
     }
 
     public async Task<(bool noHistory, List<UtxoData> data)> FetchUtxos(string adddress)
