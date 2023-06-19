@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using Angor.Client.Shared.Models;
 using Angor.Client.Shared.Types;
+using Angor.Client.Storage;
 using Angor.Shared;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
@@ -15,52 +16,19 @@ public class WalletOperations : IWalletOperations
 {
     private readonly HttpClient _http;
     private readonly IClientStorage _storage;
+    private readonly IWalletStorage _walletStorage;
     private readonly IHdOperations _hdOperations;
     private readonly ILogger<WalletOperations> _logger;
     private readonly INetworkConfiguration _networkConfiguration;
 
-    public WalletOperations(HttpClient http, IClientStorage storage, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration)
+    public WalletOperations(HttpClient http, IClientStorage storage, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration, IWalletStorage walletStorage)
     {
         _http = http;
         _storage = storage;
         _hdOperations = hdOperations;
         _logger = logger;
         _networkConfiguration = networkConfiguration;
-    }
-
-    public bool HasWallet()
-    {
-        return _storage.GetWalletWords() != null;
-    }
-
-    public void CreateWallet(WalletWords walletWords)
-    {
-        if (_storage.GetWalletWords() != null)
-        {
-            throw new ArgumentNullException("Wallet already exists!");
-        }
-
-        var data = walletWords.ConvertToString();
-
-        _storage.SaveWalletWords(data);
-    }
-
-    public void DeleteWallet()
-    {
-        _storage.DeleteWalletWords();
-    }
-
-    public WalletWords GetWallet()
-    {
-        var words = _storage.GetWalletWords();
-
-        if (string.IsNullOrEmpty(words))
-        {
-            throw new ArgumentNullException("Wallet not found!");
-
-        }
-
-        return WalletWords.ConvertFromString(words);
+        _walletStorage = walletStorage;
     }
 
     public string GenerateWalletWords()
@@ -107,7 +75,7 @@ public class WalletOperations : IWalletOperations
         ExtKey extendedKey;
         try
         {
-            extendedKey = _hdOperations.GetExtendedKey(_storage.GetWalletWords() ??
+            extendedKey = _hdOperations.GetExtendedKey(_walletStorage.GetWalletWords() ??
                                                        throw new ArgumentNullException("Wallet words not found"));
         }
         catch (NotSupportedException ex)
@@ -181,7 +149,7 @@ public class WalletOperations : IWalletOperations
         ExtKey extendedKey;
         try
         {
-            var data = this.GetWallet();
+            var data = _walletStorage.GetWallet();
             extendedKey = _hdOperations.GetExtendedKey(data.Words, data.Passphrase);
         }
         catch (NotSupportedException ex)

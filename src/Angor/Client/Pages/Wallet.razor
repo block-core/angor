@@ -8,6 +8,7 @@
 @using Blockcore.NBitcoin.BIP39
 @using Blockcore.Networks
 @using Angor.Client.Services
+@using Angor.Client.Storage
 
 @inject HttpClient Http
 @inject IClientStorage storage;
@@ -16,6 +17,7 @@
 @inject INetworkConfiguration _networkConfiguration;
 @inject IJSRuntime JsRuntime
 @inject IWalletOperations _walletOperations;
+@inject IWalletStorage _walletStorage;
 
 <PageTitle>Wallet and balances</PageTitle>
 
@@ -200,10 +202,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        if (storage.GetWalletWords() != null)
-        {
-            hasWallet = true;
-        }
+        hasWallet = _walletStorage.HasWallet();
     }
 
     private async Task Send()
@@ -479,7 +478,7 @@ else
             return;
         }
 
-        storage.SaveWalletWords(walletWords);
+        _walletStorage.SaveWalletWords(WalletWords.ConvertFromString(walletWords));
         await ClearAccount();
         _walletOperations.BuildAccountInfoForWalletWords();
         hasWallet = true;
@@ -492,7 +491,7 @@ else
 
     private async Task ShowWallet()
     {
-        walletWords = storage.GetWalletWords();
+        walletWords = _walletStorage.GetWalletWords() ?? string.Empty;
     }
 
     private async Task ClearAccount()
@@ -550,7 +549,7 @@ else
         //Network network = _networkConfiguration.GetNetwork();
        
         storage.DeleteAccountInfo(selectedNetwork);
-        storage.DeleteWalletWords();
+        _walletStorage.DeleteWalletWords();
         
         walletWords = string.Empty;
         localAccountInfo = null;

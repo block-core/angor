@@ -10,9 +10,11 @@
 @using Blockcore.NBitcoin.BIP39
 @using Blockcore.Networks
 @using Angor.Client.Services
+@using Angor.Client.Storage
 
 @inject HttpClient Http
 @inject IClientStorage storage;
+@inject IWalletStorage _walletStorage;
 @inject IHdOperations HdOperations;
 @inject ILogger<Wallet> Logger;
 @inject INetworkConfiguration _networkConfiguration;
@@ -66,7 +68,7 @@
                                 <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
                             </div>
                             <div class="mb-3">
-                                <button class="btn btn-success" @onclick="CreateWallet" data-bs-dismiss="modal">Create Wallet</button>
+                                <button class="btn btn-success" @onclick="CreateWalletAsync" data-bs-dismiss="modal">Create Wallet</button>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -345,7 +347,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        hasWallet = _walletOperations.HasWallet();
+        hasWallet = _walletStorage.HasWallet();
 
         if (hasWallet)
         {
@@ -378,7 +380,7 @@
         StateHasChanged();  // This will cause Blazor to re-render the page
     }
    
-    private async Task CreateWallet()
+    private async Task CreateWalletAsync()
     {
         if (string.IsNullOrEmpty(newWalletWords)) throw new ArgumentNullException();
 
@@ -386,15 +388,12 @@
         StateHasChanged();
 
         WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
-        _walletOperations.CreateWallet(data);
+        _walletStorage.SaveWalletWords(data);
         _walletOperations.BuildAccountInfoForWalletWords();
         await _walletOperations.UpdateAccountInfo();
         
-        hasWallet = _walletOperations.HasWallet();
-        newWalletWords = null;
-        newWalletWordsPassphrase = null;
-        newWalletWords = null;
-        newWalletWordsPassphrase = null;
+        hasWallet = _walletStorage.HasWallet();
+        ClearWalletWords();
         Network network = _networkConfiguration.GetNetwork();
         localAccountInfo = storage.GetAccountInfo(network.Name);
 
@@ -404,7 +403,7 @@
 
     private void ShowWords()
     {
-        var data  = _walletOperations.GetWallet();
+        var data  = _walletStorage.GetWallet();
         walletWords = data.Words;
         walletWordsPassphrase = data.Passphrase;
         StateHasChanged();
@@ -418,11 +417,16 @@
         }
 
         _clipboardService.WriteTextAsync(walletWords);
+        ClearWalletWords();
+        StateHasChanged();
+    }
+    
+    private void ClearWalletWords()
+    {
         walletWords = null;
         walletWordsPassphrase = null;
         newWalletWords = null;
         newWalletWordsPassphrase = null;
-        StateHasChanged();
     }
 
     private void WalletWordsClose()
@@ -432,12 +436,9 @@
 
     private void DeleteWallet()
     {
-       _walletOperations.DeleteWallet();
-        hasWallet = _walletOperations.HasWallet();
-        walletWords = null; // in case we showed it
-        walletWordsPassphrase = null;
-        newWalletWords = null;
-        newWalletWordsPassphrase = null;
+        _walletStorage.DeleteWallet();
+        hasWallet = _walletStorage.HasWallet();
+        ClearWalletWords();
         StateHasChanged();
     }
 
