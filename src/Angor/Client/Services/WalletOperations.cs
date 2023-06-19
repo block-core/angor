@@ -42,10 +42,6 @@ public class WalletOperations : IWalletOperations
     public async Task<(bool, string)> SendAmountToAddress(decimal sendAmount, long selectedFee, string sendToAddress)
     {
         Network network = _networkConfiguration.GetNetwork();
-        var coinType = network.Consensus.CoinType;
-        var accountIndex = 0; // for now only account 0
-        var purpose = 84; // for now only legacy
-
         AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
 
         var utxos = new List<AddressInfo>();
@@ -168,7 +164,7 @@ public class WalletOperations : IWalletOperations
         string accountHdPath = _hdOperations.GetAccountHdPath(purpose, coinType, accountIndex);
         Key privateKey = extendedKey.PrivateKey;
         _storage.SetWalletPubkey(privateKey.PubKey.ToHex());
-        //storage.SetWalletPrivkey(extendedKey.ToString(network)!);
+
         ExtPubKey accountExtPubKeyTostore =
             _hdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
 
@@ -187,7 +183,7 @@ public class WalletOperations : IWalletOperations
 
         AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
 
-        var (index, items) = await FetchUtxoForAddressAsync(accountInfo.LastFetchIndex, accountInfo.ExtPubKey, network, false);
+        var (index, items) = await FetcAddressesDataForPubKeyAsync(accountInfo.LastFetchIndex, accountInfo.ExtPubKey, network, false);
 
         accountInfo.LastFetchIndex = index;
         foreach (var (address, addressInfo) in items)
@@ -197,7 +193,7 @@ public class WalletOperations : IWalletOperations
             accountInfo.TotalBalance += addressInfo.Balance;
         }
         
-        var (changeIndex, changeItems) = await FetchUtxoForAddressAsync(accountInfo.LastFetchChangeIndex, accountInfo.ExtPubKey, network, true);
+        var (changeIndex, changeItems) = await FetcAddressesDataForPubKeyAsync(accountInfo.LastFetchChangeIndex, accountInfo.ExtPubKey, network, true);
 
         accountInfo.LastFetchChangeIndex = changeIndex;
         foreach (var (address, changeAddressInfo) in changeItems)
@@ -212,7 +208,7 @@ public class WalletOperations : IWalletOperations
         return accountInfo;
     }
 
-    private async Task<(int,Dictionary<string,AddressInfo>)> FetchUtxoForAddressAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
+    private async Task<(int,Dictionary<string,AddressInfo>)> FetcAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
     {
         ExtPubKey accountExtPubKey = ExtPubKey.Parse(ExtendedPubKey, network);
         
@@ -227,9 +223,10 @@ public class WalletOperations : IWalletOperations
             var path = _hdOperations.CreateHdPath(purpose, network.Consensus.CoinType, accountIndex, isChange, scanIndex);
             
             var address = pubkey.GetSegwitAddress(network).ToString();
-            var result = await FetchUtxos(address);
+            var result = await FetchUtxoForAddressAsync(address);
 
-            addressesInfo.Add(address, new AddressInfo{HdPath = path,UtxoData = result.data, HasHistory = !result.noHistory});
+            addressesInfo.Add(address,
+                new AddressInfo { HdPath = path, UtxoData = result.data, HasHistory = !result.noHistory });
             scanIndex++;
 
             if (!result.noHistory) continue;
@@ -240,28 +237,13 @@ public class WalletOperations : IWalletOperations
         return (scanIndex, addressesInfo);
     }
 
-    private async Task<(int, string, AddressInfo)> FetchUtxoForAddressAsync(int scanIndex,
-        ExtPubKey accountExtPubKey, Network network, bool isChange)
-    {
-        var accountIndex = 0; // for now only account 0
-        var purpose = 84; // for now only legacy
-
-        PubKey pubkey = _hdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, isChange);
-        var path = _hdOperations.CreateHdPath(purpose, network.Consensus.CoinType, accountIndex, isChange, scanIndex);
-
-        var address = pubkey.GetSegwitAddress(network).ToString();
-        var result = await FetchUtxos(address);
-
-        return (scanIndex++, address, new AddressInfo{HdPath = path,UtxoData = result.data});
-    }
-
-    public async Task<(bool noHistory, List<UtxoData> data)> FetchUtxos(string adddress)
+    public async Task<(bool noHistory, List<UtxoData> data)> FetchUtxoForAddressAsync(string address)
     {
         var limit = 50;
         var offset = 0;
         List<UtxoData> allItems = new();
 
-        var urlBalance = $"/query/address/{adddress}";
+        var urlBalance = $"/query/address/{address}";
         IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
         var addressBalance = await _http.GetFromJsonAsync<AddressBalance>(indexer.Url + urlBalance);
 
@@ -276,7 +258,7 @@ public class WalletOperations : IWalletOperations
         {
             // this is inefficient look at headers to know when to stop
 
-            var url = $"/query/address/{adddress}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
+            var url = $"/query/address/{address}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
 
             Console.WriteLine($"fetching {url}");
 
@@ -292,5 +274,33 @@ public class WalletOperations : IWalletOperations
         }
 
         return (false, allItems);
+    }
+
+    public async Task<IEnumerable<FeeEstimation>> GetFeeEstimationAsync()
+    {
+        var blocks = new []{1,5,10};
+
+        try
+        {
+            IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
+            
+            var url = "/stats/fee?" + blocks.Select(_ => $"confirmations={_}");
+
+            Console.WriteLine($"fetching fee estimation for blocks - {blocks}");
+
+            var response = await _http.GetAsync(indexer.Url + url);
+            
+            var feeEstimations = await response.Content.ReadFromJsonAsync<FeeEstimations>();
+
+            if (feeEstimations == null || (!feeEstimations.Fees?.Any() ?? true))
+                return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRateet = _ * 100});
+
+            return feeEstimations.Fees;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }

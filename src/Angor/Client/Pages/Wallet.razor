@@ -213,8 +213,10 @@ else
             StateHasChanged();
             await Task.Delay(1);
 
-            var fee = await GetFeeEstimationAsync();
+            var fees = await _walletOperations.GetFeeEstimationAsync();
 
+            var fee = fees.First().FeeRateet;
+            
             bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"The fee is {fee}, continue?");
 
             if (!confirmed)
@@ -284,67 +286,6 @@ else
             StateHasChanged();
             await Task.Delay(1);
 
-
-            // var scanIndex = accountInfo.LastFetchIndex;
-            // var gap = 5;
-            // while (gap > 0)
-            // {
-            //     scannedAcount += 1;
-            //     PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, false);
-            //     var adddress = pubkey.GetSegwitAddress(network).ToString();
-            //     var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, false, scanIndex);
-            //     var result = await FetchUtxos(adddress);
-            //     foreach (var utxoData in result.data) 
-            //         utxoData.hdPath = path;
-            //     accountInfo.UtxoItems.Remove(adddress);
-            //     accountInfo.UtxoItems.Add(adddress, result.data);
-            //     accountInfo.TotalBalance += result.data.Sum(s => s.value);
-            //     scanIndex++;
-            //
-            //     if (result.noHistory)
-            //     {
-            //         gap--;
-            //         continue;
-            //     }
-            //
-            //     accountInfo.LastFetchIndex = scanIndex;
-            //     StateHasChanged();
-            //     await Task.Delay(1);
-            // }
-            //
-            // scanIndex = accountInfo.LastFetchChangeIndex;
-            // gap = 5;
-            // while (gap > 0)
-            // {
-            //     scannedAcount += 1;
-            //     PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, true);
-            //     var adddressChange = pubkeyChange.GetSegwitAddress(network).ToString();
-            //     var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, true, scanIndex);
-            //     var resulChange = await FetchUtxos(adddressChange);
-            //     foreach (var utxoData in resulChange.data) 
-            //         utxoData.hdPath = path;
-            //     accountInfo.UtxoChangeItems.Remove(adddressChange);
-            //     accountInfo.UtxoChangeItems.Add(adddressChange, resulChange.data);
-            //     accountInfo.TotalBalance += resulChange.data.Sum(s => s.value);
-            //     scanIndex++;
-            //
-            //     if (resulChange.noHistory)
-            //     {
-            //         gap--;
-            //         continue;
-            //     }
-            //
-            //     accountInfo.LastFetchChangeIndex = scanIndex;
-            //     StateHasChanged();
-            //     await Task.Delay(1);
-            // }
-            //
-            //
-            // accountInfo.TotalBalance = accountInfo.UtxoItems.SelectMany(s => s.Value).Sum(s => s.value) 
-            //                            + accountInfo.UtxoChangeItems.SelectMany(s => s.Value).Sum(s => s.value);
-            //
-            // storage.SetAccountInfo(selectedNetwork, accountInfo);
-
             localAccountInfo = await _walletOperations.UpdateAccountInfo();
             
             erroMessage = String.Empty;
@@ -371,7 +312,7 @@ else
         {
             if (!addressInfo.UtxoData.Any()) continue;
             
-            var result = await FetchUtxos(address);
+            var result = await _walletOperations.FetchUtxoForAddressAsync(address);
 
             if (result.data.Count == addressInfo.UtxoData.Count)
             {
@@ -395,7 +336,7 @@ else
         {
             if (!addressInfo.HasHistory) continue;
             
-            var result = await FetchUtxos(changeAddress);
+            var result = await _walletOperations.FetchUtxoForAddressAsync(changeAddress);
 
             if (result.data.Count == addressInfo.UtxoData.Count)
             {
@@ -414,45 +355,6 @@ else
                 addressInfo.UtxoData.AddRange(result.data);
             }
         }
-    }
-
-    private async Task<(bool noHistory, List<UtxoData> data)> FetchUtxos( string adddress)
-    {
-        var limit = 50;
-        var offset = 0;
-        List<UtxoData> allItems = new();
-    
-        var urlBalance = $"/query/address/{adddress}";
-        IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
-        var addressBalance = await Http.GetFromJsonAsync<AddressBalance>(indexer.Url + urlBalance);
-    
-        if (addressBalance?.balance == 0 && (addressBalance.totalReceivedCount + addressBalance.totalSentCount) == 0)
-        {
-            return (true, allItems);
-        }
-    
-        int fetchCount = 50; // for the demo we just scan 50 addresses
-    
-        for (int i = 0; i < fetchCount; i++)
-        {
-            // this is inefficient look at headers to know when to stop
-    
-            var url = $"/query/address/{adddress}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
-    
-            Console.WriteLine($"fetching {url}");
-    
-            var response = await Http.GetAsync(indexer.Url + url);
-            var utxo = await response.Content.ReadFromJsonAsync<List<UtxoData>>();
-    
-            if (utxo == null || !utxo.Any())
-                break;
-    
-            allItems.AddRange(utxo);
-    
-            offset += limit;
-        }
-    
-        return (false, allItems);
     }
 
     private async Task RestoreWallet()
@@ -556,34 +458,5 @@ else
             collapses.Remove(address);
         else
             collapses.Add(address, null);
-    }
-
-
-    private async Task<long> GetFeeEstimationAsync()
-    {
-        var blocks = 10;
-
-        try
-        {
-            IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
-            
-            var url = $"/stats/fee?confirmations={blocks}";
-
-            Console.WriteLine($"fetching fee estimation for blocks - {blocks}");
-
-            var response = await Http.GetAsync(indexer.Url + url);
-            
-            var feeEstimations = await response.Content.ReadFromJsonAsync<FeeEstimations>();
-
-            if (feeEstimations == null || (!feeEstimations.Fees?.Any() ?? true))
-                return 1000;
-
-            return feeEstimations.Fees.Single().FeeRateet;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
     }
 }
