@@ -1,13 +1,8 @@
 @page "/wallet1"
 @using Blockcore.Consensus.BlockInfo
 @using Blockcore.NBitcoin
-@using Blockcore.NBitcoin.BIP32
 @using Angor.Client.Shared.Models
-@using Angor.Client.Shared.Types
 @using Angor.Shared
-@using Blockcore.Consensus.ScriptInfo
-@using Blockcore.Consensus.TransactionInfo
-@using Blockcore.NBitcoin.BIP39
 @using Blockcore.Networks
 @using Angor.Client.Services
 @using Angor.Client.Storage
@@ -26,12 +21,30 @@
 <div class="container my-4">
     <h1>Wallet and balances</h1>
     
-    @if (isLoading)
-    {
-        <div class="loader-wrapper">
-            <div class="loader"></div>
+    <div class="row mt-4">
+        <div class="col">
+
+            @if (isLoading)
+            {
+                <div class="loader-wrapper">
+                    <div class="loader"></div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 col-md-10">
+                        <div class="alert alert-danger fixed-bottom w-70 d-flex justify-content-between align-items-center" role="alert" style="left: 20%; right: 20%">
+                            @errorMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    </div>
+                </div>
+            }
+
         </div>
-    }
+    </div>
 
     <!-- This part of the page is visible only if the wallet is found -->
     @if (!hasWallet)
@@ -39,7 +52,7 @@
         <!-- No Wallet found -->
         <div class="row mt-4">
             <div class="col">
-                <div class="alert alert-danger" role="alert">No Wallet Found</div>
+                <div class="alert alert-info" role="alert">No Wallet Found</div>
                 <!-- Adding a button to create a wallet -->
                 @*<button class="btn btn-primary mt-2" @onclick="CreateWallet">Create Wallet</button>*@
 
@@ -90,30 +103,19 @@
                     <span class="fs-3"><strong> @Money.Satoshis(localAccountInfo.TotalBalance).ToUnit(MoneyUnit.BTC) BTC</strong></span> <!-- replace this with actual balance -->
                 </div>
 
-                <div class="mb-3">
-                    <span class="fs-6">Unconfirmed balance: </span>
-                    <span class="fs-5">0.00 BTC</span> <!-- replace this with actual unconfirmed balance -->
-                </div>
+                @if (localAccountInfo.TotalUnConfirmedBalance > 0)
+                {
+                    <div class="mb-3">
+                        <span class="fs-6">Unconfirmed balance: </span>
+                        <span class="fs-5"> @Money.Satoshis(localAccountInfo.TotalUnConfirmedBalance).ToUnit(MoneyUnit.BTC) BTC</span> <!-- replace this with actual unconfirmed balance -->
+                    </div>
+                }
 
                 <!-- Replace '#' in 'data-bs-target' with the id of your modal -->
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#walletWordsModal">Show Wallet Words</button>
                 
                 <button class="btn btn-primary" @onclick="RefreshBalance">Refresh Balance</button>
                 
-             
-                
-                @if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    <div class="row justify-content-center">
-                        <div class="col-lg-8 col-md-10">
-                            <div class="alert alert-danger fixed-bottom w-70 d-flex justify-content-between align-items-center" role="alert" style="left:20%;right:20%">
-                                @errorMessage
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        </div>
-                    </div>
-                }
-
             </div>
 
             <!-- Wallet Words Modal -->
@@ -171,23 +173,21 @@
 
 
         <!-- Section 2 -->
-        <div class="container mt-4">
-            <div class="row mt-4">
-                <div class="col-lg-12">
-                    <h2>Receive</h2>
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-lg-6">
-                                    <h4 class="card-title">Receive Address</h4>
-                                    <p id="receive-address" class="card-text">@localAccountInfo.GetNextReceiveAddress()</p>
-                                    <button class="btn btn-primary" onclick="@CopyNextReceiveAddress">Copy Address</button>
-                                </div>
-                                <div class="col-lg-6">
-                                    <h4 class="card-title">QR Code</h4>
-                                    <!-- Replace the src with your actual QR code -->
-                                    <img src="https://via.placeholder.com/150" class="card-img-top qrcode" alt="QR Code" />
-                                </div>
+        <div class="row mt-4">
+            <div class="col-lg-12">
+                <h2>Receive</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <h4 class="card-title">Receive Address</h4>
+                                <p id="receive-address" class="card-text">@localAccountInfo.GetNextReceiveAddress()</p>
+                                <button class="btn btn-primary" onclick="@CopyNextReceiveAddress">Copy Address</button>
+                            </div>
+                            <div class="col-lg-6">
+                                <h4 class="card-title">QR Code</h4>
+                                <!-- Replace the src with your actual QR code -->
+                                <img src="https://via.placeholder.com/150" class="card-img-top qrcode" alt="QR Code" />
                             </div>
                         </div>
                     </div>
@@ -200,49 +200,28 @@
 
 
         <!-- Section 3 -->
-        <div class="container my-4">
-            <div class="row">
-                <div class="col-md-12">
-                    <h2 class="mb-3">Send</h2>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <h2 class="mb-3">Send</h2>
 
-                    <form>
-                        <div class="mb-3">
-                            <label for="sendToAddress" class="form-label">Send to Address</label>
-                            <input type="text" class="form-control" id="sendToAddress" placeholder="Enter address">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="sendAmount" class="form-label">Amount</label>
-                            <input type="text" class="form-control" id="sendAmount" placeholder="Enter amount">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="feeRange" class="form-label">Fee</label>
-                            <input type="range" class="form-range" id="feeRange">
-                        </div>
-
-                        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#coinControlModal">Coin Control</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Coin Control Modal -->
-        <div class="modal fade" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <form>
+                    <div class="mb-3">
+                        <label for="sendToAddress" class="form-label">Send to Address</label>
+                        <input type="text" class="form-control" id="sendToAddress" placeholder="Enter address">
                     </div>
-                    <div class="modal-body">
-                        <!-- The tick boxes and amounts will go here -->
+
+                    <div class="mb-3">
+                        <label for="sendAmount" class="form-label">Amount</label>
+                        <input type="text" class="form-control" id="sendAmount" placeholder="Enter amount">
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Save changes</button>
+
+                    <div class="mb-3">
+                        <label for="feeRange" class="form-label">Fee</label>
+                        <input type="range" class="form-range" id="feeRange">
                     </div>
-                </div>
+
+                    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#coinControlModal">Coin Control</button>
+                </form>
             </div>
             
             <!-- Coin Control Modal -->
@@ -263,38 +242,43 @@
                     </div>
                 </div>
             </div>
-
         </div>
-
 
        
 
 
         <!-- Section 4 -->
-        <div class="container my-4">
-            <div class="row">
-                <div class="col-md-12">
-                    <h2 class="mb-3">Addresses and Amounts</h2>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <h2 class="mb-3">Addresses and Amounts</h2>
 
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Address</th>
-                                <th scope="col">Amount</th>
-                                <th scope="col">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr data-bs-toggle="collapse" data-bs-target="#collapseExample1" aria-expanded="false" aria-controls="collapseExample1">
-                                <td>Address 1</td>
-                                <td>Amount 1</td>
-                                <td>
-                                    <button class="btn btn-primary">Expand</button>
-                                </td>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Address</th>
+                            <th scope="col">Amount</th>
+                            <th scope="col">Path</th>
+                            <th scope="col">UTXO count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    
+                    @foreach (var (address, addressInfo) in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
+                    {
+                        var total = addressInfo.Balance;
+                        var count = addressInfo.UtxoData.Count();
+
+                        if (total > 0)
+                        {
+                            <tr data-bs-toggle="collapse" class="clickable-row" data-bs-target="#@address" aria-expanded="false" aria-controls="collapseExample1">
+                                <td>@address</td>
+                                <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) BTC</td>
+                                <td>@addressInfo.HdPath</td>
+                                <td>@count</td>
                             </tr>
                             <tr>
                                 <td colspan="3">
-                                    <div class="collapse" id="collapseExample1">
+                                        <div class="collapse" id="@address">
                                         <div class="card card-body">
                                             <!-- Inner table goes here -->
                                             <table class="table table-sm">
@@ -305,24 +289,26 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
+                                                @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                                {
                                                     <tr>
-                                                        <td>Coin 1</td>
-                                                        <td>Amount 1</td>
+                                                        <td>@($"{addressUtxoItem.outpoint.transactionId}-{addressUtxoItem.outpoint.outputIndex}")</td>
+                                                        <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) BTC </td>
                                                     </tr>
+                                                }
                                                 </tbody>
                                             </table>
                                         </div>
                                     </div>
                                 </td>
                             </tr>
-
-                            <!-- More rows go here -->
-                        </tbody>
-                    </table>
-                </div>
+                        }
+                    }
+                    <!-- More rows go here -->
+                    </tbody>
+                </table>
             </div>
         </div>
-
     }
 </div>
 
@@ -343,7 +329,7 @@
     string loadingStatus = string.Empty;
     string errorMessage = string.Empty;
 
-    private AccountInfo? localAccountInfo;
+    private AccountInfo localAccountInfo = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -409,14 +395,14 @@
         StateHasChanged();
     }
 
-    private void CopyWordsToClibboard()
+    private async Task CopyWordsToClibboard()
     {
         if (string.IsNullOrEmpty(walletWords))
         {
             throw new InvalidOperationException();
         }
 
-        _clipboardService.WriteTextAsync(walletWords);
+        await _clipboardService.WriteTextAsync(walletWords);
         ClearWalletWords();
         StateHasChanged();
     }
@@ -447,9 +433,16 @@
         newWalletWords = _walletOperations.GenerateWalletWords();
     }
 
-    public void CopyNextReceiveAddress()
+    public  async Task CopyNextReceiveAddress()
     {
-        _clipboardService.WriteTextAsync(localAccountInfo.GetNextReceiveAddress());
+        var address = localAccountInfo.GetNextReceiveAddress();
+
+        if (string.IsNullOrEmpty(address))
+        {
+            await ShowErrorMessage("New address was not created");
+            return;
+        }
+        await _clipboardService.WriteTextAsync(address);
     }
 
 }

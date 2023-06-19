@@ -7,10 +7,11 @@ public class AccountInfo
     public int LastFetchIndex { get; set; }
     public int LastFetchChangeIndex { get; set; }
     public long TotalBalance { get; set; }
-    public Dictionary<string, AddressInfo> AddressesInfo { get; set; }
-    public Dictionary<string, AddressInfo> ChangeAddressesInfo { get; set; }
+    public long TotalUnConfirmedBalance { get; set; }
+    public Dictionary<string, AddressInfo> AddressesInfo { get; set; } = new();
+    public Dictionary<string, AddressInfo> ChangeAddressesInfo { get; set; } = new();
 
-    public string GetNextReceiveAddress()
+    public string? GetNextReceiveAddress()
     {
         string? lastAddress = null;
         foreach (var (address, addressInfo) in AddressesInfo)
