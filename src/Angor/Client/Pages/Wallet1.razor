@@ -85,7 +85,7 @@
 
                 <div class="mb-3">
                     <span class="fs-4">Confirmed balance: </span>
-                    <span class="fs-3"><strong>0.00 BTC</strong></span> <!-- replace this with actual balance -->
+                    <span class="fs-3"><strong> @Money.Satoshis(localAccountInfo.TotalBalance).ToUnit(MoneyUnit.BTC) BTC</strong></span> <!-- replace this with actual balance -->
                 </div>
 
                 <div class="mb-3">
@@ -168,38 +168,32 @@
 
 
 
-        @if (localAccountInfo != null)
-        {
-            var nextAddress = @localAccountInfo.GetNextReceiveAddress();
-
-            if (nextAddress != null)
-            {
-                <!-- Section 2 -->
-                <div class="container mt-4">
-                    <div class="row mt-4">
-                        <div class="col-lg-12">
-                            <h2>Receive</h2>
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-lg-6">
-                                            <h4 class="card-title">Receive Address</h4>
-                                            <p id="receive-address" class="card-text">@nextAddress</p>
-                                            <button class="btn btn-primary" onclick="@CopyNextReceiveAddress">Copy Address</button>
-                                        </div>
-                                        <div class="col-lg-6">
-                                            <h4 class="card-title">QR Code</h4>
-                                            <!-- Replace the src with your actual QR code -->
-                                            <img src="https://via.placeholder.com/150" class="card-img-top qrcode" alt="QR Code" />
-                                        </div>
-                                    </div>
+        <!-- Section 2 -->
+        <div class="container mt-4">
+            <div class="row mt-4">
+                <div class="col-lg-12">
+                    <h2>Receive</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <h4 class="card-title">Receive Address</h4>
+                                    <p id="receive-address" class="card-text">@localAccountInfo.GetNextReceiveAddress()</p>
+                                    <button class="btn btn-primary" onclick="@CopyNextReceiveAddress">Copy Address</button>
+                                </div>
+                                <div class="col-lg-6">
+                                    <h4 class="card-title">QR Code</h4>
+                                    <!-- Replace the src with your actual QR code -->
+                                    <img src="https://via.placeholder.com/150" class="card-img-top qrcode" alt="QR Code" />
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            }
-        }
+            </div>
+        </div>
+            
+        
         
 
 
@@ -365,7 +359,8 @@
         isLoading = true;
         // Add your balance refreshing logic here.
         
-        await _walletOperations.UpdateAccountInfo();
+        localAccountInfo = await _walletOperations.UpdateAccountInfo();
+        StateHasChanged();
 
         isLoading = false;
 
