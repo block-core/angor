@@ -283,17 +283,17 @@ public class WalletOperations : IWalletOperations
         try
         {
             IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
-            
-            var url = "/stats/fee?" + blocks.Select(_ => $"confirmations={_}");
 
-            Console.WriteLine($"fetching fee estimation for blocks - {blocks}");
+            var url = blocks.Aggregate("/stats/fee?", (current, block) => current + $"confirmations={block}");
+
+            _logger.LogInformation($"fetching fee estimation for blocks - {url}");
 
             var response = await _http.GetAsync(indexer.Url + url);
             
             var feeEstimations = await response.Content.ReadFromJsonAsync<FeeEstimations>();
 
             if (feeEstimations == null || (!feeEstimations.Fees?.Any() ?? true))
-                return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRateet = _ * 100});
+                return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRateet = 1000 / _});
 
             return feeEstimations.Fees;
         }
