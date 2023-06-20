@@ -222,18 +222,18 @@ else
             if (!confirmed)
                 return;
 
-            var (success, message) = await _walletOperations.SendAmountToAddress(sendAmount, fee, sendToAddress);
+            var res = await _walletOperations.SendAmountToAddress(sendAmount, fee, sendToAddress);
 
-            if (!success)
+            if (!res.Success)
             {
-                erroMessage = message;
+                erroMessage = res.Message;
                 StateHasChanged();
                 await Task.Delay(1);
-                throw new Exception(message);
+                throw new Exception(res.Message);
             }
 
             erroMessage = string.Empty;
-            loadingStatus = $"Transaction Sent! - {sendAmount} coins to {sendToAddress} - trxid = {message}";
+            loadingStatus = $"Transaction Sent! - {sendAmount} coins to {sendToAddress} - trxid = {res.Message}";
 
         }
         catch (Exception ex)

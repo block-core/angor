@@ -39,7 +39,7 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
 
-    public async Task<(bool, string)> SendAmountToAddress(decimal sendAmount, long selectedFee, string sendToAddress)
+    public async Task<OperationResult<Transaction>> SendAmountToAddress(decimal sendAmount, long selectedFee, string sendToAddress)
     {
         Network network = _networkConfiguration.GetNetwork();
         AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
@@ -69,7 +69,7 @@ public class WalletOperations : IWalletOperations
         }
 
         if (total < ToSendSats)
-            return (false, "not enough funds");
+            return new OperationResult<Transaction> { Success = false, Message = "not enough funds" };
 
         ExtKey extendedKey;
         try
@@ -121,11 +121,11 @@ public class WalletOperations : IWalletOperations
         var res = await _http.PostAsync(endpoint, new StringContent(hex));
 
         if (res.IsSuccessStatusCode)
-            return (true,signedTransaction.GetHash().ToString());
+            return new OperationResult<Transaction> { Success = true, Data = signedTransaction };
 
         var content = await res.Content.ReadAsStringAsync();
-        
-        return (false, res.ReasonPhrase + content);
+
+        return new OperationResult<Transaction> { Success = false, Message = res.ReasonPhrase + content };
     }
 
     public void BuildAccountInfoForWalletWords()

@@ -7,6 +7,7 @@
 @using Angor.Client.Services
 @using Angor.Client.Storage
 @using System.Globalization
+@using Blockcore.Consensus.TransactionInfo
 
 @inject HttpClient Http
 @inject IClientStorage storage;
@@ -34,11 +35,22 @@
 
             @if (!string.IsNullOrEmpty(errorMessage))
             {
-                <div class="row justify-content-center">
-                    <div class="col-lg-8 col-md-10">
-                        <div class="alert alert-danger fixed-bottom w-70 d-flex justify-content-between align-items-center" role="alert" style="left: 20%; right: 20%">
-                            @errorMessage
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    Error
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" @onclick="ClearErrorMessage"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>@errorMessage</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light" @onclick="ClearErrorMessage">Dismiss</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -278,7 +290,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary"  data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" onclick="@SendCoins">Confirm</button>
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="@SendCoins">Confirm</button>
                         </div>
                     </div>
                 </div>
@@ -400,49 +412,49 @@
         }
     }
 
-    private async Task RefreshBalance()
+    private void ClearErrorMessage()
     {
-        isLoading = true;
-        // Add your balance refreshing logic here.
-        
-        localAccountInfo = await _walletOperations.UpdateAccountInfo();
+        errorMessage = "";
         StateHasChanged();
-
-        isLoading = false;
-
-        // await ShowErrorMessage("Your error message");
     }
 
-    private async Task ShowErrorMessage(string message)
+    private async Task RefreshBalance()
+    {
+        var operationResult = await LongOperation(async () =>
+        {
+            localAccountInfo = await _walletOperations.UpdateAccountInfo();
+
+            return new OperationResult { Success = true };
+        });
+    }
+
+    private void ShowErrorMessage(string message)
     {
         errorMessage = message;
-        StateHasChanged();  // This will cause Blazor to re-render the page
-
-        await Task.Delay(5000);  // Wait for 5 seconds
-
-        errorMessage = null;
-        StateHasChanged();  // This will cause Blazor to re-render the page
+        StateHasChanged();  
     }
    
     private async Task CreateWalletAsync()
     {
         if (string.IsNullOrEmpty(newWalletWords)) throw new ArgumentNullException();
 
-        isLoading = true;
-        StateHasChanged();
+        var operationResult = await LongOperation(async () =>
+        {
+            WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
+            _walletStorage.SaveWalletWords(data);
+            _walletOperations.BuildAccountInfoForWalletWords();
+            await _walletOperations.UpdateAccountInfo();
 
-        WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
-        _walletStorage.SaveWalletWords(data);
-        _walletOperations.BuildAccountInfoForWalletWords();
-        await _walletOperations.UpdateAccountInfo();
-        
-        hasWallet = _walletStorage.HasWallet();
-        ClearWalletWords();
-        Network network = _networkConfiguration.GetNetwork();
-        localAccountInfo = storage.GetAccountInfo(network.Name);
+            return new OperationResult { Success = true };
+        });
 
-        isLoading = false;
-        StateHasChanged();
+        if (operationResult?.Success ?? false)
+        {
+            hasWallet = _walletStorage.HasWallet();
+            ClearWalletWords();
+            Network network = _networkConfiguration.GetNetwork();
+            localAccountInfo = storage.GetAccountInfo(network.Name);
+        }
     }
 
     private void ShowWords()
@@ -497,14 +509,13 @@
 
         if (string.IsNullOrEmpty(address))
         {
-            await ShowErrorMessage("New address was not created");
+            ShowErrorMessage("New address was not created");
             return;
         }
+
         await _clipboardService.WriteTextAsync(address);
     }
     
-    
-
     private async Task RefreshFee()
     {
         // refresh fee if last refresh was 60 seconds ago
@@ -529,32 +540,56 @@
         }
     }
 
-    private async Task SendCoins()
+    private async Task<OperationResult?> LongOperation(Func<Task<OperationResult>> action)
     {
-        isLoading = true;
-        StateHasChanged();
+        OperationResult? res = default(OperationResult);
+        Exception? failure = null;
 
-        var (success, message) = await _walletOperations.SendAmountToAddress(SendAmount,Money.Coins(FeeRate).Satoshi, SendToAddress);
-
-        isLoading = false;
-        StateHasChanged();
-
-        if (!success)
+        try
         {
-            await ShowErrorMessage($"Error: {message}");
-
+            isLoading = true;
+            await Task.Delay(10);
             StateHasChanged();
-            await Task.Delay(1);
-            //throw new Exception(message);
-            return;
+
+            res = await action();
+        }
+        catch (Exception ex)
+        {
+            failure = ex;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
         }
 
-        SendAmount = 0;
-        SendToAddress = string.Empty;
-        sendInfo = new SendInfo();
+        if (failure != null)
+        {
+            Logger.LogError(failure, failure.Message);
+            ShowErrorMessage(failure.Message);
+        }
+        else
+        {
+            if (res is {Success: false })
+            {
+                Logger.LogError(res.Message);
+                ShowErrorMessage($"Error: {res.Message}");
+            }
+        }
 
-        //erroMessage = string.Empty;
-        //loadingStatus = $"Transaction Sent! - {sendAmount} coins to {sendToAddress} - trxid = {message}";
+        return res;
+    }
+
+    private async Task SendCoins()
+    {
+        var operationResult = await LongOperation(async () => await _walletOperations.SendAmountToAddress(SendAmount, Money.Coins(FeeRate).Satoshi, SendToAddress));
+
+        if (operationResult?.Success ?? false)
+        {
+            SendAmount = 0;
+            SendToAddress = string.Empty;
+            sendInfo = new SendInfo();
+        }
     }
 
     private void HandleCheckboxChange(UtxoData addressUtxoItem)
