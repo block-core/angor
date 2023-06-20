@@ -627,7 +627,10 @@
                     var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     FeeBlockCount = estimationsFee.Confirmations;
-                    FeeRate = Money.Satoshis(estimationsFee.FeeRate).ToUnit(MoneyUnit.BTC);
+                    FeeRate = _walletOperations.CalculateTransactionFee(Money.Coins(SendAmount).Satoshi, estimationsFee.FeeRate, SendToAddress)
+                        .ToUnit(MoneyUnit.BTC);
+                    
+                    StateHasChanged();
                 }
             }
         }
