@@ -39,27 +39,23 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
 
-    public async Task<OperationResult<Transaction>> SendAmountToAddress(decimal sendAmount, long selectedFee, string sendToAddress)
+    public async Task<OperationResult<Transaction>> SendAmountToAddress(SendInfo sendInfo)
     {
         Network network = _networkConfiguration.GetNetwork();
         AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
 
-        var ToSendSats = Money.Coins(sendAmount).Satoshi;
-        
-        var (coins, keys) = GetUnspentOutputsForTransaction(ToSendSats, accountInfo);
+        var (coins, keys) = GetUnspentOutputsForTransaction(sendInfo, accountInfo);
         if (coins == null)
         {
             return new OperationResult<Transaction> { Success = false, Message = "not enough funds" };
         }
 
-        var change = accountInfo.ChangeAddressesInfo.First(f => f.Value.HasHistory == false).Key;
-
         var builder = new TransactionBuilder(network)
-            .Send(BitcoinWitPubKeyAddress.Create(sendToAddress, network), Money.Coins(sendAmount))
+            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), Money.Coins(sendInfo.SendAmount))
             .AddCoins(coins)
             .AddKeys(keys.ToArray())
-            .SetChange(BitcoinWitPubKeyAddress.Create(change, network))
-            .SendEstimatedFees(new FeeRate(Money.Satoshis(selectedFee)));
+            .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network))
+            .SendEstimatedFees(new FeeRate(Money.Coins(sendInfo.FeeRate)));
 
         var signedTransaction = builder.BuildTransaction(true);
 
@@ -79,13 +75,13 @@ public class WalletOperations : IWalletOperations
         return new OperationResult<Transaction> { Success = false, Message = res.ReasonPhrase + content };
     }
 
-    private (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(long sendAmount, AccountInfo accountInfo)
+    private void FindOutputsForTransaction(SendInfo sendInfo, AccountInfo accountInfo)
     {
         var utxos = new List<AddressInfo>();
         utxos.AddRange(accountInfo.AddressesInfo.Values);
         utxos.AddRange(accountInfo.ChangeAddressesInfo.Values);
 
-        var utxosToSpend = new List<(string, UtxoData)>();
+        var utxosToSpend = new List<UtxoDataWithPath>();
 
         long total = 0;
         foreach (var utxoData in utxos.SelectMany(_ => _.UtxoData
@@ -93,19 +89,32 @@ public class WalletOperations : IWalletOperations
                      .OrderBy(o => o.utxo.blockIndex)
                      .ThenByDescending(o => o.utxo.value))
         {
-            utxosToSpend.Add((utxoData.path, utxoData.utxo));
+            utxosToSpend.Add(new UtxoDataWithPath { HdPath = utxoData.path, UtxoData = utxoData.utxo });
 
             total += utxoData.utxo.value;
 
-            if (total > sendAmount)
+            if (total > sendInfo.SendAmountSat)
             {
                 break;
             }
         }
 
-        if (total < sendAmount)
+        if (total < sendInfo.SendAmountSat)
         {
-            return (null,null);
+            throw new ApplicationException("Not enough funds");
+        }
+
+        foreach (var data in utxosToSpend)
+        {
+            sendInfo.SendUtxos.Add(data.UtxoData.outpoint.ToString(), data);
+        }
+    }
+
+    private (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(SendInfo sendInfo, AccountInfo accountInfo)
+    {
+        if (sendInfo.SendAmountSat > sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value))
+        {
+            throw new ApplicationException("not enough funds");
         }
 
         ExtKey extendedKey;
@@ -127,13 +136,15 @@ public class WalletOperations : IWalletOperations
         var coins = new List<Coin>();
         var keys = new List<Key>();
 
-        foreach (var (hdPath, utxo) in utxosToSpend)
+        foreach (var item in sendInfo.SendUtxos)
         {
+            var utxo = item.Value.UtxoData;
+
             coins.Add(new Coin(uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
                 Money.Satoshis(utxo.value), Script.FromHex(utxo.scriptHex)));
 
             // derive the private key
-            var extKey = extendedKey.Derive(new KeyPath(hdPath));
+            var extKey = extendedKey.Derive(new KeyPath(item.Value.HdPath));
             Key privateKey = extKey.PrivateKey;
             keys.Add(privateKey);
         }
@@ -317,30 +328,44 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    private static Transaction? tx; //TODO change this when confirmation pop up is added!!!!
-    
-    public Money CalculateTransactionFee(long sendAmount,long feeRate, string sendToAddress)
+    public void CalculateTransactionFee(SendInfo sendInfo, long feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
-        
-        if (tx == null)
+
+        AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
+
+
+        if (sendInfo.SendUtxos.Count == 0)
         {
-            AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
+            var sendSats = Money.Coins(sendInfo.SendAmount).Satoshi;
 
-            var (coins, keys) = GetUnspentOutputsForTransaction(sendAmount, accountInfo);
-            if (coins == null)
+            FindOutputsForTransaction(sendInfo, accountInfo);
+
+            if (sendInfo.SendUtxos.Count == 0) // something went wrong
                 throw new ArgumentNullException();
-            var change = accountInfo.ChangeAddressesInfo.First(f => f.Value.HasHistory == false).Key;
-
-            var builder = new TransactionBuilder(network)
-                .Send(BitcoinWitPubKeyAddress.Create(sendToAddress, network), Money.Satoshis(sendAmount))
-                .AddCoins(coins)
-                .AddKeys(keys.ToArray())
-                .SetChange(BitcoinWitPubKeyAddress.Create(change, network));
-
-            tx = builder.BuildTransaction(false);
         }
 
-        return new TransactionBuilder(network).EstimateFees(tx,new FeeRate(Money.Satoshis(feeRate)));
+        if (string.IsNullOrEmpty(sendInfo.ChangeAddress))
+        {
+            sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.Value.HasHistory == false).Key;
+        }
+
+        var coins = new List<Coin>();
+
+        foreach (var sendUtxosItem in sendInfo.SendUtxos)
+        {
+            var utxo = sendUtxosItem.Value.UtxoData;
+
+            coins.Add(new Coin(uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
+                Money.Satoshis(utxo.value), Script.FromHex(utxo.scriptHex)));
+        }
+
+        var builder = new TransactionBuilder(network)
+            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), sendInfo.SendAmountSat)
+            .AddCoins(coins)
+            // .AddKeys(keys.ToArray())
+            .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network));
+
+        sendInfo.SendFee = builder.EstimateFees(new FeeRate(Money.Satoshis(feeRate))).ToUnit(MoneyUnit.BTC);
     }
 }

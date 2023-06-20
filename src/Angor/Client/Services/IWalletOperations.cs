@@ -7,11 +7,11 @@ namespace Angor.Client.Services;
 public interface IWalletOperations
 {
     string GenerateWalletWords();
-    Task<OperationResult<Transaction>> SendAmountToAddress(decimal sendAmount, long selectedFee, string sendToAddress);
+    Task<OperationResult<Transaction>> SendAmountToAddress(SendInfo sendInfo);
     void BuildAccountInfoForWalletWords();
     Task<AccountInfo> UpdateAccountInfo();
     Task<(bool noHistory, List<UtxoData> data)> FetchUtxoForAddressAsync(string adddress);
     Task<IEnumerable<FeeEstimation>> GetFeeEstimationAsync();
 
-    Money CalculateTransactionFee(long sendAmount,long feeRate, string sendToAddress);
+    void CalculateTransactionFee(SendInfo sendInfo, long feeRate);
 }

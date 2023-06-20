@@ -222,7 +222,7 @@ else
             if (!confirmed)
                 return;
 
-            var res = await _walletOperations.SendAmountToAddress(sendAmount, fee, sendToAddress);
+            var res = await _walletOperations.SendAmountToAddress(null);//sendAmount, fee, sendToAddress);
 
             if (!res.Success)
             {

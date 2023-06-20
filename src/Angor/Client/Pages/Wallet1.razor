@@ -220,12 +220,12 @@
                 <form>
                     <div class="mb-3">
                         <label for="sendToAddress" class="form-label">Send to Address</label>
-                        <input type="text" class="form-control" id="sendToAddress" @bind="SendToAddress" placeholder="Enter address">
+                        <input type="text" class="form-control" id="sendToAddress" @bind="sendInfo.SendToAddress" placeholder="Enter address">
                     </div>
 
                     <div class="mb-3">
                         <label for="sendAmount" class="form-label">Amount</label>
-                        <input type="text" class="form-control" id="sendAmount" @bind="SendAmount" placeholder="Enter amount">
+                        <input type="text" class="form-control" id="sendAmount" @bind="sendInfo.SendAmount" placeholder="Enter amount">
                     </div>
 
                     <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#coinControlModal">Coin Control</button>
@@ -247,7 +247,7 @@
                         <div class="modal-body">
                             <!-- The tick boxes and amounts will go here -->
 
-                            <p>Total amount selected  = @Money.Satoshis(sendInfo.SendUtxos.Sum(s => s.Value.value)).ToUnit(MoneyUnit.BTC) BTC</p>
+                            <p>Total amount selected  = @Money.Satoshis(sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) BTC</p>
 
                             @foreach (var (address, addressInfo) in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
                             {
@@ -256,7 +256,7 @@
                                     bool isTicked = sendInfo.SendUtxos.ContainsKey(addressUtxoItem.outpoint.ToString());
 
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" value="@isTicked" id="@addressUtxoItem" @onclick="() => HandleCheckboxChange(addressUtxoItem)">
+                                        <input class="form-check-input" type="checkbox" value="@isTicked" id="@addressUtxoItem" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
                                         <label class="form-check-label" for="@addressUtxoItem">
                                             @($"{addressUtxoItem.outpoint} - {Money.Satoshis(@addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} BTC")
                                         </label>
@@ -282,12 +282,14 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="() => sendConfirmModal = false"></button>
                             </div>
                             <div class="modal-body">
-                                Are you sure you want to send <strong>@SendAmount BTC</strong> to <strong> @SendToAddress?</strong>
-                                The fee for this transaction will be <strong>@SendFee</strong>
+                                Are you sure you want to send <strong>@sendInfo.SendAmount BTC</strong> to <strong> @sendInfo.SendToAddress?</strong>
+                                The fee for this transaction will be <strong>@sendInfo.SendFee</strong>
+                               
+                                <hr>
 
                                 <div class="mb-3">
-                                    <label for="feeRange" class="form-label">Feerate for @FeeBlockCount blocks is @FeeRate BTC</label>
-                                    <input type="range" class="form-range" id="feeRange" @oninput="FeeRangeChanged" min="@FeeMin" max="@FeeMax">
+                                    <label for="feeRange" class="form-label">Feerate for @sendInfo.FeeBlockCount blocks is @sendInfo.FeeRate BTC</label>
+                                    <input type="range" class="form-range" id="feeRange" @bind="FeePosition" @oninput="FeeRangeChanged" min="@FeeMin" max="@FeeMax">
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -389,16 +391,12 @@
     private AccountInfo localAccountInfo = new();
 
     private int feeRange = 0;
-
+    private int FeePosition = 1;
     private SendInfo sendInfo = new ();
-    public string SendToAddress { get; set; }
-    public decimal SendAmount { get; set; }
-    public decimal SendFee { get; set; }
 
     private FeeEstimations FeeEstimations = new ();
 
-    int FeeBlockCount = 1;
-    decimal FeeRate = 0;
+
 
     // Max index for the range input
     private int FeeMin = 1;
@@ -524,7 +522,7 @@
     {
         // refresh fee if last refresh was 60 seconds ago
 
-        if (LastFeeRefresh.AddSeconds(60) < DateTime.UtcNow)
+        if (sendInfo.FeeRateSat == 0 || LastFeeRefresh.AddSeconds(60) < DateTime.UtcNow)
         {
             var fees = await _walletOperations.GetFeeEstimationAsync();
 
@@ -536,8 +534,8 @@
 
             if (feeItem != null)
             {
-                FeeBlockCount = feeItem.Confirmations;
-                FeeRate = Money.Satoshis(feeItem.FeeRate).ToUnit(MoneyUnit.BTC);
+                sendInfo.FeeBlockCount = feeItem.Confirmations;
+                sendInfo.FeeRateSat = feeItem.FeeRate;
             }
 
             LastFeeRefresh = DateTime.UtcNow;
@@ -599,9 +597,13 @@
 
             // by default select the highest fee
             var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[0];
-            FeeBlockCount = estimationsFee.Confirmations;
-            FeeRate = estimationsFee.FeeRate;
-            SendFee = _walletOperations.CalculateTransactionFee(Money.Coins(SendAmount).Satoshi, estimationsFee.FeeRate, SendToAddress).ToUnit(MoneyUnit.BTC);
+
+            FeePosition = 1;
+
+            sendInfo.FeeBlockCount = estimationsFee.Confirmations;
+            sendInfo.FeeRateSat = estimationsFee.FeeRate;
+
+            _walletOperations.CalculateTransactionFee(sendInfo, estimationsFee.FeeRate);
 
             return new OperationResult { Success = true };
         });
@@ -615,17 +617,21 @@
 
     private async Task SendCoins()
     {
-        var operationResult = await LongOperation(async () => await _walletOperations.SendAmountToAddress(SendAmount, Money.Coins(FeeRate).Satoshi, SendToAddress));
+        var operationResult = await LongOperation(async () =>
+        {
+            sendConfirmModal = false;
+            //StateHasChanged();
+
+            return await _walletOperations.SendAmountToAddress(sendInfo);
+        });
 
         if (operationResult is { Success: true })
         {
-            SendAmount = 0;
-            SendToAddress = string.Empty;
             sendInfo = new SendInfo();
         }
     }
 
-    private void HandleCheckboxChange(UtxoData addressUtxoItem)
+    private void HandleCheckboxChange(UtxoData addressUtxoItem, string hdPath)
     {
         // Here you can handle the change
         // Note: replace AddressUtxoItem with the actual type of addressUtxoItem
@@ -636,12 +642,8 @@
         }
         else
         {
-            sendInfo.SendUtxos.Add(addressUtxoItem.outpoint.ToString(), addressUtxoItem);
+            sendInfo.SendUtxos.Add(addressUtxoItem.outpoint.ToString(), new UtxoDataWithPath { HdPath = hdPath, UtxoData = addressUtxoItem });
         }
-
-        //var sum = sendInfo.SendUtxos.Sum(s => s.Value.value);
-        //sendInfo.SendAmount = Money.Satoshis(sendInfo.SendUtxos.Sum(s => s.Value.value)).ToUnit(MoneyUnit.BTC);
-
     }
 
     private void FeeRangeChanged(ChangeEventArgs e)
@@ -658,10 +660,10 @@
                 if (res <= FeeEstimations.Fees.Count)
                 {
                     var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-                    FeeBlockCount = estimationsFee.Confirmations;
-                    FeeRate = estimationsFee.FeeRate;
-                    SendFee = _walletOperations.CalculateTransactionFee(Money.Coins(SendAmount).Satoshi, estimationsFee.FeeRate, SendToAddress).ToUnit(MoneyUnit.BTC);
+                   
+                    sendInfo.FeeBlockCount = estimationsFee.Confirmations;
+                    sendInfo.FeeRateSat = estimationsFee.FeeRate;
+                    _walletOperations.CalculateTransactionFee(sendInfo, estimationsFee.FeeRate);
                     
                     StateHasChanged();
                 }

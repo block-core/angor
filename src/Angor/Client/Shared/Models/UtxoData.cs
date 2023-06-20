@@ -10,3 +10,9 @@ public class UtxoData
     public bool coinBase { get; set; }
     public bool coinStake { get; set; }
 }
+
+public class UtxoDataWithPath
+{
+    public UtxoData UtxoData { get; set; }
+    public string HdPath { get; set; }
+}
