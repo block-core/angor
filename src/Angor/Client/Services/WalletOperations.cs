@@ -44,21 +44,56 @@ public class WalletOperations : IWalletOperations
         Network network = _networkConfiguration.GetNetwork();
         AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
 
+        var (coins, keys) = GetUnspentOutputsForTransaction(sendAmount, accountInfo);
+        if (coins == null)
+        {
+            return new OperationResult<Transaction> { Success = false, Message = "not enough funds" };
+        }
+
+        var change = accountInfo.ChangeAddressesInfo.First(f => f.Value.HasHistory == false).Key;
+
+        var builder = new TransactionBuilder(network)
+            .Send(BitcoinWitPubKeyAddress.Create(sendToAddress, network), Money.Coins(sendAmount))
+            .AddCoins(coins)
+            .AddKeys(keys.ToArray())
+            .SetChange(BitcoinWitPubKeyAddress.Create(change, network))
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(selectedFee)));
+
+        var signedTransaction = builder.BuildTransaction(true);
+
+        var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
+
+        var indexer = _networkConfiguration.getIndexerUrl();
+        
+        var endpoint = Path.Combine(indexer.Url, "command/send");
+
+        var res = await _http.PostAsync(endpoint, new StringContent(hex));
+
+        if (res.IsSuccessStatusCode)
+            return new OperationResult<Transaction> { Success = true, Data = signedTransaction };
+
+        var content = await res.Content.ReadAsStringAsync();
+
+        return new OperationResult<Transaction> { Success = false, Message = res.ReasonPhrase + content };
+    }
+
+    private (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(decimal sendAmount, AccountInfo accountInfo)
+    {
         var utxos = new List<AddressInfo>();
         utxos.AddRange(accountInfo.AddressesInfo.Values);
         utxos.AddRange(accountInfo.ChangeAddressesInfo.Values);
 
-        var utxosToSpend = new List<(string,UtxoData)>();
+        var utxosToSpend = new List<(string, UtxoData)>();
 
         long ToSendSats = Money.Coins(sendAmount).Satoshi;
 
         long total = 0;
         foreach (var utxoData in utxos.SelectMany(_ => _.UtxoData
-                         .Select(u =>  new{path = _.HdPath, utxo = u }))
+                         .Select(u => new { path = _.HdPath, utxo = u }))
                      .OrderBy(o => o.utxo.blockIndex)
                      .ThenByDescending(o => o.utxo.value))
         {
-            utxosToSpend.Add((utxoData.path,utxoData.utxo));
+            utxosToSpend.Add((utxoData.path, utxoData.utxo));
 
             total += utxoData.utxo.value;
 
@@ -69,7 +104,9 @@ public class WalletOperations : IWalletOperations
         }
 
         if (total < ToSendSats)
-            return new OperationResult<Transaction> { Success = false, Message = "not enough funds" };
+        {
+            return (null,null);
+        }
 
         ExtKey extendedKey;
         try
@@ -101,31 +138,7 @@ public class WalletOperations : IWalletOperations
             keys.Add(privateKey);
         }
 
-        var change = accountInfo.ChangeAddressesInfo.First(f => f.Value.HasHistory == false).Key;
-
-        var builder = new TransactionBuilder(network)
-            .Send(BitcoinWitPubKeyAddress.Create(sendToAddress, network), Money.Coins(sendAmount))
-            .AddCoins(coins)
-            .AddKeys(keys.ToArray())
-            .SetChange(BitcoinWitPubKeyAddress.Create(change, network))
-            .SendEstimatedFees(new FeeRate(Money.Satoshis(selectedFee)));
-
-        var signedTransaction = builder.BuildTransaction(true);
-
-        var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
-
-        var indexer = _networkConfiguration.getIndexerUrl();
-        
-        var endpoint = Path.Combine(indexer.Url, "command/send");
-
-        var res = await _http.PostAsync(endpoint, new StringContent(hex));
-
-        if (res.IsSuccessStatusCode)
-            return new OperationResult<Transaction> { Success = true, Data = signedTransaction };
-
-        var content = await res.Content.ReadAsStringAsync();
-
-        return new OperationResult<Transaction> { Success = false, Message = res.ReasonPhrase + content };
+        return (coins,keys);
     }
 
     public void BuildAccountInfoForWalletWords()
@@ -293,7 +306,7 @@ public class WalletOperations : IWalletOperations
             var feeEstimations = await response.Content.ReadFromJsonAsync<FeeEstimations>();
 
             if (feeEstimations == null || (!feeEstimations.Fees?.Any() ?? true))
-                return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRateet = 1000 / _});
+                return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRate = 1000 / _});
 
             return feeEstimations.Fees;
         }
@@ -302,5 +315,23 @@ public class WalletOperations : IWalletOperations
             Console.WriteLine(e);
             throw;
         }
+    }
+
+    public Money CalculateTransactionFee(long sendAmount,long feeRate, string sendToAddress)
+    {
+        Network network = _networkConfiguration.GetNetwork();
+        AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
+
+        var (coins, keys) = GetUnspentOutputsForTransaction(sendAmount, accountInfo);
+        var change = accountInfo.ChangeAddressesInfo.First(f => f.Value.HasHistory == false).Key;
+        
+        var builder = new TransactionBuilder(network)
+            .Send(BitcoinWitPubKeyAddress.Create(sendToAddress, network), Money.Coins(sendAmount))
+            .AddCoins(coins)
+            .AddKeys(keys.ToArray())
+            .SetChange(BitcoinWitPubKeyAddress.Create(change, network))
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)));
+
+        return builder.EstimateFees(new FeeRate(Money.Satoshis(feeRate)));
     }
 }

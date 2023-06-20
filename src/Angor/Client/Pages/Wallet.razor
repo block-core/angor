@@ -215,7 +215,7 @@ else
 
             var fees = await _walletOperations.GetFeeEstimationAsync();
 
-            var fee = fees.First().FeeRateet;
+            var fee = fees.First().FeeRate;
             
             bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"The fee is {fee}, continue?");
 

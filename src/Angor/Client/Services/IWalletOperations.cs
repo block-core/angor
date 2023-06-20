@@ -1,5 +1,5 @@
 using Angor.Client.Shared.Models;
-using Blockcore.Consensus.TransactionInfo;
+using Blockcore.NBitcoin;
 
 namespace Angor.Client.Services;
 
@@ -11,4 +11,6 @@ public interface IWalletOperations
     Task<AccountInfo> UpdateAccountInfo();
     Task<(bool noHistory, List<UtxoData> data)> FetchUtxoForAddressAsync(string adddress);
     Task<IEnumerable<FeeEstimation>> GetFeeEstimationAsync();
+
+    Money CalculateTransactionFee(long sendAmount,long feeRate, string sendToAddress);
 }

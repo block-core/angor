@@ -533,7 +533,7 @@
             if (feeItem != null)
             {
                 FeeBlockCount = feeItem.Confirmations;
-                FeeRate = Money.Satoshis(feeItem.FeeRateet).ToUnit(MoneyUnit.BTC);
+                FeeRate = Money.Satoshis(feeItem.FeeRate).ToUnit(MoneyUnit.BTC);
             }
 
             LastFeeRefresh = DateTime.UtcNow;
@@ -627,7 +627,7 @@
                     var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     FeeBlockCount = estimationsFee.Confirmations;
-                    FeeRate = Money.Satoshis(estimationsFee.FeeRateet).ToUnit(MoneyUnit.BTC);
+                    FeeRate = Money.Satoshis(estimationsFee.FeeRate).ToUnit(MoneyUnit.BTC);
                 }
             }
         }
