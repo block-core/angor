@@ -220,23 +220,18 @@
                 <form>
                     <div class="mb-3">
                         <label for="sendToAddress" class="form-label">Send to Address</label>
-                        <input type="text" class="form-control" id="sendToAddress" @bind="SendToAddress" onclick="@RefreshFee" placeholder="Enter address">
+                        <input type="text" class="form-control" id="sendToAddress" @bind="SendToAddress" placeholder="Enter address">
                     </div>
 
                     <div class="mb-3">
                         <label for="sendAmount" class="form-label">Amount</label>
-                        <input type="text" class="form-control" id="sendAmount" @bind="SendAmount" onclick="@RefreshFee" placeholder="Enter amount">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="feeRange" class="form-label">Feerate for @FeeBlockCount blocks is @FeeRate BTC</label>
-                        <input type="range" class="form-range" id="feeRange" @bind="FeePosition" @oninput="FeeRangeChanged" min="@FeeMin" max="@FeeMax">
+                        <input type="text" class="form-control" id="sendAmount" @bind="SendAmount" placeholder="Enter amount">
                     </div>
 
                     <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#coinControlModal">Coin Control</button>
                     
                     <!-- New Send button that triggers a confirmation dialog -->
-                    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#sendConfirmModal">Send</button>
+                    <button type="button" class="btn btn-primary mb-3" onclick="@BuildSend">Send</button>
 
                 </form>
             </div>
@@ -276,25 +271,33 @@
                 </div>
             </div>
             
-            <!-- Send Confirmation Modal -->
-            <div class="modal fade" id="sendConfirmModal" tabindex="-1" aria-labelledby="sendConfirmModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="sendConfirmModalLabel">Confirmation</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            Are you sure you want to send <strong>@SendAmount BTC</strong> to <strong> @SendToAddress?</strong>
-                            The fee for this transaction will be <strong>@FeeRate</strong>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary"  data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="@SendCoins">Confirm</button>
+            @if (sendConfirmModal)
+            {
+                <!-- Send Confirmation Modal -->
+                <div class="modal fade show d-block" id="sendConfirmModal" tabindex="-1" aria-labelledby="sendConfirmModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="sendConfirmModalLabel">Confirmation</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="() => sendConfirmModal = false"></button>
+                            </div>
+                            <div class="modal-body">
+                                Are you sure you want to send <strong>@SendAmount BTC</strong> to <strong> @SendToAddress?</strong>
+                                The fee for this transaction will be <strong>@SendFee</strong>
+
+                                <div class="mb-3">
+                                    <label for="feeRange" class="form-label">Feerate for @FeeBlockCount blocks is @FeeRate BTC</label>
+                                    <input type="range" class="form-range" id="feeRange" @oninput="FeeRangeChanged" min="@FeeMin" max="@FeeMax">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => sendConfirmModal = false">Cancel</button>
+                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="@SendCoins">Confirm</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
 
        
@@ -379,6 +382,7 @@
     private string? newWalletWordsPassphrase;
    
     private bool isLoading;
+    private bool sendConfirmModal;
     string loadingStatus = string.Empty;
     string errorMessage = string.Empty;
 
@@ -389,7 +393,7 @@
     private SendInfo sendInfo = new ();
     public string SendToAddress { get; set; }
     public decimal SendAmount { get; set; }
-    public decimal FeePosition { get; set; }
+    public decimal SendFee { get; set; }
 
     private FeeEstimations FeeEstimations = new ();
 
@@ -580,11 +584,40 @@
         return res;
     }
 
+    private async Task BuildSend()
+    {
+        var operationResult = await LongOperation(async () =>
+        {
+            localAccountInfo = await _walletOperations.UpdateAccountInfo();
+
+            await RefreshFee();
+
+            if (FeeEstimations.Fees.Count == 0)
+            {
+                return new OperationResult { Success = false, Message = "Unable top calculate fee" };
+            }
+
+            // by default select the highest fee
+            var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[0];
+            FeeBlockCount = estimationsFee.Confirmations;
+            FeeRate = estimationsFee.FeeRate;
+            SendFee = _walletOperations.CalculateTransactionFee(Money.Coins(SendAmount).Satoshi, estimationsFee.FeeRate, SendToAddress).ToUnit(MoneyUnit.BTC);
+
+            return new OperationResult { Success = true };
+        });
+
+        if (operationResult is {Success:true})
+        {
+            sendConfirmModal = true;
+        }
+
+    }
+
     private async Task SendCoins()
     {
         var operationResult = await LongOperation(async () => await _walletOperations.SendAmountToAddress(SendAmount, Money.Coins(FeeRate).Satoshi, SendToAddress));
 
-        if (operationResult?.Success ?? false)
+        if (operationResult is { Success: true })
         {
             SendAmount = 0;
             SendToAddress = string.Empty;
@@ -627,8 +660,8 @@
                     var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     FeeBlockCount = estimationsFee.Confirmations;
-                    FeeRate = _walletOperations.CalculateTransactionFee(Money.Coins(SendAmount).Satoshi, estimationsFee.FeeRate, SendToAddress)
-                        .ToUnit(MoneyUnit.BTC);
+                    FeeRate = estimationsFee.FeeRate;
+                    SendFee = _walletOperations.CalculateTransactionFee(Money.Coins(SendAmount).Satoshi, estimationsFee.FeeRate, SendToAddress).ToUnit(MoneyUnit.BTC);
                     
                     StateHasChanged();
                 }
