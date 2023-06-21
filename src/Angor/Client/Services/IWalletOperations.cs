@@ -12,6 +12,6 @@ public interface IWalletOperations
     Task<AccountInfo> UpdateAccountInfo();
     Task<(bool noHistory, List<UtxoData> data)> FetchUtxoForAddressAsync(string adddress);
     Task<IEnumerable<FeeEstimation>> GetFeeEstimationAsync();
-
     void CalculateTransactionFee(SendInfo sendInfo, long feeRate);
+    void DeleteWallet();
 }

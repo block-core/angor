@@ -494,7 +494,7 @@
 
     private void DeleteWallet()
     {
-        _walletStorage.DeleteWallet();
+        _walletOperations.DeleteWallet();
         hasWallet = _walletStorage.HasWallet();
         ClearWalletWords();
         StateHasChanged();

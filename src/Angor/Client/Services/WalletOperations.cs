@@ -39,6 +39,13 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
 
+    public void DeleteWallet()
+    {
+        Network network = _networkConfiguration.GetNetwork();
+        _storage.DeleteAccountInfo(network.Name);
+        _walletStorage.DeleteWallet();
+    }
+
     public async Task<OperationResult<Transaction>> SendAmountToAddress(SendInfo sendInfo)
     {
         Network network = _networkConfiguration.GetNetwork();
