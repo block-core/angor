@@ -32,6 +32,18 @@
                     <div class="loader"></div>
                 </div>
             }
+            
+            @if (!string.IsNullOrEmpty(notificationMessage))
+            {
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 col-md-10">
+                        <div class="alert alert-info fixed-bottom w-70 d-flex justify-content-between align-items-center" role="alert" style="left: 20%; right: 20%">
+                            @notificationMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    </div>
+                </div>
+            }
 
             @if (!string.IsNullOrEmpty(errorMessage))
             {
@@ -283,6 +295,9 @@
                             </div>
                             <div class="modal-body">
                                 Are you sure you want to send <strong>@sendInfo.SendAmount BTC</strong> to <strong> @sendInfo.SendToAddress?</strong>
+                                
+                                <br/>
+
                                 The fee for this transaction will be <strong>@sendInfo.SendFee</strong>
                                
                                 <hr>
@@ -291,6 +306,21 @@
                                     <label for="feeRange" class="form-label">Feerate for @sendInfo.FeeBlockCount blocks is @sendInfo.FeeRate BTC</label>
                                     <input type="range" class="form-range" id="feeRange" @bind="FeePosition" @oninput="FeeRangeChanged" min="@FeeMin" max="@FeeMax">
                                 </div>
+                                
+                                <hr>
+                                
+                                The change address is <strong>@sendInfo.ChangeAddress</strong>
+                                
+                                <br/>
+
+                                The selected inputs:
+                                
+                                @foreach (var infoSendUtxo in sendInfo.SendUtxos)
+                                {
+                                    <br />
+                                    <p>@Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) BTC - @infoSendUtxo.Key</p>
+                                }
+
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => sendConfirmModal = false">Cancel</button>
@@ -387,6 +417,7 @@
     private bool sendConfirmModal;
     string loadingStatus = string.Empty;
     string errorMessage = string.Empty;
+    string notificationMessage = string.Empty;
 
     private AccountInfo localAccountInfo = new();
 
@@ -418,6 +449,21 @@
     {
         errorMessage = "";
         StateHasChanged();
+    }
+
+    private void ShowNotificationMessage(string message)
+    {
+        Task.Run(async () =>
+        {
+            notificationMessage = message;
+            StateHasChanged(); // This will cause Blazor to re-render the page
+
+            await Task.Delay(5000); // Wait for 5 seconds
+
+            notificationMessage = null;
+            StateHasChanged(); // This will cause Blazor to re-render the page
+
+        });
     }
 
     private async Task RefreshBalance()
@@ -620,7 +666,6 @@
         var operationResult = await LongOperation(async () =>
         {
             sendConfirmModal = false;
-            //StateHasChanged();
 
             return await _walletOperations.SendAmountToAddress(sendInfo);
         });
@@ -628,6 +673,8 @@
         if (operationResult is { Success: true })
         {
             sendInfo = new SendInfo();
+            
+            ShowNotificationMessage("Sent complete!");
         }
     }
 
