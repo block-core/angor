@@ -470,7 +470,9 @@
     {
         var operationResult = await LongOperation(async () =>
         {
-            localAccountInfo = await _walletOperations.UpdateAccountInfo();
+            await _walletOperations.FetchDataForExistingAddressesAsync();
+            
+            localAccountInfo = await _walletOperations.FetchDataForNewAddressesAsync();
 
             return new OperationResult { Success = true };
         });
@@ -491,7 +493,7 @@
             WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
             _walletStorage.SaveWalletWords(data);
             _walletOperations.BuildAccountInfoForWalletWords();
-            await _walletOperations.UpdateAccountInfo();
+            await _walletOperations.FetchDataForNewAddressesAsync();
 
             return new OperationResult { Success = true };
         });
@@ -632,7 +634,7 @@
     {
         var operationResult = await LongOperation(async () =>
         {
-            localAccountInfo = await _walletOperations.UpdateAccountInfo();
+            localAccountInfo = await _walletOperations.FetchDataForNewAddressesAsync();
 
             await RefreshFee();
 
