@@ -205,7 +205,69 @@ public class WalletOperations : IWalletOperations
         _storage.SetAccountInfo(network.Name, accountInfo);
     }
 
-    public async Task<AccountInfo> UpdateAccountInfo()
+    public async Task<AccountInfo> FetchDataForExistingAddressesAsync()
+    {
+        ExtKey.UseBCForHMACSHA512 = true;
+        Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
+        Network network = _networkConfiguration.GetNetwork();
+
+        AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
+        
+        foreach (var (address, addressInfo) in accountInfo.AddressesInfo)
+        {
+            if (!addressInfo.UtxoData.Any()) continue;
+            
+            var result = await FetchUtxoForAddressAsync(address);
+
+            if (result.data.Count == addressInfo.UtxoData.Count)
+            {
+                for (var i = 0; i < result.data.Count - 1; i++)
+                {
+                    if (result.data[i].outpoint.transactionId == addressInfo.UtxoData[i].outpoint.transactionId) 
+                        continue;
+                    addressInfo.UtxoData.Clear();
+                    addressInfo.UtxoData.AddRange(result.data);
+                    break;
+                }
+            }
+            else
+            {
+                addressInfo.UtxoData.Clear();
+                addressInfo.UtxoData.AddRange(result.data);
+            }
+        }
+
+        foreach (var (changeAddress, addressInfo) in accountInfo.ChangeAddressesInfo)
+        {
+            if (!addressInfo.HasHistory) continue;
+            
+            var result = await FetchUtxoForAddressAsync(changeAddress);
+
+            if (result.data.Count == addressInfo.UtxoData.Count)
+            {
+                for (var i = 0; i < result.data.Count - 1; i++)
+                {
+                    if (result.data[i].outpoint.transactionId == addressInfo.UtxoData[i].outpoint.transactionId) 
+                        continue;
+                    addressInfo.UtxoData.Clear();
+                    addressInfo.UtxoData.AddRange(result.data);
+                    break;
+                }
+            }
+            else
+            {
+                addressInfo.UtxoData.Clear();
+                addressInfo.UtxoData.AddRange(result.data);
+            }
+        }
+
+        _storage.SetAccountInfo(network.Name, accountInfo);
+        
+        return accountInfo;
+    }
+
+    public async Task<AccountInfo> FetchDataForNewAddressesAsync()
     {
         ExtKey.UseBCForHMACSHA512 = true;
         Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;

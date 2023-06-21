@@ -286,7 +286,7 @@ else
             StateHasChanged();
             await Task.Delay(1);
 
-            localAccountInfo = await _walletOperations.UpdateAccountInfo();
+            localAccountInfo = await _walletOperations.FetchDataForNewAddressesAsync();
             
             erroMessage = String.Empty;
             loadingStatus = string.Empty;
