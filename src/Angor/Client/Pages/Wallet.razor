@@ -261,7 +261,7 @@
 
                             <p>Total amount selected  = @Money.Satoshis(sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) BTC</p>
 
-                            @foreach (var (address, addressInfo) in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
+                            @foreach (var addressInfo in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
                             {
                                 @foreach (var addressUtxoItem in addressInfo.UtxoData)
                                 {
@@ -351,22 +351,22 @@
                     </thead>
                     <tbody>
                     
-                        @foreach (var (address, addressInfo) in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
+                        @foreach (var addressInfo in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
                         {
                             var total = addressInfo.Balance;
                             var count = addressInfo.UtxoData.Count();
 
                             if (total > 0)
                             {
-                                <tr data-bs-toggle="collapse" class="clickable-row" data-bs-target="#@address" aria-expanded="false" aria-controls="collapseExample1">
-                                    <td>@address</td>
+                                <tr data-bs-toggle="collapse" class="clickable-row" data-bs-target="#@addressInfo.Address" aria-expanded="false" aria-controls="collapseExample1">
+                                    <td>@addressInfo.Address</td>
                                     <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) BTC</td>
                                     <td>@addressInfo.HdPath</td>
                                     <td>@count</td>
                                 </tr>
                                 <tr>
                                     <td colspan="3">
-                                            <div class="collapse" id="@address">
+                                            <div class="collapse" id="@addressInfo.Address">
                                             <div class="card card-body">
                                                 <!-- Inner table goes here -->
                                                 <table class="table table-sm">

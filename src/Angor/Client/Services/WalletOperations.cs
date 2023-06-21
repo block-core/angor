@@ -84,9 +84,7 @@ public class WalletOperations : IWalletOperations
 
     private void FindOutputsForTransaction(SendInfo sendInfo, AccountInfo accountInfo)
     {
-        var utxos = new List<AddressInfo>();
-        utxos.AddRange(accountInfo.AddressesInfo.Values);
-        utxos.AddRange(accountInfo.ChangeAddressesInfo.Values);
+        var utxos = accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo);
 
         var utxosToSpend = new List<UtxoDataWithPath>();
 
@@ -214,11 +212,11 @@ public class WalletOperations : IWalletOperations
 
         AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
         
-        foreach (var (address, addressInfo) in accountInfo.AddressesInfo)
+        foreach (var addressInfo in accountInfo.AddressesInfo)
         {
             if (!addressInfo.UtxoData.Any()) continue;
             
-            var result = await FetchUtxoForAddressAsync(address);
+            var result = await FetchUtxoForAddressAsync(addressInfo.Address);
 
             if (result.data.Count == addressInfo.UtxoData.Count)
             {
@@ -238,27 +236,27 @@ public class WalletOperations : IWalletOperations
             }
         }
 
-        foreach (var (changeAddress, addressInfo) in accountInfo.ChangeAddressesInfo)
+        foreach (var changeAddressInfo in accountInfo.ChangeAddressesInfo)
         {
-            if (!addressInfo.HasHistory) continue;
+            if (!changeAddressInfo.HasHistory) continue;
             
-            var result = await FetchUtxoForAddressAsync(changeAddress);
+            var result = await FetchUtxoForAddressAsync(changeAddressInfo.Address);
 
-            if (result.data.Count == addressInfo.UtxoData.Count)
+            if (result.data.Count == changeAddressInfo.UtxoData.Count)
             {
                 for (var i = 0; i < result.data.Count - 1; i++)
                 {
-                    if (result.data[i].outpoint.transactionId == addressInfo.UtxoData[i].outpoint.transactionId) 
+                    if (result.data[i].outpoint.transactionId == changeAddressInfo.UtxoData[i].outpoint.transactionId) 
                         continue;
-                    addressInfo.UtxoData.Clear();
-                    addressInfo.UtxoData.AddRange(result.data);
+                    changeAddressInfo.UtxoData.Clear();
+                    changeAddressInfo.UtxoData.AddRange(result.data);
                     break;
                 }
             }
             else
             {
-                addressInfo.UtxoData.Clear();
-                addressInfo.UtxoData.AddRange(result.data);
+                changeAddressInfo.UtxoData.Clear();
+                changeAddressInfo.UtxoData.AddRange(result.data);
             }
         }
 
@@ -279,20 +277,26 @@ public class WalletOperations : IWalletOperations
         var (index, items) = await FetcAddressesDataForPubKeyAsync(accountInfo.LastFetchIndex, accountInfo.ExtPubKey, network, false);
 
         accountInfo.LastFetchIndex = index;
-        foreach (var (address, addressInfo) in items)
+        foreach (var addressInfo in items)
         {
-            accountInfo.AddressesInfo.Remove(address);
-            accountInfo.AddressesInfo.Add(address, addressInfo);
+            var addressInfoToDelete = accountInfo.AddressesInfo.SingleOrDefault(_ => _.Address == addressInfo.Address);
+            if (addressInfoToDelete != null)
+                accountInfo.AddressesInfo.Remove(addressInfoToDelete);
+            
+            accountInfo.AddressesInfo.Add(addressInfo);
             accountInfo.TotalBalance += addressInfo.Balance;
         }
-        
+
         var (changeIndex, changeItems) = await FetcAddressesDataForPubKeyAsync(accountInfo.LastFetchChangeIndex, accountInfo.ExtPubKey, network, true);
 
         accountInfo.LastFetchChangeIndex = changeIndex;
-        foreach (var (address, changeAddressInfo) in changeItems)
+        foreach (var changeAddressInfo in changeItems)
         {
-            accountInfo.ChangeAddressesInfo.Remove(address);
-            accountInfo.ChangeAddressesInfo.Add(address, changeAddressInfo);
+            var addressInfoToDelete = accountInfo.ChangeAddressesInfo.SingleOrDefault(_ => _.Address == changeAddressInfo.Address);
+            if (addressInfoToDelete != null) 
+                accountInfo.ChangeAddressesInfo.Remove(addressInfoToDelete);
+            
+            accountInfo.ChangeAddressesInfo.Add(changeAddressInfo);
             accountInfo.TotalBalance += changeAddressInfo.Balance;
         }
 
@@ -301,11 +305,11 @@ public class WalletOperations : IWalletOperations
         return accountInfo;
     }
 
-    private async Task<(int,Dictionary<string,AddressInfo>)> FetcAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
+    private async Task<(int,List<AddressInfo>)> FetcAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
     {
         ExtPubKey accountExtPubKey = ExtPubKey.Parse(ExtendedPubKey, network);
         
-        var addressesInfo = new Dictionary<string,AddressInfo>();
+        var addressesInfo = new List<AddressInfo>();
         var accountIndex = 0; // for now only account 0
         var purpose = 84; // for now only legacy
         
@@ -318,8 +322,8 @@ public class WalletOperations : IWalletOperations
             var address = pubkey.GetSegwitAddress(network).ToString();
             var result = await FetchUtxoForAddressAsync(address);
 
-            addressesInfo.Add(address,
-                new AddressInfo { HdPath = path, UtxoData = result.data, HasHistory = !result.noHistory });
+            addressesInfo.Add(new AddressInfo
+                { Address = address, HdPath = path, UtxoData = result.data, HasHistory = !result.noHistory });
             scanIndex++;
 
             if (!result.noHistory) continue;
@@ -413,7 +417,7 @@ public class WalletOperations : IWalletOperations
 
         if (string.IsNullOrEmpty(sendInfo.ChangeAddress))
         {
-            sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.Value.HasHistory == false).Key;
+            sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.HasHistory == false).Address;
         }
 
         var coins = sendInfo.SendUtxos

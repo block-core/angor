@@ -8,15 +8,15 @@ public class AccountInfo
     public int LastFetchChangeIndex { get; set; }
     public long TotalBalance { get; set; }
     public long TotalUnConfirmedBalance { get; set; }
-    public Dictionary<string, AddressInfo> AddressesInfo { get; set; } = new();
-    public Dictionary<string, AddressInfo> ChangeAddressesInfo { get; set; } = new();
+    public List<AddressInfo> AddressesInfo { get; set; } = new();
+    public List<AddressInfo> ChangeAddressesInfo { get; set; } = new();
 
     public string? GetNextReceiveAddress()
     {
         string? lastAddress = null;
-        foreach (var (address, addressInfo) in AddressesInfo)
+        foreach (var addressInfo in AddressesInfo)
         {
-            lastAddress = address;
+            lastAddress = addressInfo.Address;
 
             if (!addressInfo.HasHistory)
             {
