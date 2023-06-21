@@ -317,7 +317,7 @@ public class WalletOperations : IWalletOperations
             var feeEstimations = await response.Content.ReadFromJsonAsync<FeeEstimations>();
 
             if (feeEstimations == null || (!feeEstimations.Fees?.Any() ?? true))
-                return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRate = 1000 / _});
+                return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRate = 10000 / _});
 
             return feeEstimations.Fees;
         }
@@ -330,15 +330,12 @@ public class WalletOperations : IWalletOperations
 
     public void CalculateTransactionFee(SendInfo sendInfo, long feeRate)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        var network = _networkConfiguration.GetNetwork();
 
-        AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
-
-
+        var accountInfo = _storage.GetAccountInfo(network.Name);
+        
         if (sendInfo.SendUtxos.Count == 0)
         {
-            var sendSats = Money.Coins(sendInfo.SendAmount).Satoshi;
-
             FindOutputsForTransaction(sendInfo, accountInfo);
 
             if (sendInfo.SendUtxos.Count == 0) // something went wrong
@@ -350,20 +347,14 @@ public class WalletOperations : IWalletOperations
             sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.Value.HasHistory == false).Key;
         }
 
-        var coins = new List<Coin>();
-
-        foreach (var sendUtxosItem in sendInfo.SendUtxos)
-        {
-            var utxo = sendUtxosItem.Value.UtxoData;
-
-            coins.Add(new Coin(uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
-                Money.Satoshis(utxo.value), Script.FromHex(utxo.scriptHex)));
-        }
+        var coins = sendInfo.SendUtxos
+            .Select(_ => _.Value.UtxoData)
+            .Select(_ => new Coin(uint256.Parse(_.outpoint.transactionId), (uint)_.outpoint.outputIndex,
+                Money.Satoshis(_.value), Script.FromHex(_.scriptHex)));
 
         var builder = new TransactionBuilder(network)
             .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), sendInfo.SendAmountSat)
             .AddCoins(coins)
-            // .AddKeys(keys.ToArray())
             .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network));
 
         sendInfo.SendFee = builder.EstimateFees(new FeeRate(Money.Satoshis(feeRate))).ToUnit(MoneyUnit.BTC);
