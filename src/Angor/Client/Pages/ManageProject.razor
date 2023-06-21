@@ -1,0 +1,43 @@
+﻿@page "/project-management/{id}"
+
+<h2 class="mb-3">Project Management</h2>
+
+<form>
+    <div class="mb-3">
+        <label for="projectName" class="form-label">Project Name</label>
+        <input type="text" class="form-control" id="projectName" placeholder="Enter project name">
+    </div>
+
+    <div class="mb-3">
+        <label for="projectDescription" class="form-label">Project Description</label>
+        <textarea class="form-control" id="projectDescription" placeholder="Enter project description"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label for="startDate" class="form-label">Start Date</label>
+        <input type="date" class="form-control" id="startDate">
+    </div>
+
+    <div class="mb-3">
+        <label for="endDate" class="form-label">End Date</label>
+        <input type="date" class="form-control" id="endDate">
+    </div>
+
+    <div class="mb-3">
+        <label for="projectStatus" class="form-label">Project Status</label>
+        <select class="form-select" id="projectStatus">
+            <option selected>Select status</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="completed">Completed</option>
+            <option value="upcoming">Upcoming</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary mb-3">Save Changes</button>
+</form>
+
+@code
+{
+    [Parameter]
+    public string Id { get; set; }
+}

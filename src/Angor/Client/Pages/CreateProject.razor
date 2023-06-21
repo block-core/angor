@@ -1,0 +1,60 @@
+﻿@page "/create-project"
+
+<div class="container mt-4">
+    <h1 class="mb-4">Create New Project</h1>
+
+    <form>
+        <!-- Project Title -->
+        <div class="mb-3">
+            <label for="projectTitle" class="form-label">Project Title</label>
+            <input type="text" class="form-control" id="projectTitle" placeholder="Enter project title">
+        </div>
+
+        <!-- Project Description -->
+        <div class="mb-3">
+            <label for="projectDescription" class="form-label">Project Description</label>
+            <textarea class="form-control" id="projectDescription" rows="3" placeholder="Enter project description"></textarea>
+        </div>
+
+        <!-- Project Goal -->
+        <div class="mb-3">
+            <label for="projectGoal" class="form-label">Goal Amount</label>
+            <input type="number" class="form-control" id="projectGoal" placeholder="Enter goal amount">
+        </div>
+
+        <!-- Project Duration -->
+        <div class="mb-3">
+            <label for="projectDuration" class="form-label">Project Duration (days)</label>
+            <input type="number" class="form-control" id="projectDuration" placeholder="Enter project duration">
+        </div>
+
+        <!-- Project Category -->
+        <div class="mb-3">
+            <label for="projectCategory" class="form-label">Project Category</label>
+            <select class="form-select" id="projectCategory">
+                <option selected>Choose...</option>
+                <option>Category 1</option>
+                <option>Category 2</option>
+                <option>Category 3</option>
+            </select>
+        </div>
+
+        <!-- Project Image Upload -->
+        <div class="mb-3">
+            <label for="projectImage" class="form-label">Project Image</label>
+            <input class="form-control" type="file" id="projectImage">
+        </div>
+
+        <!-- Project Video Upload (Optional) -->
+        <div class="mb-3">
+            <label for="projectVideo" class="form-label">Project Video (optional)</label>
+            <input class="form-control" type="file" id="projectVideo">
+        </div>
+
+        <!-- Save & Publish Buttons -->
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Save Draft</button>
+            <button type="submit" class="btn btn-success">Publish Project</button>
+        </div>
+    </form>
+</div>

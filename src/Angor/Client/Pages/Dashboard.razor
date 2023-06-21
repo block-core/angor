@@ -1,0 +1,68 @@
+﻿@page "/dashboard"
+
+@inject NavigationManager Navigation
+
+
+<div class="container mt-4">
+    <h1 class="mb-4">Dashboard</h1>
+
+    <!-- Quick Action Buttons -->
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+        <button class="btn btn-primary me-md-2" @onclick="NavigateToCreateProject" type="button">Create New Project</button>
+        <button class="btn btn-secondary" type="button">View Messages</button>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+        <div class="col">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Projects</h5>
+                    <p class="card-text">10</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Total Funds Raised</h5>
+                    <p class="card-text">$20,000</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Total Backers</h5>
+                    <p class="card-text">500</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- List of Projects -->
+    <h2 class="mb-4">Your Projects</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @for (int i = 0; i < 3; i++)
+        {
+            <div class="col">
+                <div class="card">
+                    <img src="https://via.placeholder.com/150" class="card-img-top" alt="Project Image">
+                    <div class="card-body">
+                        <h5 class="card-title">Project Title</h5>
+                        <p class="card-text">Short project description...</p>
+                        <NavLink href=@($"/project-management/{i}") class="btn btn-primary">Manage Project</NavLink>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+
+    private void NavigateToCreateProject()
+    {
+        Navigation.NavigateTo("/create-project");;
+    }
+}
