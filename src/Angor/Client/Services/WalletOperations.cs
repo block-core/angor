@@ -314,22 +314,52 @@ public class WalletOperations : IWalletOperations
         var purpose = 84; // for now only legacy
         
         var gap = 5;
-        while (gap > 0)
+        AddressBalance[] addressesNotEmpty;
+        do
         {
-            PubKey pubkey = _hdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, isChange);
-            var path = _hdOperations.CreateHdPath(purpose, network.Consensus.CoinType, accountIndex, isChange, scanIndex);
-            
-            var address = pubkey.GetSegwitAddress(network).ToString();
-            var result = await FetchUtxoForAddressAsync(address);
+            var newAddressesToCheck = Enumerable.Range(0, gap)
+                .Select(_ =>
+                {
+                    PubKey pubkey = _hdOperations.GeneratePublicKey(accountExtPubKey, scanIndex + _, isChange);
+                    var path = _hdOperations.CreateHdPath(purpose, network.Consensus.CoinType, accountIndex, isChange, scanIndex + _);
+                    var address = pubkey.GetSegwitAddress(network).ToString();
 
-            addressesInfo.Add(new AddressInfo
-                { Address = address, HdPath = path, UtxoData = result.data, HasHistory = !result.noHistory });
-            scanIndex++;
+                    return new AddressInfo { Address = address, HdPath = path };
+                }).ToList();
 
-            if (!result.noHistory) continue;
-            
-            gap--;
-        }
+            //check all new addresses for balance or a history
+            var urlBalance = "/query/addresses/balance";
+            var indexer = _networkConfiguration.getIndexerUrl();
+            var response = await _http.PostAsJsonAsync(indexer.Url + urlBalance,
+                newAddressesToCheck.Select(_ => _.Address).ToArray());
+
+            if (!response.IsSuccessStatusCode)
+                throw new InvalidOperationException(response.ReasonPhrase);
+
+            addressesNotEmpty = await response.Content.ReadFromJsonAsync<AddressBalance[]>();
+
+            if (!addressesNotEmpty?.Any() ?? false)
+                break; //No new data for the addresses checked
+
+            //Add the addresses with balance or a history to the returned list
+            addressesInfo.AddRange(newAddressesToCheck
+                .Where(addressInfo => addressesNotEmpty
+                    .Any(_ => _.address == addressInfo.Address)));
+
+            var tasks = addressesNotEmpty.Select(_ => FetchUtxoForAddressWithoutCheckAsync(_.address));
+
+            var lookupResults = await Task.WhenAll(tasks);
+
+            foreach (var (address, data) in lookupResults)
+            {
+                var addressInfo = addressesInfo.First(_ => _.Address == address);
+                addressInfo.HasHistory = true;
+                addressInfo.UtxoData = data;
+            }
+
+            scanIndex += addressesNotEmpty.Length;
+
+        } while (addressesNotEmpty.Any());
 
         return (scanIndex, addressesInfo);
     }
@@ -367,10 +397,46 @@ public class WalletOperations : IWalletOperations
 
             allItems.AddRange(utxo);
 
+            if (utxo.Count < limit)
+                break;
+            
             offset += limit;
         }
 
         return (false, allItems);
+    }
+    
+    private async Task<(string address, List<UtxoData> data)> FetchUtxoForAddressWithoutCheckAsync(string address)
+    {
+        var limit = 50;
+        var offset = 0;
+        List<UtxoData> allItems = new();
+        
+        IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
+
+        do
+        {
+            // this is inefficient look at headers to know when to stop
+
+            var url = $"/query/address/{address}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
+
+            Console.WriteLine($"fetching {url}");
+
+            var response = await _http.GetAsync(indexer.Url + url);
+            var utxo = await response.Content.ReadFromJsonAsync<List<UtxoData>>();
+
+            if (utxo == null || !utxo.Any())
+                break;
+
+            allItems.AddRange(utxo);
+
+            if (utxo.Count < limit)
+                break;
+
+            offset += limit;
+        } while (true);
+
+        return (address, allItems);
     }
 
     public async Task<IEnumerable<FeeEstimation>> GetFeeEstimationAsync()
