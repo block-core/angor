@@ -213,57 +213,35 @@ public class WalletOperations : IWalletOperations
 
         AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
         
+        //TODO examine changing this to parallel calls
         foreach (var addressInfo in accountInfo.AddressesInfo)
         {
-            if (!addressInfo.UtxoData.Any()) continue;
-            
-            var result = await FetchUtxoForAddressAsync(addressInfo.Address);
-
-            if (result.data.Count == addressInfo.UtxoData.Count)
-            {
-                for (var i = 0; i < result.data.Count - 1; i++)
-                {
-                    if (result.data[i].outpoint.transactionId == addressInfo.UtxoData[i].outpoint.transactionId) 
-                        continue;
-                    addressInfo.UtxoData.Clear();
-                    addressInfo.UtxoData.AddRange(result.data);
-                    break;
-                }
-            }
-            else
-            {
-                addressInfo.UtxoData.Clear();
-                addressInfo.UtxoData.AddRange(result.data);
-            }
+            await UpdateAddressInfoUtxoData(addressInfo);
         }
 
         foreach (var changeAddressInfo in accountInfo.ChangeAddressesInfo)
         {
-            if (!changeAddressInfo.HasHistory) continue;
-            
-            var result = await FetchUtxoForAddressAsync(changeAddressInfo.Address);
-
-            if (result.data.Count == changeAddressInfo.UtxoData.Count)
-            {
-                for (var i = 0; i < result.data.Count - 1; i++)
-                {
-                    if (result.data[i].outpoint.transactionId == changeAddressInfo.UtxoData[i].outpoint.transactionId) 
-                        continue;
-                    changeAddressInfo.UtxoData.Clear();
-                    changeAddressInfo.UtxoData.AddRange(result.data);
-                    break;
-                }
-            }
-            else
-            {
-                changeAddressInfo.UtxoData.Clear();
-                changeAddressInfo.UtxoData.AddRange(result.data);
-            }
+            await UpdateAddressInfoUtxoData(changeAddressInfo);
         }
 
         _storage.SetAccountInfo(network.Name, accountInfo);
         
         return accountInfo;
+    }
+
+    private async Task UpdateAddressInfoUtxoData(AddressInfo addressInfo)
+    {
+        if (!addressInfo.UtxoData.Any() && addressInfo.HasHistory) return;
+
+        var (_, utxoList) = await FetchUtxoForAddressAsync(addressInfo.Address);
+        
+        if (utxoList.Count != addressInfo.UtxoData.Count ||
+            utxoList.Where((_, i) => _.outpoint.transactionId != addressInfo.UtxoData[i].outpoint.transactionId)
+                .Any())
+        {
+            addressInfo.UtxoData.Clear();
+            addressInfo.UtxoData.AddRange(utxoList);
+        }
     }
 
     public async Task<AccountInfo> FetchDataForNewAddressesAsync()
@@ -343,7 +321,7 @@ public class WalletOperations : IWalletOperations
                 .Where(addressInfo => addressesNotEmpty
                     .Any(_ => _.address == addressInfo.Address)));
 
-            var tasks = addressesNotEmpty.Select(_ => FetchUtxoForAddressWithoutCheckAsync(_.address));
+            var tasks = addressesNotEmpty.Select(_ => FetchUtxoForAddressAsync(_.address));
 
             var lookupResults = await Task.WhenAll(tasks);
 
@@ -373,49 +351,7 @@ public class WalletOperations : IWalletOperations
         return new AddressInfo { Address = address, HdPath = path };
     }
 
-    public async Task<(bool noHistory, List<UtxoData> data)> FetchUtxoForAddressAsync(string address)
-    {
-        var limit = 50;
-        var offset = 0;
-        List<UtxoData> allItems = new();
-
-        var urlBalance = $"/query/address/{address}";
-        IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
-        var addressBalance = await _http.GetFromJsonAsync<AddressBalance>(indexer.Url + urlBalance);
-
-        if (addressBalance?.balance == 0 && (addressBalance.totalReceivedCount + addressBalance.totalSentCount) == 0)
-        {
-            return (true, allItems);
-        }
-
-        int fetchCount = 50; // for the demo we just scan 50 addresses
-
-        for (int i = 0; i < fetchCount; i++)
-        {
-            // this is inefficient look at headers to know when to stop
-
-            var url = $"/query/address/{address}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
-
-            Console.WriteLine($"fetching {url}");
-
-            var response = await _http.GetAsync(indexer.Url + url);
-            var utxo = await response.Content.ReadFromJsonAsync<List<UtxoData>>();
-
-            if (utxo == null || !utxo.Any())
-                break;
-
-            allItems.AddRange(utxo);
-
-            if (utxo.Count < limit)
-                break;
-            
-            offset += limit;
-        }
-
-        return (false, allItems);
-    }
-    
-    private async Task<(string address, List<UtxoData> data)> FetchUtxoForAddressWithoutCheckAsync(string address)
+    public async Task<(string address, List<UtxoData> data)> FetchUtxoForAddressAsync(string address)
     {
         var limit = 50;
         var offset = 0;
