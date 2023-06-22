@@ -212,17 +212,12 @@ public class WalletOperations : IWalletOperations
         Network network = _networkConfiguration.GetNetwork();
 
         AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
-        
-        //TODO examine changing this to parallel calls
-        foreach (var addressInfo in accountInfo.AddressesInfo)
-        {
-            await UpdateAddressInfoUtxoData(addressInfo);
-        }
 
-        foreach (var changeAddressInfo in accountInfo.ChangeAddressesInfo)
-        {
-            await UpdateAddressInfoUtxoData(changeAddressInfo);
-        }
+        var addressTasks=  accountInfo.AddressesInfo.Select(UpdateAddressInfoUtxoData);
+        
+        var changeAddressTasks=  accountInfo.ChangeAddressesInfo.Select(UpdateAddressInfoUtxoData);
+
+        await Task.WhenAll(addressTasks.Concat(changeAddressTasks));
 
         _storage.SetAccountInfo(network.Name, accountInfo);
         
