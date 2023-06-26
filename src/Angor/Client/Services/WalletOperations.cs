@@ -46,6 +46,7 @@ public class WalletOperations : IWalletOperations
     {
         Network network = _networkConfiguration.GetNetwork();
         _storage.DeleteAccountInfo(network.Name);
+        _storage.DeleteWalletPubkey();
         _walletStorage.DeleteWallet();
     }
 
