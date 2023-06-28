@@ -21,6 +21,9 @@ public class WalletOperations : IWalletOperations
     private readonly ILogger<WalletOperations> _logger;
     private readonly INetworkConfiguration _networkConfiguration;
 
+    private const int AccountIndex = 0; // for now only account 0
+    private const int Purpose = 84; // for now only legacy
+
     public WalletOperations(HttpClient http, IClientStorage storage, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration, IWalletStorage walletStorage)
     {
         _http = http;
@@ -43,6 +46,7 @@ public class WalletOperations : IWalletOperations
     {
         Network network = _networkConfiguration.GetNetwork();
         _storage.DeleteAccountInfo(network.Name);
+        _storage.DeleteWalletPubkey();
         _walletStorage.DeleteWallet();
     }
 
@@ -164,8 +168,6 @@ public class WalletOperations : IWalletOperations
 
         Network network = _networkConfiguration.GetNetwork();
         var coinType = network.Consensus.CoinType;
-        var accountIndex = 0; // for now only account 0
-        var purpose = 84; // for now only legacy
 
         AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
 
@@ -190,7 +192,7 @@ public class WalletOperations : IWalletOperations
             throw;
         }
 
-        string accountHdPath = _hdOperations.GetAccountHdPath(purpose, coinType, accountIndex);
+        string accountHdPath = _hdOperations.GetAccountHdPath(Purpose, coinType, AccountIndex);
         Key privateKey = extendedKey.PrivateKey;
         _storage.SetWalletPubkey(privateKey.PubKey.ToHex());
 
@@ -211,58 +213,31 @@ public class WalletOperations : IWalletOperations
         Network network = _networkConfiguration.GetNetwork();
 
         AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
+
+        var addressTasks=  accountInfo.AddressesInfo.Select(UpdateAddressInfoUtxoData);
         
-        foreach (var addressInfo in accountInfo.AddressesInfo)
-        {
-            if (!addressInfo.UtxoData.Any()) continue;
-            
-            var result = await FetchUtxoForAddressAsync(addressInfo.Address);
+        var changeAddressTasks=  accountInfo.ChangeAddressesInfo.Select(UpdateAddressInfoUtxoData);
 
-            if (result.data.Count == addressInfo.UtxoData.Count)
-            {
-                for (var i = 0; i < result.data.Count - 1; i++)
-                {
-                    if (result.data[i].outpoint.transactionId == addressInfo.UtxoData[i].outpoint.transactionId) 
-                        continue;
-                    addressInfo.UtxoData.Clear();
-                    addressInfo.UtxoData.AddRange(result.data);
-                    break;
-                }
-            }
-            else
-            {
-                addressInfo.UtxoData.Clear();
-                addressInfo.UtxoData.AddRange(result.data);
-            }
-        }
-
-        foreach (var changeAddressInfo in accountInfo.ChangeAddressesInfo)
-        {
-            if (!changeAddressInfo.HasHistory) continue;
-            
-            var result = await FetchUtxoForAddressAsync(changeAddressInfo.Address);
-
-            if (result.data.Count == changeAddressInfo.UtxoData.Count)
-            {
-                for (var i = 0; i < result.data.Count - 1; i++)
-                {
-                    if (result.data[i].outpoint.transactionId == changeAddressInfo.UtxoData[i].outpoint.transactionId) 
-                        continue;
-                    changeAddressInfo.UtxoData.Clear();
-                    changeAddressInfo.UtxoData.AddRange(result.data);
-                    break;
-                }
-            }
-            else
-            {
-                changeAddressInfo.UtxoData.Clear();
-                changeAddressInfo.UtxoData.AddRange(result.data);
-            }
-        }
+        await Task.WhenAll(addressTasks.Concat(changeAddressTasks));
 
         _storage.SetAccountInfo(network.Name, accountInfo);
         
         return accountInfo;
+    }
+
+    private async Task UpdateAddressInfoUtxoData(AddressInfo addressInfo)
+    {
+        if (!addressInfo.UtxoData.Any() && addressInfo.HasHistory) return;
+
+        var (_, utxoList) = await FetchUtxoForAddressAsync(addressInfo.Address);
+        
+        if (utxoList.Count != addressInfo.UtxoData.Count ||
+            utxoList.Where((_, i) => _.outpoint.transactionId != addressInfo.UtxoData[i].outpoint.transactionId)
+                .Any())
+        {
+            addressInfo.UtxoData.Clear();
+            addressInfo.UtxoData.AddRange(utxoList);
+        }
     }
 
     public async Task<AccountInfo> FetchDataForNewAddressesAsync()
@@ -310,48 +285,77 @@ public class WalletOperations : IWalletOperations
         ExtPubKey accountExtPubKey = ExtPubKey.Parse(ExtendedPubKey, network);
         
         var addressesInfo = new List<AddressInfo>();
-        var accountIndex = 0; // for now only account 0
-        var purpose = 84; // for now only legacy
-        
+
         var gap = 5;
-        while (gap > 0)
+        AddressInfo? newEmptyAddress = null;
+        AddressBalance[] addressesNotEmpty;
+        do
         {
-            PubKey pubkey = _hdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, isChange);
-            var path = _hdOperations.CreateHdPath(purpose, network.Consensus.CoinType, accountIndex, isChange, scanIndex);
+            var newAddressesToCheck = Enumerable.Range(0, gap)
+                .Select(_ => GenerateAddressFromPubKey(scanIndex + _, network, isChange, accountExtPubKey))
+                .ToList();
+
+            //check all new addresses for balance or a history
+            var urlBalance = "/query/addresses/balance";
+            var indexer = _networkConfiguration.getIndexerUrl();
+            var response = await _http.PostAsJsonAsync(indexer.Url + urlBalance,
+                newAddressesToCheck.Select(_ => _.Address).ToArray());
+
+            if (!response.IsSuccessStatusCode)
+                throw new InvalidOperationException(response.ReasonPhrase);
+
+            addressesNotEmpty = (await response.Content.ReadFromJsonAsync<AddressBalance[]>())?.ToArray() ?? Array.Empty<AddressBalance>();
+
+            if (addressesNotEmpty.Length < newAddressesToCheck.Count)
+                newEmptyAddress = newAddressesToCheck[addressesNotEmpty.Length];
+
+            if (!addressesNotEmpty.Any())
+                break; //No new data for the addresses checked
             
-            var address = pubkey.GetSegwitAddress(network).ToString();
-            var result = await FetchUtxoForAddressAsync(address);
+            //Add the addresses with balance or a history to the returned list
+            addressesInfo.AddRange(newAddressesToCheck
+                .Where(addressInfo => addressesNotEmpty
+                    .Any(_ => _.address == addressInfo.Address)));
 
-            addressesInfo.Add(new AddressInfo
-                { Address = address, HdPath = path, UtxoData = result.data, HasHistory = !result.noHistory });
-            scanIndex++;
+            var tasks = addressesNotEmpty.Select(_ => FetchUtxoForAddressAsync(_.address));
 
-            if (!result.noHistory) continue;
-            
-            gap--;
-        }
+            var lookupResults = await Task.WhenAll(tasks);
 
+            foreach (var (address, data) in lookupResults)
+            {
+                var addressInfo = addressesInfo.First(_ => _.Address == address);
+                addressInfo.HasHistory = true;
+                addressInfo.UtxoData = data;
+            }
+
+            scanIndex += addressesNotEmpty.Length;
+
+        } while (addressesNotEmpty.Any());
+
+        if (newEmptyAddress != null) //empty address for receiving funds
+            addressesInfo.Add(newEmptyAddress);
+        
         return (scanIndex, addressesInfo);
     }
 
-    public async Task<(bool noHistory, List<UtxoData> data)> FetchUtxoForAddressAsync(string address)
+    private AddressInfo GenerateAddressFromPubKey(int scanIndex, Network network, bool isChange, ExtPubKey accountExtPubKey)
+    {
+        var pubKey = _hdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, isChange);
+        var path = _hdOperations.CreateHdPath(Purpose, network.Consensus.CoinType, AccountIndex, isChange, scanIndex);
+        var address = pubKey.GetSegwitAddress(network).ToString();
+
+        return new AddressInfo { Address = address, HdPath = path };
+    }
+
+    public async Task<(string address, List<UtxoData> data)> FetchUtxoForAddressAsync(string address)
     {
         var limit = 50;
         var offset = 0;
         List<UtxoData> allItems = new();
-
-        var urlBalance = $"/query/address/{address}";
+        
         IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
-        var addressBalance = await _http.GetFromJsonAsync<AddressBalance>(indexer.Url + urlBalance);
 
-        if (addressBalance?.balance == 0 && (addressBalance.totalReceivedCount + addressBalance.totalSentCount) == 0)
-        {
-            return (true, allItems);
-        }
-
-        int fetchCount = 50; // for the demo we just scan 50 addresses
-
-        for (int i = 0; i < fetchCount; i++)
+        do
         {
             // this is inefficient look at headers to know when to stop
 
@@ -367,10 +371,13 @@ public class WalletOperations : IWalletOperations
 
             allItems.AddRange(utxo);
 
-            offset += limit;
-        }
+            if (utxo.Count < limit)
+                break;
 
-        return (false, allItems);
+            offset += limit;
+        } while (true);
+
+        return (address, allItems);
     }
 
     public async Task<IEnumerable<FeeEstimation>> GetFeeEstimationAsync()

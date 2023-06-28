@@ -10,7 +10,7 @@ public interface IWalletOperations
     void BuildAccountInfoForWalletWords();
     Task<AccountInfo> FetchDataForExistingAddressesAsync();
     Task<AccountInfo> FetchDataForNewAddressesAsync();
-    Task<(bool noHistory, List<UtxoData> data)> FetchUtxoForAddressAsync(string adddress);
+    Task<(string address, List<UtxoData> data)> FetchUtxoForAddressAsync(string adddress);
     Task<IEnumerable<FeeEstimation>> GetFeeEstimationAsync();
     void CalculateTransactionFee(SendInfo sendInfo, long feeRate);
     void DeleteWallet();

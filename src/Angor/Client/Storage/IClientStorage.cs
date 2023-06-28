@@ -5,9 +5,11 @@ namespace Angor.Client.Storage
     public interface IClientStorage
     {
 
-        public void SetWalletPubkey(string pubkey);
+        void SetWalletPubkey(string pubkey);
+        string? GetWalletPubkey();
+        void DeleteWalletPubkey();
         AccountInfo GetAccountInfo(string network);
-        public void SetAccountInfo(string network, AccountInfo items);
-        public void DeleteAccountInfo(string network);
+        void SetAccountInfo(string network, AccountInfo items);
+        void DeleteAccountInfo(string network);
     }
 }

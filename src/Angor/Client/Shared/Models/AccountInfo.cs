@@ -13,21 +13,7 @@ public class AccountInfo
 
     public string? GetNextReceiveAddress()
     {
-        string? lastAddress = null;
-        foreach (var addressInfo in AddressesInfo)
-        {
-            lastAddress = addressInfo.Address;
-
-            if (!addressInfo.HasHistory)
-            {
-                break;
-            }
-        }
-
-        //if (lastAddress == null)
-        //    throw new InvalidOperationException();
-
-        return lastAddress;
+        return AddressesInfo.Last()?.Address;
     }
 
 }
