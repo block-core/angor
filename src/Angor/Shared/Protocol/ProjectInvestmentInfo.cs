@@ -11,14 +11,14 @@ public class ProjectInvestmentInfo
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public double TargetAmount { get; set; }
-    public List<Panel> Panels { get; set; } = new();
+    public List<Seeders> Seeders { get; set; } = new();
     public List<Stage> Stages { get; set; } = new();
 }
 
-public class Panel
+public class Seeders
 {
     public int Threshold { get; set; }
-    public List<string> PanelMemberPublicKeys { get; set; } = new();
+    public List<string> SeedersPublicKeys { get; set; } = new();
 }
 
 public class Stage
