@@ -11,8 +11,6 @@ public class InvestorContext
 
     public string TokenHashlockKey { get; set; }
 
-  
-
     public ProjectInvestmentInfo ProjectInvestmentInfo { get; set; }
 
     public string TransactionHex { get; set; }

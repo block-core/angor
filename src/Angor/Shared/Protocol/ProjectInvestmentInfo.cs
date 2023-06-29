@@ -9,7 +9,7 @@ public class ProjectInvestmentInfo
 {
     public string FounderKey { get; set; }
     public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
+    public DateTime ExpiryDate { get; set; }
     public double TargetAmount { get; set; }
     public List<Seeders> Seeders { get; set; } = new();
     public List<Stage> Stages { get; set; } = new();
@@ -23,6 +23,6 @@ public class Seeders
 
 public class Stage
 {
-    public long AmountToRelease { get; set; }
+    public decimal AmountToRelease { get; set; }
     public DateTime ReleaseDate { get; set; }
 }
