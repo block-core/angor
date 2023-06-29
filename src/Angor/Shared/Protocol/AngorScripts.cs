@@ -8,17 +8,19 @@ namespace Angor.Shared.Protocol
 {
     public class AngorScripts
     {
-        public static Script CreateStage(List<Script> leaves)
+        public static Script CreateStageSeeder(Network network, TaprootInternalPubKey taprootKey, Script founder, Script recover, Script expiry)
         {
-
             var builder = new TaprootBuilder();
 
-            foreach (var script in leaves)
-            {
-                //builder.
-            }
+            builder.AddLeaf(1, founder)
+                   .AddLeaf(2, recover)
+                   .AddLeaf(2, expiry);
 
-            return null;
+            var treeInfo = builder.Finalize(taprootKey);
+
+            var address = treeInfo.OutputPubKey.GetAddress(network);
+
+            return address.ScriptPubKey;
         }
     }
 }
