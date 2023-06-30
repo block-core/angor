@@ -1,6 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using Blockcore.Consensus.TransactionInfo;
+using System.ComponentModel;
+using Angor.Shared;
+using Angor.Shared.Protocol;
+using NBitcoin;
+using Money = Blockcore.NBitcoin.Money;
+using RandomUtils = Blockcore.NBitcoin.RandomUtils;
+using Script = Blockcore.Consensus.ScriptInfo.Script;
+using TxOut = Blockcore.Consensus.TransactionInfo.TxOut;
+using uint256 = Blockcore.NBitcoin.uint256;
 
 public class InvestmentOperations
 {
@@ -8,13 +16,22 @@ public class InvestmentOperations
     /// This method will create a transaction with all the spending conditions
     /// based on the project investment metadata the transaction will be unsigned (it wont have any inputs yet)
     /// </summary>
-    public void CreateInvestmentTransaction(InvestorContext context)
+    public void CreateInvestmentTransaction(InvestorContext context, long totalInvestmentAmount)
     {
         // create the output and script of the project id 
-
+        var angorFeeOutputScript = ScriptBuilder.GetAngorFeeOutputScript(context.ProjectInvestmentInfo.AngorFeeKey);
+        
         // create the output and script of the investor pubkey script opreturn
+        var investorRedeemSecret = new uint256(RandomUtils.GetBytes(32));
+        var script = ScriptBuilder.GetSeederInfoScript(context.InvestorKey, investorRedeemSecret.ToString());
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
+        var stagesScript = context.ProjectInvestmentInfo.Stages.Select(_ =>
+            ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
+                context.InvestorKey, investorRedeemSecret.ToString(), _.NumberOfBLocks,
+                context.ProjectInvestmentInfo.ExpirationNumberOfBlocks));
+
+        var stagesKeys = stagesScript.Select(_ => AngorScripts.CreateStage(_));
 
         // in-stage : create the script for the founder to spend the stage coins
 
@@ -26,8 +43,25 @@ public class InvestmentOperations
 
         // add each stage as output
 
+        var angorOutput = new TxOut(new Money(totalInvestmentAmount / 100), angorFeeOutputScript);
+        var investorInfoOutput = new TxOut(new Money(0), script);
+
+        var stagesOutputs = stagesKeys.Select((_, i) =>
+            new TxOut(new Money(GetPercentageForStage(totalInvestmentAmount, i + 1)),
+                new Script(_.ToBytes())));
     }
 
+    private long GetPercentageForStage(long amount, int stage)
+    {
+        return stage switch
+        {
+            1 => amount / 10,
+            2 => (amount / 10) * 3,
+            6 => throw new ArgumentOutOfRangeException(),
+            _ => amount / 5
+        };
+    }
+    
     public void SignInvestmentTransaction(InvestorContext context)
     {
         // this method will add inputs to an investment transaction till the amount is satisfied 
