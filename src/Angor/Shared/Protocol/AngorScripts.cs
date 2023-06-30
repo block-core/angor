@@ -1,5 +1,4 @@
-﻿using Blockcore.NBitcoin;
-using System.Text;
+﻿using System.Text;
 using NBitcoin;
 using NBitcoin.Crypto;
 using PubKey = Blockcore.NBitcoin.PubKey;
