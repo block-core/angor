@@ -33,7 +33,7 @@ public class InvestmentOperations
                 context.ProjectInvestmentInfo.ExpirationNumberOfBlocks));
 
         var stagesKeys = stagesScript.Select(scripts => 
-            AngorScripts.CreateStageSeeder(network,Guid.NewGuid().ToByteArray(),scripts.founder,scripts.recover,scripts.endOfProject));
+            AngorScripts.CreateStageSeeder(network,scripts.founder,scripts.recover,scripts.endOfProject));
 
         // in-stage : create the script for the founder to spend the stage coins
 

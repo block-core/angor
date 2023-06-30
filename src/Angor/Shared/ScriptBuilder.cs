@@ -74,7 +74,7 @@ public class ScriptBuilder
                 Op.GetPushOp(new PubKey(investorKey).ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
                 OpcodeType.OP_SHA256,
-                Op.GetPushOp(new PubKey(secret).ToBytes()),
+                Op.GetPushOp(new uint256(secret).ToBytes()),
                 OpcodeType.OP_EQUALVERIFY
             }),
 
