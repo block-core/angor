@@ -5,6 +5,7 @@ using Angor.Shared;
 using Angor.Shared.Protocol;
 using NBitcoin;
 using Money = Blockcore.NBitcoin.Money;
+using Network = Blockcore.Networks.Network;
 using RandomUtils = Blockcore.NBitcoin.RandomUtils;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
 using TxOut = Blockcore.Consensus.TransactionInfo.TxOut;
@@ -16,7 +17,7 @@ public class InvestmentOperations
     /// This method will create a transaction with all the spending conditions
     /// based on the project investment metadata the transaction will be unsigned (it wont have any inputs yet)
     /// </summary>
-    public void CreateInvestmentTransaction(InvestorContext context, long totalInvestmentAmount)
+    public void CreateInvestmentTransaction(Network network,InvestorContext context, long totalInvestmentAmount)
     {
         // create the output and script of the project id 
         var angorFeeOutputScript = ScriptBuilder.GetAngorFeeOutputScript(context.ProjectInvestmentInfo.AngorFeeKey);
@@ -31,7 +32,8 @@ public class InvestmentOperations
                 context.InvestorKey, investorRedeemSecret.ToString(), _.NumberOfBLocks,
                 context.ProjectInvestmentInfo.ExpirationNumberOfBlocks));
 
-        var stagesKeys = stagesScript.Select(_ => AngorScripts.CreateStage(_));
+        var stagesKeys = stagesScript.Select(scripts => 
+            AngorScripts.CreateStageSeeder(network,Guid.NewGuid().ToByteArray(),scripts.founder,scripts.recover,scripts.endOfProject));
 
         // in-stage : create the script for the founder to spend the stage coins
 

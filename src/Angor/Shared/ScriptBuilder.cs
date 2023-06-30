@@ -25,7 +25,7 @@ public class ScriptBuilder
             Op.GetPushOp(Hashes.SHA256(new PubKey(secret).ToBytes())));
     }
     
-    public static List<Script> BuildSeederScript(string funderKey, string investorKey, string secret,long stageBlocks, long projectLimitBlocks)
+    public static (Script founder,Script recover, Script endOfProject) BuildSeederScript(string funderKey, string investorKey, string secret,long stageBlocks, long projectLimitBlocks)
     {
         // var ops = new List<Op>
         // {
@@ -56,28 +56,36 @@ public class ScriptBuilder
         //     OpcodeType.OP_CHECKLOCKTIMEVERIFY,
         // };
 
-        return new List<Script>
-        {
+        return (
             // funder gets funds after stage started
-            new (new List<Op> {Op.GetPushOp(new PubKey(funderKey).ToBytes()),
+            new(new List<Op>
+            {
+                Op.GetPushOp(new PubKey(funderKey).ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
                 Op.GetPushOp(stageBlocks),
-                OpcodeType.OP_CHECKLOCKTIMEVERIFY }),
-            
+                OpcodeType.OP_CHECKLOCKTIMEVERIFY
+            }),
+
             // investor gets funds to redeem transaction with secret
-            new (new List<Op> {Op.GetPushOp(new PubKey(funderKey).ToBytes()),
+            new(new List<Op>
+            {
+                Op.GetPushOp(new PubKey(funderKey).ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
                 Op.GetPushOp(new PubKey(investorKey).ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
                 OpcodeType.OP_SHA256,
                 Op.GetPushOp(new PubKey(secret).ToBytes()),
-                OpcodeType.OP_EQUALVERIFY }),
-            
+                OpcodeType.OP_EQUALVERIFY
+            }),
+
             // project ended and investor can collect remaining funds
-            new (new List<Op> {Op.GetPushOp(new PubKey(investorKey).ToBytes()),
+            new(new List<Op>
+            {
+                Op.GetPushOp(new PubKey(investorKey).ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
                 Op.GetPushOp(projectLimitBlocks),
-                OpcodeType.OP_CHECKLOCKTIMEVERIFY })
-        };
+                OpcodeType.OP_CHECKLOCKTIMEVERIFY
+            })
+        );
     }
 }
