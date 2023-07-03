@@ -22,7 +22,7 @@ public class ScriptBuilder
     {
         return new Script(OpcodeType.OP_RETURN,
             Op.GetPushOp(new PubKey(investorKey).ToBytes()),
-            Op.GetPushOp(Hashes.SHA256(new PubKey(secret).ToBytes())));
+            Op.GetPushOp(uint256.Parse(secret).ToBytes()));
     }
     
     public static (Script founder,Script recover, Script endOfProject) BuildSeederScript(string funderKey, string investorKey, string secret,long stageBlocks, long projectLimitBlocks)

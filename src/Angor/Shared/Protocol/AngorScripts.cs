@@ -27,6 +27,26 @@ namespace Angor.Shared.Protocol
             return new Script(address.ScriptPubKey.ToBytes());
         }
 
+        public static uint256 CreateStage(List<Script> leaves)
+        {
+
+            var builder = new TaprootBuilder();
+
+            uint depth = 1;
+            foreach (var script in leaves)
+            {
+                builder.AddLeaf(depth, new NBitcoin.Script(script.ToBytes()));
+
+                depth += depth % 2 == 0 ? (uint)0 : 1;
+            }
+
+            var key = new PubKey(string.Empty);
+
+            var merkelRoot = builder.Finalize(new TaprootInternalPubKey(key.ToBytes())).MerkleRoot;
+
+            return new uint256(merkelRoot.ToBytes());
+        }
+
         public static TaprootInternalPubKey CreateUnspendableInternalKey()
         {
             // 1. Calculate the SHA256 of a known constant
@@ -46,26 +66,6 @@ namespace Angor.Shared.Protocol
 
 
             return taprootInternalPubKey;
-        }
-
-        public static uint256 CreateStage(List<Script> leaves)
-        {
-
-            var builder = new TaprootBuilder();
-            
-            uint depth = 1;
-            foreach (var script in leaves)
-            {
-                builder.AddLeaf(depth, new NBitcoin.Script(script.ToBytes()));
-
-                depth += depth % 2 == 0 ? (uint)0 : 1;
-            }
-
-            var key = new PubKey(string.Empty);
-
-            var merkelRoot = builder.Finalize(new TaprootInternalPubKey(key.ToBytes())).MerkleRoot;
-            
-            return new uint256(merkelRoot.ToBytes());
         }
     }
 }

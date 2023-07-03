@@ -24,3 +24,16 @@ public class InvestorContext
     public List<string> Utxos { get; set; }
 }
 
+public class UtxoSpendData
+{
+    public string scriptHex { get; set; }
+    public long value { get; set; }
+
+    public string transactionId { get; set; }
+    public int outputIndex { get; set; }
+
+    public string HdPath { get; set; }
+
+    public string Key { get; set; }
+
+}
