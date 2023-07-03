@@ -469,9 +469,9 @@
             var network = _networkConfiguration.GetNetwork();
             var accountInfo = GetAccountInfoFromStorage();
             
-            accountInfo = await _walletOperations.FetchDataForExistingAddressesAsync(accountInfo);
+            await _walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
             
-            accountInfo = await _walletOperations.FetchDataForNewAddressesAsync(accountInfo);
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
             storage.SetAccountInfo(network.Name, accountInfo);
             
@@ -498,7 +498,7 @@
             WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
             _walletStorage.SaveWalletWords(data);
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
-            await _walletOperations.FetchDataForNewAddressesAsync(accountInfo);
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
             Network network = _networkConfiguration.GetNetwork();
             storage.SetAccountInfo(network.Name,accountInfo);
             
@@ -643,8 +643,10 @@
         var operationResult = await LongOperation(async () =>
         {
             var accountInfo = GetAccountInfoFromStorage();
-            localAccountInfo = await _walletOperations.FetchDataForNewAddressesAsync(accountInfo);
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
+            localAccountInfo = accountInfo;
+            
             await RefreshFee();
 
             if (FeeEstimations.Fees.Count == 0)
