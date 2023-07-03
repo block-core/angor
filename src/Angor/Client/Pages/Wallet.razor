@@ -1,13 +1,10 @@
 @page "/wallet"
-@using Blockcore.Consensus.BlockInfo
 @using Blockcore.NBitcoin
-@using Angor.Client.Shared.Models
 @using Angor.Shared
 @using Blockcore.Networks
 @using Angor.Client.Services
 @using Angor.Client.Storage
-@using System.Globalization
-@using Blockcore.Consensus.TransactionInfo
+@using Angor.Shared.Models
 
 @inject HttpClient Http
 @inject IClientStorage storage;
@@ -440,8 +437,7 @@
 
         if (hasWallet)
         {
-            Network network = _networkConfiguration.GetNetwork();
-            localAccountInfo = storage.GetAccountInfo(network.Name);
+            localAccountInfo = GetAccountInfoFromStorage();
         }
     }
 
@@ -470,12 +466,21 @@
     {
         var operationResult = await LongOperation(async () =>
         {
-            await _walletOperations.FetchDataForExistingAddressesAsync();
+            var network = _networkConfiguration.GetNetwork();
+            var accountInfo = GetAccountInfoFromStorage();
             
-            localAccountInfo = await _walletOperations.FetchDataForNewAddressesAsync();
+            accountInfo = await _walletOperations.FetchDataForExistingAddressesAsync(accountInfo);
+            
+            accountInfo = await _walletOperations.FetchDataForNewAddressesAsync(accountInfo);
 
+            storage.SetAccountInfo(network.Name, accountInfo);
+            
+            localAccountInfo = accountInfo;
+            
             return new OperationResult { Success = true };
         });
+        
+        //TODO notify user in the UI in case the refresh failed 
     }
 
     private void ShowErrorMessage(string message)
@@ -492,9 +497,11 @@
         {
             WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
             _walletStorage.SaveWalletWords(data);
-            _walletOperations.BuildAccountInfoForWalletWords();
-            await _walletOperations.FetchDataForNewAddressesAsync();
-
+            var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
+            await _walletOperations.FetchDataForNewAddressesAsync(accountInfo);
+            Network network = _networkConfiguration.GetNetwork();
+            storage.SetAccountInfo(network.Name,accountInfo);
+            
             return new OperationResult { Success = true };
         });
 
@@ -502,8 +509,7 @@
         {
             hasWallet = _walletStorage.HasWallet();
             ClearWalletWords();
-            Network network = _networkConfiguration.GetNetwork();
-            localAccountInfo = storage.GetAccountInfo(network.Name);
+            localAccountInfo = GetAccountInfoFromStorage();
         }
     }
 
@@ -542,7 +548,9 @@
 
     private void DeleteWallet()
     {
-        _walletOperations.DeleteWallet();
+        storage.DeleteAccountInfo(_networkConfiguration.GetNetwork().Name);
+        storage.DeleteWalletPubkey();
+        _walletStorage.DeleteWallet();
         hasWallet = _walletStorage.HasWallet();
         ClearWalletWords();
         StateHasChanged();
@@ -634,7 +642,8 @@
     {
         var operationResult = await LongOperation(async () =>
         {
-            localAccountInfo = await _walletOperations.FetchDataForNewAddressesAsync();
+            var accountInfo = GetAccountInfoFromStorage();
+            localAccountInfo = await _walletOperations.FetchDataForNewAddressesAsync(accountInfo);
 
             await RefreshFee();
 
@@ -651,7 +660,12 @@
             sendInfo.FeeBlockCount = estimationsFee.Confirmations;
             sendInfo.FeeRateSat = estimationsFee.FeeRate;
 
-            _walletOperations.CalculateTransactionFee(sendInfo, estimationsFee.FeeRate);
+            if (string.IsNullOrEmpty(sendInfo.ChangeAddress))
+            {
+                sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.HasHistory == false).Address;
+            }
+            
+            sendInfo.SendFee = _walletOperations.CalculateTransactionFee(sendInfo, accountInfo, estimationsFee.FeeRate);
 
             return new OperationResult { Success = true };
         });
@@ -669,7 +683,9 @@
         {
             sendConfirmModal = false;
 
-            return await _walletOperations.SendAmountToAddress(sendInfo);
+            var wallet = _walletStorage.GetWallet();
+
+            return await _walletOperations.SendAmountToAddress(wallet, sendInfo);
         });
 
         if (operationResult is { Success: true })
@@ -712,12 +728,19 @@
                    
                     sendInfo.FeeBlockCount = estimationsFee.Confirmations;
                     sendInfo.FeeRateSat = estimationsFee.FeeRate;
-                    _walletOperations.CalculateTransactionFee(sendInfo, estimationsFee.FeeRate);
+                    var accountInfo = GetAccountInfoFromStorage();
+                    sendInfo.SendFee = _walletOperations.CalculateTransactionFee(sendInfo, accountInfo, estimationsFee.FeeRate);
                     
                     StateHasChanged();
                 }
             }
         }
+    }
+
+    private AccountInfo GetAccountInfoFromStorage()
+    {
+        var network = _networkConfiguration.GetNetwork();
+        return storage.GetAccountInfo(network.Name);
     }
 
 }

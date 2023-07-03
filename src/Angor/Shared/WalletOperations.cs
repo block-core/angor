@@ -1,22 +1,18 @@
 using System.Net.Http.Json;
-using Angor.Client.Shared.Models;
-using Angor.Client.Shared.Types;
-using Angor.Client.Storage;
-using Angor.Shared;
+using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.BIP39;
 using Blockcore.Networks;
+using Microsoft.Extensions.Logging;
 
-namespace Angor.Client.Services;
+namespace Angor.Shared;
 
 public class WalletOperations : IWalletOperations 
 {
     private readonly HttpClient _http;
-    private readonly IClientStorage _storage;
-    private readonly IWalletStorage _walletStorage;
     private readonly IHdOperations _hdOperations;
     private readonly ILogger<WalletOperations> _logger;
     private readonly INetworkConfiguration _networkConfiguration;
@@ -24,14 +20,12 @@ public class WalletOperations : IWalletOperations
     private const int AccountIndex = 0; // for now only account 0
     private const int Purpose = 84; // for now only legacy
 
-    public WalletOperations(HttpClient http, IClientStorage storage, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration, IWalletStorage walletStorage)
+    public WalletOperations(HttpClient http, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration)
     {
         _http = http;
-        _storage = storage;
         _hdOperations = hdOperations;
         _logger = logger;
         _networkConfiguration = networkConfiguration;
-        _walletStorage = walletStorage;
     }
 
     public string GenerateWalletWords()
@@ -42,20 +36,18 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
 
-    public void DeleteWallet()
+    public async Task<OperationResult<Transaction>> SendAmountToAddress(WalletWords walletWords, SendInfo sendInfo) //TODO change the passing of wallet words as parameter after refactoring is complete
     {
         Network network = _networkConfiguration.GetNetwork();
-        _storage.DeleteAccountInfo(network.Name);
-        _storage.DeleteWalletPubkey();
-        _walletStorage.DeleteWallet();
-    }
 
-    public async Task<OperationResult<Transaction>> SendAmountToAddress(SendInfo sendInfo)
-    {
-        Network network = _networkConfiguration.GetNetwork();
-        AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
-
-        var (coins, keys) = GetUnspentOutputsForTransaction(sendInfo, accountInfo);
+        if (sendInfo.SendAmountSat > sendInfo.SendUtxos.Values.Sum(s => s.UtxoData.value))
+        {
+            throw new ApplicationException("not enough funds");
+        }
+        
+        var (coins, keys) =
+            GetUnspentOutputsForTransaction(walletWords,sendInfo.SendUtxos.Values.ToList());
+        
         if (coins == null)
         {
             return new OperationResult<Transaction> { Success = false, Message = "not enough funds" };
@@ -72,7 +64,7 @@ public class WalletOperations : IWalletOperations
 
         var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
 
-        var indexer = _networkConfiguration.getIndexerUrl();
+        var indexer = _networkConfiguration.GetIndexerUrl();
         
         var endpoint = Path.Combine(indexer.Url, "command/send");
 
@@ -119,22 +111,16 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    private (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(SendInfo sendInfo, AccountInfo accountInfo)
+    private (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords , List<UtxoDataWithPath> utxoDataWithPaths)
     {
-        if (sendInfo.SendAmountSat > sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value))
-        {
-            throw new ApplicationException("not enough funds");
-        }
-
         ExtKey extendedKey;
         try
         {
-            var data = _walletStorage.GetWallet();
-            extendedKey = _hdOperations.GetExtendedKey(data.Words, data.Passphrase);
+            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase); //TODO change this to be the extended key 
         }
         catch (NotSupportedException ex)
         {
-            Console.WriteLine("Exception occurred: {0}", ex.ToString());
+            Console.WriteLine("Exception occurred: {0}", ex);
 
             if (ex.Message == "Unknown")
                 throw new Exception("Please make sure you enter valid mnemonic words.");
@@ -145,15 +131,15 @@ public class WalletOperations : IWalletOperations
         var coins = new List<Coin>();
         var keys = new List<Key>();
 
-        foreach (var item in sendInfo.SendUtxos)
+        foreach (var utxoDataWithPath in utxoDataWithPaths)
         {
-            var utxo = item.Value.UtxoData;
+            var utxo = utxoDataWithPath.UtxoData;
 
             coins.Add(new Coin(uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
                 Money.Satoshis(utxo.value), Script.FromHex(utxo.scriptHex)));
 
             // derive the private key
-            var extKey = extendedKey.Derive(new KeyPath(item.Value.HdPath));
+            var extKey = extendedKey.Derive(new KeyPath(utxoDataWithPath.HdPath));
             Key privateKey = extKey.PrivateKey;
             keys.Add(privateKey);
         }
@@ -161,7 +147,7 @@ public class WalletOperations : IWalletOperations
         return (coins,keys);
     }
 
-    public void BuildAccountInfoForWalletWords()
+    public AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords)
     {
         ExtKey.UseBCForHMACSHA512 = true;
         Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
@@ -169,18 +155,18 @@ public class WalletOperations : IWalletOperations
         Network network = _networkConfiguration.GetNetwork();
         var coinType = network.Consensus.CoinType;
 
-        AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
+        //AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
+        //
+        // if (accountInfo != null)
+        //     return accountInfo;
 
-        if (accountInfo != null)
-            return;
-
-        accountInfo = new AccountInfo();
+        var accountInfo = new AccountInfo();
 
         ExtKey extendedKey;
         try
         {
-            var data = _walletStorage.GetWallet();
-            extendedKey = _hdOperations.GetExtendedKey(data.Words, data.Passphrase);
+           // var data = _walletStorage.GetWallet();
+            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
         }
         catch (NotSupportedException ex)
         {
@@ -194,7 +180,7 @@ public class WalletOperations : IWalletOperations
 
         string accountHdPath = _hdOperations.GetAccountHdPath(Purpose, coinType, AccountIndex);
         Key privateKey = extendedKey.PrivateKey;
-        _storage.SetWalletPubkey(privateKey.PubKey.ToHex());
+        // _storage.SetWalletPubkey(privateKey.PubKey.ToHex());
 
         ExtPubKey accountExtPubKeyTostore =
             _hdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
@@ -202,17 +188,18 @@ public class WalletOperations : IWalletOperations
         accountInfo.ExtPubKey = accountExtPubKeyTostore.ToString(network);
         accountInfo.Path = accountHdPath;
 
-        _storage.SetAccountInfo(network.Name, accountInfo);
+        //_storage.SetAccountInfo(network.Name, accountInfo);
+        return accountInfo;
     }
 
-    public async Task<AccountInfo> FetchDataForExistingAddressesAsync()
+    public async Task<AccountInfo> FetchDataForExistingAddressesAsync(AccountInfo accountInfo)
     {
         ExtKey.UseBCForHMACSHA512 = true;
         Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-        Network network = _networkConfiguration.GetNetwork();
+        //Network network = _networkConfiguration.GetNetwork();
 
-        AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
+        //AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
 
         var addressTasks=  accountInfo.AddressesInfo.Select(UpdateAddressInfoUtxoData);
         
@@ -220,7 +207,7 @@ public class WalletOperations : IWalletOperations
 
         await Task.WhenAll(addressTasks.Concat(changeAddressTasks));
 
-        _storage.SetAccountInfo(network.Name, accountInfo);
+       // _storage.SetAccountInfo(network.Name, accountInfo);
         
         return accountInfo;
     }
@@ -240,14 +227,14 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    public async Task<AccountInfo> FetchDataForNewAddressesAsync()
+    public async Task<AccountInfo> FetchDataForNewAddressesAsync(AccountInfo accountInfo)
     {
         ExtKey.UseBCForHMACSHA512 = true;
         Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
         Network network = _networkConfiguration.GetNetwork();
 
-        AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
+        //AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
 
         var (index, items) = await FetcAddressesDataForPubKeyAsync(accountInfo.LastFetchIndex, accountInfo.ExtPubKey, network, false);
 
@@ -275,7 +262,7 @@ public class WalletOperations : IWalletOperations
             accountInfo.TotalBalance += changeAddressInfo.Balance;
         }
 
-        _storage.SetAccountInfo(network.Name, accountInfo);
+        //_storage.SetAccountInfo(network.Name, accountInfo);
 
         return accountInfo;
     }
@@ -297,7 +284,7 @@ public class WalletOperations : IWalletOperations
 
             //check all new addresses for balance or a history
             var urlBalance = "/query/addresses/balance";
-            var indexer = _networkConfiguration.getIndexerUrl();
+            var indexer = _networkConfiguration.GetIndexerUrl();
             var response = await _http.PostAsJsonAsync(indexer.Url + urlBalance,
                 newAddressesToCheck.Select(_ => _.Address).ToArray());
 
@@ -353,7 +340,7 @@ public class WalletOperations : IWalletOperations
         var offset = 0;
         List<UtxoData> allItems = new();
         
-        IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
+        IndexerUrl indexer = _networkConfiguration.GetIndexerUrl();
 
         do
         {
@@ -386,9 +373,9 @@ public class WalletOperations : IWalletOperations
 
         try
         {
-            IndexerUrl indexer = _networkConfiguration.getIndexerUrl();
+            IndexerUrl indexer = _networkConfiguration.GetIndexerUrl();
 
-            var url = blocks.Aggregate("/stats/fee?", (current, block) => current + $"confirmations={block}");
+            var url = blocks.Aggregate("/stats/fee?", (current, block) => current + $@"confirmations={block}&");
 
             _logger.LogInformation($"fetching fee estimation for blocks - {url}");
 
@@ -408,11 +395,11 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    public void CalculateTransactionFee(SendInfo sendInfo, long feeRate)
+    public decimal CalculateTransactionFee(SendInfo sendInfo,AccountInfo accountInfo, long feeRate)
     {
         var network = _networkConfiguration.GetNetwork();
 
-        var accountInfo = _storage.GetAccountInfo(network.Name);
+        //var accountInfo = _storage.GetAccountInfo(network.Name);
         
         if (sendInfo.SendUtxos.Count == 0)
         {
@@ -422,10 +409,10 @@ public class WalletOperations : IWalletOperations
                 throw new ArgumentNullException();
         }
 
-        if (string.IsNullOrEmpty(sendInfo.ChangeAddress))
-        {
-            sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.HasHistory == false).Address;
-        }
+        // if (string.IsNullOrEmpty(sendInfo.ChangeAddress)) TODO move to the right location in the caller 
+        // {
+        //     sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.HasHistory == false).Address;
+        // }
 
         var coins = sendInfo.SendUtxos
             .Select(_ => _.Value.UtxoData)
@@ -437,6 +424,6 @@ public class WalletOperations : IWalletOperations
             .AddCoins(coins)
             .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network));
 
-        sendInfo.SendFee = builder.EstimateFees(new FeeRate(Money.Satoshis(feeRate))).ToUnit(MoneyUnit.BTC);
+        return builder.EstimateFees(new FeeRate(Money.Satoshis(feeRate))).ToUnit(MoneyUnit.BTC);
     }
 }

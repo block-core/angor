@@ -1,4 +1,4 @@
-using Angor.Client.Shared.Models;
+using Angor.Shared.Models;
 using Blazored.LocalStorage;
 
 namespace Angor.Client.Storage;

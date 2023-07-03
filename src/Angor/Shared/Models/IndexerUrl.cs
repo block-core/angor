@@ -1,4 +1,4 @@
-namespace Angor.Client.Shared.Types;
+namespace Angor.Shared.Models;
 
 public class IndexerUrl
 {

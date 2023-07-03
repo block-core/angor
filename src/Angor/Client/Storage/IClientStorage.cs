@@ -1,4 +1,4 @@
-using Angor.Client.Shared.Models;
+using Angor.Shared.Models;
 
 namespace Angor.Client.Storage
 {

@@ -1,7 +1,6 @@
-using Blockcore.Utilities;
 using System.Text.Json;
 
-namespace Angor.Client.Shared.Models;
+namespace Angor.Shared.Models;
 
 public class WalletWords
 {

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using Angor.Shared;
+﻿using Angor.Shared;
+using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using NBitcoin;
 using Money = Blockcore.NBitcoin.Money;
@@ -18,7 +16,7 @@ public class InvestmentOperations
     /// This method will create a transaction with all the spending conditions
     /// based on the project investment metadata the transaction will be unsigned (it wont have any inputs yet)
     /// </summary>
-    public Transaction CreateInvestmentTransaction(Network network,InvestorContext context, long totalInvestmentAmount)
+    public Transaction CreateSeederTransaction(Network network,InvestorContext context, long totalInvestmentAmount)
     {
         // create the output and script of the project id 
         var angorFeeOutputScript = ScriptBuilder.GetAngorFeeOutputScript(context.ProjectInvestmentInfo.AngorFeeKey);
@@ -28,9 +26,11 @@ public class InvestmentOperations
         var opreturnScript = ScriptBuilder.GetSeederInfoScript(context.InvestorKey, investorRedeemSecret.ToString());
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
-        var stagesScript = context.ProjectInvestmentInfo.Stages.Select(_ =>
-            ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
-                context.InvestorKey, investorRedeemSecret.ToString(), _.NumberOfBLocks,
+        var stagesScript = context.ProjectInvestmentInfo.Stages
+            .Select(_ => ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
+                context.InvestorKey, 
+                investorRedeemSecret.ToString(), 
+                _.NumberOfBLocks, 
                 context.ProjectInvestmentInfo.ExpirationNumberOfBlocks));
 
         var stagesKeys = stagesScript.Select(scripts => 
@@ -65,10 +65,16 @@ public class InvestmentOperations
         };
     }
     
-    public void SignInvestmentTransaction(InvestorContext context)
+    public void SignInvestmentTransaction(InvestorContext context, Transaction transaction,List<UtxoDataWithPath> dataWithPaths)
     {
         // this method will add inputs to an investment transaction till the amount is satisfied 
 
+        // var builder = new TransactionBuilder(network)
+        //     .AddCoins(coins)
+        //     .AddKeys(keys.ToArray())
+        //     .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network))
+        //     .SendEstimatedFees(new FeeRate(Money.Coins(sendInfo.FeeRate)));
+        
         // add the address and change output 
     }
 

@@ -1,4 +1,5 @@
-using Angor.Client.Shared.Types;
+using Angor.Shared;
+using Angor.Shared.Models;
 using Blockcore.Consensus;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
@@ -15,17 +16,17 @@ public class NetworkConfiguration : INetworkConfiguration
 {
     public Network GetNetwork()
     {
-        return new BitcoinMain();
+        return new BitcoinSignet();
     }
 
-    public IndexerUrl getIndexerUrl()
+    public IndexerUrl GetIndexerUrl()
     {
         return new IndexerUrl{Symbol = "", Url = "http://10.22.156.163:9910/api"};
     }
 
-    public class BitcoinMain : Network
+    public class BitcoinSignet : Network
     {
-        public BitcoinMain()
+        public BitcoinSignet()
         {
             {
                 this.Name = "Signet";

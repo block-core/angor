@@ -1,4 +1,4 @@
-namespace Angor.Client.Shared.Models;
+namespace Angor.Shared.Models;
 
 public class AddressBalance
 {

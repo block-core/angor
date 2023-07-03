@@ -1,6 +1,6 @@
 using Blockcore.NBitcoin;
 
-namespace Angor.Client.Shared.Models;
+namespace Angor.Shared.Models;
 
 public class SendInfo
 {

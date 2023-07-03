@@ -1,10 +1,10 @@
-using Angor.Client.Shared.Types;
+using Angor.Shared.Models;
 using Blockcore.Networks;
 
-namespace Angor.Client;
+namespace Angor.Shared;
 
 public interface INetworkConfiguration
 {
     Network GetNetwork();
-    IndexerUrl getIndexerUrl();
+    IndexerUrl GetIndexerUrl();
 }
