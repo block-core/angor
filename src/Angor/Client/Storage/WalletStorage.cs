@@ -46,15 +46,4 @@ public class WalletStorage : IWalletStorage
 
         return words;
     }
-    
-    public string? GetWalletWords()
-    {
-        return _storage.GetItem<WalletWords>(WalletWordsKey)?
-            .ConvertToString() ?? null;
-    }
-
-    public void DeleteWalletWords()
-    {
-        _storage.RemoveItem(WalletWordsKey);
-    }
 }
