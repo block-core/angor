@@ -22,6 +22,7 @@ using TransactionBuilder = Blockcore.Consensus.TransactionInfo.TransactionBuilde
 using TxIn = Blockcore.Consensus.TransactionInfo.TxIn;
 using TxOut = Blockcore.Consensus.TransactionInfo.TxOut;
 using uint256 = Blockcore.NBitcoin.uint256;
+using Utils = NBitcoin.Utils;
 using WitScript = NBitcoin.WitScript;
 
 public class InvestmentOperations
@@ -57,8 +58,8 @@ public class InvestmentOperations
             .Select(_ => ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
                 context.InvestorKey,
                 context.InvestorSecretHash, 
-                _.NumberOfBLocks, 
-                context.ProjectInvestmentInfo.ExpirationNumberOfBlocks));
+                _.ReleaseDate, 
+                context.ProjectInvestmentInfo.ExpiryDate));
 
         var stagesScripts = stagesScript.Select(scripts => 
             AngorScripts.CreateStageSeeder(network,scripts.founder,scripts.recover,scripts.endOfProject));
@@ -100,8 +101,8 @@ public class InvestmentOperations
         var fee = fees.First(f => f.Confirmations == 1);
 
 
-        var incoins = coins.coins.Select(c => new NBitcoin.Coin(OutPoint.Parse(c.Outpoint.ToString()), new NBitcoin.TxOut(NBitcoin.Money.Satoshis(c.Amount.Satoshi), new NBitcoin.Script(c.ScriptPubKey.ToBytes()))));
-        var inKeys = coins.keys.Select(k => new Key(k.ToBytes())).ToArray();
+        //var incoins = coins.coins.Select(c => new NBitcoin.Coin(OutPoint.Parse(c.Outpoint.ToString()), new NBitcoin.TxOut(NBitcoin.Money.Satoshis(c.Amount.Satoshi), new NBitcoin.Script(c.ScriptPubKey.ToBytes()))));
+        //var inKeys = coins.keys.Select(k => new Key(k.ToBytes())).ToArray();
 
         var builder = new TransactionBuilder(network) // nbitcoinNetwork.CreateTransactionBuilder()
             .AddCoins(coins.coins)
@@ -152,14 +153,19 @@ public class InvestmentOperations
         var scriptStages = ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
             context.InvestorKey,
             context.InvestorSecretHash,
-            context.ProjectInvestmentInfo.Stages[stageNumber].NumberOfBLocks,
-            context.ProjectInvestmentInfo.ExpirationNumberOfBlocks);
+            context.ProjectInvestmentInfo.Stages[stageNumber].ReleaseDate,
+            context.ProjectInvestmentInfo.ExpiryDate);
 
         var controlBlock = AngorScripts.CreateControlBlockFounder(network, scriptStages.founder, scriptStages.recover, scriptStages.endOfProject);
 
         spender.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null);
 
-      
+        // we must set the locktime to be ahead of the current block time
+        // and ahead of the cltv otherwise the trx wont get accepted in the chain
+        var locktime = Utils.DateTimeToUnixTime(context.ProjectInvestmentInfo.Stages[stageNumber].ReleaseDate.AddMinutes(1));
+        spender.LockTime = locktime;
+        spender.Inputs[0].Sequence = new NBitcoin.Sequence(locktime);
+
         NBitcoin.TransactionBuilder builder = nbitcoinNetwork.CreateTransactionBuilder()
             .AddCoin(new NBitcoin.Coin(trx, stageOutput.TxOut));
 

@@ -27,48 +27,23 @@ public class ScriptBuilder
             Op.GetPushOp(uint256.Parse(secretHash).ToBytes()));
     }
     
-    public static (Script founder,Script recover, Script endOfProject) BuildSeederScript(string funderKey, string investorKey, string secretHash,long stageBlocks, long projectLimitBlocks)
+    public static (Script founder,Script recover, Script endOfProject) BuildSeederScript(string funderKey, string investorKey, string secretHash, DateTime founderLockTime, DateTime projectExpieryLocktime)
     {
-        // var ops = new List<Op>
-        // {
-        //     OpcodeType.OP_IF,
-        //     
-        //     Op.GetPushOp(new PubKey(funderKey).ToBytes()),
-        //     OpcodeType.OP_CHECKSIGVERIFY,
-        //     Op.GetPushOp(stageBlocks),
-        //     OpcodeType.OP_CHECKLOCKTIMEVERIFY,
-        //     
-        //     OpcodeType.OP_ELSE,
-        //     OpcodeType.OP_IF,
-        //     
-        //     Op.GetPushOp(new PubKey(funderKey).ToBytes()),
-        //     OpcodeType.OP_CHECKSIGVERIFY,
-        //     Op.GetPushOp(new PubKey(investorKey).ToBytes()),
-        //     OpcodeType.OP_CHECKSIGVERIFY,
-        //     OpcodeType.OP_SHA256,
-        //     Op.GetPushOp(new PubKey(secret).ToBytes()),
-        //     OpcodeType.OP_EQUALVERIFY,
-        //     
-        //     OpcodeType.OP_ELSE,
-        //     OpcodeType.OP_IF,
-        //     
-        //     Op.GetPushOp(new PubKey(investorKey).ToBytes()),
-        //     OpcodeType.OP_CHECKSIGVERIFY,
-        //     Op.GetPushOp(projectLimitBlocks),
-        //     OpcodeType.OP_CHECKLOCKTIMEVERIFY,
-        // };
+        long locktimeFounder = Utils.DateTimeToUnixTime(founderLockTime);
+        long locktimeExpiery = Utils.DateTimeToUnixTime(projectExpieryLocktime);
 
         return (
+
             // funder gets funds after stage started
             new(new List<Op>
             {
                 Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
-                Op.GetPushOp(stageBlocks),
+                Op.GetPushOp(locktimeFounder),
                 OpcodeType.OP_CHECKLOCKTIMEVERIFY
             }),
 
-            // investor gets funds to redeem transaction with secret
+            // seed investor pre-co-sign with founder to gets funds with penalty and must expose the secret
             new(new List<Op>
             {
                 Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
@@ -85,7 +60,7 @@ public class ScriptBuilder
             {
                 Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
-                Op.GetPushOp(projectLimitBlocks),
+                Op.GetPushOp(locktimeExpiery),
                 OpcodeType.OP_CHECKLOCKTIMEVERIFY
             })
         );

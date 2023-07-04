@@ -13,7 +13,6 @@ public class ProjectInvestmentInfo
     
     public DateTime StartDate { get; set; }
     public DateTime ExpiryDate { get; set; }
-    public long ExpirationNumberOfBlocks { get; set; }
     public double TargetAmount { get; set; }
     public List<Seeders> Seeders { get; set; } = new();
     public List<Stage> Stages { get; set; } = new();

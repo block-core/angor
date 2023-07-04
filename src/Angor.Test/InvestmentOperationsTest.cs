@@ -23,7 +23,7 @@ namespace Angor.Test
 
 
 
-            var scripts = ScriptBuilder.BuildSeederScript(funderKey.PubKey.ToHex(), investorKey.PubKey.ToHex(), Hashes.Hash256(secret.ToBytes()).ToString(), 5, 10);
+            var scripts = ScriptBuilder.BuildSeederScript(funderKey.PubKey.ToHex(), investorKey.PubKey.ToHex(), Hashes.Hash256(secret.ToBytes()).ToString(), DateTime.UtcNow, DateTime.UtcNow.AddDays(1));
 
             var adress = AngorScripts.CreateStageSeeder(Networks.Bitcoin.Testnet(), scripts.founder, scripts.recover, scripts.endOfProject);
 
@@ -47,18 +47,20 @@ namespace Angor.Test
 
             InvestorContext context = new InvestorContext();
             context.ProjectInvestmentInfo = new ProjectInvestmentInfo();
+            context.ProjectInvestmentInfo.TargetAmount = 3;
+            context.ProjectInvestmentInfo.StartDate = DateTime.UtcNow;
+            context.ProjectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             context.ProjectInvestmentInfo.Stages = new List<Stage>
             {
-                new Stage { AmountToRelease = 1, NumberOfBLocks = 10 },
-                new Stage { AmountToRelease = 1, NumberOfBLocks = 20 },
-                new Stage { AmountToRelease = 1, NumberOfBLocks = 30 }
+                new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             context.ProjectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
             context.ProjectInvestmentInfo.AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
             context.InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes());
             context.ChangeAddress = secret.PubKey.GetSegwitAddress(network).ToString();
             context.InvestorSecretHash = Encoders.Hex.EncodeData(Hashes.Hash256(secret.ToBytes()).ToBytes());
-            context.ProjectInvestmentInfo.TargetAmount = 3;
 
             var invtrx = operations.CreateSeederTransaction(network, context, Money.Coins(3).Satoshi);
 
