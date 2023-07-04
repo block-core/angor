@@ -206,8 +206,73 @@ public class InvestmentOperations
         // allow an investor that acquired enough panel keys to recover their investment
     }
 
-    public void RecoverEndOfProjectFunds(InvestorContext context)
+    /// <summary>
+    /// allow an investor that take back any coins left when the project end date has passed
+    /// </summary>
+    public Transaction RecoverEndOfProjectFunds(Network network, InvestorContext context, int stageNumber, Script investorRecieveAddress, string investorPrivateKey)
     {
-        // allow an investor that take back any coins left when the project end date has passed
+        // We'll use the NBitcoin lib because its a taproot spend
+
+        var fees = _walletOperations.GetFeeEstimationAsync().Result;
+        var fee = fees.First(f => f.Confirmations == 1);
+
+        var nbitcoinNetwork = NetworkMapper.Map(network);
+        var trx = NBitcoin.Transaction.Parse(context.TransactionHex, nbitcoinNetwork);
+
+        var spender = nbitcoinNetwork.CreateTransaction();
+
+        var stageOutput = trx.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 2);
+
+        spender.Outputs.Add(stageOutput.TxOut.Value, new NBitcoin.Script(investorRecieveAddress.ToBytes()));
+
+        var scriptStages = ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
+            context.InvestorKey,
+            context.InvestorSecretHash,
+            context.ProjectInvestmentInfo.Stages[stageNumber].ReleaseDate,
+            context.ProjectInvestmentInfo.ExpiryDate);
+
+        var controlBlock = AngorScripts.CreateControlBlockExpiry(scriptStages.founder, scriptStages.recover, scriptStages.endOfProject);
+
+        spender.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null);
+
+        // we must set the locktime to be ahead of the current block time
+        // and ahead of the cltv otherwise the trx wont get accepted in the chain
+        var locktime = Utils.DateTimeToUnixTime(context.ProjectInvestmentInfo.ExpiryDate.AddMinutes(1));
+        spender.LockTime = locktime;
+        spender.Inputs[0].Sequence = new NBitcoin.Sequence(locktime);
+
+        NBitcoin.TransactionBuilder builder = nbitcoinNetwork.CreateTransactionBuilder()
+            .AddCoin(new NBitcoin.Coin(trx, stageOutput.TxOut));
+
+        var feeToReduce = builder.EstimateFees(spender, new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(fee.FeeRate)));
+
+        spender.Outputs[0].Value -= feeToReduce;
+
+        var sighash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+
+        var hash = spender.GetSignatureHashTaproot(new[] { stageOutput.TxOut }, new TaprootExecutionData(0, new NBitcoin.Script(scriptStages.endOfProject.ToBytes()).TaprootV1LeafHash) { SigHash = sighash });
+
+        var key = new Key(Encoders.Hex.DecodeData(investorPrivateKey));
+        var sig = key.SignTaprootKeySpend(hash, sighash);
+
+        if (!key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature))
+        {
+            throw new Exception();
+        }
+
+        spender.Inputs[0].WitScript = new WitScript(Op.GetPushOp(sig.ToBytes()), Op.GetPushOp(scriptStages.endOfProject.ToBytes()), Op.GetPushOp(controlBlock.ToBytes()));
+
+        if (!builder.Verify(spender, out TransactionPolicyError[] errors))
+        {
+            var sb = new StringBuilder();
+            foreach (var transactionPolicyError in errors)
+            {
+                sb.AppendLine(transactionPolicyError.ToString());
+            }
+
+            throw new Exception(sb.ToString());
+        }
+
+        return network.CreateTransaction(spender.ToHex());
     }
 }

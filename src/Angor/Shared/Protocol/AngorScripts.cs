@@ -43,6 +43,24 @@ namespace Angor.Shared.Protocol
             return new Script(controlBlock.ToBytes());
         }
 
+        public static Script CreateControlBlockExpiry(Script founder, Script recover, Script expiry)
+        {
+            var taprootKey = CreateUnspendableInternalKey();
+
+            var builder = new TaprootBuilder();
+
+            builder.AddLeaf(1, new NBitcoin.Script(founder.ToBytes()))
+                .AddLeaf(2, new NBitcoin.Script(recover.ToBytes()))
+                .AddLeaf(2, new NBitcoin.Script(expiry.ToBytes()));
+
+            var treeInfo = builder.Finalize(taprootKey);
+
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(expiry.ToBytes()),
+                (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
+
+            return new Script(controlBlock.ToBytes());
+        }
+
         public static TaprootInternalPubKey CreateUnspendableInternalKey()
         {
             // 1. Calculate the SHA256 of a known constant

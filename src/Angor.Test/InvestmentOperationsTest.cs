@@ -39,8 +39,9 @@ namespace Angor.Test
             var angorKey = new Key();
             var funderKey = new Key();
             var funderReceiveCoinsKey = new Key();
-            var investorChangeKey = new Key();
             var investorKey = new Key();
+            var investorChangeKey = new Key();
+            var investorReceiveCoinsKey = new Key();
             var secret = new Key();
 
             InvestmentOperations operations = new InvestmentOperations(new WalletOperationsMock());
@@ -59,7 +60,7 @@ namespace Angor.Test
             context.ProjectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
             context.ProjectInvestmentInfo.AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
             context.InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes());
-            context.ChangeAddress = secret.PubKey.GetSegwitAddress(network).ToString();
+            context.ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString();
             context.InvestorSecretHash = Encoders.Hex.EncodeData(Hashes.Hash256(secret.ToBytes()).ToBytes());
 
             var invtrx = operations.CreateSeederTransaction(network, context, Money.Coins(3).Satoshi);
@@ -67,6 +68,8 @@ namespace Angor.Test
             operations.SignInvestmentTransaction(network, context, invtrx, null, new List<UtxoDataWithPath>());
 
             var foundertrx = operations.SpendFounderStage(network, context, 1, funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderKey.ToBytes()));
+
+            var investorExpierytrx = operations.RecoverEndOfProjectFunds(network, context, 1, investorReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(investorKey.ToBytes()));
 
         }
 
