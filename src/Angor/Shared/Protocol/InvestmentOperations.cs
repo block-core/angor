@@ -8,6 +8,9 @@ using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;
 using NBitcoin.Policy;
+using System.Text;
+using BitcoinAddress = Blockcore.NBitcoin.BitcoinAddress;
+using FeeRate = Blockcore.NBitcoin.FeeRate;
 using Key = NBitcoin.Key;
 using Money = Blockcore.NBitcoin.Money;
 using Network = Blockcore.Networks.Network;
@@ -23,6 +26,13 @@ using WitScript = NBitcoin.WitScript;
 
 public class InvestmentOperations
 {
+    private readonly IWalletOperations _walletOperations;
+
+    public InvestmentOperations(IWalletOperations walletOperations)
+    {
+        _walletOperations = walletOperations;
+    }
+
     /// <summary>
     /// This method will create a transaction with all the spending conditions
     /// based on the project investment metadata the transaction will be unsigned (it wont have any inputs yet)
@@ -37,16 +47,16 @@ public class InvestmentOperations
         investmentTransaction.AddOutput(angorOutput);
 
         // create the output and script of the investor pubkey script opreturn
-        var investorRedeemSecret = new uint256(RandomUtils.GetBytes(32));
-        var opreturnScript = ScriptBuilder.GetSeederInfoScript(context.InvestorKey, investorRedeemSecret.ToString());
+
+        var opreturnScript = ScriptBuilder.GetSeederInfoScript(context.InvestorKey, context.InvestorSecretHash);
         var investorInfoOutput = new TxOut(new Money(0), opreturnScript);
         investmentTransaction.AddOutput(investorInfoOutput);
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
         var stagesScript = context.ProjectInvestmentInfo.Stages
             .Select(_ => ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
-                context.InvestorKey, 
-                investorRedeemSecret.ToString(), 
+                context.InvestorKey,
+                context.InvestorSecretHash, 
                 _.NumberOfBLocks, 
                 context.ProjectInvestmentInfo.ExpirationNumberOfBlocks));
 
@@ -77,37 +87,35 @@ public class InvestmentOperations
         };
     }
     
-    public void SignInvestmentTransaction(InvestorContext context, Transaction transaction,List<UtxoDataWithPath> dataWithPaths)
+    public void SignInvestmentTransaction(Network network, InvestorContext context, Transaction transaction, WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths)
     {
-        var totalInOutputs = investmentTransaction.Outputs.Sum(s => s.Value);
+        // We must use the NBitcoin lib because taproot outputs are non standard before taproot activated
 
-        // var builder = new TransactionBuilder(network)
-        //     .AddCoins(coins)
-        //     .AddKeys(keys.ToArray())
-        //     .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network))
-        //     .SendEstimatedFees(new FeeRate(Money.Coins(sendInfo.FeeRate)));
-        
-        // add the address and change output 
-        var changeAmount = totalInOutputs - totalInInput;
+        //var nbitcoinNetwork = NetworkMapper.Map(network);
+        //var trx = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
 
-        investmentTransaction.AddOutput(changeAmount, new Blockcore.NBitcoin.BitcoinWitPubKeyAddress(context.ChangeAddress, network).ScriptPubKey);
+        var coins = _walletOperations.GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
-        // now we estimate the size of the fee
-        var size = investmentTransaction.GetVirtualSize(network.Consensus.Options.WitnessScaleFactor);
+        var fees = _walletOperations.GetFeeEstimationAsync().Result;
+        var fee = fees.First(f => f.Confirmations == 1);
 
 
-        // Use the NBitcoin lib to sign and verify
-        var builder = new TransactionBuilder(network)
-            .AddKeys(inputs.Select(s => new Blockcore.NBitcoin.Key(Encoders.Hex.DecodeData(s.Key))).ToArray())
-            .AddCoins(investmentTransaction)
-          
-            .SendEstimatedFees(new Blockcore.NBitcoin.FeeRate(feeRate));
+        var incoins = coins.coins.Select(c => new NBitcoin.Coin(OutPoint.Parse(c.Outpoint.ToString()), new NBitcoin.TxOut(NBitcoin.Money.Satoshis(c.Amount.Satoshi), new NBitcoin.Script(c.ScriptPubKey.ToBytes()))));
+        var inKeys = coins.keys.Select(k => new Key(k.ToBytes())).ToArray();
 
-        var signTransaction = builder.SignTransaction(investmentTransaction);
+        var builder = new TransactionBuilder(network) // nbitcoinNetwork.CreateTransactionBuilder()
+            .AddCoins(coins.coins)
+            .AddKeys(coins.keys.ToArray())
+            .SetChange(BitcoinAddress.Create(context.ChangeAddress, network))
+            .ContinueToBuild(transaction)
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(fee.FeeRate)))
+            .CoverTheRest();
 
-        var verifyresult = builder.Verify(signTransaction, out TransactionPolicyError[] result);
+        var signTransaction = builder.BuildTransaction(true);// builder.SignTransactionInPlace(transaction);
 
-        if (result.Any())
+        var verifyresult = builder.Verify(signTransaction, out Blockcore.NBitcoin.Policy.TransactionPolicyError[] result);
+
+        if (!verifyresult)
         {
             StringBuilder sb = new();
             foreach (var policyError in result)
@@ -118,27 +126,42 @@ public class InvestmentOperations
             throw new Exception(sb.ToString());
         }
 
+        context.TransactionHex = signTransaction.ToHex();
     }
 
+    /// <summary>
+    /// Allow the founder to spend the coins in a stage after the timelock has passed
+    /// </summary>
+    /// <exception cref="Exception"></exception>
     public Transaction SpendFounderStage(Network network, InvestorContext context, int stageNumber, Script founderRecieveAddress, string founderPrivateKey)
     {
-        // allow the founder to spend the coins in a stage after the timelock has passed
+        // We'll use the NBitcoin lib because its a taproot spend
 
-        //var trx = network.Consensus.ConsensusFactory.CreateTransaction(context.TransactionHex);
+        var fees = _walletOperations.GetFeeEstimationAsync().Result;
+        var fee = fees.First(f => f.Confirmations == 1);
 
         var nbitcoinNetwork = NetworkMapper.Map(network);
         var trx = NBitcoin.Transaction.Parse(context.TransactionHex, nbitcoinNetwork);
-        
-        var stageOutput = trx.Outputs[stageNumber + 2];
 
-        var spender = NBitcoin.Network.TestNet.CreateTransaction();
-        spender.Inputs.Add(new OutPoint(trx, stageNumber + 2));
+        var spender = nbitcoinNetwork.CreateTransaction();
 
-        spender.Outputs.Add(stageOutput.Value, new NBitcoin.Script(founderRecieveAddress.ToBytes()));
+        var stageOutput = trx.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 2);
+
+        spender.Outputs.Add(stageOutput.TxOut.Value, new NBitcoin.Script(founderRecieveAddress.ToBytes()));
+
+        var scriptStages = ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
+            context.InvestorKey,
+            context.InvestorSecretHash,
+            context.ProjectInvestmentInfo.Stages[stageNumber].NumberOfBLocks,
+            context.ProjectInvestmentInfo.ExpirationNumberOfBlocks);
+
+        var controlBlock = AngorScripts.CreateControlBlockFounder(network, scriptStages.founder, scriptStages.recover, scriptStages.endOfProject);
+
+        spender.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null);
 
         var sighash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
-        var hash = spender.GetSignatureHashTaproot(new[] { stageOutput }, new TaprootExecutionData(0) { SigHash = sighash });
+        var hash = spender.GetSignatureHashTaproot(new[] { stageOutput.TxOut }, new TaprootExecutionData(0) { SigHash = sighash });
 
         var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
         var sig = key.SignTaprootKeySpend(hash, sighash);
@@ -148,11 +171,16 @@ public class InvestmentOperations
             throw new Exception();
         }
 
-        spender.Inputs[0].WitScript = new WitScript(Op.GetPushOp(sig.ToBytes()));
+        spender.Inputs[0].WitScript = new WitScript(Op.GetPushOp(sig.ToBytes()), Op.GetPushOp(scriptStages.founder.ToBytes()), Op.GetPushOp(controlBlock.ToBytes()));
 
-        NBitcoin.TransactionBuilder builder = NBitcoin.Network.TestNet.CreateTransactionBuilder();
+        NBitcoin.TransactionBuilder builder = nbitcoinNetwork.CreateTransactionBuilder()
+            .AddCoin(new NBitcoin.Coin(trx, stageOutput.TxOut));
 
-        if(!builder.Verify(spender, out TransactionPolicyError[] errors))
+        var feeToReduce = builder.EstimateFees(spender, new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(fee.FeeRate)));
+
+        spender.Outputs[0].Value -= feeToReduce;
+
+        if (!builder.Verify(spender, out TransactionPolicyError[] errors))
         {
             var sb = new StringBuilder();
             foreach (var transactionPolicyError in errors)

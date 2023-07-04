@@ -9,7 +9,7 @@ public class InvestorContext
 {
     public string InvestorKey { get; set; }
 
-    public string TokenHashlockKey { get; set; }
+    public string InvestorSecretHash { get; set; }
 
     public ProjectInvestmentInfo ProjectInvestmentInfo { get; set; }
 

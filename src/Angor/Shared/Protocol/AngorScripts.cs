@@ -27,24 +27,21 @@ namespace Angor.Shared.Protocol
             return new Script(address.ScriptPubKey.ToBytes());
         }
 
-        public static uint256 CreateStage(List<Script> leaves)
+        public static Script CreateControlBlockFounder(Blockcore.Networks.Network network, Script founder, Script recover, Script expiry)
         {
+            TaprootInternalPubKey taprootKey = CreateUnspendableInternalKey();
 
             var builder = new TaprootBuilder();
 
-            uint depth = 1;
-            foreach (var script in leaves)
-            {
-                builder.AddLeaf(depth, new NBitcoin.Script(script.ToBytes()));
+            builder.AddLeaf(1, new NBitcoin.Script(founder.ToBytes()))
+                .AddLeaf(2, new NBitcoin.Script(recover.ToBytes()))
+                .AddLeaf(2, new NBitcoin.Script(expiry.ToBytes()));
 
-                depth += depth % 2 == 0 ? (uint)0 : 1;
-            }
+            var treeInfo = builder.Finalize(taprootKey);
 
-            var key = new PubKey(string.Empty);
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(founder.ToBytes()), (byte)NBitcoin.TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
 
-            var merkelRoot = builder.Finalize(new TaprootInternalPubKey(key.ToBytes())).MerkleRoot;
-
-            return new uint256(merkelRoot.ToBytes());
+            return new Script(controlBlock.ToBytes());
         }
 
         public static TaprootInternalPubKey CreateUnspendableInternalKey()
