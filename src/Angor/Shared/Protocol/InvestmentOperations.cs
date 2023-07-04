@@ -159,9 +159,17 @@ public class InvestmentOperations
 
         spender.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null);
 
+      
+        NBitcoin.TransactionBuilder builder = nbitcoinNetwork.CreateTransactionBuilder()
+            .AddCoin(new NBitcoin.Coin(trx, stageOutput.TxOut));
+
+        var feeToReduce = builder.EstimateFees(spender, new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(fee.FeeRate)));
+
+        spender.Outputs[0].Value -= feeToReduce;
+
         var sighash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
-        var hash = spender.GetSignatureHashTaproot(new[] { stageOutput.TxOut }, new TaprootExecutionData(0) { SigHash = sighash });
+        var hash = spender.GetSignatureHashTaproot(new[] { stageOutput.TxOut }, new TaprootExecutionData(0, new NBitcoin.Script(scriptStages.founder.ToBytes()).TaprootV1LeafHash) { SigHash = sighash });
 
         var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
         var sig = key.SignTaprootKeySpend(hash, sighash);
@@ -172,13 +180,6 @@ public class InvestmentOperations
         }
 
         spender.Inputs[0].WitScript = new WitScript(Op.GetPushOp(sig.ToBytes()), Op.GetPushOp(scriptStages.founder.ToBytes()), Op.GetPushOp(controlBlock.ToBytes()));
-
-        NBitcoin.TransactionBuilder builder = nbitcoinNetwork.CreateTransactionBuilder()
-            .AddCoin(new NBitcoin.Coin(trx, stageOutput.TxOut));
-
-        var feeToReduce = builder.EstimateFees(spender, new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(fee.FeeRate)));
-
-        spender.Outputs[0].Value -= feeToReduce;
 
         if (!builder.Verify(spender, out TransactionPolicyError[] errors))
         {
