@@ -155,7 +155,7 @@ public class InvestmentOperations
             context.ProjectInvestmentInfo.Stages[stageNumber].NumberOfBLocks,
             context.ProjectInvestmentInfo.ExpirationNumberOfBlocks);
 
-        var controlBlock = AngorScripts.CreateControlBlockFounder(network, scriptStages.founder, scriptStages.recover, scriptStages.endOfProject);
+        var controlBlock = AngorScripts.CreateControlBlockFounder(scriptStages.founder, scriptStages.recover, scriptStages.endOfProject);
 
         spender.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null);
 
