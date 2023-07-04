@@ -2,17 +2,48 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Protocol;
-using Blockcore.Consensus.BlockInfo;
-using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
-using System.Collections.Generic;
+using Moq;
 
 namespace Angor.Test
 {
     public class InvestmentOperationsTest
     {
+        private Mock<IWalletOperations> _walletOperations;
+
+
+        public InvestmentOperationsTest()
+        {
+            _walletOperations = new Mock<IWalletOperations>();
+
+            _walletOperations.Setup(_ => _.GetFeeEstimationAsync())
+                .ReturnsAsync(new List<FeeEstimation>
+                {
+                    new() { Confirmations = 1, FeeRate = 10000 },
+                });
+
+            _walletOperations.Setup(_ => _.GetUnspentOutputsForTransaction(It.IsAny<WalletWords>(),
+                        It.IsAny<List<UtxoDataWithPath>>()))
+                .Returns<WalletWords, List<UtxoDataWithPath>>((_, _) =>
+                {
+                    var network = Networks.Bitcoin.Testnet();
+
+                    // create a fake inputTrx
+                    var fakeInputTrx = network.Consensus.ConsensusFactory.CreateTransaction();
+                    var fakeInputKey = new Key();
+                    var fakeTxout = fakeInputTrx.AddOutput(Money.Parse("20.2"), fakeInputKey.ScriptPubKey);
+
+                    var keys = new List<Key> { fakeInputKey };
+
+                    var coins = keys.Select(key => new Coin(fakeInputTrx, fakeTxout)).ToList();
+
+                    return (coins, keys);
+                });
+
+        }
+
         [Fact]
         public void BuildStage()
         {
@@ -44,7 +75,7 @@ namespace Angor.Test
             var investorReceiveCoinsKey = new Key();
             var secret = new Key();
 
-            InvestmentOperations operations = new InvestmentOperations(new WalletOperationsMock());
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object);
 
             InvestorContext context = new InvestorContext();
             context.ProjectInvestmentInfo = new ProjectInvestmentInfo();
@@ -68,82 +99,11 @@ namespace Angor.Test
             operations.SignInvestmentTransaction(network, context, invtrx, null, new List<UtxoDataWithPath>());
 
             var foundertrx = operations.SpendFounderStage(network, context, 1, funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderKey.ToBytes()));
+            
+            Assert.NotNull(foundertrx);
 
             var investorExpierytrx = operations.RecoverEndOfProjectFunds(network, context, 1, investorReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(investorKey.ToBytes()));
 
-        }
-
-        public class WalletOperationsMock : IWalletOperations
-        {
-            public string GenerateWalletWords()
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<OperationResult<Transaction>> SendAmountToAddress(WalletWords walletWords, SendInfo sendInfo)
-            {
-                throw new NotImplementedException();
-            }
-
-            public AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords)
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<AccountInfo> FetchDataForExistingAddressesAsync(AccountInfo accountInfo)
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<AccountInfo> FetchDataForNewAddressesAsync(AccountInfo accountInfo)
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<(string address, List<UtxoData> data)> FetchUtxoForAddressAsync(string adddress)
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<IEnumerable<FeeEstimation>> GetFeeEstimationAsync()
-            {
-                var list = new List<FeeEstimation>
-                {
-                    new FeeEstimation { Confirmations = 1, FeeRate = 10000 },
-                };
-
-                return Task.FromResult<IEnumerable<FeeEstimation>>(list);
-            }
-
-            public decimal CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, long feeRate)
-            {
-                throw new NotImplementedException();
-            }
-
-            public (List<Coin>? coins, List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths)
-            {
-                var network = Shared.Networks.Networks.Bitcoin.Testnet();
-
-                // create a fake inputTrx
-                var fakeInputTrx = network.Consensus.ConsensusFactory.CreateTransaction();
-                Key fakeInputKey = new Key();
-                var fakeTxout = fakeInputTrx.AddOutput(Money.Parse("20.2"), fakeInputKey.ScriptPubKey);
-
-                List<Coin> coins = new List<Coin>();
-
-                List<Key> keys = new List<Key>()
-                {
-                    { fakeInputKey },
-                };
-
-                foreach (var key in keys)
-                {
-                    coins.Add(new Coin(fakeInputTrx, fakeTxout));
-                }
-
-                return (coins, keys);
-
-            }
         }
     }
 }
