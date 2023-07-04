@@ -1,9 +1,7 @@
 ﻿using System.Text;
 using NBitcoin;
 using NBitcoin.Crypto;
-using PubKey = Blockcore.NBitcoin.PubKey;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
-using uint256 = Blockcore.NBitcoin.uint256;
 
 
 namespace Angor.Shared.Protocol
@@ -12,7 +10,7 @@ namespace Angor.Shared.Protocol
     {
         public static Script CreateStageSeeder(Blockcore.Networks.Network network, Script founder, Script recover, Script expiry)
         {
-            TaprootInternalPubKey taprootKey = CreateUnspendableInternalKey();
+            var taprootKey = CreateUnspendableInternalKey();
 
             var builder = new TaprootBuilder();
 
@@ -22,14 +20,14 @@ namespace Angor.Shared.Protocol
 
             var treeInfo = builder.Finalize(taprootKey);
 
-            var address = treeInfo.OutputPubKey.GetAddress(NBitcoin.Network.TestNet); //TODO 
+            var address = treeInfo.OutputPubKey.GetAddress(NetworkMapper.Map(network));
 
             return new Script(address.ScriptPubKey.ToBytes());
         }
 
-        public static Script CreateControlBlockFounder(Blockcore.Networks.Network network, Script founder, Script recover, Script expiry)
+        public static Script CreateControlBlockFounder(Script founder, Script recover, Script expiry)
         {
-            TaprootInternalPubKey taprootKey = CreateUnspendableInternalKey();
+            var taprootKey = CreateUnspendableInternalKey();
 
             var builder = new TaprootBuilder();
 
@@ -39,7 +37,8 @@ namespace Angor.Shared.Protocol
 
             var treeInfo = builder.Finalize(taprootKey);
 
-            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(founder.ToBytes()), (byte)NBitcoin.TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(founder.ToBytes()), 
+                (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
 
             return new Script(controlBlock.ToBytes());
         }
