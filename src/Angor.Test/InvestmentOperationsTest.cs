@@ -42,23 +42,18 @@ namespace Angor.Test
 
                     return (coins, keys);
                 });
-
         }
 
         [Fact]
         public void BuildStage()
         {
-
             var funderKey = new Key();
             var investorKey = new Key();
             var secret = new Key();
-
-
-
+            
             var scripts = ScriptBuilder.BuildSeederScript(funderKey.PubKey.ToHex(), investorKey.PubKey.ToHex(), Hashes.Hash256(secret.ToBytes()).ToString(), DateTime.UtcNow, DateTime.UtcNow.AddDays(1));
 
             var adress = AngorScripts.CreateStageSeeder(Networks.Bitcoin.Testnet(), scripts.founder, scripts.recover, scripts.endOfProject);
-
         }
 
         [Fact]
@@ -69,7 +64,6 @@ namespace Angor.Test
             var angorKey = new Key();
             var funderKey = new Key();
             var funderReceiveCoinsKey = new Key();
-
 
             InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object);
 
@@ -98,7 +92,6 @@ namespace Angor.Test
             seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
             seeder1Context.InvestorSecretHash = Encoders.Hex.EncodeData(Hashes.Hash256(seeder1secret.ToBytes()).ToBytes());
 
-
             // Create the seeder 2 params
             var seeder2Key = new Key();
             var seeder2secret = new Key();
@@ -120,8 +113,49 @@ namespace Angor.Test
             var founderTrxForSeeder1Stage1 = operations.SpendFounderStage(network, seeder1Context, 1, funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderKey.ToBytes()));
             
             Assert.NotNull(founderTrxForSeeder1Stage1);
+        }
 
-            // todo: add the seeder penalty co-sign trx
+        [Fact]
+        public void SpendInvestorEndOfProjectTest()
+        {
+            var network = Networks.Bitcoin.Testnet();
+
+            var angorKey = new Key();
+            var funderKey = new Key();
+            var funderReceiveCoinsKey = new Key();
+
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object);
+
+            var projectInvestmentInfo = new ProjectInvestmentInfo();
+            projectInvestmentInfo.TargetAmount = 3;
+            projectInvestmentInfo.StartDate = DateTime.UtcNow;
+            projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
+            projectInvestmentInfo.Stages = new List<Stage>
+            {
+                new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+            };
+            projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
+            projectInvestmentInfo.AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
+
+            // Create the seeder 1 params
+            var seeder11Key = new Key();
+            var seeder1secret = new Key();
+            var seeder1ChangeKey = new Key();
+            var seeder1ReceiveCoinsKey = new Key();
+
+            InvestorContext seeder1Context = new InvestorContext() { ProjectInvestmentInfo = projectInvestmentInfo };
+
+            seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder11Key.PubKey.ToBytes());
+            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
+            seeder1Context.InvestorSecretHash = Encoders.Hex.EncodeData(Hashes.Hash256(seeder1secret.ToBytes()).ToBytes());
+
+            // create the investment transaction
+
+            var seeder1InvTrx = operations.CreateSeederTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+
+            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>());
 
             var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, 1, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
 
