@@ -106,7 +106,7 @@ namespace Angor.Test
 
             // create the founders transaction with both seeders
 
-            var seeder1InvTrx = operations.CreateSeederTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            var seeder1InvTrx = operations.CreateSeederInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
             operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>());
 
@@ -153,7 +153,7 @@ namespace Angor.Test
 
             // create the investment transaction
 
-            var seeder1InvTrx = operations.CreateSeederTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            var seeder1InvTrx = operations.CreateSeederInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
             operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>());
 

@@ -38,7 +38,7 @@ public class InvestmentOperations
     /// This method will create a transaction with all the spending conditions
     /// based on the project investment metadata the transaction will be unsigned (it wont have any inputs yet)
     /// </summary>
-    public Transaction CreateSeederTransaction(Network network,InvestorContext context, long totalInvestmentAmount)
+    public Transaction CreateSeederInvestmentTransaction(Network network,InvestorContext context, long totalInvestmentAmount)
     {
         Transaction investmentTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
 
