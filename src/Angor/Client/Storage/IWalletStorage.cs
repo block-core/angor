@@ -8,7 +8,4 @@ public interface IWalletStorage
     void SaveWalletWords(WalletWords walletWords);
     void DeleteWallet();
     WalletWords GetWallet();
-    
-    public string? GetWalletWords();
-    public void DeleteWalletWords();
 }

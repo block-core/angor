@@ -155,17 +155,11 @@ public class WalletOperations : IWalletOperations
         Network network = _networkConfiguration.GetNetwork();
         var coinType = network.Consensus.CoinType;
 
-        //AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
-        //
-        // if (accountInfo != null)
-        //     return accountInfo;
-
         var accountInfo = new AccountInfo();
 
         ExtKey extendedKey;
         try
         {
-           // var data = _walletStorage.GetWallet();
             extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
         }
         catch (NotSupportedException ex)
@@ -180,36 +174,26 @@ public class WalletOperations : IWalletOperations
 
         string accountHdPath = _hdOperations.GetAccountHdPath(Purpose, coinType, AccountIndex);
         Key privateKey = extendedKey.PrivateKey;
-        // _storage.SetWalletPubkey(privateKey.PubKey.ToHex());
 
         ExtPubKey accountExtPubKeyTostore =
             _hdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
 
         accountInfo.ExtPubKey = accountExtPubKeyTostore.ToString(network);
         accountInfo.Path = accountHdPath;
-
-        //_storage.SetAccountInfo(network.Name, accountInfo);
+        
         return accountInfo;
     }
 
-    public async Task<AccountInfo> FetchDataForExistingAddressesAsync(AccountInfo accountInfo)
+    public async Task UpdateDataForExistingAddressesAsync(AccountInfo accountInfo)
     {
         ExtKey.UseBCForHMACSHA512 = true;
         Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
-        //Network network = _networkConfiguration.GetNetwork();
-
-        //AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
 
         var addressTasks=  accountInfo.AddressesInfo.Select(UpdateAddressInfoUtxoData);
         
         var changeAddressTasks=  accountInfo.ChangeAddressesInfo.Select(UpdateAddressInfoUtxoData);
 
         await Task.WhenAll(addressTasks.Concat(changeAddressTasks));
-
-       // _storage.SetAccountInfo(network.Name, accountInfo);
-        
-        return accountInfo;
     }
 
     private async Task UpdateAddressInfoUtxoData(AddressInfo addressInfo)
@@ -227,16 +211,14 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    public async Task<AccountInfo> FetchDataForNewAddressesAsync(AccountInfo accountInfo)
+    public async Task UpdateAccountInfoWithNewAddressesAsync(AccountInfo accountInfo)
     {
         ExtKey.UseBCForHMACSHA512 = true;
         Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
         Network network = _networkConfiguration.GetNetwork();
-
-        //AccountInfo accountInfo = _storage.GetAccountInfo(network.Name);
-
-        var (index, items) = await FetcAddressesDataForPubKeyAsync(accountInfo.LastFetchIndex, accountInfo.ExtPubKey, network, false);
+        
+        var (index, items) = await FetchAddressesDataForPubKeyAsync(accountInfo.LastFetchIndex, accountInfo.ExtPubKey, network, false);
 
         accountInfo.LastFetchIndex = index;
         foreach (var addressInfo in items)
@@ -249,7 +231,7 @@ public class WalletOperations : IWalletOperations
             accountInfo.TotalBalance += addressInfo.Balance;
         }
 
-        var (changeIndex, changeItems) = await FetcAddressesDataForPubKeyAsync(accountInfo.LastFetchChangeIndex, accountInfo.ExtPubKey, network, true);
+        var (changeIndex, changeItems) = await FetchAddressesDataForPubKeyAsync(accountInfo.LastFetchChangeIndex, accountInfo.ExtPubKey, network, true);
 
         accountInfo.LastFetchChangeIndex = changeIndex;
         foreach (var changeAddressInfo in changeItems)
@@ -261,13 +243,9 @@ public class WalletOperations : IWalletOperations
             accountInfo.ChangeAddressesInfo.Add(changeAddressInfo);
             accountInfo.TotalBalance += changeAddressInfo.Balance;
         }
-
-        //_storage.SetAccountInfo(network.Name, accountInfo);
-
-        return accountInfo;
     }
 
-    private async Task<(int,List<AddressInfo>)> FetcAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
+    private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
     {
         ExtPubKey accountExtPubKey = ExtPubKey.Parse(ExtendedPubKey, network);
         
@@ -399,8 +377,6 @@ public class WalletOperations : IWalletOperations
     {
         var network = _networkConfiguration.GetNetwork();
 
-        //var accountInfo = _storage.GetAccountInfo(network.Name);
-        
         if (sendInfo.SendUtxos.Count == 0)
         {
             FindOutputsForTransaction(sendInfo, accountInfo);
@@ -408,11 +384,6 @@ public class WalletOperations : IWalletOperations
             if (sendInfo.SendUtxos.Count == 0) // something went wrong
                 throw new ArgumentNullException();
         }
-
-        // if (string.IsNullOrEmpty(sendInfo.ChangeAddress)) TODO move to the right location in the caller 
-        // {
-        //     sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.HasHistory == false).Address;
-        // }
 
         var coins = sendInfo.SendUtxos
             .Select(_ => _.Value.UtxoData)
