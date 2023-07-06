@@ -26,7 +26,22 @@ public class ScriptBuilder
             Op.GetPushOp(new PubKey(investorKey).ToBytes()),
             Op.GetPushOp(uint256.Parse(secretHash).ToBytes()));
     }
-    
+
+    public static (PubKey investorKey, uint256 secretHash) GetSeederInfoFromScript(Script script)
+    {
+        if (!script.IsUnspendable)
+        {
+            throw new Exception();
+        }
+
+        var ops = script.ToOps();
+
+        PubKey pubKey = new PubKey(ops[1].PushData);
+        uint256 secretHash = new uint256(ops[2].PushData);
+
+        return (pubKey, secretHash);
+    }
+
     public static (Script founder,Script recover, Script endOfProject) BuildSeederScript(string funderKey, string investorKey, string secretHash, DateTime founderLockTime, DateTime projectExpieryLocktime)
     {
         long locktimeFounder = Utils.DateTimeToUnixTime(founderLockTime);

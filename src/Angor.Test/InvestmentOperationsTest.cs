@@ -104,15 +104,25 @@ namespace Angor.Test
             seeder2Context.ChangeAddress = seeder2ChangeKey.PubKey.GetSegwitAddress(network).ToString();
             seeder2Context.InvestorSecretHash = Encoders.Hex.EncodeData(Hashes.Hash256(seeder2secret.ToBytes()).ToBytes());
 
+            FounderContext founderContext = new FounderContext { ProjectInvestmentInfo = projectInvestmentInfo };
+
+
             // create the founders transaction with both seeders
 
             var seeder1InvTrx = operations.CreateSeederInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
             operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>());
 
-            var founderTrxForSeeder1Stage1 = operations.SpendFounderStage(network, seeder1Context, 1, funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderKey.ToBytes()));
+            founderContext.InvestmentTrasnactionsHex.Add(seeder1Context.TransactionHex);
+
+            var seeder2InvTrx = operations.CreateSeederInvestmentTransaction(network, seeder2Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+
+            operations.SignInvestmentTransaction(network, seeder2Context, seeder2InvTrx, null, new List<UtxoDataWithPath>());
+
+            founderContext.InvestmentTrasnactionsHex.Add(seeder2Context.TransactionHex);
+
+            var founderTrxForSeeder1Stage1 = operations.SpendFounderStage(network, founderContext, 1, funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderKey.ToBytes()));
             
-            Assert.NotNull(founderTrxForSeeder1Stage1);
         }
 
         [Fact]

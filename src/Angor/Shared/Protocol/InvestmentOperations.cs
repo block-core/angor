@@ -6,11 +6,13 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
+using DBreeze.Utils;
 using NBitcoin;
 using NBitcoin.Policy;
 using System.Text;
 using BitcoinAddress = Blockcore.NBitcoin.BitcoinAddress;
 using FeeRate = Blockcore.NBitcoin.FeeRate;
+using IndexedTxOut = NBitcoin.IndexedTxOut;
 using Key = NBitcoin.Key;
 using Money = Blockcore.NBitcoin.Money;
 using Network = Blockcore.Networks.Network;
@@ -134,7 +136,7 @@ public class InvestmentOperations
     /// Allow the founder to spend the coins in a stage after the timelock has passed
     /// </summary>
     /// <exception cref="Exception"></exception>
-    public Transaction SpendFounderStage(Network network, InvestorContext context, int stageNumber, Script founderRecieveAddress, string founderPrivateKey)
+    public Transaction SpendFounderStage(Network network, FounderContext context, int stageNumber, Script founderRecieveAddress, string founderPrivateKey)
     {
         // We'll use the NBitcoin lib because its a taproot spend
 
@@ -142,50 +144,86 @@ public class InvestmentOperations
         var fee = fees.First(f => f.Confirmations == 1);
 
         var nbitcoinNetwork = NetworkMapper.Map(network);
-        var trx = NBitcoin.Transaction.Parse(context.TransactionHex, nbitcoinNetwork);
 
         var spender = nbitcoinNetwork.CreateTransaction();
+        var builder = nbitcoinNetwork.CreateTransactionBuilder();
 
-        var stageOutput = trx.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 2);
-
-        spender.Outputs.Add(stageOutput.TxOut.Value, new NBitcoin.Script(founderRecieveAddress.ToBytes()));
-
-        var scriptStages = ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
-            context.InvestorKey,
-            context.InvestorSecretHash,
-            context.ProjectInvestmentInfo.Stages[stageNumber].ReleaseDate,
-            context.ProjectInvestmentInfo.ExpiryDate);
-
-        var controlBlock = AngorScripts.CreateControlBlockFounder(scriptStages.founder, scriptStages.recover, scriptStages.endOfProject);
-
-        spender.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null);
+        // Step 1 - the time lock
 
         // we must set the locktime to be ahead of the current block time
         // and ahead of the cltv otherwise the trx wont get accepted in the chain
         var locktime = Utils.DateTimeToUnixTime(context.ProjectInvestmentInfo.Stages[stageNumber].ReleaseDate.AddMinutes(1));
         spender.LockTime = locktime;
-        spender.Inputs[0].Sequence = new NBitcoin.Sequence(locktime);
 
-        NBitcoin.TransactionBuilder builder = nbitcoinNetwork.CreateTransactionBuilder()
-            .AddCoin(new NBitcoin.Coin(trx, stageOutput.TxOut));
+        // Step 2 - build the transaction outputs and inputs without signing using fake sigs for fee estimation
 
+        spender.Outputs.Add(NBitcoin.Money.Zero, new NBitcoin.Script(founderRecieveAddress.ToBytes()));
+
+        var signingContext = new List<(NBitcoin.TxIn output, IndexedTxOut spendingOutput)>();
+
+        foreach (var trxHex in context.InvestmentTrasnactionsHex)
+        {
+            var trx = NBitcoin.Transaction.Parse(trxHex, nbitcoinNetwork);
+
+            var stageOutput = trx.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 2);
+
+            spender.Outputs[0].Value += stageOutput.TxOut.Value;
+
+            var input = spender.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null, new NBitcoin.Sequence(locktime));
+
+            var opretunOutput = trx.Outputs.AsIndexedOutputs().ElementAt(1);
+
+            var pubKeys = ScriptBuilder.GetSeederInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+
+            var scriptStages = ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
+                Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
+                pubKeys.secretHash.ToString(),
+                context.ProjectInvestmentInfo.Stages[stageNumber].ReleaseDate,
+                context.ProjectInvestmentInfo.ExpiryDate);
+
+            var controlBlock = AngorScripts.CreateControlBlockFounder(scriptStages.founder, scriptStages.recover, scriptStages.endOfProject);
+
+            // use fake data for fee estimation
+            var fakeSig = new byte[64];
+
+            input.WitScript = new WitScript(Op.GetPushOp(fakeSig), Op.GetPushOp(scriptStages.founder.ToBytes()), Op.GetPushOp(controlBlock.ToBytes()));
+
+            signingContext.Add((input, stageOutput));
+            builder.AddCoin(new NBitcoin.Coin(stageOutput));
+        }
+
+        // Step 3 - calculate the fee
+       
         var feeToReduce = builder.EstimateFees(spender, new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(fee.FeeRate)));
 
         spender.Outputs[0].Value -= feeToReduce;
 
-        var sighash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+        // Step 4 - sign the taproot inputs
 
-        var hash = spender.GetSignatureHashTaproot(new[] { stageOutput.TxOut }, new TaprootExecutionData(0, new NBitcoin.Script(scriptStages.founder.ToBytes()).TaprootV1LeafHash) { SigHash = sighash });
-
-        var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
-        var sig = key.SignTaprootKeySpend(hash, sighash);
-
-        if (!key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature))
+        var inputIndex = 0;
+        foreach (var item in signingContext)
         {
-            throw new Exception();
-        }
+            var founderScript = new NBitcoin.Script(item.output.WitScript[1]);
+            var controlBlock = item.output.WitScript[2];
 
-        spender.Inputs[0].WitScript = new WitScript(Op.GetPushOp(sig.ToBytes()), Op.GetPushOp(scriptStages.founder.ToBytes()), Op.GetPushOp(controlBlock.ToBytes()));
+            var sighash = TaprootSigHash.All;// TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+
+            var allSpendingOutputs = signingContext.Select(s => s.spendingOutput.TxOut).ToArray();
+            var trxData = spender.PrecomputeTransactionData(allSpendingOutputs); 
+            var execData = new TaprootExecutionData(inputIndex, founderScript.TaprootV1LeafHash) { SigHash = sighash };
+            var hash = spender.GetSignatureHashTaproot(trxData, execData);
+
+            var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
+            var sig = key.SignTaprootKeySpend(hash, sighash);
+
+            if (!key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature))
+            {
+                throw new Exception();
+            }
+
+            item.output.WitScript = new WitScript(Op.GetPushOp(sig.ToBytes()), Op.GetPushOp(founderScript.ToBytes()), Op.GetPushOp(controlBlock));
+            inputIndex++;
+        }
 
         if (!builder.Verify(spender, out TransactionPolicyError[] errors))
         {
