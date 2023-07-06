@@ -8,7 +8,7 @@ namespace Angor.Shared.Protocol
 {
     public class AngorScripts
     {
-        public static Script CreateStageSeeder(Blockcore.Networks.Network network, Script founder, Script recover, Script expiry)
+        public static Script CreateStage(Blockcore.Networks.Network network, Script founder, Script recover, Script expiry)
         {
             var taprootKey = CreateUnspendableInternalKey();
 

@@ -40,7 +40,7 @@ public class InvestmentOperations
     /// This method will create a transaction with all the spending conditions
     /// based on the project investment metadata the transaction will be unsigned (it wont have any inputs yet)
     /// </summary>
-    public Transaction CreateSeederInvestmentTransaction(Network network,InvestorContext context, long totalInvestmentAmount)
+    public Transaction CreateInvestmentTransaction(Network network,InvestorContext context, long totalInvestmentAmount)
     {
         Transaction investmentTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
 
@@ -57,14 +57,14 @@ public class InvestmentOperations
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
         var stagesScript = context.ProjectInvestmentInfo.Stages
-            .Select(_ => ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
+            .Select(_ => ScriptBuilder.BuildScripts(context.ProjectInvestmentInfo.FounderKey,
                 context.InvestorKey,
                 context.InvestorSecretHash, 
                 _.ReleaseDate, 
                 context.ProjectInvestmentInfo.ExpiryDate));
 
         var stagesScripts = stagesScript.Select(scripts => 
-            AngorScripts.CreateStageSeeder(network,scripts.founder,scripts.recover,scripts.endOfProject));
+            AngorScripts.CreateStage(network,scripts.founder,scripts.recover,scripts.endOfProject));
 
 
         var stagesOutputs = stagesScripts.Select((_, i) =>
@@ -173,11 +173,11 @@ public class InvestmentOperations
 
             var opretunOutput = trx.Outputs.AsIndexedOutputs().ElementAt(1);
 
-            var pubKeys = ScriptBuilder.GetSeederInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+            var pubKeys = ScriptBuilder.GetInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
-            var scriptStages = ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
+            var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInvestmentInfo.FounderKey,
                 Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
-                pubKeys.secretHash.ToString(),
+                pubKeys.secretHash?.ToString(),
                 context.ProjectInvestmentInfo.Stages[stageNumber - 1].ReleaseDate,
                 context.ProjectInvestmentInfo.ExpiryDate);
 
@@ -284,11 +284,11 @@ public class InvestmentOperations
 
             var opretunOutput = trx.Outputs.AsIndexedOutputs().ElementAt(1);
 
-            var pubKeys = ScriptBuilder.GetSeederInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+            var pubKeys = ScriptBuilder.GetInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
-            var scriptStages = ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
+            var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInvestmentInfo.FounderKey,
                 Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
-                pubKeys.secretHash.ToString(),
+                pubKeys.secretHash?.ToString(),
                 context.ProjectInvestmentInfo.Stages[stageNumber - 1].ReleaseDate,
                 context.ProjectInvestmentInfo.ExpiryDate);
 
