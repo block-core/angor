@@ -167,7 +167,7 @@ namespace Angor.Test
 
             operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>());
 
-            var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, 1, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
+            var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 }, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
 
             Assert.NotNull(seeder1Expierytrx);
         }
