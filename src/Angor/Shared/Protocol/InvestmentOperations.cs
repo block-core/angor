@@ -240,9 +240,52 @@ public class InvestmentOperations
         return network.CreateTransaction(spender.ToHex());
     }
 
-    public void RecoverInvestorFunds(InvestorContext context)
+    public List<Transaction> RecoverInvestorFunds(InvestorContext context, Network network, Script investorReceiveAddress, string investorPrivateKey)
     {
         // allow an investor that acquired enough panel keys to recover their investment
+        var nbitcoinNetwork = NetworkMapper.Map(network);
+        var investmentTransaction = NBitcoin.Transaction.Parse(context.TransactionHex, nbitcoinNetwork);
+
+        var transactions = investmentTransaction.Outputs.AsIndexedOutputs()
+            .Where(_ => _.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))
+            .Select((_, i) =>
+            {
+                var stageTransaction = nbitcoinNetwork.CreateTransaction();
+
+                stageTransaction.Outputs.Add(new NBitcoin.TxOut(_.TxOut.Value,
+                    new NBitcoin.Script(investorReceiveAddress.ToBytes())));
+
+                stageTransaction.Inputs.Add(new OutPoint(_.Transaction, _.N));
+
+                var scriptStages = ScriptBuilder.BuildSeederScript(context.ProjectInvestmentInfo.FounderKey,
+                    context.InvestorKey,
+                    context.InvestorSecretHash,
+                    context.ProjectInvestmentInfo.Stages[i].ReleaseDate,
+                    context.ProjectInvestmentInfo.ExpiryDate);
+
+                // var controlBlock = AngorScripts.CreateControlBlockRecover(scriptStages.founder,
+                //     scriptStages.recover, scriptStages.endOfProject);
+                
+                var sighash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+
+                var hash = stageTransaction.GetSignatureHashTaproot(new[] { _.TxOut },
+                    new TaprootExecutionData(0, 
+                            new NBitcoin.Script(scriptStages.recover.ToBytes()).TaprootV1LeafHash)
+                        { SigHash = sighash });
+
+                var key = new Key(Encoders.Hex.DecodeData(investorPrivateKey));
+                var sig = key.SignTaprootKeySpend(hash, sighash);
+
+                // stageTransaction.Inputs[0].WitScript = new WitScript(
+                //     Op.GetPushOp(sig.ToBytes()),
+                //     Op.GetPushOp(scriptStages.founder.ToBytes()), 
+                //     Op.GetPushOp(controlBlock.ToBytes())
+                //     );
+
+                return network.Consensus.ConsensusFactory.CreateTransaction(stageTransaction.ToHex());
+            });
+
+        return transactions.ToList();
     }
 
     /// <summary>

@@ -37,6 +37,16 @@ namespace Angor.Shared.Protocol
             return new Script(controlBlock.ToBytes());
         }
 
+        public static Script CreateControlBlockRecover(ProjectScripts scripts)
+        {
+            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
+
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(scripts.Recover.ToBytes()), 
+                (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
+
+            return new Script(controlBlock.ToBytes());
+        }
+        
         private static TaprootSpendInfo BuildTaprootSpendInfo(ProjectScripts scripts)
         {
             var taprootKey = CreateUnspendableInternalKey();

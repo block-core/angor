@@ -318,5 +318,57 @@ namespace Angor.Test
 
             Assert.NotNull(seeder1Expierytrx);
         }
+        
+               [Fact]
+        public void SpendInvestorRecoveryTest()
+        {
+            var network = Networks.Bitcoin.Testnet();
+
+            var angorKey = new Key();
+            var funderKey = new Key();
+            var funderReceiveCoinsKey = new Key();
+
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object);
+
+            var projectInvestmentInfo = new ProjectInvestmentInfo();
+            projectInvestmentInfo.TargetAmount = 3;
+            projectInvestmentInfo.StartDate = DateTime.UtcNow;
+            projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
+            projectInvestmentInfo.Stages = new List<Stage>
+            {
+                new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+            };
+            projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
+            projectInvestmentInfo.AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
+
+            // Create the seeder 1 params
+            var seeder11Key = new Key();
+            var seeder1secret = new Key();
+            var seeder1ChangeKey = new Key();
+            var seeder1ReceiveCoinsKey = new Key();
+
+            InvestorContext seeder1Context = new InvestorContext() { ProjectInvestmentInfo = projectInvestmentInfo };
+
+            seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder11Key.PubKey.ToBytes());
+            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
+            seeder1Context.InvestorSecretHash = Encoders.Hex.EncodeData(Hashes.Hash256(seeder1secret.ToBytes()).ToBytes());
+
+            // create the investment transaction
+
+            var seeder1InvTrx = operations.CreateSeederInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+
+            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>());
+
+            // var fees = _walletOperations.GetFeeEstimationAsync().Result;
+            // var fee = fees.First(f => f.Confirmations == 1);
+            //
+            // transactions.First().Outputs[0].Value -= fee.FeeRate; 
+            
+            var recoveryTransactions = operations.RecoverInvestorFunds(seeder1Context, network, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
+
+            Assert.NotNull(recoveryTransactions);
+        }
     }
 }
