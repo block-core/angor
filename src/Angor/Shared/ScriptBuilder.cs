@@ -1,6 +1,7 @@
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
+using System.Collections.Generic;
 
 namespace Angor.Shared;
 
@@ -45,57 +46,37 @@ public class ScriptBuilder
         return (pubKey, secretHash);
     }
 
-    public static (Script founder,Script recover, Script endOfProject) BuildScripts(string funderKey, string investorKey, string? secretHash, DateTime founderLockTime, DateTime projectExpieryLocktime)
+    public static ProjectScripts BuildScripts(string funderKey, string investorKey, string? secretHash, DateTime founderLockTime, DateTime projectExpieryLocktime, ProjectSeeders seeders)
     {
         long locktimeFounder = Utils.DateTimeToUnixTime(founderLockTime);
         long locktimeExpiery = Utils.DateTimeToUnixTime(projectExpieryLocktime);
 
+        ProjectScripts projectScripts = new();
+
+        // funder gets funds after stage started
+        projectScripts.Founder = new Script(new List<Op>
+        {
+            Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
+            OpcodeType.OP_CHECKSIGVERIFY,
+            Op.GetPushOp(locktimeFounder),
+            OpcodeType.OP_CHECKLOCKTIMEVERIFY
+        });
+
         if (string.IsNullOrEmpty(secretHash))
         {
-            return (
-
-                // funder gets funds after stage started
-                new(new List<Op>
-                {
-                    Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
-                    OpcodeType.OP_CHECKSIGVERIFY,
-                    Op.GetPushOp(locktimeFounder),
-                    OpcodeType.OP_CHECKLOCKTIMEVERIFY
-                }),
-
-                // seed investor pre-co-sign with founder to gets funds with penalty and must expose the secret
-                new(new List<Op>
-                {
-                    Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
-                    OpcodeType.OP_CHECKSIGVERIFY,
-                    Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
-                    OpcodeType.OP_CHECKSIGVERIFY
-                }),
-
-                // project ended and investor can collect remaining funds
-                new(new List<Op>
-                {
-                    Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
-                    OpcodeType.OP_CHECKSIGVERIFY,
-                    Op.GetPushOp(locktimeExpiery),
-                    OpcodeType.OP_CHECKLOCKTIMEVERIFY
-                })
-            );
-        }
-      
-        return (
-
-            // funder gets funds after stage started
-            new(new List<Op>
+            // regular investor pre-co-sign with founder to gets funds with penalty
+            projectScripts.Recover = new Script(new List<Op>
             {
                 Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
-                Op.GetPushOp(locktimeFounder),
-                OpcodeType.OP_CHECKLOCKTIMEVERIFY
-            }),
-
-            // seed investor pre-co-sign with founder to gets funds with penalty and must expose the secret
-            new(new List<Op>
+                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+                OpcodeType.OP_CHECKSIGVERIFY
+            });
+        }
+        else
+        {
+            //  seed investor pre-co-sign with founder to gets funds with penalty and must expose the secret
+            projectScripts.Recover = new Script(new List<Op>
             {
                 Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
@@ -104,16 +85,89 @@ public class ScriptBuilder
                 OpcodeType.OP_SHA256,
                 Op.GetPushOp(new uint256(secretHash).ToBytes()),
                 OpcodeType.OP_EQUALVERIFY
-            }),
+            });
+        }
 
-            // project ended and investor can collect remaining funds
-            new(new List<Op>
+        // project ended and investor can collect remaining funds
+        projectScripts.EndOfProject = new Script(new List<Op>
+        {
+            Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+            OpcodeType.OP_CHECKSIGVERIFY,
+            Op.GetPushOp(locktimeExpiery),
+            OpcodeType.OP_CHECKLOCKTIMEVERIFY
+        });
+
+        if (string.IsNullOrEmpty(secretHash))
+        {
+            if (seeders.SecretHashes.Any())
+            {
+                // all the combinations of penalty free recovery based on a threshold of seeder secret hashes
+                var seederHashes = BuildSeederScriptTree(investorKey, seeders);
+
+                projectScripts.Seeders.AddRange(seederHashes);
+            }
+        }
+
+        return projectScripts;
+    }
+
+    public static List<Script> BuildSeederScriptTree(string investorKey, ProjectSeeders seeders)
+    {
+        List<Script> list = new();
+
+        var thresholds = CreateThresholds(seeders.Threshold, seeders.SecretHashes);
+
+        foreach (var threshold in thresholds)
+        {
+            var ops = new List<Op>();
+
+            ops.AddRange(new[]
             {
                 Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
-                Op.GetPushOp(locktimeExpiery),
-                OpcodeType.OP_CHECKLOCKTIMEVERIFY
-            })
-        );
+            });
+
+            foreach (var secretHash in threshold)
+            {
+                ops.AddRange(new []
+                {
+                    OpcodeType.OP_SHA256,
+                    Op.GetPushOp(new uint256(secretHash).ToBytes()),
+                    OpcodeType.OP_EQUALVERIFY
+                });
+            }
+
+            list.Add(new Script(ops));
+        }
+
+        return list;
+    }
+
+    public static List<List<string>> CreateThresholds(int threshold, List<string> secretHashes)
+    {
+        var result = new List<List<string>>();
+        
+        result.AddRange(GetCombinations(secretHashes, threshold));
+
+        return result;
+    }
+
+    private static List<List<string>> GetCombinations(List<string> list, int length)
+    {
+        if (length == 1) return list.Select(item => new List<string> { item }).ToList();
+
+        var combinations = new List<List<string>>();
+        for (int i = 0; i < list.Count; i++)
+        {
+            var subCombinations = GetCombinations(list.Skip(i + 1).ToList(), length - 1);
+            foreach (var subCombination in subCombinations)
+            {
+                var combination = new List<string> { list[i] };
+                combination.AddRange(subCombination);
+                combinations.Add(combination);
+            }
+        }
+
+        return combinations;
     }
 }

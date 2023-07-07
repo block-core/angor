@@ -45,7 +45,7 @@ public class InvestmentOperations
         Transaction investmentTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
 
         // create the output and script of the project id 
-        var angorFeeOutputScript = ScriptBuilder.GetAngorFeeOutputScript(context.ProjectInvestmentInfo.AngorFeeKey);
+        var angorFeeOutputScript = ScriptBuilder.GetAngorFeeOutputScript(context.ProjectInfo.AngorFeeKey);
         var angorOutput = new TxOut(new Money(totalInvestmentAmount / 100), angorFeeOutputScript);
         investmentTransaction.AddOutput(angorOutput);
 
@@ -56,16 +56,16 @@ public class InvestmentOperations
         investmentTransaction.AddOutput(investorInfoOutput);
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
-        var stagesScript = context.ProjectInvestmentInfo.Stages
-            .Select(_ => ScriptBuilder.BuildScripts(context.ProjectInvestmentInfo.FounderKey,
+        var stagesScript = context.ProjectInfo.Stages
+            .Select(_ => ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
                 context.InvestorKey,
                 context.InvestorSecretHash, 
                 _.ReleaseDate, 
-                context.ProjectInvestmentInfo.ExpiryDate));
+                context.ProjectInfo.ExpiryDate, 
+                context.ProjectSeeders));
 
-        var stagesScripts = stagesScript.Select(scripts => 
-            AngorScripts.CreateStage(network,scripts.founder,scripts.recover,scripts.endOfProject));
-
+        var stagesScripts = stagesScript.Select(scripts =>
+            AngorScripts.CreateStage(network, scripts));
 
         var stagesOutputs = stagesScripts.Select((_, i) =>
             new TxOut(new Money(GetPercentageForStage(totalInvestmentAmount, i + 1)),
@@ -152,7 +152,7 @@ public class InvestmentOperations
 
         // we must set the locktime to be ahead of the current block time
         // and ahead of the cltv otherwise the trx wont get accepted in the chain
-        var locktime = Utils.DateTimeToUnixTime(context.ProjectInvestmentInfo.Stages[stageNumber - 1].ReleaseDate.AddMinutes(1));
+        var locktime = Utils.DateTimeToUnixTime(context.ProjectInfo.Stages[stageNumber - 1].ReleaseDate.AddMinutes(1));
         spender.LockTime = locktime;
 
         // Step 2 - build the transaction outputs and inputs without signing using fake sigs for fee estimation
@@ -175,18 +175,19 @@ public class InvestmentOperations
 
             var pubKeys = ScriptBuilder.GetInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
-            var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInvestmentInfo.FounderKey,
+            var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
                 Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
                 pubKeys.secretHash?.ToString(),
-                context.ProjectInvestmentInfo.Stages[stageNumber - 1].ReleaseDate,
-                context.ProjectInvestmentInfo.ExpiryDate);
+                context.ProjectInfo.Stages[stageNumber - 1].ReleaseDate,
+                context.ProjectInfo.ExpiryDate,
+                context.ProjectSeeders);
 
-            var controlBlock = AngorScripts.CreateControlBlockFounder(scriptStages.founder, scriptStages.recover, scriptStages.endOfProject);
+            var controlBlock = AngorScripts.CreateControlBlockFounder(scriptStages);
 
             // use fake data for fee estimation
             var fakeSig = new byte[64];
 
-            input.WitScript = new WitScript(Op.GetPushOp(fakeSig), Op.GetPushOp(scriptStages.founder.ToBytes()), Op.GetPushOp(controlBlock.ToBytes()));
+            input.WitScript = new WitScript(Op.GetPushOp(fakeSig), Op.GetPushOp(scriptStages.Founder.ToBytes()), Op.GetPushOp(controlBlock.ToBytes()));
 
             signingContext.Add((input, stageOutput));
             builder.AddCoin(new NBitcoin.Coin(stageOutput));
@@ -263,7 +264,7 @@ public class InvestmentOperations
 
         // we must set the locktime to be ahead of the current block time
         // and ahead of the cltv otherwise the trx wont get accepted in the chain
-        var locktime = Utils.DateTimeToUnixTime(context.ProjectInvestmentInfo.ExpiryDate.AddMinutes(1));
+        var locktime = Utils.DateTimeToUnixTime(context.ProjectInfo.ExpiryDate.AddMinutes(1));
         spender.LockTime = locktime;
 
         // Step 2 - build the transaction outputs and inputs without signing using fake sigs for fee estimation
@@ -286,18 +287,19 @@ public class InvestmentOperations
 
             var pubKeys = ScriptBuilder.GetInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
-            var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInvestmentInfo.FounderKey,
+            var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
                 Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
                 pubKeys.secretHash?.ToString(),
-                context.ProjectInvestmentInfo.Stages[stageNumber - 1].ReleaseDate,
-                context.ProjectInvestmentInfo.ExpiryDate);
+                context.ProjectInfo.Stages[stageNumber - 1].ReleaseDate,
+                context.ProjectInfo.ExpiryDate,
+                context.ProjectSeeders);
 
-            var controlBlock = AngorScripts.CreateControlBlockExpiry(scriptStages.founder, scriptStages.recover, scriptStages.endOfProject);
+            var controlBlock = AngorScripts.CreateControlBlockExpiry(scriptStages);
 
             // use fake data for fee estimation
             var fakeSig = new byte[64];
 
-            input.WitScript = new WitScript(Op.GetPushOp(fakeSig), Op.GetPushOp(scriptStages.endOfProject.ToBytes()), Op.GetPushOp(controlBlock.ToBytes()));
+            input.WitScript = new WitScript(Op.GetPushOp(fakeSig), Op.GetPushOp(scriptStages.EndOfProject.ToBytes()), Op.GetPushOp(controlBlock.ToBytes()));
 
             signingContext.Add((input, stageOutput));
             builder.AddCoin(new NBitcoin.Coin(stageOutput));

@@ -8,57 +8,54 @@ namespace Angor.Shared.Protocol
 {
     public class AngorScripts
     {
-        public static Script CreateStage(Blockcore.Networks.Network network, Script founder, Script recover, Script expiry)
+        public static Script CreateStage(Blockcore.Networks.Network network, ProjectScripts scripts)
         {
-            var taprootKey = CreateUnspendableInternalKey();
-
-            var builder = new TaprootBuilder();
-
-            builder.AddLeaf(1, new NBitcoin.Script(founder.ToBytes()))
-                   .AddLeaf(2, new NBitcoin.Script(recover.ToBytes()))
-                   .AddLeaf(2, new NBitcoin.Script(expiry.ToBytes()));
-
-            var treeInfo = builder.Finalize(taprootKey);
+            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
 
             var address = treeInfo.OutputPubKey.GetAddress(NetworkMapper.Map(network));
 
             return new Script(address.ScriptPubKey.ToBytes());
         }
 
-        public static Script CreateControlBlockFounder(Script founder, Script recover, Script expiry)
+        public static Script CreateControlBlockFounder(ProjectScripts scripts)
         {
-            var taprootKey = CreateUnspendableInternalKey();
+            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
 
-            var builder = new TaprootBuilder();
-
-            builder.AddLeaf(1, new NBitcoin.Script(founder.ToBytes()))
-                .AddLeaf(2, new NBitcoin.Script(recover.ToBytes()))
-                .AddLeaf(2, new NBitcoin.Script(expiry.ToBytes()));
-
-            var treeInfo = builder.Finalize(taprootKey);
-
-            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(founder.ToBytes()), 
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(scripts.Founder.ToBytes()), 
                 (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
 
             return new Script(controlBlock.ToBytes());
         }
 
-        public static Script CreateControlBlockExpiry(Script founder, Script recover, Script expiry)
+        public static Script CreateControlBlockExpiry(ProjectScripts scripts)
         {
-            var taprootKey = CreateUnspendableInternalKey();
+            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
 
-            var builder = new TaprootBuilder();
-
-            builder.AddLeaf(1, new NBitcoin.Script(founder.ToBytes()))
-                .AddLeaf(2, new NBitcoin.Script(recover.ToBytes()))
-                .AddLeaf(2, new NBitcoin.Script(expiry.ToBytes()));
-
-            var treeInfo = builder.Finalize(taprootKey);
-
-            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(expiry.ToBytes()),
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(scripts.EndOfProject.ToBytes()),
                 (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
 
             return new Script(controlBlock.ToBytes());
+        }
+
+        private static TaprootSpendInfo BuildTaprootSpendInfo(ProjectScripts scripts)
+        {
+            var taprootKey = CreateUnspendableInternalKey();
+
+            var scriptWeights = new List<(uint, NBitcoin.Script)>()
+            {
+                (70u, new NBitcoin.Script (scripts.Founder.ToBytes())),
+                (40u, new NBitcoin.Script (scripts.Recover.ToBytes())),
+                (1u, new NBitcoin.Script (scripts.EndOfProject.ToBytes()))
+            };
+
+            foreach (var scriptsSeeder in scripts.Seeders)
+            {
+                scriptWeights.Add((10u, new NBitcoin.Script(scriptsSeeder.ToBytes())));
+            }
+
+            var treeInfo = TaprootSpendInfo.WithHuffmanTree(taprootKey, scriptWeights.ToArray());
+
+            return treeInfo;
         }
 
         public static TaprootInternalPubKey CreateUnspendableInternalKey()

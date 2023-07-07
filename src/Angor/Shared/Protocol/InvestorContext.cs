@@ -11,7 +11,9 @@ public class InvestorContext
 
     public string InvestorSecretHash { get; set; }
 
-    public ProjectInvestmentInfo ProjectInvestmentInfo { get; set; }
+    public ProjectInfo ProjectInfo { get; set; }
+
+    public ProjectSeeders ProjectSeeders { get; set; }
 
     public string TransactionHex { get; set; }
 
@@ -20,20 +22,4 @@ public class InvestorContext
     // ==============================================
 
     public string ChangeAddress { get; set; }
-
-    public List<string> Utxos { get; set; }
-}
-
-public class UtxoSpendData
-{
-    public string scriptHex { get; set; }
-    public long value { get; set; }
-
-    public string transactionId { get; set; }
-    public int outputIndex { get; set; }
-
-    public string HdPath { get; set; }
-
-    public string Key { get; set; }
-
 }
