@@ -248,7 +248,7 @@ public class InvestmentOperations
 
                 var spendingScript = ScriptBuilder.GetInvestorPunishmentTransactionScript(
                     investorReceiveAddress,
-                    context.ProjectInvestmentInfo.StartDate.Add(context.ProjectInvestmentInfo.PunishmentTime));
+                    context.ProjectInfo.StartDate.Add(context.ProjectInfo.PunishmentTime));
                 
                 stageTransaction.Outputs.Add(new NBitcoin.TxOut(_.TxOut.Value,
                     new NBitcoin.Script(spendingScript.WitHash.ScriptPubKey.ToBytes())));
@@ -272,17 +272,18 @@ public class InvestmentOperations
         {
             var stageTransaction = NBitcoin.Transaction.Parse(_.ToHex(), nbitcoinNetwork);
             
-            var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInvestmentInfo.FounderKey,
+            var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
                 context.InvestorKey,
                 null,
-                context.ProjectInvestmentInfo.Stages[i].ReleaseDate,
-                context.ProjectInvestmentInfo.ExpiryDate);
+                context.ProjectInfo.Stages[i].ReleaseDate,
+                context.ProjectInfo.ExpiryDate,
+                new ProjectSeeders());
 
             const TaprootSigHash sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
             
             var hash = stageTransaction.GetSignatureHashTaproot(new[] { investmentTransaction.Outputs[i+2] },
                 new TaprootExecutionData(0, 
-                        new NBitcoin.Script(scriptStages.recover.ToBytes()).TaprootV1LeafHash)
+                        new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash)
                     { SigHash = sigHash });
             
             var signature = key.SignTaprootKeySpend(hash, sigHash);
@@ -303,20 +304,20 @@ public class InvestmentOperations
         {
             var stageTransaction = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
             
-            var (founder, recover, endOfProject) = ScriptBuilder.BuildScripts(context.ProjectInvestmentInfo.FounderKey,
+            var projectScripts = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
                 context.InvestorKey,
                 null,
-                context.ProjectInvestmentInfo.Stages[index].ReleaseDate,
-                context.ProjectInvestmentInfo.ExpiryDate);
+                context.ProjectInfo.Stages[index].ReleaseDate,
+                context.ProjectInfo.ExpiryDate,
+                new ProjectSeeders());
             
-            var controlBlock = AngorScripts.CreateControlBlockRecover(founder,
-                recover, endOfProject);
+            var controlBlock = AngorScripts.CreateControlBlockRecover(projectScripts);
             
             var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
             var hash = stageTransaction.GetSignatureHashTaproot(new[] { investmentTransaction.Outputs[index + 2] },
                 new TaprootExecutionData(0,
-                        new NBitcoin.Script(recover.ToBytes()).TaprootV1LeafHash)
+                        new NBitcoin.Script(projectScripts.Recover.ToBytes()).TaprootV1LeafHash)
                     { SigHash = sigHash });
             
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
@@ -327,7 +328,7 @@ public class InvestmentOperations
                             Op.GetPushOp(investorSignature.ToBytes()),
                             Op.GetPushOp(TaprootSignature.Parse(founderSignatures[index]).ToBytes()),
                             
-                            Op.GetPushOp(recover.ToBytes()),
+                            Op.GetPushOp(projectScripts.Recover.ToBytes()),
                             Op.GetPushOp(controlBlock.ToBytes()))
                         .ToBytes());
             
