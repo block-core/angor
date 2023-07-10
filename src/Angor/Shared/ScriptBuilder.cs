@@ -82,7 +82,7 @@ public class ScriptBuilder
                 OpcodeType.OP_CHECKSIGVERIFY,
                 Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
-                OpcodeType.OP_SHA256,
+                OpcodeType.OP_HASH256,
                 Op.GetPushOp(new uint256(secretHash).ToBytes()),
                 OpcodeType.OP_EQUALVERIFY
             });
@@ -121,21 +121,21 @@ public class ScriptBuilder
         {
             var ops = new List<Op>();
 
-            ops.AddRange(new[]
-            {
-                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
-                OpcodeType.OP_CHECKSIGVERIFY,
-            });
-
             foreach (var secretHash in threshold)
             {
                 ops.AddRange(new []
                 {
-                    OpcodeType.OP_SHA256,
+                    OpcodeType.OP_HASH256,
                     Op.GetPushOp(new uint256(secretHash).ToBytes()),
                     OpcodeType.OP_EQUALVERIFY
                 });
             }
+
+            ops.AddRange(new[]
+            {
+                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+                OpcodeType.OP_CHECKSIG,
+            });
 
             list.Add(new Script(ops));
         }

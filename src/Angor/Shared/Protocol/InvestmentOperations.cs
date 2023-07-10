@@ -9,8 +9,10 @@ using Blockcore.NBitcoin.DataEncoders;
 using DBreeze.Utils;
 using NBitcoin;
 using NBitcoin.Policy;
+using System.Linq;
 using System.Text;
 using BitcoinAddress = Blockcore.NBitcoin.BitcoinAddress;
+using Block = Blockcore.Consensus.BlockInfo.Block;
 using FeeRate = Blockcore.NBitcoin.FeeRate;
 using IndexedTxOut = NBitcoin.IndexedTxOut;
 using Key = NBitcoin.Key;
@@ -335,6 +337,139 @@ public class InvestmentOperations
             }
 
             item.output.WitScript = new WitScript(Op.GetPushOp(sig.ToBytes()), Op.GetPushOp(scriptToExecute.ToBytes()), Op.GetPushOp(controlBlock));
+            inputIndex++;
+        }
+
+        if (!builder.Verify(spender, out TransactionPolicyError[] errors))
+        {
+            var sb = new StringBuilder();
+            foreach (var transactionPolicyError in errors)
+            {
+                sb.AppendLine(transactionPolicyError.ToString());
+            }
+
+            throw new Exception(sb.ToString());
+        }
+
+        return network.CreateTransaction(spender.ToHex());
+    }
+
+    /// <summary>
+    /// allow an investor that take back any coins left when the project end date has passed
+    /// </summary>
+    public Transaction RecoverFundsNoPenalty(Network network, InvestorContext context, int[] stages, Blockcore.NBitcoin.Key[] seederSecrets, Script investorRecieveAddress, string investorPrivateKey)
+    {
+        // We'll use the NBitcoin lib because its a taproot spend
+
+        var fees = _walletOperations.GetFeeEstimationAsync().Result;
+        var fee = fees.First(f => f.Confirmations == 1);
+
+        var nbitcoinNetwork = NetworkMapper.Map(network);
+
+        var spender = nbitcoinNetwork.CreateTransaction();
+        var builder = nbitcoinNetwork.CreateTransactionBuilder();
+
+        // Step 1 - the time lock
+
+        // we must set the locktime to be ahead of the current block time
+        // and ahead of the cltv otherwise the trx wont get accepted in the chain
+        var locktime = Utils.DateTimeToUnixTime(context.ProjectInfo.ExpiryDate.AddMinutes(1));
+        spender.LockTime = locktime;
+
+        // Step 2 - build the transaction outputs and inputs without signing using fake sigs for fee estimation
+
+        spender.Outputs.Add(NBitcoin.Money.Zero, new NBitcoin.Script(investorRecieveAddress.ToBytes()));
+
+        var signingContext = new List<(NBitcoin.TxIn output, IndexedTxOut spendingOutput)>();
+
+        var trx = NBitcoin.Transaction.Parse(context.TransactionHex, nbitcoinNetwork);
+
+        foreach (var stageNumber in stages)
+        {
+            var stageOutput = trx.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1);
+
+            spender.Outputs[0].Value += stageOutput.TxOut.Value;
+
+            var input = spender.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null, new NBitcoin.Sequence(locktime));
+
+            var opretunOutput = trx.Outputs.AsIndexedOutputs().ElementAt(1);
+
+            var pubKeys = ScriptBuilder.GetInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+
+            var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
+                Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
+                pubKeys.secretHash?.ToString(),
+                context.ProjectInfo.Stages[stageNumber - 1].ReleaseDate,
+                context.ProjectInfo.ExpiryDate,
+                context.ProjectSeeders);
+
+            var result = AngorScripts.CreateControlSeederSecrets(scriptStages, seederSecrets);
+
+            // use fake data for fee estimation
+            var fakeSig = new byte[64];
+
+            List<Op> ops = new List<Op>();
+
+            ops.Add(Op.GetPushOp(fakeSig));
+
+            foreach (var secret in result.secrets.Reverse())
+            {
+                ops.Add(Op.GetPushOp(secret.ToBytes()));
+            }
+
+            ops.Add(Op.GetPushOp(result.execute.ToBytes()));
+            ops.Add(Op.GetPushOp(result.controlBlock.ToBytes()));
+
+            input.WitScript = new WitScript(ops.ToArray());
+
+            signingContext.Add((input, stageOutput));
+            builder.AddCoin(new NBitcoin.Coin(stageOutput));
+        }
+
+        // Step 3 - calculate the fee
+
+        var feeToReduce = builder.EstimateFees(spender, new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(fee.FeeRate)));
+
+        spender.Outputs[0].Value -= feeToReduce;
+
+        // Step 4 - sign the taproot inputs
+
+        var inputIndex = 0;
+        foreach (var item in signingContext)
+        {
+            var controBlock = new NBitcoin.Script(item.output.WitScript[item.output.WitScript.PushCount - 1]);
+            var scriptToExecute = new NBitcoin.Script(item.output.WitScript[item.output.WitScript.PushCount - 2]);
+
+            var sighash = TaprootSigHash.All;// TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+
+            var allSpendingOutputs = signingContext.Select(s => s.spendingOutput.TxOut).ToArray();
+            var trxData = spender.PrecomputeTransactionData(allSpendingOutputs);
+            var execData = new TaprootExecutionData(inputIndex, scriptToExecute.TaprootV1LeafHash) { SigHash = sighash };
+            var hash = spender.GetSignatureHashTaproot(trxData, execData);
+
+            var key = new Key(Encoders.Hex.DecodeData(investorPrivateKey));
+            var sig = key.SignTaprootKeySpend(hash, sighash);
+
+            if (!key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature))
+            {
+                throw new Exception();
+            }
+
+            List<Op> ops = new List<Op>();
+
+            // the last 3 items on the stack are the fakesig, script and controlblock anything before that is the secrets
+
+            ops.Add(Op.GetPushOp(sig.ToBytes()));
+
+            foreach (var oppush  in item.output.WitScript.Pushes.Skip(1).Take(item.output.WitScript.Pushes.Count() - 3))
+            {
+                ops.Add(Op.GetPushOp(oppush));
+            }
+
+            ops.Add(Op.GetPushOp(scriptToExecute.ToBytes()));
+            ops.Add(Op.GetPushOp(controBlock.ToBytes()));
+
+            item.output.WitScript = new WitScript(ops.ToArray());
             inputIndex++;
         }
 

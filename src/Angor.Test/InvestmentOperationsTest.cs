@@ -318,5 +318,60 @@ namespace Angor.Test
 
             Assert.NotNull(seeder1Expierytrx);
         }
+
+        [Fact]
+        public void InvestorTransaction_NoPenalty_Test()
+        {
+            var network = Networks.Bitcoin.Testnet();
+
+            var angorKey = new Key();
+            var funderKey = new Key();
+            var funderReceiveCoinsKey = new Key();
+
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object);
+
+            var projectInvestmentInfo = new ProjectInfo();
+            projectInvestmentInfo.TargetAmount = 3;
+            projectInvestmentInfo.StartDate = DateTime.UtcNow;
+            projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
+            projectInvestmentInfo.Stages = new List<Stage>
+            {
+                new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+            };
+            projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
+            projectInvestmentInfo.AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
+
+            // Create the seeder 1 params
+            var seeder11Key = new Key();
+            var seeder1ChangeKey = new Key();
+            var seeder1ReceiveCoinsKey = new Key();
+
+            var seeder1Key = new Key();
+            var seeder2Key = new Key();
+            var seeder3Key = new Key();
+
+            ProjectSeeders projectSeeders = new ProjectSeeders();
+            projectSeeders.Threshold = 2;
+            projectSeeders.SecretHashes.Add(Hashes.Hash256(seeder1Key.ToBytes()).ToString());
+            projectSeeders.SecretHashes.Add(Hashes.Hash256(seeder2Key.ToBytes()).ToString());
+            projectSeeders.SecretHashes.Add(Hashes.Hash256(seeder3Key.ToBytes()).ToString());
+
+            InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo, ProjectSeeders = projectSeeders };
+
+            seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder11Key.PubKey.ToBytes());
+            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
+
+            // create the investment transaction
+
+            var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+
+            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>());
+
+            var seeder1Expierytrx = operations.RecoverFundsNoPenalty(network, seeder1Context, new[] { 2, 3 }, new Key[]{ seeder2Key, seeder3Key }, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
+
+            Assert.NotNull(seeder1Expierytrx);
+        }
     }
 }

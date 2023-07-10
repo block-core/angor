@@ -1,7 +1,10 @@
-﻿using System.Text;
+﻿using System.Net.Sockets;
+using System.Text;
+using Blockcore.NBitcoin;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
+using uint256 = NBitcoin.uint256;
 
 
 namespace Angor.Shared.Protocol
@@ -37,10 +40,74 @@ namespace Angor.Shared.Protocol
             return new Script(controlBlock.ToBytes());
         }
 
+        public static (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts, Blockcore.NBitcoin.Key[] secrets)
+        {
+            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
+
+            var scriptWeights = BuildTaprootScripts(scripts).Skip(3).Select(s => new Script(s.Item2.ToBytes()));
+
+            // find the spending script for the current secret hash combination
+
+            var hashes = secrets.Select(secret => (Blockcore.NBitcoin.Crypto.Hashes.Hash256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
+
+            Script execute = null;
+            List<Script> secretHashes = new List<Script>();
+
+            foreach (var scriptWeight in scriptWeights)
+            {
+                var ops = scriptWeight.ToOps().ToList();
+
+                secretHashes.Clear();
+
+                foreach (var op in ops)
+                {
+                    if (op.PushData != null && op.PushData.Length == 32)
+                    {
+                        var comp = new Blockcore.NBitcoin.uint256(op.PushData);
+
+                        foreach (var hash in hashes)
+                        {
+                            if (hash.Item1 == comp)
+                            {
+                                secretHashes.Add(hash.Item2);
+                            }
+                        }
+                    }
+                }
+
+                if (secretHashes.Count == hashes.Count)
+                {
+                    execute = scriptWeight;
+
+                    break;
+                }
+            }
+
+            if (execute == null)
+            {
+                throw new Exception("no secret found that matches the given scripts");
+            }
+
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(execute.ToBytes()),
+                (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
+
+            return (new Script(controlBlock.ToBytes()), execute, secretHashes.ToArray());
+        }
+
+
         private static TaprootSpendInfo BuildTaprootSpendInfo(ProjectScripts scripts)
         {
             var taprootKey = CreateUnspendableInternalKey();
 
+            var scriptWeights = BuildTaprootScripts(scripts);
+
+            var treeInfo = TaprootSpendInfo.WithHuffmanTree(taprootKey, scriptWeights.ToArray());
+
+            return treeInfo;
+        }
+
+        private static List<(uint, NBitcoin.Script)> BuildTaprootScripts(ProjectScripts scripts)
+        {
             var scriptWeights = new List<(uint, NBitcoin.Script)>()
             {
                 (70u, new NBitcoin.Script (scripts.Founder.ToBytes())),
@@ -53,9 +120,7 @@ namespace Angor.Shared.Protocol
                 scriptWeights.Add((10u, new NBitcoin.Script(scriptsSeeder.ToBytes())));
             }
 
-            var treeInfo = TaprootSpendInfo.WithHuffmanTree(taprootKey, scriptWeights.ToArray());
-
-            return treeInfo;
+            return scriptWeights;
         }
 
         public static TaprootInternalPubKey CreateUnspendableInternalKey()
