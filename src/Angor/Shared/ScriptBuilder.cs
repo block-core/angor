@@ -46,6 +46,19 @@ public class ScriptBuilder
         return (pubKey, secretHash);
     }
 
+    public static Script GetInvestorPunishmentTransactionScript(string investorKey, DateTime punishmentLockTime)
+    {
+        var unixTime = Utils.DateTimeToUnixTime(punishmentLockTime);
+        
+        return new(new List<Op>
+        {
+            Op.GetPushOp(new NBitcoin.PubKey(investorKey).ToBytes()),
+            OpcodeType.OP_CHECKSIGVERIFY,
+            Op.GetPushOp(unixTime),
+            OpcodeType.OP_CHECKLOCKTIMEVERIFY
+        });
+    }
+    
     public static ProjectScripts BuildScripts(string funderKey, string investorKey, string? secretHash, DateTime founderLockTime, DateTime projectExpieryLocktime, ProjectSeeders seeders)
     {
         long locktimeFounder = Utils.DateTimeToUnixTime(founderLockTime);
@@ -70,7 +83,7 @@ public class ScriptBuilder
                 Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
                 Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
-                OpcodeType.OP_CHECKSIGVERIFY
+                OpcodeType.OP_CHECKSIG
             });
         }
         else

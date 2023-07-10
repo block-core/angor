@@ -1,12 +1,7 @@
 ﻿using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
-using Blockcore.Consensus.BlockInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
-using DBreeze.Utils;
 using NBitcoin;
 using NBitcoin.Policy;
 using System.Linq;
@@ -18,14 +13,13 @@ using IndexedTxOut = NBitcoin.IndexedTxOut;
 using Key = NBitcoin.Key;
 using Money = Blockcore.NBitcoin.Money;
 using Network = Blockcore.Networks.Network;
+using Op = NBitcoin.Op;
 using OutPoint = NBitcoin.OutPoint;
-using RandomUtils = Blockcore.NBitcoin.RandomUtils;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
+using ScriptType = NBitcoin.ScriptType;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 using TransactionBuilder = Blockcore.Consensus.TransactionInfo.TransactionBuilder;
-using TxIn = Blockcore.Consensus.TransactionInfo.TxIn;
 using TxOut = Blockcore.Consensus.TransactionInfo.TxOut;
-using uint256 = Blockcore.NBitcoin.uint256;
 using Utils = NBitcoin.Utils;
 using WitScript = NBitcoin.WitScript;
 
@@ -242,9 +236,106 @@ public class InvestmentOperations
         return network.CreateTransaction(spender.ToHex());
     }
 
-    public void RecoverInvestorFunds(InvestorContext context)
+    public List<Transaction> BuildRecoverInvestorFundsTransactions(InvestorContext context, Network network, string investorReceiveAddress)
     {
         // allow an investor that acquired enough panel keys to recover their investment
+        var nbitcoinNetwork = NetworkMapper.Map(network);
+        var investmentTransaction = NBitcoin.Transaction.Parse(context.TransactionHex, nbitcoinNetwork);
+
+        var founderStageSignatures = investmentTransaction.Outputs.AsIndexedOutputs()
+            .Where(_ => _.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))
+            .Select((_, i) =>
+            {
+                var stageTransaction = nbitcoinNetwork.CreateTransaction();
+
+                var spendingScript = ScriptBuilder.GetInvestorPunishmentTransactionScript(
+                    investorReceiveAddress,
+                    context.ProjectInfo.StartDate.Add(context.ProjectInfo.PunishmentTime));
+                
+                stageTransaction.Outputs.Add(new NBitcoin.TxOut(_.TxOut.Value,
+                    new NBitcoin.Script(spendingScript.WitHash.ScriptPubKey.ToBytes())));
+
+                stageTransaction.Inputs.Add(new OutPoint(_.Transaction, _.N));
+
+                return network.Consensus.ConsensusFactory.CreateTransaction(stageTransaction.ToHex());;
+            });
+
+        return founderStageSignatures.ToList();
+    }
+
+    public List<string> FounderSignInvestorRecoveryTransactions(InvestorContext context, Network network, List<Transaction> transactions, string founderPrivateKey)
+    {
+        var nbitcoinNetwork = NetworkMapper.Map(network);
+        var investmentTransaction = NBitcoin.Transaction.Parse(context.TransactionHex, nbitcoinNetwork);
+        
+        var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
+        
+        return transactions.Select((_,i) => 
+        {
+            var stageTransaction = NBitcoin.Transaction.Parse(_.ToHex(), nbitcoinNetwork);
+            
+            var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
+                context.InvestorKey,
+                null,
+                context.ProjectInfo.Stages[i].ReleaseDate,
+                context.ProjectInfo.ExpiryDate,
+                new ProjectSeeders());
+
+            const TaprootSigHash sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+            
+            var hash = stageTransaction.GetSignatureHashTaproot(new[] { investmentTransaction.Outputs[i+2] },
+                new TaprootExecutionData(0, 
+                        new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash)
+                    { SigHash = sigHash });
+            
+            var signature = key.SignTaprootKeySpend(hash, sigHash);
+
+            return signature.ToString();
+
+        }).ToList();
+    }
+    
+    public void AddWitScriptToInvestorRecoveryTransactions(InvestorContext context, Network network, List<Transaction> transactions, List<string> founderSignatures, string investorPrivateKey)
+    {
+        var nbitcoinNetwork = NetworkMapper.Map(network);
+        var investmentTransaction = NBitcoin.Transaction.Parse(context.TransactionHex, nbitcoinNetwork);
+
+        var index = 0;
+        var key = new Key(Encoders.Hex.DecodeData(investorPrivateKey));
+        foreach (var transaction in transactions)
+        {
+            var stageTransaction = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
+            
+            var projectScripts = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
+                context.InvestorKey,
+                null,
+                context.ProjectInfo.Stages[index].ReleaseDate,
+                context.ProjectInfo.ExpiryDate,
+                new ProjectSeeders());
+            
+            var controlBlock = AngorScripts.CreateControlBlockRecover(projectScripts);
+            
+            var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+
+            var hash = stageTransaction.GetSignatureHashTaproot(new[] { investmentTransaction.Outputs[index + 2] },
+                new TaprootExecutionData(0,
+                        new NBitcoin.Script(projectScripts.Recover.ToBytes()).TaprootV1LeafHash)
+                    { SigHash = sigHash });
+            
+            var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
+
+            transaction.Inputs.Single().WitScript =
+                new Blockcore.Consensus.TransactionInfo.WitScript(
+                    new WitScript(
+                            Op.GetPushOp(investorSignature.ToBytes()),
+                            Op.GetPushOp(TaprootSignature.Parse(founderSignatures[index]).ToBytes()),
+                            
+                            Op.GetPushOp(projectScripts.Recover.ToBytes()),
+                            Op.GetPushOp(controlBlock.ToBytes()))
+                        .ToBytes());
+            
+            index++;
+        }
     }
 
     /// <summary>

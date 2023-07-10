@@ -1,12 +1,16 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Angor.Shared.Protocol;
-using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
 using Moq;
+using NBitcoin;
+using NBitcoin.Policy;
+using Coin = Blockcore.NBitcoin.Coin;
+using Key = Blockcore.NBitcoin.Key;
+using Money = Blockcore.NBitcoin.Money;
+using Transaction = NBitcoin.Transaction;
 
 namespace Angor.Test
 {
@@ -26,7 +30,7 @@ namespace Angor.Test
                 });
 
             _walletOperations.Setup(_ => _.GetUnspentOutputsForTransaction(It.IsAny<WalletWords>(),
-                        It.IsAny<List<UtxoDataWithPath>>()))
+                    It.IsAny<List<UtxoDataWithPath>>()))
                 .Returns<WalletWords, List<UtxoDataWithPath>>((_, _) =>
                 {
                     var network = Networks.Bitcoin.Testnet();
@@ -317,6 +321,185 @@ namespace Angor.Test
             var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 }, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
 
             Assert.NotNull(seeder1Expierytrx);
+        }
+
+        [Fact]
+        public void SpendInvestorRecoveryTest()
+        {
+            var network = Networks.Bitcoin.Testnet();
+
+            var angorKey = new Key();
+            var funderKey = new Key();
+
+            var operations = new InvestmentOperations(_walletOperations.Object);
+
+            // Create the seeder 1 params
+            var investorKey = new Key();
+            var investorChangeKey = new Key();
+
+            var investorContext = new InvestorContext
+            {
+                ProjectInfo = new ProjectInfo
+                {
+                    TargetAmount = 3,
+                    StartDate = DateTime.UtcNow,
+                    ExpiryDate = DateTime.UtcNow.AddDays(5),
+                    Stages = new List<Stage>
+                    {
+                        new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                        new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                        new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+                    },
+                    FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes()),
+                    AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
+                    PunishmentTime = new TimeSpan(new Random().NextInt64(10000))
+                },
+                InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
+                ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString(),
+                ProjectSeeders = new ProjectSeeders()
+            };
+
+            // create the investment transaction
+
+            var investmentTransaction = operations.CreateInvestmentTransaction(network, investorContext,
+                Money.Coins(investorContext.ProjectInfo.TargetAmount).Satoshi);
+
+            investorContext.TransactionHex = investmentTransaction.ToHex();
+
+            var recoveryTransactions = operations.BuildRecoverInvestorFundsTransactions(investorContext, network,
+                Encoders.Hex.EncodeData(investorChangeKey.PubKey.ToBytes()));
+
+            var founderSignatures = operations.FounderSignInvestorRecoveryTransactions(investorContext, network,
+                recoveryTransactions,
+                Encoders.Hex.EncodeData(funderKey.ToBytes()));
+
+            operations.AddWitScriptToInvestorRecoveryTransactions(investorContext, network, recoveryTransactions,
+                founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()));
+
+            var nbitcoinNetwork = NetworkMapper.Map(network);
+
+            var builder = nbitcoinNetwork.CreateTransactionBuilder();
+            for (int i = 0; i < investmentTransaction.Outputs.Count; i++)
+            {
+                var output = investmentTransaction.Outputs[i];
+
+                if (output.Value == 0)
+                    continue;
+                builder.AddCoin(new NBitcoin.Coin(Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork),
+                    (uint)i));
+                builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Zero, 0, new NBitcoin.Money(1000),
+                    new Script(
+                        "4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
+            }
+
+            var parsedTransactions = recoveryTransactions
+                .Select(recoveryTransaction =>
+                {
+                    var trx = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
+
+                    trx.Inputs.Add(new OutPoint(NBitcoin.uint256.Zero, 0), null, null); //Add fee to the transaction
+
+                    return trx;
+                });
+
+            Assert.All(parsedTransactions, _ =>
+            {
+                builder.Verify(_, out TransactionPolicyError[] errors);
+                Assert.Empty(errors);
+            });
+        }
+
+        [Fact]
+        public void SpendInvestorConsolidatedRecoveryTest()
+        {
+            {
+                var network = Networks.Bitcoin.Testnet();
+
+                var angorKey = new Key();
+                var funderKey = new Key();
+
+                var operations = new InvestmentOperations(_walletOperations.Object);
+
+                // Create the seeder 1 params
+                var investorKey = new Key();
+                var investorChangeKey = new Key();
+
+                var investorContext = new InvestorContext
+                {
+                    ProjectInfo = new ProjectInfo
+                    {
+                        TargetAmount = 3,
+                        StartDate = DateTime.UtcNow,
+                        ExpiryDate = DateTime.UtcNow.AddDays(5),
+                        Stages = new List<Stage>
+                        {
+                            new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                            new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                            new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+                        },
+                        FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes()),
+                        AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
+                        PunishmentTime = new TimeSpan(new Random().NextInt64( 10000))
+                    },
+                    InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
+                    ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString(),
+                    ProjectSeeders = new ProjectSeeders()
+                };
+
+                // create the investment transaction
+
+                var investmentTransaction = operations.CreateInvestmentTransaction(network, investorContext,
+                    Money.Coins(investorContext.ProjectInfo.TargetAmount).Satoshi);
+
+                investorContext.TransactionHex = investmentTransaction.ToHex();
+                
+                var recoveryTransactions = operations.BuildRecoverInvestorFundsTransactions(investorContext, network,
+                    Encoders.Hex.EncodeData(investorChangeKey.PubKey.ToBytes()));
+
+                var founderSignatures = operations.FounderSignInvestorRecoveryTransactions(investorContext, network,
+                    recoveryTransactions,
+                    Encoders.Hex.EncodeData(funderKey.ToBytes()));
+
+                operations.AddWitScriptToInvestorRecoveryTransactions(investorContext, network, recoveryTransactions,
+                    founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()));
+
+                var nbitcoinNetwork = NetworkMapper.Map(network);
+
+                var builder = nbitcoinNetwork.CreateTransactionBuilder();
+                for (int i = 0; i < investmentTransaction.Outputs.Count; i++)
+                {
+                    var output = investmentTransaction.Outputs[i];
+                    
+                    if (output.Value == 0)
+                        continue;
+                    builder.AddCoin(new NBitcoin.Coin(Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork),
+                        (uint)i));
+                    builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Zero, 0, new NBitcoin.Money(10000),
+                        new Script("4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
+                }
+
+                var transaction = nbitcoinNetwork.Consensus.ConsensusFactory.CreateTransaction();
+
+                foreach (var recoveryTransaction in recoveryTransactions)
+                {
+                    transaction.Inputs.AddRange(recoveryTransaction.Inputs.Select(_ =>
+                    {
+                        var txIn = new TxIn(new OutPoint(new NBitcoin.uint256(_.PrevOut.Hash.ToBytes()), _.PrevOut.N));
+                        txIn.WitScript = new WitScript(_.WitScript.ToBytes());
+                        return txIn;
+                    }));
+                    transaction.Outputs.AddRange(recoveryTransaction.Outputs.Select(_ =>
+                        TxOut.Parse(_.ToHex(network.Consensus.ConsensusFactory))));
+                    // transaction.Outputs.Add(new NBitcoin.Money(recoveryTransaction.Outputs.Single().Value.Satoshi),
+                    //     new Script(recoveryTransaction.Outputs.Single().ScriptPubKey.ToBytes()));
+                }
+    
+                transaction.Inputs.Add(new OutPoint(NBitcoin.uint256.Zero, 0), null, null); //Add fee to the transaction
+                transaction.Outputs.Add(new NBitcoin.Money(9000), new Script(investorChangeKey.ScriptPubKey.ToBytes()));
+                
+                builder.Verify(transaction,out TransactionPolicyError[] errors);
+                Assert.Empty(errors);
+            }
         }
 
         [Fact]
