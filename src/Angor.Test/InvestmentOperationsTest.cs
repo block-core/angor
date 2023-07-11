@@ -81,7 +81,7 @@ namespace Angor.Test
 
             seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder1Key.PubKey.ToBytes());
             seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
-            seeder1Context.InvestorSecretHash = Encoders.Hex.EncodeData(Hashes.Hash256(seeder1secret.ToBytes()).ToBytes());
+            seeder1Context.InvestorSecretHash = Hashes.Hash256(seeder1secret.ToBytes()).ToString();
 
             // Create the seeder 2 params
             var seeder2Key = new Key();
@@ -92,7 +92,7 @@ namespace Angor.Test
 
             seeder2Context.InvestorKey = Encoders.Hex.EncodeData(seeder2Key.PubKey.ToBytes());
             seeder2Context.ChangeAddress = seeder2ChangeKey.PubKey.GetSegwitAddress(network).ToString();
-            seeder2Context.InvestorSecretHash = Encoders.Hex.EncodeData(Hashes.Hash256(seeder2secret.ToBytes()).ToBytes());
+            seeder2Context.InvestorSecretHash = Hashes.Hash256(seeder2secret.ToBytes()).ToString();
 
             // Create the seeder 3 params
             var seeder3Key = new Key();
@@ -103,7 +103,7 @@ namespace Angor.Test
 
             seeder3Context.InvestorKey = Encoders.Hex.EncodeData(seeder3Key.PubKey.ToBytes());
             seeder3Context.ChangeAddress = seeder3ChangeKey.PubKey.GetSegwitAddress(network).ToString();
-            seeder3Context.InvestorSecretHash = Encoders.Hex.EncodeData(Hashes.Hash256(seeder3secret.ToBytes()).ToBytes());
+            seeder3Context.InvestorSecretHash = Hashes.Hash256(seeder3secret.ToBytes()).ToString();
 
             // Build seeders hashes
 
@@ -214,7 +214,7 @@ namespace Angor.Test
 
             seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder11Key.PubKey.ToBytes());
             seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
-            seeder1Context.InvestorSecretHash = Encoders.Hex.EncodeData(Hashes.Hash256(seeder1secret.ToBytes()).ToBytes());
+            seeder1Context.InvestorSecretHash = Hashes.Hash256(seeder1secret.ToBytes()).ToString();
 
             // create the investment transaction
 
@@ -352,7 +352,7 @@ namespace Angor.Test
                     },
                     FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes()),
                     AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
-                    PunishmentTime = new TimeSpan(new Random().NextInt64(10000))
+                    PenaltyDate = DateTime.UtcNow.AddDays(5),
                 },
                 InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
                 ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString(),
@@ -374,7 +374,7 @@ namespace Angor.Test
                 Encoders.Hex.EncodeData(funderKey.ToBytes()));
 
             operations.AddWitScriptToInvestorRecoveryTransactions(investorContext, network, recoveryTransactions,
-                founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()));
+                founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()), null);
 
             var nbitcoinNetwork = NetworkMapper.Map(network);
 
@@ -420,9 +420,13 @@ namespace Angor.Test
 
                 var operations = new InvestmentOperations(_walletOperations.Object);
 
-                // Create the seeder 1 params
+                // Create the investor 1 params
                 var investorKey = new Key();
                 var investorChangeKey = new Key();
+
+                var seeder1Key = new Key();
+                var seeder2Key = new Key();
+                var seeder3Key = new Key();
 
                 var investorContext = new InvestorContext
                 {
@@ -439,11 +443,20 @@ namespace Angor.Test
                         },
                         FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes()),
                         AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
-                        PunishmentTime = new TimeSpan(new Random().NextInt64( 10000))
+                        PenaltyDate = DateTime.UtcNow.AddDays(5),
                     },
                     InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
                     ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString(),
-                    ProjectSeeders = new ProjectSeeders()
+                    ProjectSeeders = new ProjectSeeders
+                    {
+                        Threshold = 2,
+                        SecretHashes = new List<string>
+                        {
+                            Hashes.Hash256(seeder1Key.ToBytes()).ToString(),
+                            Hashes.Hash256(seeder2Key.ToBytes()).ToString(),
+                            Hashes.Hash256(seeder3Key.ToBytes()).ToString(),
+                        }
+                    }
                 };
 
                 // create the investment transaction
@@ -461,7 +474,7 @@ namespace Angor.Test
                     Encoders.Hex.EncodeData(funderKey.ToBytes()));
 
                 operations.AddWitScriptToInvestorRecoveryTransactions(investorContext, network, recoveryTransactions,
-                    founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()));
+                    founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()), null);
 
                 var nbitcoinNetwork = NetworkMapper.Map(network);
 
@@ -498,6 +511,101 @@ namespace Angor.Test
                 transaction.Outputs.Add(new NBitcoin.Money(9000), new Script(investorChangeKey.ScriptPubKey.ToBytes()));
                 
                 builder.Verify(transaction,out TransactionPolicyError[] errors);
+                Assert.Empty(errors);
+            }
+        }
+
+        [Fact]
+        public void SpendSeederConsolidatedRecoveryTest()
+        {
+            {
+                var network = Networks.Bitcoin.Testnet();
+
+                var angorKey = new Key();
+                var funderKey = new Key();
+
+                var operations = new InvestmentOperations(_walletOperations.Object);
+
+                // Create the investor 1 params
+                var seederKey = new Key();
+                var seederChangeKey = new Key();
+                var seedersecret = new Key();
+
+                var seederContext = new InvestorContext
+                {
+                    ProjectInfo = new ProjectInfo
+                    {
+                        TargetAmount = 3,
+                        StartDate = DateTime.UtcNow,
+                        ExpiryDate = DateTime.UtcNow.AddDays(5),
+                        Stages = new List<Stage>
+                        {
+                            new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                            new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                            new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+                        },
+                        FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes()),
+                        AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
+                        PenaltyDate = DateTime.UtcNow.AddDays(5),
+                    },
+                    InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes()),
+                    InvestorSecretHash = Hashes.Hash256(seedersecret.ToBytes()).ToString(),
+                    ChangeAddress = seederChangeKey.PubKey.GetSegwitAddress(network).ToString(),
+                    ProjectSeeders = new ProjectSeeders()
+                };
+
+                // create the investment transaction
+
+                var investmentTransaction = operations.CreateInvestmentTransaction(network, seederContext,
+                    Money.Coins(seederContext.ProjectInfo.TargetAmount).Satoshi);
+
+                seederContext.TransactionHex = investmentTransaction.ToHex();
+
+                var recoveryTransactions = operations.BuildRecoverInvestorFundsTransactions(seederContext, network,
+                    Encoders.Hex.EncodeData(seederChangeKey.PubKey.ToBytes()));
+
+                var founderSignatures = operations.FounderSignInvestorRecoveryTransactions(seederContext, network,
+                    recoveryTransactions,
+                    Encoders.Hex.EncodeData(funderKey.ToBytes()));
+
+                operations.AddWitScriptToInvestorRecoveryTransactions(seederContext, network, recoveryTransactions,
+                    founderSignatures, Encoders.Hex.EncodeData(seederKey.ToBytes()), Encoders.Hex.EncodeData(seedersecret.ToBytes()));
+
+                var nbitcoinNetwork = NetworkMapper.Map(network);
+
+                var builder = nbitcoinNetwork.CreateTransactionBuilder();
+                for (int i = 0; i < investmentTransaction.Outputs.Count; i++)
+                {
+                    var output = investmentTransaction.Outputs[i];
+
+                    if (output.Value == 0)
+                        continue;
+                    builder.AddCoin(new NBitcoin.Coin(Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork),
+                        (uint)i));
+                    builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Zero, 0, new NBitcoin.Money(10000),
+                        new Script("4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
+                }
+
+                var transaction = nbitcoinNetwork.Consensus.ConsensusFactory.CreateTransaction();
+
+                foreach (var recoveryTransaction in recoveryTransactions)
+                {
+                    transaction.Inputs.AddRange(recoveryTransaction.Inputs.Select(_ =>
+                    {
+                        var txIn = new TxIn(new OutPoint(new NBitcoin.uint256(_.PrevOut.Hash.ToBytes()), _.PrevOut.N));
+                        txIn.WitScript = new WitScript(_.WitScript.ToBytes());
+                        return txIn;
+                    }));
+                    transaction.Outputs.AddRange(recoveryTransaction.Outputs.Select(_ =>
+                        TxOut.Parse(_.ToHex(network.Consensus.ConsensusFactory))));
+                    // transaction.Outputs.Add(new NBitcoin.Money(recoveryTransaction.Outputs.Single().Value.Satoshi),
+                    //     new Script(recoveryTransaction.Outputs.Single().ScriptPubKey.ToBytes()));
+                }
+
+                transaction.Inputs.Add(new OutPoint(NBitcoin.uint256.Zero, 0), null, null); //Add fee to the transaction
+                transaction.Outputs.Add(new NBitcoin.Money(9000), new Script(seederChangeKey.ScriptPubKey.ToBytes()));
+
+                builder.Verify(transaction, out TransactionPolicyError[] errors);
                 Assert.Empty(errors);
             }
         }

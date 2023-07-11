@@ -46,7 +46,7 @@ public class ScriptBuilder
         return (pubKey, secretHash);
     }
 
-    public static Script GetInvestorPunishmentTransactionScript(string investorKey, DateTime punishmentLockTime)
+    public static Script GetInvestorPenaltyTransactionScript(string investorKey, DateTime punishmentLockTime)
     {
         var unixTime = Utils.DateTimeToUnixTime(punishmentLockTime);
         
@@ -97,7 +97,7 @@ public class ScriptBuilder
                 OpcodeType.OP_CHECKSIGVERIFY,
                 OpcodeType.OP_HASH256,
                 Op.GetPushOp(new uint256(secretHash).ToBytes()),
-                OpcodeType.OP_EQUALVERIFY
+                OpcodeType.OP_EQUAL
             });
         }
 

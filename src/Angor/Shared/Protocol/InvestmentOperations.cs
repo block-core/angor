@@ -248,9 +248,9 @@ public class InvestmentOperations
             {
                 var stageTransaction = nbitcoinNetwork.CreateTransaction();
 
-                var spendingScript = ScriptBuilder.GetInvestorPunishmentTransactionScript(
+                var spendingScript = ScriptBuilder.GetInvestorPenaltyTransactionScript(
                     investorReceiveAddress,
-                    context.ProjectInfo.StartDate.Add(context.ProjectInfo.PunishmentTime));
+                    context.ProjectInfo.PenaltyDate);
                 
                 stageTransaction.Outputs.Add(new NBitcoin.TxOut(_.TxOut.Value,
                     new NBitcoin.Script(spendingScript.WitHash.ScriptPubKey.ToBytes())));
@@ -269,17 +269,21 @@ public class InvestmentOperations
         var investmentTransaction = NBitcoin.Transaction.Parse(context.TransactionHex, nbitcoinNetwork);
         
         var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
-        
+
+        var opretunOutput = investmentTransaction.Outputs.AsIndexedOutputs().ElementAt(1);
+
+        var pubKeys = ScriptBuilder.GetInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+
         return transactions.Select((_,i) => 
         {
             var stageTransaction = NBitcoin.Transaction.Parse(_.ToHex(), nbitcoinNetwork);
             
             var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
-                context.InvestorKey,
-                null,
+                Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
+                pubKeys.secretHash?.ToString(),
                 context.ProjectInfo.Stages[i].ReleaseDate,
                 context.ProjectInfo.ExpiryDate,
-                new ProjectSeeders());
+                context.ProjectSeeders);
 
             const TaprootSigHash sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
             
@@ -295,23 +299,29 @@ public class InvestmentOperations
         }).ToList();
     }
     
-    public void AddWitScriptToInvestorRecoveryTransactions(InvestorContext context, Network network, List<Transaction> transactions, List<string> founderSignatures, string investorPrivateKey)
+    public void AddWitScriptToInvestorRecoveryTransactions(InvestorContext context, Network network, List<Transaction> transactions, List<string> founderSignatures, string investorPrivateKey, string? seederSecret)
     {
         var nbitcoinNetwork = NetworkMapper.Map(network);
         var investmentTransaction = NBitcoin.Transaction.Parse(context.TransactionHex, nbitcoinNetwork);
 
         var index = 0;
         var key = new Key(Encoders.Hex.DecodeData(investorPrivateKey));
+        var secret = seederSecret != null ? new Key(Encoders.Hex.DecodeData(seederSecret)) : null;
+
+        var opretunOutput = investmentTransaction.Outputs.AsIndexedOutputs().ElementAt(1);
+
+        var pubKeys = ScriptBuilder.GetInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+
         foreach (var transaction in transactions)
         {
             var stageTransaction = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
             
             var projectScripts = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
-                context.InvestorKey,
-                null,
+                Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
+                pubKeys.secretHash?.ToString(),
                 context.ProjectInfo.Stages[index].ReleaseDate,
                 context.ProjectInfo.ExpiryDate,
-                new ProjectSeeders());
+                context.ProjectSeeders);
             
             var controlBlock = AngorScripts.CreateControlBlockRecover(projectScripts);
             
@@ -324,16 +334,35 @@ public class InvestmentOperations
             
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 
-            transaction.Inputs.Single().WitScript =
-                new Blockcore.Consensus.TransactionInfo.WitScript(
-                    new WitScript(
-                            Op.GetPushOp(investorSignature.ToBytes()),
-                            Op.GetPushOp(TaprootSignature.Parse(founderSignatures[index]).ToBytes()),
-                            
-                            Op.GetPushOp(projectScripts.Recover.ToBytes()),
-                            Op.GetPushOp(controlBlock.ToBytes()))
-                        .ToBytes());
-            
+            if (string.IsNullOrEmpty(context.InvestorSecretHash))
+            {
+                transaction.Inputs.Single().WitScript =
+                    new Blockcore.Consensus.TransactionInfo.WitScript(
+                        new WitScript(
+                                Op.GetPushOp(investorSignature.ToBytes()),
+                                Op.GetPushOp(TaprootSignature.Parse(founderSignatures[index]).ToBytes()),
+
+                                Op.GetPushOp(projectScripts.Recover.ToBytes()),
+                                Op.GetPushOp(controlBlock.ToBytes()))
+                            .ToBytes());
+            }
+            else
+            {
+                if (secret == null)
+                    throw new Exception("secret is missing");
+
+                transaction.Inputs.Single().WitScript =
+                    new Blockcore.Consensus.TransactionInfo.WitScript(
+                        new WitScript(
+                                Op.GetPushOp(secret.ToBytes()),
+                                Op.GetPushOp(investorSignature.ToBytes()),
+                                Op.GetPushOp(TaprootSignature.Parse(founderSignatures[index]).ToBytes()),
+
+                                Op.GetPushOp(projectScripts.Recover.ToBytes()),
+                                Op.GetPushOp(controlBlock.ToBytes()))
+                            .ToBytes());
+            }
+
             index++;
         }
     }
