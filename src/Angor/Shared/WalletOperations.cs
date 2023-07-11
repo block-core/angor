@@ -111,7 +111,7 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    private (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords , List<UtxoDataWithPath> utxoDataWithPaths)
+    public (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords , List<UtxoDataWithPath> utxoDataWithPaths)
     {
         ExtKey extendedKey;
         try

@@ -1,30 +1,136 @@
-﻿using System.Text;
+﻿using System.Net.Sockets;
+using System.Text;
+using Blockcore.NBitcoin;
 using NBitcoin;
 using NBitcoin.Crypto;
-using PubKey = Blockcore.NBitcoin.PubKey;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
-using uint256 = Blockcore.NBitcoin.uint256;
+using uint256 = NBitcoin.uint256;
 
 
 namespace Angor.Shared.Protocol
 {
     public class AngorScripts
     {
-        public static Script CreateStageSeeder(Blockcore.Networks.Network network, Script founder, Script recover, Script expiry)
+        public static Script CreateStage(Blockcore.Networks.Network network, ProjectScripts scripts)
         {
-            TaprootInternalPubKey taprootKey = CreateUnspendableInternalKey();
+            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
 
-            var builder = new TaprootBuilder();
-
-            builder.AddLeaf(1, new NBitcoin.Script(founder.ToBytes()))
-                   .AddLeaf(2, new NBitcoin.Script(recover.ToBytes()))
-                   .AddLeaf(2, new NBitcoin.Script(expiry.ToBytes()));
-
-            var treeInfo = builder.Finalize(taprootKey);
-
-            var address = treeInfo.OutputPubKey.GetAddress(NBitcoin.Network.TestNet); //TODO 
+            var address = treeInfo.OutputPubKey.GetAddress(NetworkMapper.Map(network));
 
             return new Script(address.ScriptPubKey.ToBytes());
+        }
+
+        public static Script CreateControlBlockFounder(ProjectScripts scripts)
+        {
+            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
+
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(scripts.Founder.ToBytes()), 
+                (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
+
+            return new Script(controlBlock.ToBytes());
+        }
+
+        public static Script CreateControlBlockExpiry(ProjectScripts scripts)
+        {
+            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
+
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(scripts.EndOfProject.ToBytes()),
+                (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
+
+            return new Script(controlBlock.ToBytes());
+        }
+
+        public static Script CreateControlBlockRecover(ProjectScripts scripts)
+        {
+            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
+
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(scripts.Recover.ToBytes()),
+                (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
+
+            return new Script(controlBlock.ToBytes());
+        }
+
+        public static (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts, Blockcore.NBitcoin.Key[] secrets)
+        {
+            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
+
+            var scriptWeights = BuildTaprootScripts(scripts).Skip(3).Select(s => new Script(s.Item2.ToBytes()));
+
+            // find the spending script for the current secret hash combination
+
+            var hashes = secrets.Select(secret => (Blockcore.NBitcoin.Crypto.Hashes.Hash256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
+
+            Script execute = null;
+            List<Script> secretHashes = new List<Script>();
+
+            foreach (var scriptWeight in scriptWeights)
+            {
+                var ops = scriptWeight.ToOps().ToList();
+
+                secretHashes.Clear();
+
+                foreach (var op in ops)
+                {
+                    if (op.PushData != null && op.PushData.Length == 32)
+                    {
+                        var comp = new Blockcore.NBitcoin.uint256(op.PushData);
+
+                        foreach (var hash in hashes)
+                        {
+                            if (hash.Item1 == comp)
+                            {
+                                secretHashes.Add(hash.Item2);
+                            }
+                        }
+                    }
+                }
+
+                if (secretHashes.Count == hashes.Count)
+                {
+                    execute = scriptWeight;
+
+                    break;
+                }
+            }
+
+            if (execute == null)
+            {
+                throw new Exception("no secret found that matches the given scripts");
+            }
+
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(execute.ToBytes()),
+                (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
+
+            return (new Script(controlBlock.ToBytes()), execute, secretHashes.ToArray());
+        }
+
+
+        private static TaprootSpendInfo BuildTaprootSpendInfo(ProjectScripts scripts)
+        {
+            var taprootKey = CreateUnspendableInternalKey();
+
+            var scriptWeights = BuildTaprootScripts(scripts);
+
+            var treeInfo = TaprootSpendInfo.WithHuffmanTree(taprootKey, scriptWeights.ToArray());
+
+            return treeInfo;
+        }
+
+        private static List<(uint, NBitcoin.Script)> BuildTaprootScripts(ProjectScripts scripts)
+        {
+            var scriptWeights = new List<(uint, NBitcoin.Script)>()
+            {
+                (70u, new NBitcoin.Script (scripts.Founder.ToBytes())),
+                (40u, new NBitcoin.Script (scripts.Recover.ToBytes())),
+                (1u, new NBitcoin.Script (scripts.EndOfProject.ToBytes()))
+            };
+
+            foreach (var scriptsSeeder in scripts.Seeders)
+            {
+                scriptWeights.Add((10u, new NBitcoin.Script(scriptsSeeder.ToBytes())));
+            }
+
+            return scriptWeights;
         }
 
         public static TaprootInternalPubKey CreateUnspendableInternalKey()
@@ -46,26 +152,6 @@ namespace Angor.Shared.Protocol
 
 
             return taprootInternalPubKey;
-        }
-
-        public static uint256 CreateStage(List<Script> leaves)
-        {
-
-            var builder = new TaprootBuilder();
-            
-            uint depth = 1;
-            foreach (var script in leaves)
-            {
-                builder.AddLeaf(depth, new NBitcoin.Script(script.ToBytes()));
-
-                depth += depth % 2 == 0 ? (uint)0 : 1;
-            }
-
-            var key = new PubKey(string.Empty);
-
-            var merkelRoot = builder.Finalize(new TaprootInternalPubKey(key.ToBytes())).MerkleRoot;
-            
-            return new uint256(merkelRoot.ToBytes());
         }
     }
 }

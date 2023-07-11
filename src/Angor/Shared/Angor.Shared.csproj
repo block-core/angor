@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DefineConstants>HAS_SPAN</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Blockcore.Core" Version="1.1.40" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
