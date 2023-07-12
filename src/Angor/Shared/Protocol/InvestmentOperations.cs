@@ -86,7 +86,8 @@ public class InvestmentOperations
         };
     }
     
-    public void SignInvestmentTransaction(Network network, InvestorContext context, Transaction transaction, WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths)
+    public void SignInvestmentTransaction(Network network, InvestorContext context, Transaction transaction, WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths,
+        FeeEstimation feeRate)
     {
         // We must use the NBitcoin lib because taproot outputs are non standard before taproot activated
 
@@ -95,8 +96,8 @@ public class InvestmentOperations
 
         var coins = _walletOperations.GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
-        var fees = _walletOperations.GetFeeEstimationAsync().Result;
-        var fee = fees.First(f => f.Confirmations == 1);
+        // var fees = _walletOperations.GetFeeEstimationAsync().GetAwaiter().GetResult();
+        // var fee = fees.First(f => f.Confirmations == 1);
 
 
         //var incoins = coins.coins.Select(c => new NBitcoin.Coin(OutPoint.Parse(c.Outpoint.ToString()), new NBitcoin.TxOut(NBitcoin.Money.Satoshis(c.Amount.Satoshi), new NBitcoin.Script(c.ScriptPubKey.ToBytes()))));
@@ -107,7 +108,7 @@ public class InvestmentOperations
             .AddKeys(coins.keys.ToArray())
             .SetChange(BitcoinAddress.Create(context.ChangeAddress, network))
             .ContinueToBuild(transaction)
-            .SendEstimatedFees(new FeeRate(Money.Satoshis(fee.FeeRate)))
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate.FeeRate)))
             .CoverTheRest();
 
         var signTransaction = builder.BuildTransaction(true);// builder.SignTransactionInPlace(transaction);
@@ -132,12 +133,13 @@ public class InvestmentOperations
     /// Allow the founder to spend the coins in a stage after the timelock has passed
     /// </summary>
     /// <exception cref="Exception"></exception>
-    public Transaction SpendFounderStage(Network network, FounderContext context, int stageNumber, Script founderRecieveAddress, string founderPrivateKey)
+    public Transaction SpendFounderStage(Network network, FounderContext context, int stageNumber, Script founderRecieveAddress, string founderPrivateKey,
+        FeeEstimation fee)
     {
         // We'll use the NBitcoin lib because its a taproot spend
 
-        var fees = _walletOperations.GetFeeEstimationAsync().Result;
-        var fee = fees.First(f => f.Confirmations == 1);
+        // var fees = _walletOperations.GetFeeEstimationAsync().Result;
+        // var fee = fees.First(f => f.Confirmations == 1);
 
         var nbitcoinNetwork = NetworkMapper.Map(network);
 

@@ -18,16 +18,15 @@ namespace Angor.Test
     {
         private Mock<IWalletOperations> _walletOperations;
 
+        private FeeEstimation _expectedFeeEstimation = new FeeEstimation()
+        { Confirmations = 1, FeeRate = 10000 };
 
         public InvestmentOperationsTest()
         {
             _walletOperations = new Mock<IWalletOperations>();
 
             _walletOperations.Setup(_ => _.GetFeeEstimationAsync())
-                .ReturnsAsync(new List<FeeEstimation>
-                {
-                    new() { Confirmations = 1, FeeRate = 10000 },
-                });
+                .ReturnsAsync(new List<FeeEstimation> { _expectedFeeEstimation });
 
             _walletOperations.Setup(_ => _.GetUnspentOutputsForTransaction(It.IsAny<WalletWords>(),
                     It.IsAny<List<UtxoDataWithPath>>()))
@@ -138,7 +137,7 @@ namespace Angor.Test
 
             var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>());
+            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation);
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder1Context.TransactionHex);
 
@@ -146,7 +145,7 @@ namespace Angor.Test
 
             var seeder2InvTrx = operations.CreateInvestmentTransaction(network, seeder2Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            operations.SignInvestmentTransaction(network, seeder2Context, seeder2InvTrx, null, new List<UtxoDataWithPath>());
+            operations.SignInvestmentTransaction(network, seeder2Context, seeder2InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation);
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder2Context.TransactionHex);
 
@@ -154,7 +153,7 @@ namespace Angor.Test
 
             var seeder3InvTrx = operations.CreateInvestmentTransaction(network, seeder3Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            operations.SignInvestmentTransaction(network, seeder3Context, seeder3InvTrx, null, new List<UtxoDataWithPath>());
+            operations.SignInvestmentTransaction(network, seeder3Context, seeder3InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation);
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder3Context.TransactionHex);
 
@@ -162,7 +161,7 @@ namespace Angor.Test
 
             var investor1InvTrx = operations.CreateInvestmentTransaction(network, investor1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            operations.SignInvestmentTransaction(network, investor1Context, investor1InvTrx, null, new List<UtxoDataWithPath>());
+            operations.SignInvestmentTransaction(network, investor1Context, investor1InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation);
 
             founderContext.InvestmentTrasnactionsHex.Add(investor1Context.TransactionHex);
 
@@ -170,13 +169,14 @@ namespace Angor.Test
 
             var investor2InvTrx = operations.CreateInvestmentTransaction(network, investor2Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            operations.SignInvestmentTransaction(network, investor2Context, investor2InvTrx, null, new List<UtxoDataWithPath>());
+            operations.SignInvestmentTransaction(network, investor2Context, investor2InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation);
 
             founderContext.InvestmentTrasnactionsHex.Add(investor2Context.TransactionHex);
 
             // spend all investment transactions for stage 1
 
-            var founderTrxForSeeder1Stage1 = operations.SpendFounderStage(network, founderContext, 1, funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderKey.ToBytes()));
+            var founderTrxForSeeder1Stage1 = operations.SpendFounderStage(network, founderContext, 1, funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderKey.ToBytes())
+            ,_expectedFeeEstimation);
             
         }
 
@@ -220,7 +220,7 @@ namespace Angor.Test
 
             var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>());
+            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation);
 
             var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 }, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
 
@@ -265,7 +265,8 @@ namespace Angor.Test
 
             var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>());
+            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>(),
+                _expectedFeeEstimation);
 
             var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 }, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
 
@@ -316,7 +317,7 @@ namespace Angor.Test
 
             var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>());
+            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation);
 
             var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 }, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
 
@@ -658,7 +659,7 @@ namespace Angor.Test
 
             var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>());
+            operations.SignInvestmentTransaction(network, seeder1Context, seeder1InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation);
 
             var seeder1Expierytrx = operations.RecoverFundsNoPenalty(network, seeder1Context, new[] { 2, 3 }, new Key[]{ seeder2Key, seeder3Key }, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
 
