@@ -8,7 +8,7 @@ namespace Angor.Shared.Networks
         {
             get
             {
-                return new NetworksSelector(() => new BitcoinMain(), () => null, () => null);
+                return new NetworksSelector(() => new BitcoinMain(), () => new BitcoinTest(), () => null);
             }
         }
 

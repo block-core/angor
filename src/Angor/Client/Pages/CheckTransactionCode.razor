@@ -1,0 +1,171 @@
+@page "/CheckTransactionCode"
+@using Blockcore.Consensus.TransactionInfo
+@using Angor.Client.Storage
+@using Angor.Shared
+@using Angor.Shared.Models
+@using Blockcore.Consensus.ScriptInfo
+@using Blockcore.NBitcoin
+@using Blockcore.NBitcoin.BIP32
+@using Blockcore.NBitcoin.DataEncoders
+<h3>CheckTransactionCode</h3>
+
+@inject IWalletOperations _walletOperations; 
+@inject INetworkConfiguration _networkConfiguration;
+@inject IClientStorage storage;
+@inject IWalletStorage _walletStorage;
+@inject IHdOperations _hdOperations;
+
+<div class="container mt-4">
+    <h1 class="mb-4">Dashboard</h1>
+    
+    <button type="button" class="btn btn-light" @onclick="CreateInvestmentTransaction">Load transaction</button>
+    
+    @if (ShowTransaction)
+    {
+        <div>
+            @* <textarea>@JsonContent.Create(transaction ).ReadAsStringAsync().Result</textarea> *@
+        </div>
+        
+        
+@if (transaction == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">@transaction.GetHash()</h5>
+            <h6>Inputs</h6>
+            @foreach (var input in transaction.Inputs)
+            {
+                <p class="card-text">From: @input.ScriptSig</p>
+                <p class="card-text">Script: @input.WitScript</p>
+            }
+            <h6>Outputs</h6>
+            @foreach (var output in transaction.Outputs)
+            {
+                <p class="card-text">To: @output.ScriptPubKey</p>
+                <p class="card-text">Amount: @output.Value BTC</p>
+            }
+        </div>
+    </div>
+}
+    }
+</div>
+
+@if (founderTransaction == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">@founderTransaction.GetHash()</h5>
+            <h6>Inputs</h6>
+            @foreach (var input in founderTransaction.Inputs)
+            {
+                <p class="card-text">From: @input.ScriptSig</p>
+                <p class="card-text">Script: @input.WitScript</p>
+                <p class="card-text">Script: @(new Script(input.WitScript.ToScript().ToOps()[1].PushData).ToString())</p>
+            }
+            <h6>Outputs</h6>
+            @foreach (var output in founderTransaction.Outputs)
+            {
+                <p class="card-text">To: @output.ScriptPubKey</p>
+                <p class="card-text">Amount: @output.Value BTC</p>
+            }
+        </div>
+    </div>
+}
+
+@code {
+
+    Transaction transaction;
+    Transaction founderTransaction;
+    bool ShowTransaction = false;
+    private AccountInfo localAccountInfo = new();
+    InvestmentOperations _investmentOperations;
+    
+    private AccountInfo GetAccountInfoFromStorage()
+    {
+        var network = _networkConfiguration.GetNetwork();
+        return storage.GetAccountInfo(network.Name);
+    }
+
+    private async Task CreateInvestmentTransaction()
+    {
+        _investmentOperations = new InvestmentOperations(_walletOperations);
+        var network = _networkConfiguration.GetNetwork();
+        localAccountInfo = GetAccountInfoFromStorage();
+
+        ExtPubKey accountExtPubKey = ExtPubKey.Parse(localAccountInfo.ExtPubKey, network);
+        var walletWords = _walletStorage.GetWallet();
+        var extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+
+        var privateFounderKey = extendedKey.Derive(new KeyPath("m/84'/1'/0'/0/3"));
+        
+        var pubKey = _hdOperations.GeneratePublicKey(accountExtPubKey, localAccountInfo.LastFetchIndex + 1, false);
+        var angorPubKey = _hdOperations.GeneratePublicKey(accountExtPubKey, localAccountInfo.LastFetchIndex + 3, false);
+
+        var context = new InvestorContext
+        {
+            ChangeAddress = localAccountInfo.ChangeAddressesInfo.First().Address,
+            InvestorKey = pubKey.ToHex(),
+            ProjectInfo = new ProjectInfo
+            {
+                Stages = new List<Stage>
+                {
+                    new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                    new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                    new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+                },
+                ExpiryDate = DateTime.Now.AddDays(1),
+                FounderKey = Encoders.Hex.EncodeData(privateFounderKey.Neuter().PubKey.ToBytes()),
+                PenaltyDate = DateTime.Now.AddMinutes(1000),
+                StartDate = DateTime.Now,
+                TargetAmount = 10,
+                AngorFeeKey = angorPubKey.ToHex()
+            },
+            ProjectSeeders = new ProjectSeeders()
+        };
+
+        transaction = _investmentOperations.CreateInvestmentTransaction(network, context, 1000000);
+
+        var sendInfo = new SendInfo
+        {
+            ChangeAddress = pubKey.GetSegwitAddress(network).ToString(),
+            SendAmount = 10,
+            SendToAddress = privateFounderKey.Neuter().PubKey.GetSegwitAddress(network).ToString()
+        };
+
+        _walletOperations.CalculateTransactionFee(sendInfo, localAccountInfo, 1000);
+
+        var fee = await _walletOperations.GetFeeEstimationAsync();
+        _investmentOperations.SignInvestmentTransaction(network, context, transaction, walletWords, sendInfo.SendUtxos.Values.ToList(),
+            fee.First());
+
+        founderTransaction = _investmentOperations.SpendFounderStage(network, new FounderContext
+            {
+                ChangeAddress = pubKey.GetSegwitAddress(network).ToString(),
+                ProjectInfo = context.ProjectInfo,
+                ProjectSeeders = new ProjectSeeders(),
+                InvestmentTrasnactionsHex = new List<string> { context.TransactionHex }
+            },
+            1,
+            privateFounderKey.Neuter().PubKey.ScriptPubKey,
+            Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()),
+            fee.First());
+
+        var transactions = _investmentOperations.BuildRecoverInvestorFundsTransactions(context, network, pubKey.ToHex());
+
+        var signatures = _investmentOperations.FounderSignInvestorRecoveryTransactions(context, network, transactions, 
+            Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()));
+        
+        _investmentOperations.AddWitScriptToInvestorRecoveryTransactions(context,network,transactions,signatures,extendedKey.PrivateKey.ToHex(network.Consensus.ConsensusFactory),null);
+        
+        ShowTransaction = true;
+    }
+
+}
