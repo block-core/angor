@@ -1,7 +1,24 @@
 ﻿@page "/create-project"
 @using Angor.Shared.Models
+@using Angor.Shared
+@using Angor.Client.Storage
 
 @inject HttpClient Http
+@inject IDerivationOperations _derivationOperations
+@inject IWalletStorage _walletStorage;
+@inject IClientStorage storage;
+@inject NavigationManager NavigationManager
+
+@if (!hasWallet)
+{
+    <div class="row mt-4">
+        <div class="col">
+            <div class="alert alert-info" role="alert">No Wallet Found</div>
+        </div>
+    </div>
+
+    return;
+}
 
 <div class="container mt-4">
     <h1 class="mb-4">Create New Project</h1>
@@ -9,17 +26,17 @@
     <NotificationComponent @ref="notificationComponent"/>
 
     <EditForm Model="project" OnValidSubmit="HandleValidSubmit">
+        
+        <!-- Angor Fee Key -->
+        <div class="mb-3">
+            <label for="angorFeeKey" class="form-label">Project identifier</label>
+            <InputText id="angorFeeKey" @bind-Value="project.ProjectIdentifier" class="form-control" placeholder="Enter angor fee key" readonly />
+        </div>
 
         <!-- Founder Key -->
         <div class="mb-3">
             <label for="founderKey" class="form-label">Founder Key</label>
-            <InputText id="founderKey" @bind-Value="project.FounderKey" class="form-control" placeholder="Enter founder key"/>
-        </div>
-
-        <!-- Angor Fee Key -->
-        <div class="mb-3">
-            <label for="angorFeeKey" class="form-label">Angor Fee Key</label>
-            <InputText id="angorFeeKey" @bind-Value="project.AngorFeeKey" class="form-control" placeholder="Enter angor fee key"/>
+            <InputText id="founderKey" @bind-Value="project.FounderKey" class="form-control" placeholder="Enter founder key" readonly />
         </div>
 
         <!-- Start Date -->
@@ -73,6 +90,7 @@
     private NotificationComponent notificationComponent;
 
     private bool sendConfirmModal;
+    private bool hasWallet;
 
     private ProjectInfo project = new ProjectInfo
     {
@@ -84,10 +102,39 @@
         {
             new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(1) },
             new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(2) },
-            new Stage { AmountToRelease = 70, ReleaseDate = DateTime.UtcNow.AddDays(3) },
+            new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(3) },
         }
     };
    
+    protected override Task OnInitializedAsync()
+    {
+        hasWallet = _walletStorage.HasWallet();
+
+        if (hasWallet)
+        {
+            var myproject = storage.GetMyProjectsInfo();
+
+            if (myproject != null)
+            {
+                NavigationManager.NavigateTo($"/view-project/{myproject.ProjectIdentifier}");
+            }
+            else
+            {
+                var wallet = _walletStorage.GetWallet();
+
+                var testAngorKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
+                var founderKey = _derivationOperations.DeriveFounderKey(wallet);
+                var projectIdentifier = _derivationOperations.DeriveAngorKey(founderKey, testAngorKey);
+                project.FounderKey = founderKey;
+                project.ProjectIdentifier = projectIdentifier;
+            }
+
+        }
+        
+        return Task.CompletedTask;
+    }
+
+
     private async Task HandleValidSubmit()
     {
         if (project.Stages.Count() < 3)
@@ -104,6 +151,14 @@
             return;
         }
 
+        var myproject = storage.GetMyProjectsInfo();
+
+        if (myproject != null)
+        {
+            notificationComponent.ShowErrorMessage("This wallet already has a project");
+            return;
+        }
+
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             await Task.Delay(1000);
@@ -114,6 +169,8 @@
         if (operationResult.Success)
         {
             notificationComponent.ShowNotificationMessage("Project created", 1);
+
+            storage.SetMyProjectInfo(project);
         }
     }
 

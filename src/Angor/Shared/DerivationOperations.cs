@@ -12,7 +12,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared;
 
-public class DerivationOperations //: IDerivationOperations
+public interface IDerivationOperations
+{
+    string DeriveFounderKey(WalletWords walletWords);
+    uint DeriveProjectId(string founderKey);
+    string DeriveAngorKey(string founderKey, string angorRootKey);
+    Script AngorKeyToScript(string angorKey);
+}
+
+public class DerivationOperations : IDerivationOperations
 {
     private readonly HttpClient _http;
     private readonly IHdOperations _hdOperations;
@@ -102,7 +110,7 @@ public class DerivationOperations //: IDerivationOperations
         return address;
     }
 
-    public Script DeriveAngorKeyScript(string angorKey)
+    public Script AngorKeyToScript(string angorKey)
     {
         Network network = _networkConfiguration.GetNetwork();
 

@@ -69,7 +69,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
-            projectInvestmentInfo.AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
+            projectInvestmentInfo.ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
 
             // Create the seeder 1 params
             var seeder1Key = new Key();
@@ -202,7 +202,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
-            projectInvestmentInfo.AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
+            projectInvestmentInfo.ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
@@ -249,7 +249,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
-            projectInvestmentInfo.AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
+            projectInvestmentInfo.ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
@@ -295,7 +295,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
-            projectInvestmentInfo.AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
+            projectInvestmentInfo.ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
@@ -352,7 +352,7 @@ namespace Angor.Test
                         new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                     },
                     FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes()),
-                    AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
+                    ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
                     PenaltyDate = DateTime.UtcNow.AddDays(5),
                 },
                 InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
@@ -443,7 +443,7 @@ namespace Angor.Test
                             new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                         },
                         FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes()),
-                        AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
+                        ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
                         PenaltyDate = DateTime.UtcNow.AddDays(5),
                     },
                     InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
@@ -546,7 +546,7 @@ namespace Angor.Test
                             new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                         },
                         FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes()),
-                        AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
+                        ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
                         PenaltyDate = DateTime.UtcNow.AddDays(5),
                     },
                     InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes()),
@@ -633,7 +633,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
-            projectInvestmentInfo.AngorFeeKey = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
+            projectInvestmentInfo.ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
 
             // Create the seeder 1 params
             var seeder11Key = new Key();

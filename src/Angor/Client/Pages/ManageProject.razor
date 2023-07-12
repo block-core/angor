@@ -1,43 +1,91 @@
-﻿@page "/project-management/{id}"
+﻿@page "/view-project/{ProjectId}"
+@using Angor.Shared
+@using Angor.Client.Storage
 
-<h2 class="mb-3">Project Management</h2>
+@inject HttpClient Http
+@inject IDerivationOperations _derivationOperations
+@inject IWalletStorage _walletStorage;
+@inject IClientStorage storage;
 
-<form>
-    <div class="mb-3">
-        <label for="projectName" class="form-label">Project Name</label>
-        <input type="text" class="form-control" id="projectName" placeholder="Enter project name">
-    </div>
+<h3>View Project</h3>
 
-    <div class="mb-3">
-        <label for="projectDescription" class="form-label">Project Description</label>
-        <textarea class="form-control" id="projectDescription" placeholder="Enter project description"></textarea>
-    </div>
-
-    <div class="mb-3">
-        <label for="startDate" class="form-label">Start Date</label>
-        <input type="date" class="form-control" id="startDate">
-    </div>
-
-    <div class="mb-3">
-        <label for="endDate" class="form-label">End Date</label>
-        <input type="date" class="form-control" id="endDate">
-    </div>
-
-    <div class="mb-3">
-        <label for="projectStatus" class="form-label">Project Status</label>
-        <select class="form-select" id="projectStatus">
-            <option selected>Select status</option>
-            <option value="ongoing">Ongoing</option>
-            <option value="completed">Completed</option>
-            <option value="upcoming">Upcoming</option>
-        </select>
-    </div>
-
-    <button type="submit" class="btn btn-primary mb-3">Save Changes</button>
-</form>
-
-@code
+@if (!hasWallet)
 {
+    <div class="row mt-4">
+        <div class="col">
+            <div class="alert alert-info" role="alert">No Wallet Found</div>
+        </div>
+    </div>
+
+    return;
+}
+
+<NotificationComponent @ref="notificationComponent"/>
+
+@if (project == null)
+{
+    <p><em>project not found...</em></p>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
+            <p class="card-text">Founder Key: @project.FounderKey</p>
+            <p class="card-text">Start Date: @project.StartDate</p>
+            <p class="card-text">Penalty Date: @project.PenaltyDate</p>
+            <p class="card-text">Expiry Date: @project.ExpiryDate</p>
+            <p class="card-text">Target Amount: @project.TargetAmount</p>
+            <h5>Stages:</h5>
+            @foreach (var stage in project.Stages)
+            {
+                <hr /> <!-- This adds a horizontal line -->
+                <p class="card-text">Amount to Release: @stage.AmountToRelease%</p>
+                <p class="card-text">Release Date: @stage.ReleaseDate</p>
+                
+            }
+        </div>
+    </div>
+
+}
+
+@code {
     [Parameter]
-    public string Id { get; set; }
+    public string ProjectId { get; set; }
+
+    private ProjectInfo project;
+
+    private NotificationComponent notificationComponent;
+
+    private bool sendConfirmModal;
+    private bool hasWallet;
+
+
+    protected override Task OnInitializedAsync()
+    {
+        hasWallet = _walletStorage.HasWallet();
+
+        if (hasWallet)
+        {
+            var myproject = storage.GetMyProjectsInfo();
+
+            if (myproject != null && myproject.ProjectIdentifier == ProjectId)
+            {
+                project = myproject;
+            }
+            else
+            {
+                var projects = storage.GetProjectsInfo();
+
+                var found = projects.FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+
+                if (found != null)
+                {
+                    project = found;
+                }
+            }
+        }
+        
+        return Task.CompletedTask;
+    }
 }

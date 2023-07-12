@@ -11,5 +11,10 @@ namespace Angor.Client.Storage
         AccountInfo GetAccountInfo(string network);
         void SetAccountInfo(string network, AccountInfo items);
         void DeleteAccountInfo(string network);
+        void AddProjectInfo(ProjectInfo project);
+        List<ProjectInfo> GetProjectsInfo();
+        void SetMyProjectInfo(ProjectInfo project);
+        ProjectInfo? GetMyProjectsInfo();
+
     }
 }

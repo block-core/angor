@@ -8,7 +8,7 @@ using System.Collections.Generic;
 public class ProjectInfo
 {
     public string FounderKey { get; set; }
-    public string AngorFeeKey { get; set; }
+    public string ProjectIdentifier { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime PenaltyDate { get; set; }
     public DateTime ExpiryDate { get; set; }

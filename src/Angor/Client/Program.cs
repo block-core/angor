@@ -20,5 +20,6 @@ builder.Services.AddTransient <IClientStorage, ClientStorage>();
 builder.Services.AddTransient <IWalletStorage, WalletStorage>();
 builder.Services.AddTransient<IWalletOperations, WalletOperations>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
+builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
 
 await builder.Build().RunAsync();

@@ -41,7 +41,7 @@ public class InvestmentOperations
         Transaction investmentTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
 
         // create the output and script of the project id 
-        var angorFeeOutputScript = ScriptBuilder.GetAngorFeeOutputScript(context.ProjectInfo.AngorFeeKey);
+        var angorFeeOutputScript = ScriptBuilder.GetAngorFeeOutputScript(context.ProjectInfo.ProjectIdentifier);
         var angorOutput = new TxOut(new Money(totalInvestmentAmount / 100), angorFeeOutputScript);
         investmentTransaction.AddOutput(angorOutput);
 
