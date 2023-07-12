@@ -1,60 +1,129 @@
 ﻿@page "/create-project"
+@using Angor.Shared.Models
+
+@inject HttpClient Http
 
 <div class="container mt-4">
     <h1 class="mb-4">Create New Project</h1>
 
-    <form>
-        <!-- Project Title -->
+    <NotificationComponent @ref="notificationComponent"/>
+
+    <EditForm Model="project" OnValidSubmit="HandleValidSubmit">
+
+        <!-- Founder Key -->
         <div class="mb-3">
-            <label for="projectTitle" class="form-label">Project Title</label>
-            <input type="text" class="form-control" id="projectTitle" placeholder="Enter project title">
+            <label for="founderKey" class="form-label">Founder Key</label>
+            <InputText id="founderKey" @bind-Value="project.FounderKey" class="form-control" placeholder="Enter founder key"/>
         </div>
 
-        <!-- Project Description -->
+        <!-- Angor Fee Key -->
         <div class="mb-3">
-            <label for="projectDescription" class="form-label">Project Description</label>
-            <textarea class="form-control" id="projectDescription" rows="3" placeholder="Enter project description"></textarea>
+            <label for="angorFeeKey" class="form-label">Angor Fee Key</label>
+            <InputText id="angorFeeKey" @bind-Value="project.AngorFeeKey" class="form-control" placeholder="Enter angor fee key"/>
         </div>
 
-        <!-- Project Goal -->
+        <!-- Start Date -->
         <div class="mb-3">
-            <label for="projectGoal" class="form-label">Goal Amount</label>
-            <input type="number" class="form-control" id="projectGoal" placeholder="Enter goal amount">
+            <label for="startDate" class="form-label">Start Date</label>
+            <InputDate id="startDate" @bind-Value="project.StartDate" class="form-control"/>
         </div>
 
-        <!-- Project Duration -->
+        <!-- Penalty Date -->
         <div class="mb-3">
-            <label for="projectDuration" class="form-label">Project Duration (days)</label>
-            <input type="number" class="form-control" id="projectDuration" placeholder="Enter project duration">
+            <label for="penaltyDate" class="form-label">Penalty Date</label>
+            <InputDate id="penaltyDate" @bind-Value="project.PenaltyDate" class="form-control"/>
         </div>
 
-        <!-- Project Category -->
+        <!-- Expiry Date -->
         <div class="mb-3">
-            <label for="projectCategory" class="form-label">Project Category</label>
-            <select class="form-select" id="projectCategory">
-                <option selected>Choose...</option>
-                <option>Category 1</option>
-                <option>Category 2</option>
-                <option>Category 3</option>
-            </select>
+            <label for="expiryDate" class="form-label">Expiry Date</label>
+            <InputDate id="expiryDate" @bind-Value="project.ExpiryDate" class="form-control"/>
         </div>
 
-        <!-- Project Image Upload -->
+        <!-- Target Amount -->
         <div class="mb-3">
-            <label for="projectImage" class="form-label">Project Image</label>
-            <input class="form-control" type="file" id="projectImage">
+            <label for="targetAmount" class="form-label">Target Amount</label>
+            <InputNumber id="targetAmount" @bind-Value="project.TargetAmount" class="form-control" placeholder="Enter target amount"/>
         </div>
 
-        <!-- Project Video Upload (Optional) -->
-        <div class="mb-3">
-            <label for="projectVideo" class="form-label">Project Video (optional)</label>
-            <input class="form-control" type="file" id="projectVideo">
-        </div>
+        <!-- Stages -->
+        <h3 class="mb-3">Stages</h3>
+        @foreach (var stage in project.Stages)
+        {
+            <div class="mb-3">
+                <label class="form-label">Stage @project.Stages.IndexOf(stage)</label>
+                <div class="input-group">
+                    <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1"/>
+                    <InputDate @bind-Value="stage.ReleaseDate" class="form-control"/>
+                    <button type="button" class="btn btn-danger" @onclick="() => RemoveStage(stage)">Remove</button>
+                </div>
+            </div>
+        }
+        <button type="button" class="btn btn-primary mb-3" @onclick="AddStage">Add Stage</button>
 
         <!-- Save & Publish Buttons -->
         <div class="mb-3">
-            <button type="submit" class="btn btn-primary">Save Draft</button>
-            <button type="submit" class="btn btn-success">Publish Project</button>
+            <button type="submit" class="btn btn-success">Save Project</button>
         </div>
-    </form>
+    </EditForm>
 </div>
+
+@code {
+
+    private NotificationComponent notificationComponent;
+
+    private bool sendConfirmModal;
+
+    private ProjectInfo project = new ProjectInfo
+    {
+        StartDate = DateTime.UtcNow,
+        PenaltyDate = DateTime.UtcNow,
+        ExpiryDate = DateTime.UtcNow,
+        TargetAmount = 100,
+        Stages = new List<Stage>
+        {
+            new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+            new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+            new Stage { AmountToRelease = 70, ReleaseDate = DateTime.UtcNow.AddDays(3) },
+        }
+    };
+   
+    private async Task HandleValidSubmit()
+    {
+        if (project.Stages.Count() < 3)
+        {
+            // Show an error message to the user.
+            notificationComponent.ShowErrorMessage("There must be at least 3 stages");
+            return;
+        }
+
+        if (project.Stages.Sum(s => s.AmountToRelease) != 100)
+        {
+            // Show an error message to the user.
+            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
+            return;
+        }
+
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            await Task.Delay(1000);
+
+            return new OperationResult { Success = true };
+        });
+
+        if (operationResult.Success)
+        {
+            notificationComponent.ShowNotificationMessage("Project created", 1);
+        }
+    }
+
+    private void AddStage()
+    {
+        project.Stages.Add(new Stage { ReleaseDate = DateTime.UtcNow });
+    }
+
+    private void RemoveStage(Stage stage)
+    {
+        project.Stages.Remove(stage);
+    }
+}
