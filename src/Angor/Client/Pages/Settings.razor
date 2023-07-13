@@ -1,0 +1,108 @@
+﻿@page "/settings"
+@using Angor.Shared
+
+@inject INetworkConfiguration _networkConfiguration
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h3>Settings</h3>
+
+            <p>Network Type: <strong>@networkType</strong></p>
+
+            <hr /> <!-- Line separator -->
+
+            <h4 class="mt-4">Indexers</h4>
+            <ul>
+                @foreach (var link in indexers)
+                {
+                    <li>
+                        <button class="btn btn-link" @onclick="() => SelectIndexerLink(link)">
+                            <i class="fas fa-check" style="color: @(selectedIndexerLink == link ? "green" : "gray")"></i>
+                        </button>
+                        <a href="@link" target="_blank">@link</a>
+                    </li>
+                }
+            </ul>
+
+            <form @onsubmit="AddIndexer">
+                <div class="mb-3">
+                    <input type="text" id="newLink" @bind="newIndexerLink" class="form-control" placeholder="Enter new indexer link" />
+                </div>
+                <button type="submit" class="btn btn-primary">Add indexer Link</button>
+            </form>
+
+            <hr /> <!-- Line separator -->
+
+            <h4 class="mt-4">Nostr Relays</h4>
+            
+            <ul>
+                @foreach (var link in relays)
+                {
+                    <li>
+                        <button class="btn btn-link" @onclick="() => SelectRelayLink(link)">
+                            <i class="fas fa-check" style="color: @(selectedRelayLink == link ? "green" : "gray")"></i>
+                        </button>
+                        <a href="@link" target="_blank">@link</a>
+                    </li>
+                }
+            </ul>
+
+            <form @onsubmit="AddRelay">
+                <div class="mb-3">
+                    <input type="text" id="newLink" @bind="newRelayLink" class="form-control" placeholder="Enter new relay link" />
+                </div>
+                <button type="submit" class="btn btn-primary">Add relay Link</button>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private string newIndexerLink;
+    private string newRelayLink;
+
+    private List<string> indexers = new();
+    private List<string> relays = new ();
+
+    private string selectedIndexerLink;
+    private string selectedRelayLink;
+    private string networkType;
+
+    protected override Task OnInitializedAsync()
+    {
+        indexers.Add(_networkConfiguration.GetIndexerUrl().Url);
+        networkType = _networkConfiguration.GetNetwork().Name;
+
+        return Task.CompletedTask;
+    }
+
+    private void AddIndexer()
+    {
+        if (!string.IsNullOrWhiteSpace(newIndexerLink))
+        {
+            indexers.Add(newIndexerLink);
+            newIndexerLink = string.Empty;
+        }
+    }
+
+    private void AddRelay()
+    {
+        if (!string.IsNullOrWhiteSpace(newRelayLink))
+        {
+            relays.Add(newRelayLink);
+            newRelayLink = string.Empty;
+        }
+    }
+
+    private void SelectIndexerLink(string item)
+    {
+        selectedIndexerLink = item;
+    }
+
+    private void SelectRelayLink(string item)
+    {
+        selectedIndexerLink = item;
+    }
+}

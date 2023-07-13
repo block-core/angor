@@ -1,0 +1,57 @@
+﻿@page "/browse-projects"
+@inject HttpClient Http
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h3>Browse Projects</h3>
+
+            <!-- Search form -->
+            <form @onsubmit="SearchProjects">
+                <div class="mb-3">
+                    <label for="searchQuery" class="form-label">Search</label>
+                    <input type="text" id="searchQuery" @bind="searchQuery" class="form-control" placeholder="Enter search query" />
+                </div>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+
+            <!-- List of projects -->
+            @if (projects == null)
+            {
+                <p><em>Loading...</em></p>
+            }
+            else if (projects.Count == 0)
+            {
+                <p>No projects found.</p>
+            }
+            else
+            {
+                foreach (var project in projects)
+                {
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">@project.ProjectIdentifier</h5>
+                            <p class="card-text">Nostr ID: <a href="/" target="_blank">@(new Blockcore.NBitcoin.Key().PubKey.ToHex())</a></p>
+                            <button @onclick="() => ImportProject(project)" class="btn btn-primary">Import</button>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string searchQuery;
+    private List<ProjectInfo> projects;
+
+    private async Task SearchProjects()
+    {
+    // Replace with the actual URL of your API endpoint
+        projects = await Http.GetFromJsonAsync<List<ProjectInfo>>($"api/Project/Search?query={searchQuery}");
+    }
+
+    private void ImportProject(ProjectInfo project)
+    {
+    // Add your code to import the project here
+    }
+}

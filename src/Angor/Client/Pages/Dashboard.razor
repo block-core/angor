@@ -1,16 +1,12 @@
 ﻿@page "/dashboard"
+@using Angor.Client.Storage
 
+@inject IClientStorage storage;
 @inject NavigationManager Navigation
 
 
 <div class="container mt-4">
     <h1 class="mb-4">Dashboard</h1>
-
-    <!-- Quick Action Buttons -->
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
-        <button class="btn btn-primary me-md-2" @onclick="NavigateToCreateProject" type="button">Create New Project</button>
-        <button class="btn btn-secondary" type="button">View Messages</button>
-    </div>
 
     <!-- Summary Statistics -->
     <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
@@ -18,23 +14,23 @@
             <div class="card text-white bg-primary">
                 <div class="card-body">
                     <h5 class="card-title">Total Projects</h5>
-                    <p class="card-text">10</p>
+                    <p class="card-text">@projects.Count</p>
                 </div>
             </div>
         </div>
         <div class="col">
             <div class="card text-white bg-success">
                 <div class="card-body">
-                    <h5 class="card-title">Total Funds Raised</h5>
-                    <p class="card-text">$20,000</p>
+                    <h5 class="card-title">Total invested</h5>
+                    <p class="card-text"> @projects.Sum(s => s.TargetAmount) BTC</p>
                 </div>
             </div>
         </div>
         <div class="col">
             <div class="card text-white bg-info">
                 <div class="card-body">
-                    <h5 class="card-title">Total Backers</h5>
-                    <p class="card-text">500</p>
+                    <h5 class="card-title">Total Stages</h5>
+                    <p class="card-text">@projects.Sum(s => s.Stages.Count)</p>
                 </div>
             </div>
         </div>
@@ -43,7 +39,7 @@
     <!-- List of Projects -->
     <h2 class="mb-4">Your Projects</h2>
     <div class="row row-cols-1 row-cols-md-3 g-4">
-        @for (int i = 0; i < 3; i++)
+        @foreach(var project in projects)
         {
             <div class="col">
                 <div class="card">
@@ -51,7 +47,7 @@
                     <div class="card-body">
                         <h5 class="card-title">Project Title</h5>
                         <p class="card-text">Short project description...</p>
-                        <NavLink href=@($"/project-management/{i}") class="btn btn-primary">Manage Project</NavLink>
+                        <NavLink href=@($"/view-project/{project.ProjectIdentifier}") class="btn btn-primary">View Project</NavLink>
                     </div>
                 </div>
             </div>
@@ -61,8 +57,73 @@
 
 @code {
 
+    private List<ProjectInfo> projects;
+
+    protected override Task OnInitializedAsync()
+    {
+        projects = storage.GetProjectsInfo();
+
+        if (projects.Count == 0)
+        {
+            projects = new List<ProjectInfo>
+            {
+                new ProjectInfo
+                {
+                    StartDate = DateTime.UtcNow,
+                    PenaltyDate = DateTime.UtcNow,
+                    ExpiryDate = DateTime.UtcNow,
+                    TargetAmount = 100,
+                    ProjectIdentifier = Guid.NewGuid().ToString("N"),
+                    Stages = new List<Stage>
+                    {
+                        new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                        new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                        new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(3) },
+                    }
+                },
+                new ProjectInfo
+                {
+                    StartDate = DateTime.UtcNow,
+                    PenaltyDate = DateTime.UtcNow,
+                    ExpiryDate = DateTime.UtcNow,
+                    TargetAmount = 100,
+                    ProjectIdentifier = Guid.NewGuid().ToString("N"),
+                    Stages = new List<Stage>
+                    {
+                        new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                        new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                        new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(3) },
+                    }
+                },
+                new ProjectInfo
+                {
+                    StartDate = DateTime.UtcNow,
+                    PenaltyDate = DateTime.UtcNow,
+                    ExpiryDate = DateTime.UtcNow,
+                    TargetAmount = 100,
+                    ProjectIdentifier = Guid.NewGuid().ToString("N"),
+                    Stages = new List<Stage>
+                    {
+                        new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                        new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                        new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(3) },
+                    }
+                },
+            };
+
+            foreach (var project in projects)
+            {
+                storage.AddProjectInfo(project);
+            }
+
+        }
+
+        return Task.CompletedTask;
+    }
+
     private void NavigateToCreateProject()
     {
-        Navigation.NavigateTo("/create-project");;
+        Navigation.NavigateTo("/founder");
     }
+
 }

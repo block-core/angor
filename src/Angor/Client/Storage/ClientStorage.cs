@@ -66,12 +66,12 @@ public class ClientStorage : IClientStorage
         return ret;
     }
 
-    public void SetMyProjectInfo(ProjectInfo project)
+    public void SetFounderProjectInfo(ProjectInfo project)
     {
         _storage.SetItem("my-project", project);
     }
 
-    public ProjectInfo? GetMyProjectsInfo()
+    public ProjectInfo? GetFounderProjectsInfo()
     {
         var ret = _storage.GetItem<ProjectInfo>("my-project");
 

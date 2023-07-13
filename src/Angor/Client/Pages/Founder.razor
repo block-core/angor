@@ -1,0 +1,60 @@
+﻿@page "/founder"
+@using Angor.Shared
+@using Angor.Client.Storage
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IDerivationOperations _derivationOperations
+@inject IWalletStorage _walletStorage;
+@inject IClientStorage storage;
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h3>Founder Page</h3>
+
+            <p>Welcome to the founder page! Here you can create a new project or view your existing project.</p>
+            
+            <p>Creating a project requires an on-chain transaction and a nostr did</p>
+
+
+            @if (founderproject != null)
+            {
+                <p>View project @projectId </p>
+                <button class="btn btn-primary mb-3" @onclick="NavigateToProject">View Project</button>
+            }
+            else
+            {
+                <p>To create a project follow </p>
+                <button class="btn btn-primary mb-3" @onclick="NavigateToCreateProject">Create Project</button>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string founderKey;
+    private string projectId;
+    private ProjectInfo? founderproject;
+
+    protected override async Task OnInitializedAsync()
+    {
+        founderproject = storage.GetFounderProjectsInfo();
+
+        if (founderproject != null)
+        {
+            founderKey = founderproject.FounderKey;
+            projectId = founderproject.ProjectIdentifier;
+        }
+       
+    }
+
+    private void NavigateToCreateProject()
+    {
+        NavigationManager.NavigateTo("/create-project");
+    }
+
+    private void NavigateToProject()
+    {
+        NavigationManager.NavigateTo($"/view-project/{projectId}");
+    }
+}

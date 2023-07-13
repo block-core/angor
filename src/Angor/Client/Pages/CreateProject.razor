@@ -112,7 +112,7 @@
 
         if (hasWallet)
         {
-            var myproject = storage.GetMyProjectsInfo();
+            var myproject = storage.GetFounderProjectsInfo();
 
             if (myproject != null)
             {
@@ -151,7 +151,7 @@
             return;
         }
 
-        var myproject = storage.GetMyProjectsInfo();
+        var myproject = storage.GetFounderProjectsInfo();
 
         if (myproject != null)
         {
@@ -170,7 +170,7 @@
         {
             notificationComponent.ShowNotificationMessage("Project created", 1);
 
-            storage.SetMyProjectInfo(project);
+            storage.SetFounderProjectInfo(project);
         }
     }
 
