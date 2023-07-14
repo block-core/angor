@@ -14,7 +14,7 @@ namespace Angor.Shared;
 
 public interface IDerivationOperations
 {
-    string DeriveFounderKey(WalletWords walletWords);
+    string DeriveFounderKey(WalletWords walletWords, int index);
     uint DeriveProjectId(string founderKey);
     string DeriveAngorKey(string founderKey, string angorRootKey);
     Script AngorKeyToScript(string angorKey);
@@ -39,7 +39,7 @@ public class DerivationOperations : IDerivationOperations
     }
 
 
-    public string DeriveFounderKey(WalletWords walletWords)
+    public string DeriveFounderKey(WalletWords walletWords, int index)
     {
         // founder key is derived from the path m/5'
 
@@ -62,7 +62,7 @@ public class DerivationOperations : IDerivationOperations
             throw;
         }
 
-        var path = $"m/5'";
+        var path = $"m/5'/{index}'";
 
         ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
 

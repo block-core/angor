@@ -7,6 +7,7 @@ using System.Collections.Generic;
 /// </summary>
 public class ProjectInfo
 {
+    public int ProjectIndex { get; set; }
     public string FounderKey { get; set; }
     public string ProjectIdentifier { get; set; }
     public DateTime StartDate { get; set; }

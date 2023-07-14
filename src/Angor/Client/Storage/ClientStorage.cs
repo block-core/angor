@@ -44,37 +44,35 @@ public class ClientStorage : IClientStorage
         _storage.RemoveItem(string.Format(utxoKey,network));
     }
 
-    public void AddProjectInfo(ProjectInfo project)
+    public void AddProject(ProjectInfo project)
     {
-        var ret = GetProjectsInfo();
+        var ret = GetProjects();
 
         ret.Add(project);
 
         _storage.SetItem("projects", ret);
     }
 
-    public List<ProjectInfo> GetProjectsInfo()
+    public List<ProjectInfo> GetProjects()
     {
         var ret =  _storage.GetItem<List<ProjectInfo>>("projects");
 
-        if (ret == null)
-        {
-            ret = new List<ProjectInfo>();
-            _storage.SetItem("projects",ret);
-        }
-
-        return ret;
+        return ret ?? new List<ProjectInfo>();
     }
 
-    public void SetFounderProjectInfo(ProjectInfo project)
+    public void AddFounderProject(ProjectInfo project)
     {
-        _storage.SetItem("my-project", project);
+        var ret = GetProjects();
+
+        ret.Add(project);
+
+        _storage.SetItem("founder-projects", ret);
     }
 
-    public ProjectInfo? GetFounderProjectsInfo()
+    public List<ProjectInfo> GetFounderProjects()
     {
-        var ret = _storage.GetItem<ProjectInfo>("my-project");
+        var ret = _storage.GetItem<List<ProjectInfo>>("founder-projects");
 
-        return ret;
+        return ret ?? new List<ProjectInfo>();
     }
 }

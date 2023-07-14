@@ -1,4 +1,4 @@
-﻿@page "/create-project"
+﻿@page "/create"
 @using Angor.Shared.Models
 @using Angor.Shared
 @using Angor.Client.Storage
@@ -14,12 +14,7 @@
 
 @if (!hasWallet)
 {
-    <div class="row mt-4">
-        <div class="col">
-            <div class="alert alert-info" role="alert">No Wallet Found</div>
-        </div>
-    </div>
-
+    NavigationManager.NavigateTo($"/wallet");
     return;
 }
 
@@ -95,8 +90,6 @@
     private bool sendConfirmModal;
     private bool hasWallet;
 
-    private string testAngorKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
-    
     private ProjectInfo project = new ProjectInfo
     {
         StartDate = DateTime.UtcNow,
@@ -110,31 +103,23 @@
             new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(3) },
         }
     };
-   
+
     protected override Task OnInitializedAsync()
     {
         hasWallet = _walletStorage.HasWallet();
 
         if (hasWallet)
         {
-            var myproject = storage.GetFounderProjectsInfo();
+            var wallet = _walletStorage.GetWallet();
+            var projects = storage.GetFounderProjects();
 
-            if (myproject != null)
-            {
-                NavigationManager.NavigateTo($"/view-project/{myproject.ProjectIdentifier}");
-            }
-            else
-            {
-                var wallet = _walletStorage.GetWallet();
-                
-                var founderKey = _derivationOperations.DeriveFounderKey(wallet);
-                var projectIdentifier = _derivationOperations.DeriveAngorKey(founderKey, testAngorKey);
-                project.FounderKey = founderKey;
-                project.ProjectIdentifier = projectIdentifier;
-            }
-
+            var founderKey = _derivationOperations.DeriveFounderKey(wallet, projects.Count + 1);
+            var projectIdentifier = _derivationOperations.DeriveAngorKey(founderKey, NetworkConfiguration.AngorTestKey);
+            project.ProjectIndex = projects.Count + 1;
+            project.FounderKey = founderKey;
+            project.ProjectIdentifier = projectIdentifier;
         }
-        
+
         return Task.CompletedTask;
     }
 
@@ -143,29 +128,26 @@
     {
         if (project.Stages.Count() < 3)
         {
-    // Show an error message to the user.
             notificationComponent.ShowErrorMessage("There must be at least 3 stages");
             return;
         }
 
         if (project.Stages.Sum(s => s.AmountToRelease) != 100)
         {
-    // Show an error message to the user.
             notificationComponent.ShowErrorMessage("The stages must sum to 100%");
             return;
         }
 
-        var myproject = storage.GetFounderProjectsInfo();
+        var projects = storage.GetFounderProjects();
 
-        if (myproject != null)
+        if (projects.Any(a => project.ProjectIdentifier == a.ProjectIdentifier))
         {
-            notificationComponent.ShowErrorMessage("This wallet already has a project");
+            notificationComponent.ShowErrorMessage("This wallet already has a project with this index");
             return;
         }
 
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-
             var sendInfo = new SendInfo();
             var network = _NetworkConfiguration.GetNetwork();
             var accountInfo = storage.GetAccountInfo(network.Name);
@@ -188,7 +170,7 @@
         {
             notificationComponent.ShowNotificationMessage("Project created", 1);
 
-            storage.SetFounderProjectInfo(project);
+            storage.AddFounderProject(project);
         }
         else
         {

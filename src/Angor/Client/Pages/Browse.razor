@@ -1,4 +1,4 @@
-﻿@page "/browse-projects"
+﻿@page "/browse"
 @inject HttpClient Http
 <div class="container">
     <div class="row">
@@ -15,11 +15,7 @@
             </form>
 
             <!-- List of projects -->
-            @if (projects == null)
-            {
-                <p><em>Loading...</em></p>
-            }
-            else if (projects.Count == 0)
+            @if (projects.Count == 0)
             {
                 <p>No projects found.</p>
             }
@@ -42,16 +38,29 @@
 
 @code {
     private string searchQuery;
-    private List<ProjectInfo> projects;
+
+    private List<ProjectInfo> projects= new();
+
+    protected override Task OnInitializedAsync()
+    {
+         // fake display data
+
+        if (projects.Count == 0)
+        {
+            projects = NetworkConfiguration.CreateFakeProjects();
+        }
+
+        return Task.CompletedTask;
+    }
 
     private async Task SearchProjects()
     {
-    // Replace with the actual URL of your API endpoint
-        projects = await Http.GetFromJsonAsync<List<ProjectInfo>>($"api/Project/Search?query={searchQuery}");
+        // Replace with the actual URL of your API endpoint
+        // projects = await Http.GetFromJsonAsync<List<ProjectInfo>>($"api/Project/Search?query={searchQuery}");
     }
 
     private void ImportProject(ProjectInfo project)
     {
-    // Add your code to import the project here
+        // Add your code to import the project here
     }
 }

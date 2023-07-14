@@ -1,0 +1,137 @@
+﻿@page "/invest"
+@using Angor.Shared.Models
+@using Angor.Shared
+@using Angor.Client.Storage
+@using Angor.Shared.Protocol
+
+@inject HttpClient Http
+@inject IDerivationOperations _derivationOperations
+@inject IWalletStorage _walletStorage;
+@inject IClientStorage storage;
+@inject NavigationManager NavigationManager
+@inject IWalletOperations _WalletOperations
+@inject INetworkConfiguration  _NetworkConfiguration
+
+@if (!hasWallet)
+{
+    NavigationManager.NavigateTo($"/wallet");
+    return;
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Create New Project</h1>
+
+    <NotificationComponent @ref="notificationComponent"/>
+
+    <EditForm Model="project" OnValidSubmit="HandleValidSubmit">
+        
+        <!-- Angor Fee Key -->
+        <div class="mb-3">
+            <label for="angorFeeKey" class="form-label">Project identifier</label>
+            <InputText id="angorFeeKey" @bind-Value="project.ProjectIdentifier" class="form-control" placeholder="Enter angor fee key" readonly />
+        </div>
+
+        <!-- Founder Key -->
+        <div class="mb-3">
+            <label for="founderKey" class="form-label">Founder Key</label>
+            <InputText id="founderKey" @bind-Value="project.FounderKey" class="form-control" placeholder="Enter founder key" readonly />
+        </div>
+
+        <!-- Start Date -->
+        <div class="mb-3">
+            <label for="startDate" class="form-label">Start Date</label>
+            <InputDate id="startDate" @bind-Value="project.StartDate" class="form-control"/>
+        </div>
+
+        <!-- Penalty Date -->
+        <div class="mb-3">
+            <label for="penaltyDate" class="form-label">Penalty Date</label>
+            <InputDate id="penaltyDate" @bind-Value="project.PenaltyDate" class="form-control"/>
+        </div>
+
+        <!-- Expiry Date -->
+        <div class="mb-3">
+            <label for="expiryDate" class="form-label">Expiry Date</label>
+            <InputDate id="expiryDate" @bind-Value="project.ExpiryDate" class="form-control"/>
+        </div>
+
+        <!-- Target Amount -->
+        <div class="mb-3">
+            <label for="targetAmount" class="form-label">Target Amount</label>
+            <InputNumber id="targetAmount" @bind-Value="project.TargetAmount" class="form-control" placeholder="Enter target amount"/>
+        </div>
+
+        <!-- Stages -->
+        <h3 class="mb-3">Stages</h3>
+        @foreach (var stage in project.Stages)
+        {
+            <div class="mb-3">
+                <label class="form-label">Stage @project.Stages.IndexOf(stage)</label>
+                <div class="input-group">
+                    <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1"/>
+                    <InputDate @bind-Value="stage.ReleaseDate" class="form-control"/>
+                    <button type="button" class="btn btn-danger" @onclick="() => RemoveStage(stage)">Remove</button>
+                </div>
+            </div>
+        }
+        <button type="button" class="btn btn-primary mb-3" @onclick="AddStage">Add Stage</button>
+
+        <!-- Save & Publish Buttons -->
+        <div class="mb-3">
+            <button type="submit" class="btn btn-success">Save Project</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+
+    private NotificationComponent notificationComponent;
+
+    private bool sendConfirmModal;
+    private bool hasWallet;
+
+    private string testAngorKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
+    
+    private ProjectInfo project = new ProjectInfo
+    {
+        StartDate = DateTime.UtcNow,
+        PenaltyDate = DateTime.UtcNow,
+        ExpiryDate = DateTime.UtcNow,
+        TargetAmount = 100,
+        Stages = new List<Stage>
+        {
+            new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+            new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+            new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(3) },
+        }
+    };
+   
+    protected override Task OnInitializedAsync()
+    {
+        hasWallet = _walletStorage.HasWallet();
+
+        if (hasWallet)
+        {
+          
+
+        }
+        
+        return Task.CompletedTask;
+    }
+
+
+    private async Task HandleValidSubmit()
+    {
+       
+    }
+
+    private void AddStage()
+    {
+        project.Stages.Add(new Stage { ReleaseDate = DateTime.UtcNow });
+    }
+
+    private void RemoveStage(Stage stage)
+    {
+        project.Stages.Remove(stage);
+    }
+}
