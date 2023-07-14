@@ -143,8 +143,9 @@ else
         _walletOperations.CalculateTransactionFee(sendInfo, localAccountInfo, 1000);
 
         var fee = await _walletOperations.GetFeeEstimationAsync();
-        _investmentOperations.SignInvestmentTransaction(network, context, transaction, walletWords, sendInfo.SendUtxos.Values.ToList(),
-            fee.First());
+        context.TransactionHex = _investmentOperations.SignInvestmentTransaction(network, context.ChangeAddress, transaction, walletWords, sendInfo.SendUtxos.Values.ToList(),
+            fee.First())
+            .ToHex();
 
         founderTransaction = _investmentOperations.SpendFounderStage(network, new FounderContext
             {

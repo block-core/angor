@@ -86,7 +86,7 @@ public class InvestmentOperations
         };
     }
     
-    public void SignInvestmentTransaction(Network network, InvestorContext context, Transaction transaction, WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths,
+    public Transaction SignInvestmentTransaction(Network network,string changeAddress, Transaction transaction, WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths,
         FeeEstimation feeRate)
     {
         // We must use the NBitcoin lib because taproot outputs are non standard before taproot activated
@@ -106,7 +106,7 @@ public class InvestmentOperations
         var builder = new TransactionBuilder(network) // nbitcoinNetwork.CreateTransactionBuilder()
             .AddCoins(coins.coins)
             .AddKeys(coins.keys.ToArray())
-            .SetChange(BitcoinAddress.Create(context.ChangeAddress, network))
+            .SetChange(BitcoinAddress.Create(changeAddress, network))
             .ContinueToBuild(transaction)
             .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate.FeeRate)))
             .CoverTheRest();
@@ -126,7 +126,7 @@ public class InvestmentOperations
             throw new Exception(sb.ToString());
         }
 
-        context.TransactionHex = signTransaction.ToHex();
+        return signTransaction;
     }
 
     /// <summary>

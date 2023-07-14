@@ -25,6 +25,12 @@ public class ScriptBuilder
             Op.GetPushOp(new PubKey(investorKey).ToBytes()),
             Op.GetPushOp(uint256.Parse(secretHash).ToBytes()));
     }
+    
+    public static Script GetProjectStartScript(string founderKey)
+    {
+        return new Script(OpcodeType.OP_RETURN,
+            Op.GetPushOp(new PubKey(founderKey).ToBytes()));
+    }
 
     public static (PubKey investorKey, uint256? secretHash) GetInfoFromScript(Script script)
     {

@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text;
 using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
@@ -35,6 +36,24 @@ public class WalletOperations : IWalletOperations
         string walletWords = mnemonic.ToString();
         return walletWords;
     }
+    
+    public Transaction AddInputsAndSignTransaction(Network network,string changeAddress, Transaction transaction, WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths,
+        FeeEstimation feeRate)
+    {
+        var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+
+        var builder = new TransactionBuilder(network) // nbitcoinNetwork.CreateTransactionBuilder()
+            .AddCoins(coins.coins)
+            .AddKeys(coins.keys.ToArray())
+            .SetChange(BitcoinAddress.Create(changeAddress, network))
+            .ContinueToBuild(transaction)
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate.FeeRate)))
+            .CoverTheRest();
+
+        var signTransaction = builder.BuildTransaction(true);// builder.SignTransactionInPlace(transaction);
+
+        return signTransaction;
+    }
 
     public async Task<OperationResult<Transaction>> SendAmountToAddress(WalletWords walletWords, SendInfo sendInfo) //TODO change the passing of wallet words as parameter after refactoring is complete
     {
@@ -61,11 +80,16 @@ public class WalletOperations : IWalletOperations
             .SendEstimatedFees(new FeeRate(Money.Coins(sendInfo.FeeRate)));
 
         var signedTransaction = builder.BuildTransaction(true);
-
-        var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
-
-        var indexer = _networkConfiguration.GetIndexerUrl();
         
+        return await PublishTransactionAsync(network, signedTransaction);
+    }
+
+    public async Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,Transaction signedTransaction)
+    {
+        var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
+        
+        var indexer = _networkConfiguration.GetIndexerUrl();
+
         var endpoint = Path.Combine(indexer.Url, "command/send");
 
         var res = await _http.PostAsync(endpoint, new StringContent(hex));
@@ -78,7 +102,7 @@ public class WalletOperations : IWalletOperations
         return new OperationResult<Transaction> { Success = false, Message = res.ReasonPhrase + content };
     }
 
-    private void FindOutputsForTransaction(SendInfo sendInfo, AccountInfo accountInfo)
+    public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
     {
         var utxos = accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo);
 
@@ -94,21 +118,18 @@ public class WalletOperations : IWalletOperations
 
             total += utxoData.utxo.value;
 
-            if (total > sendInfo.SendAmountSat)
+            if (total > sendAmountat)
             {
                 break;
             }
         }
 
-        if (total < sendInfo.SendAmountSat)
+        if (total < sendAmountat)
         {
             throw new ApplicationException("Not enough funds");
         }
 
-        foreach (var data in utxosToSpend)
-        {
-            sendInfo.SendUtxos.Add(data.UtxoData.outpoint.ToString(), data);
-        }
+        return utxosToSpend;
     }
 
     public (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords , List<UtxoDataWithPath> utxoDataWithPaths)
@@ -200,7 +221,7 @@ public class WalletOperations : IWalletOperations
     {
         if (!addressInfo.UtxoData.Any() && addressInfo.HasHistory) return;
 
-        var (_, utxoList) = await FetchUtxoForAddressAsync(addressInfo.Address);
+        var (address, utxoList) = await FetchUtxoForAddressAsync(addressInfo.Address);
         
         if (utxoList.Count != addressInfo.UtxoData.Count ||
             utxoList.Where((_, i) => _.outpoint.transactionId != addressInfo.UtxoData[i].outpoint.transactionId)
@@ -379,10 +400,15 @@ public class WalletOperations : IWalletOperations
 
         if (sendInfo.SendUtxos.Count == 0)
         {
-            FindOutputsForTransaction(sendInfo, accountInfo);
+            var utxosToSpend = FindOutputsForTransaction(sendInfo.SendAmountSat, accountInfo);
 
             if (sendInfo.SendUtxos.Count == 0) // something went wrong
                 throw new ArgumentNullException();
+            
+            foreach (var data in utxosToSpend) //TODO move this out of the fee calculation
+            {
+                sendInfo.SendUtxos.Add(data.UtxoData.outpoint.ToString(), data);
+            }
         }
 
         var coins = sendInfo.SendUtxos

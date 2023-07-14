@@ -19,8 +19,4 @@
   <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Blockcore.Core" Version="1.1.40" />
-  </ItemGroup>
 </Project>

@@ -2,12 +2,15 @@
 @using Angor.Shared.Models
 @using Angor.Shared
 @using Angor.Client.Storage
+@using Angor.Shared.Protocol
 
 @inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
+@inject IWalletOperations _WalletOperations
+@inject INetworkConfiguration  _NetworkConfiguration
 
 @if (!hasWallet)
 {
@@ -92,6 +95,8 @@
     private bool sendConfirmModal;
     private bool hasWallet;
 
+    private string testAngorKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
+    
     private ProjectInfo project = new ProjectInfo
     {
         StartDate = DateTime.UtcNow,
@@ -121,8 +126,7 @@
             else
             {
                 var wallet = _walletStorage.GetWallet();
-
-                var testAngorKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
+                
                 var founderKey = _derivationOperations.DeriveFounderKey(wallet);
                 var projectIdentifier = _derivationOperations.DeriveAngorKey(founderKey, testAngorKey);
                 project.FounderKey = founderKey;
@@ -139,14 +143,14 @@
     {
         if (project.Stages.Count() < 3)
         {
-            // Show an error message to the user.
+    // Show an error message to the user.
             notificationComponent.ShowErrorMessage("There must be at least 3 stages");
             return;
         }
 
         if (project.Stages.Sum(s => s.AmountToRelease) != 100)
         {
-            // Show an error message to the user.
+    // Show an error message to the user.
             notificationComponent.ShowErrorMessage("The stages must sum to 100%");
             return;
         }
@@ -161,9 +165,23 @@
 
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            await Task.Delay(1000);
 
-            return new OperationResult { Success = true };
+            var sendInfo = new SendInfo();
+            var network = _NetworkConfiguration.GetNetwork();
+            var accountInfo = storage.GetAccountInfo(network.Name);
+
+            var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
+            var utxoDataWithPaths = _WalletOperations.FindOutputsForTransaction(sendInfo.SendAmountSat, accountInfo);
+
+            var transaction = ProjectOperations.CreateNewProjectTransaction(network, project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000);
+
+            var signedTransaction = _WalletOperations.AddInputsAndSignTransaction(network, accountInfo.ChangeAddressesInfo.First().Address, transaction, _walletStorage.GetWallet(), utxoDataWithPaths,
+                feeEstimation.First());
+
+            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+
+            return new OperationResult { Success = response.Success, Message = response.Message };
+
         });
 
         if (operationResult.Success)
@@ -171,6 +189,10 @@
             notificationComponent.ShowNotificationMessage("Project created", 1);
 
             storage.SetFounderProjectInfo(project);
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
         }
     }
 
