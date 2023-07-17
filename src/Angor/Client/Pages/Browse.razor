@@ -1,5 +1,9 @@
 ﻿@page "/browse"
+@using Angor.Client.Storage
 @inject HttpClient Http
+@inject IClientStorage storage;
+@inject NavigationManager NavigationManager
+
 <div class="container">
     <div class="row">
         <div class="col">
@@ -27,7 +31,7 @@
                         <div class="card-body">
                             <h5 class="card-title">@project.ProjectIdentifier</h5>
                             <p class="card-text">Nostr ID: <a href="/" target="_blank">@(new Blockcore.NBitcoin.Key().PubKey.ToHex())</a></p>
-                            <button @onclick="() => ImportProject(project)" class="btn btn-primary">Import</button>
+                            <button @onclick="() => ImportProject(project)" class="btn btn-primary">View</button>
                         </div>
                     </div>
                 }
@@ -61,6 +65,8 @@
 
     private void ImportProject(ProjectInfo project)
     {
-        // Add your code to import the project here
+        storage.AddBrowseProject(project);
+
+        NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
     }
 }

@@ -208,7 +208,17 @@
 
                 if (findProject != null)
                 {
+                    invested = true;
                     project = findProject;
+                }
+                else
+                {
+                    findProject = storage.GetBrowseProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+
+                    if (findProject != null)
+                    {
+                        project = findProject;
+                    }
                 }
             }
         }

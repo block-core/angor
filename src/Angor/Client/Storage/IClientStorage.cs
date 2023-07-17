@@ -4,8 +4,8 @@ namespace Angor.Client.Storage
 {
     public interface IClientStorage
     {
-
-        void SetWalletPubkey(string pubkey);
+        void SetFounderKeys(FounderKeyCollection founderPubKeys);
+        FounderKeyCollection GetFounderKeys();
         string? GetWalletPubkey();
         void DeleteWalletPubkey();
         AccountInfo GetAccountInfo(string network);
@@ -15,5 +15,7 @@ namespace Angor.Client.Storage
         List<ProjectInfo> GetProjects();
         void AddFounderProject(ProjectInfo project);
         List<ProjectInfo> GetFounderProjects();
+        void AddBrowseProject(ProjectInfo project);
+        List<ProjectInfo> GetBrowseProjects();
     }
 }

@@ -13,6 +13,7 @@
 @inject INetworkConfiguration _networkConfiguration;
 @inject IWalletOperations _walletOperations
 @inject IClipboardService _clipboardService
+@inject IDerivationOperations _derivationOperations
 
 <PageTitle>Wallet and balances</PageTitle>
 
@@ -496,12 +497,17 @@
         var operationResult = await LongOperation(async () =>
         {
             WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
-            _walletStorage.SaveWalletWords(data);
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
             Network network = _networkConfiguration.GetNetwork();
+            
+            _walletStorage.SaveWalletWords(data);
             storage.SetAccountInfo(network.Name,accountInfo);
             
+            // pre-derive the angor wallet keys 
+            FounderKeyCollection founderKeyCollection = _derivationOperations.DeriveProjectKeys(data, NetworkConfiguration.AngorTestKey);
+            storage.SetFounderKeys(founderKeyCollection);
+
             return new OperationResult { Success = true };
         });
 

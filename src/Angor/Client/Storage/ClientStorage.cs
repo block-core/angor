@@ -14,9 +14,14 @@ public class ClientStorage : IClientStorage
         _storage = storage;
     }
 
-    public void SetWalletPubkey(string pubkey)
+    public void SetFounderKeys(FounderKeyCollection founderPubKeys)
     {
-        _storage.SetItemAsString(PubKey, pubkey);
+        _storage.SetItem("projectsKeys", founderPubKeys);
+    }
+
+    public FounderKeyCollection GetFounderKeys()
+    {
+        return _storage.GetItem<FounderKeyCollection>("projectsKeys");
     }
 
     public string? GetWalletPubkey()
@@ -72,6 +77,26 @@ public class ClientStorage : IClientStorage
     public List<ProjectInfo> GetFounderProjects()
     {
         var ret = _storage.GetItem<List<ProjectInfo>>("founder-projects");
+
+        return ret ?? new List<ProjectInfo>();
+    }
+
+
+    public void AddBrowseProject(ProjectInfo project)
+    {
+        var ret = GetBrowseProjects();
+
+        if (ret.FirstOrDefault(f => f.ProjectIdentifier == project.ProjectIdentifier) == null)
+        {
+            ret.Add(project);
+        }
+
+        _storage.SetItem("browse-projects", ret);
+    }
+
+    public List<ProjectInfo> GetBrowseProjects()
+    {
+        var ret = _storage.GetItem<List<ProjectInfo>>("browse-projects");
 
         return ret ?? new List<ProjectInfo>();
     }

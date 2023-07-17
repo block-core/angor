@@ -112,17 +112,17 @@
         {
             var wallet = _walletStorage.GetWallet();
             var projects = storage.GetFounderProjects();
+            var keys = storage.GetFounderKeys();
+            var projectsKeys = _derivationOperations.GetProjectKey(keys, projects.Count + 1);
 
-            var founderKey = _derivationOperations.DeriveFounderKey(wallet, projects.Count + 1);
-            var projectIdentifier = _derivationOperations.DeriveAngorKey(founderKey, NetworkConfiguration.AngorTestKey);
-            project.ProjectIndex = projects.Count + 1;
-            project.FounderKey = founderKey;
-            project.ProjectIdentifier = projectIdentifier;
+
+            project.ProjectIndex = projectsKeys.Index;
+            project.FounderKey = projectsKeys.FounderKey;
+            project.ProjectIdentifier = projectsKeys.ProjectIdentifier;
         }
 
         return Task.CompletedTask;
     }
-
 
     private async Task HandleValidSubmit()
     {

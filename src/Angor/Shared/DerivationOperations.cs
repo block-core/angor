@@ -1,10 +1,7 @@
-using System.Net.Http.Json;
 using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP32;
-using Blockcore.NBitcoin.BIP39;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.Networks;
@@ -14,6 +11,8 @@ namespace Angor.Shared;
 
 public interface IDerivationOperations
 {
+    FounderKeyCollection DeriveProjectKeys(WalletWords walletWords, string angorTestKey);
+    FounderKeys GetProjectKey(FounderKeyCollection founderKeyCollection, int index);
     string DeriveFounderKey(WalletWords walletWords, int index);
     uint DeriveProjectId(string founderKey);
     string DeriveAngorKey(string founderKey, string angorRootKey);
@@ -27,9 +26,6 @@ public class DerivationOperations : IDerivationOperations
     private readonly ILogger<DerivationOperations> _logger;
     private readonly INetworkConfiguration _networkConfiguration;
 
-    private const int AccountIndex = 0; // for now only account 0
-    private const int Purpose = 84; // for now only legacy
-
     public DerivationOperations(HttpClient http, IHdOperations hdOperations, ILogger<DerivationOperations> logger, INetworkConfiguration networkConfiguration)
     {
         _http = http;
@@ -38,6 +34,39 @@ public class DerivationOperations : IDerivationOperations
         _networkConfiguration = networkConfiguration;
     }
 
+    public FounderKeyCollection DeriveProjectKeys(WalletWords walletWords, string angorTestKey)
+    {
+        FounderKeyCollection founderKeyCollection = new();
+
+        for (int i = 0; i < 5; i++)
+        {
+            var founderKey = DeriveFounderKey(walletWords, i);
+            var projectIdentifier = DeriveAngorKey(founderKey, angorTestKey);
+
+            founderKeyCollection.Keys.Add(new FounderKeys
+            {
+                ProjectIdentifier = projectIdentifier,
+                FounderKey = founderKey,
+                Index = i
+            });
+        }
+
+        return founderKeyCollection;
+
+    }
+
+    public FounderKeys GetProjectKey(FounderKeyCollection founderKeyCollection, int index)
+    {
+        var keys = founderKeyCollection.Keys.FirstOrDefault(k => k.Index == index);
+
+        if (keys == null)
+        {
+            throw new Exception("Keys derivation limit exceeded");
+        }
+
+        return keys;
+
+    }
 
     public string DeriveFounderKey(WalletWords walletWords, int index)
     {
