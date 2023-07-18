@@ -6,6 +6,7 @@ using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
+using System.IO;
 
 namespace Angor.Shared;
 
@@ -17,6 +18,8 @@ public interface IDerivationOperations
     uint DeriveProjectId(string founderKey);
     string DeriveAngorKey(string founderKey, string angorRootKey);
     Script AngorKeyToScript(string angorKey);
+    string DeriveInvestorKey(WalletWords walletWords, string founderKey);
+    string DeriveSeederSecretHash(WalletWords walletWords, string founderKey);
 }
 
 public class DerivationOperations : IDerivationOperations
@@ -68,6 +71,66 @@ public class DerivationOperations : IDerivationOperations
 
     }
 
+    public string DeriveSeederSecretHash(WalletWords walletWords, string founderKey)
+    {
+        Network network = _networkConfiguration.GetNetwork();
+
+        ExtKey extendedKey;
+        try
+        {
+            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        }
+        catch (NotSupportedException ex)
+        {
+            _logger.LogError("Exception occurred: {0}", ex.ToString());
+
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid mnemonic words.");
+
+            throw;
+        }
+
+        var projectid = this.DeriveProjectId(founderKey);
+
+        var path = $"m/5'/{projectid}'/4'";
+
+        ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
+
+        var derivedSecret = extendedKey.Derive(new KeyPath(path));
+
+        var hash = Hashes.Hash256(derivedSecret.ToBytes()).ToString();
+
+        return hash;
+    }
+
+    public string DeriveInvestorKey(WalletWords walletWords, string founderKey)
+    {
+        Network network = _networkConfiguration.GetNetwork();
+
+        ExtKey extendedKey;
+        try
+        {
+            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        }
+        catch (NotSupportedException ex)
+        {
+            _logger.LogError("Exception occurred: {0}", ex.ToString());
+
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid mnemonic words.");
+
+            throw;
+        }
+
+        var projectid = this.DeriveProjectId(founderKey);
+
+        var path = $"m/5'/{projectid}'/1'";
+
+        ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
+
+        return extPubKey.PubKey.ToHex();
+    }
+
     public string DeriveFounderKey(WalletWords walletWords, int index)
     {
         // founder key is derived from the path m/5'
@@ -105,7 +168,6 @@ public class DerivationOperations : IDerivationOperations
 
         Network network = _networkConfiguration.GetNetwork();
 
-
         var key = new PubKey(founderKey);
 
         var hashOfid = Hashes.Hash256(key.ToBytes());
@@ -141,8 +203,6 @@ public class DerivationOperations : IDerivationOperations
 
     public Script AngorKeyToScript(string angorKey)
     {
-        Network network = _networkConfiguration.GetNetwork();
-
         var encoder = new Bech32Encoder("angor");
 
         var data = encoder.Decode(angorKey, out byte ver);

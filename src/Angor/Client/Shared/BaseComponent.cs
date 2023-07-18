@@ -8,8 +8,11 @@ namespace Angor.Client.Shared
         [Inject]
         protected IWalletStorage _walletStorage { get; set; }
 
-        public NotificationComponent notificationComponent;
+        [Inject]
+        protected NavigationManager NavigationManager { get; set; }
 
+
+        public NotificationComponent notificationComponent;
         protected bool hasWallet { get; set; }
 
         protected void SharedMethod()

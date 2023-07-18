@@ -23,5 +23,6 @@ builder.Services.AddTransient<IWalletOperations, WalletOperations>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
 builder.Services.AddScoped<NavMenuState>();
+builder.Services.AddScoped<InvestmentOperations>();
 
 await builder.Build().RunAsync();

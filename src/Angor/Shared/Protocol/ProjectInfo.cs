@@ -15,4 +15,6 @@ public class ProjectInfo
     public DateTime ExpiryDate { get; set; }
     public decimal TargetAmount { get; set; }
     public List<Stage> Stages { get; set; } = new();
+
+    public string Hack_TransactionId { get; set; }
 }

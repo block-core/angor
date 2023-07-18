@@ -9,6 +9,7 @@
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
+@inject INetworkConfiguration _NetworkConfiguration
 
 <div class="container mt-4">
     <h3>View Project</h3>
@@ -109,7 +110,10 @@
                     }
                     else if (invested)
                     {
-                        <p>You have already invested in this project.</p>
+                        <p>You have already invested in this project.
+
+                        <a href="@_NetworkConfiguration.GetExplorerUrl() + ""TransactionID" target="_blank">View the transaction on the explorer.</a>
+                        </p>
                     }
                     else
                     {
@@ -152,6 +156,8 @@
     private bool sendConfirmModal;
     private bool hasWallet;
 
+    string explorerLink;
+
     private List<(string Hash, int Amount)> SelectedSeeders = new List<(string hash, int amount)>
     {
         { (new uint256().ToString(), 10) },
@@ -185,12 +191,16 @@
 
         if (hasWallet)
         {
+            
+
             var findProject = storage.GetProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
 
             if (findProject != null)
             {
                 invested = true;
                 project = findProject;
+
+                explorerLink = _NetworkConfiguration.GetExplorerUrl() + $"transaction/{project.Hack_TransactionId}";
             }
             else
             {

@@ -1,6 +1,10 @@
 ﻿@page "/invest/{ProjectId}"
 @using Angor.Shared
 @using Angor.Client.Storage
+@using Angor.Shared.Models
+@using Angor.Shared.Protocol
+@using Blockcore.Consensus.TransactionInfo
+@using Blockcore.NBitcoin
 
 @inherits BaseComponent
 
@@ -11,6 +15,7 @@
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
 @inject INetworkConfiguration _NetworkConfiguration
+@inject InvestmentOperations investmentOperations
 
 @if (!hasWallet)
 {
@@ -18,71 +23,331 @@
     return;
 }
 
+@if (invested)
+{
+    <p>You already invested.</p>
+    return;
+}
+
+@if (founder)
+{
+    <p>You are founder.</p>
+    return;
+}
+
 <div class="container py-3">
     <h2 class="mb-4">Investment Page</h2>
-    <p>Here is a small explanation of the project. You can <a href="/project">view more details about the project here</a>.</p>
+    <p>Here is a small explanation of the project. You can <a href="view/@ProjectId">view more details about the project here</a>.</p>
     
-    <NotificationComponent @ref="notificationComponent"/>
+    <p>ProjectId: @ProjectId</p>
+    <p>Target amount: @project.TargetAmount BTC</p>
+    <p>Starting in: @project.StartDate.ToString("d")</p>
+
+    <NotificationComponent @ref="notificationComponent" />
 
     <div class="card">
         <div class="card-body">
-            <form>
+            <EditForm Model="Investment" OnValidSubmit="InvestFunds">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
                 <div class="form-group">
                     <label for="investmentAmount">Investment Amount</label>
-                    <input type="number" class="form-control" id="investmentAmount" @bind="InvestmentAmount">
+                    <InputNumber class="form-control" id="investmentAmount" @bind-Value="@Investment.InvestmentAmount" @oninput="UpdateStagesBreakdown" />
                 </div>
 
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="isSeeder" @bind="IsSeeder" disabled="@IsSeederTimePassed">
+                    <InputCheckbox class="form-check-input" id="isSeeder" @bind-Value="@Investment.IsSeeder" disabled="@(!IsSeederTimePassed)" />
                     <label class="form-check-label" for="isSeeder">
                         Do you want to invest as a Seeder?
                     </label>
                 </div>
 
-                @if (IsSeeder)
+                @if (!IsSeederTimePassed)
                 {
                     <div class="alert alert-info mt-2">
                         <strong>Seeder Requirements:</strong> Here are the requirements for a Seeder...
                     </div>
                 }
 
-                <button type="submit" class="btn btn-primary mt-3" @onclick="InvestFunds">Invest</button>
-            </form>
+                <button type="submit" class="btn btn-primary mt-3">Next</button>
+            </EditForm>
         </div>
     </div>
+
+    @if (showCreateModal)
+    {
+        <!-- Confirmation Modal -->
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmation</h5>
+                        <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
+                        <p><strong>Founder Key:</strong> @project.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
+
+                        <p><strong>Target amount:</strong> @project.TargetAmount BTC</p>
+
+                        <p><strong>Start date:</strong> @project.StartDate.ToString("d")</p>
+                        <p><strong>Expiry date:</strong> @project.ExpiryDate.ToString("d")</p>
+                        <p><strong>Penalty date:</strong> @project.PenaltyDate.ToString("d")</p>
+
+                        <p><strong>Miner fee:</strong> [Your fee here]</p>
+                        <p><strong>Angor fee:</strong> 1000 sats</p>
+
+                        <hr>
+
+                        <h6 class="mt-3 mb-2">Stages</h6>
+                        @foreach (var stage in project.Stages)
+                        {
+                            <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
+                                <p><strong>Stage percent:</strong> @stage.AmountToRelease % </p>
+                                <p><strong>Stage date:</strong> @stage.ReleaseDate.ToString("d") - @((stage.ReleaseDate - project.StartDate).Days) days after project starts </p>
+                            </div>
+                        }
+
+                        <p class="mt-3">Are you sure you want to continue?</p>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="Send">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+
+    <!-- Stages Breakdown -->
+    @if (StagesBreakdown != null)
+    {
+        <div class="card mt-3">
+            <div class="card-header">
+                <h4>Stages Breakdown</h4>
+            </div>
+            <div class="card-body">
+                @foreach (var stage in StagesBreakdown)
+                {
+                    <p>Stage @stage.StageNumber: invest @stage.Amount BTC that will released on @stage.StageDateTime.ToString("d") (@stage.DaysFromStartDate days) </p>
+                }
+            </div>
+        </div>
+    }
 </div>
 
 @code {
     [Parameter]
     public string ProjectId { get; set; }
 
-    private decimal InvestmentAmount { get; set; }
-    private bool IsSeeder { get; set; }
+    public InvestmentModel Investment { get; set; } = new InvestmentModel {InvestmentAmount = 10};
     private bool IsSeederTimePassed { get; set; }
-    //private bool hasWallet;
+    private List<StageBreakdown> StagesBreakdown { get; set; } = new();
+    bool founder = false;
+    bool invested = false;
+    private ProjectInfo project;
+    private bool showCreateModal;
+    Transaction signedTransaction;
 
-    //private NotificationComponent notificationComponent;
-
-    // Assume a method to determine whether seeder time has passed
     protected override async Task OnInitializedAsync()
     {
-      //  hasWallet = _walletStorage.HasWallet();
-        
         if (hasWallet)
         {
-            IsSeederTimePassed = await CheckIfSeederTimeHasPassed();
+            var findProject = storage.GetProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+
+            if (findProject != null)
+            {
+                invested = true;
+                project = findProject;
+            }
+            else
+            {
+                findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+
+                if (findProject != null)
+                {
+                    founder = true;
+                    invested = true;
+                    project = findProject;
+                }
+                else
+                {
+                    findProject = storage.GetBrowseProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+
+                    if (findProject != null)
+                    {
+                        project = findProject;
+                    }
+                }
+            }
         }
+
+        await CheckIfSeederTimeHasPassed();
     }
 
-    private Task<bool> CheckIfSeederTimeHasPassed()
+    private Task CheckIfSeederTimeHasPassed()
     {
         // Implement your logic to check whether the seeder time has passed.
         // For now, I'm returning a dummy value.
-        return Task.FromResult(false);
+        IsSeederTimePassed = false;
+
+        Investment.IsSeeder = !IsSeederTimePassed;
+
+        return Task.CompletedTask;
     }
 
-    private void InvestFunds()
+    private void UpdateStagesBreakdown(ChangeEventArgs e)
     {
-        // Implement your investment logic here.
+        if (decimal.TryParse(e.Value.ToString(), out decimal amount))
+        {
+            Investment.InvestmentAmount = amount;
+
+            StagesBreakdown.Clear();
+            int index = 1;
+
+            foreach (var stage in project.Stages)
+            {
+                var insert = new StageBreakdown
+                {
+                    StageNumber = index++,
+                    Amount = Investment.InvestmentAmount * (stage.AmountToRelease / 100),
+                    StageDateTime = stage.ReleaseDate,
+                    DaysFromStartDate = (stage.ReleaseDate - project.StartDate).Days
+                };
+
+                StagesBreakdown.Add(insert);
+            }
+        }
+    }
+
+    private async Task InvestFunds()
+    {
+        if (Investment.IsSeeder) 
+        {
+            var minSeederAmount = 10;
+            if (Investment.InvestmentAmount < minSeederAmount)
+            {
+                notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minSeederAmount} BTC was not reached");
+                return;
+            }
+        }
+        else
+        {
+            if  (Investment.InvestmentAmount < (decimal)0.001)
+            {
+                notificationComponent.ShowErrorMessage($"Investor minimum investment amount is {0.001} BTC");
+                return;
+            }
+        }
+
+        if (project.Stages.Sum(s => s.AmountToRelease) != 100)
+        {
+            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
+            return;
+        }
+
+        var projects = storage.GetProjects();
+
+        if (projects.Any(a => project.ProjectIdentifier == a.ProjectIdentifier))
+        {
+            notificationComponent.ShowErrorMessage("You already invested");
+            return;
+        }
+
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            var network = _NetworkConfiguration.GetNetwork();
+            var accountInfo = storage.GetAccountInfo(network.Name);
+
+            var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
+            var utxoDataWithPaths = _WalletOperations.FindOutputsForTransaction(Money.Coins(Investment.InvestmentAmount).Satoshi, accountInfo);
+
+            // UGLY TEMPORARY HACK
+            if (project.FounderKey == null)
+            {
+                var keys = storage.GetFounderKeys();
+                project.FounderKey = keys.Keys[0].FounderKey;
+                project.ProjectIdentifier = keys.Keys[0].ProjectIdentifier;
+            }
+
+            var investorKey = _derivationOperations.DeriveInvestorKey(_walletStorage.GetWallet(), project.FounderKey);
+
+            InvestorContext context = new InvestorContext
+            {
+                ProjectInfo = project,
+                ChangeAddress = accountInfo.ChangeAddressesInfo.First().Address,
+                InvestorKey = investorKey,
+            };
+
+            if (Investment.IsSeeder)
+            {
+                var seederHash = _derivationOperations.DeriveSeederSecretHash(_walletStorage.GetWallet(), project.FounderKey);
+
+                context.InvestorSecretHash = seederHash;
+            }
+
+            var transaction = investmentOperations.CreateInvestmentTransaction(network, context, Money.Coins(Investment.InvestmentAmount).Satoshi);
+
+
+            signedTransaction = investmentOperations.SignInvestmentTransaction(network, context.ChangeAddress, transaction, _walletStorage.GetWallet(), utxoDataWithPaths, feeEstimation.First());
+
+            return new OperationResult { Success = true };
+
+        });
+
+        if (operationResult.Success)
+        {
+            showCreateModal = true;
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private async Task Send()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            showCreateModal = false;
+
+            var network = _NetworkConfiguration.GetNetwork();
+
+            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+
+            return new OperationResult { Success = response.Success, Message = response.Message };
+        });
+
+        if (operationResult.Success)
+        {
+            notificationComponent.ShowNotificationMessage("Project created", 1);
+
+            project.Hack_TransactionId = signedTransaction.ToString();
+
+            storage.AddProject(project);
+
+            NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    public class InvestmentModel
+    {
+        public decimal InvestmentAmount { get; set; }
+        public bool IsSeeder { get; set; }
+    }
+
+    public class StageBreakdown
+    {
+        public int StageNumber { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime StageDateTime { get; set; }
+        public int DaysFromStartDate { get; set; }
     }
 }

@@ -10,7 +10,17 @@ public class ScriptBuilder
 
     public static Script GetAngorFeeOutputScript(string angorKey)
     {
-        return new PubKey(angorKey).WitHash.ScriptPubKey;
+        try
+        {
+            return new PubKey(angorKey).WitHash.ScriptPubKey;
+        }
+        catch (Exception e)
+        {
+            // ugly hack
+            DerivationOperations derivation = new DerivationOperations(null, null, null, null);
+
+            return derivation.AngorKeyToScript(angorKey);
+        }
     }
 
     public static Script GetSeederInfoScript(string investorKey, string secretHash)

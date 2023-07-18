@@ -19,6 +19,11 @@ public class NetworkConfiguration : INetworkConfiguration
         return new IndexerUrl{Symbol = "", Url = "http://10.22.156.163:9910/api"};
     }
 
+    public IndexerUrl GetExplorerUrl()
+    {
+        return new IndexerUrl { Symbol = "", Url = "http://10.22.156.163:9911/btc/explorer" };
+    }
+
     public static List<ProjectInfo> CreateFakeProjects()
     {
         return new List<ProjectInfo>

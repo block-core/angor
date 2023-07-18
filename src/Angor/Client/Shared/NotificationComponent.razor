@@ -70,10 +70,13 @@
         });
     }
 
-    public void ShowErrorMessage(string message)
+    public void ShowErrorMessage(string? message)
     {
-        errorMessage = message;
-        StateHasChanged();  
+        if (!string.IsNullOrEmpty(message))
+        {
+            errorMessage = message;
+            StateHasChanged();
+        }
     }
 
     private void ClearErrorMessage()

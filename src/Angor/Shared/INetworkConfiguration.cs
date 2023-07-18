@@ -7,4 +7,5 @@ public interface INetworkConfiguration
 {
     Network GetNetwork();
     IndexerUrl GetIndexerUrl();
+    IndexerUrl GetExplorerUrl();
 }
