@@ -14,6 +14,7 @@
 @inject IWalletOperations _walletOperations
 @inject IClipboardService _clipboardService
 @inject IDerivationOperations _derivationOperations
+@inject NavMenuState NavMenuState
 
 <PageTitle>Wallet and balances</PageTitle>
 
@@ -516,6 +517,8 @@
             hasWallet = _walletStorage.HasWallet();
             ClearWalletWords();
             localAccountInfo = GetAccountInfoFromStorage();
+
+            NavMenuState.NotifyStateChanged();
         }
     }
 
@@ -557,9 +560,12 @@
         storage.DeleteAccountInfo(_networkConfiguration.GetNetwork().Name);
         storage.DeleteWalletPubkey();
         _walletStorage.DeleteWallet();
+        storage.DeleteFounderKeys();
         hasWallet = _walletStorage.HasWallet();
         ClearWalletWords();
         StateHasChanged();
+
+        NavMenuState.NotifyStateChanged();
     }
 
     private void GenerateNewWalletWords()

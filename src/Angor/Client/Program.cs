@@ -1,5 +1,6 @@
 using Angor.Client;
 using Angor.Client.Services;
+using Angor.Client.Shared;
 using Angor.Client.Storage;
 using Angor.Shared;
 using Blazored.LocalStorage;
@@ -21,5 +22,6 @@ builder.Services.AddTransient <IWalletStorage, WalletStorage>();
 builder.Services.AddTransient<IWalletOperations, WalletOperations>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
+builder.Services.AddScoped<NavMenuState>();
 
 await builder.Build().RunAsync();

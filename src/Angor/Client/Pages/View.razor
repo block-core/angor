@@ -35,17 +35,16 @@
                     <div class="card-body">
                         <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
                         <p class="card-text">Founder Key: @project.FounderKey</p>
-                        <p class="card-text">Start Date: @project.StartDate</p>
-                        <p class="card-text">Penalty Date: @project.PenaltyDate</p>
-                        <p class="card-text">Expiry Date: @project.ExpiryDate</p>
+                        <p class="card-text">Start Date: @project.StartDate.ToString("d")</p>
+                        <p class="card-text">Penalty Date: @project.PenaltyDate.ToString("d")</p>
+                        <p class="card-text">Expiry Date: @project.ExpiryDate.ToString("d")</p>
                         <p class="card-text">Target Amount: @project.TargetAmount</p>
                         <h5>Stages:</h5>
                         @foreach (var stage in project.Stages)
                         {
                             <hr /> <!-- This adds a horizontal line -->
                             <p class="card-text">Amount to Release: @stage.AmountToRelease%</p>
-                            <p class="card-text">Release Date: @stage.ReleaseDate</p>
-                
+                            <p class="card-text">Release Date: @stage.ReleaseDate.ToString("d")</p>
                         }
                     </div>
                 </div>
@@ -102,23 +101,28 @@
         <div class="row mt-4">
             <div class="col">
                 <h4>Invest</h4>
-                @if (!invested)
-                {
-                    <button class="btn btn-primary" @onclick="InvestInProject">Invest</button>
-                }
-                else
-                {
-                    <p>You have already invested in this project.</p>
-                }
+
+                    @if (founder) 
+                    {
+                        <p>You are the founder.</p>
+                        
+                    }
+                    else if (invested)
+                    {
+                        <p>You have already invested in this project.</p>
+                    }
+                    else
+                    {
+                        <button class="btn btn-primary" @onclick="InvestInProject">Invest</button>
+                    }
             </div>
         </div>
 
         <!-- Nostr Clients and Events Section -->
         <div class="row mt-4">
             <div class="col">
-                <h4>Nostr Clients and Events</h4>
+                <h4>View on nostr</h4>
 
-                <h5>Clients</h5>
                 @if (NostrClients.Any())
                 {
                     <ul>
@@ -131,21 +135,6 @@
                 else
                 {
                     <p>No clients found for this project.</p>
-                }
-
-                <h5>Events</h5>
-                @if (NostrEvents.Any())
-                {
-                    <ul>
-                        @foreach (var eventitem in NostrEvents)
-                    {
-                            <li>@eventitem</li>
-                    }
-                    </ul>
-                }
-                else
-                {
-                    <p>No events found for this project.</p>
                 }
             </div>
         </div>
@@ -185,10 +174,10 @@
         TotalSeeders = 7
     };
 
+    bool founder = false;
     bool invested = false;
 
     private List<string> NostrClients = new List<string> { "link1", "link2" };
-    private List<string> NostrEvents = new List<string> { "event1", "event2" };
 
     protected override Task OnInitializedAsync()
     {
@@ -200,6 +189,7 @@
 
             if (findProject != null)
             {
+                invested = true;
                 project = findProject;
             }
             else
@@ -208,6 +198,7 @@
 
                 if (findProject != null)
                 {
+                    founder = true;
                     invested = true;
                     project = findProject;
                 }
@@ -238,6 +229,6 @@
 
     private async Task InvestInProject()
     {
-        NavigationManager.NavigateTo("/invest");
+        NavigationManager.NavigateTo($"/invest/{ProjectId}");
     }
 }

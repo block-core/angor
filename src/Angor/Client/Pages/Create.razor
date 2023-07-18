@@ -3,6 +3,7 @@
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Protocol
+@using Blockcore.Consensus.TransactionInfo
 
 @inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
@@ -23,7 +24,7 @@
 
     <NotificationComponent @ref="notificationComponent"/>
 
-    <EditForm Model="project" OnValidSubmit="HandleValidSubmit">
+    <EditForm Model="project" OnValidSubmit="CreatProject">
         
         <!-- Angor Fee Key -->
         <div class="mb-3">
@@ -78,9 +79,56 @@
 
         <!-- Save & Publish Buttons -->
         <div class="mb-3">
-            <button type="submit" class="btn btn-success">Save Project</button>
+            <button type="submit" class="btn btn-success">Next</button>
         </div>
     </EditForm>
+    
+    @if (showCreateModal)
+    {
+        <!-- Confirmation Modal -->
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmation</h5>
+                        <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
+                        <p><strong>Founder Key:</strong> @project.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
+
+                        <p><strong>Target amount:</strong> @project.TargetAmount BTC</p>
+
+                        <p><strong>Start date:</strong> @project.StartDate.ToString("d")</p>
+                        <p><strong>Expiry date:</strong> @project.ExpiryDate.ToString("d")</p>
+                        <p><strong>Penalty date:</strong> @project.PenaltyDate.ToString("d")</p>
+
+                        <p><strong>Miner fee:</strong> [Your fee here]</p>
+                        <p><strong>Angor fee:</strong> 1000 sats</p>
+
+                        <hr>
+
+                        <h6 class="mt-3 mb-2">Stages</h6>
+                        @foreach (var stage in project.Stages)
+                        {
+                            <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
+                                <p><strong>Stage percent:</strong> @stage.AmountToRelease % </p>
+                                <p><strong>Stage date:</strong> @stage.ReleaseDate.ToString("d") - @((stage.ReleaseDate - project.StartDate).Days) days after project starts </p>
+                            </div>
+                        }
+
+                        <p class="mt-3">Are you sure you want to continue?</p>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="Send">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
 </div>
 
 @code {
@@ -89,18 +137,21 @@
 
     private bool sendConfirmModal;
     private bool hasWallet;
+    private bool showCreateModal;
+
+    Transaction signedTransaction;
 
     private ProjectInfo project = new ProjectInfo
     {
-        StartDate = DateTime.UtcNow,
-        PenaltyDate = DateTime.UtcNow,
-        ExpiryDate = DateTime.UtcNow,
+        StartDate = DateTime.UtcNow.AddDays(1),
+        PenaltyDate = DateTime.UtcNow.AddDays(100),
+        ExpiryDate = DateTime.UtcNow.AddDays(50),
         TargetAmount = 100,
         Stages = new List<Stage>
         {
-            new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(1) },
-            new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(2) },
-            new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(3) },
+            new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(10) },
+            new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
+            new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) },
         }
     };
 
@@ -115,7 +166,6 @@
             var keys = storage.GetFounderKeys();
             var projectsKeys = _derivationOperations.GetProjectKey(keys, projects.Count + 1);
 
-
             project.ProjectIndex = projectsKeys.Index;
             project.FounderKey = projectsKeys.FounderKey;
             project.ProjectIdentifier = projectsKeys.ProjectIdentifier;
@@ -124,7 +174,7 @@
         return Task.CompletedTask;
     }
 
-    private async Task HandleValidSubmit()
+    private async Task CreatProject()
     {
         if (project.Stages.Count() < 3)
         {
@@ -157,13 +207,34 @@
 
             var transaction = ProjectOperations.CreateNewProjectTransaction(network, project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000);
 
-            var signedTransaction = _WalletOperations.AddInputsAndSignTransaction(network, accountInfo.ChangeAddressesInfo.First().Address, transaction, _walletStorage.GetWallet(), utxoDataWithPaths,
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(network, accountInfo.ChangeAddressesInfo.First().Address, transaction, _walletStorage.GetWallet(), utxoDataWithPaths,
                 feeEstimation.First());
+
+            return new OperationResult { Success = true };
+
+        });
+
+        if (operationResult.Success)
+        {
+            showCreateModal = true;
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private async Task Send()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            showCreateModal = false;
+
+            var network = _NetworkConfiguration.GetNetwork();
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
             return new OperationResult { Success = response.Success, Message = response.Message };
-
         });
 
         if (operationResult.Success)
@@ -171,6 +242,8 @@
             notificationComponent.ShowNotificationMessage("Project created", 1);
 
             storage.AddFounderProject(project);
+
+            NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
         }
         else
         {

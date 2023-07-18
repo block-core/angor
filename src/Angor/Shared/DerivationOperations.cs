@@ -57,7 +57,7 @@ public class DerivationOperations : IDerivationOperations
 
     public FounderKeys GetProjectKey(FounderKeyCollection founderKeyCollection, int index)
     {
-        var keys = founderKeyCollection.Keys.FirstOrDefault(k => k.Index == index);
+        var keys = founderKeyCollection.Keys.FirstOrDefault(k => k.Index == index - 1);
 
         if (keys == null)
         {

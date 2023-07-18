@@ -1,5 +1,6 @@
 ﻿@using Angor.Client.Storage
 @inject IWalletStorage _walletStorage;
+@inject NavMenuState NavMenuState;
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -73,5 +74,14 @@
     protected override void OnInitialized()
     {
         hasWallet = _walletStorage.HasWallet();
+
+        NavMenuState.OnChange += NavMenuStateOnOnChange;
     }
+
+    private void NavMenuStateOnOnChange()
+    {
+        hasWallet = _walletStorage.HasWallet();
+        StateHasChanged();
+    }
+
 }

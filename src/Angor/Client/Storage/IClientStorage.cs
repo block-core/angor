@@ -6,6 +6,7 @@ namespace Angor.Client.Storage
     {
         void SetFounderKeys(FounderKeyCollection founderPubKeys);
         FounderKeyCollection GetFounderKeys();
+        void DeleteFounderKeys();
         string? GetWalletPubkey();
         void DeleteWalletPubkey();
         AccountInfo GetAccountInfo(string network);

@@ -24,6 +24,11 @@ public class ClientStorage : IClientStorage
         return _storage.GetItem<FounderKeyCollection>("projectsKeys");
     }
 
+    public void DeleteFounderKeys()
+    {
+        _storage.RemoveItem("projectsKeys");
+    }
+
     public string? GetWalletPubkey()
     {
         return _storage.GetItemAsString(PubKey);
