@@ -4,6 +4,7 @@
 @using Angor.Client.Storage
 @using Angor.Shared.Protocol
 @using Blockcore.Consensus.TransactionInfo
+@using Angor.Client.Services
 
 @inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
@@ -11,7 +12,9 @@
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
-@inject INetworkConfiguration  _NetworkConfiguration
+@inject INetworkConfiguration _NetworkConfiguration
+@inject IRelayService _RelayService
+@inject IIndexerService _IndexerService
 
 @if (!hasWallet)
 {
@@ -233,6 +236,13 @@
             var network = _NetworkConfiguration.GetNetwork();
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+
+            if (!response.Success)
+                return response;
+
+            await _RelayService.AddProjectAsync(project);
+         
+            await _IndexerService.AddProjectAsync(new ProjectIndexerData {ProjectIdentifier = project.ProjectIdentifier, FounderKey = project.FounderKey, TrxHex = signedTransaction.ToHex()});
 
             return new OperationResult { Success = response.Success, Message = response.Message };
         });

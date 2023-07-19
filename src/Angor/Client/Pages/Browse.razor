@@ -1,8 +1,11 @@
 ﻿@page "/browse"
 @using Angor.Client.Storage
+@using Angor.Client.Services
 @inject HttpClient Http
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
+@inject IRelayService _RelayService
+@inject IIndexerService _IndexerService
 
 <div class="container">
     <div class="row">
@@ -45,22 +48,24 @@
 
     private List<ProjectInfo> projects= new();
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-         // fake display data
 
-        if (projects.Count == 0)
-        {
-            projects = NetworkConfiguration.CreateFakeProjects();
-        }
-
-        return Task.CompletedTask;
     }
 
     private async Task SearchProjects()
     {
-        // Replace with the actual URL of your API endpoint
-        // projects = await Http.GetFromJsonAsync<List<ProjectInfo>>($"api/Project/Search?query={searchQuery}");
+        var blockchainProjects = await _IndexerService.GetProjectsAsync();
+
+        foreach (var blockchainProject in blockchainProjects)
+        {
+            var project = await _RelayService.GetProjectAsync(blockchainProject.ProjectIdentifier);
+
+            if (project != null)
+            {
+                projects.Add(project);
+            }
+        }
     }
 
     private void ImportProject(ProjectInfo project)

@@ -25,4 +25,7 @@ builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
 builder.Services.AddScoped<NavMenuState>();
 builder.Services.AddScoped<InvestmentOperations>();
 
+builder.Services.AddScoped<IIndexerService, IndexerService>();
+builder.Services.AddScoped<IRelayService, RelayService>();
+
 await builder.Build().RunAsync();
