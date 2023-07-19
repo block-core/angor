@@ -4,6 +4,8 @@ using Angor.Shared.Networks;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NBitcoin;
 using NBitcoin.Policy;
@@ -17,6 +19,9 @@ namespace Angor.Test
     public class InvestmentOperationsTest
     {
         private Mock<IWalletOperations> _walletOperations;
+        private Mock<INetworkConfiguration> _networkConfiguration;
+
+        private string angorRootKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
 
         private FeeEstimation _expectedFeeEstimation = new FeeEstimation()
         { Confirmations = 1, FeeRate = 10000 };
@@ -45,18 +50,25 @@ namespace Angor.Test
 
                     return (coins, keys);
                 });
+
+            _networkConfiguration = new Mock<INetworkConfiguration>();
+
+            _networkConfiguration.Setup(_ => _.GetNetwork())
+                .Returns(Networks.Bitcoin.Testnet());
         }
 
         [Fact]
         public void SpendFounderStage_Test()
         {
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+
             var network = Networks.Bitcoin.Testnet();
 
-            var angorKey = new Key();
-            var funderKey = new Key();
-            var funderReceiveCoinsKey = new Key();
+            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object);
+            var funderKey = derivationOperations.DeriveFounderPrivateKey(words, 1);
+            var funderReceiveCoinsKey = new Key();
 
             var projectInvestmentInfo = new ProjectInfo();
             projectInvestmentInfo.TargetAmount = 3;
@@ -68,9 +80,9 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
-            projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
-            projectInvestmentInfo.ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
-
+            projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.ProjectIdentifier = derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+            
             // Create the seeder 1 params
             var seeder1Key = new Key();
             var seeder1secret = new Key();
@@ -188,13 +200,12 @@ namespace Angor.Test
         [Fact]
         public void SeederTransaction_EndOfProject_Test()
         {
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+
             var network = Networks.Bitcoin.Testnet();
 
-            var angorKey = new Key();
-            var funderKey = new Key();
-            var funderReceiveCoinsKey = new Key();
-
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object);
+            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
             projectInvestmentInfo.TargetAmount = 3;
@@ -206,8 +217,8 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
-            projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
-            projectInvestmentInfo.ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
+            projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.ProjectIdentifier = derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
@@ -236,13 +247,12 @@ namespace Angor.Test
         [Fact]
         public void InvestorTransaction_EndOfProject_Test()
         {
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+
             var network = Networks.Bitcoin.Testnet();
 
-            var angorKey = new Key();
-            var funderKey = new Key();
-            var funderReceiveCoinsKey = new Key();
-
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object);
+            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
             projectInvestmentInfo.TargetAmount = 3;
@@ -254,8 +264,8 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
-            projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
-            projectInvestmentInfo.ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
+            projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.ProjectIdentifier = derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
@@ -283,13 +293,12 @@ namespace Angor.Test
         [Fact]
         public void InvestorTransaction_WithSeederHashes_EndOfProject_Test()
         {
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+
             var network = Networks.Bitcoin.Testnet();
 
-            var angorKey = new Key();
-            var funderKey = new Key();
-            var funderReceiveCoinsKey = new Key();
-
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object);
+            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
             projectInvestmentInfo.TargetAmount = 3;
@@ -301,8 +310,8 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
-            projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
-            projectInvestmentInfo.ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
+            projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.ProjectIdentifier = derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
@@ -335,16 +344,20 @@ namespace Angor.Test
         [Fact]
         public void SpendInvestorRecoveryTest()
         {
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+
             var network = Networks.Bitcoin.Testnet();
 
-            var angorKey = new Key();
-            var funderKey = new Key();
-
-            var operations = new InvestmentOperations(_walletOperations.Object);
+            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             // Create the seeder 1 params
             var investorKey = new Key();
             var investorChangeKey = new Key();
+
+            var funderKey = derivationOperations.DeriveFounderKey(words, 1);
+            var angorKey = derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
+            var funderPrivateKey = derivationOperations.DeriveFounderPrivateKey(words, 1);
 
             var investorContext = new InvestorContext
             {
@@ -359,8 +372,8 @@ namespace Angor.Test
                         new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
                         new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                     },
-                    FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes()),
-                    ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
+                    FounderKey = funderKey,
+                    ProjectIdentifier = angorKey,
                     PenaltyDate = DateTime.UtcNow.AddDays(5),
                 },
                 InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
@@ -380,7 +393,7 @@ namespace Angor.Test
 
             var founderSignatures = operations.FounderSignInvestorRecoveryTransactions(investorContext, network,
                 recoveryTransactions,
-                Encoders.Hex.EncodeData(funderKey.ToBytes()));
+                Encoders.Hex.EncodeData(funderPrivateKey.ToBytes()));
 
             operations.AddWitScriptToInvestorRecoveryTransactions(investorContext, network, recoveryTransactions,
                 founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()), null);
@@ -422,12 +435,16 @@ namespace Angor.Test
         public void SpendInvestorConsolidatedRecoveryTest()
         {
             {
+                DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+                InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+
                 var network = Networks.Bitcoin.Testnet();
 
-                var angorKey = new Key();
-                var funderKey = new Key();
+                var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
-                var operations = new InvestmentOperations(_walletOperations.Object);
+                var funderKey = derivationOperations.DeriveFounderKey(words, 1);
+                var angorKey = derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
+                var funderPrivateKey = derivationOperations.DeriveFounderPrivateKey(words, 1);
 
                 // Create the investor 1 params
                 var investorKey = new Key();
@@ -450,8 +467,8 @@ namespace Angor.Test
                             new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
                             new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                         },
-                        FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes()),
-                        ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
+                        FounderKey = funderKey,
+                        ProjectIdentifier = angorKey,
                         PenaltyDate = DateTime.UtcNow.AddDays(5),
                     },
                     InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
@@ -480,7 +497,7 @@ namespace Angor.Test
 
                 var founderSignatures = operations.FounderSignInvestorRecoveryTransactions(investorContext, network,
                     recoveryTransactions,
-                    Encoders.Hex.EncodeData(funderKey.ToBytes()));
+                    Encoders.Hex.EncodeData(funderPrivateKey.ToBytes()));
 
                 operations.AddWitScriptToInvestorRecoveryTransactions(investorContext, network, recoveryTransactions,
                     founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()), null);
@@ -528,12 +545,16 @@ namespace Angor.Test
         public void SpendSeederConsolidatedRecoveryTest()
         {
             {
+                DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+                InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+
                 var network = Networks.Bitcoin.Testnet();
 
-                var angorKey = new Key();
-                var funderKey = new Key();
+                var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
-                var operations = new InvestmentOperations(_walletOperations.Object);
+                var funderKey = derivationOperations.DeriveFounderKey(words, 1);
+                var angorKey = derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
+                var funderPrivateKey = derivationOperations.DeriveFounderPrivateKey(words, 1);
 
                 // Create the investor 1 params
                 var seederKey = new Key();
@@ -553,8 +574,8 @@ namespace Angor.Test
                             new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
                             new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                         },
-                        FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes()),
-                        ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes()),
+                        FounderKey = funderKey,
+                        ProjectIdentifier = angorKey,
                         PenaltyDate = DateTime.UtcNow.AddDays(5),
                     },
                     InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes()),
@@ -575,7 +596,7 @@ namespace Angor.Test
 
                 var founderSignatures = operations.FounderSignInvestorRecoveryTransactions(seederContext, network,
                     recoveryTransactions,
-                    Encoders.Hex.EncodeData(funderKey.ToBytes()));
+                    Encoders.Hex.EncodeData(funderPrivateKey.ToBytes()));
 
                 operations.AddWitScriptToInvestorRecoveryTransactions(seederContext, network, recoveryTransactions,
                     founderSignatures, Encoders.Hex.EncodeData(seederKey.ToBytes()), Encoders.Hex.EncodeData(seedersecret.ToBytes()));
@@ -622,13 +643,12 @@ namespace Angor.Test
         [Fact]
         public void InvestorTransaction_NoPenalty_Test()
         {
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+
             var network = Networks.Bitcoin.Testnet();
 
-            var angorKey = new Key();
-            var funderKey = new Key();
-            var funderReceiveCoinsKey = new Key();
-
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object);
+            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
             projectInvestmentInfo.TargetAmount = 3;
@@ -640,8 +660,8 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
-            projectInvestmentInfo.FounderKey = Encoders.Hex.EncodeData(funderKey.PubKey.ToBytes());
-            projectInvestmentInfo.ProjectIdentifier = Encoders.Hex.EncodeData(angorKey.PubKey.ToBytes());
+            projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.ProjectIdentifier = derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
 
             // Create the seeder 1 params
             var seeder11Key = new Key();

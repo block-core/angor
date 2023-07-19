@@ -7,6 +7,7 @@
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.BIP32
 @using Blockcore.NBitcoin.DataEncoders
+@using Microsoft.Extensions.Logging.Abstractions
 <h3>CheckTransactionCode</h3>
 
 @inject IWalletOperations _walletOperations; 
@@ -96,7 +97,9 @@ else
 
     private async Task CreateInvestmentTransaction()
     {
-        _investmentOperations = new InvestmentOperations(_walletOperations);
+        DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration);
+
+        _investmentOperations = new InvestmentOperations(_walletOperations, derivationOperations);
         var network = _networkConfiguration.GetNetwork();
         localAccountInfo = GetAccountInfoFromStorage();
 

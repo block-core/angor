@@ -27,7 +27,7 @@ public class InvestmentOperations
 {
     private readonly IWalletOperations _walletOperations;
 
-    public InvestmentOperations(IWalletOperations walletOperations)
+    public InvestmentOperations(IWalletOperations walletOperations, IDerivationOperations derivationOperations)
     {
         _walletOperations = walletOperations;
     }

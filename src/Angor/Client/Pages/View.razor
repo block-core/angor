@@ -112,7 +112,7 @@
                     {
                         <p>You have already invested in this project.
 
-                        <a href="@_NetworkConfiguration.GetExplorerUrl() + ""TransactionID" target="_blank">View the transaction on the explorer.</a>
+                        <a href="@explorerLink" target="_blank">View the transaction on the explorer.</a>
                         </p>
                     }
                     else
@@ -200,7 +200,7 @@
                 invested = true;
                 project = findProject;
 
-                explorerLink = _NetworkConfiguration.GetExplorerUrl() + $"transaction/{project.HackTransactionId}";
+                explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.HackTransactionId}";
             }
             else
             {

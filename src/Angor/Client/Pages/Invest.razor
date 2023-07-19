@@ -265,14 +265,6 @@
             var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
             var utxoDataWithPaths = _WalletOperations.FindOutputsForTransaction(Money.Coins(Investment.InvestmentAmount).Satoshi, accountInfo);
 
-            // UGLY TEMPORARY HACK
-            if (project.FounderKey == null)
-            {
-                var keys = storage.GetFounderKeys();
-                project.FounderKey = keys.Keys[0].FounderKey;
-                project.ProjectIdentifier = keys.Keys[0].ProjectIdentifier;
-            }
-
             var investorKey = _derivationOperations.DeriveInvestorKey(_walletStorage.GetWallet(), project.FounderKey);
 
             InvestorContext context = new InvestorContext

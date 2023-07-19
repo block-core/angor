@@ -20,18 +20,17 @@ public interface IDerivationOperations
     Script AngorKeyToScript(string angorKey);
     string DeriveInvestorKey(WalletWords walletWords, string founderKey);
     string DeriveSeederSecretHash(WalletWords walletWords, string founderKey);
+    Key DeriveFounderPrivateKey(WalletWords walletWords, int index);
 }
 
 public class DerivationOperations : IDerivationOperations
 {
-    private readonly HttpClient _http;
     private readonly IHdOperations _hdOperations;
     private readonly ILogger<DerivationOperations> _logger;
     private readonly INetworkConfiguration _networkConfiguration;
 
-    public DerivationOperations(HttpClient http, IHdOperations hdOperations, ILogger<DerivationOperations> logger, INetworkConfiguration networkConfiguration)
+    public DerivationOperations(IHdOperations hdOperations, ILogger<DerivationOperations> logger, INetworkConfiguration networkConfiguration)
     {
-        _http = http;
         _hdOperations = hdOperations;
         _logger = logger;
         _networkConfiguration = networkConfiguration;
@@ -159,6 +158,36 @@ public class DerivationOperations : IDerivationOperations
         ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
 
         return extPubKey.PubKey.ToHex();
+    }
+
+    public Key DeriveFounderPrivateKey(WalletWords walletWords, int index)
+    {
+        // founder key is derived from the path m/5'
+
+
+        Network network = _networkConfiguration.GetNetwork();
+
+
+        ExtKey extendedKey;
+        try
+        {
+            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        }
+        catch (NotSupportedException ex)
+        {
+            _logger.LogError("Exception occurred: {0}", ex.ToString());
+
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid mnemonic words.");
+
+            throw;
+        }
+
+        var path = $"m/5'/{index}'";
+
+        ExtKey extKey = extendedKey.Derive(new KeyPath(path));
+
+        return extKey.PrivateKey;
     }
 
     public uint DeriveProjectId(string founderKey)
