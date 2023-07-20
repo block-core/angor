@@ -57,7 +57,7 @@
 
                             <div class="d-flex mb-2">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" disabled="@(!stageisActive)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
+                                    <input class="form-check-input" type="checkbox" disabled="@(!stageisActive || transaction.IsSepnt)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
                                 </div>
                                 <div class="flex-grow-1 ms-3">
                                     <p class="mb-0">Transaction details: @transaction.Amount BTC</p>
@@ -139,6 +139,7 @@
         public int Outputindex;
         public string OutputAddress;
         public decimal Amount;
+        public bool IsSepnt;
     } 
 
     List<StageData> stageDatas = new();
@@ -171,15 +172,18 @@
 
                 foreach (var item in transactions)
                 {
-                    stageItem.Items.Add(new StageDataTrx
+                    var insert = new StageDataTrx
                     {
                         Trxid = item.TrxId,
                         OutputAddress = item.Transaction.Outputs[stageIndex + 2].ScriptPubKey.WitHash.GetAddress(network).ToString(),
                         Outputindex = stageIndex + 2,
                         Amount = item.Transaction.Outputs[stageIndex + 2].Value.ToUnit(MoneyUnit.BTC),
-                    });
+                    };
+                    
+                    stageItem.Items.Add(insert);
 
                     // todo: using the OutputAddress we can ping the indexer to check if the stage has been claim already
+                    insert.IsSepnt = false;
                 }
 
                 stageIndex++;
