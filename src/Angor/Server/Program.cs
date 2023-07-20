@@ -1,4 +1,7 @@
+using Angor.Server;
+using Blockcore.AtomicSwaps.Server;
 using Microsoft.AspNetCore.ResponseCompression;
+using DataConfigOptions = Angor.Server.DataConfigOptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +9,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+builder.Services.AddSingleton<DataConfigOptions>();
+builder.Services.AddSingleton<TestStorageService>();
+builder.Services.AddSingleton<TestStorageServiceIndexer>();
 
 var app = builder.Build();
 
@@ -33,5 +40,7 @@ app.UseRouting();
 app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
+
+
 
 app.Run();

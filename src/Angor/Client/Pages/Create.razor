@@ -97,17 +97,17 @@
                         <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
                     </div>
                     <div class="modal-body">
-                        <p><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
-                        <p><strong>Founder Key:</strong> @project.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
+                        <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
+                        <p class="mb-1"><strong>Founder Key:</strong> @project.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
 
-                        <p><strong>Target amount:</strong> @project.TargetAmount BTC</p>
+                        <p class="mb-1"><strong>Target amount:</strong> @project.TargetAmount BTC</p>
 
-                        <p><strong>Start date:</strong> @project.StartDate.ToString("d")</p>
-                        <p><strong>Expiry date:</strong> @project.ExpiryDate.ToString("d")</p>
-                        <p><strong>Penalty date:</strong> @project.PenaltyDate.ToString("d")</p>
+                        <p class="mb-1"><strong>Start date:</strong> @project.StartDate.ToString("d")</p>
+                        <p class="mb-1"><strong>Expiry date:</strong> @project.ExpiryDate.ToString("d")</p>
+                        <p class="mb-1"><strong>Penalty date:</strong> @project.PenaltyDate.ToString("d")</p>
 
-                        <p><strong>Miner fee:</strong> [Your fee here]</p>
-                        <p><strong>Angor fee:</strong> 1000 sats</p>
+                        <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
+                        <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
 
                         <hr>
 
@@ -115,10 +115,12 @@
                         @foreach (var stage in project.Stages)
                         {
                             <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
-                                <p><strong>Stage percent:</strong> @stage.AmountToRelease % </p>
-                                <p><strong>Stage date:</strong> @stage.ReleaseDate.ToString("d") - @((stage.ReleaseDate - project.StartDate).Days) days after project starts </p>
+                                <p class="mb-1"><strong>Stage percent:</strong> @stage.AmountToRelease % </p>
+                                <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("d") - @((stage.ReleaseDate - project.StartDate).Days) days after project starts </p>
                             </div>
                         }
+                        
+                        <hr>
 
                         <p class="mt-3">Are you sure you want to continue?</p>
 

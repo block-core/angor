@@ -402,9 +402,6 @@ public class WalletOperations : IWalletOperations
         {
             var utxosToSpend = FindOutputsForTransaction(sendInfo.SendAmountSat, accountInfo);
 
-            if (sendInfo.SendUtxos.Count == 0) // something went wrong
-                throw new ArgumentNullException();
-            
             foreach (var data in utxosToSpend) //TODO move this out of the fee calculation
             {
                 sendInfo.SendUtxos.Add(data.UtxoData.outpoint.ToString(), data);

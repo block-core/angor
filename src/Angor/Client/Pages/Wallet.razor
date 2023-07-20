@@ -316,7 +316,7 @@
                                 @foreach (var infoSendUtxo in _sendInfo.SendUtxos)
                                 {
                                     <br />
-                                    <p>@Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) BTC - @infoSendUtxo.Key</p>
+                                    <p style="font-size: 0.7em;">@Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) BTC - @infoSendUtxo.Key</p>
                                 }
 
                             </div>

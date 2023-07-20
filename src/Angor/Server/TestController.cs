@@ -1,3 +1,4 @@
+using Angor.Server;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blockcore.AtomicSwaps.Server.Controllers
@@ -6,27 +7,32 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
     [Route("api/[controller]")]
     public class TestController : ControllerBase
     {
-        private static List<ProjectInfo> projects = new();
+        private readonly TestStorageService _storage;
+
+        public TestController(TestStorageService storage)
+        {
+            _storage = storage;
+        }
 
         [HttpGet]
-        public Task<List<ProjectInfo>> Get()
+        public async Task<List<ProjectInfo>> Get()
         {
-            return Task.FromResult(projects);
+            return (await _storage.Get()).ToList();
         }
 
         [HttpPost]
-        public Task Post([FromBody] ProjectInfo project)
+        public async Task Post([FromBody] ProjectInfo project)
         {
-            projects.Add(project);
-
-            return Task.CompletedTask;
+            await _storage.Add(project);
         }
 
         [HttpGet]
         [Route("project/{projectId}")]
-        public Task<ProjectInfo?> GetProject(string projectId)
+        public async Task<ProjectInfo?> GetProject(string projectId)
         {
-            return Task.FromResult(projects.FirstOrDefault(p => p.ProjectIdentifier == projectId));
+            var projects = (await _storage.Get()).ToList();
+
+            return projects.FirstOrDefault(p => p.ProjectIdentifier == projectId);
         }
     }
 
@@ -34,28 +40,39 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
     [Route("api/[controller]")]
     public class TestIndexerController : ControllerBase
     {
-        private static List<ProjectIndexerData> projects = new();
+        private readonly TestStorageServiceIndexer _storage;
+
+        public TestIndexerController(TestStorageServiceIndexer storage)
+        {
+            _storage = storage;
+        }
 
         [HttpGet]
-        public Task<List<ProjectIndexerData>> Get()
+        public async Task<List<ProjectIndexerData>> Get()
         {
-            return Task.FromResult(projects);
+            return (await _storage.Get()).ToList();
         }
 
         [HttpPost]
-        public Task Post([FromBody] ProjectIndexerData project)
+        public async Task Post([FromBody] ProjectIndexerData project)
         {
-            projects.Add(project);
+            await _storage.Add(project);
+        }
 
-            return Task.CompletedTask;
+        [HttpGet]
+        [Route("investment/{projectId}")]
+        public async Task<List<ProjectInvestment>> Get(string projectId)
+        {
+            return (await _storage.GetInv()).ToList().Where(item => item.ProjectIdentifier == projectId).ToList();
+        }
+
+        [HttpPost]
+        [Route("investment")]
+        public async Task PostInv([FromBody] ProjectInvestment project)
+        {
+            await _storage.Add(project);
         }
     }
 
-    public class ProjectIndexerData
-    {
-        public string FounderKey { get; set; }
-        public string ProjectIdentifier { get; set; }
-        public string TrxHex { get; set; }
-
-    }
+   
 }
