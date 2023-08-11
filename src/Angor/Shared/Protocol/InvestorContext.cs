@@ -13,8 +13,6 @@ public class InvestorContext
 
     public ProjectInfo ProjectInfo { get; set; }
 
-    public ProjectSeeders ProjectSeeders { get; set; }
-
     public string TransactionHex { get; set; }
 
 

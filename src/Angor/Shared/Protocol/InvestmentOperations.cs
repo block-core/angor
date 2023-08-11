@@ -58,13 +58,13 @@ public class InvestmentOperations
                 context.InvestorSecretHash, 
                 _.ReleaseDate, 
                 context.ProjectInfo.ExpiryDate, 
-                context.ProjectSeeders));
+                context.ProjectInfo.ProjectSeeders));
 
         var stagesScripts = stagesScript.Select(scripts =>
             AngorScripts.CreateStage(network, scripts));
 
         var stagesOutputs = stagesScripts.Select((_, i) =>
-            new TxOut(new Money(GetPercentageForStage(totalInvestmentAmount, i + 1)),
+            new TxOut(new Money(GetPercentageForStage(totalInvestmentAmount, context.ProjectInfo.Stages[i])),
                 new Script(_.ToBytes())));
 
         foreach (var stagesOutput in stagesOutputs)
@@ -75,15 +75,9 @@ public class InvestmentOperations
         return investmentTransaction;
     }
 
-    private long GetPercentageForStage(long amount, int stage) //TODO move to interface 
+    private long GetPercentageForStage(long amount, Stage stage) //TODO move to interface 
     {
-        return stage switch
-        {
-            1 => amount / 10,
-            2 => (amount / 10) * 3,
-            6 => throw new ArgumentOutOfRangeException(),
-            _ => amount / 5
-        };
+        return Convert.ToInt64(amount * stage.AmountToRelease);
     }
     
     public Transaction SignInvestmentTransaction(Network network,string changeAddress, Transaction transaction, WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths,
@@ -171,7 +165,7 @@ public class InvestmentOperations
 
             var opretunOutput = trx.Outputs.AsIndexedOutputs().ElementAt(1);
 
-            var pubKeys = ScriptBuilder.GetInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+            var pubKeys = ScriptBuilder.GetInvestmentDataFromOpReturnScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
             var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
                 Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
@@ -274,7 +268,7 @@ public class InvestmentOperations
 
         var opretunOutput = investmentTransaction.Outputs.AsIndexedOutputs().ElementAt(1);
 
-        var pubKeys = ScriptBuilder.GetInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+        var pubKeys = ScriptBuilder.GetInvestmentDataFromOpReturnScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
         return transactions.Select((_,i) => 
         {
@@ -285,7 +279,7 @@ public class InvestmentOperations
                 pubKeys.secretHash?.ToString(),
                 context.ProjectInfo.Stages[i].ReleaseDate,
                 context.ProjectInfo.ExpiryDate,
-                context.ProjectSeeders);
+                context.ProjectInfo.ProjectSeeders);
 
             const TaprootSigHash sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
             
@@ -312,7 +306,7 @@ public class InvestmentOperations
 
         var opretunOutput = investmentTransaction.Outputs.AsIndexedOutputs().ElementAt(1);
 
-        var pubKeys = ScriptBuilder.GetInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+        var pubKeys = ScriptBuilder.GetInvestmentDataFromOpReturnScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
         foreach (var transaction in transactions)
         {
@@ -323,7 +317,7 @@ public class InvestmentOperations
                 pubKeys.secretHash?.ToString(),
                 context.ProjectInfo.Stages[index].ReleaseDate,
                 context.ProjectInfo.ExpiryDate,
-                context.ProjectSeeders);
+                context.ProjectInfo.ProjectSeeders);
             
             var controlBlock = AngorScripts.CreateControlBlockRecover(projectScripts);
             
@@ -409,14 +403,14 @@ public class InvestmentOperations
 
             var opretunOutput = trx.Outputs.AsIndexedOutputs().ElementAt(1);
 
-            var pubKeys = ScriptBuilder.GetInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+            var pubKeys = ScriptBuilder.GetInvestmentDataFromOpReturnScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
             var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
                 Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
                 pubKeys.secretHash?.ToString(),
                 context.ProjectInfo.Stages[stageNumber - 1].ReleaseDate,
                 context.ProjectInfo.ExpiryDate,
-                context.ProjectSeeders);
+                context.ProjectInfo.ProjectSeeders);
 
             var controlBlock = AngorScripts.CreateControlBlockExpiry(scriptStages);
 
@@ -516,14 +510,14 @@ public class InvestmentOperations
 
             var opretunOutput = trx.Outputs.AsIndexedOutputs().ElementAt(1);
 
-            var pubKeys = ScriptBuilder.GetInfoFromScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+            var pubKeys = ScriptBuilder.GetInvestmentDataFromOpReturnScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
             var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
                 Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
                 pubKeys.secretHash?.ToString(),
                 context.ProjectInfo.Stages[stageNumber - 1].ReleaseDate,
                 context.ProjectInfo.ExpiryDate,
-                context.ProjectSeeders);
+                context.ProjectInfo.ProjectSeeders);
 
             var result = AngorScripts.CreateControlSeederSecrets(scriptStages, seederSecrets);
 

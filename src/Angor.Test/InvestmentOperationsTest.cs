@@ -21,10 +21,11 @@ namespace Angor.Test
         private Mock<IWalletOperations> _walletOperations;
         private Mock<INetworkConfiguration> _networkConfiguration;
 
-        private string angorRootKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
+        private string angorRootKey =
+            "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
 
         private FeeEstimation _expectedFeeEstimation = new FeeEstimation()
-        { Confirmations = 1, FeeRate = 10000 };
+            { Confirmations = 1, FeeRate = 10000 };
 
         public InvestmentOperationsTest()
         {
@@ -60,7 +61,8 @@ namespace Angor.Test
         [Fact]
         public void SpendFounderStage_Test()
         {
-            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
+                new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
             InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
 
             var network = Networks.Bitcoin.Testnet();
@@ -81,8 +83,9 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
-            projectInvestmentInfo.ProjectIdentifier = derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
-            
+            projectInvestmentInfo.ProjectIdentifier =
+                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+
             // Create the seeder 1 params
             var seeder1Key = new Key();
             var seeder1secret = new Key();
@@ -124,11 +127,13 @@ namespace Angor.Test
             projectSeeders.SecretHashes.Add(seeder2Context.InvestorSecretHash);
             projectSeeders.SecretHashes.Add(seeder3Context.InvestorSecretHash);
 
+            projectInvestmentInfo.ProjectSeeders = projectSeeders;
+
             // Create the investor 1 params
             var investor1Key = new Key();
             var investor1ChangeKey = new Key();
 
-            InvestorContext investor1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo, ProjectSeeders = projectSeeders };
+            InvestorContext investor1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             investor1Context.InvestorKey = Encoders.Hex.EncodeData(investor1Key.PubKey.ToBytes());
             investor1Context.ChangeAddress = investor1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
@@ -137,70 +142,85 @@ namespace Angor.Test
             var investor2Key = new Key();
             var investor2ChangeKey = new Key();
 
-            InvestorContext investor2Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo, ProjectSeeders = projectSeeders };
+            InvestorContext investor2Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             investor2Context.InvestorKey = Encoders.Hex.EncodeData(investor2Key.PubKey.ToBytes());
             investor2Context.ChangeAddress = investor2ChangeKey.PubKey.GetSegwitAddress(network).ToString();
 
             // create founder context
-            FounderContext founderContext = new FounderContext { ProjectInfo = projectInvestmentInfo, ProjectSeeders = projectSeeders };
+            FounderContext founderContext = new FounderContext
+                { ProjectInfo = projectInvestmentInfo, ProjectSeeders = projectSeeders };
 
             // create seeder1 investment transaction
 
-            var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context,
+                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress, seeder1InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation)
+            seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
+                    seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
                 .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder1Context.TransactionHex);
 
             // create seeder2 investment transaction
 
-            var seeder2InvTrx = operations.CreateInvestmentTransaction(network, seeder2Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            var seeder2InvTrx = operations.CreateInvestmentTransaction(network, seeder2Context,
+                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            seeder2Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder2Context.ChangeAddress, seeder2InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation)
+            seeder2Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder2Context.ChangeAddress,
+                    seeder2InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
                 .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder2Context.TransactionHex);
 
             // create seeder3 investment transaction
 
-            var seeder3InvTrx = operations.CreateInvestmentTransaction(network, seeder3Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            var seeder3InvTrx = operations.CreateInvestmentTransaction(network, seeder3Context,
+                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            seeder3Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder3Context.ChangeAddress, seeder3InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation)
+            seeder3Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder3Context.ChangeAddress,
+                    seeder3InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
                 .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder3Context.TransactionHex);
 
             // create investor 1 investment transaction
 
-            var investor1InvTrx = operations.CreateInvestmentTransaction(network, investor1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            var investor1InvTrx = operations.CreateInvestmentTransaction(network, investor1Context,
+                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            investor1Context.TransactionHex = operations.SignInvestmentTransaction(network, investor1Context.ChangeAddress , investor1InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation)
+            investor1Context.TransactionHex = operations.SignInvestmentTransaction(network,
+                    investor1Context.ChangeAddress, investor1InvTrx, null, new List<UtxoDataWithPath>(),
+                    _expectedFeeEstimation)
                 .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(investor1Context.TransactionHex);
 
             // create investor 2 investment transaction
 
-            var investor2InvTrx = operations.CreateInvestmentTransaction(network, investor2Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            var investor2InvTrx = operations.CreateInvestmentTransaction(network, investor2Context,
+                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            investor2Context.TransactionHex = operations.SignInvestmentTransaction(network, investor2Context.ChangeAddress, investor2InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation)
+            investor2Context.TransactionHex = operations.SignInvestmentTransaction(network,
+                    investor2Context.ChangeAddress, investor2InvTrx, null, new List<UtxoDataWithPath>(),
+                    _expectedFeeEstimation)
                 .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(investor2Context.TransactionHex);
 
             // spend all investment transactions for stage 1
 
-            var founderTrxForSeeder1Stage1 = operations.SpendFounderStage(network, founderContext, 1, funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderKey.ToBytes())
-            ,_expectedFeeEstimation);
-            
+            var founderTrxForSeeder1Stage1 = operations.SpendFounderStage(network, founderContext, 1,
+                funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderKey.ToBytes())
+                , _expectedFeeEstimation);
+
         }
 
         [Fact]
         public void SeederTransaction_EndOfProject_Test()
         {
-            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
+                new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
             InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
 
             var network = Networks.Bitcoin.Testnet();
@@ -218,7 +238,8 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
-            projectInvestmentInfo.ProjectIdentifier = derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+            projectInvestmentInfo.ProjectIdentifier =
+                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
@@ -234,12 +255,15 @@ namespace Angor.Test
 
             // create the investment transaction
 
-            var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context,
+                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress , seeder1InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation)
+            seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
+                    seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
                 .ToHex();
 
-            var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 }, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
+            var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 },
+                seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
 
             Assert.NotNull(seeder1Expierytrx);
         }
@@ -247,7 +271,8 @@ namespace Angor.Test
         [Fact]
         public void InvestorTransaction_EndOfProject_Test()
         {
-            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
+                new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
             InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
 
             var network = Networks.Bitcoin.Testnet();
@@ -265,27 +290,32 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
-            projectInvestmentInfo.ProjectIdentifier = derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+            projectInvestmentInfo.ProjectIdentifier =
+                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+            projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
             var seeder1ChangeKey = new Key();
             var seeder1ReceiveCoinsKey = new Key();
 
-            InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo, ProjectSeeders = new ProjectSeeders()};
+            InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder11Key.PubKey.ToBytes());
             seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
 
             // create the investment transaction
 
-            var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context,
+                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress, seeder1InvTrx, null, new List<UtxoDataWithPath>(),
-                _expectedFeeEstimation)
+            seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
+                    seeder1InvTrx, null, new List<UtxoDataWithPath>(),
+                    _expectedFeeEstimation)
                 .ToHex();
 
-            var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 }, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
+            var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 },
+                seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
 
             Assert.NotNull(seeder1Expierytrx);
         }
@@ -293,7 +323,8 @@ namespace Angor.Test
         [Fact]
         public void InvestorTransaction_WithSeederHashes_EndOfProject_Test()
         {
-            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
+                new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
             InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
 
             var network = Networks.Bitcoin.Testnet();
@@ -311,7 +342,9 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
-            projectInvestmentInfo.ProjectIdentifier = derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+            projectInvestmentInfo.ProjectIdentifier =
+                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+            projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
@@ -324,19 +357,22 @@ namespace Angor.Test
             projectSeeders.SecretHashes.Add(Hashes.Hash256(new Key().ToBytes()).ToString());
             projectSeeders.SecretHashes.Add(Hashes.Hash256(new Key().ToBytes()).ToString());
 
-            InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo, ProjectSeeders = projectSeeders };
+            InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder11Key.PubKey.ToBytes());
             seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
 
             // create the investment transaction
 
-            var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context,
+                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress, seeder1InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation)
+            seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
+                    seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
                 .ToHex();
 
-            var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 }, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
+            var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 },
+                seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
 
             Assert.NotNull(seeder1Expierytrx);
         }
@@ -344,7 +380,8 @@ namespace Angor.Test
         [Fact]
         public void SpendInvestorRecoveryTest()
         {
-            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
+                new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
             InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
 
             var network = Networks.Bitcoin.Testnet();
@@ -375,10 +412,10 @@ namespace Angor.Test
                     FounderKey = funderKey,
                     ProjectIdentifier = angorKey,
                     PenaltyDate = DateTime.UtcNow.AddDays(5),
+                    ProjectSeeders = new ProjectSeeders()
                 },
                 InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
-                ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString(),
-                ProjectSeeders = new ProjectSeeders()
+                ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString()
             };
 
             // create the investment transaction
@@ -435,8 +472,10 @@ namespace Angor.Test
         public void SpendInvestorConsolidatedRecoveryTest()
         {
             {
-                DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
-                InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+                DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
+                    new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+                InvestmentOperations operations =
+                    new InvestmentOperations(_walletOperations.Object, derivationOperations);
 
                 var network = Networks.Bitcoin.Testnet();
 
@@ -470,19 +509,19 @@ namespace Angor.Test
                         FounderKey = funderKey,
                         ProjectIdentifier = angorKey,
                         PenaltyDate = DateTime.UtcNow.AddDays(5),
+                        ProjectSeeders = new ProjectSeeders
+                        {
+                            Threshold = 2,
+                            SecretHashes = new List<string>
+                            {
+                                Hashes.Hash256(seeder1Key.ToBytes()).ToString(),
+                                Hashes.Hash256(seeder2Key.ToBytes()).ToString(),
+                                Hashes.Hash256(seeder3Key.ToBytes()).ToString(),
+                            }
+                        }
                     },
                     InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
                     ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString(),
-                    ProjectSeeders = new ProjectSeeders
-                    {
-                        Threshold = 2,
-                        SecretHashes = new List<string>
-                        {
-                            Hashes.Hash256(seeder1Key.ToBytes()).ToString(),
-                            Hashes.Hash256(seeder2Key.ToBytes()).ToString(),
-                            Hashes.Hash256(seeder3Key.ToBytes()).ToString(),
-                        }
-                    }
                 };
 
                 // create the investment transaction
@@ -491,7 +530,7 @@ namespace Angor.Test
                     Money.Coins(investorContext.ProjectInfo.TargetAmount).Satoshi);
 
                 investorContext.TransactionHex = investmentTransaction.ToHex();
-                
+
                 var recoveryTransactions = operations.BuildRecoverInvestorFundsTransactions(investorContext, network,
                     Encoders.Hex.EncodeData(investorChangeKey.PubKey.ToBytes()));
 
@@ -508,13 +547,14 @@ namespace Angor.Test
                 for (int i = 0; i < investmentTransaction.Outputs.Count; i++)
                 {
                     var output = investmentTransaction.Outputs[i];
-                    
+
                     if (output.Value == 0)
                         continue;
                     builder.AddCoin(new NBitcoin.Coin(Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork),
                         (uint)i));
                     builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Zero, 0, new NBitcoin.Money(10000),
-                        new Script("4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
+                        new Script(
+                            "4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
                 }
 
                 var transaction = nbitcoinNetwork.Consensus.ConsensusFactory.CreateTransaction();
@@ -532,11 +572,11 @@ namespace Angor.Test
                     // transaction.Outputs.Add(new NBitcoin.Money(recoveryTransaction.Outputs.Single().Value.Satoshi),
                     //     new Script(recoveryTransaction.Outputs.Single().ScriptPubKey.ToBytes()));
                 }
-    
+
                 transaction.Inputs.Add(new OutPoint(NBitcoin.uint256.Zero, 0), null, null); //Add fee to the transaction
                 transaction.Outputs.Add(new NBitcoin.Money(9000), new Script(investorChangeKey.ScriptPubKey.ToBytes()));
-                
-                builder.Verify(transaction,out TransactionPolicyError[] errors);
+
+                builder.Verify(transaction, out TransactionPolicyError[] errors);
                 Assert.Empty(errors);
             }
         }
@@ -545,8 +585,10 @@ namespace Angor.Test
         public void SpendSeederConsolidatedRecoveryTest()
         {
             {
-                DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
-                InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+                DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
+                    new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+                InvestmentOperations operations =
+                    new InvestmentOperations(_walletOperations.Object, derivationOperations);
 
                 var network = Networks.Bitcoin.Testnet();
 
@@ -577,11 +619,11 @@ namespace Angor.Test
                         FounderKey = funderKey,
                         ProjectIdentifier = angorKey,
                         PenaltyDate = DateTime.UtcNow.AddDays(5),
+                        ProjectSeeders = new ProjectSeeders()
                     },
                     InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes()),
                     InvestorSecretHash = Hashes.Hash256(seedersecret.ToBytes()).ToString(),
-                    ChangeAddress = seederChangeKey.PubKey.GetSegwitAddress(network).ToString(),
-                    ProjectSeeders = new ProjectSeeders()
+                    ChangeAddress = seederChangeKey.PubKey.GetSegwitAddress(network).ToString()
                 };
 
                 // create the investment transaction
@@ -599,7 +641,8 @@ namespace Angor.Test
                     Encoders.Hex.EncodeData(funderPrivateKey.ToBytes()));
 
                 operations.AddWitScriptToInvestorRecoveryTransactions(seederContext, network, recoveryTransactions,
-                    founderSignatures, Encoders.Hex.EncodeData(seederKey.ToBytes()), Encoders.Hex.EncodeData(seedersecret.ToBytes()));
+                    founderSignatures, Encoders.Hex.EncodeData(seederKey.ToBytes()),
+                    Encoders.Hex.EncodeData(seedersecret.ToBytes()));
 
                 var nbitcoinNetwork = NetworkMapper.Map(network);
 
@@ -613,7 +656,8 @@ namespace Angor.Test
                     builder.AddCoin(new NBitcoin.Coin(Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork),
                         (uint)i));
                     builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Zero, 0, new NBitcoin.Money(10000),
-                        new Script("4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
+                        new Script(
+                            "4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
                 }
 
                 var transaction = nbitcoinNetwork.Consensus.ConsensusFactory.CreateTransaction();
@@ -643,7 +687,8 @@ namespace Angor.Test
         [Fact]
         public void InvestorTransaction_NoPenalty_Test()
         {
-            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
+                new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
             InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
 
             var network = Networks.Bitcoin.Testnet();
@@ -661,7 +706,8 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
-            projectInvestmentInfo.ProjectIdentifier = derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+            projectInvestmentInfo.ProjectIdentifier =
+                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
@@ -678,19 +724,25 @@ namespace Angor.Test
             projectSeeders.SecretHashes.Add(Hashes.Hash256(seeder2Key.ToBytes()).ToString());
             projectSeeders.SecretHashes.Add(Hashes.Hash256(seeder3Key.ToBytes()).ToString());
 
-            InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo, ProjectSeeders = projectSeeders };
+            projectInvestmentInfo.ProjectSeeders = projectSeeders;
+
+            InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder11Key.PubKey.ToBytes());
             seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
 
             // create the investment transaction
 
-            var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context,
+                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress, seeder1InvTrx, null, new List<UtxoDataWithPath>(),_expectedFeeEstimation)
+            seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
+                    seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
                 .ToHex();
 
-            var seeder1Expierytrx = operations.RecoverFundsNoPenalty(network, seeder1Context, new[] { 2, 3 }, new Key[]{ seeder2Key, seeder3Key }, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
+            var seeder1Expierytrx = operations.RecoverFundsNoPenalty(network, seeder1Context, new[] { 2, 3 },
+                new Key[] { seeder2Key, seeder3Key }, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey,
+                Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
 
             Assert.NotNull(seeder1Expierytrx);
         }
