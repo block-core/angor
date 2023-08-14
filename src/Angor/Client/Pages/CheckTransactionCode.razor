@@ -129,9 +129,9 @@ else
                 PenaltyDate = DateTime.Now.AddMinutes(1000),
                 StartDate = DateTime.Now,
                 TargetAmount = 10,
-                ProjectIdentifier = angorPubKey.ToHex()
+                ProjectIdentifier = angorPubKey.ToHex(),
+                ProjectSeeders = new ProjectSeeders()
             },
-            ProjectSeeders = new ProjectSeeders()
         };
 
         transaction = _investmentOperations.CreateInvestmentTransaction(network, context, 1000000);

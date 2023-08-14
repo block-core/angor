@@ -4,10 +4,8 @@ using Angor.Shared.Protocol;
 using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;
 using NBitcoin.Policy;
-using System.Linq;
 using System.Text;
 using BitcoinAddress = Blockcore.NBitcoin.BitcoinAddress;
-using Block = Blockcore.Consensus.BlockInfo.Block;
 using FeeRate = Blockcore.NBitcoin.FeeRate;
 using IndexedTxOut = NBitcoin.IndexedTxOut;
 using Key = NBitcoin.Key;
@@ -64,7 +62,7 @@ public class InvestmentOperations
             AngorScripts.CreateStage(network, scripts));
 
         var stagesOutputs = stagesScripts.Select((_, i) =>
-            new TxOut(new Money(GetPercentageForStage(totalInvestmentAmount, context.ProjectInfo.Stages[i])),
+            new TxOut(new Money(GetPercentageOfAmountForStage(totalInvestmentAmount, context.ProjectInfo.Stages[i])),
                 new Script(_.ToBytes())));
 
         foreach (var stagesOutput in stagesOutputs)
@@ -75,7 +73,7 @@ public class InvestmentOperations
         return investmentTransaction;
     }
 
-    private long GetPercentageForStage(long amount, Stage stage) //TODO move to interface 
+    private static long GetPercentageOfAmountForStage(long amount, Stage stage)
     {
         return Convert.ToInt64(amount * stage.AmountToRelease);
     }

@@ -2,6 +2,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.ProtocolNew;
+using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP39;
 using Blockcore.NBitcoin.Crypto;
@@ -12,32 +13,19 @@ using NBitcoin.Policy;
 using Coin = NBitcoin.Coin;
 using Key = Blockcore.NBitcoin.Key;
 
-namespace Angor.Test;
+namespace Angor.Test.ProtocolNew;
 
-public class FounderTransactionActionTest
+public class FounderTransactionActionTest : AngorTestData
 {
     private FounderTransactionActions _sut;
-
-    private Mock<INetworkConfiguration> _networkConfiguration;
-    private DerivationOperations _derivationOperations;
-
+    
     private Mock<IWalletOperations> _walletOperations;
 
-    private string angorRootKey =
-        "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
-
-    private FeeEstimation _expectedFeeEstimation = new FeeEstimation()
+    private FeeEstimation _expectedFeeEstimation = new()
         { Confirmations = 1, FeeRate = 10000 };
 
     public FounderTransactionActionTest()
     {
-        _networkConfiguration = new Mock<INetworkConfiguration>();
-        _derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(),
-            _networkConfiguration.Object);
-
-        _networkConfiguration.Setup(_ => _.GetNetwork())
-            .Returns(Networks.Bitcoin.Testnet());
-
         _walletOperations = new Mock<IWalletOperations>();
         _walletOperations.Setup(_ => _.GetUnspentOutputsForTransaction(It.IsAny<WalletWords>(),
                 It.IsAny<List<UtxoDataWithPath>>()))
@@ -61,6 +49,68 @@ public class FounderTransactionActionTest
         _sut = new FounderTransactionActions(_networkConfiguration.Object);
     }
 
+     private ProjectInfo GivenValidProjectInvestmentInfo(DerivationOperations derivationOperations, WalletWords words)
+    {
+        var projectInvestmentInfo = new ProjectInfo();
+        projectInvestmentInfo.TargetAmount = 3;
+        projectInvestmentInfo.StartDate = DateTime.UtcNow;
+        projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
+        projectInvestmentInfo.Stages = new List<Stage>
+        {
+            new Stage { AmountToRelease = (decimal)0.1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+            new Stage { AmountToRelease = (decimal)0.5, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+            new Stage { AmountToRelease = (decimal)0.4, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+        };
+        projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+        projectInvestmentInfo.ProjectIdentifier =
+            derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+
+        // Build seeders hashes
+
+        projectInvestmentInfo.ProjectSeeders = new ProjectSeeders { Threshold = 2 };
+        return projectInvestmentInfo;
+    }
+
+    private Transaction GivenASeederTransactionHex(InvestmentOperations operations, ProjectInfo projectInvestmentInfo)
+    {
+        var network = Networks.Bitcoin.Testnet();
+        var seederKey = new Key();
+        var seederSecret = new Key();
+        var seederChangeKey = new Key();
+
+        InvestorContext seederContext = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
+
+        seederContext.InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes());
+        seederContext.ChangeAddress = seederChangeKey.PubKey.GetSegwitAddress(network).ToString();
+        seederContext.InvestorSecretHash = Hashes.Hash256(seederSecret.ToBytes()).ToString();
+        
+        projectInvestmentInfo.ProjectSeeders.SecretHashes.Add(seederContext.InvestorSecretHash);
+        
+        var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seederContext,
+            Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+
+        return operations.SignInvestmentTransaction(network, seederContext.ChangeAddress,
+                seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation);
+    }
+    
+    private Transaction GivenAnInvestorTransactionHex(InvestmentOperations operations, ProjectInfo projectInvestmentInfo)
+    {
+        var network = Networks.Bitcoin.Testnet();
+        var seederKey = new Key();
+        var seederChangeKey = new Key();
+
+        InvestorContext context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
+
+        context.InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes());
+        context.ChangeAddress = seederChangeKey.PubKey.GetSegwitAddress(network).ToString();
+
+        var seeder1InvTrx = operations.CreateInvestmentTransaction(network, context,
+            Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+
+        return operations.SignInvestmentTransaction(network, context.ChangeAddress,
+                seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation);
+    }
+    
     // [Fact]
     // public void FounderSignInvestorRecoveryTransactionsSuccessfully()
     // {
@@ -135,111 +185,33 @@ public class FounderTransactionActionTest
     [InlineData(3)]
     public void SpendFounderStage_Test(int stageNumber)
     {
-        DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
-            new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
-        InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+        InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _derivationOperations);
 
         var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
-        var funderKey = derivationOperations.DeriveFounderPrivateKey(words, 1);
+        var funderKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
         var funderReceiveCoinsKey = new Key();
 
-        var projectInvestmentInfo = GivenValidProjectInvestmentInfo(derivationOperations, words);
+        var projectInvestmentInfo = GivenValidProjectInvestmentInfo(_derivationOperations, words);
 
         // create founder context
-        var transactionHexList = new List<string>();
+        var transactionList = new List<Transaction>();
 
         // create seeder1 investment transaction
 
-        transactionHexList.Add(GivenASeederTransactionHex(operations,  projectInvestmentInfo));
-        transactionHexList.Add(GivenASeederTransactionHex(operations,  projectInvestmentInfo));
-        transactionHexList.Add(GivenASeederTransactionHex(operations,  projectInvestmentInfo));
-        transactionHexList.Add(GivenAnInvestorTransactionHex(operations,  projectInvestmentInfo));
-        transactionHexList.Add(GivenAnInvestorTransactionHex(operations,  projectInvestmentInfo));
+        transactionList.Add(GivenASeederTransactionHex(operations,  projectInvestmentInfo));
+        transactionList.Add(GivenASeederTransactionHex(operations,  projectInvestmentInfo));
+        transactionList.Add(GivenASeederTransactionHex(operations,  projectInvestmentInfo));
+        transactionList.Add(GivenAnInvestorTransactionHex(operations,  projectInvestmentInfo));
+        transactionList.Add(GivenAnInvestorTransactionHex(operations,  projectInvestmentInfo));
 
         // spend all investment transactions for stage 1
-        var founderTrxSpendStageOne = _sut.SpendFounderStage(projectInvestmentInfo, transactionHexList, stageNumber,
+        var founderTrxSpendStageOne = _sut.SpendFounderStage(projectInvestmentInfo, transactionList.Select(_ => _.ToHex()), stageNumber,
             funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderKey.ToBytes())
             , _expectedFeeEstimation);
-
-
-        var nbitcoinNetwork = NetworkMapper.Map(Networks.Bitcoin.Testnet());
-        var builder = nbitcoinNetwork.CreateTransactionBuilder();
-
-        foreach (var investmentTransactionHex in transactionHexList)
-        {
-            var investmentTransaction = NBitcoin.Transaction.Parse(investmentTransactionHex, nbitcoinNetwork);
-
-            builder.AddCoin(new Coin(investmentTransaction.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1)));
-        }
-
-        var trx = NBitcoin.Transaction.Parse(founderTrxSpendStageOne.ToHex(), nbitcoinNetwork);
-
-        Assert.True(builder.Verify(trx, out TransactionPolicyError[] errors),
-            userMessage: errors.Select(_ => _.ToString()).Aggregate("", (x, y) => x + "," + y));
-    }
-
-    private ProjectInfo GivenValidProjectInvestmentInfo(DerivationOperations derivationOperations, WalletWords words)
-    {
-        var projectInvestmentInfo = new ProjectInfo();
-        projectInvestmentInfo.TargetAmount = 3;
-        projectInvestmentInfo.StartDate = DateTime.UtcNow;
-        projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
-        projectInvestmentInfo.Stages = new List<Stage>
-        {
-            new Stage { AmountToRelease = (decimal)0.1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
-            new Stage { AmountToRelease = (decimal)0.5, ReleaseDate = DateTime.UtcNow.AddDays(2) },
-            new Stage { AmountToRelease = (decimal)0.4, ReleaseDate = DateTime.UtcNow.AddDays(3) }
-        };
-        projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
-        projectInvestmentInfo.ProjectIdentifier =
-            derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
-
-        // Build seeders hashes
-
-        projectInvestmentInfo.ProjectSeeders = new ProjectSeeders { Threshold = 2 };
-        return projectInvestmentInfo;
-    }
-
-    private string GivenASeederTransactionHex(InvestmentOperations operations, ProjectInfo projectInvestmentInfo)
-    {
-        var network = Networks.Bitcoin.Testnet();
-        var seederKey = new Key();
-        var seederSecret = new Key();
-        var seederChangeKey = new Key();
-
-        InvestorContext seederContext = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
-
-        seederContext.InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes());
-        seederContext.ChangeAddress = seederChangeKey.PubKey.GetSegwitAddress(network).ToString();
-        seederContext.InvestorSecretHash = Hashes.Hash256(seederSecret.ToBytes()).ToString();
         
-        projectInvestmentInfo.ProjectSeeders.SecretHashes.Add(seederContext.InvestorSecretHash);
-        
-        var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seederContext,
-            Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
-
-        return operations.SignInvestmentTransaction(network, seederContext.ChangeAddress,
-                seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
-            .ToHex();
-    }
-    
-    private string GivenAnInvestorTransactionHex(InvestmentOperations operations, ProjectInfo projectInvestmentInfo)
-    {
-        var network = Networks.Bitcoin.Testnet();
-        var seederKey = new Key();
-        var seederChangeKey = new Key();
-
-        InvestorContext context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
-
-        context.InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes());
-        context.ChangeAddress = seederChangeKey.PubKey.GetSegwitAddress(network).ToString();
-
-        var seeder1InvTrx = operations.CreateInvestmentTransaction(network, context,
-            Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
-
-        return operations.SignInvestmentTransaction(network, context.ChangeAddress,
-                seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
-            .ToHex();
+        TransactionValidation.ThanTheTransactionHasNoErrors(founderTrxSpendStageOne,
+            transactionList.Select(_ =>
+                new Blockcore.NBitcoin.Coin(_.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1))));
     }
 }
