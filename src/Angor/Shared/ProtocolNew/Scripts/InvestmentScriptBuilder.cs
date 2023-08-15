@@ -12,6 +12,19 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         _seederScriptTreeBuilder = seederScriptTreeBuilder;
     }
 
+    public Script GetInvestorPenaltyTransactionScript(string investorKey, DateTime punishmentLockTime)
+    {
+        var unixTime = Utils.DateTimeToUnixTime(punishmentLockTime);
+        
+        return new(new List<Op>
+        {
+            Op.GetPushOp(new NBitcoin.PubKey(investorKey).ToBytes()),
+            OpcodeType.OP_CHECKSIGVERIFY,
+            Op.GetPushOp(unixTime),
+            OpcodeType.OP_CHECKLOCKTIMEVERIFY
+        });
+    }
+
     public ProjectScripts BuildSSeederScripts(string funderKey, string investorKey, string? secretHash,
         DateTime founderLockTime,
         DateTime projectExpieryLocktime)

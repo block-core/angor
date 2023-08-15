@@ -232,7 +232,7 @@ public class InvestmentOperations
 
     public List<Transaction> BuildRecoverInvestorFundsTransactions(InvestorContext context, Network network, string investorReceiveAddress)
     {
-        // allow an investor that acquired enough panel keys to recover their investment
+        // allow an investor that acquired enough seeder secrets to recover their investment
         var nbitcoinNetwork = NetworkMapper.Map(network);
         var investmentTransaction = NBitcoin.Transaction.Parse(context.TransactionHex, nbitcoinNetwork);
 
