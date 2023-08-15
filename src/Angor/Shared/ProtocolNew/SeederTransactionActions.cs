@@ -1,3 +1,4 @@
+using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.ProtocolNew.Scripts;
 using Blockcore.Consensus.ScriptInfo;
@@ -39,12 +40,11 @@ public class SeederTransactionActions : ISeederTransactionActions
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
         var stagesScript = projectInfo.Stages
-            .Select(_ =>
-                _investmentScriptBuilder.BuildSSeederScripts(projectInfo.FounderKey,
-                    investorKey,
-                    investorSecretHash,
-                    _.ReleaseDate,
-                    projectInfo.ExpiryDate));
+            .Select(_ => _investmentScriptBuilder.BuildSSeederScripts(projectInfo.FounderKey,
+                investorKey,
+                _.ReleaseDate,
+                projectInfo.ExpiryDate,
+                investorSecretHash));
 
         var stagesScripts = stagesScript.Select(_ => AngorScripts.CreateStage(network, _));
 

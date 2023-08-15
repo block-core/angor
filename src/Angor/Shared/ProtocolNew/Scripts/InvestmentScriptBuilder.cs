@@ -25,9 +25,8 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         });
     }
 
-    public ProjectScripts BuildSSeederScripts(string funderKey, string investorKey, string? secretHash,
-        DateTime founderLockTime,
-        DateTime projectExpieryLocktime)
+    public ProjectScripts BuildSSeederScripts(string funderKey, string investorKey, DateTime founderLockTime, 
+        DateTime projectExpieryLocktime, string? secretHash)
     {
         long locktimeFounder = Utils.DateTimeToUnixTime(founderLockTime);
         long locktimeExpiery = Utils.DateTimeToUnixTime(projectExpieryLocktime);

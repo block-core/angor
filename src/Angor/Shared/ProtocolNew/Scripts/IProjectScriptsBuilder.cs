@@ -10,5 +10,5 @@ public interface IProjectScriptsBuilder
     
     Script BuildSeederInfoScript(string investorKey, string secretHash);
     
-    (PubKey investorKey, uint256? secretHash) GetInvestmentDataFromOpReturnScript(Script script);
+    (string investorKey, uint256? secretHash) GetInvestmentDataFromOpReturnScript(Script script);
 }

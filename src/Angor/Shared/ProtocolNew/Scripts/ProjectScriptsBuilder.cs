@@ -30,7 +30,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
             Op.GetPushOp(uint256.Parse(secretHash).ToBytes()));
     }
 
-    public (PubKey investorKey, uint256? secretHash) GetInvestmentDataFromOpReturnScript(Script script)
+    public (string investorKey, uint256? secretHash) GetInvestmentDataFromOpReturnScript(Script script)
     {
         if (!script.IsUnspendable)
         {
@@ -41,12 +41,12 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
 
         if (ops.Count == 2)
         {
-            return (new PubKey(ops[1].PushData), null);
+            return (new PubKey(ops[1].PushData).ToHex(), null);
         }
 
         PubKey pubKey = new PubKey(ops[1].PushData);
         uint256 secretHash = new uint256(ops[2].PushData);
 
-        return (pubKey, secretHash);
+        return (pubKey.ToHex(), secretHash);
     }
 }

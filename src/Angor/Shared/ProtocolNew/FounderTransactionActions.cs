@@ -93,7 +93,8 @@ public class FounderTransactionActions : IFounderTransactionActions
         foreach (var trxHex in investmentTransactionsHex)
         {
             var trx = NBitcoin.Transaction.Parse(trxHex, nbitcoinNetwork);
-            var outputStage = AddInputToSpendingTransaction(projectInfo, stageNumber, trx, spendingTransaction);
+            var outputStage = AddInputToSpendingTransaction(projectInfo, stageNumber, trx, spendingTransaction,
+                AngorScripts.CreateControlBlockFounder);
             stageOutputs.Add(outputStage);
             builder.AddCoin( outputStage.ToCoin());
         }
@@ -132,7 +133,7 @@ public class FounderTransactionActions : IFounderTransactionActions
     }
 
      private static IndexedTxOut AddInputToSpendingTransaction(ProjectInfo projectInfo, int stageNumber, NBitcoin.Transaction trx,
-         NBitcoin.Transaction spendingTransaction)
+         NBitcoin.Transaction spendingTransaction, Func<ProjectScripts,Script> func)
      {
          var stageOutput = trx.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1);
 
@@ -151,9 +152,9 @@ public class FounderTransactionActions : IFounderTransactionActions
              projectInfo.Stages[stageNumber - 1].ReleaseDate,
              projectInfo.ExpiryDate,
              projectInfo.ProjectSeeders);
-         
-         var controlBlock = AngorScripts.CreateControlBlockFounder(scriptStages);
 
+         var controlBlock = func(scriptStages);
+         
          // use fake data for fee estimation
          var sigPlaceHolder = new byte[64];
 
