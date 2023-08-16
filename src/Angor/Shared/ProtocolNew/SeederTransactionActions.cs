@@ -1,9 +1,11 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.ProtocolNew.Scripts;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
+using NBitcoin;
+using Money = Blockcore.NBitcoin.Money;
+using Script = Blockcore.Consensus.ScriptInfo.Script;
+using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
+using TxOut = Blockcore.Consensus.TransactionInfo.TxOut;
 
 namespace Angor.Shared.ProtocolNew;
 
@@ -12,13 +14,15 @@ public class SeederTransactionActions : ISeederTransactionActions
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly IInvestmentScriptBuilder _investmentScriptBuilder;
     private readonly IProjectScriptsBuilder _projectScriptsBuilder;
+    private readonly ISpendingTransactionBuilder _spendingTransactionBuilder;
 
     public SeederTransactionActions(INetworkConfiguration networkConfiguration, IInvestmentScriptBuilder investmentScriptBuilder, 
-        IProjectScriptsBuilder projectScriptsBuilder)
+        IProjectScriptsBuilder projectScriptsBuilder, ISpendingTransactionBuilder spendingTransactionBuilder)
     {
         _networkConfiguration = networkConfiguration;
         _investmentScriptBuilder = investmentScriptBuilder;
         _projectScriptsBuilder = projectScriptsBuilder;
+        _spendingTransactionBuilder = spendingTransactionBuilder;
     }
 
     public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey,
@@ -83,6 +87,27 @@ public class SeederTransactionActions : ISeederTransactionActions
                     new NBitcoin.Script(spendingScript.WitHash.ScriptPubKey.ToBytes())));
 
                 return network.Consensus.ConsensusFactory.CreateTransaction(stageTransaction.ToHex());;
+            });
+    }
+
+    public Transaction RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex, string investorReceiveAddress,
+        string investorPrivateKey, FeeEstimation feeEstimation)
+    {
+        return _spendingTransactionBuilder.RecoverProjectFunds(transactionHex, projectInfo, stageIndex,
+            investorReceiveAddress, investorPrivateKey, new FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
+            _ =>
+            {
+                var controlBlock = AngorScripts.CreateControlBlockExpiry(_); //TODO replace call to interface
+                var fakeSig = new byte[64];
+                return new WitScript(Op.GetPushOp(fakeSig), Op.GetPushOp(_.EndOfProject.ToBytes()),
+                    Op.GetPushOp(controlBlock.ToBytes()));
+            },
+            (witScript, sig) =>
+            {
+                var scriptToExecute = witScript[1];
+                var controlBlock = witScript[2];
+
+                return new WitScript(Op.GetPushOp(sig.ToBytes()), Op.GetPushOp(scriptToExecute), Op.GetPushOp(controlBlock));
             });
     }
 }

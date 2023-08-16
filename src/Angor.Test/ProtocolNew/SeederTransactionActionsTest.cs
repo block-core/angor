@@ -19,10 +19,15 @@ public class SeederTransactionActionsTest : AngorTestData
     public SeederTransactionActionsTest()
     {
         _projectScriptsBuilder = new Mock<IProjectScriptsBuilder>();
-        
-        _sut = new SeederTransactionActions(_networkConfiguration.Object,
-            new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
-            _projectScriptsBuilder.Object);
+
+        var investmentScriptBuilder = new InvestmentScriptBuilder(new SeederScriptTreeBuilder());
+
+        _sut = new SeederTransactionActions(
+            _networkConfiguration.Object, investmentScriptBuilder, _projectScriptsBuilder.Object,
+            new SpendingTransactionBuilder(
+                _networkConfiguration.Object,
+                _projectScriptsBuilder.Object,
+                investmentScriptBuilder));
     }
 
     private ProjectInfo GivenValidProjectInvestmentInfo( WalletWords words)
@@ -162,7 +167,7 @@ public class SeederTransactionActionsTest : AngorTestData
             .Returns(expectedScript);
 
         _sut = new SeederTransactionActions(_networkConfiguration.Object,
-            mock.Object, _projectScriptsBuilder.Object);
+            mock.Object, _projectScriptsBuilder.Object, new Mock<ISpendingTransactionBuilder>().Object);
 
         var recoveryTransactions = _sut.BuildRecoverSeederFundsTransactions(investmentTrx, 
             expectedDateTime, expectedAddress);
@@ -171,4 +176,6 @@ public class SeederTransactionActionsTest : AngorTestData
         Assert.Contains(recoveryTransactions.SelectMany(_ => _.Outputs).ToList(),
             _ => _.ScriptPubKey.ToHex().Equals(expectedScript.WitHash.ScriptPubKey.ToHex()));
     }
+    
+    
 }
