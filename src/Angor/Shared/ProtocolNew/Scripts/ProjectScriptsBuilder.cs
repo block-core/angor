@@ -17,7 +17,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
         return _derivationOperations.AngorKeyToScript(angorKey);
     }
 
-    public Script BuildInvestorInfoScript(string investorKey, string secretHash)
+    public Script BuildInvestorInfoScript(string investorKey)
     {
         return new Script(OpcodeType.OP_RETURN,
             Op.GetPushOp(new PubKey(investorKey).ToBytes()));

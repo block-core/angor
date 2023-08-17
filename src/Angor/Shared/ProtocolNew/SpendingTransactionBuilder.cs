@@ -21,9 +21,9 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         _investmentScriptBuilder = investmentScriptBuilder;
     }
 
-    public Transaction RecoverProjectFunds(string investmentTransactionHex ,ProjectInfo projectInfo, int startStage, 
-        string receiveAddress, string privateKey, FeeRate feeRate, 
-        Func<ProjectScripts, WitScript> buildWitScriptWithSigPlaceholder, 
+    public Transaction BuildRecoverInvestorRemainingFundsInProject(string investmentTransactionHex ,ProjectInfo projectInfo, 
+        int startStage, string receiveAddress, string privateKey, FeeRate feeRate, 
+        Func<ProjectScripts, WitScript> buildWitScriptWithSigPlaceholder,
         Func<WitScript, TaprootSignature, WitScript> addSignatureToWitScript)
     {
         var network = _networkConfiguration.GetNetwork();
@@ -32,18 +32,13 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         var nbitcoinNetwork = NetworkMapper.Map(network);
 
         var spendingTrx = nbitcoinNetwork.CreateTransaction();
-        var builder = nbitcoinNetwork.CreateTransactionBuilder();
 
         var (investorKey, secretHash, investmentTrxOutputs) = GetInvestorTransactionData(investmentTransactionHex, startStage);
-        
-        
-        // Step 1 - the time lock
 
+        // Step 1 - the time lock
         // we must set the locktime to be ahead of the current block time
         // and ahead of the cltv otherwise the trx wont get accepted in the chain
         spendingTrx.LockTime = Utils.DateTimeToUnixTime(projectInfo.ExpiryDate.AddMinutes(1));
-        
-        
         
         // Step 2 - build the transaction outputs and inputs without signing using fake sigs for fee estimation
         spendingTrx.Outputs.Add(investmentTrxOutputs.Sum(_ => _.TxOut.Value), new NBitcoin.Script(receiveAddress.ToBytes()));
@@ -59,21 +54,18 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
                 : _investmentScriptBuilder.BuildSSeederScripts(projectInfo.FounderKey, investorKey, 
                     projectInfo.Stages[stageIndex].ReleaseDate, projectInfo.ExpiryDate, secretHash.ToString());
 
-            var witScript = buildWitScriptWithSigPlaceholder(scriptStages);
+            var witScript =  new WitScript(new NBitcoin.Script(buildWitScriptWithSigPlaceholder(scriptStages).ToBytes()));
 
             return new TxIn(new OutPoint(_.Transaction, _.N), witScript)
                 { Sequence = new Sequence(spendingTrx.LockTime.Value) };
         }));
-
-        
         
         // Step 3 - calculate the fee and add a single output for all  inputs
-        var feeToReduce = builder
+        var feeToReduce = nbitcoinNetwork.CreateTransactionBuilder()
             .AddCoins(investmentTrxOutputs.Select(_ => _.ToCoin()))
             .EstimateFees(spendingTrx, feeRate);
 
         spendingTrx.Outputs.Single().Value -= feeToReduce;
-        
         
         // Step 4 - sign the taproot inputs
         var trxData = spendingTrx.PrecomputeTransactionData(investmentTrxOutputs.Select(s => s.TxOut).ToArray());
@@ -92,7 +84,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
 
             var sig = key.SignTaprootKeySpend(hash, sigHash);
 
-            input.WitScript = addSignatureToWitScript(input.WitScript, sig);
+            input.WitScript = new WitScript(addSignatureToWitScript(input.WitScript ,sig).ToBytes());
 
             inputIndex++;
         }

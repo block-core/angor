@@ -23,11 +23,13 @@ public class SeederTransactionActionsTest : AngorTestData
         var investmentScriptBuilder = new InvestmentScriptBuilder(new SeederScriptTreeBuilder());
 
         _sut = new SeederTransactionActions(
-            _networkConfiguration.Object, investmentScriptBuilder, _projectScriptsBuilder.Object,
+            investmentScriptBuilder, 
+            _projectScriptsBuilder.Object,
             new SpendingTransactionBuilder(
                 _networkConfiguration.Object,
                 _projectScriptsBuilder.Object,
-                investmentScriptBuilder));
+                investmentScriptBuilder),
+            new Mock<IInvestmentTransactionBuilder>().Object);
     }
 
     private ProjectInfo GivenValidProjectInvestmentInfo( WalletWords words)
@@ -166,8 +168,8 @@ public class SeederTransactionActionsTest : AngorTestData
         mock.Setup(_ => _.GetInvestorPenaltyTransactionScript(expectedAddress, expectedDateTime))
             .Returns(expectedScript);
 
-        _sut = new SeederTransactionActions(_networkConfiguration.Object,
-            mock.Object, _projectScriptsBuilder.Object, new Mock<ISpendingTransactionBuilder>().Object);
+        _sut = new SeederTransactionActions(mock.Object, _projectScriptsBuilder.Object,
+            new Mock<ISpendingTransactionBuilder>().Object, new Mock<IInvestmentTransactionBuilder>().Object);
 
         var recoveryTransactions = _sut.BuildRecoverSeederFundsTransactions(investmentTrx, 
             expectedDateTime, expectedAddress);

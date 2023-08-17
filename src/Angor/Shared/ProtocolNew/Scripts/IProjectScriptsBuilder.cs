@@ -6,7 +6,7 @@ namespace Angor.Shared.ProtocolNew.Scripts;
 public interface IProjectScriptsBuilder
 {
     Script GetAngorFeeOutputScript(string angorKey);
-    Script BuildInvestorInfoScript(string investorKey, string secretHash);
+    Script BuildInvestorInfoScript(string investorKey);
     
     Script BuildSeederInfoScript(string investorKey, string secretHash);
     
