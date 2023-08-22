@@ -1,6 +1,5 @@
 using Angor.Shared.ProtocolNew.Scripts;
 using Blockcore.NBitcoin.DataEncoders;
-using DBreeze.Utils;
 using NBitcoin;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
@@ -41,7 +40,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         spendingTrx.LockTime = Utils.DateTimeToUnixTime(projectInfo.ExpiryDate.AddMinutes(1));
         
         // Step 2 - build the transaction outputs and inputs without signing using fake sigs for fee estimation
-        spendingTrx.Outputs.Add(investmentTrxOutputs.Sum(_ => _.TxOut.Value), new NBitcoin.Script(receiveAddress.ToBytes()));
+        spendingTrx.Outputs.Add(investmentTrxOutputs.Sum(_ => _.TxOut.Value), new NBitcoin.Script(receiveAddress));
         
         //Need to add the script sig to calculate the fee correctly
         spendingTrx.Inputs.AddRange(investmentTrxOutputs.Select((_,i) =>
@@ -54,10 +53,10 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
                 : _investmentScriptBuilder.BuildSSeederScripts(projectInfo.FounderKey, investorKey, 
                     projectInfo.Stages[stageIndex].ReleaseDate, projectInfo.ExpiryDate, secretHash.ToString());
 
-            var witScript =  new WitScript(new NBitcoin.Script(buildWitScriptWithSigPlaceholder(scriptStages).ToBytes()));
+            var witScript =  new WitScript(buildWitScriptWithSigPlaceholder(scriptStages).Pushes);
 
-            return new TxIn(new OutPoint(_.Transaction, _.N), witScript)
-                { Sequence = new Sequence(spendingTrx.LockTime.Value) };
+            return new TxIn(new OutPoint(_.Transaction, _.N))
+                { Sequence = new Sequence(spendingTrx.LockTime.Value),  WitScript = witScript};
         }));
         
         // Step 3 - calculate the fee and add a single output for all  inputs

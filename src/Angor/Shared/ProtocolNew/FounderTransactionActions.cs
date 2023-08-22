@@ -93,8 +93,7 @@ public class FounderTransactionActions : IFounderTransactionActions
         foreach (var trxHex in investmentTransactionsHex)
         {
             var trx = NBitcoin.Transaction.Parse(trxHex, nbitcoinNetwork);
-            var outputStage = AddInputToSpendingTransaction(projectInfo, stageNumber, trx, spendingTransaction,
-                AngorScripts.CreateControlBlockFounder);
+            var outputStage = AddInputToSpendingTransaction(projectInfo, stageNumber, trx, spendingTransaction);
             stageOutputs.Add(outputStage);
             builder.AddCoin( outputStage.ToCoin());
         }
@@ -104,19 +103,18 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         // Step 4 - sign the taproot inputs
         var trxData = spendingTransaction.PrecomputeTransactionData(stageOutputs.Select(_ => _.TxOut).ToArray());
-
+        const TaprootSigHash sigHash = TaprootSigHash.All;
+        var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
+        
         var inputIndex = 0;
         foreach (var input in spendingTransaction.Inputs)
         {
             var scriptToExecute = new NBitcoin.Script(input.WitScript[1]);
             var controlBlock = input.WitScript[2];
-
-            var sigHash = TaprootSigHash.All;// TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
-
+            
             var execData = new TaprootExecutionData(inputIndex, scriptToExecute.TaprootV1LeafHash) { SigHash = sigHash };
             var hash = spendingTransaction.GetSignatureHashTaproot(trxData, execData);
-
-            var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
+            
             var sig = key.SignTaprootKeySpend(hash, sigHash);
 
             Debug.Assert(key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature));
@@ -133,7 +131,7 @@ public class FounderTransactionActions : IFounderTransactionActions
     }
 
      private static IndexedTxOut AddInputToSpendingTransaction(ProjectInfo projectInfo, int stageNumber, NBitcoin.Transaction trx,
-         NBitcoin.Transaction spendingTransaction, Func<ProjectScripts,Script> func)
+         NBitcoin.Transaction spendingTransaction)
      {
          var stageOutput = trx.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1);
 
@@ -153,7 +151,7 @@ public class FounderTransactionActions : IFounderTransactionActions
              projectInfo.ExpiryDate,
              projectInfo.ProjectSeeders);
 
-         var controlBlock = func(scriptStages);
+         var controlBlock = AngorScripts.CreateControlBlockFounder(scriptStages);
          
          // use fake data for fee estimation
          var sigPlaceHolder = new byte[64];
