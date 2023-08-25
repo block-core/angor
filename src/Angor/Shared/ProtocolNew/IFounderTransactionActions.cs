@@ -6,7 +6,7 @@ namespace Angor.Shared.ProtocolNew;
 
 public interface IFounderTransactionActions
 {
-    List<string> FounderSignInvestorRecoveryTransactions(ProjectInfo projectInfo, string investmentTrxHex, 
+    List<string> SignInvestorRecoveryTransactions(ProjectInfo projectInfo, string investmentTrxHex, 
         IEnumerable<Transaction> transactions, string founderPrivateKey);
 
     Transaction SpendFounderStage(ProjectInfo projectInfo, IEnumerable<string> investmentTransactionsHex,
