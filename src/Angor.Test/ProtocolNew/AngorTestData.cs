@@ -25,19 +25,21 @@ public class AngorTestData
             new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
     }
     
-    protected ProjectInfo GivenValidProjectInvestmentInfo( WalletWords? words = null)
+    protected ProjectInfo GivenValidProjectInvestmentInfo( WalletWords? words = null, DateTime? startDate = null)
     {
         words ??= new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
+
+        startDate ??= DateTime.UtcNow;
         
         var projectInvestmentInfo = new ProjectInfo();
         projectInvestmentInfo.TargetAmount = 3;
-        projectInvestmentInfo.StartDate = DateTime.UtcNow;
-        projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
+        projectInvestmentInfo.StartDate = startDate.Value;
+        projectInvestmentInfo.ExpiryDate = startDate.Value.AddDays(5);
         projectInvestmentInfo.Stages = new List<Stage>
         {
-            new() { AmountToRelease = (decimal)0.1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
-            new() { AmountToRelease = (decimal)0.5, ReleaseDate = DateTime.UtcNow.AddDays(2) },
-            new() { AmountToRelease = (decimal)0.4, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+            new() { AmountToRelease = (decimal)0.1, ReleaseDate = startDate.Value.AddDays(1) },
+            new() { AmountToRelease = (decimal)0.5, ReleaseDate = startDate.Value.AddDays(2) },
+            new() { AmountToRelease = (decimal)0.4, ReleaseDate = startDate.Value.AddDays(3) }
         };
         projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
         projectInvestmentInfo.ProjectIdentifier =
