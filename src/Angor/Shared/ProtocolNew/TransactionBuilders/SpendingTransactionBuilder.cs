@@ -5,7 +5,7 @@ using Script = Blockcore.Consensus.ScriptInfo.Script;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 using uint256 = Blockcore.NBitcoin.uint256;
 
-namespace Angor.Shared.ProtocolNew;
+namespace Angor.Shared.ProtocolNew.TransactionBuilders;
 
 public class SpendingTransactionBuilder : ISpendingTransactionBuilder
 {

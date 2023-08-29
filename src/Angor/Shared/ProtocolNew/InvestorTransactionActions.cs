@@ -1,6 +1,7 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.ProtocolNew.Scripts;
+using Angor.Shared.ProtocolNew.TransactionBuilders;
 using NBitcoin;
 using Key = Blockcore.NBitcoin.Key;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;

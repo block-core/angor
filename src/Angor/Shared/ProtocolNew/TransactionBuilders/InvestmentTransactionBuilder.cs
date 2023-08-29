@@ -4,7 +4,7 @@ using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 
-namespace Angor.Shared.ProtocolNew;
+namespace Angor.Shared.ProtocolNew.TransactionBuilders;
 
 public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
 {

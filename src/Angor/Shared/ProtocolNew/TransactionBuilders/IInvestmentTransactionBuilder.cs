@@ -1,7 +1,7 @@
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 
-namespace Angor.Shared.ProtocolNew;
+namespace Angor.Shared.ProtocolNew.TransactionBuilders;
 
 public interface IInvestmentTransactionBuilder
 {
