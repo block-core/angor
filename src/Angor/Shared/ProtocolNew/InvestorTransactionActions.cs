@@ -4,7 +4,6 @@ using Angor.Shared.ProtocolNew.Scripts;
 using NBitcoin;
 using Key = Blockcore.NBitcoin.Key;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
-using WitScript = Blockcore.Consensus.TransactionInfo.WitScript;
 
 namespace Angor.Shared.ProtocolNew;
 
@@ -31,11 +30,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
         var stagesScript = projectInfo.Stages
-            .Select(_ => _investmentScriptBuilder.BuildInvestorScripts(projectInfo.FounderKey,
-                investorKey,
-                _.ReleaseDate,
-                projectInfo.ExpiryDate,
-                projectInfo.ProjectSeeders));
+            .Select((_,index) => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, index));
 
         return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript,
             totalInvestmentAmount);

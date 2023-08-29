@@ -99,11 +99,11 @@ public class SpendingTransactionBuilderTest : AngorTestData
 
         var mock = new Mock<IInvestmentScriptBuilder>();
 
-        mock.Setup(_ => _.BuildSSeederScripts(projectInfo.FounderKey, investorKey,
-                It.Is<DateTime>(_ => projectInfo.Stages.Exists(s => s.ReleaseDate == _))
-                , projectInfo.ExpiryDate, secretHash))
-            .Returns(expectedProjectScripts);
-
+        mock.Setup(_ =>
+            _.BuildProjectScriptsForStage(projectInfo, investorKey, It.Is<int>(_ => _ < projectInfo.Stages.Count),
+                secretHash
+            )).Returns(expectedProjectScripts);
+        
         var expectedFinalWitSig = GetRandomDataWitScript(3);
 
         _sut = new SpendingTransactionBuilder(_networkConfiguration.Object,

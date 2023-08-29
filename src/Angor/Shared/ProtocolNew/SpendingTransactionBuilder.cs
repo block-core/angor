@@ -47,11 +47,8 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         {
             var stageIndex = i + startStage;
             
-            var scriptStages = secretHash == null
-                ? _investmentScriptBuilder.BuildInvestorScripts(projectInfo.FounderKey, investorKey, 
-                    projectInfo.Stages[stageIndex].ReleaseDate, projectInfo.ExpiryDate, projectInfo.ProjectSeeders)
-                : _investmentScriptBuilder.BuildSSeederScripts(projectInfo.FounderKey, investorKey, 
-                    projectInfo.Stages[stageIndex].ReleaseDate, projectInfo.ExpiryDate, secretHash.ToString());
+            var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
+                    stageIndex, secretHash?.ToString());
 
             var witScript =  new WitScript(buildWitScriptWithSigPlaceholder(scriptStages).Pushes);
 

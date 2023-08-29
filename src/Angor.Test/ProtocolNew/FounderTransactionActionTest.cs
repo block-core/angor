@@ -3,13 +3,16 @@ using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
-using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP39;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
 using Moq;
 using Key = Blockcore.NBitcoin.Key;
+using Mnemonic = Blockcore.NBitcoin.BIP39.Mnemonic;
+using Money = Blockcore.NBitcoin.Money;
+using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
+using WordCount = Blockcore.NBitcoin.BIP39.WordCount;
+using Wordlist = Blockcore.NBitcoin.BIP39.Wordlist;
 
 namespace Angor.Test.ProtocolNew;
 
@@ -83,6 +86,54 @@ public class FounderTransactionActionTest : AngorTestData
 
         return operations.CreateInvestmentTransaction(network, context,
             Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+    }
+
+    [Fact]
+    public void SignInvestorRecoveryTransactions_()
+    {
+        var words = new WalletWords
+            { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+
+        var founderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
+        var funderReceiveCoinsKey = new Key();
+
+        var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
+
+        projectInvestmentInfo.ProjectSeeders = new ProjectSeeders
+        {
+            Threshold = 2,
+            SecretHashes = new List<string>
+            {
+                "e4759b9b7ea959f28b2594a14b3daf349178ba10405e1659fee35f763993e865",
+                "7fafd2f15123babbbb4a187edeb7dc3c2c6d917f998d2e6ee3e3b02c929d17ac",
+                "f5b567168806a449bd3b9ecc14f9fd63f478caad69169a9f1080508ea9f99075"
+            }
+        };
+
+        var investmentTrxHex =
+            "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000446a2103c298c205208c0c9e72528063f6fe5351d5c8d6db9c10a59f7c9447f858f31c3b2065e89339765fe3fe59165e4010ba789134af3d4ba194258bf259a97e9b9b75e480c3c9010000000022512017156ec0e463d67a17df8be2fd5fb4f4de965e8ddbbc1754e8c3748f9f178f7580d1f008000000002251207476a7cd846bd4cb4e9ce1b04bb9d542458ce1bc234a4d5c042e228e973f8e7b000e27070000000022512063ce95e900fe97d6521bcf038e3a27cbd8d809add5ca37602524df7428e765e700000000";
+
+        projectInvestmentInfo.PenaltyDate = DateTime.Now.AddMinutes(1000);
+
+        var investmentTrxBuilder = new InvestmentTransactionBuilder(_networkConfiguration.Object,
+            new ProjectScriptsBuilder(_derivationOperations),
+            new InvestmentScriptBuilder(new SeederScriptTreeBuilder())); 
+        
+        var transactions = investmentTrxBuilder.BuildUpfrontRecoverFundsTransactions(
+            Networks.Bitcoin.Testnet().CreateTransaction(investmentTrxHex), 
+            projectInvestmentInfo.PenaltyDate,
+            Encoders.Hex.EncodeData(funderReceiveCoinsKey.PubKey.ToBytes()));
+
+        var result = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, investmentTrxHex, transactions, Encoders.Hex.EncodeData(founderPrivateKey.ToBytes()));
+
+        Assert.NotEmpty(result);
+        
+        foreach (var signature in result)
+        {
+            //TODO get the hash for the verification
+            // Assert.True(founderPrivateKey.PubKey.Verify(new uint256(), 
+            //     new SchnorrSignature(TaprootSignature.Parse(signature).SchnorrSignature.ToBytes())));
+        }
     }
 
     //[Fact]

@@ -47,8 +47,9 @@ public class FounderTransactionActions : IFounderTransactionActions
             .Select(_ => NBitcoin.Transaction.Parse(_.ToHex(), nbitcoinNetwork)) //We need to convert to NBitcoin transactions
             .Select((stageTransaction, index) =>
             {
-                var scriptStages = GetProjectStagesScripts(projectInfo, index, investorKey,secretHash);
-            
+                var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
+                    index, secretHash?.ToString());
+                
                 var hash = stageTransaction.GetSignatureHashTaproot(new[] { investmentTransaction.Outputs[index + 2] },
                     new TaprootExecutionData(0,
                             new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash)
@@ -131,8 +132,9 @@ public class FounderTransactionActions : IFounderTransactionActions
 
          var (investorKey, secretHash) = GetProjectDetailsFromOpReturn(trx);
 
-         var scriptStages = GetProjectStagesScripts(projectInfo, stageNumber, investorKey, secretHash);
-         
+         var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
+             stageNumber - 1, secretHash?.ToString());
+
          var controlBlock = AngorScripts.CreateControlBlockFounder(scriptStages);
          
          // use fake data for fee estimation
@@ -151,15 +153,5 @@ public class FounderTransactionActions : IFounderTransactionActions
          return
              _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(
                  new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
-     }
-     
-     private ProjectScripts GetProjectStagesScripts(ProjectInfo projectInfo, int stageNumber,
-         string investorKey, uint256? secretHash)
-     {
-         return secretHash == null
-             ? _investmentScriptBuilder.BuildInvestorScripts(projectInfo.FounderKey, investorKey,
-                 projectInfo.Stages[stageNumber - 1].ReleaseDate, projectInfo.ExpiryDate, projectInfo.ProjectSeeders)
-             : _investmentScriptBuilder.BuildSSeederScripts(projectInfo.FounderKey, investorKey,
-                 projectInfo.Stages[stageNumber - 1].ReleaseDate, projectInfo.ExpiryDate, secretHash.ToString());
      }
 }

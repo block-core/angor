@@ -30,11 +30,8 @@ public class SeederTransactionActions : ISeederTransactionActions
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
         var stagesScript = projectInfo.Stages
-            .Select(_ => _investmentScriptBuilder.BuildSSeederScripts(projectInfo.FounderKey,
-                investorKey,
-                _.ReleaseDate,
-                projectInfo.ExpiryDate,
-                investorSecretHash));
+            .Select((_,index) => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo,
+                investorKey,index, investorSecretHash));
 
         return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript,
             totalInvestmentAmount);

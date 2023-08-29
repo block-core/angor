@@ -25,69 +25,49 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         });
     }
 
-    public ProjectScripts BuildSSeederScripts(string funderKey, string investorKey, DateTime founderLockTime, 
-        DateTime projectExpieryLocktime, string? secretHash)
+    public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
+        string? hashOfSecret)
     {
-        long locktimeFounder = Utils.DateTimeToUnixTime(founderLockTime);
-        long locktimeExpiery = Utils.DateTimeToUnixTime(projectExpieryLocktime);
-
-        return new()
+        // regular investor pre-co-sign with founder to gets funds with penalty
+        var recoveryOps = new List<Op>
         {
-            // funder gets funds after stage started
-            Founder = GetFounderSpendScript(funderKey, locktimeFounder),
-            //  seed investor pre-co-sign with founder to gets funds with penalty and must expose the secret
-            Recover = new Script(new List<Op>
+            Op.GetPushOp(new NBitcoin.PubKey(projectInfo.FounderKey).GetTaprootFullPubKey().ToBytes()),
+            OpcodeType.OP_CHECKSIGVERIFY,
+            Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+        };
+
+        var secretHashOps = string.IsNullOrEmpty(hashOfSecret)
+            ? new List<Op> { OpcodeType.OP_CHECKSIG }
+            : new List<Op>
             {
-                Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
-                OpcodeType.OP_CHECKSIGVERIFY,
-                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
                 OpcodeType.OP_HASH256,
-                Op.GetPushOp(new uint256(secretHash).ToBytes()),
+                Op.GetPushOp(new uint256(hashOfSecret).ToBytes()),
                 OpcodeType.OP_EQUAL
-            }),
-            // project ended and investor can collect remaining funds
-            EndOfProject = GetEndOfProjectInvestorSpendScript(investorKey, locktimeExpiery)
+            };
+        
+        recoveryOps.AddRange(secretHashOps);
+
+        var seeders = string.IsNullOrEmpty(hashOfSecret) && projectInfo.ProjectSeeders.SecretHashes.Any()
+            ? _seederScriptTreeBuilder.BuildSeederScriptTree(investorKey,
+                projectInfo.ProjectSeeders.Threshold,
+                projectInfo.ProjectSeeders.SecretHashes).ToList()
+            : new List<Script>();
+        
+        return new()
+        {
+            Founder = GetFounderSpendScript(projectInfo.FounderKey, projectInfo.Stages[stageIndex].ReleaseDate),
+            Recover = new Script(recoveryOps),
+            EndOfProject = GetEndOfProjectInvestorSpendScript(investorKey, projectInfo.ExpiryDate),
+            Seeders = seeders
         };
     }
 
-    public ProjectScripts BuildInvestorScripts(string funderKey, string investorKey, DateTime founderLockTime,
-        DateTime projectExpieryLocktime, ProjectSeeders seeders)
+    private static Script GetFounderSpendScript(string funderKey, DateTime stageReleaseDate)
     {
-        long locktimeFounder = Utils.DateTimeToUnixTime(founderLockTime);
-        long locktimeExpiery = Utils.DateTimeToUnixTime(projectExpieryLocktime);
-
-        ProjectScripts projectScripts = new()
-        {
-
-            // funder gets funds after stage started
-            Founder = GetFounderSpendScript(funderKey, locktimeFounder),
-            // regular investor pre-co-sign with founder to gets funds with penalty
-            Recover = new Script(new List<Op>
-            {
-                Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
-                OpcodeType.OP_CHECKSIGVERIFY,
-                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
-                OpcodeType.OP_CHECKSIG
-            }),
-            // project ended and investor can collect remaining funds
-            EndOfProject = GetEndOfProjectInvestorSpendScript(investorKey, locktimeExpiery)
-        };
-
-        if (seeders.SecretHashes.Any())
-        {
-            // all the combinations of penalty free recovery based on a threshold of seeder secret hashes
-            var seederHashes = _seederScriptTreeBuilder.BuildSeederScriptTree(investorKey, seeders.Threshold,
-                seeders.SecretHashes);
-
-            projectScripts.Seeders.AddRange(seederHashes);
-        }
-
-        return projectScripts;
-    }
-
-    private static Script GetFounderSpendScript(string funderKey, long locktimeFounder)
-    {
+        long locktimeFounder = Utils.DateTimeToUnixTime(stageReleaseDate);   
+        
+        // funder gets funds after stage started
         return new Script(new List<Op>
         {
             Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
@@ -97,8 +77,11 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         });
     }
 
-    private static Script GetEndOfProjectInvestorSpendScript(string investorKey, long locktimeExpiery)
+    private static Script GetEndOfProjectInvestorSpendScript(string investorKey, DateTime projectExpieryDate)
     {
+        long locktimeExpiery = Utils.DateTimeToUnixTime(projectExpieryDate);
+        
+        // project ended and investor can collect remaining funds
         return new Script(new List<Op>
         {
             Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),

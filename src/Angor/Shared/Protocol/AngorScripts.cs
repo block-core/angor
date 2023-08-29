@@ -1,10 +1,9 @@
-﻿using System.Net.Sockets;
+﻿using System.Linq.Expressions;
 using System.Text;
 using Blockcore.NBitcoin;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
-using uint256 = NBitcoin.uint256;
 
 
 namespace Angor.Shared.Protocol
@@ -45,6 +44,18 @@ namespace Angor.Shared.Protocol
             var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
 
             ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(scripts.Recover.ToBytes()),
+                (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
+
+            return new Script(controlBlock.ToBytes());
+        }
+        
+        public static Script CreateControlBlock(ProjectScripts scripts, Expression<Func<ProjectScripts,Script>> func)
+        {
+            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
+
+            var script = func.Compile().Invoke(scripts);
+            
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(script.ToBytes()),
                 (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
 
             return new Script(controlBlock.ToBytes());
