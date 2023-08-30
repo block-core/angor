@@ -135,7 +135,7 @@ public class FounderTransactionActions : IFounderTransactionActions
          var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
              stageNumber - 1, secretHash?.ToString());
 
-         var controlBlock = AngorScripts.CreateControlBlockFounder(scriptStages);
+         var controlBlock = AngorScripts.CreateControlBlock(scriptStages, _ => _.Founder);
          
          // use fake data for fee estimation
          var sigPlaceHolder = new byte[64];

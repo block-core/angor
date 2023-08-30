@@ -172,7 +172,7 @@ public class InvestmentOperations
                 context.ProjectInfo.ExpiryDate,
                 context.ProjectSeeders);
 
-            var controlBlock = AngorScripts.CreateControlBlockFounder(scriptStages);
+            var controlBlock = AngorScripts.CreateControlBlock(scriptStages, _ => _.Founder);
 
             // use fake data for fee estimation
             var fakeSig = new byte[64];
@@ -285,9 +285,10 @@ public class InvestmentOperations
                 new TaprootExecutionData(0, 
                         new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash)
                     { SigHash = sigHash });
+
             
             var signature = key.SignTaprootKeySpend(hash, sigHash);
-
+            
             return signature.ToString();
 
         }).ToList();
@@ -317,7 +318,7 @@ public class InvestmentOperations
                 context.ProjectInfo.ExpiryDate,
                 context.ProjectInfo.ProjectSeeders);
             
-            var controlBlock = AngorScripts.CreateControlBlockRecover(projectScripts);
+            var controlBlock = AngorScripts.CreateControlBlock(projectScripts, _ => _.Recover);
             
             var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
@@ -410,7 +411,7 @@ public class InvestmentOperations
                 context.ProjectInfo.ExpiryDate,
                 context.ProjectInfo.ProjectSeeders);
 
-            var controlBlock = AngorScripts.CreateControlBlockExpiry(scriptStages);
+            var controlBlock = AngorScripts.CreateControlBlock(scriptStages, _ => _.EndOfProject);
 
             // use fake data for fee estimation
             var fakeSig = new byte[64];

@@ -50,7 +50,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             projectScripts =>
             {
-                var controlBlock = AngorScripts.CreateControlBlockExpiry(projectScripts); //TODO replace call to interface
+                var controlBlock = AngorScripts.CreateControlBlock(projectScripts, _ => _.EndOfProject);
                 var fakeSig = new byte[64];
                 return new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(fakeSig),
                     NBitcoin.Op.GetPushOp(projectScripts.EndOfProject.ToBytes()),

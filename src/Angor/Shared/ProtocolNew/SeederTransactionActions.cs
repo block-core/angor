@@ -51,7 +51,7 @@ public class SeederTransactionActions : ISeederTransactionActions
             investorReceiveAddress, investorPrivateKey, new FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             _ =>
             {
-                var controlBlock = AngorScripts.CreateControlBlockExpiry(_); //TODO replace call to interface
+                var controlBlock = AngorScripts.CreateControlBlock(_, script => script.EndOfProject);
                 var fakeSig = new byte[64];
                 return new WitScript(Op.GetPushOp(fakeSig), Op.GetPushOp(_.EndOfProject.ToBytes()),
                     Op.GetPushOp(controlBlock.ToBytes()));
