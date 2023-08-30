@@ -192,19 +192,15 @@ public class FounderTransactionActionTest : AngorTestData
         var funderReceiveCoinsKey = new Key();
 
         var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
-
-        // create founder context
+        
         var transactionList = new List<Transaction>();
-
-        // create seeder1 investment transaction
-
+        
         transactionList.Add(GivenASeederTransaction(projectInvestmentInfo));
         transactionList.Add(GivenASeederTransaction(projectInvestmentInfo));
         transactionList.Add(GivenASeederTransaction(projectInvestmentInfo));
         transactionList.Add(GivenAnInvestorTransaction(projectInvestmentInfo));
         transactionList.Add(GivenAnInvestorTransaction(projectInvestmentInfo));
-
-        // spend all investment transactions for stage 1
+        
         var founderTrxSpendStageOne = _sut.SpendFounderStage(projectInvestmentInfo,
             transactionList.Select(_ => _.ToHex()), stageNumber,
             funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderPrivateKey.ToBytes())

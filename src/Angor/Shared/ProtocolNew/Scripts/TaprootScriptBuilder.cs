@@ -11,11 +11,11 @@ namespace Angor.Shared.ProtocolNew.Scripts;
 
 public class TaprootScriptBuilder : ITaprootScriptBuilder
 {
-    public Script CreateControlBlock(ProjectScripts scripts, Expression<Func<ProjectScripts,Script>> func)
+    public Script CreateControlBlock(ProjectScripts scripts, Expression<Func<ProjectScripts,Script>> scriptSelector)
     {
         var treeInfo = BuildTaprootSpendInfo(scripts);
 
-        var script = func.Compile().Invoke(scripts);
+        var script = scriptSelector.Compile().Invoke(scripts);
             
         ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(script.ToBytes()),
             (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
