@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Angor.Shared.Models;
-using Angor.Shared.Protocol;
+//using Angor.Shared.Protocol;
 using Angor.Shared.ProtocolNew.Scripts;
 using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;
@@ -21,12 +21,14 @@ public class FounderTransactionActions : IFounderTransactionActions
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly IProjectScriptsBuilder _projectScriptsBuilder;
     private readonly IInvestmentScriptBuilder _investmentScriptBuilder;
+    private readonly ITaprootScriptBuilder _taprootScriptBuilder;
     
-    public FounderTransactionActions(INetworkConfiguration networkConfiguration, IProjectScriptsBuilder projectScriptsBuilder, IInvestmentScriptBuilder investmentScriptBuilder)
+    public FounderTransactionActions(INetworkConfiguration networkConfiguration, IProjectScriptsBuilder projectScriptsBuilder, IInvestmentScriptBuilder investmentScriptBuilder, ITaprootScriptBuilder taprootScriptBuilder)
     {
         _networkConfiguration = networkConfiguration;
         _projectScriptsBuilder = projectScriptsBuilder;
         _investmentScriptBuilder = investmentScriptBuilder;
+        _taprootScriptBuilder = taprootScriptBuilder;
     }
 
     public List<string> SignInvestorRecoveryTransactions(ProjectInfo projectInfo, string investmentTrxHex, 
@@ -135,7 +137,7 @@ public class FounderTransactionActions : IFounderTransactionActions
          var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
              stageNumber - 1, secretHash?.ToString());
 
-         var controlBlock = AngorScripts.CreateControlBlock(scriptStages, _ => _.Founder);
+         var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Founder);
          
          // use fake data for fee estimation
          var sigPlaceHolder = new byte[64];

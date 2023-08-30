@@ -1,4 +1,5 @@
 using Angor.Server;
+using Angor.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blockcore.AtomicSwaps.Server.Controllers

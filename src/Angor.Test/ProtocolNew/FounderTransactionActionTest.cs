@@ -49,7 +49,7 @@ public class FounderTransactionActionTest : AngorTestData
 
 
         _sut = new FounderTransactionActions(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations),
-            new InvestmentScriptBuilder(new SeederScriptTreeBuilder()));
+            new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder());
     }
 
     private Transaction GivenASeederTransaction(ProjectInfo projectInvestmentInfo)

@@ -1,3 +1,4 @@
+using Angor.Shared.Models;
 using NBitcoin;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 

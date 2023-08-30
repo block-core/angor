@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using System.Text;
+using Angor.Shared.Models;
 using Blockcore.NBitcoin;
 using NBitcoin;
 using NBitcoin.Crypto;

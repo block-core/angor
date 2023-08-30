@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace Angor.Shared.Models;
 
 /// <summary>
 /// Encapsulates the public information related to an investment project.

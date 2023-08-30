@@ -1,5 +1,5 @@
 using Angor.Shared.Models;
-using Angor.Shared.Protocol;
+//using Angor.Shared.Protocol;
 using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
 using NBitcoin;
@@ -14,13 +14,15 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     private readonly IProjectScriptsBuilder _projectScriptsBuilder;
     private readonly ISpendingTransactionBuilder _spendingTransactionBuilder;
     private readonly IInvestmentTransactionBuilder _investmentTransactionBuilder;
+    private readonly ITaprootScriptBuilder _taprootScriptBuilder;
 
-    public InvestorTransactionActions(IInvestmentScriptBuilder investmentScriptBuilder, IProjectScriptsBuilder projectScriptsBuilder, ISpendingTransactionBuilder spendingTransactionBuilder, IInvestmentTransactionBuilder investmentTransactionBuilder)
+    public InvestorTransactionActions(IInvestmentScriptBuilder investmentScriptBuilder, IProjectScriptsBuilder projectScriptsBuilder, ISpendingTransactionBuilder spendingTransactionBuilder, IInvestmentTransactionBuilder investmentTransactionBuilder, ITaprootScriptBuilder taprootScriptBuilder)
     {
         _investmentScriptBuilder = investmentScriptBuilder;
         _projectScriptsBuilder = projectScriptsBuilder;
         _spendingTransactionBuilder = spendingTransactionBuilder;
         _investmentTransactionBuilder = investmentTransactionBuilder;
+        _taprootScriptBuilder = taprootScriptBuilder;
     }
 
     public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey,
@@ -50,7 +52,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             projectScripts =>
             {
-                var controlBlock = AngorScripts.CreateControlBlock(projectScripts, _ => _.EndOfProject);
+                var controlBlock = _taprootScriptBuilder.CreateControlBlock(projectScripts, _ => _.EndOfProject);
                 var fakeSig = new byte[64];
                 return new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(fakeSig),
                     NBitcoin.Op.GetPushOp(projectScripts.EndOfProject.ToBytes()),
@@ -76,7 +78,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             _ =>
             {
-                var result = AngorScripts.CreateControlSeederSecrets(_, secrets.ToArray());
+                var result = _taprootScriptBuilder.CreateControlSeederSecrets(_, secrets.ToArray());
 
                 // use fake data for fee estimation
                 var fakeSig = new byte[64];

@@ -1,5 +1,7 @@
 using Blockcore.Consensus.ScriptInfo;
 
+namespace Angor.Shared.Models;
+
 public class ProjectScripts
 {
     public Script Founder { get; set; }

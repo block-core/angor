@@ -1,3 +1,4 @@
+using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
@@ -34,7 +35,8 @@ public class SeederTransactionActionsTest : AngorTestData
                 _networkConfiguration.Object,
                 _projectScriptsBuilder.Object,
                 new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
-            _investmentTransactionBuilder.Object);
+            _investmentTransactionBuilder.Object,
+            new TaprootScriptBuilder());
     }
 
     [Fact]

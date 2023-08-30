@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Angor.Shared.Models;
 
 /// <summary>
 /// Contains all the requisite information for an investor to formulate an investment transaction.

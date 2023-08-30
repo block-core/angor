@@ -1,3 +1,4 @@
+using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 
 namespace Angor.Shared.ProtocolNew.Scripts;

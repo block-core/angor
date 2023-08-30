@@ -1,3 +1,4 @@
+using Angor.Shared.Models;
 using Angor.Shared.ProtocolNew.Scripts;
 using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;

@@ -1,5 +1,5 @@
 using Angor.Shared.Models;
-using Angor.Shared.Protocol;
+//using Angor.Shared.Protocol;
 using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
 using NBitcoin;
@@ -13,14 +13,16 @@ public class SeederTransactionActions : ISeederTransactionActions
     private readonly IProjectScriptsBuilder _projectScriptsBuilder;
     private readonly ISpendingTransactionBuilder _spendingTransactionBuilder;
     private readonly IInvestmentTransactionBuilder _investmentTransactionBuilder;
+    private readonly ITaprootScriptBuilder _taprootScriptBuilder;
 
     public SeederTransactionActions(IInvestmentScriptBuilder investmentScriptBuilder, IProjectScriptsBuilder projectScriptsBuilder, 
-        ISpendingTransactionBuilder spendingTransactionBuilder, IInvestmentTransactionBuilder investmentTransactionBuilder)
+        ISpendingTransactionBuilder spendingTransactionBuilder, IInvestmentTransactionBuilder investmentTransactionBuilder, ITaprootScriptBuilder taprootScriptBuilder)
     {
         _investmentScriptBuilder = investmentScriptBuilder;
         _projectScriptsBuilder = projectScriptsBuilder;
         _spendingTransactionBuilder = spendingTransactionBuilder;
         _investmentTransactionBuilder = investmentTransactionBuilder;
+        _taprootScriptBuilder = taprootScriptBuilder;
     }
 
     public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey,
@@ -51,7 +53,7 @@ public class SeederTransactionActions : ISeederTransactionActions
             investorReceiveAddress, investorPrivateKey, new FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             _ =>
             {
-                var controlBlock = AngorScripts.CreateControlBlock(_, script => script.EndOfProject);
+                var controlBlock = _taprootScriptBuilder.CreateControlBlock(_, script => script.EndOfProject);
                 var fakeSig = new byte[64];
                 return new WitScript(Op.GetPushOp(fakeSig), Op.GetPushOp(_.EndOfProject.ToBytes()),
                     Op.GetPushOp(controlBlock.ToBytes()));

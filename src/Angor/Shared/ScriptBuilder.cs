@@ -2,6 +2,7 @@ using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using System.Collections.Generic;
+using Angor.Shared.Models;
 
 namespace Angor.Shared;
 
