@@ -42,9 +42,9 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             totalInvestmentAmount);
     }
 
-    public IEnumerable<Transaction> BuildRecoverInvestorFundsTransactions(Transaction investmentTransaction, DateTime penaltyDate, string investorReceiveAddress)
+    public Transaction BuildRecoverInvestorFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate, string investorReceiveAddress)
     {
-        return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransactions(investmentTransaction, penaltyDate,
+        return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(investmentTransaction, penaltyDate,
             investorReceiveAddress);
     }
 

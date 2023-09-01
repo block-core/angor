@@ -10,6 +10,7 @@
 @using Blockcore.NBitcoin.Crypto
 @using Blockcore.NBitcoin.DataEncoders
 @using Microsoft.Extensions.Logging.Abstractions
+@using System.Text
 <h3>CheckTransactionCode</h3>
 
 @inject IWalletOperations _walletOperations; 
@@ -151,10 +152,9 @@ else
 
         context.TransactionHex = transaction.ToHex();
 
-        var transactions = SeederTransactionActions.BuildRecoverSeederFundsTransactions(transaction, context.ProjectInfo.PenaltyDate, testAddress.PubKey.ToHex())
-            .ToList();
+        var recoveryTransaction = SeederTransactionActions.BuildRecoverSeederFundsTransaction(transaction, context.ProjectInfo.PenaltyDate, testAddress.PubKey.ToHex());
 
-        var signatures = FounderTransactionActions.SignInvestorRecoveryTransactions(context.ProjectInfo, context.TransactionHex, transactions, Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()));
+        var signatures = FounderTransactionActions.SignInvestorRecoveryTransactions(context.ProjectInfo, context.TransactionHex, recoveryTransaction, Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()));
 
         var sendInfo = new SendInfo
         {
@@ -170,9 +170,10 @@ else
         context.TransactionHex = _investmentOperations.SignInvestmentTransaction(network, context.ChangeAddress, transaction, walletWords, sendInfo.SendUtxos.Values.ToList(),
             fee.First())
             .ToHex();
-        
-        _investmentOperations.AddWitScriptToInvestorRecoveryTransactions(context, network, transactions, signatures, extendedKey.PrivateKey.ToHex(network.Consensus.ConsensusFactory), null);
-        
+
+        SeederTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(context.ProjectInfo, transaction, testAddress.PubKey.ToHex(), signatures, Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()), 
+            Encoders.Hex.EncodeData(secret.ToBytes()));
+
         founderTransaction = FounderTransactionActions.SpendFounderStage(context.ProjectInfo, new List<string>(){ transaction.ToHex()}, 1,
             testAddress.ScriptPubKey , privateFounderKey.PrivateKey.ToHex(network.Consensus.ConsensusFactory), fee.First());
         

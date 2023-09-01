@@ -7,7 +7,7 @@ namespace Angor.Shared.ProtocolNew;
 public interface ISeederTransactionActions
 {
     Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey, uint256 investorSecretHash, long totalInvestmentAmount);
-    IEnumerable<Transaction> BuildRecoverSeederFundsTransactions(Transaction investmentTransaction, DateTime penaltyDate, string investorReceiveAddress);
+    Transaction BuildRecoverSeederFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate, string investorReceiveAddress);
     Transaction RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex, string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation);
 
     Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,

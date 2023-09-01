@@ -45,9 +45,10 @@ public class SeederTransactionActions : ISeederTransactionActions
             totalInvestmentAmount);
     }
     
-    public IEnumerable<Transaction> BuildRecoverSeederFundsTransactions(Transaction investmentTransaction, DateTime penaltyDate, string investorReceiveAddress)
+    public Transaction BuildRecoverSeederFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate,
+        string investorReceiveAddress)
     {
-        return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransactions(investmentTransaction, penaltyDate,
+        return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(investmentTransaction, penaltyDate,
             investorReceiveAddress);
     }
 
@@ -61,6 +62,13 @@ public class SeederTransactionActions : ISeederTransactionActions
         
         var nBitcoinTransaction = NBitcoin.Transaction.Parse(transaction.ToHex(), 
             NetworkMapper.Map(_networkConfiguration.GetNetwork()));
+
+        var outputs = investmentTransaction.Outputs.AsIndexedOutputs()
+            .Where(_ => _.N > 1)
+            .Select(blockcoreTxOut => new TxOut(
+                    new Money(blockcoreTxOut.TxOut.Value.Satoshi),
+                    new Script(blockcoreTxOut.TxOut.ScriptPubKey.ToBytes())))
+            .ToArray();
         
         var key = new Key(Encoders.Hex.DecodeData(privateKey));
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
@@ -71,10 +79,7 @@ public class SeederTransactionActions : ISeederTransactionActions
 
             var controlBlock = _taprootScriptBuilder.CreateControlBlock(projectScripts, _ => _.Recover);
 
-            var blockcoreTxOut = investmentTransaction.Outputs[2 + stageIndex];
-            var nBitcoinTxOut = new TxOut(new Money(blockcoreTxOut.Value.Satoshi), new Script(blockcoreTxOut.ScriptPubKey.ToBytes()));
-
-            var hash = nBitcoinTransaction.GetSignatureHashTaproot(new[] { nBitcoinTxOut },
+            var hash = nBitcoinTransaction.GetSignatureHashTaproot(outputs,
                 new TaprootExecutionData(
                         stageIndex, 
                         new NBitcoin.Script(projectScripts.Recover.ToBytes()).TaprootV1LeafHash)

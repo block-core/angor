@@ -120,11 +120,11 @@ public class InvestmentTransactionBuilderTest : AngorTestData
         _investmentScriptBuilder.Setup(_ => _.GetInvestorPenaltyTransactionScript(It.IsAny<string>(), It.IsAny<DateTime>()))
             .Returns(new Key().ScriptPubKey);
         
-        var recoveryTransactions = _sut.BuildUpfrontRecoverFundsTransactions(investmentTrx, DateTime.Now.AddMonths(6), 
+        var recoveryTransaction = _sut.BuildUpfrontRecoverFundsTransaction(investmentTrx, DateTime.Now.AddMonths(6), 
             Encoders.Hex.EncodeData(changeAddress.PubKey.ToBytes()));
 
         //All inputs are from the investment transaction outputs
-        Assert.Contains(recoveryTransactions.SelectMany(_ => _.Inputs.AsIndexedInputs()),
+        Assert.Contains(recoveryTransaction.Inputs.AsIndexedInputs(),
             _ => investmentTrx.Outputs.AsIndexedOutputs().Any(o => o.ToOutPoint().Equals(_.PrevOut)));
     }
     
@@ -143,11 +143,11 @@ public class InvestmentTransactionBuilderTest : AngorTestData
         _investmentScriptBuilder.Setup(_ => _.GetInvestorPenaltyTransactionScript(expectedAddress, expectedDateTime))
             .Returns(expectedScript);
 
-        var recoveryTransactions = _sut.BuildUpfrontRecoverFundsTransactions(investmentTrx, 
+        var recoveryTransaction = _sut.BuildUpfrontRecoverFundsTransaction(investmentTrx, 
             expectedDateTime, expectedAddress);
         
         //All outputs pay to the penalty script
-        Assert.Contains(recoveryTransactions.SelectMany(_ => _.Outputs).ToList(),
+        Assert.Contains(recoveryTransaction.Outputs,
             _ => _.ScriptPubKey.ToHex().Equals(expectedScript.WitHash.ScriptPubKey.ToHex()));
     }
 }

@@ -32,7 +32,7 @@ public class FounderTransactionActions : IFounderTransactionActions
     }
 
     public List<string> SignInvestorRecoveryTransactions(ProjectInfo projectInfo, string investmentTrxHex, 
-        IEnumerable<Transaction> transactions, string founderPrivateKey)
+        Transaction recoveryTransaction, string founderPrivateKey)
     {
         var network = _networkConfiguration.GetNetwork();
         
@@ -43,17 +43,23 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         var (investorKey, secretHash) = GetProjectDetailsFromOpReturn(investmentTransaction);
         
+        var outputs = investmentTransaction.Outputs.AsIndexedOutputs()
+            .Where(_ => _.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))
+            .Select(_ => _.TxOut)
+            .ToArray();
+
         const TaprootSigHash sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
-        
-        return transactions
-            .Select(_ => NBitcoin.Transaction.Parse(_.ToHex(), nbitcoinNetwork)) //We need to convert to NBitcoin transactions
-            .Select((stageTransaction, index) =>
+
+        var nBitcoinTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork); //We need to convert to NBitcoin transactions 
+
+        return Enumerable.Range(0,recoveryTransaction.Outputs.Count)
+            .Select(index =>
             {
                 var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
                     index, secretHash);
                 
-                var hash = stageTransaction.GetSignatureHashTaproot(new[] { investmentTransaction.Outputs[index + 2] },
-                    new TaprootExecutionData(0,
+                var hash = nBitcoinTransaction.GetSignatureHashTaproot(outputs ,
+                    new TaprootExecutionData(index,
                             new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash)
                         { SigHash = sigHash });
 
