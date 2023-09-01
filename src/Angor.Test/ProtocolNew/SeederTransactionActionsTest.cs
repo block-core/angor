@@ -36,7 +36,8 @@ public class SeederTransactionActionsTest : AngorTestData
                 _projectScriptsBuilder.Object,
                 new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
             _investmentTransactionBuilder.Object,
-            new TaprootScriptBuilder());
+            new TaprootScriptBuilder(),
+            _networkConfiguration.Object);
     }
 
     [Fact]
@@ -45,7 +46,7 @@ public class SeederTransactionActionsTest : AngorTestData
             var projectInvestmentInfo = GivenValidProjectInvestmentInfo();
 
             var investorKey = Encoders.Hex.EncodeData( new Key().PubKey.ToBytes());
-            var investorSecret = Hashes.Hash256( new Key().ToBytes()).ToString();
+            var investorSecret = Hashes.Hash256( new Key().ToBytes());
             // create the investment transaction
 
             var expectedOpReturnScript = new Key().ScriptPubKey;
@@ -72,7 +73,7 @@ public class SeederTransactionActionsTest : AngorTestData
         var projectInvestmentInfo = GivenValidProjectInvestmentInfo();
 
         var investorKey = Encoders.Hex.EncodeData(new Key().PubKey.ToBytes());
-        var investorSecret = Hashes.Hash256(new Key().ToBytes()).ToString();
+        var investorSecret = Hashes.Hash256(new Key().ToBytes());
         // create the investment transaction
         
         var expectedProjectScripts = new ProjectScripts{ Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() };

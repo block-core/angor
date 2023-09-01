@@ -7,6 +7,7 @@ using Blockcore.NBitcoin.DataEncoders;
 using Moq;
 using NBitcoin;
 using Key = Blockcore.NBitcoin.Key;
+using uint256 = Blockcore.NBitcoin.uint256;
 
 namespace Angor.Test.ProtocolNew.TransactionBuilders;
 
@@ -91,7 +92,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
 
         var projectInfo = GivenValidProjectInvestmentInfo();
 
-        var secretHash = "e1449d99d4861ff66a41e316d5605a37d79168a954b4f9cd0bb4656c7cd5dcfc";
+        var secretHash = uint256.Parse("e1449d99d4861ff66a41e316d5605a37d79168a954b4f9cd0bb4656c7cd5dcfc");
         var investorKey = "03eb7d47c80390672435987b9a7ecaa22730cd9c4537fc8d257417fb058248ed77";
         var expectedProjectScripts = new ProjectScripts
         {

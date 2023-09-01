@@ -4,6 +4,7 @@ using Angor.Shared.ProtocolNew.Scripts;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
+using TxIn = Blockcore.Consensus.TransactionInfo.TxIn;
 
 namespace Angor.Shared.ProtocolNew.TransactionBuilders;
 
@@ -71,5 +72,24 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
 
                 return network.Consensus.ConsensusFactory.CreateTransaction(stageTransaction.ToHex());;
             });
+    }
+
+    public Transaction BuildUpfrontRecoverFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate,
+        string investorReceiveAddress)
+    {
+        var spendingScript = _investmentScriptBuilder.GetInvestorPenaltyTransactionScript(
+            investorReceiveAddress,
+            penaltyDate);
+
+        var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
+
+        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Where(_ => _.N > 1))
+        {
+            transaction.Inputs.Add( new TxIn(output.ToOutPoint()));
+
+            transaction.Outputs.Add(new TxOut(output.TxOut.Value, spendingScript.WitHash.ScriptPubKey));
+        }
+
+        return transaction;
     }
 }

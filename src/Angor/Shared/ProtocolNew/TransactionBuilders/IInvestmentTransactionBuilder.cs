@@ -11,4 +11,7 @@ public interface IInvestmentTransactionBuilder
 
     IEnumerable<Transaction> BuildUpfrontRecoverFundsTransactions(Transaction investmentTransaction, DateTime penaltyDate,
         string investorReceiveAddress);
+    
+    Transaction BuildUpfrontRecoverFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate,
+        string investorReceiveAddress);
 }

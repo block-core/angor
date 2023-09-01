@@ -50,7 +50,7 @@ public class FounderTransactionActions : IFounderTransactionActions
             .Select((stageTransaction, index) =>
             {
                 var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
-                    index, secretHash?.ToString());
+                    index, secretHash);
                 
                 var hash = stageTransaction.GetSignatureHashTaproot(new[] { investmentTransaction.Outputs[index + 2] },
                     new TaprootExecutionData(0,
@@ -135,7 +135,7 @@ public class FounderTransactionActions : IFounderTransactionActions
          var (investorKey, secretHash) = GetProjectDetailsFromOpReturn(trx);
 
          var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
-             stageNumber - 1, secretHash?.ToString());
+             stageNumber - 1, secretHash);
 
          var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Founder);
          

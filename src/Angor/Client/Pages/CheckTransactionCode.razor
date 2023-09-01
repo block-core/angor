@@ -145,7 +145,7 @@ else
             }
         };
 
-        transaction = SeederTransactionActions.CreateInvestmentTransaction(context.ProjectInfo, pubKey.ToHex(), Hashes.Hash256(secret.ToBytes()).ToString()
+        transaction = SeederTransactionActions.CreateInvestmentTransaction(context.ProjectInfo, pubKey.ToHex(), Hashes.Hash256(secret.ToBytes())
             , 1000000); 
             //_investmentOperations.CreateInvestmentTransaction(network, context, 1000000);
 

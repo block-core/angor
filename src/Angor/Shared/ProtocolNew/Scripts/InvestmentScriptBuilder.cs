@@ -27,7 +27,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
     }
 
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
-        string? hashOfSecret)
+        uint256? hashOfSecret)
     {
         // regular investor pre-co-sign with founder to gets funds with penalty
         var recoveryOps = new List<Op>
@@ -37,7 +37,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
             Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
         };
 
-        var secretHashOps = string.IsNullOrEmpty(hashOfSecret)
+        var secretHashOps = hashOfSecret == null
             ? new List<Op> { OpcodeType.OP_CHECKSIG }
             : new List<Op>
             {
@@ -49,7 +49,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         
         recoveryOps.AddRange(secretHashOps);
 
-        var seeders = string.IsNullOrEmpty(hashOfSecret) && projectInfo.ProjectSeeders.SecretHashes.Any()
+        var seeders = hashOfSecret == null && projectInfo.ProjectSeeders.SecretHashes.Any()
             ? _seederScriptTreeBuilder.BuildSeederScriptTree(investorKey,
                 projectInfo.ProjectSeeders.Threshold,
                 projectInfo.ProjectSeeders.SecretHashes).ToList()

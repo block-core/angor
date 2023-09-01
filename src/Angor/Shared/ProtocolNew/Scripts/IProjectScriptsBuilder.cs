@@ -8,7 +8,7 @@ public interface IProjectScriptsBuilder
     Script GetAngorFeeOutputScript(string angorKey);
     Script BuildInvestorInfoScript(string investorKey);
     
-    Script BuildSeederInfoScript(string investorKey, string secretHash);
+    Script BuildSeederInfoScript(string investorKey, uint256 secretHash);
     
     (string investorKey, uint256? secretHash) GetInvestmentDataFromOpReturnScript(Script script);
 }
