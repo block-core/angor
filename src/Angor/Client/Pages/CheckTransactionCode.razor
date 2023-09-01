@@ -3,9 +3,11 @@
 @using Angor.Client.Storage
 @using Angor.Shared
 @using Angor.Shared.Models
+@using Angor.Shared.ProtocolNew
 @using Blockcore.Consensus.ScriptInfo
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.BIP32
+@using Blockcore.NBitcoin.Crypto
 @using Blockcore.NBitcoin.DataEncoders
 @using Microsoft.Extensions.Logging.Abstractions
 <h3>CheckTransactionCode</h3>
@@ -15,6 +17,8 @@
 @inject IClientStorage storage;
 @inject IWalletStorage _walletStorage;
 @inject IHdOperations _hdOperations;
+@inject ISeederTransactionActions SeederTransactionActions;
+@inject IFounderTransactionActions FounderTransactionActions;
 
 <div class="container mt-4">
     <h1 class="mb-4">Dashboard</h1>
@@ -97,8 +101,8 @@ else
 
     private async Task CreateInvestmentTransaction()
     {
-        DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration);
-
+         DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration);
+        
         _investmentOperations = new InvestmentOperations(_walletOperations, derivationOperations);
         var network = _networkConfiguration.GetNetwork();
         localAccountInfo = GetAccountInfoFromStorage();
@@ -107,11 +111,18 @@ else
         var walletWords = _walletStorage.GetWallet();
         var extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
 
-        var privateFounderKey = extendedKey.Derive(new KeyPath("m/84'/1'/0'/0/3"));
+        var privateFounderKey = extendedKey.Derive(new KeyPath("m/84'/1'/0'/0/3")); //derive a different path for the founder keys testing
         
         var pubKey = _hdOperations.GeneratePublicKey(accountExtPubKey, localAccountInfo.LastFetchIndex + 1, false);
-        var angorPubKey = _hdOperations.GeneratePublicKey(accountExtPubKey, localAccountInfo.LastFetchIndex + 3, false);
 
+        string angorRootKey =
+            "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
+        
+        //var angorPubKey = _hdOperations.GeneratePublicKey(accountExtPubKey, localAccountInfo.LastFetchIndex + 3, false);
+
+        var secret = new Key();
+        var testAddress = new Key();
+        
         var context = new InvestorContext
         {
             ChangeAddress = localAccountInfo.ChangeAddressesInfo.First().Address,
@@ -129,12 +140,21 @@ else
                 PenaltyDate = DateTime.Now.AddMinutes(1000),
                 StartDate = DateTime.Now,
                 TargetAmount = 10,
-                ProjectIdentifier = angorPubKey.ToHex()
-            },
-            ProjectSeeders = new ProjectSeeders()
+                ProjectIdentifier = derivationOperations.DeriveAngorKey(Encoders.Hex.EncodeData(privateFounderKey.Neuter().PubKey.ToBytes()),angorRootKey),
+                ProjectSeeders = new ProjectSeeders()
+            }
         };
 
-        transaction = _investmentOperations.CreateInvestmentTransaction(network, context, 1000000);
+        transaction = SeederTransactionActions.CreateInvestmentTransaction(context.ProjectInfo, pubKey.ToHex(), Hashes.Hash256(secret.ToBytes()).ToString()
+            , 1000000); 
+            //_investmentOperations.CreateInvestmentTransaction(network, context, 1000000);
+
+        context.TransactionHex = transaction.ToHex();
+
+        var transactions = SeederTransactionActions.BuildRecoverSeederFundsTransactions(transaction, context.ProjectInfo.PenaltyDate, testAddress.PubKey.ToHex())
+            .ToList();
+
+        var signatures = FounderTransactionActions.SignInvestorRecoveryTransactions(context.ProjectInfo, context.TransactionHex, transactions, Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()));
 
         var sendInfo = new SendInfo
         {
@@ -146,28 +166,15 @@ else
         _walletOperations.CalculateTransactionFee(sendInfo, localAccountInfo, 1000);
 
         var fee = await _walletOperations.GetFeeEstimationAsync();
+        
         context.TransactionHex = _investmentOperations.SignInvestmentTransaction(network, context.ChangeAddress, transaction, walletWords, sendInfo.SendUtxos.Values.ToList(),
             fee.First())
             .ToHex();
-
-        founderTransaction = _investmentOperations.SpendFounderStage(network, new FounderContext
-            {
-                ChangeAddress = pubKey.GetSegwitAddress(network).ToString(),
-                ProjectInfo = context.ProjectInfo,
-                ProjectSeeders = new ProjectSeeders(),
-                InvestmentTrasnactionsHex = new List<string> { context.TransactionHex }
-            },
-            1,
-            privateFounderKey.Neuter().PubKey.ScriptPubKey,
-            Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()),
-            fee.First());
-
-        var transactions = _investmentOperations.BuildRecoverInvestorFundsTransactions(context, network, pubKey.ToHex());
-
-        var signatures = _investmentOperations.FounderSignInvestorRecoveryTransactions(context, network, transactions, 
-            Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()));
         
-        _investmentOperations.AddWitScriptToInvestorRecoveryTransactions(context,network,transactions,signatures,extendedKey.PrivateKey.ToHex(network.Consensus.ConsensusFactory),null);
+        _investmentOperations.AddWitScriptToInvestorRecoveryTransactions(context, network, transactions, signatures, extendedKey.PrivateKey.ToHex(network.Consensus.ConsensusFactory), null);
+        
+        founderTransaction = FounderTransactionActions.SpendFounderStage(context.ProjectInfo, new List<string>(){ transaction.ToHex()}, 1,
+            testAddress.ScriptPubKey , privateFounderKey.PrivateKey.ToHex(network.Consensus.ConsensusFactory), fee.First());
         
         ShowTransaction = true;
     }

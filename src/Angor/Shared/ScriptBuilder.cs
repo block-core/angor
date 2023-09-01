@@ -2,6 +2,7 @@ using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using System.Collections.Generic;
+using Angor.Shared.Models;
 
 namespace Angor.Shared;
 
@@ -34,7 +35,7 @@ public class ScriptBuilder
             Op.GetPushOp(new PubKey(founderKey).ToBytes()));
     }
 
-    public static (PubKey investorKey, uint256? secretHash) GetInfoFromScript(Script script)
+    public static (PubKey investorKey, uint256? secretHash) GetInvestmentDataFromOpReturnScript(Script script)
     {
         if (!script.IsUnspendable)
         {
@@ -66,7 +67,7 @@ public class ScriptBuilder
             OpcodeType.OP_CHECKLOCKTIMEVERIFY
         });
     }
-    
+
     public static ProjectScripts BuildScripts(string funderKey, string investorKey, string? secretHash, DateTime founderLockTime, DateTime projectExpieryLocktime, ProjectSeeders seeders)
     {
         long locktimeFounder = Utils.DateTimeToUnixTime(founderLockTime);

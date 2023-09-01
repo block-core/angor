@@ -3,6 +3,9 @@ using Angor.Client.Services;
 using Angor.Client.Shared;
 using Angor.Client.Storage;
 using Angor.Shared;
+using Angor.Shared.ProtocolNew;
+using Angor.Shared.ProtocolNew.Scripts;
+using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -27,5 +30,18 @@ builder.Services.AddScoped<InvestmentOperations>();
 
 builder.Services.AddScoped<IIndexerService, IndexerService>();
 builder.Services.AddScoped<IRelayService, RelayService>();
+
+builder.Services.AddTransient<IFounderTransactionActions, FounderTransactionActions>();
+builder.Services.AddTransient<ISeederTransactionActions, SeederTransactionActions>();
+builder.Services.AddTransient<IInvestmentScriptBuilder, InvestmentScriptBuilder>();
+builder.Services.AddTransient<IInvestmentScriptBuilder, InvestmentScriptBuilder>();
+builder.Services.AddTransient<IProjectScriptsBuilder, ProjectScriptsBuilder>();
+builder.Services.AddTransient<ISpendingTransactionBuilder, SpendingTransactionBuilder>();
+builder.Services.AddTransient<IInvestmentTransactionBuilder, InvestmentTransactionBuilder>();
+builder.Services.AddTransient<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
+
+    
+
+
 
 await builder.Build().RunAsync();

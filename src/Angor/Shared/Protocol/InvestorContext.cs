@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Angor.Shared.Models;
 
 /// <summary>
 /// Contains all the requisite information for an investor to formulate an investment transaction.
@@ -12,8 +13,6 @@ public class InvestorContext
     public string InvestorSecretHash { get; set; }
 
     public ProjectInfo ProjectInfo { get; set; }
-
-    public ProjectSeeders ProjectSeeders { get; set; }
 
     public string TransactionHex { get; set; }
 

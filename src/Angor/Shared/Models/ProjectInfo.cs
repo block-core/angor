@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace Angor.Shared.Models;
 
 /// <summary>
 /// Encapsulates the public information related to an investment project.
@@ -17,4 +16,6 @@ public class ProjectInfo
     public List<Stage> Stages { get; set; } = new();
 
     public string? HackTransactionId { get; set; }
+    
+    public ProjectSeeders ProjectSeeders { get; set; }
 }

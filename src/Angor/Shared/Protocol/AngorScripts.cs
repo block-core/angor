@@ -1,10 +1,10 @@
-﻿using System.Net.Sockets;
+﻿using System.Linq.Expressions;
 using System.Text;
+using Angor.Shared.Models;
 using Blockcore.NBitcoin;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
-using uint256 = NBitcoin.uint256;
 
 
 namespace Angor.Shared.Protocol
@@ -19,32 +19,14 @@ namespace Angor.Shared.Protocol
 
             return new Script(address.ScriptPubKey.ToBytes());
         }
-
-        public static Script CreateControlBlockFounder(ProjectScripts scripts)
+        
+        public static Script CreateControlBlock(ProjectScripts scripts, Expression<Func<ProjectScripts,Script>> func)
         {
             var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
 
-            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(scripts.Founder.ToBytes()), 
-                (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
-
-            return new Script(controlBlock.ToBytes());
-        }
-
-        public static Script CreateControlBlockExpiry(ProjectScripts scripts)
-        {
-            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
-
-            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(scripts.EndOfProject.ToBytes()),
-                (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
-
-            return new Script(controlBlock.ToBytes());
-        }
-
-        public static Script CreateControlBlockRecover(ProjectScripts scripts)
-        {
-            var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
-
-            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(scripts.Recover.ToBytes()),
+            var script = func.Compile().Invoke(scripts);
+            
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(script.ToBytes()),
                 (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
 
             return new Script(controlBlock.ToBytes());

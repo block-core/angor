@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Polly;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using Angor.Shared.Models;
 
 namespace Angor.Server
 {
