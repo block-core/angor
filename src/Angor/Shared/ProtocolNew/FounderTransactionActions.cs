@@ -128,7 +128,29 @@ public class FounderTransactionActions : IFounderTransactionActions
         return network.CreateTransaction(spendingTransaction.ToHex());
     }
 
-     private IndexedTxOut AddInputToSpendingTransaction(ProjectInfo projectInfo, int stageNumber, NBitcoin.Transaction trx,
+    public Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis)
+    {
+        var projectStartTransaction = _networkConfiguration.GetNetwork()
+            .Consensus.ConsensusFactory.CreateTransaction();
+        
+        // create the output and script of the project id
+        var investorInfoOutput = new Blockcore.Consensus.TransactionInfo.TxOut(
+            new Blockcore.NBitcoin.Money(angorFeeSatoshis), angorKey);
+        
+        projectStartTransaction.AddOutput(investorInfoOutput);
+
+        // todo: here we should add the hash of the project data as opreturn
+
+        // create the output and script of the investor pubkey script opreturn
+        var angorFeeOutputScript = _projectScriptsBuilder.BuildFounderInfoScript(founderKey);
+        var founderOPReturnOutput = new Blockcore.Consensus.TransactionInfo.TxOut(
+            new Blockcore.NBitcoin.Money(0), angorFeeOutputScript);
+        projectStartTransaction.AddOutput(founderOPReturnOutput);
+
+        return projectStartTransaction;
+    }
+
+    private IndexedTxOut AddInputToSpendingTransaction(ProjectInfo projectInfo, int stageNumber, NBitcoin.Transaction trx,
          NBitcoin.Transaction spendingTransaction)
      {
          var stageOutput = trx.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1);

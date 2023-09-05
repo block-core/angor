@@ -12,4 +12,6 @@ public interface IFounderTransactionActions
     Transaction SpendFounderStage(ProjectInfo projectInfo, IEnumerable<string> investmentTransactionsHex,
         int stageNumber, Script founderRecieveAddress, string founderPrivateKey,
         FeeEstimation fee);
+
+    Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis);
 }
