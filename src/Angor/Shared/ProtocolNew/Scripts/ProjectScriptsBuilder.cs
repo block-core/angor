@@ -23,11 +23,11 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
             Op.GetPushOp(new PubKey(investorKey).ToBytes()));
     }
 
-    public Script BuildSeederInfoScript(string investorKey, string secretHash)
+    public Script BuildSeederInfoScript(string investorKey, uint256 secretHash)
     {
         return new Script(OpcodeType.OP_RETURN,
             Op.GetPushOp(new PubKey(investorKey).ToBytes()),
-            Op.GetPushOp(uint256.Parse(secretHash).ToBytes()));
+            Op.GetPushOp(secretHash.ToBytes()));
     }
 
     public (string investorKey, uint256? secretHash) GetInvestmentDataFromOpReturnScript(Script script)

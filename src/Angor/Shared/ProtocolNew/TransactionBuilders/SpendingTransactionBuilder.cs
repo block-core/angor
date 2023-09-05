@@ -49,7 +49,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
             var stageIndex = i + startStage;
             
             var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
-                    stageIndex, secretHash?.ToString());
+                    stageIndex, secretHash);
 
             var witScript =  new WitScript(buildWitScriptWithSigPlaceholder(scriptStages).Pushes);
 

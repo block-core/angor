@@ -4,6 +4,7 @@ using Angor.Shared.ProtocolNew.Scripts;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
+using TxIn = Blockcore.Consensus.TransactionInfo.TxIn;
 
 namespace Angor.Shared.ProtocolNew.TransactionBuilders;
 
@@ -46,30 +47,23 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
 
         return investmentTransaction;
     }
-    
-    public IEnumerable<Transaction> BuildUpfrontRecoverFundsTransactions(Transaction investmentTransaction, DateTime penaltyDate, string investorReceiveAddress)
-    {
-        var network = _networkConfiguration.GetNetwork();
-        // allow an investor that acquired enough seeder secrets to recover their investment
-        var nbitcoinNetwork = NetworkMapper.Map(network);
-        var nbitcoinInvestmentTrx = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
 
+    public Transaction BuildUpfrontRecoverFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate,
+        string investorReceiveAddress)
+    {
         var spendingScript = _investmentScriptBuilder.GetInvestorPenaltyTransactionScript(
             investorReceiveAddress,
             penaltyDate);
-        
-        return nbitcoinInvestmentTrx.Outputs.AsIndexedOutputs()
-            .Where(_ => _.TxOut.ScriptPubKey.IsScriptType(NBitcoin.ScriptType.Taproot))
-            .Select((_, i) =>
-            {
-                var stageTransaction = nbitcoinNetwork.CreateTransaction();
-                
-                stageTransaction.Inputs.Add(new NBitcoin.OutPoint(_.Transaction, _.N));
-                
-                stageTransaction.Outputs.Add(new NBitcoin.TxOut(_.TxOut.Value,
-                    new NBitcoin.Script(spendingScript.WitHash.ScriptPubKey.ToBytes())));
 
-                return network.Consensus.ConsensusFactory.CreateTransaction(stageTransaction.ToHex());;
-            });
+        var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
+
+        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Where(_ => _.N > 1))
+        {
+            transaction.Inputs.Add( new TxIn(output.ToOutPoint()));
+
+            transaction.Outputs.Add(new TxOut(output.TxOut.Value, spendingScript.WitHash.ScriptPubKey));
+        }
+
+        return transaction;
     }
 }

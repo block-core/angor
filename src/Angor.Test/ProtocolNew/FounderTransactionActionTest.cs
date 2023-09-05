@@ -120,12 +120,12 @@ public class FounderTransactionActionTest : AngorTestData
             new ProjectScriptsBuilder(_derivationOperations),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder())); 
         
-        var transactions = investmentTrxBuilder.BuildUpfrontRecoverFundsTransactions(
+        var transaction = investmentTrxBuilder.BuildUpfrontRecoverFundsTransaction(
             Networks.Bitcoin.Testnet().CreateTransaction(investmentTrxHex), 
             projectInvestmentInfo.PenaltyDate,
             Encoders.Hex.EncodeData(funderReceiveCoinsKey.PubKey.ToBytes()));
 
-        var result = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, investmentTrxHex, transactions, Encoders.Hex.EncodeData(founderPrivateKey.ToBytes()));
+        var result = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, investmentTrxHex, transaction, Encoders.Hex.EncodeData(founderPrivateKey.ToBytes()));
 
         Assert.NotEmpty(result);
         

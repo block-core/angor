@@ -39,6 +39,7 @@ builder.Services.AddTransient<IProjectScriptsBuilder, ProjectScriptsBuilder>();
 builder.Services.AddTransient<ISpendingTransactionBuilder, SpendingTransactionBuilder>();
 builder.Services.AddTransient<IInvestmentTransactionBuilder, InvestmentTransactionBuilder>();
 builder.Services.AddTransient<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
+builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 
     
 

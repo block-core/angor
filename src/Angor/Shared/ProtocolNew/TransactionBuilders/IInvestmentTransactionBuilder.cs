@@ -9,6 +9,6 @@ public interface IInvestmentTransactionBuilder
     Transaction BuildInvestmentTransaction(ProjectInfo projectInfo, Script opReturnScript,
         IEnumerable<ProjectScripts> projectScripts, long totalInvestmentAmount);
 
-    IEnumerable<Transaction> BuildUpfrontRecoverFundsTransactions(Transaction investmentTransaction, DateTime penaltyDate,
+    Transaction BuildUpfrontRecoverFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate,
         string investorReceiveAddress);
 }
