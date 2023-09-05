@@ -7,6 +7,7 @@
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 
+@inject HttpClient Http
 @inject IClientStorage storage;
 @inject IIndexerService _IndexerService
 @inject INetworkConfiguration _NetworkConfiguration
@@ -188,6 +189,47 @@
 
                 stageIndex++;
                 stageDatas.Add(stageItem);
+            }
+
+            await CheckSpentFund();
+        }
+    }
+
+    private async Task CheckSpentFund()
+    {
+        IndexerUrl indexer = _NetworkConfiguration.GetIndexerUrl();
+
+        List<QueryTransaction> trxs = new();
+
+        foreach (StageData stageData in stageDatas)
+        {
+            foreach (var item in stageData.Items)
+            {
+                if(item.IsSepnt)
+                    continue;
+
+                QueryTransaction trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
+
+                if (trx == null)
+                {
+                    var url = $"/query/transaction/{item.Trxid}";
+
+                    Console.WriteLine($"fetching {url}");
+
+                    var response = await Http.GetAsync(indexer.Url + url);
+                    trx = await response.Content.ReadFromJsonAsync<QueryTransaction>();
+
+                    trxs.Add(trx);
+                }
+
+                var output = trx.Outputs.First(outp => outp.Index == item.Outputindex);
+
+
+                if (!string.IsNullOrEmpty(output.SpentInTransaction))
+                {
+                    item.IsSepnt = true;
+                }
+
             }
         }
     }
