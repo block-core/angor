@@ -3,11 +3,11 @@ using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
-using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
 using Moq;
+using NBitcoin;
+using Hashes = Blockcore.NBitcoin.Crypto.Hashes;
 using Key = Blockcore.NBitcoin.Key;
 using Mnemonic = Blockcore.NBitcoin.BIP39.Mnemonic;
 using Money = Blockcore.NBitcoin.Money;
@@ -90,50 +90,34 @@ public class FounderTransactionActionTest : AngorTestData
     }
 
     [Fact]
-    public void SignInvestorRecoveryTransactions_()
+    public void SignInvestorRecoveryTransactions_CreatesValidSignatures()
     {
         var words = new WalletWords
             { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
-
         var founderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
-        var funderReceiveCoinsKey = new Key();
-
         var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
-
-        projectInvestmentInfo.ProjectSeeders = new ProjectSeeders
-        {
-            Threshold = 2,
-            SecretHashes = new List<string>
-            {
-                "e4759b9b7ea959f28b2594a14b3daf349178ba10405e1659fee35f763993e865",
-                "7fafd2f15123babbbb4a187edeb7dc3c2c6d917f998d2e6ee3e3b02c929d17ac",
-                "f5b567168806a449bd3b9ecc14f9fd63f478caad69169a9f1080508ea9f99075"
-            }
-        };
 
         var investmentTrxHex =
             "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000446a2103c298c205208c0c9e72528063f6fe5351d5c8d6db9c10a59f7c9447f858f31c3b2065e89339765fe3fe59165e4010ba789134af3d4ba194258bf259a97e9b9b75e480c3c9010000000022512017156ec0e463d67a17df8be2fd5fb4f4de965e8ddbbc1754e8c3748f9f178f7580d1f008000000002251207476a7cd846bd4cb4e9ce1b04bb9d542458ce1bc234a4d5c042e228e973f8e7b000e27070000000022512063ce95e900fe97d6521bcf038e3a27cbd8d809add5ca37602524df7428e765e700000000";
-
-        projectInvestmentInfo.PenaltyDate = DateTime.Now.AddMinutes(1000);
-
-        var investmentTrxBuilder = new InvestmentTransactionBuilder(_networkConfiguration.Object,
-            new ProjectScriptsBuilder(_derivationOperations),
-            new InvestmentScriptBuilder(new SeederScriptTreeBuilder())); 
+        var recoveryTrxHex = "01000000038f7edbad9acd157df9efe3305b6a578a1348e41c8398bd49d796f8a05161a4480200000000ffffffff8f7edbad9acd157df9efe3305b6a578a1348e41c8398bd49d796f8a05161a4480300000000ffffffff8f7edbad9acd157df9efe3305b6a578a1348e41c8398bd49d796f8a05161a4480400000000ffffffff0380c3c9010000000022002071c48ed956bd7abdafe7f892269537baabc8dc842de21608e4fb475bfeb5dd4580d1f0080000000022002071c48ed956bd7abdafe7f892269537baabc8dc842de21608e4fb475bfeb5dd45000e27070000000022002071c48ed956bd7abdafe7f892269537baabc8dc842de21608e4fb475bfeb5dd4500000000";
+        var recoveryTransaction = Networks.Bitcoin.Testnet().CreateTransaction(recoveryTrxHex);
+        var key = new NBitcoin.Key(founderPrivateKey.ToBytes());
+        var expectedHashes = new List<NBitcoin.uint256>()
+        {
+            new(Encoders.Hex.DecodeData("63a125b396400667f7cc70c0f4716cbff98c9b721484fce0b559e32955bfe8ae")),
+            new(Encoders.Hex.DecodeData("692e51930a50ea3687fff64e3b44794ed624e2a58f8df4cd1790197c45b33c12")),
+            new (Encoders.Hex.DecodeData("5a99a107d6d6e45571481f72d17fd193e3d6aec3a234a879ddf712b48ca7cb3b"))
+        };
         
-        var transaction = investmentTrxBuilder.BuildUpfrontRecoverFundsTransaction(
-            Networks.Bitcoin.Testnet().CreateTransaction(investmentTrxHex), 
-            projectInvestmentInfo.PenaltyDate,
-            Encoders.Hex.EncodeData(funderReceiveCoinsKey.PubKey.ToBytes()));
-
-        var result = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, investmentTrxHex, transaction, Encoders.Hex.EncodeData(founderPrivateKey.ToBytes()));
+        var result = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, investmentTrxHex, recoveryTransaction, Encoders.Hex.EncodeData(founderPrivateKey.ToBytes()));
 
         Assert.NotEmpty(result);
-        
-        foreach (var signature in result)
+        Assert.Equal(3,result.Count);
+
+        for (var index = 0; index < result.Count; index++)
         {
-            //TODO get the hash for the verification
-            // Assert.True(founderPrivateKey.PubKey.Verify(new uint256(), 
-            //     new SchnorrSignature(TaprootSignature.Parse(signature).SchnorrSignature.ToBytes())));
+            Assert.True(key.CreateTaprootKeyPair().PubKey.VerifySignature(
+                expectedHashes[index], TaprootSignature.Parse(result[index]).SchnorrSignature));
         }
     }
 
@@ -143,31 +127,31 @@ public class FounderTransactionActionTest : AngorTestData
         int stageNumber = 1;
         
         var words = new WalletWords
-            { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+            { Words = "saddle hawk note mind travel prison tragic three degree tongue duty tone" };
     
         var funderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
         var funderReceiveCoinsKey = new Key();
 
-        var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
+        var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words, new DateTime(638295190967868801));
 
         projectInvestmentInfo.ProjectSeeders = new ProjectSeeders
         {
             Threshold = 2,
             SecretHashes = new List<string>
             {
-                "e4759b9b7ea959f28b2594a14b3daf349178ba10405e1659fee35f763993e865",
-                "7fafd2f15123babbbb4a187edeb7dc3c2c6d917f998d2e6ee3e3b02c929d17ac",
-                "f5b567168806a449bd3b9ecc14f9fd63f478caad69169a9f1080508ea9f99075"
+                "c39301155c48e50db3a111c766c1836c36326e05ebfe13aea0e376c87be754ca",
+                "56f248dcb956f36cd0363daa960bf5be4f21ee1c4cd5da22da2385335e3f08ba",
+                "912fbd981001c737f95d9c03a0e0498d71e90bb91fffd3b8a7ed7ca6a530e8da"
             }
         };
 
     var transactionHexList = new List<string>
     {
-        "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000446a2103c298c205208c0c9e72528063f6fe5351d5c8d6db9c10a59f7c9447f858f31c3b2065e89339765fe3fe59165e4010ba789134af3d4ba194258bf259a97e9b9b75e480c3c9010000000022512017156ec0e463d67a17df8be2fd5fb4f4de965e8ddbbc1754e8c3748f9f178f7580d1f008000000002251207476a7cd846bd4cb4e9ce1b04bb9d542458ce1bc234a4d5c042e228e973f8e7b000e27070000000022512063ce95e900fe97d6521bcf038e3a27cbd8d809add5ca37602524df7428e765e700000000",
-        "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000446a210322da704c2813fc4c16d835a1910483e718624856dc9e77a6ea3b6cc2f3a38af320ac179d922cb0e3e36e2e8d997f916d2c3cdcb7de7e184abbbbba2351f1d2af7f80c3c90100000000225120e4f0734f5ae7f2113d00954cb4424c811ce4fba09a383ab649c35b88930c838380d1f00800000000225120a700c581da793a0997e86185f6acc81b408a6751fc51ad05f3a1c83dbb741897000e27070000000022512056da9954d605da2750a4eeb94fd2c27b6e58cd97ed446e0066248cef5bbe7edb00000000",
-        "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000446a210335f4708588b886a3dc9a6662b03ba01978ef3cbad2b1b491b3480d1099b2aa50207590f9a98e5080109f9a1669adca78f463fdf914cc9e3bbd49a406881667b5f580c3c901000000002251205428cc8df1f7a3f6b4aa1d36cc6e107261880cd46bd7ee65c0268cedc0339a4c80d1f008000000002251207f1cbee8907c9f7b68ce81f69aefcc4ec533cc518ac30741e451b45be08db3f8000e2707000000002251206c43bf12d38ad3f49c0ccaacf825c6e8cc662b01e35e0336e329f17036ec631500000000",
-        "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000236a21023bb34de4edd4e5874882a465fddb645bfdb083d0c0522538b69578b28f78431180c3c9010000000022512064d0ca5475744876a00ce33e2a7f82096b8e87ccbf464a8099357c745533ec9f80d1f008000000002251202fd3b34c25b33ba0b9a46b9a9e026d2831a6f7b3dd1609c13b1eeab853aa6391000e27070000000022512093b2cea402048c8c3c5e950a9adaec4624e861f5fe1b51af78014c15217bc4e400000000",
-        "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000236a2102e9e49625d2bae86bb7586a45bc0a1538feb0fa03b60d740076db76c8fbf000d480c3c9010000000022512024ae88230e2bff51e7921fb4bec7ad828ca2d3b45126eacd094816ec4c75812680d1f00800000000225120fdb6557adc1c53747910c45f7766090e37fc27ba394e1fb85738f84a58bb6aa0000e2707000000002251206a3d1c5e5648a21adbf2bda32ad2b4b471d4a70a2911dd1089449b5d9945323300000000"
+        "010000080005c0c62d0000000000160014e356a6ff53f3875b9620492aaea98a89d964443c0000000000000000446a21033a61dfb8f31a67b61c8e15835d8ad4591bd728fbe7f3a112527d2a54241aba2220ca54e77bc876e3a0ae13feeb056e32366c83c166c711a1b30de5485c150193c380c3c901000000002251203e242cf22f15b7607455e6c04d95e18de5df6eb63238905a748eb42d2d08f88d80d1f00800000000225120c812227079c1d57395c9792bd176ea0e6ebafb1ce5e6a0772797386ce6bc40e5000e270700000000225120aada3b47492dc6b596f26c2c8fdaea92ae857477802cbfe6732e6c281d2a4a2d00000000",
+        "010000080005c0c62d0000000000160014e356a6ff53f3875b9620492aaea98a89d964443c0000000000000000446a2103761c88ca2b5a814596906d41fdd2b504e92d24a06c6d39ba220a7dababd92b7220ba083f5e338523da22dad54c1cee214fbef50b96aa3d36d06cf356b9dc48f25680c3c901000000002251201e57ec396649f646de54c1f652be5cdac4e5a720615e915180ac6fd1cfdebce880d1f00800000000225120f0f2cd06b31d5d718707f938586df9c2ff0cf6872f551837650a6e7555db4b7f000e270700000000225120f407bb19550ae21f1b19d5c19562d491fac7caa1cb6af36e143ab0654fcacd4400000000",
+        "010000080005c0c62d0000000000160014e356a6ff53f3875b9620492aaea98a89d964443c0000000000000000446a21027d58e79ed3d7a33d7b4ea19bac37519bbf5cba53783633ed82f334d82d44a06620dae830a5a67ceda7b8d3ff1fb90be9718d49e0a0039c5df937c7011098bd2f9180c3c90100000000225120bea6df9861c94095aedf36156671d743cb92af930ff5aea4386e985e5460208f80d1f008000000002251208042353ddf688b757b691a89c29c148e3a243c54ae834d31568eae8005f8d085000e2707000000002251202f45ea8c811102dabfb2d5620c7b58b6282d9362e1711bff5f985dc2e6f2e85100000000",
+        "010000080005c0c62d0000000000160014e356a6ff53f3875b9620492aaea98a89d964443c0000000000000000236a210330dbb2f8c751a5cbef888b60b16c966a6093c7249c1b0f4299b2c58b53878f9280c3c90100000000225120b8d8807ef0f4a9105d115ad1d99cc4e64f15ae0037276c1a36e2b62ae0d782c980d1f008000000002251208f6b5cbeb2bbc5716ba321d5b370622c0fba13952267cdbf48f6c37c8f9208e9000e2707000000002251209055b51a3ac0ca18025269c26f78cd7150d51291daceb48aedee3c8e0d47e0ff00000000",
+        "010000080005c0c62d0000000000160014e356a6ff53f3875b9620492aaea98a89d964443c0000000000000000236a2102e0ddb502660f739af1707ff32b2c52b32ad93e3b8087c8b7e1d9183e1f6b760880c3c9010000000022512084fb0619d5274b3306dd1199b738804af5391828bbcfb59308e43d4112d7470380d1f00800000000225120253c8e7093d4a6f6f8c50089ec60d525f0d4cbee231f458443c6e359381bda9b000e270700000000225120bcbdb8f7902320f889a1b1fd615293ddb3f55ee7f5f9dafb0ee8420bfd5c97d100000000"
     };
 
     var founderTrx = _sut.SpendFounderStage(projectInvestmentInfo, transactionHexList
