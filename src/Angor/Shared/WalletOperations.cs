@@ -37,12 +37,14 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
     
-    public Transaction AddInputsAndSignTransaction(Network network,string changeAddress, Transaction transaction, WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths,
+    public Transaction AddInputsAndSignTransaction(Network network, string changeAddress, Transaction transaction,
+        WalletWords walletWords, AccountInfo accountInfo,//TODO change the passing of wallet words as parameter after refactoring is complete
         FeeEstimation feeRate)
     {
+        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
-        var builder = new TransactionBuilder(network) // nbitcoinNetwork.CreateTransactionBuilder()
+        var builder = new TransactionBuilder(network)
             .AddCoins(coins.coins)
             .AddKeys(coins.keys.ToArray())
             .SetChange(BitcoinAddress.Create(changeAddress, network))
@@ -50,7 +52,7 @@ public class WalletOperations : IWalletOperations
             .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate.FeeRate)))
             .CoverTheRest();
 
-        var signTransaction = builder.BuildTransaction(true);// builder.SignTransactionInPlace(transaction);
+        var signTransaction = builder.BuildTransaction(true);
 
         return signTransaction;
     }

@@ -208,11 +208,10 @@
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
-            var utxoDataWithPaths = _WalletOperations.FindOutputsForTransaction(sendInfo.SendAmountSat, accountInfo);
 
             var transaction = ProjectOperations.CreateNewProjectTransaction(network, project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(network, accountInfo.ChangeAddressesInfo.First().Address, transaction, _walletStorage.GetWallet(), utxoDataWithPaths,
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(network, accountInfo.ChangeAddressesInfo.First().Address, transaction, _walletStorage.GetWallet(), accountInfo,
                 feeEstimation.First());
 
             return new OperationResult { Success = true };

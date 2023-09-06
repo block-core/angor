@@ -115,8 +115,7 @@ else
     
     bool ShowTransaction = false;
     private AccountInfo localAccountInfo = new();
-    InvestmentOperations _investmentOperations;
-    
+
     private AccountInfo GetAccountInfoFromStorage()
     {
         var network = _networkConfiguration.GetNetwork();
@@ -127,7 +126,6 @@ else
     {
          DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration);
         
-        _investmentOperations = new InvestmentOperations(_walletOperations, derivationOperations);
         var network = _networkConfiguration.GetNetwork();
         localAccountInfo = GetAccountInfoFromStorage();
 
@@ -170,8 +168,7 @@ else
         };
 
         transaction = SeederTransactionActions.CreateInvestmentTransaction(context.ProjectInfo, pubKey.ToHex(), Hashes.Hash256(secret.ToBytes())
-            , 1000000); 
-            //_investmentOperations.CreateInvestmentTransaction(network, context, 1000000);
+            , 1000000);
 
         context.TransactionHex = transaction.ToHex();
 
@@ -196,7 +193,7 @@ else
         founderTransaction = FounderTransactionActions.SpendFounderStage(context.ProjectInfo, new List<string>(){ transaction.ToHex()}, 1,
             testAddress.ScriptPubKey , privateFounderKey.PrivateKey.ToHex(network.Consensus.ConsensusFactory), fee.First());
         
-        transaction = _investmentOperations.SignInvestmentTransaction(network, context.ChangeAddress, transaction, walletWords, sendInfo.SendUtxos.Values.ToList(),
+        transaction = _walletOperations.AddInputsAndSignTransaction(network, context.ChangeAddress, transaction, walletWords, localAccountInfo,
             fee.First());
         
         ShowTransaction = true;

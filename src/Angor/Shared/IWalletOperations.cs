@@ -19,7 +19,7 @@ public interface IWalletOperations
     (List<Coin>? coins, List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths);
 
     Transaction AddInputsAndSignTransaction(Network network, string changeAddress, Transaction transaction,
-        WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths,
+        WalletWords walletWords, AccountInfo accountInfo,
         FeeEstimation feeRate);
 
     Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,
