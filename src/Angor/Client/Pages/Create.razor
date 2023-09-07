@@ -5,6 +5,7 @@
 @using Angor.Shared.Protocol
 @using Blockcore.Consensus.TransactionInfo
 @using Angor.Client.Services
+@using Angor.Shared.ProtocolNew
 
 @inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
@@ -15,6 +16,8 @@
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IRelayService _RelayService
 @inject IIndexerService _IndexerService
+
+@inject IFounderTransactionActions _founderTransactionActions
 
 @if (!hasWallet)
 {
@@ -209,7 +212,7 @@
 
             var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
 
-            var transaction = ProjectOperations.CreateNewProjectTransaction(network, project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000);
+            var transaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000);
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(network, accountInfo.ChangeAddressesInfo.First().Address, transaction, _walletStorage.GetWallet(), accountInfo,
                 feeEstimation.First());

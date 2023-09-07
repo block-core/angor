@@ -16,6 +16,6 @@ public class ProjectInfo
     public List<Stage> Stages { get; set; } = new();
 
     public string? HackTransactionId { get; set; }
-    
-    public ProjectSeeders ProjectSeeders { get; set; }
+
+    public ProjectSeeders ProjectSeeders { get; set; } = new();
 }

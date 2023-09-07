@@ -6,6 +6,7 @@
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Angor.Client.Services
+@using Angor.Shared.ProtocolNew
 
 @inherits BaseComponent
 
@@ -16,8 +17,11 @@
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
 @inject INetworkConfiguration _NetworkConfiguration
-@inject InvestmentOperations investmentOperations
+
 @inject IIndexerService _IndexerService
+
+@inject IInvestorTransactionActions _InvestorTransactionActions
+
 
 @if (!hasWallet)
 {
@@ -271,7 +275,6 @@
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
-            var utxoDataWithPaths = _WalletOperations.FindOutputsForTransaction(Money.Coins(Investment.InvestmentAmount).Satoshi, accountInfo);
 
             var investorKey = _derivationOperations.DeriveInvestorKey(_walletStorage.GetWallet(), project.FounderKey);
 
@@ -289,10 +292,10 @@
                 context.InvestorSecretHash = seederHash;
             }
 
-            var transaction = investmentOperations.CreateInvestmentTransaction(network, context, Money.Coins(Investment.InvestmentAmount).Satoshi);
+            var transaction = _InvestorTransactionActions.CreateInvestmentTransaction(context.ProjectInfo, context.InvestorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
 
-            signedTransaction = investmentOperations.SignInvestmentTransaction(network, context.ChangeAddress, transaction, _walletStorage.GetWallet(), utxoDataWithPaths, feeEstimation.First());
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(network, context.ChangeAddress, transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
 
             return new OperationResult { Success = true };
 

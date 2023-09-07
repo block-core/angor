@@ -3,6 +3,7 @@
 @using Angor.Client.Storage
 @using Angor.Client.Services
 @using Angor.Shared.Models
+@using Angor.Shared.ProtocolNew
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
@@ -11,9 +12,9 @@
 @inject IClientStorage storage;
 @inject IIndexerService _IndexerService
 @inject INetworkConfiguration _NetworkConfiguration
-@inject InvestmentOperations investmentOperations
 @inject IDerivationOperations _derivationOperations
 @inject IWalletOperations _WalletOperations
+@inject IFounderTransactionActions _founderTransactionActions
 
 @inherits BaseComponent
 
@@ -260,7 +261,7 @@
 
             var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet(), keys.Index);
 
-            signedTransaction = investmentOperations.SpendFounderStage(network, founderContext, stageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeEstimation.First());
+            signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, stageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeEstimation.First());
 
             return new OperationResult { Success = true };
         });

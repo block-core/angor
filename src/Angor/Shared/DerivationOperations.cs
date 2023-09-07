@@ -203,7 +203,7 @@ public class DerivationOperations : IDerivationOperations
 
         var projectid = hashOfid.GetLow32();
 
-        var ret = projectid / 2; // the max size of bip32 derivation range is 2,147,483,648 (2^31) the max number of uint is 4,294,967,295 so we must divide by zero
+        var ret = projectid / 2; // the max size of bip32 derivation range is 2,147,483,648 (2^31) the max number of uint is 4,294,967,295 so we must divide by two
 
         if (ret >= 2_147_483_648)
             throw new Exception();

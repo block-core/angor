@@ -33,7 +33,7 @@ builder.Services.AddScoped<IRelayService, RelayService>();
 
 builder.Services.AddTransient<IFounderTransactionActions, FounderTransactionActions>();
 builder.Services.AddTransient<ISeederTransactionActions, SeederTransactionActions>();
-builder.Services.AddTransient<IInvestmentScriptBuilder, InvestmentScriptBuilder>();
+builder.Services.AddTransient<IInvestorTransactionActions, InvestorTransactionActions>();
 builder.Services.AddTransient<IInvestmentScriptBuilder, InvestmentScriptBuilder>();
 builder.Services.AddTransient<IProjectScriptsBuilder, ProjectScriptsBuilder>();
 builder.Services.AddTransient<ISpendingTransactionBuilder, SpendingTransactionBuilder>();
@@ -41,7 +41,9 @@ builder.Services.AddTransient<IInvestmentTransactionBuilder, InvestmentTransacti
 builder.Services.AddTransient<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
 builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 
-    
+
+
+
 
 
 

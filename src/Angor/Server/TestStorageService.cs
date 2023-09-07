@@ -51,7 +51,6 @@ namespace Angor.Server
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<ProjectInfo>().HasNoKey();
         }
     }
 
