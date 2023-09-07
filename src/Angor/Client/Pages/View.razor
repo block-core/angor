@@ -106,7 +106,7 @@
                     @if (founder) 
                     {
                         <p>You are the founder.</p>
-                         <NavLink href=@($"/founderspend/{project.ProjectIdentifier}") class="btn btn-primary">Spend Funds</NavLink>
+                         <NavLink href=@($"/spend/{project.ProjectIdentifier}") class="btn btn-primary">Spend Funds</NavLink>
                         
                     }
                     else if (invested)

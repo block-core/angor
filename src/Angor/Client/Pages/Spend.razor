@@ -1,4 +1,4 @@
-﻿@page "/founderspend/{ProjectId}"
+﻿@page "/spend/{ProjectId}"
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Client.Services
@@ -167,49 +167,70 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (hasWallet)
+       
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
         {
-            project = storage.GetFounderProjects().First(p => p.ProjectIdentifier == ProjectId);
-
-            var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
-
-            var network = _NetworkConfiguration.GetNetwork();
-
-            foreach (var trx in trxs)
+            if (hasWallet)
             {
-                transactions.Add((network.CreateTransaction(trx.TrxHex), trx.TrxId));
-            }
-
-            int stageIndex = 0;
-            foreach (var stage in project.Stages)
-            {
-                var stageItem = new StageData
+                var operationResult = await notificationComponent.LongOperation(async () =>
                 {
-                    Stage = stage,
-                    StageIndex = stageIndex + 1,
+                    await FindInvestments();
+
+                    await CheckSpentFund();
+
+                    return new OperationResult { Success = true };
+
+                });
+
+                if (operationResult.Success)
+                {
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task FindInvestments()
+    {
+        project = storage.GetFounderProjects().First(p => p.ProjectIdentifier == ProjectId);
+
+        var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
+
+        var network = _NetworkConfiguration.GetNetwork();
+
+        foreach (var trx in trxs)
+        {
+            transactions.Add((network.CreateTransaction(trx.TrxHex), trx.TrxId));
+        }
+
+        int stageIndex = 0;
+        foreach (var stage in project.Stages)
+        {
+            var stageItem = new StageData
+            {
+                Stage = stage,
+                StageIndex = stageIndex + 1,
+            };
+
+            foreach (var item in transactions)
+            {
+                var insert = new StageDataTrx
+                {
+                    Trxid = item.TrxId,
+                    OutputAddress = item.Transaction.Outputs[stageIndex + 2].ScriptPubKey.WitHash.GetAddress(network).ToString(),
+                    Outputindex = stageIndex + 2,
+                    Amount = item.Transaction.Outputs[stageIndex + 2].Value.ToUnit(MoneyUnit.BTC),
                 };
 
-                foreach (var item in transactions)
-                {
-                    var insert = new StageDataTrx
-                    {
-                        Trxid = item.TrxId,
-                        OutputAddress = item.Transaction.Outputs[stageIndex + 2].ScriptPubKey.WitHash.GetAddress(network).ToString(),
-                        Outputindex = stageIndex + 2,
-                        Amount = item.Transaction.Outputs[stageIndex + 2].Value.ToUnit(MoneyUnit.BTC),
-                    };
-                    
-                    stageItem.Items.Add(insert);
-
-                    // todo: using the OutputAddress we can ping the indexer to check if the stage has been claim already
-                    insert.IsSepnt = false;
-                }
-
-                stageIndex++;
-                stageDatas.Add(stageItem);
+                stageItem.Items.Add(insert);
             }
 
-            await CheckSpentFund();
+            stageIndex++;
+            stageDatas.Add(stageItem);
         }
     }
 
@@ -223,7 +244,7 @@
         {
             foreach (var item in stageData.Items)
             {
-                if(item.IsSepnt)
+                if (item.IsSepnt)
                     continue;
 
                 QueryTransaction? trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
@@ -247,7 +268,6 @@
                 {
                     item.IsSepnt = true;
                 }
-
             }
         }
     }
