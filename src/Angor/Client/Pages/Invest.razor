@@ -47,7 +47,7 @@
     
     <p>ProjectId: @ProjectId</p>
     <p>Target amount: @project.TargetAmount BTC</p>
-    <p>Starting in: @project.StartDate.ToString("d")</p>
+    <p>Starting in: @project.StartDate.ToString("dd/MM/yyyy")</p>
 
     <NotificationComponent @ref="notificationComponent" />
 
@@ -97,9 +97,9 @@
 
                         <p class ="mb-1"><strong>Target amount:</strong> @project.TargetAmount BTC</p>
 
-                        <p class="mb-1"><strong>Start date:</strong> @project.StartDate.ToString("d")</p>
-                        <p class="mb-1"><strong>Expiry date:</strong> @project.ExpiryDate.ToString("d")</p>
-                        <p class="mb-1"><strong>Penalty date:</strong> @project.PenaltyDate.ToString("d")</p>
+                        <p class="mb-1"><strong>Start date:</strong> @project.StartDate.ToString("dd/MM/yyyy")</p>
+                        <p class="mb-1"><strong>Expiry date:</strong> @project.ExpiryDate.ToString("dd/MM/yyyy")</p>
+                        <p class="mb-1"><strong>Penalty date:</strong> @project.PenaltyDate.ToString("dd/MM/yyyy")</p>
 
                         <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
                         <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
@@ -113,7 +113,7 @@
                             {
                                 <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
                                     <p class="mb-1"><strong>Stage amount:</strong> @StagesBreakdown[index++].Amount BTC - @stage.AmountToRelease % </p>
-                                    <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("d") - @((stage.ReleaseDate - project.StartDate).Days) days after project starts </p>
+                                    <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.StartDate).Days) days after project starts </p>
                                 </div>
                             }
                         }
@@ -142,7 +142,7 @@
             <div class="card-body">
                 @foreach (var stage in StagesBreakdown)
                 {
-                    <p>Stage @stage.StageNumber: invest @stage.Amount BTC that will released on @stage.StageDateTime.ToString("d") (@stage.DaysFromStartDate days) </p>
+                    <p>Stage @stage.StageNumber: invest @stage.Amount BTC that will released on @stage.StageDateTime.ToString("dd/MM/yyyy") (@stage.DaysFromStartDate days) </p>
                 }
             </div>
         </div>

@@ -43,7 +43,7 @@
                         <button class="btn btn-success" @onclick="() => ClaimCoins(stage.StageIndex)">Claim Coins</button>
                     }
                 </div>
-                <p class="card-subtitle text-muted mb-2">Estimated completion time: @stage.Stage.ReleaseDate.ToString("d")</p>
+                <p class="card-subtitle text-muted mb-2">Estimated completion time: @stage.Stage.ReleaseDate.ToString("dd/MM/yyyy")</p>
 
                 <button @onclick="() => Expand(stage.StageIndex)" class="btn btn-link d-block text-decoration-none text-end">
                     <i class="bi bi-chevron-double-down"></i> Expand
@@ -64,6 +64,23 @@
                                 <div class="flex-grow-1 ms-3">
                                     <p class="mb-0">Transaction details: @transaction.Amount BTC</p>
                                     <p class="mb-0">Address: @transaction.OutputAddress</p>
+
+                                    @if (stageisActive)
+                                    {
+                                        @if (transaction.IsSepnt)
+                                        {
+                                            <p class="text-primary">This output was spent</p>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-success">This output can be spent</p>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <p class="text-warning">This output can be spent in @((stage.Stage.ReleaseDate - DateTime.UtcNow).Days) days</p>
+                                    }
+                                    
                                 </div>
                             </div>
                         }
@@ -209,7 +226,7 @@
                 if(item.IsSepnt)
                     continue;
 
-                QueryTransaction trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
+                QueryTransaction? trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
 
                 if (trx == null)
                 {
