@@ -186,10 +186,6 @@ namespace Angor.Test
 
             var seeder1InvTrx = _seederTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
                 seeder1Context.InvestorKey, new uint256(seeder1Context.InvestorSecretHash), Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
-            //
-            // seeder1Context.TransactionHex = _seederTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(projectInvestmentInfo,seeder1InvTrx,seeder1Context.ChangeAddress,
-            //         funderKey.PubKey.ScriptPubKey.ToString(),seeder1Key.ToString(),seeder1secret)
-            //     .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder1InvTrx.ToHex());
 
@@ -197,10 +193,6 @@ namespace Angor.Test
 
             var seeder2InvTrx = _seederTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
                 seeder2Context.InvestorKey, new uint256(seeder2Context.InvestorSecretHash), Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
-            //
-            // seeder2Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder2Context.ChangeAddress,
-            //         seeder2InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
-            //     .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder2InvTrx.ToHex());
 
@@ -208,10 +200,6 @@ namespace Angor.Test
 
             var seeder3InvTrx = _seederTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
                 seeder3Context.InvestorKey, new uint256(seeder3Context.InvestorSecretHash), Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
-            //
-            // seeder3Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder3Context.ChangeAddress,
-            //         seeder3InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
-            //     .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder3InvTrx.ToHex());
 
@@ -219,11 +207,6 @@ namespace Angor.Test
 
             var investor1InvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
                 investor1Context.InvestorKey, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
-            //
-            // investor1Context.TransactionHex = operations.SignInvestmentTransaction(network,
-            //         investor1Context.ChangeAddress, investor1InvTrx, null, new List<UtxoDataWithPath>(),
-            //         _expectedFeeEstimation)
-            //     .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(investor1InvTrx.ToHex());
 
@@ -231,11 +214,6 @@ namespace Angor.Test
 
             var investor2InvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
                 investor2Context.InvestorKey, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
-            //
-            // investor2Context.TransactionHex = operations.SignInvestmentTransaction(network,
-            //         investor2Context.ChangeAddress, investor2InvTrx, null, new List<UtxoDataWithPath>(),
-            //         _expectedFeeEstimation)
-            //   .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(investor2InvTrx.ToHex());
 
@@ -291,19 +269,6 @@ namespace Angor.Test
             var seeder1InvTrx = _seederTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,seeder1Context.InvestorKey,
                 new uint256(seeder1Context.InvestorSecretHash), Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
-            // TODO verify in another test
-            // var seederRecoveryTrx = _seederTransactionActions.BuildRecoverSeederFundsTransaction(seeder1InvTrx,
-            //     projectInvestmentInfo.PenaltyDate, Encoders.Hex.EncodeData(seeder1ReceiveCoinsKey.PubKey.ToBytes()));
-            //
-            // var founderSignatures= _founderTransactionActions.SignInvestorRecoveryTransactions(projectInvestmentInfo, seeder1InvTrx.ToHex(),
-            //     seederRecoveryTrx,
-            //     Encoders.Hex.EncodeData(seeder11Key.ToBytes()));
-            //
-            // var signedRecoveryTransaction = _seederTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(projectInvestmentInfo, seeder1InvTrx,
-            //     Encoders.Hex.EncodeData(seeder1ReceiveCoinsKey.PubKey.ToBytes()),
-            //     founderSignatures, Encoders.Hex.EncodeData(seeder11Key.ToBytes()),
-            //     Encoders.Hex.EncodeData(seeder1secret.ToBytes()));
-
             var seeder1Expierytrx  = _seederTransactionActions.RecoverEndOfProjectFunds(seeder1InvTrx.ToHex(), projectInvestmentInfo,
                 1, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey.ToString(),
                 Encoders.Hex.EncodeData(seeder11Key.ToBytes()), _expectedFeeEstimation);
@@ -354,12 +319,6 @@ namespace Angor.Test
 
             var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,seeder1Context.InvestorKey,
                 Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
-
-            // TODO verify in another test
-            // seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
-            //         seeder1InvTrx, null, new List<UtxoDataWithPath>(),
-            //         _expectedFeeEstimation)
-            //     .ToHex();
 
             var investor1Expierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
                 projectInvestmentInfo,
@@ -417,11 +376,6 @@ namespace Angor.Test
 
             var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,investorPubKey,
                 Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
-
-            // TODO verify in another test
-            // investorContext.TransactionHex = operations.SignInvestmentTransaction(network, investorContext.ChangeAddress,
-            //         investor1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
-            //     .ToHex();
 
             var investorExpierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
                 projectInvestmentInfo, 1, investorReceiveCoinsKey.PubKey.ScriptPubKey.ToString(),
