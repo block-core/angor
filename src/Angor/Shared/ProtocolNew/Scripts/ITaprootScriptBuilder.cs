@@ -8,6 +8,6 @@ public interface ITaprootScriptBuilder
 {
     public Script CreateControlBlock(ProjectScripts scripts, Expression<Func<ProjectScripts, Script>> func);
 
-    (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts,
+    (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts, int threshold,
         Blockcore.NBitcoin.Key[] secrets);
 }

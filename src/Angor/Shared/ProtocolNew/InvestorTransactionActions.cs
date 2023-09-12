@@ -35,8 +35,8 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(investorKey);
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
-        var stagesScript = projectInfo.Stages
-            .Select((_,index) => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, index));
+        var stagesScript = Enumerable.Range(0,projectInfo.Stages.Count)
+            .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, index));
 
         return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript,
             totalInvestmentAmount);
@@ -71,7 +71,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             });
     }
 
-    public Transaction RecoverRemainingFundsWithPenalty(string transactionHex, ProjectInfo projectInfo, int stageIndex,
+    public Transaction RecoverRemainingFundsWithOutPenalty(string transactionHex, ProjectInfo projectInfo, int stageIndex,
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation,
         IEnumerable<byte[]> seederSecrets)
     {
@@ -81,7 +81,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             _ =>
             {
-                var result = _taprootScriptBuilder.CreateControlSeederSecrets(_, secrets.ToArray());
+                var result = _taprootScriptBuilder.CreateControlSeederSecrets(_,   projectInfo.ProjectSeeders.Threshold,secrets.ToArray());
 
                 // use fake data for fee estimation
                 var fakeSig = new byte[64];
@@ -137,16 +137,20 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var key = new NBitcoin.Key(Encoders.Hex.DecodeData(privateKey));
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
         
+        var outputs = investmentTransaction.Outputs.AsIndexedOutputs()
+            .Where(_ => _.N > 1)
+            .Select(blockcoreTxOut => new TxOut(
+                new Money(blockcoreTxOut.TxOut.Value.Satoshi),
+                new Script(blockcoreTxOut.TxOut.ScriptPubKey.ToBytes())))
+            .ToArray();
+        
         for (var stageIndex = 0; stageIndex < nBitcoinTransaction.Outputs.Count; stageIndex++)
         {
             var projectScripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
 
             var controlBlock = _taprootScriptBuilder.CreateControlBlock(projectScripts, _ => _.Recover);
 
-            var blockcoreTxOut = investmentTransaction.Outputs[2 + stageIndex];
-            var nBitcoinTxOut = new TxOut(new Money(blockcoreTxOut.Value.Satoshi), new Script(blockcoreTxOut.ScriptPubKey.ToBytes()));
-
-            var hash = nBitcoinTransaction.GetSignatureHashTaproot(new[] { nBitcoinTxOut },
+            var hash = nBitcoinTransaction.GetSignatureHashTaproot(outputs,
                 new TaprootExecutionData(
                         stageIndex, 
                         new NBitcoin.Script(projectScripts.Recover.ToBytes()).TaprootV1LeafHash)
