@@ -42,10 +42,10 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             totalInvestmentAmount);
     }
 
-    public Transaction BuildRecoverInvestorFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate, string investorReceiveAddress)
+    public Transaction BuildRecoverInvestorFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate, string investorKey)
     {
         return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(investmentTransaction, penaltyDate,
-            investorReceiveAddress);
+            investorKey);
     }
 
     public Transaction RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex,

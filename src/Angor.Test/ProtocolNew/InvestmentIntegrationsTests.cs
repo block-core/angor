@@ -101,6 +101,7 @@ namespace Angor.Test
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var funderKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
+
             var funderReceiveCoinsKey = new Key();
 
             var projectInvestmentInfo = new ProjectInfo();
@@ -114,6 +115,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
                 _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
 
@@ -401,8 +403,10 @@ namespace Angor.Test
             var seederSecret = new Key();
 
             var funderKey = _derivationOperations.DeriveFounderKey(words, 1);
+            var founderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
             var angorKey = _derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
             var funderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
+            var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
 
             var investorContext = new InvestorContext
             {
@@ -418,6 +422,7 @@ namespace Angor.Test
                         new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                     },
                     FounderKey = funderKey,
+                    FounderRecoveryKey = founderRecoveryKey,
                     ProjectIdentifier = angorKey,
                     PenaltyDate = DateTime.UtcNow.AddDays(5),
                     ProjectSeeders = new ProjectSeeders()
@@ -439,7 +444,7 @@ namespace Angor.Test
 
             var founderSignatures = _founderTransactionActions.SignInvestorRecoveryTransactions(investorContext.ProjectInfo,
                 investmentTransaction.ToHex(),recoveryTransaction,
-                Encoders.Hex.EncodeData(funderPrivateKey.ToBytes()));
+                Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
             var signedRecoveryTransaction = _seederTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(investorContext.ProjectInfo,
                 investmentTransaction, seederFundsRecoveryKey.PubKey.ToHex(),
@@ -469,7 +474,9 @@ namespace Angor.Test
 
             var funderKey = _derivationOperations.DeriveFounderKey(words, 1);
             var angorKey = _derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
+            var founderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
             var funderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
+            var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
 
             var investorContext = new InvestorContext
             {
@@ -485,6 +492,7 @@ namespace Angor.Test
                         new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                     },
                     FounderKey = funderKey,
+                    FounderRecoveryKey = founderRecoveryKey,
                     ProjectIdentifier = angorKey,
                     PenaltyDate = DateTime.UtcNow.AddDays(5),
                     ProjectSeeders = new ProjectSeeders()
@@ -506,7 +514,7 @@ namespace Angor.Test
 
             var founderSignatures = _founderTransactionActions.SignInvestorRecoveryTransactions(investorContext.ProjectInfo,
                 investmentTransaction.ToHex(),recoveryTransaction,
-                Encoders.Hex.EncodeData(funderPrivateKey.ToBytes()));
+                Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
             var signedRecoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(investorContext.ProjectInfo,
                 investmentTransaction, investorFundsRecoveryKey.PubKey.ToHex(),

@@ -46,10 +46,10 @@ public class SeederTransactionActions : ISeederTransactionActions
     }
     
     public Transaction BuildRecoverSeederFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate,
-        string investorReceiveAddress)
+        string investorKey)
     {
         return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(investmentTransaction, penaltyDate,
-            investorReceiveAddress);
+            investorKey);
     }
 
     public Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
