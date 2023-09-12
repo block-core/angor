@@ -23,7 +23,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
         return new Script(controlBlock.ToBytes());
     }
 
-    public (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts, Blockcore.NBitcoin.Key[] secrets)
+    public (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts, int threshold, Blockcore.NBitcoin.Key[] secrets)
     {
         var treeInfo = BuildTaprootSpendInfo(scripts);
 
@@ -31,7 +31,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
 
         // find the spending script for the current secret hash combination
 
-        var hashes = secrets.Select(secret => (Blockcore.NBitcoin.Crypto.Hashes.Hash256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
+        var hashesOfSecrets = secrets.Select(secret => (Blockcore.NBitcoin.Crypto.Hashes.Hash256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
 
         Script execute = null;
         List<Script> secretHashes = new List<Script>();
@@ -48,7 +48,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
                 {
                     var comp = new Blockcore.NBitcoin.uint256(op.PushData);
 
-                    foreach (var hash in hashes)
+                    foreach (var hash in hashesOfSecrets)
                     {
                         if (hash.Item1 == comp)
                         {
@@ -58,7 +58,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
                 }
             }
 
-            if (secretHashes.Count == hashes.Count)
+            if (secretHashes.Count == threshold)
             {
                 execute = scriptWeight;
 
