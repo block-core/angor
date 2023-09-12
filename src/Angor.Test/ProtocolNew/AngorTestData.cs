@@ -42,6 +42,7 @@ public class AngorTestData
             new() { AmountToRelease = (decimal)0.4, ReleaseDate = startDate.Value.AddDays(3) }
         };
         projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
+        projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
         projectInvestmentInfo.ProjectIdentifier =
             _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
         

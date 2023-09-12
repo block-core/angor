@@ -10,5 +10,5 @@ public interface IInvestmentTransactionBuilder
         IEnumerable<ProjectScripts> projectScripts, long totalInvestmentAmount);
 
     Transaction BuildUpfrontRecoverFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate,
-        string investorReceiveAddress);
+        string investorKey);
 }

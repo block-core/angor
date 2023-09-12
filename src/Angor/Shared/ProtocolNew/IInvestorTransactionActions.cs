@@ -13,4 +13,7 @@ public interface IInvestorTransactionActions
 
     Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
         string receiveAddress, List<string> founderSignatures, string privateKey);
+
+    bool CheckInvestorRecoverySignatures(ProjectInfo projectInfo, Transaction investmentTransaction, List<string> founderSignatures);
+
 }

@@ -49,10 +49,10 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
     }
 
     public Transaction BuildUpfrontRecoverFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate,
-        string investorReceiveAddress)
+        string investorKey)
     {
         var spendingScript = _investmentScriptBuilder.GetInvestorPenaltyTransactionScript(
-            investorReceiveAddress,
+            investorKey,
             penaltyDate);
 
         var transaction = _networkConfiguration.GetNetwork().CreateTransaction();

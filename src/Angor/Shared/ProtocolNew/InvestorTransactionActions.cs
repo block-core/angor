@@ -165,4 +165,44 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
         return transaction;
     }
+
+     public bool CheckInvestorRecoverySignatures(ProjectInfo projectInfo, Transaction investmentTransaction, List<string> founderSignatures)
+     {
+         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs[1].ScriptPubKey);
+
+        var recoveryTransaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(investmentTransaction, projectInfo.PenaltyDate, investorKey);
+
+        var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
+        var nBitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
+        var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
+
+        var pubkey = new PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey();
+        var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+
+        var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
+            .Where(_ => _.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))
+            .Select(_ => _.TxOut)
+            .ToArray();
+
+        Enumerable.Range(0, recoveryTransaction.Outputs.Count)
+            .Select(stageIndex =>
+            {
+                var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
+
+                var hash = nBitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs,
+                    new TaprootExecutionData(stageIndex,
+                            new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash)
+                        { SigHash = sigHash });
+
+                var result = pubkey.VerifySignature(hash, TaprootSignature.Parse(founderSignatures[stageIndex]).SchnorrSignature);
+
+                if (result == false)
+                    throw new Exception("Invaid signatures provided by founder");
+
+                return true;
+
+            }).ToList();
+
+        return true;
+     }
 }

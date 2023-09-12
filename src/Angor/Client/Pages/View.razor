@@ -113,8 +113,10 @@
                     {
                         <p>You have already invested in this project.
 
-                        <a href="@explorerLink" target="_blank">View the transaction on the explorer.</a>
+                            <a href="@explorerLink" target="_blank">View the transaction on the explorer.</a>
                         </p>
+
+                        <button class="btn btn-danger" @onclick="RecoverFunds">Recover</button>
                     }
                     else
                     {
@@ -236,6 +238,10 @@
 
             return new OperationResult { Success = true };
         });
+    }
+    private async Task RecoverFunds()
+    {
+        NavigationManager.NavigateTo($"/recover/{ProjectId}");
     }
 
     private async Task InvestInProject()

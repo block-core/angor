@@ -55,9 +55,15 @@ namespace Angor.Test
 
             Assert.Equal("tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL", rootKey);
 
-            var founderKey = derivationOperations.DeriveFounderKey(new WalletWords { Words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor" }, 1);
+            string words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor";
+
+            var founderKey = derivationOperations.DeriveFounderKey(new WalletWords { Words = words }, 1);
 
             Assert.Equal("030d1351b9828b423a3a63ac7bd04c4d5b15b77be055300e166ddf65515eda905a", founderKey);
+
+            var founderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(new WalletWords { Words = words }, 1);
+
+            Assert.Equal("030d1351b9828b423a3a63ac7bd04c4d5b15b77be055300e166ddf65515eda905a", founderRecoveryKey);
 
             var projectId = derivationOperations.DeriveProjectId(founderKey);
 

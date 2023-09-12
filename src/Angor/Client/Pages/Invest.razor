@@ -7,6 +7,7 @@
 @using Blockcore.NBitcoin
 @using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
+@using Blockcore.NBitcoin.DataEncoders
 
 @inherits BaseComponent
 
@@ -19,6 +20,7 @@
 @inject INetworkConfiguration _NetworkConfiguration
 
 @inject IIndexerService _IndexerService
+@inject ISignService _SignService
 
 @inject IInvestorTransactionActions _InvestorTransactionActions
 
@@ -161,6 +163,7 @@
     private ProjectInfo project;
     private bool showCreateModal;
     Transaction signedTransaction;
+    List<string> recoverySigs;
 
     protected override async Task OnInitializedAsync()
     {
@@ -294,8 +297,12 @@
 
             var transaction = _InvestorTransactionActions.CreateInvestmentTransaction(context.ProjectInfo, context.InvestorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
-
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(network, context.ChangeAddress, transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
+
+            recoverySigs = await _SignService.GetInvestmentSigsAsync(project.ProjectIdentifier, context.InvestorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
+
+            // validate the signatures
+            _InvestorTransactionActions.CheckInvestorRecoverySignatures(context.ProjectInfo, transaction, recoverySigs);
 
             return new OperationResult { Success = true };
 
@@ -318,6 +325,8 @@
             showCreateModal = false;
 
             var network = _NetworkConfiguration.GetNetwork();
+
+            storage.AddSignatures(new SignatureInfo { ProjectIdentifier = project.ProjectIdentifier, Signatures = recoverySigs });
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 

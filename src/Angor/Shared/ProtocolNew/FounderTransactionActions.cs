@@ -50,7 +50,7 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         const TaprootSigHash sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
-        var nBitcoinTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork); //We need to convert to NBitcoin transactions 
+        var nBitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork); //We need to convert to NBitcoin transactions 
 
         return Enumerable.Range(0,recoveryTransaction.Outputs.Count)
             .Select(index =>
@@ -58,7 +58,7 @@ public class FounderTransactionActions : IFounderTransactionActions
                 var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
                     index, secretHash);
                 
-                var hash = nBitcoinTransaction.GetSignatureHashTaproot(outputs ,
+                var hash = nBitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs ,
                     new TaprootExecutionData(index,
                             new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash)
                         { SigHash = sigHash });

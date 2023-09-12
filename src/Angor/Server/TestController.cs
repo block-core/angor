@@ -1,5 +1,6 @@
 using Angor.Server;
 using Angor.Shared.Models;
+using Angor.Shared.ProtocolNew;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blockcore.AtomicSwaps.Server.Controllers
@@ -75,5 +76,44 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
         }
     }
 
-   
+    [ApiController]
+    [Route("api/[controller]")]
+    public class TestSignController : ControllerBase
+    {
+        private readonly TestStorageService _storage;
+        private readonly IFounderTransactionActions _founderTransactionActions;
+        private readonly IInvestorTransactionActions _investorTransactionActions;
+
+        public TestSignController(TestStorageService storage, IFounderTransactionActions founderTransactionActions, IInvestorTransactionActions investorTransactionActions)
+        {
+            _storage = storage;
+            _founderTransactionActions = founderTransactionActions;
+            _investorTransactionActions = investorTransactionActions;
+        }
+        
+        [HttpPost]
+        public async Task Post([FromBody] SignData project)
+        {
+            await _storage.AddKey(project.ProjectIdentifier, project.FounderRecoveryPrivateKey);
+        }
+
+        [HttpGet]
+        [Route("{projectId}/{investorKey}/{totalInvestmentAmount}")]
+        public async Task<List<string>> Get(string projectId, string investorKey, long totalInvestmentAmount)
+        {
+            var key = await _storage.GetKey(projectId);
+
+            var project = (await _storage.Get()).First(f => f.ProjectIdentifier == projectId);
+
+            // build sigs
+            var investmenttrx = _investorTransactionActions.CreateInvestmentTransaction(project, investorKey, totalInvestmentAmount);
+            var recoverytrx = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(investmenttrx, project.PenaltyDate, investorKey);
+            var sigs = _founderTransactionActions.SignInvestorRecoveryTransactions(project, investmenttrx.ToHex(), recoverytrx, key);
+
+            return sigs;
+
+        }
+
+       
+    }
 }
