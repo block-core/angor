@@ -37,7 +37,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         var investorInfoOutput = new TxOut(new Money(0), opReturnScript);
         investmentTransaction.AddOutput(investorInfoOutput);
 
-        var stagesScripts = projectScripts.Select(_ => AngorScripts.CreateStage(network, _));
+        var stagesScripts = projectScripts.Select(_ => AngorScripts.CreateStage(network, _)); //TODO replace angor scripts
 
         var stagesOutputs = stagesScripts.Select((_, i) =>
             new TxOut(new Money(Convert.ToInt64(totalInvestmentAmount * (projectInfo.Stages[i].AmountToRelease / 100))),

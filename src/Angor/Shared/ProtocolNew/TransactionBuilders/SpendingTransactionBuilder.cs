@@ -28,12 +28,14 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
     {
         var network = _networkConfiguration.GetNetwork();
         
+        var startStageIndex = startStage - 1; // from stage number to index in the array
+        
         // We'll use the NBitcoin lib because its a taproot spend
         var nbitcoinNetwork = NetworkMapper.Map(network);
 
         var spendingTrx = nbitcoinNetwork.CreateTransaction();
 
-        var (investorKey, secretHash, investmentTrxOutputs) = GetInvestorTransactionData(investmentTransactionHex, startStage);
+        var (investorKey, secretHash, investmentTrxOutputs) = GetInvestorTransactionData(investmentTransactionHex, startStageIndex);
 
         // Step 1 - the time lock
         // we must set the locktime to be ahead of the current block time
@@ -46,10 +48,10 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         //Need to add the script sig to calculate the fee correctly
         spendingTrx.Inputs.AddRange(investmentTrxOutputs.Select((_,i) =>
         {
-            var stageIndex = i + startStage;
+            var currentStageIndex = i + startStageIndex;
             
             var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
-                    stageIndex, secretHash);
+                    currentStageIndex, secretHash);
 
             var witScript =  new WitScript(buildWitScriptWithSigPlaceholder(scriptStages).Pushes);
 
