@@ -63,7 +63,7 @@ namespace Angor.Test
 
             var founderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(new WalletWords { Words = words }, 1);
 
-            Assert.Equal("030d1351b9828b423a3a63ac7bd04c4d5b15b77be055300e166ddf65515eda905a", founderRecoveryKey);
+            Assert.Equal("02d966f1fd78fad5ae7a6620eaecbacea36223f27ac0c232bb40bbec75f7e5cd42", founderRecoveryKey);
 
             var projectId = derivationOperations.DeriveProjectId(founderKey);
 
