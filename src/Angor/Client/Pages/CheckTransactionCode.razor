@@ -172,7 +172,7 @@ else
 
         context.TransactionHex = transaction.ToHex();
 
-        recoveryTransaction = SeederTransactionActions.BuildRecoverSeederFundsTransaction(transaction, context.ProjectInfo.PenaltyDate, testAddress.PubKey.ToHex());
+        recoveryTransaction = SeederTransactionActions.BuildRecoverSeederFundsTransaction(context.ProjectInfo, transaction, context.ProjectInfo.PenaltyDate, testAddress.PubKey.ToHex());
 
         var signatures = FounderTransactionActions.SignInvestorRecoveryTransactions(context.ProjectInfo, context.TransactionHex, recoveryTransaction, Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()));
 

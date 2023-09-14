@@ -249,6 +249,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
                 _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
             
@@ -303,6 +304,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
                 derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
             projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
@@ -355,6 +357,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
                 derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
             projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
@@ -438,7 +441,7 @@ namespace Angor.Test
 
             investorContext.TransactionHex = investmentTransaction.ToHex();
 
-            var recoveryTransaction = _seederTransactionActions.BuildRecoverSeederFundsTransaction(
+            var recoveryTransaction = _seederTransactionActions.BuildRecoverSeederFundsTransaction(investorContext.ProjectInfo, 
                 investmentTransaction,
                 investorContext.ProjectInfo.PenaltyDate, Encoders.Hex.EncodeData(seederFundsRecoveryKey.PubKey.ToBytes()));
 
@@ -470,7 +473,6 @@ namespace Angor.Test
             // Create the seeder 1 params
             var investorKey = new Key();
             var investorChangeKey = new Key();
-            var investorFundsRecoveryKey = new Key();
 
             var funderKey = _derivationOperations.DeriveFounderKey(words, 1);
             var angorKey = _derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
@@ -508,16 +510,15 @@ namespace Angor.Test
 
             investorContext.TransactionHex = investmentTransaction.ToHex();
 
-            var recoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(
-                investmentTransaction,
-                investorContext.ProjectInfo.PenaltyDate, Encoders.Hex.EncodeData(investorFundsRecoveryKey.PubKey.ToBytes()));
+            var recoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(investorContext.ProjectInfo,
+                investmentTransaction);
 
             var founderSignatures = _founderTransactionActions.SignInvestorRecoveryTransactions(investorContext.ProjectInfo,
                 investmentTransaction.ToHex(),recoveryTransaction,
                 Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
             var signedRecoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(investorContext.ProjectInfo,
-                investmentTransaction, investorFundsRecoveryKey.PubKey.ToHex(),
+                investmentTransaction,
                 founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()));
 
             var nbitcoinNetwork = NetworkMapper.Map(network);
@@ -576,6 +577,7 @@ namespace Angor.Test
                     new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                 },
                 FounderKey = _derivationOperations.DeriveFounderKey(words, 1),
+                FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1),
                 ProjectSeeders = new()
                 {
                     Threshold = 2,

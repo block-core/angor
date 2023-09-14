@@ -107,7 +107,7 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 
             // build sigs
             var investmenttrx = _investorTransactionActions.CreateInvestmentTransaction(project, investorKey, totalInvestmentAmount);
-            var recoverytrx = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(investmenttrx, project.PenaltyDate, investorKey);
+            var recoverytrx = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(project, investmenttrx);
             var sigs = _founderTransactionActions.SignInvestorRecoveryTransactions(project, investmenttrx.ToHex(), recoverytrx, key);
 
             return sigs;

@@ -45,17 +45,17 @@ public class SeederTransactionActions : ISeederTransactionActions
             totalInvestmentAmount);
     }
     
-    public Transaction BuildRecoverSeederFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate,
+    public Transaction BuildRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, DateTime penaltyDate,
         string investorKey)
     {
-        return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(investmentTransaction, penaltyDate,
+        return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, penaltyDate,
             investorKey);
     }
 
     public Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
         string receiveAddress, List<string> founderSignatures, string privateKey, string? secret)
     {
-        var transaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(investmentTransaction, projectInfo.PenaltyDate,
+        var transaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDate,
             receiveAddress);
 
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs[1].ScriptPubKey);

@@ -51,7 +51,8 @@ public class InvestmentOperations
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
         var stagesScript = context.ProjectInfo.Stages
-            .Select(_ => ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
+            .Select(_ => ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey, 
+                context.ProjectInfo.FounderRecoveryKey,
                 context.InvestorKey,
                 context.InvestorSecretHash, 
                 _.ReleaseDate, 
@@ -166,6 +167,7 @@ public class InvestmentOperations
             var pubKeys = ScriptBuilder.GetInvestmentDataFromOpReturnScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
             var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
+                context.ProjectInfo.FounderRecoveryKey,
                 Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
                 pubKeys.secretHash?.ToString(),
                 context.ProjectInfo.Stages[stageNumber - 1].ReleaseDate,
@@ -273,6 +275,7 @@ public class InvestmentOperations
             var stageTransaction = NBitcoin.Transaction.Parse(_.ToHex(), nbitcoinNetwork);
             
             var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
+                context.ProjectInfo.FounderRecoveryKey,
                 Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
                 pubKeys.secretHash?.ToString(),
                 context.ProjectInfo.Stages[i].ReleaseDate,
@@ -312,6 +315,7 @@ public class InvestmentOperations
             var stageTransaction = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
             
             var projectScripts = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
+                context.ProjectInfo.FounderRecoveryKey,
                 Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
                 pubKeys.secretHash?.ToString(),
                 context.ProjectInfo.Stages[index].ReleaseDate,
@@ -405,6 +409,7 @@ public class InvestmentOperations
             var pubKeys = ScriptBuilder.GetInvestmentDataFromOpReturnScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
             var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
+                context.ProjectInfo.FounderRecoveryKey,
                 Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
                 pubKeys.secretHash?.ToString(),
                 context.ProjectInfo.Stages[stageNumber - 1].ReleaseDate,
@@ -512,6 +517,7 @@ public class InvestmentOperations
             var pubKeys = ScriptBuilder.GetInvestmentDataFromOpReturnScript(new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
             var scriptStages = ScriptBuilder.BuildScripts(context.ProjectInfo.FounderKey,
+                context.ProjectInfo.FounderRecoveryKey,
                 Encoders.Hex.EncodeData(pubKeys.investorKey.ToBytes()),
                 pubKeys.secretHash?.ToString(),
                 context.ProjectInfo.Stages[stageNumber - 1].ReleaseDate,

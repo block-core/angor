@@ -15,7 +15,7 @@
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IDerivationOperations _derivationOperations
 @inject IWalletOperations _WalletOperations
-@inject IFounderTransactionActions _founderTransactionActions
+@inject IInvestorTransactionActions _InvestorTransactionActions
 
 @inherits BaseComponent
 
@@ -31,35 +31,41 @@
 
     <NotificationComponent @ref="notificationComponent" />
 
+    <p style="margin-bottom: 20px;">
+        Project ID: <span id="transactionID">@ProjectId</span>
+    </p>
+
+    <p style="margin-bottom: 20px;">
+        Transaction ID: <span id="transactionID">@StageInfo.Trxid</span> | 
+        <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
+    </p>
+    
+    <p>Total funds to recover = @StageInfo.Items.Where(t => !t.IsSpent).Sum(t => t.Amount) BTC</p>
+
+    <button class="btn btn-primary" @onclick="RecoverCoins">Recover Funds</button>
+
     <table class="table">
         <thead>
             <tr>
-                <th>Transaction Details</th>
+                <th>Stage Details</th>
                 <th>Address</th>
                 <th>Status</th>
-                <th>Action</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var transaction in transactions)
+            @foreach (var item in StageInfo.Items)
             {
                 <tr>
-                    <td>@transaction.Amount BTC</td>
-                    <td>@transaction.OutputAddress</td>
+                    <td>@item.Amount BTC</td>
+                    <td>@item.OutputAddress</td>
                     <td>
-                        @if (transaction.IsSpent)
+                        @if (item.IsSpent)
                         {
                             <span class="text-primary">Spent</span>
                         }
                         else
                         {
                             <span class="text-success">Not Spent</span>
-                        }
-                    </td>
-                    <td>
-                        @if (!transaction.IsSpent)
-                        {
-                            <button class="btn btn-primary" @onclick="() => OpenRecoveryModal(transaction)">Recover Funds</button>
                         }
                     </td>
                 </tr>
@@ -77,8 +83,13 @@
                         <button type="button" class="btn-close" @onclick="() => showRecoveryModal = false"></button>
                     </div>
                     <div class="modal-body">
-                        <p class="mb-1">Transaction details: @currentTransaction.Amount BTC</p>
-                        <p class="mb-1">Address: @currentTransaction.OutputAddress</p>
+
+                        <p class="mb-1">The number of stages to be recovered is @recoveryTransaction.Outputs.Count </p>
+
+                        <p class="mb-1">The amount to be recovered in to a penalty = @recoveryTransaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) BTC</p>
+
+                        <p class="mb-1">The penalty duration is @(project.PenaltyDate - DateTime.UtcNow).Days) days </p>
+
                         <hr>
                         <p class="mt-3">Are you sure you want to recover these funds?</p>
                     </div>
@@ -96,35 +107,187 @@
 @code {
     [Parameter]
     public string ProjectId { get; set; }
+    private ProjectInfo project;
 
     private bool showRecoveryModal = false;
-    private Transaction currentTransaction; // Assuming you have a model called Transaction
+    private Transaction investmentTransaction; 
+    private Transaction recoveryTransaction;
+    StageData StageInfo = new();
+    string explorerLink;
 
-    // Sample data. Replace with your actual data fetching method.
-    private List<Transaction> transactions = new List<Transaction>
+    public class StageData
     {
-        new Transaction { Amount = 1, OutputAddress = "address1", IsSpent = false },
-        // Add other sample transactions
-    };
+        public string Trxid;
 
-    private void OpenRecoveryModal(Transaction transaction)
-    {
-        currentTransaction = transaction;
-        showRecoveryModal = true;
+        public List<StageDataTrx> Items = new ();
     }
 
-    private void RecoverFunds()
+    public class StageDataTrx
     {
-        // Logic to recover funds here
+        public int StageIndex;
 
-        showRecoveryModal = false;
+        public int Outputindex;
+        public string OutputAddress;
+        public decimal Amount;
+        public bool IsSpent;
+    } 
+
+    protected override async Task OnInitializedAsync()
+    {
+
     }
 
-    // Your Transaction model for the sake of the example
-    private class Transaction
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        public decimal Amount { get; set; }
-        public string OutputAddress { get; set; }
-        public bool IsSpent { get; set; }
+        if (firstRender)
+        {
+            if (hasWallet)
+            {
+                var operationResult = await notificationComponent.LongOperation(async () =>
+                {
+                    await FindInvestments();
+
+                    await CheckSpentFund();
+
+                    return new OperationResult { Success = true };
+
+                });
+
+                if (operationResult.Success)
+                {
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task FindInvestments()
+    {
+        var network = _NetworkConfiguration.GetNetwork();
+
+        project = storage.GetProjects().First(p => p.ProjectIdentifier == ProjectId);
+
+        var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
+
+        var trxHex = trxs.First(f => f.ProjectIdentifier == ProjectId);
+
+        investmentTransaction = network.CreateTransaction(trxHex.TrxHex);
+        StageInfo.Trxid = trxHex.TrxId;
+
+        explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{trxHex.TrxId}";
+
+        StageInfo.Items.Clear();
+
+        int stageIndex = 0;
+        foreach (var stageInfo in project.Stages)
+        {
+            var output = investmentTransaction.Outputs[stageIndex + 2];
+
+            var insert = new StageDataTrx
+            {
+                OutputAddress = output.ScriptPubKey.WitHash.GetAddress(network).ToString(),
+                Outputindex = stageIndex,
+                Amount = output.Value.ToUnit(MoneyUnit.BTC),
+                StageIndex = stageIndex,
+                IsSpent = false
+            };
+
+            StageInfo.Items.Add(insert);
+
+            stageIndex++;
+        }
+    }
+
+    private async Task CheckSpentFund()
+    {
+        IndexerUrl indexer = _NetworkConfiguration.GetIndexerUrl();
+
+        var url = $"/query/transaction/{StageInfo.Trxid}";
+
+        Console.WriteLine($"fetching {url}");
+
+        var response = await Http.GetAsync(indexer.Url + url);
+        var trx = await response.Content.ReadFromJsonAsync<QueryTransaction>();
+
+        foreach (var item in StageInfo.Items)
+        {
+            var output = trx.Outputs.ElementAt(item.StageIndex + 2);
+
+            if (!string.IsNullOrEmpty(output.SpentInTransaction))
+            {
+                item.IsSpent = true;
+            }
+        }
+    }
+
+    private async Task RecoverCoins()
+    {
+        var network = _NetworkConfiguration.GetNetwork();
+
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
+
+            var sigs = storage.GetSignaturess().First(p => p.ProjectIdentifier == ProjectId);
+
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+
+            recoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project, investmentTransaction, sigs.Signatures, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+
+            // remove outputs that have been spent
+            List<TxOut> toremove = new();
+            foreach (var item in StageInfo.Items)
+            {
+                if (item.IsSpent)
+                {
+                    toremove.Add(recoveryTransaction.Outputs[item.StageIndex]);
+                }
+            }
+
+            foreach (var txOut in toremove)
+            {
+                recoveryTransaction.Outputs.Remove(txOut);
+            }
+
+            // todo: add fee to recovery trasnaction
+
+
+            return new OperationResult { Success = true };
+        });
+
+        if (operationResult.Success)
+        {
+            showRecoveryModal = true;
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private async Task RecoverFunds()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            showRecoveryModal = false;
+
+            var network = _NetworkConfiguration.GetNetwork();
+
+            var response = await _WalletOperations.PublishTransactionAsync(network, recoveryTransaction);
+
+            if (!response.Success)
+                return response;
+
+            return new OperationResult { Success = response.Success, Message = response.Message };
+        });
+
+        if (operationResult.Success)
+        {
+            notificationComponent.ShowNotificationMessage("Done", 1);
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
     }
 }

@@ -6,13 +6,12 @@ namespace Angor.Shared.ProtocolNew;
 public interface IInvestorTransactionActions
 {
     Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey, long totalInvestmentAmount);
-    Transaction BuildRecoverInvestorFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate, string investorKey);
+    Transaction BuildRecoverInvestorFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction);
     Transaction RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex, string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation);
     
     Transaction RecoverRemainingFundsWithOutPenalty(string transactionHex, ProjectInfo projectInfo, int stageIndex, string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation, IEnumerable<byte[]> seederSecrets);
 
-    Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
-        string receiveAddress, List<string> founderSignatures, string privateKey);
+    Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, List<string> founderSignatures, string privateKey);
 
     bool CheckInvestorRecoverySignatures(ProjectInfo projectInfo, Transaction investmentTransaction, List<string> founderSignatures);
 

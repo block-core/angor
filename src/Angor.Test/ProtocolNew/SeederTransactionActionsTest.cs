@@ -107,10 +107,10 @@ public class SeederTransactionActionsTest : AngorTestData
         var penaltyDate = DateTime.Now.AddMonths(6);
         var receiveAddress = Encoders.Hex.EncodeData(changeAddress.PubKey.ToBytes()); 
         
-        var recoveryTransactions = _sut.BuildRecoverSeederFundsTransaction(investmentTrx, penaltyDate, 
+        var recoveryTransactions = _sut.BuildRecoverSeederFundsTransaction(new ProjectInfo(), investmentTrx, penaltyDate, 
             receiveAddress);
         
-        _investmentTransactionBuilder.Verify(_ => _.BuildUpfrontRecoverFundsTransaction(investmentTrx,penaltyDate,receiveAddress),
+        _investmentTransactionBuilder.Verify(_ => _.BuildUpfrontRecoverFundsTransaction(It.IsAny<ProjectInfo>(), investmentTrx,penaltyDate,receiveAddress),
             Times.Once);
     }
 }

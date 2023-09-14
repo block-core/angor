@@ -48,16 +48,15 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         return investmentTransaction;
     }
 
-    public Transaction BuildUpfrontRecoverFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate,
-        string investorKey)
+    public Transaction BuildUpfrontRecoverFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, DateTime penaltyDate, string investorKey)
     {
         var spendingScript = _investmentScriptBuilder.GetInvestorPenaltyTransactionScript(
             investorKey,
             penaltyDate);
 
         var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
-
-        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Where(_ => _.N > 1))
+        
+        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2).Take(projectInfo.Stages.Count))
         {
             transaction.Inputs.Add( new TxIn(output.ToOutPoint()));
 
