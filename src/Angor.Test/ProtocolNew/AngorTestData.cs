@@ -35,6 +35,7 @@ public class AngorTestData
         projectInvestmentInfo.TargetAmount = 3;
         projectInvestmentInfo.StartDate = startDate.Value;
         projectInvestmentInfo.ExpiryDate = startDate.Value.AddDays(5);
+        projectInvestmentInfo.PenaltyDate = startDate.Value.AddDays(10);
         projectInvestmentInfo.Stages = new List<Stage>
         {
             new() { AmountToRelease = (decimal)0.1, ReleaseDate = startDate.Value.AddDays(1) },

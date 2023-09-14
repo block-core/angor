@@ -3,6 +3,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
+using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using Moq;
@@ -20,7 +21,7 @@ namespace Angor.Test.ProtocolNew;
 public class FounderTransactionActionTest : AngorTestData
 {
     private readonly FounderTransactionActions _sut;
-
+    private readonly InvestorTransactionActions _investorTransactionActions;
     private readonly Mock<IWalletOperations> _walletOperations;
 
     private readonly FeeEstimation _expectedFeeEstimation = new()
@@ -50,6 +51,14 @@ public class FounderTransactionActionTest : AngorTestData
 
         _sut = new FounderTransactionActions(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder());
+
+        _investorTransactionActions = new InvestorTransactionActions(
+            new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), 
+            new ProjectScriptsBuilder(_derivationOperations),
+            new SpendingTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+            new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())), 
+            new TaprootScriptBuilder(),
+            _networkConfiguration.Object);
     }
 
     private Transaction GivenASeederTransaction(ProjectInfo projectInvestmentInfo)
@@ -94,22 +103,36 @@ public class FounderTransactionActionTest : AngorTestData
     {
         var words = new WalletWords
             { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
-        var founderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
         var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
 
+        var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
+
+        // To recreate the vector parameters uncomment the code bellow
+        // and in the method SignInvestorRecoveryTransactions use the method
+        // Encoders.Hex.Encode() on the hash of each GetSignatureHashTaproot
+        //var investorKey = _derivationOperations.DeriveInvestorKey(words, projectInvestmentInfo.FounderKey);
+        //var build_investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, investorKey,
+        //    Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+        //var build_recoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInvestmentInfo,
+        //    build_investmentTransaction);
+        //var build_founderSignatures = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo,
+        //    build_investmentTransaction.ToHex(), build_recoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+        //var build_investmentTransactionHex = build_investmentTransaction.ToHex();
+        //var build_recoveryTransactionHex = build_recoveryTransaction.ToHex();
+
         var investmentTrxHex =
-            "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000446a2103c298c205208c0c9e72528063f6fe5351d5c8d6db9c10a59f7c9447f858f31c3b2065e89339765fe3fe59165e4010ba789134af3d4ba194258bf259a97e9b9b75e480c3c9010000000022512017156ec0e463d67a17df8be2fd5fb4f4de965e8ddbbc1754e8c3748f9f178f7580d1f008000000002251207476a7cd846bd4cb4e9ce1b04bb9d542458ce1bc234a4d5c042e228e973f8e7b000e27070000000022512063ce95e900fe97d6521bcf038e3a27cbd8d809add5ca37602524df7428e765e700000000";
-        var recoveryTrxHex = "01000000038f7edbad9acd157df9efe3305b6a578a1348e41c8398bd49d796f8a05161a4480200000000ffffffff8f7edbad9acd157df9efe3305b6a578a1348e41c8398bd49d796f8a05161a4480300000000ffffffff8f7edbad9acd157df9efe3305b6a578a1348e41c8398bd49d796f8a05161a4480400000000ffffffff0380c3c9010000000022002071c48ed956bd7abdafe7f892269537baabc8dc842de21608e4fb475bfeb5dd4580d1f0080000000022002071c48ed956bd7abdafe7f892269537baabc8dc842de21608e4fb475bfeb5dd45000e27070000000022002071c48ed956bd7abdafe7f892269537baabc8dc842de21608e4fb475bfeb5dd4500000000";
+            "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000236a21038a7eedf38d874799c0d7579d5f08d605ca039da7f6dc7c57e6abd82f0f380334e0930400000000002251207aade2c416ca565c1b66041eac56d707a26aa8bab7d217190ecf3aa57899c9a360e316000000000022512048dc0a52f43379c6515962a40eec91d183582c8e2c861d612e4e564617d08a67804f120000000000225120f57ad9ed9e0fb880cda0847cfea668a4c3ccb1b9a08bdbcc3f029e8ad0380c9d00000000";
+        var recoveryTrxHex = "010000000396174a48b38bc96a0addafd1ccfdc478a53aae572c3cc5240b33231939eb67880200000000ffffffff96174a48b38bc96a0addafd1ccfdc478a53aae572c3cc5240b33231939eb67880300000000ffffffff96174a48b38bc96a0addafd1ccfdc478a53aae572c3cc5240b33231939eb67880400000000ffffffff03e09304000000000022002012f9e11fd7142b631007a4c8cde632a0f851fcc6b61fbd6f09ceebf30ea6d4eb60e316000000000022002012f9e11fd7142b631007a4c8cde632a0f851fcc6b61fbd6f09ceebf30ea6d4eb804f12000000000022002012f9e11fd7142b631007a4c8cde632a0f851fcc6b61fbd6f09ceebf30ea6d4eb00000000";
         var recoveryTransaction = Networks.Bitcoin.Testnet().CreateTransaction(recoveryTrxHex);
-        var key = new NBitcoin.Key(founderPrivateKey.ToBytes());
+        var key = new NBitcoin.Key(founderRecoveryPrivateKey.ToBytes());
         var expectedHashes = new List<NBitcoin.uint256>()
         {
-            new(Encoders.Hex.DecodeData("63a125b396400667f7cc70c0f4716cbff98c9b721484fce0b559e32955bfe8ae")),
-            new(Encoders.Hex.DecodeData("692e51930a50ea3687fff64e3b44794ed624e2a58f8df4cd1790197c45b33c12")),
-            new (Encoders.Hex.DecodeData("5a99a107d6d6e45571481f72d17fd193e3d6aec3a234a879ddf712b48ca7cb3b"))
+            new(Encoders.Hex.DecodeData("76e77d8738586b9bafd708421371314872165e9f113946a11bc1112e2fbc8f41")),
+            new(Encoders.Hex.DecodeData("7f0fa60f9f991f291bdaea122635eaab8f3e1a7b29fcb4e5f2e270f0c11ba435")),
+            new (Encoders.Hex.DecodeData("4e4f9533500faea374fd71e59ae3ef20cc9bb397f6a95ee6dcf47fc17e10708b"))
         };
         
-        var result = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, investmentTrxHex, recoveryTransaction, Encoders.Hex.EncodeData(founderPrivateKey.ToBytes()));
+        var result = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, investmentTrxHex, recoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
         Assert.NotEmpty(result);
         Assert.Equal(3,result.Count);
