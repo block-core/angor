@@ -1,3 +1,6 @@
+using Blockcore.Consensus.TransactionInfo;
+using Blockcore.NBitcoin;
+
 namespace Angor.Shared.Models;
 
 public class Outpoint
@@ -8,5 +11,10 @@ public class Outpoint
     public override string ToString()
     {
         return $"{transactionId}-{outputIndex}";
+    }
+
+    public OutPoint ToOutPoint()
+    {
+        return new OutPoint(uint256.Parse(transactionId), outputIndex);
     }
 }

@@ -21,7 +21,7 @@ namespace Angor.Test.ProtocolNew;
 public class FounderTransactionActionTest : AngorTestData
 {
     private readonly FounderTransactionActions _sut;
-    private readonly InvestorTransactionActions _investorTransactionActions;
+    //private readonly InvestorTransactionActions _investorTransactionActions;  // needed to recreate the vector parameters
     private readonly Mock<IWalletOperations> _walletOperations;
 
     private readonly FeeEstimation _expectedFeeEstimation = new()
@@ -52,13 +52,14 @@ public class FounderTransactionActionTest : AngorTestData
         _sut = new FounderTransactionActions(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder());
 
-        _investorTransactionActions = new InvestorTransactionActions(
-            new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), 
-            new ProjectScriptsBuilder(_derivationOperations),
-            new SpendingTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
-            new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())), 
-            new TaprootScriptBuilder(),
-            _networkConfiguration.Object);
+        // needed to recreate the vector parameters
+        //_investorTransactionActions = new InvestorTransactionActions(
+        //    new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), 
+        //    new ProjectScriptsBuilder(_derivationOperations),
+        //    new SpendingTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+        //    new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())), 
+        //    new TaprootScriptBuilder(),
+        //    _networkConfiguration.Object);
     }
 
     private Transaction GivenASeederTransaction(ProjectInfo projectInvestmentInfo)

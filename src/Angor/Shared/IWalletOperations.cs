@@ -24,4 +24,8 @@ public interface IWalletOperations
 
     Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,
         Transaction signedTransaction);
+
+    Transaction AddFeeAndSignTransaction(Network network, string changeAddress, Transaction transaction,
+        WalletWords walletWords, AccountInfo accountInfo,
+        FeeEstimation feeRate);
 }

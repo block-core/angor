@@ -1,5 +1,4 @@
-﻿using Microsoft.JSInterop;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using Angor.Shared.Models;
 
 namespace Angor.Client.Services
