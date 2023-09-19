@@ -99,7 +99,7 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 
         [HttpGet]
         [Route("{projectId}/{investorKey}/{totalInvestmentAmount}")]
-        public async Task<List<string>> Get(string projectId, string investorKey, long totalInvestmentAmount)
+        public async Task<SignatureInfo> Get(string projectId, string investorKey, long totalInvestmentAmount)
         {
             var key = await _storage.GetKey(projectId);
 

@@ -135,13 +135,13 @@ public class FounderTransactionActionTest : AngorTestData
         
         var result = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, investmentTrxHex, recoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
-        Assert.NotEmpty(result);
-        Assert.Equal(3,result.Count);
+        Assert.NotEmpty(result.Signatures);
+        Assert.Equal(3,result.Signatures.Count);
 
-        for (var index = 0; index < result.Count; index++)
+        for (var index = 0; index < result.Signatures.Count; index++)
         {
             Assert.True(key.CreateTaprootKeyPair().PubKey.VerifySignature(
-                expectedHashes[index], TaprootSignature.Parse(result[index]).SchnorrSignature));
+                expectedHashes[index], TaprootSignature.Parse(result.Signatures[index].Signature).SchnorrSignature));
         }
     }
 

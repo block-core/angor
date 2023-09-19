@@ -1,4 +1,6 @@
+using System;
 using System.Diagnostics;
+using System.Reflection;
 using Angor.Shared.Models;
 //using Angor.Shared.Protocol;
 using Angor.Shared.ProtocolNew.Scripts;
@@ -31,40 +33,38 @@ public class FounderTransactionActions : IFounderTransactionActions
         _taprootScriptBuilder = taprootScriptBuilder;
     }
 
-    public List<string> SignInvestorRecoveryTransactions(ProjectInfo projectInfo, string investmentTrxHex, 
+    public SignatureInfo SignInvestorRecoveryTransactions(ProjectInfo projectInfo, string investmentTrxHex, 
         Transaction recoveryTransaction, string founderPrivateKey)
     {
-        var network = _networkConfiguration.GetNetwork();
-        
-        var nbitcoinNetwork = NetworkMapper.Map(network);
-        var investmentTransaction = NBitcoin.Transaction.Parse(investmentTrxHex, nbitcoinNetwork);
-        
-        var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
+        var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
+        var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
+        var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTrxHex, nbitcoinNetwork);
 
-        var (investorKey, secretHash) = GetProjectDetailsFromOpReturn(investmentTransaction);
+        var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
+        const TaprootSigHash sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+
+        var (investorKey, secretHash) = GetProjectDetailsFromOpReturn(nbitcoinInvestmentTransaction);
         
-        var outputs = investmentTransaction.Outputs.AsIndexedOutputs()
-            .Where(_ => _.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))
+        var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
+            .Skip(2).Take(projectInfo.Stages.Count)
             .Select(_ => _.TxOut)
             .ToArray();
 
-        const TaprootSigHash sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+        SignatureInfo info = new SignatureInfo { ProjectIdentifier = projectInfo.ProjectIdentifier };
 
-        var nBitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork); //We need to convert to NBitcoin transactions 
+        for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
+        {
+            var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
 
-        return Enumerable.Range(0,recoveryTransaction.Outputs.Count)
-            .Select(index =>
-            {
-                var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
-                    index, secretHash);
-                
-                var hash = nBitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs ,
-                    new TaprootExecutionData(index,
-                            new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash)
-                        { SigHash = sigHash });
+            var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
+            var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
-                return key.SignTaprootKeySpend(hash, sigHash).ToString();
-            }).ToList();
+            var sig = key.SignTaprootKeySpend(hash, sigHash).ToString();
+
+            info.Signatures.Add(new SignatureInfoItem { Signature = sig, StageIndex = stageIndex });
+        }
+
+        return info;
     }
 
     /// <summary>

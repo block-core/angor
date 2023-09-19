@@ -6,7 +6,7 @@ namespace Angor.Client.Services
     public interface ISignService
     {
         Task AddSignKeyAsync(ProjectInfo project, string founderRecoveryPrivateKey);
-        Task<List<string>> GetInvestmentSigsAsync(string projectId, string investorKey, long totalInvestmentAmount);
+        Task<SignatureInfo> GetInvestmentSigsAsync(string projectId, string investorKey, long totalInvestmentAmount);
     }
 
     public class SignService : ISignService
@@ -26,11 +26,11 @@ namespace Angor.Client.Services
             response.EnsureSuccessStatusCode();
         }
 
-        public async Task<List<string>> GetInvestmentSigsAsync(string projectId, string investorKey, long totalInvestmentAmount)
+        public async Task<SignatureInfo> GetInvestmentSigsAsync(string projectId, string investorKey, long totalInvestmentAmount)
         {
             var response = await _httpClient.GetAsync($"{_baseUrl}/{projectId}/{investorKey}/{totalInvestmentAmount}");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<string>>();
+            return await response.Content.ReadFromJsonAsync<SignatureInfo>();
         }
     }
 }

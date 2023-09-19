@@ -15,6 +15,7 @@ using NBitcoin.Policy;
 using Coin = Blockcore.NBitcoin.Coin;
 using Key = Blockcore.NBitcoin.Key;
 using Money = Blockcore.NBitcoin.Money;
+using MoneyUnit = NBitcoin.MoneyUnit;
 using Transaction = NBitcoin.Transaction;
 using uint256 = Blockcore.NBitcoin.uint256;
 
@@ -517,6 +518,9 @@ namespace Angor.Test
                 investmentTransaction.ToHex(),recoveryTransaction,
                 Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
+            var sigCheckResult = _investorTransactionActions.CheckInvestorRecoverySignatures(investorContext.ProjectInfo, investmentTransaction, founderSignatures);
+            Assert.True(sigCheckResult, "failed to validate the founders signatures");
+
             var signedRecoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(investorContext.ProjectInfo,
                 investmentTransaction,
                 founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()));
@@ -622,6 +626,34 @@ namespace Angor.Test
                 TransactionValidation.ThanTheTransactionHasNoErrors(investorRecoverFundsNoPenalty,
                     investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
             }
+        }
+
+        [Fact]
+        public void TestLive()
+        {
+            var network = Networks.Bitcoin.Testnet();
+            var nbitcoinNetwork = NetworkMapper.Map(network);
+
+            string signedRecoveryTransaction = "01000000000103eb29b9500bae199fe7be415f74256fed56bfa9e945101639261fed43a08abdd10300000000ffffffffeb29b9500bae199fe7be415f74256fed56bfa9e945101639261fed43a08abdd10400000000ffffffff1b73cd0fa4374c29f4b8bedd35c6ca6099b3eb80d1bdb572f0912b52335a99f50500000000ffffffff030087930300000000220020d30c485f5b44be2bfc561f6174e33431ea467437d93a83d790cbbab80da750de000e270700000000220020d30c485f5b44be2bfc561f6174e33431ea467437d93a83d790cbbab80da750de0a4ba71200000000160014c469fa92427e6da0c05294c6fe1b47d68fecf1db0441fbd6a31d93776a9cae7fd8647d6d99ecbcec3536e030bdcdb39ffaf1fd76360ab4ca6574fd4f801cbc1b43ddc4399f4cd144a3f7f25d8e544a33920d02b5d51a8341e44a251dcca10d3e96c1b2a11fa2375b6ac0693a66f9225b80ddf14506afa3e30f03f6e0d52aa0ca2d44712868b807e095a1593945d58ba96b7d265eeaf0cf8b834420ba1295f2b8a82ef5f6cf28c987788b0a0fb9e8dd6bfa46373328d2b947e0ef52ad20459ca76a90a354c2a7026e0f8db0a3457a47521855adcdee2ece6f2a4c6c33c4ac61c09f9aa7a903393a2d6aa6aa744355a25175b7ce04fcd081f04d10802bc90d1003e6055c43b465f7885e3a9a2f14230d469718057c2872c74902d34103f2fbd314f53c9229fa351ac176cd8cabc957072a890d1579e7e67ed190517f18b01b3e4a04410aef28adc3507804eaadaa0c86e1febbf1fe001cd5ea59299d4db41c295c57d949a7eda695a862f83af317b7ae6e81e20de893eff72c5e708d9706571d454118834197bc123193f5d1226c25fd2eeee386a0656e8ee4274b22e0022844ae210bcd058120309432dc7d3e29a5b7ee2c497a422e830a02d655ac895e75f81284d62fda834420ba1295f2b8a82ef5f6cf28c987788b0a0fb9e8dd6bfa46373328d2b947e0ef52ad20459ca76a90a354c2a7026e0f8db0a3457a47521855adcdee2ece6f2a4c6c33c4ac61c19f9aa7a903393a2d6aa6aa744355a25175b7ce04fcd081f04d10802bc90d1003e6055c43b465f7885e3a9a2f14230d469718057c2872c74902d34103f2fbd3142a3f1c6e76d81fe8ff297abc45b697feff2f37fb42d69c9713ced9a49801193c02483045022100c8253cee1b64ef8db4efa2c6f79ffbe2fdeba2f05e4167aa484b00c5dadc82dc02200b10ae34cc9158204a313a69eb708e562935048809456612d92a0be88a37dea0012103f8aca8b4508b117af0a201a46cc6127dab155b62a3cc80f3c3b2fcec770687f500000000";
+
+            var parsedTransaction = NBitcoin.Transaction.Parse(signedRecoveryTransaction, nbitcoinNetwork);
+
+            var builder = nbitcoinNetwork.CreateTransactionBuilder();
+
+            builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Parse("d1bd8aa043ed1f2639161045e9a9bf56ed6f25745f41bee79f19ae0b50b929eb"), 3, new NBitcoin.Money(60000000, MoneyUnit.Satoshi),
+                Script.FromHex("51201ae0d87eaa4d590042454c36c04c86298e1f64786284d1eca5a36dc1492351e9")));
+
+            builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Parse("d1bd8aa043ed1f2639161045e9a9bf56ed6f25745f41bee79f19ae0b50b929eb"), 4, new NBitcoin.Money(120000000, MoneyUnit.Satoshi),
+                Script.FromHex("5120d5cf9377d8d23eb3ad99c521bebe17b17125f0624556590291f313cce608818d")));
+
+            builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Parse("f5995a33522b91f072b5bdd180ebb39960cac635ddbeb8f4294c37a40fcd731b"), 5, new NBitcoin.Money(312957210, MoneyUnit.Satoshi),
+                Script.FromHex("0014c469fa92427e6da0c05294c6fe1b47d68fecf1db")));
+
+            Assert.All(new[] { parsedTransaction }, _ =>
+            {
+                builder.Verify(_, out TransactionPolicyError[] errors);
+                Assert.Empty(errors);
+            });
         }
     }
 }

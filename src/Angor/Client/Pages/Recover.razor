@@ -16,6 +16,7 @@
 @inject IDerivationOperations _derivationOperations
 @inject IWalletOperations _WalletOperations
 @inject IInvestorTransactionActions _InvestorTransactionActions
+@inject ILogger<Recover> Logger;
 
 @inherits BaseComponent
 
@@ -84,7 +85,7 @@
                     </div>
                     <div class="modal-body">
 
-                        <p class="mb-1">The number of stages to be recovered is @recoveryTransaction.Outputs.Count </p>
+                        <p class="mb-1">The number of stages to be recovered is @StageInfo.Items.Count(s => !s.IsSpent) </p>
 
                         <p class="mb-1">The amount to be recovered in to a penalty = @StageInfo.Items.Where(s=> !s.IsSpent).Sum(s=> s.Amount) BTC</p>
 
@@ -233,7 +234,7 @@
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
 
-            recoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project, investmentTransaction, sigs.Signatures, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+            recoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project, investmentTransaction, sigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
             // remove outputs that have been spent
             List<TxOut> removeTxout = new();
@@ -252,6 +253,8 @@
 
             // add fee to the recovery trx
             recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(network, accountInfo.ChangeAddressesInfo.First().Address, recoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
+
+            Logger.LogInformation($"recoveryTransaction={recoveryTransaction.ToHex(network.Consensus.ConsensusFactory)}");
 
             return new OperationResult { Success = true };
         });

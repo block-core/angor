@@ -4,6 +4,7 @@ using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;
+using System;
 using Key = Blockcore.NBitcoin.Key;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 
@@ -124,52 +125,46 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             });
     }
     
-     public Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, List<string> founderSignatures, string privateKey)
+     public Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures, string privateKey)
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs[1].ScriptPubKey);
 
         var recoveryTransaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDate, investorKey);
-        
-        var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), 
-            NetworkMapper.Map(_networkConfiguration.GetNetwork()));
-        
+
+        var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
+        var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
+        var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
+
         var key = new NBitcoin.Key(Encoders.Hex.DecodeData(privateKey));
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
-        
-        var outputs = investmentTransaction.Outputs.AsIndexedOutputs()
+
+        var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
             .Skip(2).Take(projectInfo.Stages.Count)
-            .Select(blockcoreTxOut => new TxOut(
-                new Money(blockcoreTxOut.TxOut.Value.Satoshi),
-                new Script(blockcoreTxOut.TxOut.ScriptPubKey.ToBytes())))
+            .Select(_ => _.TxOut)
             .ToArray();
-        
+
         for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
         {
-            var projectScripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
+            var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
+            var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Recover);
 
-            var controlBlock = _taprootScriptBuilder.CreateControlBlock(projectScripts, _ => _.Recover);
-
-            var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs,
-                new TaprootExecutionData(
-                        stageIndex, 
-                        new NBitcoin.Script(projectScripts.Recover.ToBytes()).TaprootV1LeafHash)
-                    { SigHash = sigHash });
+            var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
+            var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 
             recoveryTransaction.Inputs[stageIndex].WitScript = new Blockcore.Consensus.TransactionInfo.WitScript(
                 new WitScript(
                     Op.GetPushOp(investorSignature.ToBytes()),
-                    Op.GetPushOp(TaprootSignature.Parse(founderSignatures[stageIndex]).ToBytes()),
-
-                    Op.GetPushOp(projectScripts.Recover.ToBytes()),
+                    Op.GetPushOp(TaprootSignature.Parse(founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature).ToBytes()),
+                    Op.GetPushOp(scriptStages.Recover.ToBytes()),
                     Op.GetPushOp(controlBlock.ToBytes())).ToBytes());
         }
 
         return recoveryTransaction;
     }
 
-     public bool CheckInvestorRecoverySignatures(ProjectInfo projectInfo, Transaction investmentTransaction, List<string> founderSignatures)
+     public bool CheckInvestorRecoverySignatures(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures)
      {
          var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs[1].ScriptPubKey);
 
@@ -183,28 +178,22 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
         var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
-            .Where(_ => _.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))
+            .Skip(2).Take(projectInfo.Stages.Count)
             .Select(_ => _.TxOut)
             .ToArray();
 
-        Enumerable.Range(0, recoveryTransaction.Outputs.Count)
-            .Select(stageIndex =>
-            {
-                var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
+        for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
+        {
+            var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
 
-                var hash = nBitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs,
-                    new TaprootExecutionData(stageIndex,
-                            new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash)
-                        { SigHash = sigHash });
+            var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
+            var hash = nBitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
-                var result = pubkey.VerifySignature(hash, TaprootSignature.Parse(founderSignatures[stageIndex]).SchnorrSignature);
+            var result = pubkey.VerifySignature(hash, TaprootSignature.Parse(founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature).SchnorrSignature);
 
-                if (result == false)
-                    throw new Exception("Invaid signatures provided by founder");
-
-                return true;
-
-            }).ToList();
+            if (result == false)
+                throw new Exception("Invalid signatures provided by founder");
+        }
 
         return true;
      }

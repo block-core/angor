@@ -94,7 +94,11 @@ public class WalletOperationsTest : AngorTestData
         var investmentTransactionHex = "010000080005c0c62d000000000016001464159155125d0522f0d951d25bbc584f8ccc48990000000000000000236a2102ee6e8902e7a8a5f343bb768b8bed2245620c886af241e2b374a7906a7d4c20a1c0c62d000000000022512091ffed43dbf778e1a4ab3758fc82189e56a8d99a3224c2a22ee5d3397645ad50c0c62d00000000002251202636cae6c34f00da94453afb36468f0c803402c5c5262aa59bf42800c5c58af4c0c62d0000000000225120f7d4c02d3e8380f8e380d84cf4c383fb745f21a5a09817108075f710002787c300000000";
         var investmentTransaction = network.CreateTransaction(investmentTransactionHex);
 
-        var recoveryTransactions = _sut.AddFeeAndSignTransaction(network, changeAddress, recoveryTransaction, words, accountInfo, new FeeEstimation { FeeRate = 2000 });
+        // remove the first stage to simulate that is was spent
+        recoveryTransaction.Outputs.RemoveAt(0);
+        recoveryTransaction.Inputs.RemoveAt(0);
+
+        var recoveryTransactions = _sut.AddFeeAndSignTransaction(network, changeAddress, recoveryTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
 
         // add the inputs of the investment trx
         List<Blockcore.NBitcoin.Coin> coins = new();
@@ -103,7 +107,7 @@ public class WalletOperationsTest : AngorTestData
             coins.Add(new Blockcore.NBitcoin.Coin(investmentTransaction, (uint)output.N));
         }
 
-        foreach (var input in recoveryTransactions.Inputs.Skip(3))
+        foreach (var input in recoveryTransactions.Inputs.Skip(2))
         {
             // find the spend utxo
             var utxo = accountInfo.AddressesInfo.SelectMany(s => s.UtxoData.Where(u => u.outpoint.ToOutPoint() == input.PrevOut)).First();

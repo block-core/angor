@@ -4,5 +4,5 @@ public class SignatureInfo
 {
     public string ProjectIdentifier { get; set; }
 
-    public List<string> Signatures { get; set; }
+    public List<SignatureInfoItem> Signatures { get; set; } = new();
 }

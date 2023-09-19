@@ -163,7 +163,7 @@
     private ProjectInfo project;
     private bool showCreateModal;
     Transaction signedTransaction;
-    List<string> recoverySigs;
+    SignatureInfo recoverySigs;
 
     protected override async Task OnInitializedAsync()
     {
@@ -326,7 +326,7 @@
 
             var network = _NetworkConfiguration.GetNetwork();
 
-            storage.AddSignatures(new SignatureInfo { ProjectIdentifier = project.ProjectIdentifier, Signatures = recoverySigs });
+            storage.AddSignatures(recoverySigs);
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 

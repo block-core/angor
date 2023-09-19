@@ -53,50 +53,45 @@ public class SeederTransactionActions : ISeederTransactionActions
     }
 
     public Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
-        string receiveAddress, List<string> founderSignatures, string privateKey, string? secret)
+        string receiveAddress, SignatureInfo founderSignatures, string privateKey, string? secret)
     {
-        var transaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDate,
-            receiveAddress);
+        var recoveryTransaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDate, receiveAddress);
 
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs[1].ScriptPubKey);
         
-        var nBitcoinTransaction = NBitcoin.Transaction.Parse(transaction.ToHex(), 
-            NetworkMapper.Map(_networkConfiguration.GetNetwork()));
+        var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
+        var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
+        var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
 
-        var outputs = investmentTransaction.Outputs.AsIndexedOutputs()
-            .Where(_ => _.N > 1)
-            .Select(blockcoreTxOut => new TxOut(
-                    new Money(blockcoreTxOut.TxOut.Value.Satoshi),
-                    new Script(blockcoreTxOut.TxOut.ScriptPubKey.ToBytes())))
+
+        var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
+            .Skip(2).Take(projectInfo.Stages.Count)
+            .Select(_ => _.TxOut)
             .ToArray();
-        
+
         var key = new Key(Encoders.Hex.DecodeData(privateKey));
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
-        
-        for (var stageIndex = 0; stageIndex < nBitcoinTransaction.Outputs.Count; stageIndex++)
+
+        for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
         {
             var projectScripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
 
             var controlBlock = _taprootScriptBuilder.CreateControlBlock(projectScripts, _ => _.Recover);
 
-            var hash = nBitcoinTransaction.GetSignatureHashTaproot(outputs,
-                new TaprootExecutionData(
-                        stageIndex, 
-                        new NBitcoin.Script(projectScripts.Recover.ToBytes()).TaprootV1LeafHash)
-                    { SigHash = sigHash });
+            var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(projectScripts.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
+            var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 
-            transaction.Inputs[stageIndex].WitScript = new WitScript(
-                    Op.GetPushOp(new Key(Encoders.Hex.DecodeData(secret)).ToBytes()),
+            recoveryTransaction.Inputs[stageIndex].WitScript = new WitScript(
+                   Op.GetPushOp(new Key(Encoders.Hex.DecodeData(secret)).ToBytes()),
                             Op.GetPushOp(investorSignature.ToBytes()),
-                            Op.GetPushOp(TaprootSignature.Parse(founderSignatures[stageIndex]).ToBytes()),
-
+                            Op.GetPushOp(TaprootSignature.Parse(founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature).ToBytes()),
                             Op.GetPushOp(projectScripts.Recover.ToBytes()),
                             Op.GetPushOp(controlBlock.ToBytes()));
         }
 
-        return transaction;
+        return recoveryTransaction;
     }
 
     public Transaction RecoverEndOfProjectFunds(string investmentTransactionHex, ProjectInfo projectInfo, int stageIndex, string investorReceiveAddress,
