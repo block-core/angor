@@ -11,6 +11,7 @@
 
 @inherits BaseComponent
 
+@inject ILogger<Invest> _Logger;
 @inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
@@ -302,7 +303,7 @@
             recoverySigs = await _SignService.GetInvestmentSigsAsync(project.ProjectIdentifier, context.InvestorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
             // validate the signatures
-            _InvestorTransactionActions.CheckInvestorRecoverySignatures(context.ProjectInfo, transaction, recoverySigs);
+            _InvestorTransactionActions.CheckInvestorRecoverySignatures(context.ProjectInfo, signedTransaction, recoverySigs);
 
             return new OperationResult { Success = true };
 

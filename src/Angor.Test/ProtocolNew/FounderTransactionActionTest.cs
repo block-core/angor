@@ -6,6 +6,7 @@ using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NBitcoin;
 using Hashes = Blockcore.NBitcoin.Crypto.Hashes;
@@ -49,7 +50,7 @@ public class FounderTransactionActionTest : AngorTestData
             });
 
 
-        _sut = new FounderTransactionActions(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations),
+        _sut = new FounderTransactionActions(new NullLogger<FounderTransactionActions>(), _networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder());
 
         // needed to recreate the vector parameters

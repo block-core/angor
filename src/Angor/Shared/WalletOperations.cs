@@ -162,7 +162,7 @@ public class WalletOperations : IWalletOperations
 
         if (total < sendAmountat)
         {
-            throw new ApplicationException($"Not enough funds, expected {sendAmountat} BTC, found {total} BTC");
+            throw new ApplicationException($"Not enough funds, expected {Money.Satoshis(sendAmountat)} BTC, found {Money.Satoshis(total)} BTC");
         }
 
         return utxosToSpend;

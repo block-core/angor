@@ -8,6 +8,7 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace Angor.Test.ProtocolNew;
@@ -28,7 +29,7 @@ public class SeederTransactionActionsTest : AngorTestData
 
         _investmentTransactionBuilder = new Mock<IInvestmentTransactionBuilder>();
         
-        _sut = new SeederTransactionActions(
+        _sut = new SeederTransactionActions(new NullLogger<SeederTransactionActions>(),
             _investmentScriptBuilder.Object, 
             _projectScriptsBuilder.Object,
             new SpendingTransactionBuilder(

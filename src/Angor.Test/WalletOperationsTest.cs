@@ -19,6 +19,11 @@ using Angor.Client.Services;
 using ISecret = Blockcore.NBitcoin.ISecret;
 using Money = Blockcore.NBitcoin.Money;
 using uint256 = Blockcore.NBitcoin.uint256;
+using Polly;
+using NBitcoin.RPC;
+using Network = NBitcoin.Network;
+using Transaction = NBitcoin.Transaction;
+using WitScript = NBitcoin.WitScript;
 
 namespace Angor.Test;
 
@@ -27,12 +32,25 @@ public class WalletOperationsTest : AngorTestData
     private WalletOperations _sut;
 
     private readonly Mock<IIndexerService> _indexerService;
+    private readonly InvestorTransactionActions _investorTransactionActions;
+    private readonly FounderTransactionActions _founderTransactionActions;
 
     public WalletOperationsTest()
     {
         _indexerService = new Mock<IIndexerService>();
 
         _sut = new WalletOperations(_indexerService.Object, new HdOperations(), new NullLogger<WalletOperations>(), _networkConfiguration.Object);
+
+        _investorTransactionActions = new InvestorTransactionActions(new NullLogger<InvestorTransactionActions>(),
+            new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
+            new ProjectScriptsBuilder(_derivationOperations),
+            new SpendingTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+            new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+            new TaprootScriptBuilder(),
+            _networkConfiguration.Object);
+
+        _founderTransactionActions = new FounderTransactionActions(new NullLogger<FounderTransactionActions>(), _networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations),
+            new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder());
     }
 
 
@@ -107,16 +125,77 @@ public class WalletOperationsTest : AngorTestData
             coins.Add(new Blockcore.NBitcoin.Coin(investmentTransaction, (uint)output.N));
         }
 
-        foreach (var input in recoveryTransactions.Inputs.Skip(2))
+        //add all utxos as coins (easier)
+        foreach (var utxo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo).SelectMany(s => s.UtxoData))
         {
-            // find the spend utxo
-            var utxo = accountInfo.AddressesInfo.SelectMany(s => s.UtxoData.Where(u => u.outpoint.ToOutPoint() == input.PrevOut)).First();
-
-            // add the inputs of the fee
             coins.Add(new Blockcore.NBitcoin.Coin(Blockcore.NBitcoin.uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
                 new Money(utxo.value), Blockcore.Consensus.ScriptInfo.Script.FromHex(utxo.scriptHex))); //Adding fee inputs
         }
 
         TransactionValidation.ThanTheTransactionHasNoErrors(recoveryTransactions, coins);
+    }
+
+    [Fact]
+    public void AddInputsAndSignTransaction()
+    {
+        var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+
+        AccountInfo accountInfo = _sut.BuildAccountInfoForWalletWords(words);
+
+        AddCoins(accountInfo, 6, 50000000);
+
+        var network = _networkConfiguration.Object.GetNetwork();
+
+        var projectInfo = new ProjectInfo();
+        projectInfo.TargetAmount = 3;
+        projectInfo.StartDate = DateTime.UtcNow;
+        projectInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
+        projectInfo.PenaltyDate= DateTime.UtcNow.AddDays(10);
+        projectInfo.Stages = new List<Stage>
+        {
+            new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+            new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+            new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+        };
+        projectInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
+        projectInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
+        projectInfo.ProjectIdentifier = _derivationOperations.DeriveAngorKey(projectInfo.FounderKey, angorRootKey);
+
+        var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
+
+        var investmentAmount = 10;
+        var investorKey = _derivationOperations.DeriveInvestorKey(words, projectInfo.FounderKey);
+        var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, projectInfo.FounderKey);
+
+        var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investorKey, Money.Coins(investmentAmount).Satoshi);
+        var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(network, accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
+        var strippedInvestmentTransaction = network.CreateTransaction(signedInvestmentTransaction.ToHex());
+        strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
+        Assert.Equal(signedInvestmentTransaction.GetHash(), strippedInvestmentTransaction.GetHash());
+
+        var unsignedRecoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInfo, strippedInvestmentTransaction);
+        var recoverySigs = _founderTransactionActions.SignInvestorRecoveryTransactions(projectInfo, strippedInvestmentTransaction.ToHex(), unsignedRecoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+
+        _investorTransactionActions.CheckInvestorRecoverySignatures(projectInfo, signedInvestmentTransaction, recoverySigs);
+
+        var recoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(projectInfo, signedInvestmentTransaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+
+        var signedRecoveryTransaction = _sut.AddFeeAndSignTransaction(network, accountInfo.GetNextReceiveAddress(), recoveryTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
+
+        // add the inputs of the investment trx
+        List<Blockcore.NBitcoin.Coin> coins = new();
+        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2))
+        {
+            coins.Add(new Blockcore.NBitcoin.Coin(signedInvestmentTransaction, (uint)output.N));
+        }
+
+        //add all utxos as coins (easier)
+        foreach (var utxo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo).SelectMany(s => s.UtxoData))
+        {
+                coins.Add(new Blockcore.NBitcoin.Coin(Blockcore.NBitcoin.uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
+                    new Money(utxo.value), Blockcore.Consensus.ScriptInfo.Script.FromHex(utxo.scriptHex))); //Adding fee inputs
+        }
+
+        TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction, coins);
     }
 }
