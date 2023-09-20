@@ -180,6 +180,10 @@ public class WalletOperationsTest : AngorTestData
 
         var recoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(projectInfo, signedInvestmentTransaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
+        // remove the first stage to simulate that is was spent
+        recoveryTransaction.Outputs.RemoveAt(0);
+        recoveryTransaction.Inputs.RemoveAt(0);
+
         var signedRecoveryTransaction = _sut.AddFeeAndSignTransaction(accountInfo.GetNextReceiveAddress(), recoveryTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
 
         // add the inputs of the investment trx

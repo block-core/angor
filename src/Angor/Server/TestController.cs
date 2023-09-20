@@ -1,6 +1,8 @@
 using Angor.Server;
+using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.ProtocolNew;
+using Blockcore.Consensus.TransactionInfo;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blockcore.AtomicSwaps.Server.Controllers
@@ -83,12 +85,14 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
         private readonly TestStorageService _storage;
         private readonly IFounderTransactionActions _founderTransactionActions;
         private readonly IInvestorTransactionActions _investorTransactionActions;
+        private readonly INetworkConfiguration _networkConfiguration;
 
-        public TestSignController(TestStorageService storage, IFounderTransactionActions founderTransactionActions, IInvestorTransactionActions investorTransactionActions)
+        public TestSignController(TestStorageService storage, IFounderTransactionActions founderTransactionActions, IInvestorTransactionActions investorTransactionActions, INetworkConfiguration networkConfiguration)
         {
             _storage = storage;
             _founderTransactionActions = founderTransactionActions;
             _investorTransactionActions = investorTransactionActions;
+            _networkConfiguration = networkConfiguration;
         }
         
         [HttpPost]
@@ -97,23 +101,19 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
             await _storage.AddKey(project.ProjectIdentifier, project.FounderRecoveryPrivateKey);
         }
 
-        [HttpGet]
-        [Route("{projectId}/{investorKey}/{totalInvestmentAmount}")]
-        public async Task<SignatureInfo> Get(string projectId, string investorKey, long totalInvestmentAmount)
+        [HttpPost]
+        [Route("sign")]
+        public async Task<SignatureInfo> Post([FromBody] SignRecoveryRequest signRecoveryRequest)
         {
-            var key = await _storage.GetKey(projectId);
+            var key = await _storage.GetKey(signRecoveryRequest.ProjectIdentifier);
 
-            var project = (await _storage.Get()).First(f => f.ProjectIdentifier == projectId);
+            var project = (await _storage.Get()).First(f => f.ProjectIdentifier == signRecoveryRequest.ProjectIdentifier);
 
             // build sigs
-            var investmenttrx = _investorTransactionActions.CreateInvestmentTransaction(project, investorKey, totalInvestmentAmount);
-            var recoverytrx = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(project, investmenttrx);
-            var sigs = _founderTransactionActions.SignInvestorRecoveryTransactions(project, investmenttrx.ToHex(), recoverytrx, key);
+            var recoverytrx = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(project, _networkConfiguration.GetNetwork().CreateTransaction(signRecoveryRequest.InvestmentTransaction));
+            var sigs = _founderTransactionActions.SignInvestorRecoveryTransactions(project, signRecoveryRequest.InvestmentTransaction, recoverytrx, key);
 
             return sigs;
-
         }
-
-       
     }
 }

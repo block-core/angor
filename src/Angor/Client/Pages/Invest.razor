@@ -300,7 +300,15 @@
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
 
-            recoverySigs = await _SignService.GetInvestmentSigsAsync(project.ProjectIdentifier, context.InvestorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
+            // remove signatures when requesting founder to sign 
+            var strippedInvestmentTransaction = network.CreateTransaction(signedTransaction.ToHex());
+            strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
+
+            recoverySigs = await _SignService.GetInvestmentSigsAsync(new SignRecoveryRequest
+            {
+                ProjectIdentifier = project.ProjectIdentifier, 
+                InvestmentTransaction = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory)
+            });
 
             // validate the signatures
             _InvestorTransactionActions.CheckInvestorRecoverySignatures(context.ProjectInfo, signedTransaction, recoverySigs);
