@@ -8,6 +8,7 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace Angor.Test.ProtocolNew;
@@ -28,7 +29,7 @@ public class SeederTransactionActionsTest : AngorTestData
 
         _investmentTransactionBuilder = new Mock<IInvestmentTransactionBuilder>();
         
-        _sut = new SeederTransactionActions(
+        _sut = new SeederTransactionActions(new NullLogger<SeederTransactionActions>(),
             _investmentScriptBuilder.Object, 
             _projectScriptsBuilder.Object,
             new SpendingTransactionBuilder(
@@ -105,12 +106,13 @@ public class SeederTransactionActionsTest : AngorTestData
         
         var investmentTrx = Networks.Bitcoin.Testnet().Consensus.ConsensusFactory.CreateTransaction(investmentTrxHex);
         var penaltyDate = DateTime.Now.AddMonths(6);
-        var receiveAddress = Encoders.Hex.EncodeData(changeAddress.PubKey.ToBytes()); 
-        
-        var recoveryTransactions = _sut.BuildRecoverSeederFundsTransaction(investmentTrx, penaltyDate, 
+        var receiveAddress = Encoders.Hex.EncodeData(changeAddress.PubKey.ToBytes());
+        var newProject = new ProjectInfo();
+
+        var recoveryTransactions = _sut.BuildRecoverSeederFundsTransaction(newProject, investmentTrx, penaltyDate, 
             receiveAddress);
         
-        _investmentTransactionBuilder.Verify(_ => _.BuildUpfrontRecoverFundsTransaction(investmentTrx,penaltyDate,receiveAddress),
+        _investmentTransactionBuilder.Verify(_ => _.BuildUpfrontRecoverFundsTransaction(newProject, investmentTrx,penaltyDate,receiveAddress),
             Times.Once);
     }
 }

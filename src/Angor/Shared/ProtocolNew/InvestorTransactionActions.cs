@@ -4,6 +4,8 @@ using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;
+using System;
+using Microsoft.Extensions.Logging;
 using Key = Blockcore.NBitcoin.Key;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 
@@ -11,6 +13,7 @@ namespace Angor.Shared.ProtocolNew;
 
 public class InvestorTransactionActions : IInvestorTransactionActions
 {
+    private readonly ILogger<InvestorTransactionActions> _logger;
     private readonly IInvestmentScriptBuilder _investmentScriptBuilder;
     private readonly IProjectScriptsBuilder _projectScriptsBuilder;
     private readonly ISpendingTransactionBuilder _spendingTransactionBuilder;
@@ -18,8 +21,9 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     private readonly ITaprootScriptBuilder _taprootScriptBuilder;
     private readonly INetworkConfiguration _networkConfiguration;
 
-    public InvestorTransactionActions(IInvestmentScriptBuilder investmentScriptBuilder, IProjectScriptsBuilder projectScriptsBuilder, ISpendingTransactionBuilder spendingTransactionBuilder, IInvestmentTransactionBuilder investmentTransactionBuilder, ITaprootScriptBuilder taprootScriptBuilder, INetworkConfiguration networkConfiguration)
+    public InvestorTransactionActions(ILogger<InvestorTransactionActions> logger, IInvestmentScriptBuilder investmentScriptBuilder, IProjectScriptsBuilder projectScriptsBuilder, ISpendingTransactionBuilder spendingTransactionBuilder, IInvestmentTransactionBuilder investmentTransactionBuilder, ITaprootScriptBuilder taprootScriptBuilder, INetworkConfiguration networkConfiguration)
     {
+        _logger = logger;
         _investmentScriptBuilder = investmentScriptBuilder;
         _projectScriptsBuilder = projectScriptsBuilder;
         _spendingTransactionBuilder = spendingTransactionBuilder;
@@ -42,10 +46,11 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             totalInvestmentAmount);
     }
 
-    public Transaction BuildRecoverInvestorFundsTransaction(Transaction investmentTransaction, DateTime penaltyDate, string investorReceiveAddress)
+    public Transaction BuildRecoverInvestorFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction)
     {
-        return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(investmentTransaction, penaltyDate,
-            investorReceiveAddress);
+        var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
+
+        return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDate, investorKey);
     }
 
     public Transaction RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex,
@@ -123,50 +128,82 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             });
     }
     
-     public Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
-        string receiveAddress, List<string> founderSignatures, string privateKey)
+     public Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures, string investorPrivateKey)
     {
-        var transaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(investmentTransaction, projectInfo.PenaltyDate,
-            receiveAddress);
+        var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
-        var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs[1].ScriptPubKey);
-        
-        var nBitcoinTransaction = NBitcoin.Transaction.Parse(transaction.ToHex(), 
-            NetworkMapper.Map(_networkConfiguration.GetNetwork()));
-        
-        var key = new NBitcoin.Key(Encoders.Hex.DecodeData(privateKey));
+        var recoveryTransaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDate, investorKey);
+
+        var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
+        var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
+        var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
+
+        var key = new NBitcoin.Key(Encoders.Hex.DecodeData(investorPrivateKey));
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
-        
-        var outputs = investmentTransaction.Outputs.AsIndexedOutputs()
-            .Where(_ => _.N > 1)
-            .Select(blockcoreTxOut => new TxOut(
-                new Money(blockcoreTxOut.TxOut.Value.Satoshi),
-                new Script(blockcoreTxOut.TxOut.ScriptPubKey.ToBytes())))
+
+        var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
+            .Skip(2).Take(projectInfo.Stages.Count)
+            .Select(_ => _.TxOut)
             .ToArray();
-        
-        for (var stageIndex = 0; stageIndex < nBitcoinTransaction.Outputs.Count; stageIndex++)
+
+        // todo: david change to Enumerable.Range 
+        for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
         {
-            var projectScripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
+            var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
+            var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Recover);
 
-            var controlBlock = _taprootScriptBuilder.CreateControlBlock(projectScripts, _ => _.Recover);
+            var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
+            var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
-            var hash = nBitcoinTransaction.GetSignatureHashTaproot(outputs,
-                new TaprootExecutionData(
-                        stageIndex, 
-                        new NBitcoin.Script(projectScripts.Recover.ToBytes()).TaprootV1LeafHash)
-                    { SigHash = sigHash });
+            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; investor-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}");
 
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 
-            transaction.Inputs[stageIndex].WitScript = new Blockcore.Consensus.TransactionInfo.WitScript(
+            recoveryTransaction.Inputs[stageIndex].WitScript = new Blockcore.Consensus.TransactionInfo.WitScript(
                 new WitScript(
                     Op.GetPushOp(investorSignature.ToBytes()),
-                    Op.GetPushOp(TaprootSignature.Parse(founderSignatures[stageIndex]).ToBytes()),
-
-                    Op.GetPushOp(projectScripts.Recover.ToBytes()),
+                    Op.GetPushOp(TaprootSignature.Parse(founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature).ToBytes()),
+                    Op.GetPushOp(scriptStages.Recover.ToBytes()),
                     Op.GetPushOp(controlBlock.ToBytes())).ToBytes());
         }
 
-        return transaction;
+        return recoveryTransaction;
     }
+
+     public bool CheckInvestorRecoverySignatures(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures)
+     {
+         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
+
+        var recoveryTransaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDate, investorKey);
+
+        var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
+        var nBitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
+        var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
+
+        var pubkey = new PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey();
+        var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+
+        var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
+            .Skip(2).Take(projectInfo.Stages.Count)
+            .Select(_ => _.TxOut)
+            .ToArray();
+
+        // todo: david change to Enumerable.Range 
+        for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
+        {
+            var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
+
+            var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
+            var hash = nBitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
+
+            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={projectInfo.FounderRecoveryKey}; stage={stageIndex}; hash={hash}");
+
+            var result = pubkey.VerifySignature(hash, TaprootSignature.Parse(founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature).SchnorrSignature);
+
+            if (result == false)
+                throw new Exception("Invalid signatures provided by founder");
+        }
+
+        return true;
+     }
 }

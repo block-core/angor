@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text;
+using Angor.Client.Services;
 using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
@@ -13,20 +14,20 @@ namespace Angor.Shared;
 
 public class WalletOperations : IWalletOperations 
 {
-    private readonly HttpClient _http;
     private readonly IHdOperations _hdOperations;
     private readonly ILogger<WalletOperations> _logger;
     private readonly INetworkConfiguration _networkConfiguration;
+    private readonly IIndexerService _indexerService;
 
     private const int AccountIndex = 0; // for now only account 0
     private const int Purpose = 84; // for now only legacy
 
-    public WalletOperations(HttpClient http, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration)
+    public WalletOperations(IIndexerService indexerService, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration)
     {
-        _http = http;
         _hdOperations = hdOperations;
         _logger = logger;
         _networkConfiguration = networkConfiguration;
+        _indexerService = indexerService;
     }
 
     public string GenerateWalletWords()
@@ -37,10 +38,12 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
     
-    public Transaction AddInputsAndSignTransaction(Network network, string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo,//TODO change the passing of wallet words as parameter after refactoring is complete
+    public Transaction AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
+        WalletWords walletWords, AccountInfo accountInfo,
         FeeEstimation feeRate)
     {
+        Network network = _networkConfiguration.GetNetwork();
+
         var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
@@ -55,6 +58,47 @@ public class WalletOperations : IWalletOperations
         var signTransaction = builder.BuildTransaction(true);
 
         return signTransaction;
+    }
+
+
+    public Transaction AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
+        WalletWords walletWords, AccountInfo accountInfo,
+        FeeEstimation feeRate)
+    {
+        Network network = _networkConfiguration.GetNetwork();
+
+        var changeOutput = transaction.AddOutput(Money.Zero, BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
+
+        var virtualSize = transaction.GetVirtualSize(4);
+        var fee = new FeeRate(Money.Satoshis(feeRate.FeeRate)).GetFee(virtualSize);
+        
+        var utxoDataWithPaths = FindOutputsForTransaction((long)fee, accountInfo);
+        var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+
+        var totalSats = coins.coins.Sum(s => s.Amount.Satoshi);
+        totalSats -= fee;
+        changeOutput.Value = new Money(totalSats);
+
+        // add all inputs
+        foreach (var coin in coins.coins)
+        {
+            transaction.AddInput(new TxIn(coin.Outpoint, null));
+        }
+
+        // sign each new input
+        var index = 0;
+        foreach (var coin in coins.coins)
+        {
+            var key = coins.keys[index];
+
+            var input = transaction.Inputs.Single(p => p.PrevOut == coin.Outpoint);
+            var signature = transaction.SignInput(network, key, coin, SigHash.All);
+            input.WitScript = new WitScript(Op.GetPushOp(signature.ToBytes()), Op.GetPushOp(key.PubKey.ToBytes()));
+
+            index++;
+        }
+
+        return transaction;
     }
 
     public async Task<OperationResult<Transaction>> SendAmountToAddress(WalletWords walletWords, SendInfo sendInfo) //TODO change the passing of wallet words as parameter after refactoring is complete
@@ -89,19 +133,13 @@ public class WalletOperations : IWalletOperations
     public async Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,Transaction signedTransaction)
     {
         var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
-        
-        var indexer = _networkConfiguration.GetIndexerUrl();
 
-        var endpoint = Path.Combine(indexer.Url, "command/send");
+        var res = await _indexerService.PublishTransactionAsync(hex);
 
-        var res = await _http.PostAsync(endpoint, new StringContent(hex));
-
-        if (res.IsSuccessStatusCode)
+        if (string.IsNullOrEmpty(res))
             return new OperationResult<Transaction> { Success = true, Data = signedTransaction };
 
-        var content = await res.Content.ReadAsStringAsync();
-
-        return new OperationResult<Transaction> { Success = false, Message = res.ReasonPhrase + content };
+        return new OperationResult<Transaction> { Success = false, Message = res };
     }
 
     public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
@@ -128,7 +166,7 @@ public class WalletOperations : IWalletOperations
 
         if (total < sendAmountat)
         {
-            throw new ApplicationException($"Not enough funds, expected {sendAmountat} BTC, found {total} BTC");
+            throw new ApplicationException($"Not enough funds, expected {Money.Satoshis(sendAmountat)} BTC, found {Money.Satoshis(total)} BTC");
         }
 
         return utxosToSpend;
@@ -251,7 +289,6 @@ public class WalletOperations : IWalletOperations
                 accountInfo.AddressesInfo.Remove(addressInfoToDelete);
             
             accountInfo.AddressesInfo.Add(addressInfo);
-            accountInfo.TotalBalance += addressInfo.Balance;
         }
 
         var (changeIndex, changeItems) = await FetchAddressesDataForPubKeyAsync(accountInfo.LastFetchChangeIndex, accountInfo.ExtPubKey, network, true);
@@ -264,8 +301,9 @@ public class WalletOperations : IWalletOperations
                 accountInfo.ChangeAddressesInfo.Remove(addressInfoToDelete);
             
             accountInfo.ChangeAddressesInfo.Add(changeAddressInfo);
-            accountInfo.TotalBalance += changeAddressInfo.Balance;
         }
+
+        accountInfo.TotalBalance = accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo).SelectMany(s => s.UtxoData).Sum(s => s.value);
     }
 
     private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
@@ -284,15 +322,7 @@ public class WalletOperations : IWalletOperations
                 .ToList();
 
             //check all new addresses for balance or a history
-            var urlBalance = "/query/addresses/balance";
-            var indexer = _networkConfiguration.GetIndexerUrl();
-            var response = await _http.PostAsJsonAsync(indexer.Url + urlBalance,
-                newAddressesToCheck.Select(_ => _.Address).ToArray());
-
-            if (!response.IsSuccessStatusCode)
-                throw new InvalidOperationException(response.ReasonPhrase);
-
-            addressesNotEmpty = (await response.Content.ReadFromJsonAsync<AddressBalance[]>())?.ToArray() ?? Array.Empty<AddressBalance>();
+            addressesNotEmpty = await _indexerService.GetAdressBalancesAsync(newAddressesToCheck);
 
             if (addressesNotEmpty.Length < newAddressesToCheck.Count)
                 newEmptyAddress = newAddressesToCheck[addressesNotEmpty.Length];
@@ -346,13 +376,7 @@ public class WalletOperations : IWalletOperations
         do
         {
             // this is inefficient look at headers to know when to stop
-
-            var url = $"/query/address/{address}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
-
-            Console.WriteLine($"fetching {url}");
-
-            var response = await _http.GetAsync(indexer.Url + url);
-            var utxo = await response.Content.ReadFromJsonAsync<List<UtxoData>>();
+            var utxo = await _indexerService.FetchUtxoAsync(address, offset, limit);
 
             if (utxo == null || !utxo.Any())
                 break;
@@ -374,24 +398,18 @@ public class WalletOperations : IWalletOperations
 
         try
         {
-            IndexerUrl indexer = _networkConfiguration.GetIndexerUrl();
+            _logger.LogInformation($"fetching fee estimation for blocks");
 
-            var url = blocks.Aggregate("/stats/fee?", (current, block) => current + $@"confirmations={block}&");
-
-            _logger.LogInformation($"fetching fee estimation for blocks - {url}");
-
-            var response = await _http.GetAsync(indexer.Url + url);
-            
-            var feeEstimations = await response.Content.ReadFromJsonAsync<FeeEstimations>();
+            var feeEstimations = await _indexerService.GetFeeEstimation(blocks);
 
             if (feeEstimations == null || (!feeEstimations.Fees?.Any() ?? true))
                 return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRate = 10000 / _});
 
-            return feeEstimations.Fees;
+            return feeEstimations.Fees!;
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            _logger.LogError(e.Message, e);
             throw;
         }
     }

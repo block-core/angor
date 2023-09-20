@@ -119,8 +119,8 @@ public class InvestmentTransactionBuilderTest : AngorTestData
 
         _investmentScriptBuilder.Setup(_ => _.GetInvestorPenaltyTransactionScript(It.IsAny<string>(), It.IsAny<DateTime>()))
             .Returns(new Key().ScriptPubKey);
-        
-        var recoveryTransaction = _sut.BuildUpfrontRecoverFundsTransaction(investmentTrx, DateTime.Now.AddMonths(6), 
+
+        var recoveryTransaction = _sut.BuildUpfrontRecoverFundsTransaction(new ProjectInfo { Stages = new List<Stage> { new Stage(), new Stage(), new Stage() } }, investmentTrx, DateTime.Now.AddMonths(6),
             Encoders.Hex.EncodeData(changeAddress.PubKey.ToBytes()));
 
         //All inputs are from the investment transaction outputs
@@ -143,7 +143,7 @@ public class InvestmentTransactionBuilderTest : AngorTestData
         _investmentScriptBuilder.Setup(_ => _.GetInvestorPenaltyTransactionScript(expectedAddress, expectedDateTime))
             .Returns(expectedScript);
 
-        var recoveryTransaction = _sut.BuildUpfrontRecoverFundsTransaction(investmentTrx, 
+        var recoveryTransaction = _sut.BuildUpfrontRecoverFundsTransaction(new ProjectInfo { Stages = new List<Stage> { new Stage(), new Stage(), new Stage() } }, investmentTrx, 
             expectedDateTime, expectedAddress);
         
         //All outputs pay to the penalty script

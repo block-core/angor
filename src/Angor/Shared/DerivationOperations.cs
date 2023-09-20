@@ -30,11 +30,13 @@ public class DerivationOperations : IDerivationOperations
         for (int i = 0; i < 5; i++)
         {
             var founderKey = DeriveFounderKey(walletWords, i);
+            var founderRecoveryKey = DeriveFounderRecoveryKey(walletWords, i);
             var projectIdentifier = DeriveAngorKey(founderKey, angorTestKey);
 
             founderKeyCollection.Keys.Add(new FounderKeys
             {
                 ProjectIdentifier = projectIdentifier,
+                FounderRecoveryKey = founderRecoveryKey,
                 FounderKey = founderKey,
                 Index = i
             });
@@ -117,13 +119,41 @@ public class DerivationOperations : IDerivationOperations
         return extPubKey.PubKey.ToHex();
     }
 
+    public Key DeriveInvestorPrivateKey(WalletWords walletWords, string founderKey)
+    {
+        Network network = _networkConfiguration.GetNetwork();
+
+        ExtKey extendedKey;
+        try
+        {
+            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        }
+        catch (NotSupportedException ex)
+        {
+            _logger.LogError("Exception occurred: {0}", ex.ToString());
+
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid mnemonic words.");
+
+            throw;
+        }
+
+        var projectid = this.DeriveProjectId(founderKey);
+
+        var path = $"m/5'/{projectid}'/1'";
+
+        ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
+
+        ExtKey extKey = extendedKey.Derive(new KeyPath(path));
+
+        return extKey.PrivateKey;
+    }
+
     public string DeriveFounderKey(WalletWords walletWords, int index)
     {
         // founder key is derived from the path m/5'
 
-
         Network network = _networkConfiguration.GetNetwork();
-
 
         ExtKey extendedKey;
         try
@@ -141,6 +171,34 @@ public class DerivationOperations : IDerivationOperations
         }
 
         var path = $"m/5'/{index}'";
+
+        ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
+
+        return extPubKey.PubKey.ToHex();
+    }
+
+    public string DeriveFounderRecoveryKey(WalletWords walletWords, int index)
+    {
+        // founder recovery key is derived from the path m/6'
+
+        Network network = _networkConfiguration.GetNetwork();
+
+        ExtKey extendedKey;
+        try
+        {
+            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        }
+        catch (NotSupportedException ex)
+        {
+            _logger.LogError("Exception occurred: {0}", ex.ToString());
+
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid mnemonic words.");
+
+            throw;
+        }
+
+        var path = $"m/6'/{index}'";
 
         ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
 
@@ -171,6 +229,36 @@ public class DerivationOperations : IDerivationOperations
         }
 
         var path = $"m/5'/{index}'";
+
+        ExtKey extKey = extendedKey.Derive(new KeyPath(path));
+
+        return extKey.PrivateKey;
+    }
+
+    public Key DeriveFounderRecoveryPrivateKey(WalletWords walletWords, int index)
+    {
+        // founder key is derived from the path m/5'
+
+
+        Network network = _networkConfiguration.GetNetwork();
+
+
+        ExtKey extendedKey;
+        try
+        {
+            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        }
+        catch (NotSupportedException ex)
+        {
+            _logger.LogError("Exception occurred: {0}", ex.ToString());
+
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid mnemonic words.");
+
+            throw;
+        }
+
+        var path = $"m/6'/{index}'";
 
         ExtKey extKey = extendedKey.Derive(new KeyPath(path));
 

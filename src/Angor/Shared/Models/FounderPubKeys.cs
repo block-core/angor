@@ -9,6 +9,8 @@ public class FounderKeys
 {
     public string FounderKey { get; set; }
 
+    public string FounderRecoveryKey { get; set; }
+
     public string ProjectIdentifier { get; set; }
 
     public int Index { get; set; }

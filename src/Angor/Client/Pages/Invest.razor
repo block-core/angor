@@ -7,9 +7,11 @@
 @using Blockcore.NBitcoin
 @using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
+@using Blockcore.NBitcoin.DataEncoders
 
 @inherits BaseComponent
 
+@inject ILogger<Invest> _Logger;
 @inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
@@ -19,6 +21,7 @@
 @inject INetworkConfiguration _NetworkConfiguration
 
 @inject IIndexerService _IndexerService
+@inject ISignService _SignService
 
 @inject IInvestorTransactionActions _InvestorTransactionActions
 
@@ -161,6 +164,7 @@
     private ProjectInfo project;
     private bool showCreateModal;
     Transaction signedTransaction;
+    SignatureInfo recoverySigs;
 
     protected override async Task OnInitializedAsync()
     {
@@ -294,8 +298,20 @@
 
             var transaction = _InvestorTransactionActions.CreateInvestmentTransaction(context.ProjectInfo, context.InvestorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(network, context.ChangeAddress, transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
+            // remove signatures when requesting founder to sign 
+            var strippedInvestmentTransaction = network.CreateTransaction(signedTransaction.ToHex());
+            strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
+
+            recoverySigs = await _SignService.GetInvestmentSigsAsync(new SignRecoveryRequest
+            {
+                ProjectIdentifier = project.ProjectIdentifier, 
+                InvestmentTransaction = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory)
+            });
+
+            // validate the signatures
+            _InvestorTransactionActions.CheckInvestorRecoverySignatures(context.ProjectInfo, signedTransaction, recoverySigs);
 
             return new OperationResult { Success = true };
 
@@ -318,6 +334,8 @@
             showCreateModal = false;
 
             var network = _NetworkConfiguration.GetNetwork();
+
+            storage.AddSignatures(recoverySigs);
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 

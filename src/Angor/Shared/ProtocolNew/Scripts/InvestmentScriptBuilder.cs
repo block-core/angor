@@ -32,7 +32,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         // regular investor pre-co-sign with founder to gets funds with penalty
         var recoveryOps = new List<Op>
         {
-            Op.GetPushOp(new NBitcoin.PubKey(projectInfo.FounderKey).GetTaprootFullPubKey().ToBytes()),
+            Op.GetPushOp(new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey().ToBytes()),
             OpcodeType.OP_CHECKSIGVERIFY,
             Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
         };
@@ -64,14 +64,14 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         };
     }
 
-    private static Script GetFounderSpendScript(string funderKey, DateTime stageReleaseDate)
+    private static Script GetFounderSpendScript(string founderKey, DateTime stageReleaseDate)
     {
         long locktimeFounder = Utils.DateTimeToUnixTime(stageReleaseDate);   
         
-        // funder gets funds after stage started
+        // founder gets funds after stage started
         return new Script(new List<Op>
         {
-            Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
+            Op.GetPushOp(new NBitcoin.PubKey(founderKey).GetTaprootFullPubKey().ToBytes()),
             OpcodeType.OP_CHECKSIGVERIFY,
             Op.GetPushOp(locktimeFounder),
             OpcodeType.OP_CHECKLOCKTIMEVERIFY

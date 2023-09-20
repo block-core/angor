@@ -68,7 +68,7 @@ public class ScriptBuilder
         });
     }
 
-    public static ProjectScripts BuildScripts(string funderKey, string investorKey, string? secretHash, DateTime founderLockTime, DateTime projectExpieryLocktime, ProjectSeeders seeders)
+    public static ProjectScripts BuildScripts(string funderKey, string funderRecoveryKey, string investorKey, string? secretHash, DateTime founderLockTime, DateTime projectExpieryLocktime, ProjectSeeders seeders)
     {
         long locktimeFounder = Utils.DateTimeToUnixTime(founderLockTime);
         long locktimeExpiery = Utils.DateTimeToUnixTime(projectExpieryLocktime);
@@ -89,7 +89,7 @@ public class ScriptBuilder
             // regular investor pre-co-sign with founder to gets funds with penalty
             projectScripts.Recover = new Script(new List<Op>
             {
-                Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
+                Op.GetPushOp(new NBitcoin.PubKey(funderRecoveryKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
                 Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIG
@@ -100,7 +100,7 @@ public class ScriptBuilder
             //  seed investor pre-co-sign with founder to gets funds with penalty and must expose the secret
             projectScripts.Recover = new Script(new List<Op>
             {
-                Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
+                Op.GetPushOp(new NBitcoin.PubKey(funderRecoveryKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
                 Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,

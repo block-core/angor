@@ -204,9 +204,7 @@
 
             foreach (var trx in trxs)
             {
-                var trxHex = await _IndexerService.GetTransactionHexByIdAsync(trx.TrxId);
-                
-                transactions.Add((network.CreateTransaction(trxHex), trx.TrxId));
+                transactions.Add((network.CreateTransaction(trx.TrxHex), trx.TrxId));
             }
 
         int stageIndex = 0;

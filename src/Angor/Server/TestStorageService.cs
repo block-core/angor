@@ -79,6 +79,9 @@ namespace Angor.Server
 
             foreach (var data in projects)
             {
+                if (data.Key.StartsWith("key:"))
+                    continue;
+
                 var ret = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(data.Data);
                 if (ret != null) lst.Add(ret);
             }
@@ -94,6 +97,36 @@ namespace Angor.Server
             context.Projects.Add(new SerializeData { Key = project.ProjectIdentifier, Data = System.Text.Json.JsonSerializer.Serialize(project) });
 
             await context.SaveChangesAsync();
+        }
+
+        public async Task AddKey(string projectid, string founderRecoveryPrivateKey)
+        {
+            await using var context = new ProjectContext(dbPath);
+
+            context.Projects.Add(new SerializeData { Key = "key:" + projectid, Data = founderRecoveryPrivateKey });
+
+            await context.SaveChangesAsync();
+        }
+
+        public async Task<string> GetKey(string projectid)
+        {
+            await using var context = new ProjectContext(dbPath);
+
+            var projects = context.Projects;
+
+            var key = string.Empty;
+
+            foreach (var data in projects)
+            {
+                if (data.Key.StartsWith("key:"))
+                {
+                    if (data.Key.Contains(projectid))
+                        key = data.Data;
+
+                }
+            }
+
+            return key;
         }
     }
 

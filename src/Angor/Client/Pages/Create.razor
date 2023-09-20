@@ -6,6 +6,8 @@
 @using Blockcore.Consensus.TransactionInfo
 @using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
+@using Blockcore.NBitcoin
+@using Blockcore.NBitcoin.DataEncoders
 
 @inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
@@ -16,6 +18,8 @@
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IRelayService _RelayService
 @inject IIndexerService _IndexerService
+
+@inject ISignService _SignService
 
 @inject IFounderTransactionActions _founderTransactionActions
 
@@ -176,6 +180,7 @@
             
             project.ProjectIndex = projectsKeys.Index;
             project.FounderKey = projectsKeys.FounderKey;
+            project.FounderRecoveryKey = projectsKeys.FounderRecoveryKey;
             project.ProjectIdentifier = projectsKeys.ProjectIdentifier;
         }
 
@@ -214,7 +219,7 @@
 
             var transaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(network, accountInfo.ChangeAddressesInfo.First().Address, transaction, _walletStorage.GetWallet(), accountInfo,
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.ChangeAddressesInfo.First().Address, transaction, _walletStorage.GetWallet(), accountInfo,
                 feeEstimation.First());
 
             return new OperationResult { Success = true };
@@ -245,7 +250,15 @@
                 return response;
 
             await _RelayService.AddProjectAsync(project);
-            
+         
+            await _IndexerService.AddProjectAsync(new ProjectIndexerData {ProjectIdentifier = project.ProjectIdentifier, FounderKey = project.FounderKey, TrxHex = signedTransaction.ToHex()});
+
+            // todo this code must be reviewed again as we send the recovery private key to the signing server
+
+            var key = _derivationOperations.DeriveFounderRecoveryPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+
+            await _SignService.AddSignKeyAsync(project, Encoders.Hex.EncodeData(key.ToBytes()));
+
             return new OperationResult { Success = response.Success, Message = response.Message };
         });
 

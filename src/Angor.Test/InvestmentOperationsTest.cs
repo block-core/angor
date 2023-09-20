@@ -70,6 +70,7 @@ namespace Angor.Test
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var funderKey = derivationOperations.DeriveFounderPrivateKey(words, 1);
+
             var funderReceiveCoinsKey = new Key();
 
             var projectInvestmentInfo = new ProjectInfo();
@@ -83,6 +84,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
                 derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
 
@@ -238,6 +240,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
                 derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
 
@@ -290,6 +293,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
                 derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
             projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
@@ -342,6 +346,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
                 derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
             projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
@@ -393,8 +398,10 @@ namespace Angor.Test
             var investorChangeKey = new Key();
 
             var funderKey = derivationOperations.DeriveFounderKey(words, 1);
+            var funderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
             var angorKey = derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
             var funderPrivateKey = derivationOperations.DeriveFounderPrivateKey(words, 1);
+            var funderRecoveryPrivateKey = derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
 
             var investorContext = new InvestorContext
             {
@@ -410,6 +417,7 @@ namespace Angor.Test
                         new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                     },
                     FounderKey = funderKey,
+                    FounderRecoveryKey = funderRecoveryKey,
                     ProjectIdentifier = angorKey,
                     PenaltyDate = DateTime.UtcNow.AddDays(5),
                     ProjectSeeders = new ProjectSeeders()
@@ -430,7 +438,7 @@ namespace Angor.Test
 
             var founderSignatures = operations.FounderSignInvestorRecoveryTransactions(investorContext, network,
                 recoveryTransactions,
-                Encoders.Hex.EncodeData(funderPrivateKey.ToBytes()));
+                Encoders.Hex.EncodeData(funderRecoveryPrivateKey.ToBytes()));
 
             operations.AddWitScriptToInvestorRecoveryTransactions(investorContext, network, recoveryTransactions,
                 founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()), null);
@@ -482,8 +490,10 @@ namespace Angor.Test
                 var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
                 var funderKey = derivationOperations.DeriveFounderKey(words, 1);
+                var funderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
                 var angorKey = derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
                 var funderPrivateKey = derivationOperations.DeriveFounderPrivateKey(words, 1);
+                var funderRecoveryPrivateKey = derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
 
                 // Create the investor 1 params
                 var investorKey = new Key();
@@ -507,6 +517,7 @@ namespace Angor.Test
                             new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                         },
                         FounderKey = funderKey,
+                        FounderRecoveryKey = funderRecoveryKey,
                         ProjectIdentifier = angorKey,
                         PenaltyDate = DateTime.UtcNow.AddDays(5),
                         ProjectSeeders = new ProjectSeeders
@@ -536,7 +547,7 @@ namespace Angor.Test
 
                 var founderSignatures = operations.FounderSignInvestorRecoveryTransactions(investorContext, network,
                     recoveryTransactions,
-                    Encoders.Hex.EncodeData(funderPrivateKey.ToBytes()));
+                    Encoders.Hex.EncodeData(funderRecoveryPrivateKey.ToBytes()));
 
                 operations.AddWitScriptToInvestorRecoveryTransactions(investorContext, network, recoveryTransactions,
                     founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()), null);
@@ -595,8 +606,10 @@ namespace Angor.Test
                 var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
                 var funderKey = derivationOperations.DeriveFounderKey(words, 1);
+                var funderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
                 var angorKey = derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
                 var funderPrivateKey = derivationOperations.DeriveFounderPrivateKey(words, 1);
+                var funderRecoveryPrivateKey = derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
 
                 // Create the investor 1 params
                 var seederKey = new Key();
@@ -617,6 +630,7 @@ namespace Angor.Test
                             new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                         },
                         FounderKey = funderKey,
+                        FounderRecoveryKey = funderRecoveryKey,
                         ProjectIdentifier = angorKey,
                         PenaltyDate = DateTime.UtcNow.AddDays(5),
                         ProjectSeeders = new ProjectSeeders()
@@ -638,7 +652,7 @@ namespace Angor.Test
 
                 var founderSignatures = operations.FounderSignInvestorRecoveryTransactions(seederContext, network,
                     recoveryTransactions,
-                    Encoders.Hex.EncodeData(funderPrivateKey.ToBytes()));
+                    Encoders.Hex.EncodeData(funderRecoveryPrivateKey.ToBytes()));
 
                 operations.AddWitScriptToInvestorRecoveryTransactions(seederContext, network, recoveryTransactions,
                     founderSignatures, Encoders.Hex.EncodeData(seederKey.ToBytes()),
@@ -706,6 +720,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
                 derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
 

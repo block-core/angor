@@ -35,6 +35,7 @@ public class AngorTestData
         projectInvestmentInfo.TargetAmount = 3;
         projectInvestmentInfo.StartDate = startDate.Value;
         projectInvestmentInfo.ExpiryDate = startDate.Value.AddDays(5);
+        projectInvestmentInfo.PenaltyDate = startDate.Value.AddDays(10);
         projectInvestmentInfo.Stages = new List<Stage>
         {
             new() { AmountToRelease = (decimal)0.1, ReleaseDate = startDate.Value.AddDays(1) },
@@ -42,6 +43,7 @@ public class AngorTestData
             new() { AmountToRelease = (decimal)0.4, ReleaseDate = startDate.Value.AddDays(3) }
         };
         projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
+        projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
         projectInvestmentInfo.ProjectIdentifier =
             _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
         
