@@ -202,10 +202,10 @@
 
         var network = _NetworkConfiguration.GetNetwork();
 
-        foreach (var trx in trxs)
-        {
-            transactions.Add((network.CreateTransaction(trx.TrxHex), trx.TrxId));
-        }
+            foreach (var trx in trxs)
+            {
+                transactions.Add((network.CreateTransaction(trx.TrxHex), trx.TrxId));
+            }
 
         int stageIndex = 0;
         foreach (var stage in project.Stages)
