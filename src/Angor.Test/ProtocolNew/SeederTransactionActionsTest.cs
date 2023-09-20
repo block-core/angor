@@ -106,12 +106,13 @@ public class SeederTransactionActionsTest : AngorTestData
         
         var investmentTrx = Networks.Bitcoin.Testnet().Consensus.ConsensusFactory.CreateTransaction(investmentTrxHex);
         var penaltyDate = DateTime.Now.AddMonths(6);
-        var receiveAddress = Encoders.Hex.EncodeData(changeAddress.PubKey.ToBytes()); 
-        
-        var recoveryTransactions = _sut.BuildRecoverSeederFundsTransaction(new ProjectInfo(), investmentTrx, penaltyDate, 
+        var receiveAddress = Encoders.Hex.EncodeData(changeAddress.PubKey.ToBytes());
+        var newProject = new ProjectInfo();
+
+        var recoveryTransactions = _sut.BuildRecoverSeederFundsTransaction(newProject, investmentTrx, penaltyDate, 
             receiveAddress);
         
-        _investmentTransactionBuilder.Verify(_ => _.BuildUpfrontRecoverFundsTransaction(It.IsAny<ProjectInfo>(), investmentTrx,penaltyDate,receiveAddress),
+        _investmentTransactionBuilder.Verify(_ => _.BuildUpfrontRecoverFundsTransaction(newProject, investmentTrx,penaltyDate,receiveAddress),
             Times.Once);
     }
 }

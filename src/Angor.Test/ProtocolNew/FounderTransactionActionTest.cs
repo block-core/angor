@@ -22,7 +22,6 @@ namespace Angor.Test.ProtocolNew;
 public class FounderTransactionActionTest : AngorTestData
 {
     private readonly FounderTransactionActions _sut;
-    //private readonly InvestorTransactionActions _investorTransactionActions;  // needed to recreate the vector parameters
     private readonly Mock<IWalletOperations> _walletOperations;
 
     private readonly FeeEstimation _expectedFeeEstimation = new()
@@ -53,14 +52,6 @@ public class FounderTransactionActionTest : AngorTestData
         _sut = new FounderTransactionActions(new NullLogger<FounderTransactionActions>(), _networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder());
 
-        // needed to recreate the vector parameters
-        //_investorTransactionActions = new InvestorTransactionActions(
-        //    new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), 
-        //    new ProjectScriptsBuilder(_derivationOperations),
-        //    new SpendingTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
-        //    new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())), 
-        //    new TaprootScriptBuilder(),
-        //    _networkConfiguration.Object);
     }
 
     private Transaction GivenASeederTransaction(ProjectInfo projectInvestmentInfo)
@@ -100,6 +91,9 @@ public class FounderTransactionActionTest : AngorTestData
             Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
     }
 
+    /// <summary>
+    /// To recreate the vector parameters see GenerateVectorsFor_SignInvestorRecoveryTransactions_CreatesValidSignatures
+    /// </summary>
     [Fact]
     public void SignInvestorRecoveryTransactions_CreatesValidSignatures()
     {
@@ -108,19 +102,6 @@ public class FounderTransactionActionTest : AngorTestData
         var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
 
         var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
-
-        // To recreate the vector parameters uncomment the code bellow
-        // and in the method SignInvestorRecoveryTransactions use the method
-        // Encoders.Hex.Encode() on the hash of each GetSignatureHashTaproot
-        //var investorKey = _derivationOperations.DeriveInvestorKey(words, projectInvestmentInfo.FounderKey);
-        //var build_investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, investorKey,
-        //    Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
-        //var build_recoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInvestmentInfo,
-        //    build_investmentTransaction);
-        //var build_founderSignatures = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo,
-        //    build_investmentTransaction.ToHex(), build_recoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
-        //var build_investmentTransactionHex = build_investmentTransaction.ToHex();
-        //var build_recoveryTransactionHex = build_recoveryTransaction.ToHex();
 
         var investmentTrxHex =
             "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000236a21038a7eedf38d874799c0d7579d5f08d605ca039da7f6dc7c57e6abd82f0f380334e0930400000000002251207aade2c416ca565c1b66041eac56d707a26aa8bab7d217190ecf3aa57899c9a360e316000000000022512048dc0a52f43379c6515962a40eec91d183582c8e2c861d612e4e564617d08a67804f120000000000225120f57ad9ed9e0fb880cda0847cfea668a4c3ccb1b9a08bdbcc3f029e8ad0380c9d00000000";
@@ -217,5 +198,34 @@ public class FounderTransactionActionTest : AngorTestData
 
         TransactionValidation.ThanTheTransactionHasNoErrors(founderTrxSpendStageOne,
             transactionList.Select(_ => _.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1).ToCoin()));
+    }
+
+    public void GenerateVectorsFor_SignInvestorRecoveryTransactions_CreatesValidSignatures()
+    {
+        // this cod generates text vectors for SignInvestorRecoveryTransactions_CreatesValidSignatures
+
+        //InvestorTransactionActions _investorTransactionActions;  // needed to recreate the vector parameters
+
+        // needed to recreate the vector parameters
+        //_investorTransactionActions = new InvestorTransactionActions(
+        //    new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), 
+        //    new ProjectScriptsBuilder(_derivationOperations),
+        //    new SpendingTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+        //    new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())), 
+        //    new TaprootScriptBuilder(),
+        //    _networkConfiguration.Object);
+
+        // and in the method SignInvestorRecoveryTransactions use the method
+        // Encoders.Hex.Encode() on the hash of each GetSignatureHashTaproot
+        //var investorKey = _derivationOperations.DeriveInvestorKey(words, projectInvestmentInfo.FounderKey);
+        //var build_investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, investorKey,
+        //    Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+        //var build_recoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInvestmentInfo,
+        //    build_investmentTransaction);
+        //var build_founderSignatures = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo,
+        //    build_investmentTransaction.ToHex(), build_recoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+        //var build_investmentTransactionHex = build_investmentTransaction.ToHex();
+        //var build_recoveryTransactionHex = build_recoveryTransaction.ToHex();
+
     }
 }

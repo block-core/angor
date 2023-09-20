@@ -38,10 +38,12 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
     
-    public Transaction AddInputsAndSignTransaction(Network network, string changeAddress, Transaction transaction,
+    public Transaction AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo,
         FeeEstimation feeRate)
     {
+        Network network = _networkConfiguration.GetNetwork();
+
         var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
@@ -59,10 +61,12 @@ public class WalletOperations : IWalletOperations
     }
 
 
-    public Transaction AddFeeAndSignTransaction(Network network, string changeAddress, Transaction transaction,
+    public Transaction AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo,
         FeeEstimation feeRate)
     {
+        Network network = _networkConfiguration.GetNetwork();
+
         var changeOutput = transaction.AddOutput(Money.Zero, BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
 
         var virtualSize = transaction.GetVirtualSize(4);

@@ -298,7 +298,7 @@
 
             var transaction = _InvestorTransactionActions.CreateInvestmentTransaction(context.ProjectInfo, context.InvestorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(network, context.ChangeAddress, transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
 
             recoverySigs = await _SignService.GetInvestmentSigsAsync(project.ProjectIdentifier, context.InvestorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 

@@ -207,6 +207,7 @@
 
         Console.WriteLine($"fetching {url}");
 
+        // todo: use indexer service
         var response = await Http.GetAsync(indexer.Url + url);
         var trx = await response.Content.ReadFromJsonAsync<QueryTransaction>();
 
@@ -252,7 +253,7 @@
             foreach (var txIn in removeTxin) recoveryTransaction.Inputs.Remove(txIn);
 
             // add fee to the recovery trx
-            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(network, accountInfo.ChangeAddressesInfo.First().Address, recoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
+            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.ChangeAddressesInfo.First().Address, recoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
 
             Logger.LogInformation($"recoveryTransaction={recoveryTransaction.ToHex(network.Consensus.ConsensusFactory)}");
 

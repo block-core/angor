@@ -193,7 +193,7 @@ else
         founderTransaction = FounderTransactionActions.SpendFounderStage(context.ProjectInfo, new List<string>(){ transaction.ToHex()}, 1,
             testAddress.ScriptPubKey , privateFounderKey.PrivateKey.ToHex(network.Consensus.ConsensusFactory), fee.First());
         
-        transaction = _walletOperations.AddInputsAndSignTransaction(network, context.ChangeAddress, transaction, walletWords, localAccountInfo,
+        transaction = _walletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transaction, walletWords, localAccountInfo,
             fee.First());
         
         ShowTransaction = true;

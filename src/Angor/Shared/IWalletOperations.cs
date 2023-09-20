@@ -18,14 +18,14 @@ public interface IWalletOperations
     decimal CalculateTransactionFee(SendInfo sendInfo,AccountInfo accountInfo, long feeRate);
     (List<Coin>? coins, List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths);
 
-    Transaction AddInputsAndSignTransaction(Network network, string changeAddress, Transaction transaction,
+    Transaction AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo,
         FeeEstimation feeRate);
 
     Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,
         Transaction signedTransaction);
 
-    Transaction AddFeeAndSignTransaction(Network network, string changeAddress, Transaction transaction,
+    Transaction AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo,
         FeeEstimation feeRate);
 }
