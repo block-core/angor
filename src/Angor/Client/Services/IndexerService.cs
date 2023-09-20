@@ -10,6 +10,8 @@ namespace Angor.Client.Services
         Task AddProjectAsync(ProjectIndexerData project);
         Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId);
         Task AddInvestmentAsync(ProjectInvestment project);
+
+        Task<string> GetTransactionHexByIdAsync(string transactionId);
     }
     public class ProjectIndexerData
     {
@@ -22,14 +24,14 @@ namespace Angor.Client.Services
     {
         public string ProjectIdentifier { get; set; }
         public string TrxId { get; set; }
-        public string TrxHex { get; set; }
+       // public string TrxHex { get; set; }
     }
 
     public class IndexerService : IIndexerService
     {
 
         private readonly HttpClient _httpClient;
-        private readonly string _baseUrl = "/api/TestIndexer"; // "https://your-base-url/api/test";
+        private readonly string _baseUrl = "http://10.22.156.163:9910"; // "https://your-base-url/api/test";
 
         public IndexerService(HttpClient httpClient)
         {
@@ -38,7 +40,7 @@ namespace Angor.Client.Services
 
         public async Task<List<ProjectIndexerData>> GetProjectsAsync()
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}");
+            var response = await _httpClient.GetAsync($"{_baseUrl}/api/query/Angor/projects");
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>();
         }
@@ -51,7 +53,7 @@ namespace Angor.Client.Services
 
         public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}/investment/{projectId}");
+            var response = await _httpClient.GetAsync($"{_baseUrl}/api/query/Angor/projects/{projectId}/investments");
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
         }
@@ -60,6 +62,13 @@ namespace Angor.Client.Services
         {
             var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/investment", project);
             response.EnsureSuccessStatusCode();
+        }
+
+        public async Task<string> GetTransactionHexByIdAsync(string transactionId)
+        {
+            var response = await _httpClient.GetAsync($"{_baseUrl}/api/query/transaction/{transactionId}/hex");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsStringAsync();
         }
     }
 }

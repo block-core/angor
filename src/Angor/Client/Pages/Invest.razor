@@ -324,13 +324,6 @@
             if (!response.Success)
                 return response;
 
-            await _IndexerService.AddInvestmentAsync(new ProjectInvestment
-            {
-                ProjectIdentifier = project.ProjectIdentifier,
-                TrxId = signedTransaction.ToString(),
-                TrxHex = signedTransaction.ToHex(network.Consensus.ConsensusFactory)
-            });
-
             return new OperationResult { Success = response.Success, Message = response.Message };
         });
 

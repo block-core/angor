@@ -1,4 +1,4 @@
-﻿@page "/create"
+@page "/create"
 @using Angor.Shared.Models
 @using Angor.Shared
 @using Angor.Client.Storage
@@ -172,8 +172,8 @@
             var wallet = _walletStorage.GetWallet();
             var projects = storage.GetFounderProjects();
             var keys = storage.GetFounderKeys();
-            var projectsKeys = _derivationOperations.GetProjectKey(keys, projects.Count + 1);
-
+            var projectsKeys = _derivationOperations.GetProjectKey(keys, projects.Count + 1); //TODO need to make sure that + 1 will not create collisions  
+            
             project.ProjectIndex = projectsKeys.Index;
             project.FounderKey = projectsKeys.FounderKey;
             project.ProjectIdentifier = projectsKeys.ProjectIdentifier;
@@ -245,9 +245,7 @@
                 return response;
 
             await _RelayService.AddProjectAsync(project);
-         
-            await _IndexerService.AddProjectAsync(new ProjectIndexerData {ProjectIdentifier = project.ProjectIdentifier, FounderKey = project.FounderKey, TrxHex = signedTransaction.ToHex()});
-
+            
             return new OperationResult { Success = response.Success, Message = response.Message };
         });
 
