@@ -5,6 +5,7 @@ using Angor.Shared.Models;
 //using Angor.Shared.Protocol;
 using Angor.Shared.ProtocolNew.Scripts;
 using Blockcore.NBitcoin.DataEncoders;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using IndexedTxOut = NBitcoin.IndexedTxOut;
 using Key = NBitcoin.Key;
@@ -20,13 +21,15 @@ namespace Angor.Shared.ProtocolNew;
 
 public class FounderTransactionActions : IFounderTransactionActions
 {
+    private readonly ILogger<FounderTransactionActions> _logger;
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly IProjectScriptsBuilder _projectScriptsBuilder;
     private readonly IInvestmentScriptBuilder _investmentScriptBuilder;
     private readonly ITaprootScriptBuilder _taprootScriptBuilder;
     
-    public FounderTransactionActions(INetworkConfiguration networkConfiguration, IProjectScriptsBuilder projectScriptsBuilder, IInvestmentScriptBuilder investmentScriptBuilder, ITaprootScriptBuilder taprootScriptBuilder)
+    public FounderTransactionActions(ILogger<FounderTransactionActions> logger, INetworkConfiguration networkConfiguration, IProjectScriptsBuilder projectScriptsBuilder, IInvestmentScriptBuilder investmentScriptBuilder, ITaprootScriptBuilder taprootScriptBuilder)
     {
+        _logger = logger;
         _networkConfiguration = networkConfiguration;
         _projectScriptsBuilder = projectScriptsBuilder;
         _investmentScriptBuilder = investmentScriptBuilder;
@@ -58,6 +61,8 @@ public class FounderTransactionActions : IFounderTransactionActions
 
             var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
+
+            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}");
 
             var sig = key.SignTaprootKeySpend(hash, sigHash).ToString();
 

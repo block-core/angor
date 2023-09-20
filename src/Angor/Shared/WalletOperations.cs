@@ -285,7 +285,6 @@ public class WalletOperations : IWalletOperations
                 accountInfo.AddressesInfo.Remove(addressInfoToDelete);
             
             accountInfo.AddressesInfo.Add(addressInfo);
-            accountInfo.TotalBalance += addressInfo.Balance;
         }
 
         var (changeIndex, changeItems) = await FetchAddressesDataForPubKeyAsync(accountInfo.LastFetchChangeIndex, accountInfo.ExtPubKey, network, true);
@@ -298,8 +297,9 @@ public class WalletOperations : IWalletOperations
                 accountInfo.ChangeAddressesInfo.Remove(addressInfoToDelete);
             
             accountInfo.ChangeAddressesInfo.Add(changeAddressInfo);
-            accountInfo.TotalBalance += changeAddressInfo.Balance;
         }
+
+        accountInfo.TotalBalance = accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo).SelectMany(s => s.UtxoData).Sum(s => s.value);
     }
 
     private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)

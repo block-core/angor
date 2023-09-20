@@ -5,6 +5,7 @@ using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;
 using System;
+using Microsoft.Extensions.Logging;
 using Key = Blockcore.NBitcoin.Key;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 
@@ -12,6 +13,7 @@ namespace Angor.Shared.ProtocolNew;
 
 public class InvestorTransactionActions : IInvestorTransactionActions
 {
+    private readonly ILogger<InvestorTransactionActions> _logger;
     private readonly IInvestmentScriptBuilder _investmentScriptBuilder;
     private readonly IProjectScriptsBuilder _projectScriptsBuilder;
     private readonly ISpendingTransactionBuilder _spendingTransactionBuilder;
@@ -19,8 +21,9 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     private readonly ITaprootScriptBuilder _taprootScriptBuilder;
     private readonly INetworkConfiguration _networkConfiguration;
 
-    public InvestorTransactionActions(IInvestmentScriptBuilder investmentScriptBuilder, IProjectScriptsBuilder projectScriptsBuilder, ISpendingTransactionBuilder spendingTransactionBuilder, IInvestmentTransactionBuilder investmentTransactionBuilder, ITaprootScriptBuilder taprootScriptBuilder, INetworkConfiguration networkConfiguration)
+    public InvestorTransactionActions(ILogger<InvestorTransactionActions> logger, IInvestmentScriptBuilder investmentScriptBuilder, IProjectScriptsBuilder projectScriptsBuilder, ISpendingTransactionBuilder spendingTransactionBuilder, IInvestmentTransactionBuilder investmentTransactionBuilder, ITaprootScriptBuilder taprootScriptBuilder, INetworkConfiguration networkConfiguration)
     {
+        _logger = logger;
         _investmentScriptBuilder = investmentScriptBuilder;
         _projectScriptsBuilder = projectScriptsBuilder;
         _spendingTransactionBuilder = spendingTransactionBuilder;
@@ -125,7 +128,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             });
     }
     
-     public Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures, string privateKey)
+     public Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures, string investorPrivateKey)
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs[1].ScriptPubKey);
 
@@ -135,7 +138,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
         var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
 
-        var key = new NBitcoin.Key(Encoders.Hex.DecodeData(privateKey));
+        var key = new NBitcoin.Key(Encoders.Hex.DecodeData(investorPrivateKey));
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
         var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
@@ -150,6 +153,8 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
             var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
+
+            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; investor-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}");
 
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 
@@ -188,6 +193,8 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
             var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
             var hash = nBitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
+
+            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={projectInfo.FounderRecoveryKey}; stage={stageIndex}; hash={hash}");
 
             var result = pubkey.VerifySignature(hash, TaprootSignature.Parse(founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature).SchnorrSignature);
 

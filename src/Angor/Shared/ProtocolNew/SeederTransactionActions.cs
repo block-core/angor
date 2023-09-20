@@ -7,11 +7,13 @@ using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 using Op = Blockcore.Consensus.ScriptInfo.Op;
 using uint256 = Blockcore.NBitcoin.uint256;
 using WitScript = Blockcore.Consensus.TransactionInfo.WitScript;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.ProtocolNew;
 
 public class SeederTransactionActions : ISeederTransactionActions
 {
+    private readonly ILogger<SeederTransactionActions> _logger;
     private readonly IInvestmentScriptBuilder _investmentScriptBuilder;
     private readonly IProjectScriptsBuilder _projectScriptsBuilder;
     private readonly ISpendingTransactionBuilder _spendingTransactionBuilder;
@@ -19,9 +21,10 @@ public class SeederTransactionActions : ISeederTransactionActions
     private readonly ITaprootScriptBuilder _taprootScriptBuilder;
     private readonly INetworkConfiguration _networkConfiguration;
     
-    public SeederTransactionActions(IInvestmentScriptBuilder investmentScriptBuilder, IProjectScriptsBuilder projectScriptsBuilder, 
+    public SeederTransactionActions(ILogger<SeederTransactionActions> logger, IInvestmentScriptBuilder investmentScriptBuilder, IProjectScriptsBuilder projectScriptsBuilder, 
         ISpendingTransactionBuilder spendingTransactionBuilder, IInvestmentTransactionBuilder investmentTransactionBuilder, ITaprootScriptBuilder taprootScriptBuilder, INetworkConfiguration networkConfiguration)
     {
+        _logger = logger;
         _investmentScriptBuilder = investmentScriptBuilder;
         _projectScriptsBuilder = projectScriptsBuilder;
         _spendingTransactionBuilder = spendingTransactionBuilder;
@@ -80,6 +83,8 @@ public class SeederTransactionActions : ISeederTransactionActions
 
             var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(projectScripts.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
+
+            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; seeder-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}");
 
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 
