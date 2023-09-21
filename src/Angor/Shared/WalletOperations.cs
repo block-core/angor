@@ -400,7 +400,7 @@ public class WalletOperations : IWalletOperations
         {
             _logger.LogInformation($"fetching fee estimation for blocks");
 
-            var feeEstimations = await _indexerService.GetFeeEstimation(blocks);
+            var feeEstimations = await _indexerService.GetFeeEstimationAsync(blocks);
 
             if (feeEstimations == null || (!feeEstimations.Fees?.Any() ?? true))
                 return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRate = 10000 / _});

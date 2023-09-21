@@ -32,11 +32,13 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 
         [HttpGet]
         [Route("project/{projectId}")]
-        public async Task<ProjectInfo?> GetProject(string projectId)
+        public async Task<IActionResult> GetProject(string projectId)
         {
             var projects = (await _storage.Get()).ToList();
 
-            return projects.FirstOrDefault(p => p.ProjectIdentifier == projectId);
+            var project = projects.FirstOrDefault(p => p.ProjectIdentifier == projectId);
+
+            return project == null ? NotFound() : Ok(project);
         }
     }
 

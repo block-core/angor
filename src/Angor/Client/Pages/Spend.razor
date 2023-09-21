@@ -202,10 +202,18 @@
 
         var network = _NetworkConfiguration.GetNetwork();
 
-            foreach (var trx in trxs)
-            {
-                transactions.Add((network.CreateTransaction(trx.TrxHex), trx.TrxId));
-            }
+        var tasks = transactions.Select(async _ =>
+        {
+            var hex = await _IndexerService.GetTransactionByIdAsync(_.TrxId);
+            return new { hex, _.TrxId };
+        });
+
+        var trxHexList = await Task.WhenAll(tasks);
+
+        foreach (var trx in trxHexList)
+        {
+            transactions.Add((network.CreateTransaction(trx.hex), trx.TrxId));
+        }
 
         int stageIndex = 0;
         foreach (var stage in project.Stages)

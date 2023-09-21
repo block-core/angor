@@ -1,26 +1,19 @@
 ﻿using Angor.Shared.Models;
 using Angor.Shared;
-using System.Net.Http;
 using System.Net.Http.Json;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.Networks;
-using static System.Net.WebRequestMethods;
-using System.Collections.Generic;
 
 namespace Angor.Client.Services
 {
     public interface IIndexerService
     {
         Task<List<ProjectIndexerData>> GetProjectsAsync();
-        Task AddProjectAsync(ProjectIndexerData project);
         Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId);
-        Task AddInvestmentAsync(ProjectInvestment project);
         Task<string> PublishTransactionAsync(string trxHex);
         Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data);
         Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset);
+        Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations);
 
-        Task<FeeEstimations?> GetFeeEstimation(int[] confirmations);
-
+        Task<string> GetTransactionByIdAsync(string transactionId);
     }
     public class ProjectIndexerData
     {
@@ -31,16 +24,21 @@ namespace Angor.Client.Services
 
     public class ProjectInvestment
     {
-        public string ProjectIdentifier { get; set; }
-        public string TrxId { get; set; }
-        public string TrxHex { get; set; }
+        public string TransactionId { get; set; }
+        
+        public string InvestorPublicKey { get; set; }
+        
+        public long TotalAmount { get; set; }
+        
+        public string HashOfSecret { get; set; }
+
+        public bool IsSeeder { get; set; }
     }
 
     public class IndexerService : IIndexerService
     {
         private readonly INetworkConfiguration _networkConfiguration;
         private readonly HttpClient _httpClient;
-        private readonly string _baseUrl = "/api/TestIndexer"; // "https://your-base-url/api/test";
 
         public IndexerService(INetworkConfiguration networkConfiguration, HttpClient httpClient)
         {
@@ -50,28 +48,18 @@ namespace Angor.Client.Services
 
         public async Task<List<ProjectIndexerData>> GetProjectsAsync()
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}");
+            var indexer = _networkConfiguration.GetIndexerUrl();
+            var response = await _httpClient.GetAsync($"{indexer.Url}/query/Angor/projects");
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>();
         }
 
-        public async Task AddProjectAsync(ProjectIndexerData project)
-        {
-            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}", project);
-            response.EnsureSuccessStatusCode();
-        }
-
         public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}/investment/{projectId}");
+            var indexer = _networkConfiguration.GetIndexerUrl();
+            var response = await _httpClient.GetAsync($"{indexer.Url}/query/Angor/projects/{projectId}/investments");
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
-        }
-
-        public async Task AddInvestmentAsync(ProjectInvestment project)
-        {
-            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/investment", project);
-            response.EnsureSuccessStatusCode();
         }
 
         public async Task<string> PublishTransactionAsync(string trxHex)
@@ -122,7 +110,7 @@ namespace Angor.Client.Services
             return utxo;
         }
 
-        public async Task<FeeEstimations?> GetFeeEstimation(int[] confirmations)
+        public async Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations)
         {
             IndexerUrl indexer = _networkConfiguration.GetIndexerUrl();
 
@@ -139,6 +127,20 @@ namespace Angor.Client.Services
             var feeEstimations = await response.Content.ReadFromJsonAsync<FeeEstimations>();
 
             return feeEstimations;
+        }
+
+        public async Task<string> GetTransactionByIdAsync(string transactionId)
+        {
+            IndexerUrl indexer = _networkConfiguration.GetIndexerUrl();
+
+            var url = $"/query/transaction/{transactionId}/hex";
+            
+            var response = await _httpClient.GetAsync(indexer.Url + url);
+            
+            if (!response.IsSuccessStatusCode)
+                throw new InvalidOperationException(response.ReasonPhrase);
+
+            return await response.Content.ReadAsStringAsync();
         }
     }
 }

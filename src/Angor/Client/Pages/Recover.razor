@@ -170,12 +170,14 @@
 
         var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
 
-        var trxHex = trxs.First(f => f.ProjectIdentifier == ProjectId);
+        var trx = trxs.First(f => f.TransactionId == project.HackTransactionId);
 
-        investmentTransaction = network.CreateTransaction(trxHex.TrxHex);
-        StageInfo.Trxid = trxHex.TrxId;
+        var trxHex = await _IndexerService.GetTransactionByIdAsync(trx.TransactionId);
+        
+        investmentTransaction = network.CreateTransaction(trxHex);
+        StageInfo.Trxid = trx.TransactionId;
 
-        explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{trxHex.TrxId}";
+        explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{trx.TransactionId}";
 
         StageInfo.Items.Clear();
 

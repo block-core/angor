@@ -37,8 +37,10 @@ namespace Angor.Client.Services
         public async Task<ProjectInfo?> GetProjectAsync(string projectId)
         {
             var response = await _httpClient.GetAsync($"{_baseUrl}/project/{projectId}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<ProjectInfo>();
+
+            return response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<ProjectInfo?>()
+                : null;
         }
 
     }

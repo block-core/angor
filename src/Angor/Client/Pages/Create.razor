@@ -250,8 +250,7 @@
                 return response;
 
             await _RelayService.AddProjectAsync(project);
-         
-            await _IndexerService.AddProjectAsync(new ProjectIndexerData {ProjectIdentifier = project.ProjectIdentifier, FounderKey = project.FounderKey, TrxHex = signedTransaction.ToHex()});
+            
 
             // todo this code must be reviewed again as we send the recovery private key to the signing server
 
