@@ -35,6 +35,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
+                        <a href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
                         <p class="card-text">Founder Key: @project.FounderKey</p>
                         <p class="card-text">Start Date: @project.StartDate.ToString("dd/MM/yyyy")</p>
                         <p class="card-text">Penalty Date: @project.PenaltyDate.ToString("dd/MM/yyyy")</p>
@@ -113,7 +114,7 @@
                     {
                         <p>You have already invested in this project.
 
-                            <a href="@explorerLink" target="_blank">View the transaction on the explorer.</a>
+                            <a href="@myProjectExplorerLink" target="_blank">View the transaction on the explorer.</a>
                         </p>
 
                         <button class="btn btn-danger" @onclick="RecoverFunds">Recover</button>
@@ -152,14 +153,15 @@
     [Parameter]
     public string ProjectId { get; set; }
 
-    private ProjectInfo project;
+    private ProjectInfo? project;
 
     private NotificationComponent notificationComponent;
 
     private bool sendConfirmModal;
     private bool hasWallet;
 
-    string explorerLink;
+    string myProjectExplorerLink;
+    string projectExplorerLink;
 
     private List<(string Hash, int Amount)> SelectedSeeders = new List<(string hash, int amount)>
     {
@@ -194,8 +196,6 @@
 
         if (hasWallet)
         {
-            
-
             var findProject = storage.GetProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
 
             if (findProject != null)
@@ -203,7 +203,8 @@
                 invested = true;
                 project = findProject;
 
-                explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.HackTransactionId}";
+                var myProject = storage.GetSignaturess().First(s => s.ProjectIdentifier == ProjectId);
+                myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{myProject.TransactionId}";
             }
             else
             {
@@ -224,6 +225,11 @@
                         project = findProject;
                     }
                 }
+            }
+
+            if (project != null)
+            {
+                projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.TransactionId}";
             }
         }
         

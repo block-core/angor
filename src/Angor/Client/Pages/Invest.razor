@@ -313,6 +313,9 @@
             // validate the signatures
             _InvestorTransactionActions.CheckInvestorRecoverySignatures(context.ProjectInfo, signedTransaction, recoverySigs);
 
+            // link the trx to the signatures
+            recoverySigs.TransactionId = signedTransaction.GetHash().ToString();
+
             return new OperationResult { Success = true };
 
         });
@@ -348,8 +351,6 @@
         if (operationResult.Success)
         {
             notificationComponent.ShowNotificationMessage("Project created", 1);
-
-            project.HackTransactionId = signedTransaction.ToString();
 
             storage.AddProject(project);
 

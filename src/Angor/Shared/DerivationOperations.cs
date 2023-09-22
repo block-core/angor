@@ -27,7 +27,7 @@ public class DerivationOperations : IDerivationOperations
     {
         FounderKeyCollection founderKeyCollection = new();
 
-        for (int i = 0; i < 5; i++)
+        for (int i = 1; i <= 5; i++)
         {
             var founderKey = DeriveFounderKey(walletWords, i);
             var founderRecoveryKey = DeriveFounderRecoveryKey(walletWords, i);
@@ -48,7 +48,7 @@ public class DerivationOperations : IDerivationOperations
 
     public FounderKeys GetProjectKey(FounderKeyCollection founderKeyCollection, int index)
     {
-        var keys = founderKeyCollection.Keys.FirstOrDefault(k => k.Index == index - 1);
+        var keys = founderKeyCollection.Keys.FirstOrDefault(k => k.Index == index);
 
         if (keys == null)
         {

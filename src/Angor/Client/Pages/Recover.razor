@@ -170,7 +170,9 @@
 
         var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
 
-        var trx = trxs.First(f => f.TransactionId == project.HackTransactionId);
+        var myProject = storage.GetSignaturess().First(s => s.ProjectIdentifier == ProjectId);
+
+        var trx = trxs.First(f => f.TransactionId == myProject.TransactionId);
 
         var trxHex = await _IndexerService.GetTransactionByIdAsync(trx.TransactionId);
         

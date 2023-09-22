@@ -159,6 +159,7 @@
         PenaltyDate = DateTime.UtcNow.AddDays(100),
         ExpiryDate = DateTime.UtcNow.AddDays(50),
         TargetAmount = 100,
+        TransactionId = "unknowen",
         Stages = new List<Stage>
         {
             new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(10) },
@@ -173,11 +174,11 @@
 
         if (hasWallet)
         {
-            var wallet = _walletStorage.GetWallet();
             var projects = storage.GetFounderProjects();
             var keys = storage.GetFounderKeys();
-            var projectsKeys = _derivationOperations.GetProjectKey(keys, projects.Count + 1); //TODO need to make sure that + 1 will not create collisions  
-            
+            var latestProject = projects.MaxBy(p => p.ProjectIndex);
+            var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectIndex + 1 ?? 1);
+
             project.ProjectIndex = projectsKeys.Index;
             project.FounderKey = projectsKeys.FounderKey;
             project.FounderRecoveryKey = projectsKeys.FounderRecoveryKey;
@@ -211,7 +212,6 @@
 
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            var sendInfo = new SendInfo();
             var network = _NetworkConfiguration.GetNetwork();
             var accountInfo = storage.GetAccountInfo(network.Name);
 
@@ -219,8 +219,9 @@
 
             var transaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.ChangeAddressesInfo.First().Address, transaction, _walletStorage.GetWallet(), accountInfo,
-                feeEstimation.First());
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.ChangeAddressesInfo.First().Address, transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
+
+            project.TransactionId = signedTransaction.GetHash().ToString();
 
             return new OperationResult { Success = true };
 
@@ -250,7 +251,6 @@
                 return response;
 
             await _RelayService.AddProjectAsync(project);
-            
 
             // todo this code must be reviewed again as we send the recovery private key to the signing server
 
