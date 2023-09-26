@@ -13,5 +13,7 @@ public class FounderKeys
 
     public string ProjectIdentifier { get; set; }
 
+    public string NostrPubKey { get; set; }
+
     public int Index { get; set; }
 }

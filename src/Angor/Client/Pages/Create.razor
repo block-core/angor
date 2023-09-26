@@ -183,6 +183,7 @@
             project.FounderKey = projectsKeys.FounderKey;
             project.FounderRecoveryKey = projectsKeys.FounderRecoveryKey;
             project.ProjectIdentifier = projectsKeys.ProjectIdentifier;
+            project.NostrPubKey = projectsKeys.NostrPubKey;
         }
 
         return Task.CompletedTask;
@@ -224,7 +225,7 @@
 
             var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
 
-            var transaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000);
+            var transaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000, project.NostrPubKey);
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
 
