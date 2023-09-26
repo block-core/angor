@@ -33,11 +33,13 @@
     @foreach (var stage in stageDatas)
     {
         bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
-        
+        var investedCount = stage.Items.Count(c => c.IsSepnt == false);
+        var investedAmount = stage.Items.Where(c => c.IsSepnt == false).Sum(c => c.Amount);
+
         <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <h5 class="card-title">Stage @stage.StageIndex - @stage.Stage.AmountToRelease %</h5>
+                    <h5 class="card-title">Stage @stage.StageIndex - @stage.Stage.AmountToRelease % - @investedCount available trx with total of @investedAmount BTC</h5>
                     @if (stageisActive)
                     {
                         <button class="btn btn-success" @onclick="() => ClaimCoins(stage.StageIndex)">Claim Coins</button>
@@ -202,17 +204,17 @@
 
         var network = _NetworkConfiguration.GetNetwork();
 
-        var tasks = transactions.Select(async _ =>
+        var tasks = trxs.Select(async _ =>
         {
-            var hex = await _IndexerService.GetTransactionByIdAsync(_.TrxId);
-            return new { hex, _.TrxId };
+            var hex = await _IndexerService.GetTransactionByIdAsync(_.TransactionId);
+            return new { hex, _.TransactionId };
         });
 
         var trxHexList = await Task.WhenAll(tasks);
 
         foreach (var trx in trxHexList)
         {
-            transactions.Add((network.CreateTransaction(trx.hex), trx.TrxId));
+            transactions.Add((network.CreateTransaction(trx.hex), trx.TransactionId));
         }
 
         int stageIndex = 0;

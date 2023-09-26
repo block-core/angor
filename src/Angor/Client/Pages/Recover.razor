@@ -5,6 +5,7 @@
 @using Angor.Client.Services
 @using Angor.Shared.Models
 @using Angor.Shared.ProtocolNew
+@using Blockcore.Consensus.ScriptInfo
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
@@ -62,7 +63,7 @@
                     <td>
                         @if (item.IsSpent)
                         {
-                            <span class="text-primary">Spent</span>
+                            <span class="text-primary">Spent (@item.SpentTo)</span>
                         }
                         else
                         {
@@ -131,6 +132,7 @@
         public string OutputAddress;
         public decimal Amount;
         public bool IsSpent;
+        public string SpentTo;
     } 
 
     protected override async Task OnInitializedAsync()
@@ -222,6 +224,36 @@
             if (!string.IsNullOrEmpty(output.SpentInTransaction))
             {
                 item.IsSpent = true;
+
+                // try to resolve the destination
+                var url1 = $"/query/transaction/{output.SpentInTransaction}";
+                var response1 = await Http.GetAsync(indexer.Url + url1);
+                var trx1 = await response1.Content.ReadFromJsonAsync<QueryTransaction>();
+
+                var input = trx1.Inputs.FirstOrDefault(input => input.InputIndex == item.StageIndex + 2);
+                var sigs = storage.GetSignaturess().First(p => p.ProjectIdentifier == ProjectId);
+
+                if (input != null)
+                {
+                    var script = Script.FromHex(input.WitScript);
+
+                    var ops = script.ToOps();
+                    var executeScript = new Script(ops[^1].ToBytes());
+
+                    Logger.LogDebug(script.ToString());
+                    Logger.LogDebug(executeScript.ToString());
+
+                    if (sigs.Signatures.Any(a => input.WitScript.Contains(a.Signature)))
+                    {
+                        item.SpentTo = "penalty";
+                    }
+                    else
+                    {
+                        item.SpentTo = "founder (probably)";
+                    }
+
+                }
+                
             }
         }
     }

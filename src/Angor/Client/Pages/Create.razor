@@ -155,14 +155,14 @@
 
     private ProjectInfo project = new ProjectInfo
     {
-        StartDate = DateTime.UtcNow.AddDays(1),
+        StartDate = DateTime.UtcNow,
         PenaltyDate = DateTime.UtcNow.AddDays(100),
         ExpiryDate = DateTime.UtcNow.AddDays(50),
         TargetAmount = 100,
         TransactionId = "unknowen",
         Stages = new List<Stage>
         {
-            new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(10) },
+            new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
             new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
             new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) },
         }

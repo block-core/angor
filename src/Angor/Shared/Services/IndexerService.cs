@@ -49,7 +49,8 @@ namespace Angor.Client.Services
         public async Task<List<ProjectIndexerData>> GetProjectsAsync()
         {
             var indexer = _networkConfiguration.GetIndexerUrl();
-            var response = await _httpClient.GetAsync($"{indexer.Url}/query/Angor/projects");
+            // todo: dan - make this proper paging
+            var response = await _httpClient.GetAsync($"{indexer.Url}/query/Angor/projects?offset=0&limit=50");
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>();
         }
