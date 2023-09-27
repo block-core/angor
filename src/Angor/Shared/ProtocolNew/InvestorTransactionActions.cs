@@ -8,6 +8,7 @@ using System;
 using Microsoft.Extensions.Logging;
 using Key = Blockcore.NBitcoin.Key;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
+using System.Reflection;
 
 namespace Angor.Shared.ProtocolNew;
 
@@ -44,6 +45,36 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
         return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript,
             totalInvestmentAmount);
+    }
+
+    public string DiscoverUsedScript(ProjectInfo projectInfo, Transaction investmentTransaction, int stageIndex, string witScript)
+    {
+        var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
+
+        var scripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex);
+
+        var witScriptInfo = new Blockcore.Consensus.TransactionInfo.WitScript(Blockcore.Consensus.ScriptInfo.Script.FromHex(witScript));
+        var executeScript = new Blockcore.Consensus.ScriptInfo.Script(witScriptInfo[witScriptInfo.PushCount - 2]);
+
+        var withex = executeScript.ToHex();
+
+        // todo: turn this to eunms perhaps?
+        if (withex == scripts.Founder.ToHex())
+        {
+            return "Founder";
+        }
+
+        if (withex == scripts.Recover.ToHex())
+        {
+            return $"Penalty, locked for {(projectInfo.PenaltyDate - DateTime.Now).Days} days";
+        }
+
+        if (withex == scripts.EndOfProject.ToHex())
+        {
+            return "Investor";
+        }
+
+        return "unknown";
     }
 
     public Transaction BuildRecoverInvestorFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction)

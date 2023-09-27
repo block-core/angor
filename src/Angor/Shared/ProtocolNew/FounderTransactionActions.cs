@@ -121,6 +121,7 @@ public class FounderTransactionActions : IFounderTransactionActions
             
             var sig = key.SignTaprootKeySpend(hash, sigHash);
 
+            // todo: throw a proper exception
             Debug.Assert(key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature));
             
             input.WitScript = new WitScript(

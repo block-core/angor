@@ -63,7 +63,7 @@
                     <td>
                         @if (item.IsSpent)
                         {
-                            <span class="text-primary">Spent (@item.SpentTo)</span>
+                            <span class="text-primary">Spent to @item.SpentTo</span>
                         }
                         else
                         {
@@ -235,23 +235,7 @@
 
                 if (input != null)
                 {
-                    var script = Script.FromHex(input.WitScript);
-
-                    var ops = script.ToOps();
-                    var executeScript = new Script(ops[^1].ToBytes());
-
-                    Logger.LogDebug(script.ToString());
-                    Logger.LogDebug(executeScript.ToString());
-
-                    if (sigs.Signatures.Any(a => input.WitScript.Contains(a.Signature)))
-                    {
-                        item.SpentTo = "penalty";
-                    }
-                    else
-                    {
-                        item.SpentTo = "founder (probably)";
-                    }
-
+                    item.SpentTo = _InvestorTransactionActions.DiscoverUsedScript(project, investmentTransaction, item.StageIndex, input.WitScript);
                 }
                 
             }
