@@ -4,6 +4,8 @@ using Angor.Shared.Networks;
 using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
+using Blockcore.Consensus.ScriptInfo;
+using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
@@ -16,6 +18,8 @@ using Coin = Blockcore.NBitcoin.Coin;
 using Key = Blockcore.NBitcoin.Key;
 using Money = Blockcore.NBitcoin.Money;
 using MoneyUnit = NBitcoin.MoneyUnit;
+using OutPoint = NBitcoin.OutPoint;
+using Script = Blockcore.Consensus.ScriptInfo.Script;
 using Transaction = NBitcoin.Transaction;
 using uint256 = Blockcore.NBitcoin.uint256;
 
@@ -488,6 +492,7 @@ namespace Angor.Test
                     TargetAmount = 3,
                     StartDate = DateTime.UtcNow,
                     ExpiryDate = DateTime.UtcNow.AddDays(5),
+                    PenaltyDate = DateTime.UtcNow.AddDays(5),
                     Stages = new List<Stage>
                     {
                         new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
@@ -497,7 +502,6 @@ namespace Angor.Test
                     FounderKey = funderKey,
                     FounderRecoveryKey = founderRecoveryKey,
                     ProjectIdentifier = angorKey,
-                    PenaltyDate = DateTime.UtcNow.AddDays(5),
                     ProjectSeeders = new ProjectSeeders()
                 },
                 InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
@@ -525,31 +529,32 @@ namespace Angor.Test
                 investmentTransaction,
                 founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()));
 
-            var nbitcoinNetwork = NetworkMapper.Map(network);
-
-            var builder = nbitcoinNetwork.CreateTransactionBuilder();
-            for (int i = 0; i < investmentTransaction.Outputs.Count; i++)
+            List<Coin> coins = new();
+            foreach (var indexedTxOut in investmentTransaction.Outputs.AsIndexedOutputs().Where(w => !w.TxOut.ScriptPubKey.IsUnspendable))
             {
-                var output = investmentTransaction.Outputs[i];
+                coins.Add(new Blockcore.NBitcoin.Coin(indexedTxOut));
+                coins.Add(new Blockcore.NBitcoin.Coin(Blockcore.NBitcoin.uint256.Zero, 0, new Blockcore.NBitcoin.Money(1000),
+                    new Script("4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
 
-                if (output.Value == 0)
-                    continue;
-                builder.AddCoin(new NBitcoin.Coin(Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork),
-                    (uint)i));
-                builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Zero, 0, new NBitcoin.Money(1000),
-                    new Script(
-                        "4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
             }
-            
-            var parsedTransaction = NBitcoin.Transaction.Parse(signedRecoveryTransaction.ToHex(), nbitcoinNetwork);
+           
+            signedRecoveryTransaction.Inputs.Add(new Blockcore.Consensus.TransactionInfo.TxIn(
+                new Blockcore.Consensus.TransactionInfo.OutPoint(Blockcore.NBitcoin.uint256.Zero, 0), null)); //Add fee to the transaction
 
-            parsedTransaction.Inputs.Add(new OutPoint(NBitcoin.uint256.Zero, 0), null, null); //Add fee to the transaction
+            TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction, coins);
 
-            Assert.All(new []{parsedTransaction}, _ =>
+            // recover the coins after the penalty
+            var releaseTransaction = _investorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(investorContext.ProjectInfo, investmentTransaction, signedRecoveryTransaction, 
+                investorContext.ChangeAddress, _expectedFeeEstimation, Encoders.Hex.EncodeData(investorKey.ToBytes()));
+
+            coins = new();
+            foreach (var indexedTxOut in signedRecoveryTransaction.Outputs.AsIndexedOutputs())
             {
-                builder.Verify(_, out TransactionPolicyError[] errors);
-                Assert.Empty(errors);
-            });
+                coins.Add(new Blockcore.NBitcoin.Coin(indexedTxOut));
+            }
+
+            TransactionValidation.ThanTheTransactionHasNoErrors(releaseTransaction, coins);
+
         }
 
         [Theory]

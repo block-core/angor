@@ -338,7 +338,7 @@
 
             var network = _NetworkConfiguration.GetNetwork();
 
-            storage.AddSignatures(recoverySigs);
+            storage.AddOrUpdateSignatures(recoverySigs);
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 

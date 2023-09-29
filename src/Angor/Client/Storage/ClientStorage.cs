@@ -106,18 +106,18 @@ public class ClientStorage : IClientStorage
         return ret ?? new List<ProjectInfo>();
     }
 
-    public void AddSignatures(SignatureInfo signatureInfo)
+    public void AddOrUpdateSignatures(SignatureInfo signatureInfo)
     {
         var ret = GetSignaturess();
 
-        if (ret.FirstOrDefault(f => f.ProjectIdentifier == signatureInfo.ProjectIdentifier) == null)
+        var item = ret.FirstOrDefault(f => f.ProjectIdentifier == signatureInfo.ProjectIdentifier);
+
+        if (item != null)
         {
-            ret.Add(signatureInfo);
+            ret.Remove(item);
         }
-        else
-        {
-            throw new Exception("trying to overwrite recovery signatures");
-        }
+
+        ret.Add(signatureInfo);
 
         _storage.SetItem("recovery-signatures", ret);
     }

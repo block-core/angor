@@ -43,8 +43,16 @@
     </p>
     
     <p>Total funds to recover = @StageInfo.Items.Where(t => !t.IsSpent).Sum(t => t.Amount) BTC</p>
-
-    <button class="btn btn-primary" @onclick="RecoverCoins">Recover Funds</button>
+    
+    @if (StageInfo.CanRecover)
+    {
+        <button class="btn btn-primary" @onclick="PrepareToRecoverCoins">Recover Funds</button>
+    }
+    
+    @if (StageInfo.CanRelease)
+    {
+        <button class="btn btn-secondary" @onclick="PrepareToReleaseCoins">Release Funds</button>
+    }
 
     <table class="table">
         <thead>
@@ -63,7 +71,7 @@
                     <td>
                         @if (item.IsSpent)
                         {
-                            <span class="text-primary">Spent to @item.SpentTo</span>
+                            <span class="text-primary">@item.SpentTo</span>
                         }
                         else
                         {
@@ -97,7 +105,34 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @onclick="() => showRecoveryModal = false">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="RecoverFunds">Confirm</button>
+                        <button type="button" class="btn btn-primary" @onclick="RecoverCoins">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    
+    @if (showRecoveryReleaseModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Release Recovery Confirmation</h5>
+                        <button type="button" class="btn-close" @onclick="() => showRecoveryReleaseModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        <p class="mb-1">The amount to be released from the penalty = @Money.Satoshis(releaseRecoveryTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) BTC</p>
+
+                        <p class="mb-1">Send to @releaseRecoveryTransaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
+
+                        <hr>
+                        <p class="mt-3">Are you sure you want to release these funds from the penalty?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => showRecoveryReleaseModal = false">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="ReleaseCoins">Confirm</button>
                     </div>
                 </div>
             </div>
@@ -112,14 +147,21 @@
     private ProjectInfo project;
 
     private bool showRecoveryModal = false;
-    private Transaction investmentTransaction; 
-    private Transaction recoveryTransaction;
+    private bool showRecoveryReleaseModal = false;
+    private Transaction? investmentTransaction; 
+    private Transaction? recoveryTransaction;
+    private Transaction? releaseRecoveryTransaction;
     StageData StageInfo = new();
     string explorerLink;
+    SignatureInfo recoverySigs;
 
     public class StageData
     {
         public string Trxid;
+
+        public QueryTransaction TransactionInfo;
+        public bool CanRecover;
+        public bool CanRelease;
 
         public List<StageDataTrx> Items = new ();
     }
@@ -133,11 +175,14 @@
         public decimal Amount;
         public bool IsSpent;
         public string SpentTo;
+
+        public ProjectScriptType ProjectScriptType;
     } 
 
     protected override async Task OnInitializedAsync()
     {
-
+        project = storage.GetProjects().First(p => p.ProjectIdentifier == ProjectId);
+        recoverySigs = storage.GetSignaturess().First(s => s.ProjectIdentifier == ProjectId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -168,18 +213,20 @@
     {
         var network = _NetworkConfiguration.GetNetwork();
 
-        project = storage.GetProjects().First(p => p.ProjectIdentifier == ProjectId);
-
         var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
 
-        var myProject = storage.GetSignaturess().First(s => s.ProjectIdentifier == ProjectId);
+        var trx = trxs.First(f => f.TransactionId == recoverySigs.TransactionId);
 
-        var trx = trxs.First(f => f.TransactionId == myProject.TransactionId);
+        if (investmentTransaction == null)
+        {
+            var trxHex = await _IndexerService.GetTransactionHexByIdAsync(recoverySigs.TransactionId);
+            investmentTransaction = network.CreateTransaction(trxHex);
+        }
 
-        var trxHex = await _IndexerService.GetTransactionByIdAsync(trx.TransactionId);
-        
-        investmentTransaction = network.CreateTransaction(trxHex);
+        var trxInfo = await _IndexerService.GetTransactionInfoByIdAsync(trx.TransactionId);
+
         StageInfo.Trxid = trx.TransactionId;
+        StageInfo.TransactionInfo = trxInfo;
 
         explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{trx.TransactionId}";
 
@@ -188,13 +235,13 @@
         int stageIndex = 0;
         foreach (var stageInfo in project.Stages)
         {
-            var output = investmentTransaction.Outputs[stageIndex + 2];
+            var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
 
             var insert = new StageDataTrx
             {
-                OutputAddress = output.ScriptPubKey.WitHash.GetAddress(network).ToString(),
-                Outputindex = stageIndex,
-                Amount = output.Value.ToUnit(MoneyUnit.BTC),
+                OutputAddress = output.Address,
+                Outputindex = stageIndex + 2,
+                Amount = Money.Satoshis(output.Balance).ToUnit(MoneyUnit.BTC),
                 StageIndex = stageIndex,
                 IsSpent = false
             };
@@ -207,42 +254,70 @@
 
     private async Task CheckSpentFund()
     {
-        IndexerUrl indexer = _NetworkConfiguration.GetIndexerUrl();
-
-        var url = $"/query/transaction/{StageInfo.Trxid}";
-
-        Console.WriteLine($"fetching {url}");
-
-        // todo: use indexer service
-        var response = await Http.GetAsync(indexer.Url + url);
-        var trx = await response.Content.ReadFromJsonAsync<QueryTransaction>();
-
+        
         foreach (var item in StageInfo.Items)
         {
-            var output = trx.Outputs.ElementAt(item.StageIndex + 2);
+            var output = StageInfo.TransactionInfo.Outputs.ElementAt(item.Outputindex);
 
             if (!string.IsNullOrEmpty(output.SpentInTransaction))
             {
                 item.IsSpent = true;
 
-                // try to resolve the destination
-                var url1 = $"/query/transaction/{output.SpentInTransaction}";
-                var response1 = await Http.GetAsync(indexer.Url + url1);
-                var trx1 = await response1.Content.ReadFromJsonAsync<QueryTransaction>();
-
-                var input = trx1.Inputs.FirstOrDefault(input => input.InputIndex == item.StageIndex + 2);
-                var sigs = storage.GetSignaturess().First(p => p.ProjectIdentifier == ProjectId);
-
-                if (input != null)
+                if (output.SpentInTransaction == recoverySigs.RecoveryTransactionId)
                 {
-                    item.SpentTo = _InvestorTransactionActions.DiscoverUsedScript(project, investmentTransaction, item.StageIndex, input.WitScript);
+                    if (!string.IsNullOrEmpty(recoverySigs.RecoveryReleaseTransactionId))
+                    {
+                        item.SpentTo = "Recovered after penalty";
+                        item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Unknown };
+                    }
+                    else
+                    {
+                        item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty };
+                        var days = (project.PenaltyDate - DateTime.Now).Days;
+                        item.SpentTo = days > 0 ? $"Penalty, released in {days} days" : "Penalty can be released";
+                    }
                 }
-                
+                else
+                {
+                    // try to resolve the destination
+                    var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+
+                    var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == StageInfo.Trxid && input.InputIndex == item.Outputindex);
+
+                    if (input != null)
+                    {
+                        item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project, investmentTransaction, item.StageIndex, input.WitScript);
+
+                        switch (item.ProjectScriptType.ScriptType)
+                        {
+                            case ProjectScriptTypeEnum.Founder:
+                            {
+                                item.SpentTo = "Spent by founder";
+                                break;
+                            }
+                            case ProjectScriptTypeEnum.InvestorWithPenalty:
+                            {
+                                var days = (project.PenaltyDate - DateTime.Now).Days;
+                                item.SpentTo = days > 0 ? $"Penalty, released in {days} days" : "Penalty can be released";
+                                break;
+                            }
+                            case ProjectScriptTypeEnum.EndOfProject:
+                            case ProjectScriptTypeEnum.InvestorNoPenalty:
+                            {
+                                item.SpentTo = $"Spent by investor";
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
+
+        StageInfo.CanRecover = StageInfo.Items.Any(a => a.IsSpent == false);
+        StageInfo.CanRelease = StageInfo.Items.Any(a => a.ProjectScriptType.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty);
     }
 
-    private async Task RecoverCoins()
+    private async Task PrepareToRecoverCoins()
     {
         var network = _NetworkConfiguration.GetNetwork();
 
@@ -250,12 +325,12 @@
         {
             var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
 
-            var sigs = storage.GetSignaturess().First(p => p.ProjectIdentifier == ProjectId);
+            recoverySigs = storage.GetSignaturess().First(p => p.ProjectIdentifier == ProjectId);
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
 
-            recoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project, investmentTransaction, sigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+            recoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project, investmentTransaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
             // remove outputs that have been spent
             List<TxOut> removeTxout = new();
@@ -275,7 +350,9 @@
             // add fee to the recovery trx
             recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.ChangeAddressesInfo.First().Address, recoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
 
-            Logger.LogInformation($"recoveryTransaction={recoveryTransaction.ToHex(network.Consensus.ConsensusFactory)}");
+            recoverySigs.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
+
+            Logger.LogInformation($"recoveryTransaction={recoverySigs.RecoveryTransactionId}");
 
             return new OperationResult { Success = true };
         });
@@ -290,13 +367,15 @@
         }
     }
 
-    private async Task RecoverFunds()
+    private async Task RecoverCoins()
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             showRecoveryModal = false;
 
             var network = _NetworkConfiguration.GetNetwork();
+
+            storage.AddOrUpdateSignatures(recoverySigs);
 
             var response = await _WalletOperations.PublishTransactionAsync(network, recoveryTransaction);
 
@@ -315,4 +394,71 @@
             notificationComponent.ShowErrorMessage(operationResult.Message);
         }
     }
+
+    private async Task PrepareToReleaseCoins()
+    {
+        var network = _NetworkConfiguration.GetNetwork();
+
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+
+            if (recoveryTransaction == null)
+            {
+                var trxHex = await _IndexerService.GetTransactionHexByIdAsync(recoverySigs.RecoveryTransactionId);
+                recoveryTransaction = network.CreateTransaction(trxHex);
+            }
+
+            releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project, investmentTransaction, recoveryTransaction,
+                accountInfo.ChangeAddressesInfo.First().Address, feeEstimation.First(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+
+            recoverySigs.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
+
+            Logger.LogInformation($"recoveryReleaseTransactionId={recoverySigs.RecoveryTransactionId}");
+
+            return new OperationResult { Success = true };
+        });
+
+        if (operationResult.Success)
+        {
+            showRecoveryReleaseModal = true;
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private async Task ReleaseCoins()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            showRecoveryReleaseModal = false;
+
+            var network = _NetworkConfiguration.GetNetwork();
+
+            storage.AddOrUpdateSignatures(recoverySigs);
+
+            var response = await _WalletOperations.PublishTransactionAsync(network, releaseRecoveryTransaction);
+
+            if (!response.Success)
+                return response;
+
+            return new OperationResult { Success = response.Success, Message = response.Message };
+        });
+
+        if (operationResult.Success)
+        {
+            notificationComponent.ShowNotificationMessage("Done", 1);
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
 }

@@ -1,6 +1,7 @@
 ﻿using Angor.Shared.Models;
 using Angor.Shared;
 using System.Net.Http.Json;
+using static System.Net.WebRequestMethods;
 
 namespace Angor.Client.Services
 {
@@ -13,7 +14,9 @@ namespace Angor.Client.Services
         Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset);
         Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations);
 
-        Task<string> GetTransactionByIdAsync(string transactionId);
+        Task<string> GetTransactionHexByIdAsync(string transactionId);
+
+        Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId);
     }
     public class ProjectIndexerData
     {
@@ -130,7 +133,7 @@ namespace Angor.Client.Services
             return feeEstimations;
         }
 
-        public async Task<string> GetTransactionByIdAsync(string transactionId)
+        public async Task<string> GetTransactionHexByIdAsync(string transactionId)
         {
             IndexerUrl indexer = _networkConfiguration.GetIndexerUrl();
 
@@ -142,6 +145,22 @@ namespace Angor.Client.Services
                 throw new InvalidOperationException(response.ReasonPhrase);
 
             return await response.Content.ReadAsStringAsync();
+        }
+
+        public async Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId)
+        {
+            IndexerUrl indexer = _networkConfiguration.GetIndexerUrl();
+
+            var url = $"/query/transaction/{transactionId}";
+            
+            var response = await _httpClient.GetAsync(indexer.Url + url);
+
+            if (!response.IsSuccessStatusCode)
+                throw new InvalidOperationException(response.ReasonPhrase);
+
+            var info = await response.Content.ReadFromJsonAsync<QueryTransaction>();
+
+            return info;
         }
     }
 }

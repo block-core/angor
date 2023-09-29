@@ -9,6 +9,15 @@ using Microsoft.Extensions.Logging;
 using Key = Blockcore.NBitcoin.Key;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 using System.Reflection;
+using Blockcore.Consensus.TransactionInfo;
+using WitScript = NBitcoin.WitScript;
+using Blockcore.Networks;
+using NBitcoin.RPC;
+using Blockcore.NBitcoin;
+using DBreeze.Utils;
+using Money = Blockcore.NBitcoin.Money;
+using SigHash = Blockcore.Consensus.ScriptInfo.SigHash;
+using Utils = Blockcore.NBitcoin.Utils;
 
 namespace Angor.Shared.ProtocolNew;
 
@@ -47,7 +56,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             totalInvestmentAmount);
     }
 
-    public string DiscoverUsedScript(ProjectInfo projectInfo, Transaction investmentTransaction, int stageIndex, string witScript)
+    public ProjectScriptType DiscoverUsedScript(ProjectInfo projectInfo, Transaction investmentTransaction, int stageIndex, string witScript)
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
@@ -58,23 +67,22 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
         var withex = executeScript.ToHex();
 
-        // todo: turn this to eunms perhaps?
         if (withex == scripts.Founder.ToHex())
         {
-            return "Founder";
+            return new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Founder };
         }
 
         if (withex == scripts.Recover.ToHex())
         {
-            return $"Penalty, locked for {(projectInfo.PenaltyDate - DateTime.Now).Days} days";
+            return new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty };
         }
 
         if (withex == scripts.EndOfProject.ToHex())
         {
-            return "Investor";
+            return new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.EndOfProject };
         }
 
-        return "unknown";
+        return new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Unknown };
     }
 
     public Transaction BuildRecoverInvestorFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction)
@@ -82,6 +90,60 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
         return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDate, investorKey);
+    }
+
+    public Transaction BuildAndSignRecoverReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
+        Transaction recoveryTransaction, string investorReceiveAddress, FeeEstimation feeEstimation, string investorPrivateKey)
+    {
+        var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
+
+        var spendingScript = _investmentScriptBuilder.GetInvestorPenaltyTransactionScript(
+            investorKey,
+            projectInfo.PenaltyDate);
+
+        var network = _networkConfiguration.GetNetwork();
+        var transaction = network.CreateTransaction();
+
+        transaction.LockTime = Utils.DateTimeToUnixTime(projectInfo.PenaltyDate.AddMinutes(1));
+
+        // add the output address
+        transaction.Outputs.Add(new Blockcore.Consensus.TransactionInfo.TxOut(Money.Zero, Blockcore.NBitcoin.BitcoinAddress.Create(investorReceiveAddress, network)));
+
+        // add all the outputs that are in a penalty
+        foreach (var output in recoveryTransaction.Outputs.AsIndexedOutputs())
+        {
+            if (output.TxOut.ScriptPubKey == spendingScript.WitHash.ScriptPubKey)
+            {
+                // this is a penalty output
+                transaction.Inputs.Add(new Blockcore.Consensus.TransactionInfo.TxIn(output.ToOutPoint()) { Sequence = new Blockcore.NBitcoin.Sequence(transaction.LockTime.Value)});
+
+                transaction.Outputs[0].Value += output.TxOut.Value;
+            }
+        }
+
+        // reduce the network fee form the first output
+        var virtualSize = transaction.GetVirtualSize(4);
+        var fee = new Blockcore.NBitcoin.FeeRate(Blockcore.NBitcoin.Money.Satoshis(feeEstimation.FeeRate)).GetFee(virtualSize);
+        transaction.Outputs[0].Value -= new Blockcore.NBitcoin.Money(fee);
+
+        // sign the inputs
+        var key = new Key(Encoders.Hex.DecodeData(investorPrivateKey));
+
+        foreach (var intput in transaction.Inputs)
+        {
+            var spendingOutput = recoveryTransaction.Outputs.AsIndexedOutputs().First(f => f.ToOutPoint() == intput.PrevOut);
+
+            //var sig = transaction.SignInput(network, key, new Blockcore.NBitcoin.ScriptCoin(intput.PrevOut, spendingOutput.TxOut, spendingScript));
+
+            var hash = transaction.GetSignatureHash(network, new Blockcore.NBitcoin.ScriptCoin(intput.PrevOut, spendingOutput.TxOut, spendingScript));
+            var sig = key.Sign(hash, SigHash.All);
+
+            intput.WitScript = new Blockcore.Consensus.TransactionInfo.WitScript(
+                Blockcore.Consensus.ScriptInfo.Op.GetPushOp(sig.ToBytes()),
+                Blockcore.Consensus.ScriptInfo.Op.GetPushOp(spendingScript.ToBytes()));
+        }
+
+        return transaction;
     }
 
     public Transaction RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex,
@@ -211,7 +273,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var nBitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
         var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
 
-        var pubkey = new PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey();
+        var pubkey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey();
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
         var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()

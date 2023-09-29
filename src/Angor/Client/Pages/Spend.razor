@@ -25,6 +25,7 @@
 }
 
 <h3>Founder Stage Claim</h3>
+<h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
 
 <div class="container">
 
@@ -39,11 +40,16 @@
         <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <h5 class="card-title">Stage @stage.StageIndex - @stage.Stage.AmountToRelease % - @investedCount available trx with total of @investedAmount BTC</h5>
+                    <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount BTC (@investedCount trx) </h5>
                     @if (stageisActive)
                     {
                         <button class="btn btn-success" @onclick="() => ClaimCoins(stage.StageIndex)">Claim Coins</button>
                     }
+                    else
+                    {
+                        <button class="btn btn-warning" disabled>In @((stage.Stage.ReleaseDate - DateTime.UtcNow).Days) Days</button>
+                    }
+                    
                 </div>
                 <p class="card-subtitle text-muted mb-2">Estimated completion time: @stage.Stage.ReleaseDate.ToString("dd/MM/yyyy")</p>
 
@@ -64,25 +70,19 @@
                                     <input class="form-check-input" type="checkbox" disabled="@(!stageisActive || transaction.IsSepnt)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
                                 </div>
                                 <div class="flex-grow-1 ms-3">
-                                    <p class="mb-0">Transaction details: @transaction.Amount BTC</p>
-                                    <p class="mb-0">Address: @transaction.OutputAddress</p>
-
-                                    @if (stageisActive)
-                                    {
+                                    <p class="mb-0">
+                                        @transaction.Amount BTC - utxo : @transaction.Trxid-@transaction.Outputindex 
+                                      
                                         @if (transaction.IsSepnt)
                                         {
-                                            <p class="text-primary">This output was spent</p>
+                                            <p class="text-primary">spent</p>
                                         }
                                         else
                                         {
-                                            <p class="text-success">This output can be spent</p>
+                                            <p class="text-success">unspent</p>
                                         }
-                                    }
-                                    else
-                                    {
-                                        <p class="text-warning">This output can be spent in @((stage.Stage.ReleaseDate - DateTime.UtcNow).Days) days</p>
-                                    }
-                                    
+
+                                    </p>
                                 </div>
                             </div>
                         }
@@ -169,7 +169,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-       
+        project = storage.GetFounderProjects().First(p => p.ProjectIdentifier == ProjectId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -198,15 +198,13 @@
 
     private async Task FindInvestments()
     {
-        project = storage.GetFounderProjects().First(p => p.ProjectIdentifier == ProjectId);
-
         var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
 
         var network = _NetworkConfiguration.GetNetwork();
 
         var tasks = trxs.Select(async _ =>
         {
-            var hex = await _IndexerService.GetTransactionByIdAsync(_.TransactionId);
+            var hex = await _IndexerService.GetTransactionHexByIdAsync(_.TransactionId);
             return new { hex, _.TransactionId };
         });
 

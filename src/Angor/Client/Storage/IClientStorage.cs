@@ -18,7 +18,7 @@ namespace Angor.Client.Storage
         List<ProjectInfo> GetFounderProjects();
         void AddBrowseProject(ProjectInfo project);
         List<ProjectInfo> GetBrowseProjects();
-        void AddSignatures(SignatureInfo signatureInfo);
+        void AddOrUpdateSignatures(SignatureInfo signatureInfo);
         List<SignatureInfo> GetSignaturess();
     }
 }
