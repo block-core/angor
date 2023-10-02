@@ -5,12 +5,10 @@
 @using Angor.Client.Services
 @using Angor.Shared.Models
 @using Angor.Shared.ProtocolNew
-@using Blockcore.Consensus.ScriptInfo
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 
-@inject HttpClient Http
 @inject IClientStorage storage;
 @inject IIndexerService _IndexerService
 @inject INetworkConfiguration _NetworkConfiguration
@@ -254,7 +252,6 @@
 
     private async Task CheckSpentFund()
     {
-        
         foreach (var item in StageInfo.Items)
         {
             var output = StageInfo.TransactionInfo.Outputs.ElementAt(item.Outputindex);
@@ -284,7 +281,7 @@
 
                     var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == StageInfo.Trxid && input.InputIndex == item.Outputindex);
 
-                    if (input != null)
+                    if (input != null && investmentTransaction != null)
                     {
                         item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project, investmentTransaction, item.StageIndex, input.WitScript);
 
@@ -314,7 +311,7 @@
         }
 
         StageInfo.CanRecover = StageInfo.Items.Any(a => a.IsSpent == false);
-        StageInfo.CanRelease = StageInfo.Items.Any(a => a.ProjectScriptType.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty);
+        StageInfo.CanRelease = StageInfo.Items.Any(a => a.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty);
     }
 
     private async Task PrepareToRecoverCoins()
