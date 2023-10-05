@@ -14,6 +14,7 @@
     <PackageReference Include="Blockcore.Core" Version="1.1.40" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
     <PackageReference Include="NBitcoin" Version="7.0.25" />
+    <PackageReference Include="Nostr.Client" Version="1.4.3" />
   </ItemGroup>
 
   <ItemGroup>
