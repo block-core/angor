@@ -285,7 +285,7 @@
             InvestorContext context = new InvestorContext
             {
                 ProjectInfo = project,
-                ChangeAddress = accountInfo.ChangeAddressesInfo.First().Address,
+                ChangeAddress = accountInfo.GetNextChangeReceiveAddress(),
                 InvestorKey = investorKey,
             };
 

@@ -27,7 +27,7 @@
 
     <NotificationComponent @ref="notificationComponent" />
 
-    @if (penaltyProjects == null || !penaltyProjects.Any())
+    @if (!penaltyProjects.Any())
     {
         <p><em>No penalties found...</em></p>
     }
@@ -40,7 +40,7 @@
                 <table class="table table-bordered table-hover">
                     <thead>
                         <tr>
-                            <th>Transaction ID</th>
+                            <th>Project ID</th>
                             <th>Amount in Penalty</th>
                             <th>Days Left</th>
                         </tr>
@@ -49,23 +49,23 @@
                         @foreach (var penalty in penaltyProjects)
                         {
                             <tr>
-                                <td>@penalty.RecoveryTransactionId</td>
+                                <td>@penalty.ProjectIdentifier</td>
                                 <td>@penalty.Amount BTC</td>
                                 <td>
                                     @if (penalty.IsExpired)
                                     {
                                         if (penalty.IsReleased)
                                         {
-                                            <p>Penalty Released</p>
+                                            <button disabled class="btn btn-secondary">Penalty Released</button>
                                         }
                                         else
                                         {
-                                            <button @onclick="() => ClaimPenalty(penalty.ProjectIdentifier)">Claim Penalty</button>    
+                                            <button class="btn btn-info" @onclick="() => ClaimPenalty(penalty.ProjectIdentifier)">Claim Penalty</button>
                                         }
                                     }
                                     else
                                     {
-                                        <p>Penalty Release in @penalty.DaysLeftForPenalty days</p>
+                                        <button disabled class="btn btn-warning">Penalty Release in @penalty.DaysLeftForPenalty days</button>
                                     }
                                 </td>
                             </tr>

@@ -9,6 +9,7 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
+using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -278,7 +279,7 @@ namespace Angor.Test
                 new uint256(seeder1Context.InvestorSecretHash), Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
             var seeder1Expierytrx  = _seederTransactionActions.RecoverEndOfProjectFunds(seeder1InvTrx.ToHex(), projectInvestmentInfo,
-                1, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey.ToString(),
+                1, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
                 Encoders.Hex.EncodeData(seeder11Key.ToBytes()), _expectedFeeEstimation);
 
             Assert.NotNull(seeder1Expierytrx);
@@ -331,7 +332,7 @@ namespace Angor.Test
 
             var investor1Expierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
                 projectInvestmentInfo,
-                1, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey.ToString(),
+                1, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
                 Encoders.Hex.EncodeData(seeder11Key.ToBytes()), _expectedFeeEstimation);
 
             Assert.NotNull(investor1Expierytrx);
@@ -388,7 +389,7 @@ namespace Angor.Test
                 Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
 
             var investorExpierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
-                projectInvestmentInfo, 1, investorReceiveCoinsKey.PubKey.ScriptPubKey.ToString(),
+                projectInvestmentInfo, 1, investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
                 Encoders.Hex.EncodeData(investorKey.ToBytes()),_expectedFeeEstimation);
 
             Assert.NotNull(investorExpierytrx);
@@ -558,9 +559,9 @@ namespace Angor.Test
         }
 
         [Theory]
+        [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
-        [InlineData(3)]
         public void InvestorTransaction_NoPenalty_Test(int stageIndex)
         {
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
@@ -622,7 +623,7 @@ namespace Angor.Test
                 
                 var investorRecoverFundsNoPenalty = _investorTransactionActions.RecoverRemainingFundsWithOutPenalty(
                     investorInvTrx.ToHex(), projectInvestmentInfo, stageIndex,
-                    investorReceiveCoinsKey.PubKey.ScriptPubKey.ToString(),
+                    investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
                     Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation,partSecrets
                 );
 

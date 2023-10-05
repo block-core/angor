@@ -16,4 +16,8 @@ public class AccountInfo
         return AddressesInfo.Last()?.Address;
     }
 
+    public string? GetNextChangeReceiveAddress()
+    {
+        return ChangeAddressesInfo.Last()?.Address;
+    }
 }

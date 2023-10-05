@@ -22,13 +22,11 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
     }
 
     public Transaction BuildRecoverInvestorRemainingFundsInProject(string investmentTransactionHex ,ProjectInfo projectInfo, 
-        int startStage, string receiveAddress, string privateKey, FeeRate feeRate, 
+        int startStageIndex, string receiveAddress, string privateKey, FeeRate feeRate, 
         Func<ProjectScripts, WitScript> buildWitScriptWithSigPlaceholder,
         Func<WitScript, TaprootSignature, WitScript> addSignatureToWitScript)
     {
         var network = _networkConfiguration.GetNetwork();
-        
-        var startStageIndex = startStage - 1; // from stage number to index in the array
         
         // We'll use the NBitcoin lib because its a taproot spend
         var nbitcoinNetwork = NetworkMapper.Map(network);
@@ -43,7 +41,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         spendingTrx.LockTime = Utils.DateTimeToUnixTime(projectInfo.ExpiryDate.AddMinutes(1));
         
         // Step 2 - build the transaction outputs and inputs without signing using fake sigs for fee estimation
-        spendingTrx.Outputs.Add(investmentTrxOutputs.Sum(_ => _.TxOut.Value), new NBitcoin.Script(receiveAddress));
+        spendingTrx.Outputs.Add(investmentTrxOutputs.Sum(_ => _.TxOut.Value), NBitcoin.BitcoinAddress.Create(receiveAddress, nbitcoinNetwork));
         
         //Need to add the script sig to calculate the fee correctly
         spendingTrx.Inputs.AddRange(investmentTrxOutputs.Select((_,i) =>

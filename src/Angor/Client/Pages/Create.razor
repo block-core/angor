@@ -219,7 +219,7 @@
 
             var transaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.ChangeAddressesInfo.First().Address, transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
 
             project.TransactionId = signedTransaction.GetHash().ToString();
 
