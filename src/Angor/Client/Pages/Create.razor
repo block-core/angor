@@ -259,8 +259,10 @@
             if (!response.Success)
                 return response;
 
-            await _RelayService.AddProjectAsync(project);
-
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+            
+            await _RelayService.AddProjectAsync(project, NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()));
+            
             // todo this code must be reviewed again as we send the recovery private key to the signing server
 
             var key = _derivationOperations.DeriveFounderRecoveryPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);

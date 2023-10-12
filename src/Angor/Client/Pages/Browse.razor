@@ -53,13 +53,18 @@
 
     protected override async Task OnInitializedAsync()
     {
-
+        await _RelayService.ConnectToRelaysAsync();
     }
 
     private async Task SearchProjects()
     {
         var blockchainProjects = await _IndexerService.GetProjectsAsync();
 
+        // foreach (var blockchainProject in blockchainProjects)
+        // {
+        //     _RelayService.RequestProjectDataAsync(blockchainProject.)
+        // }
+        
         foreach (var blockchainProject in blockchainProjects)
         {
             var project = await _RelayService.GetProjectAsync(blockchainProject.ProjectIdentifier);
@@ -73,7 +78,7 @@
 
     private void ImportProject(ProjectInfo project)
     {
-        storage.AddBrowseProject(project);
+        storage.AddBrowseProject(project); 
 
         NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
     }

@@ -19,4 +19,5 @@ public interface IDerivationOperations
     Key DeriveFounderPrivateKey(WalletWords walletWords, int index);
 
     Key DeriveFounderRecoveryPrivateKey(WalletWords walletWords, int index);
+    Key DeriveProjectNostrPrivateKey(WalletWords walletWords, int index);
 }

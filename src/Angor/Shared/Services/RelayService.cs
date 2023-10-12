@@ -14,36 +14,84 @@ namespace Angor.Shared.Services
 {
     public interface IRelayService
     {
+        Task ConnectToRelaysAsync();
+        
         Task AddProjectAsync(ProjectInfo project, string nsec);
         Task<ProjectInfo?> GetProjectAsync(string projectId);
+
+        Task RequestProjectDataAsync(string nostrPubKey);
     }
 
     public class RelayService : IRelayService
     {
         
-        private readonly INostrClient _nostrClient;
-      //  private const string nsec = "nsec1l0a7m5dlg4h9wurhnmgsq5nv9cqyvdwsutk4yf3w4fzzaqw7n80ssdfzkg";
-        private readonly string _baseUrl = "/api/Test"; // "https://your-base-url/api/test";
+        private INostrClient _nostrClient;
+        private INostrCommunicator _nostrCommunicator;
 
         private readonly ISessionStorage _storage;
         private ILogger<RelayService> _logger;
 
-        public RelayService(INostrClient httpClient, ISessionStorage storage, ILogger<RelayService> logger)
+        private ILogger<NostrWebsocketClient> _clientLogger; 
+        
+        public RelayService(ISessionStorage storage, ILogger<RelayService> logger, 
+            ILogger<NostrWebsocketClient> clientLogger)
         {
-            _nostrClient = httpClient;
             _storage = storage;
             _logger = logger;
+            //_nostrCommunicator = nostrCommunicator;
+            _clientLogger = clientLogger;
         }
 
-        public async Task RequestProjectDataAsync(string nostrPubKey)
+        public async Task ConnectToRelaysAsync()
         {
+            _nostrCommunicator = new NostrWebsocketCommunicator(new Uri("ws://angor-relay.test"));
 
+            _nostrCommunicator.Name = "angor-relay.test";
+            
+            _nostrCommunicator.DisconnectionHappened.Subscribe(info => _logger.LogError(info.Exception,"[{relay}] Disconnected, type: {type}, reason: {reason}", "test", info.Type, info.CloseStatus));
+            
+            await _nostrCommunicator.StartOrFail();
+            
+            _nostrClient =
+                new NostrWebsocketClient(_nostrCommunicator, _clientLogger);
+
+            _nostrClient.Streams.UnknownMessageStream.Subscribe(_ =>
+                _logger.LogError(_.ToString(), "unknown event"));
+            
+            _nostrClient.Send(new NostrFilter
+                { Authors = new[] { "c62a0e7f62d990eca33b9a56799137d55de4b7fb65e5fcc307ec010c01dc1b5c" }, Kinds = new[] { NostrKind.Metadata } });
+            
+            
+            // _nostrCommunicator.DisconnectionHappened.Subscribe(_ => _logger.LogError(_.Exception, "failed to connect"));
+            //
+            // await _nostrCommunicator.StartOrFail();
+        //     using var communicator = new NostrWebsocketCommunicator(new Uri("wss://angor-relay-web.test"));
+        //     
+        //     using (  var client = new NostrWebsocketClient(communicator,_clientLogger))
+        //     {
+        //         client.Communicator.DisconnectionHappened.Subscribe(_ => _logger.LogError(_.Exception, "failed to connect"));
+        //         
+        //         client.Streams.EventStream.Subscribe(_ => _logger.LogInformation(_.Event.Content));
+        //
+        //         await client.Communicator.StartOrFail();
+        //         
+        //         client.Send(new NostrFilter
+        //             { Authors = new[] { "c62a0e7f62d990eca33b9a56799137d55de4b7fb65e5fcc307ec010c01dc1b5c" }, Kinds = new[] { NostrKind.Metadata } });
+        //     }
+        //     
+        //     
+        //     var test =
+        //         new NostrWebsocketClient(new NostrWebsocketCommunicator(new Uri("wss://localhost:3000")),_clientLogger);
+        //     
+        //     test.Communicator.DisconnectionHappened.Subscribe(_ => _logger.LogError(_.Exception, "failed to connect"));
+        //     
+        //     await test.Communicator.StartOrFail();
+         }
+        
+        public Task RequestProjectDataAsync(string nostrPubKey)
+        {
             _nostrClient.Send(new NostrFilter
                 { Authors = new[] { nostrPubKey }, Kinds = new[] { NostrKind.Metadata } });
-            
-            var url = new Uri("wss://relay.damus.io");
-
-            using var communicator = new NostrWebsocketCommunicator(url);
 
             _nostrClient.Streams.EventStream.Subscribe(response =>
             {
@@ -55,13 +103,14 @@ namespace Angor.Shared.Services
 
                 var projectInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<ProjectInfo>(ev.Content);
                 _storage.StoreProjectInfo(projectInfo);
-                _logger.LogInformation("Name: {name}, about: {about}", evm.Metadata?.Name, evm.Metadata?.About
+                _logger.LogInformation("Name: {name}, about: {about}", evm.Metadata?.Name, evm.Metadata?.About);
             });
 
-            await communicator.Start();
+            return Task.CompletedTask;
+            //await _nostrCommunicator.Start();
         }
-        
-        public Task AddProjectAsync(ProjectInfo project, string nsec)
+
+        public Task AddProjectAsync(ProjectInfo project, string hexPrivateKey)
         {
             var content = Newtonsoft.Json.JsonConvert.SerializeObject(project);
 
@@ -73,8 +122,8 @@ namespace Angor.Shared.Services
                 Pubkey = project.NostrPubKey,
                 Tags = new NostrEventTags(new NostrEventTag("ProjectDeclaration")) 
             };
-
-            var key = NostrPrivateKey.FromBech32(nsec);
+            
+            var key = NostrPrivateKey.FromHex(hexPrivateKey);
             var signed = ev.Sign(key);
 
             _nostrClient.Send(new NostrEventRequest(signed));
