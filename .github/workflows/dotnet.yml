@@ -1,28 +1,102 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
-name: .NET
+name: Build and Release
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            extension: ".zip"
+            runtime: "win-x64"
+          - os: ubuntu-latest
+            extension: ".tar.gz"
+            runtime: "linux-x64"
+          - os: macos-latest
+            runtime: "osx-x64"
+            extension: ".zip"
+        node_version: [18]
+      fail-fast: false
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    env:
+      PROJECT_NAME: "Angor"
+      SOLUTION_PATH: "src/Angor.sln"
+      PROJECT_PATH: "src/Server/Server.csproj"
+      BUILD_CONFIGURATION: "Release"
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      - uses: actions/checkout@v1
+        name: Checkout
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: |
+            7.0.x
+      - name: Setup Node.js (${{ matrix.node_version }})
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - name: Variables
+        run: |
+          echo VERSION=$(npm run version --silent) >> $GITHUB_ENV
+        shell: bash
+
+      - name: Workload
+        run: dotnet workload restore ${{env.SOLUTION_PATH}}
+
+      - name: Restore
+        run: dotnet restore ${{env.SOLUTION_PATH}}
+
+      - name: Unit Test
+        run: dotnet test -v=normal -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
+
+      - name: Publish (BlazorStore)
+        run: dotnet publish -c ${{env.BUILD_CONFIGURATION}} -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }} -v m -o ./src/${{ env.PROJECT_NAME }}/bin/publish ${{env.PROJECT_PATH}}
+
+      - name: Package Name
+        run: |
+          echo RELEASE_NAME=${{ env.PROJECT_NAME }}-${{ env.VERSION }}-${{ matrix.runtime }}${{ matrix.extension }} >> $GITHUB_ENV
+          echo RELEASE_PATH=${{ env.PROJECT_NAME }}-${{ env.VERSION }}-${{ matrix.runtime }}${{ matrix.extension }} >> $GITHUB_ENV
+        shell: bash
+
+      - name: Package (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          echo RELEASE_PATH=./src/${{env.PROJECT_NAME}}/bin/publish/${{env.RELEASE_NAME}} >> $GITHUB_ENV
+          cd ./src/${{env.PROJECT_NAME}}/bin/publish/
+          tar cvzf ${{env.RELEASE_NAME}} *
+      - name: Package (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          Compress-Archive -Path .\src\${{env.PROJECT_NAME}}\bin\publish\* -DestinationPath .\${{env.RELEASE_NAME}}
+      - name: Package (Mac)
+        if: matrix.os == 'macos-latest'
+        run: |
+          zip -r ${{env.RELEASE_NAME}} ./src/${{env.PROJECT_NAME}}/bin/publish/
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: api
+          path: "${{env.RELEASE_PATH}}"
+
+      - name: Release
+        uses: sondreb/action-release@main
+        with:
+          commit: "main"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: "${{env.RELEASE_PATH}}"
+          draft: true
+          prerelease: false
+          body: ""
+          name: "Angor (Release ${{env.VERSION}})"
+          tag: ${{env.VERSION}}
