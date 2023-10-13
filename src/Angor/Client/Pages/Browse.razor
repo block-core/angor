@@ -30,7 +30,7 @@
             }
             else
             {
-                foreach (var project in projects)
+                foreach (var project in projects.OrderByDescending(d => d.StartDate))
                 {
                     <div class="card mb-3">
                         <div class="card-body">
