@@ -29,7 +29,7 @@ jobs:
     env:
       PROJECT_NAME: "Angor"
       SOLUTION_PATH: "src/Angor.sln"
-      PROJECT_PATH: "src/Server/Server.csproj"
+      PROJECT_PATH: "src/Angor/Server/Angor.Server.csproj"
       BUILD_CONFIGURATION: "Release"
 
     steps:
@@ -60,7 +60,7 @@ jobs:
       - name: Unit Test
         run: dotnet test -v=normal -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
 
-      - name: Publish (BlazorStore)
+      - name: Publish (Angor)
         run: dotnet publish -c ${{env.BUILD_CONFIGURATION}} -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }} -v m -o ./src/${{ env.PROJECT_NAME }}/bin/publish ${{env.PROJECT_PATH}}
 
       - name: Package Name
