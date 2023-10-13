@@ -213,8 +213,8 @@
         DateTime prev = DateTime.UtcNow;
         foreach (var stage in project.Stages)
         {
-            if ((stage.ReleaseDate - prev).Days < 10)
-                notificationComponent.ShowErrorMessage("Stages must be at least 10 days a part");
+            if ((stage.ReleaseDate - prev).Days < 0)
+                notificationComponent.ShowErrorMessage("Stages must be chronological");
         }
 
         var operationResult = await notificationComponent.LongOperation(async () =>
