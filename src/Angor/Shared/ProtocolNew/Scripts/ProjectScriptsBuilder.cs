@@ -27,7 +27,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
     {
         return new Script(OpcodeType.OP_RETURN,
             Op.GetPushOp(new PubKey(founderKey).ToBytes()),
-            Op.GetPushOp(new PubKey(nostrPuKey).ToBytes()));
+            Op.GetPushOp(new NBitcoin.PubKey(nostrPuKey).GetTaprootFullPubKey().ToBytes()));
     }
 
     public Script BuildSeederInfoScript(string investorKey, uint256 secretHash)

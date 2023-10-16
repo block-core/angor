@@ -1,7 +1,6 @@
 ﻿@page "/browse"
 @using Angor.Client.Storage
 @using Angor.Client.Services
-@using Angor.Shared.Models
 @using Angor.Shared.Services
 @inject HttpClient Http
 @inject IClientStorage storage;
@@ -37,7 +36,7 @@
                         <div class="card-body">
                             <h5 class="card-title">@project.ProjectIdentifier</h5>
                             <p class="card-text">Nostr ID: <a href="/" target="_blank">@(new Blockcore.NBitcoin.Key().PubKey.ToHex())</a></p>
-                            <button @onclick="() => ImportProject(project)" class="btn btn-primary">View</button>
+                            <button @onclick="() => ImportProject(project.ProjectIdentifier)" class="btn btn-primary">View</button>
                         </div>
                     </div>
                 }
@@ -49,7 +48,7 @@
 @code {
     private string searchQuery;
 
-    private List<ProjectInfo> projects= new();
+    private List<ProjectIndexerData> projects= new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -60,26 +59,21 @@
     {
         var blockchainProjects = await _IndexerService.GetProjectsAsync();
 
-        // foreach (var blockchainProject in blockchainProjects)
-        // {
-        //     _RelayService.RequestProjectDataAsync(blockchainProject.)
-        // }
-        
         foreach (var blockchainProject in blockchainProjects)
         {
-            var project = await _RelayService.GetProjectAsync(blockchainProject.ProjectIdentifier);
+            await _RelayService.RequestProjectDataAsync(blockchainProject.NostrPubKey);
 
-            if (project != null)
-            {
-                projects.Add(project);
-            }
+            projects.Add(blockchainProject);
         }
+        StateHasChanged();
     }
 
-    private void ImportProject(ProjectInfo project)
+    private void ImportProject(string projectIdentifier)
     {
-        storage.AddBrowseProject(project); 
-
-        NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
+        //storage.AddBrowseProject(project); 
+        
+        //var project = await _RelayService.GetProjectAsync(projectIdentifier);
+        
+        NavigationManager.NavigateTo($"/view/{projectIdentifier}");
     }
 }

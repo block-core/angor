@@ -1,4 +1,5 @@
-﻿using Angor.Client.Services;
+﻿using System.Reactive.Linq;
+using Angor.Client.Services;
 using Angor.Shared.Models;
 using Nostr.Client.Messages.Metadata;
 using Nostr.Client.Requests;
@@ -7,8 +8,6 @@ using Nostr.Client.Client;
 using Nostr.Client.Communicator;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
-using Nostr.Client.Messages.Metadata;
-using Nostr.Client.Requests;
 
 namespace Angor.Shared.Services
 {
@@ -25,8 +24,8 @@ namespace Angor.Shared.Services
     public class RelayService : IRelayService
     {
         
-        private INostrClient _nostrClient;
-        private INostrCommunicator _nostrCommunicator;
+        private static INostrClient _nostrClient;
+        private static INostrCommunicator _nostrCommunicator;
 
         private readonly ISessionStorage _storage;
         private ILogger<RelayService> _logger;
@@ -44,70 +43,60 @@ namespace Angor.Shared.Services
 
         public async Task ConnectToRelaysAsync()
         {
+            if (_nostrCommunicator != null)
+                return;
+
             _nostrCommunicator = new NostrWebsocketCommunicator(new Uri("ws://angor-relay.test"));
 
             _nostrCommunicator.Name = "angor-relay.test";
+            _nostrCommunicator.ReconnectTimeout = null;
             
-            _nostrCommunicator.DisconnectionHappened.Subscribe(info => _logger.LogError(info.Exception,"[{relay}] Disconnected, type: {type}, reason: {reason}", "test", info.Type, info.CloseStatus));
+            _nostrCommunicator.DisconnectionHappened.Subscribe(info =>
+            {
+                _logger.LogError(info.Exception, "Relay disconnected, type: {type}, reason: {reason}.", info.Type, info.CloseStatus);
+                _nostrCommunicator.Start();
+            });
+            _nostrCommunicator.MessageReceived.Subscribe(info => _logger.LogInformation(info.Text, "Relay message received, type: {type}", info.MessageType));
             
             await _nostrCommunicator.StartOrFail();
             
-            _nostrClient =
-                new NostrWebsocketClient(_nostrCommunicator, _clientLogger);
+            _nostrClient = new NostrWebsocketClient(_nostrCommunicator, _clientLogger);
 
-            _nostrClient.Streams.UnknownMessageStream.Subscribe(_ =>
-                _logger.LogError(_.ToString(), "unknown event"));
+            _nostrClient.Send(new NostrRequest("default",new NostrFilter { Kinds = new[] { NostrKind.Metadata } }));
             
-            _nostrClient.Send(new NostrFilter
-                { Authors = new[] { "c62a0e7f62d990eca33b9a56799137d55de4b7fb65e5fcc307ec010c01dc1b5c" }, Kinds = new[] { NostrKind.Metadata } });
-            
-            
-            // _nostrCommunicator.DisconnectionHappened.Subscribe(_ => _logger.LogError(_.Exception, "failed to connect"));
-            //
-            // await _nostrCommunicator.StartOrFail();
-        //     using var communicator = new NostrWebsocketCommunicator(new Uri("wss://angor-relay-web.test"));
-        //     
-        //     using (  var client = new NostrWebsocketClient(communicator,_clientLogger))
-        //     {
-        //         client.Communicator.DisconnectionHappened.Subscribe(_ => _logger.LogError(_.Exception, "failed to connect"));
-        //         
-        //         client.Streams.EventStream.Subscribe(_ => _logger.LogInformation(_.Event.Content));
-        //
-        //         await client.Communicator.StartOrFail();
-        //         
-        //         client.Send(new NostrFilter
-        //             { Authors = new[] { "c62a0e7f62d990eca33b9a56799137d55de4b7fb65e5fcc307ec010c01dc1b5c" }, Kinds = new[] { NostrKind.Metadata } });
-        //     }
-        //     
-        //     
-        //     var test =
-        //         new NostrWebsocketClient(new NostrWebsocketCommunicator(new Uri("wss://localhost:3000")),_clientLogger);
-        //     
-        //     test.Communicator.DisconnectionHappened.Subscribe(_ => _logger.LogError(_.Exception, "failed to connect"));
-        //     
-        //     await test.Communicator.StartOrFail();
-         }
+            _nostrClient.Streams.UnknownMessageStream.Subscribe(_ => _logger.LogInformation($"UnknownMessageStream {_}",_.MessageType));
+            _nostrClient.Streams.EventStream.Subscribe(_ => _logger.LogInformation($"EventStream {_.Subscription}", _.AdditionalData));
+            _nostrClient.Streams.EoseStream.Subscribe(_ => _logger.LogInformation($"EoseStream on subscription - {_.Subscription}", _.AdditionalData));
+            _nostrClient.Streams.OkStream.Subscribe(_ => _logger.LogInformation($"OkStream {_}", _.MessageType));
+            _nostrClient.Streams.NoticeStream.Subscribe(_ => _logger.LogInformation($"NoticeStream {_}", _.MessageType));
+            _nostrClient.Streams.UnknownRawStream.Subscribe(_ => _logger.LogInformation($"UnknownRawStream {_}", _.Message.MessageType.ToString()));
+        }
         
         public Task RequestProjectDataAsync(string nostrPubKey)
         {
-            _nostrClient.Send(new NostrFilter
-                { Authors = new[] { nostrPubKey }, Kinds = new[] { NostrKind.Metadata } });
+            if (_storage.IsProjectInSubscribedList(nostrPubKey))
+                return Task.CompletedTask;
 
-            _nostrClient.Streams.EventStream.Subscribe(response =>
-            {
-                var ev = response.Event;
-                _logger.LogInformation("{kind}: {content}", ev?.Kind, ev?.Content);
+            _nostrClient.Send( new NostrRequest(nostrPubKey, new NostrFilter
+                { Authors = new[] { nostrPubKey }, Kinds = new[] { NostrKind.Metadata } }));
 
-                if (ev is not NostrMetadataEvent evm)
-                    return;
+            _nostrClient.Streams.EventStream.Where(_ => _.Subscription == nostrPubKey)
+                .Select(_ => _.Event)
+                .Subscribe(ev =>
+                {
+                    _logger.LogInformation("{kind}: {content}", ev?.Kind, ev?.Content);
 
-                var projectInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<ProjectInfo>(ev.Content);
-                _storage.StoreProjectInfo(projectInfo);
-                _logger.LogInformation("Name: {name}, about: {about}", evm.Metadata?.Name, evm.Metadata?.About);
-            });
+                    if (ev is not NostrMetadataEvent evm)
+                        return;
 
+                    var projectInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<ProjectInfo>(evm.Content);
+                    _storage.StoreProjectInfo(projectInfo);
+                    _logger.LogInformation($"Updated storage with project from nostr {projectInfo.ProjectIdentifier}");
+                });
+
+            _storage.AddProjectToSubscribedList(nostrPubKey);
+            
             return Task.CompletedTask;
-            //await _nostrCommunicator.Start();
         }
 
         public Task AddProjectAsync(ProjectInfo project, string hexPrivateKey)
@@ -120,7 +109,7 @@ namespace Angor.Shared.Services
                 CreatedAt = DateTime.UtcNow,
                 Content = content,
                 Pubkey = project.NostrPubKey,
-                Tags = new NostrEventTags(new NostrEventTag("ProjectDeclaration")) 
+                Tags = new NostrEventTags(new NostrEventTag("ProjectDeclaration")) //TODO need to find the correct tags for the event
             };
             
             var key = NostrPrivateKey.FromHex(hexPrivateKey);

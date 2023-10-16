@@ -32,7 +32,7 @@ public class DerivationOperations : IDerivationOperations
             var founderKey = DeriveFounderKey(walletWords, i);
             var founderRecoveryKey = DeriveFounderRecoveryKey(walletWords, i);
             var projectIdentifier = DeriveAngorKey(founderKey, angorTestKey);
-            var nostrPubKey = DeriveNostrId(walletWords, i);
+            var nostrPubKey = DeriveNostrPubKey(walletWords, i);
             
             founderKeyCollection.Keys.Add(new FounderKeys
             {
@@ -179,7 +179,7 @@ public class DerivationOperations : IDerivationOperations
         return extPubKey.PubKey.ToHex();
     }
     
-    public string DeriveNostrId(WalletWords walletWords, int index)
+    public string DeriveNostrPubKey(WalletWords walletWords, int index)
     {
         // founder key is derived from the path m/5'
 
