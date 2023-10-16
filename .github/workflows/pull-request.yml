@@ -18,8 +18,8 @@ jobs:
     
     env:
       PROJECT_NAME: 'Blockcore.AtomicSwaps'
-      SOLUTION_PATH: 'src/Blockcore.AtomicSwaps.sln'
-      PROJECT_PATH: 'src/Blockcore.AtomicSwaps.Server/Blockcore.AtomicSwaps.Server.csproj'
+      SOLUTION_PATH: 'src/Angor.sln'
+      PROJECT_PATH: 'src/Angor/Server/Angor.Server.csproj'
       BUILD_CONFIGURATION: 'Release'
 
     steps:

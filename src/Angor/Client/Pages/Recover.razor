@@ -253,8 +253,6 @@
 
     private async Task FindInvestments()
     {
-        var network = _NetworkConfiguration.GetNetwork();
-
         var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
 
         var trx = trxs.First(f => f.TransactionId == recoverySigs.TransactionId);
@@ -364,8 +362,6 @@
 
     private async Task PrepareToRecoverCoins()
     {
-        var network = _NetworkConfiguration.GetNetwork();
-
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
@@ -418,8 +414,6 @@
         {
             showRecoveryModal = false;
 
-            var network = _NetworkConfiguration.GetNetwork();
-
             storage.AddOrUpdateSignatures(recoverySigs);
 
             var response = await _WalletOperations.PublishTransactionAsync(network, recoveryTransaction);
@@ -442,8 +436,6 @@
 
     private async Task PrepareToReleaseCoins()
     {
-        var network = _NetworkConfiguration.GetNetwork();
-
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
@@ -484,8 +476,6 @@
         {
             showRecoveryReleaseModal = false;
 
-            var network = _NetworkConfiguration.GetNetwork();
-
             storage.AddOrUpdateSignatures(recoverySigs);
 
             var response = await _WalletOperations.PublishTransactionAsync(network, releaseRecoveryTransaction);
@@ -509,8 +499,6 @@
 
     private async Task PrepareEndOfProjectCoins()
     {
-        var network = _NetworkConfiguration.GetNetwork();
-
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
@@ -546,8 +534,6 @@
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             showEndOfProjectModal = false;
-
-            var network = _NetworkConfiguration.GetNetwork();
 
             storage.AddOrUpdateSignatures(recoverySigs);
 
