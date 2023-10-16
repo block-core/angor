@@ -30,7 +30,7 @@ jobs:
         env:
           VERSION: ${{ github.event.release.tag_name }}
 
-      - name: Build the Docker container image for BlazorStore
+      - name: Build the Docker container image
         run: docker build -f "./src/Angor/Server/Dockerfile.Release" -t blockcore/angor:latest -t blockcore/angor:${{ github.event.release.tag_name }} --label "unstable=true" "."
 
       - name: Login and Push to Docker Registry
