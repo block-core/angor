@@ -123,14 +123,14 @@
 
                 <div class="mb-3">
                     <span class="fs-4">Confirmed balance: </span>
-                    <span class="fs-3"><strong> @Money.Satoshis(localAccountInfo.TotalBalance).ToUnit(MoneyUnit.BTC) BTC</strong></span> <!-- replace this with actual balance -->
+                    <span class="fs-3"><strong> @Money.Satoshis(localAccountInfo.TotalBalance).ToUnit(MoneyUnit.BTC) @symbol</strong></span> <!-- replace this with actual balance -->
                 </div>
 
                 @if (localAccountInfo.TotalUnConfirmedBalance > 0)
                 {
                     <div class="mb-3">
                         <span class="fs-6">Unconfirmed balance: </span>
-                        <span class="fs-5"> @Money.Satoshis(localAccountInfo.TotalUnConfirmedBalance).ToUnit(MoneyUnit.BTC) BTC</span> <!-- replace this with actual unconfirmed balance -->
+                        <span class="fs-5"> @Money.Satoshis(localAccountInfo.TotalUnConfirmedBalance).ToUnit(MoneyUnit.BTC) @symbol</span> <!-- replace this with actual unconfirmed balance -->
                     </div>
                 }
 
@@ -425,7 +425,7 @@
 
     private FeeEstimations FeeEstimations = new ();
 
-
+    string symbol = "BTC";
 
     // Max index for the range input
         private const int FeeMin = 1;
@@ -439,6 +439,8 @@
         if (hasWallet)
         {
             localAccountInfo = GetAccountInfoFromStorage();
+            var network = _networkConfiguration.GetNetwork();
+            symbol = network.CoinTicker;
         }
         return Task.CompletedTask;
     }
