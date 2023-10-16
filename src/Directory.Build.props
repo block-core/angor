@@ -1,0 +1,25 @@
+<Project>
+   <PropertyGroup>
+      <Version>0.0.2</Version>
+      <TargetFramework>net7.0</TargetFramework>
+      <Authors>Blockcore</Authors>
+      <PackageLicenseExpression>MIT</PackageLicenseExpression>
+      <PackageProjectUrl>https://www.blockcore.net</PackageProjectUrl>
+      <RepositoryType>git</RepositoryType>
+      <RepositoryUrl>git://github.com/block-core/angor</RepositoryUrl>
+      <PackageIcon></PackageIcon>
+      <PackageIconUrl>https://www.blockcore.net/assets/blockcore-256x256.png</PackageIconUrl>
+      <PackageTags>blockchain;cryptocurrency;crypto;C#;.NET;bitcoin;blockcore</PackageTags>
+      <GenerateDocumentationFile>true</GenerateDocumentationFile>
+      <PublishRepositoryUrl>true</PublishRepositoryUrl>
+      <EmbedUntrackedSources>true</EmbedUntrackedSources>
+      <IncludeSymbols>true</IncludeSymbols>
+      <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+      <DebugType>portable</DebugType>
+   </PropertyGroup>
+
+   <ItemGroup>
+      <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+   </ItemGroup>
+
+</Project>

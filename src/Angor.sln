@@ -9,7 +9,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Angor.Client", "Angor\Clien
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Angor.Shared", "Angor\Shared\Angor.Shared.csproj", "{08FD6946-7D39-41D1-ABB0-8DF32E403489}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Test", "Angor.Test\Angor.Test.csproj", "{B70832F0-D887-4447-BC78-C8240E7EB540}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Angor.Test", "Angor.Test\Angor.Test.csproj", "{B70832F0-D887-4447-BC78-C8240E7EB540}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{36D68A4A-B9A8-4A20-89F0-702E08EB1377}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		..\LICENSE = ..\LICENSE
+		..\README.md = ..\README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
