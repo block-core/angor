@@ -1,1 +1,17 @@
-# angor
+# Angor
+
+## Introduction
+
+Angor is a decentralized crowdfunding platform built on the Bitcoin network. Think of it as a trustless, risk-minimized Initial Coin Offering (ICO). With Angor, investors maintain complete control of their funds until the founders actually need to use the funds.
+
+## License
+
+Please visit and review the [Custom License](/LICENSE) before contributing.
+
+## Contributing
+
+We welcome contributions to the codebase. Please maintain the same code style as the existing code.
+
+## Documentation
+
+For detailed documentation and specifications, please refer to our TICO (Trustless ICO) [Specification](https://gist.github.com/dangershony/7683ce7b380c57bf60875739824fd987).
