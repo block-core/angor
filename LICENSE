@@ -5,10 +5,17 @@ Copyright (c) 2023, Blockcore, Softchains
 Definitions:
 
 "Software": The Softchains and associated documentation.
+
 "Licensed Work": Any version of the Software made available under this License.
 
+"Non-Commercial Purposes" is defined as the use of the Software in a manner that:
+ 1. Does Not Generate Revenue: The Software or any derivative thereof is not directly sold, rented, licensed, or otherwise used as a means to generate revenue or financial gain.
+ 2. Not Part of Revenue-Generating Activities: The Software or any derivative thereof is not used as a part of, or in conjunction with, any revenue-generating activities, including but not limited to, commercial services, product offerings, or advertising.
+ 3. Personal, Educational, or Research Use: The Software is used primarily for personal experimentation, educational purposes, academic research, or other non-profit activities that are not intended to produce direct or indirect financial profit.
+ 4. Charitable Organizations: Use by recognized non-profit or charitable organizations, provided such use does not result in generating revenue beyond what is necessary for the basic operation and sustenance of the organization.
+
 1. Grant of License:
-  Permission is granted to any person obtaining a copy of this Software to view, review, and use the Software for non-commercial purposes, subject to the conditions listed below.
+  Permission is granted to any person obtaining a copy of this Software to view, review, and use the Software for Non-Commercial Purposes, subject to the conditions listed below.
 
 2. Restrictions:
   a. Commercial Use: Before using the Software for commercial purposes, you must obtain a separate license or written permission from Softchains.
