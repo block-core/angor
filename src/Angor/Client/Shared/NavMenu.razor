@@ -1,4 +1,5 @@
 ﻿@using Angor.Client.Storage
+@using System.Reflection
 @inject IWalletStorage _walletStorage;
 @inject NavMenuState NavMenuState;
 
@@ -52,19 +53,28 @@
             </NavLink>
         </div>
 
-      @*  <div class="nav-item px-3">
+        @*  <div class="nav-item px-3">
             <NavLink class="nav-link" href="CheckTransactionCode">
                 <span class="oi oi-plus" aria-hidden="true"></span> CheckTransactionCode
             </NavLink>
         </div>*@
     </nav>
+    
+    <div class="nav-footer">
+        <div class="text-muted small">Version: @softwareVersion</div>
+    </div>
+
 </div>
+
+
 
 @code {
     private bool collapseNavMenu = true;
     private bool hasWallet;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private string softwareVersion = "0.0.0";
 
     private void ToggleNavMenu()
     {
@@ -76,6 +86,15 @@
         hasWallet = _walletStorage.HasWallet();
 
         NavMenuState.OnChange += NavMenuStateOnOnChange;
+
+        // Get the current assembly (the assembly of your Blazor app)
+        Assembly assembly = Assembly.GetEntryAssembly();
+
+        // Get the assembly's version information
+        Version version = assembly.GetName().Version;
+
+        // Convert the version to a string
+        softwareVersion = version.ToString();
     }
 
     private void NavMenuStateOnOnChange()
