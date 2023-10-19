@@ -433,6 +433,8 @@
 
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
+            walletWordsCreateModal = false;
+
             WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
@@ -493,6 +495,7 @@
 
     private void DeleteWallet()
     {
+        walletWordsModal = false;
         storage.DeleteAccountInfo(_networkConfiguration.GetNetwork().Name);
         storage.DeleteWalletPubkey();
         _walletStorage.DeleteWallet();
