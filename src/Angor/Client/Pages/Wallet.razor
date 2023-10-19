@@ -16,58 +16,15 @@
 @inject IDerivationOperations _derivationOperations
 @inject NavMenuState NavMenuState
 
+@inherits BaseComponent
+
 <PageTitle>Wallet and balances</PageTitle>
 
 <div class="container my-4">
     <h1>Wallet and balances</h1>
     
-    <div class="row mt-4">
-        <div class="col">
+    <NotificationComponent @ref="notificationComponent" />
 
-            @if (isLoading)
-            {
-                <div class="loader-wrapper">
-                    <div class="loader"></div>
-                </div>
-            }
-            
-            @if (!string.IsNullOrEmpty(notificationMessage))
-            {
-                <div class="row justify-content-center">
-                    <div class="col-lg-8 col-md-10">
-                        <div class="alert alert-info fixed-bottom w-70 d-flex justify-content-between align-items-center" role="alert" style="left: 20%; right: 20%">
-                            @notificationMessage
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    </div>
-                </div>
-            }
-
-            @if (!string.IsNullOrEmpty(errorMessage))
-            {
-                <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-                    <div class="modal-dialog modal-dialog-centered modal-sm">
-                        <div class="modal-content">
-                            <div class="modal-header bg-danger text-white">
-                                <h5 class="modal-title">
-                                    <i class="bi bi-exclamation-triangle-fill"></i>
-                                    Error
-                                </h5>
-                                <button type="button" class="btn-close btn-close-white" @onclick="ClearErrorMessage"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p>@errorMessage</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-light" @onclick="ClearErrorMessage">Dismiss</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-
-        </div>
-    </div>
 
     <!-- This part of the page is visible only if the wallet is found -->
     @if (!hasWallet)
@@ -79,40 +36,43 @@
                 <!-- Adding a button to create a wallet -->
                 @*<button class="btn btn-primary mt-2" @onclick="CreateWallet">Create Wallet</button>*@
 
-                <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#walletWordsCreateModal">Create Wallet</button>
+                <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" @onclick="() => walletWordsCreateModal = true">Create Wallet</button>
 
             </div>
 
-            <!-- Wallet Words Create Modal -->
-            <div class="modal fade" id="walletWordsCreateModal" tabindex="-1" aria-labelledby="walletWordsCreateModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="walletWordsCreateModalLabel">Create Wallet</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="WalletWordsClose" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="walletWordsTextArea">Paste your wallet words here or generate a new wallet:</label>
-                                <textarea class="form-control" id="walletWordsTextArea" rows="3" @bind="newWalletWords"></textarea>
+            @if (walletWordsCreateModal)
+            {
+                <!-- Wallet Words Create Modal -->
+                <div class="modal fade show d-block" id="walletWordsCreateModal" tabindex="-1" aria-labelledby="walletWordsCreateModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="walletWordsCreateModalLabel">Create Wallet</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" aria-label="Close"></button>
                             </div>
-                            <div class="mb-3">
-                                <label for="additionalPassphraseInput">Additional Passphrase (optional):</label>
-                                <input type="text" class="form-control" id="additionalPassphraseInput" @bind="newWalletWordsPassphrase" />
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="walletWordsTextArea">Paste your wallet words here or generate a new wallet:</label>
+                                    <textarea class="form-control" id="walletWordsTextArea" rows="3" @bind="newWalletWords"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="additionalPassphraseInput">Additional Passphrase (optional):</label>
+                                    <input type="text" class="form-control" id="additionalPassphraseInput" @bind="newWalletWordsPassphrase"/>
+                                </div>
+                                <div class="mb-3">
+                                    <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
+                                </div>
+                                <div class="mb-3">
+                                    <button class="btn btn-success" @onclick="CreateWalletAsync" data-bs-dismiss="modal">Create Wallet</button>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" data-bs-dismiss="modal">Close</button>
                             </div>
-                            <div class="mb-3">
-                                <button class="btn btn-success" @onclick="CreateWalletAsync" data-bs-dismiss="modal">Create Wallet</button>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="WalletWordsClose" data-bs-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
     }
     else
@@ -135,64 +95,63 @@
                 }
 
                 <!-- Replace '#' in 'data-bs-target' with the id of your modal -->
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#walletWordsModal">Show Wallet Words</button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" @onclick="() => walletWordsModal = true">Show Wallet Words</button>
                 
                 <button class="btn btn-primary" @onclick="RefreshBalance">Refresh Balance</button>
                 
             </div>
+            
+            @if (walletWordsModal)
+            {
+                <!-- Wallet Words Modal -->
+                <div class="modal fade show d-block" id="walletWordsModal" tabindex="-1" aria-labelledby="walletWordsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="walletWordsModalLabel">Wallet Words</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
 
-            <!-- Wallet Words Modal -->
-            <div class="modal fade" id="walletWordsModal" tabindex="-1" aria-labelledby="walletWordsModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="walletWordsModalLabel">Wallet Words</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="WalletWordsClose" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                          
-                            @if (string.IsNullOrEmpty(walletWords))
-                            {
-                                <!-- Show words button with warning -->
-                                <div class="mb-3">
-                                    <button class="btn btn-warning" @onclick="ShowWords">Show Words</button>
-                                    <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
-                                </div>
-                            }
-                            else
-                            {
-                                <!-- Wallet words will be shown here -->
-                                <p>@walletWords</p>
-
-                                if (!string.IsNullOrEmpty(walletWordsPassphrase))
+                                @if (string.IsNullOrEmpty(walletWords))
                                 {
-                                    <p>This wallet has a pass phrase!</p>
+                                    <!-- Show words button with warning -->
+                                    <div class="mb-3">
+                                        <button class="btn btn-warning" @onclick="ShowWords">Show Words</button>
+                                        <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <!-- Wallet words will be shown here -->
+                                    <p>@walletWords</p>
+
+                                    if (!string.IsNullOrEmpty(walletWordsPassphrase))
+                                    {
+                                        <p>This wallet has a pass phrase!</p>
+                                    }
+
+                                    <!-- Copy words to clipboard -->
+                                    <div class="mb-3">
+                                        <button class="btn btn-danger" @onclick="CopyWordsToClibboard">Copy To clipboard</button>
+                                        <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
+                                    </div>
                                 }
 
-                                <!-- Copy words to clipboard -->
+                                <!-- Delete wallet button -->
                                 <div class="mb-3">
-                                    <button class="btn btn-danger" @onclick="CopyWordsToClibboard">Copy To clipboard</button>
-                                    <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
+                                    <button class="btn btn-danger" @onclick="DeleteWallet" data-bs-dismiss="modal">Delete Wallet</button>
                                 </div>
-                            }
 
-                            <!-- Delete wallet button -->
-                            <div class="mb-3">
-                                <button class="btn btn-danger" @onclick="DeleteWallet" data-bs-dismiss="modal">Delete Wallet</button>
                             </div>
-
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="WalletWordsClose" data-bs-dismiss="modal">Close</button>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" data-bs-dismiss="modal">Close</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
+            }
         </div>
-
-      
-
 
 
         <!-- Section 2 -->
@@ -238,49 +197,52 @@
                         <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
                     </div>
 
-                    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#coinControlModal">Coin Control</button>
+                    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" @onclick="() => coinControlModal = true">Coin Control</button>
                     
                     <!-- New Send button that triggers a confirmation dialog -->
                     <button type="button" class="btn btn-primary mb-3" onclick="@BuildSend">Send</button>
 
                 </form>
             </div>
-            
-            <!-- Coin Control Modal -->
-            <div class="modal fade" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <!-- The tick boxes and amounts will go here -->
 
-                            <p>Total amount selected  = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) BTC</p>
+            @if (coinControlModal)
+            {
+                <!-- Coin Control Modal -->
+                <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => coinControlModal = false" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <!-- The tick boxes and amounts will go here -->
 
-                            @foreach (var addressInfo in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
-                            {
-                                @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                <p>Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) BTC</p>
+
+                                @foreach (var addressInfo in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
                                 {
-                                    bool isTicked = _sendInfo.SendUtxos.ContainsKey(addressUtxoItem.outpoint.ToString());
+                                    @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                    {
+                                        bool isTicked = _sendInfo.SendUtxos.ContainsKey(addressUtxoItem.outpoint.ToString());
 
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" value="@isTicked" id="@addressUtxoItem" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
-                                        <label class="form-check-label" for="@addressUtxoItem">
-                                            @($"{addressUtxoItem.outpoint} - {Money.Satoshis(@addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} BTC")
-                                        </label>
-                                    </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="@isTicked" id="@addressUtxoItem" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
+                                            <label class="form-check-label" style="font-size: 0.7em;" for="@addressUtxoItem">
+                                                @($"{addressUtxoItem.outpoint} - {Money.Satoshis(@addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} BTC")
+                                            </label>
+                                        </div>
+                                    }
                                 }
-                            }
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => coinControlModal = false">Close</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
+            }
+
             @if (sendConfirmModal)
             {
                 <!-- Send Confirmation Modal -->
@@ -411,11 +373,10 @@
     private string? newWalletWords;
     private string? newWalletWordsPassphrase;
    
-    private bool isLoading;
     private bool sendConfirmModal;
-    string loadingStatus = string.Empty;
-    string errorMessage = string.Empty;
-    string notificationMessage = string.Empty;
+    private bool coinControlModal;
+    private bool walletWordsModal;
+    private bool walletWordsCreateModal;
 
     private AccountInfo localAccountInfo = new();
 
@@ -444,31 +405,10 @@
         }
         return Task.CompletedTask;
     }
-
-    private void ClearErrorMessage()
-    {
-        errorMessage = "";
-        StateHasChanged();
-    }
-
-    private void ShowNotificationMessage(string message)
-    {
-        Task.Run(async () =>
-        {
-            notificationMessage = message;
-            StateHasChanged(); // This will cause Blazor to re-render the page
-
-            await Task.Delay(5000); // Wait for 5 seconds
-
-            notificationMessage = null;
-            StateHasChanged(); // This will cause Blazor to re-render the page
-
-        });
-    }
-
+    
     private async Task RefreshBalance()
     {
-        var operationResult = await LongOperation(async () =>
+        var operationResult = await notificationComponent.LongOperation(async () =>
         {
             var network = _networkConfiguration.GetNetwork();
             var accountInfo = GetAccountInfoFromStorage();
@@ -487,17 +427,11 @@
         //TODO notify user in the UI in case the refresh failed 
     }
 
-    private void ShowErrorMessage(string message)
-    {
-        errorMessage = message;
-        StateHasChanged();  
-    }
-   
     private async Task CreateWalletAsync()
     {
         if (string.IsNullOrEmpty(newWalletWords)) throw new ArgumentNullException();
 
-        var operationResult = await LongOperation(async () =>
+        var operationResult = await notificationComponent.LongOperation(async () =>
         {
             WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
@@ -581,7 +515,7 @@
 
         if (string.IsNullOrEmpty(address))
         {
-            ShowErrorMessage("New address was not created");
+            notificationComponent.ShowErrorMessage("New address was not created");
             return;
         }
 
@@ -611,50 +545,10 @@
             _lastFeeRefresh = DateTime.UtcNow;
         }
     }
-
-    private async Task<OperationResult?> LongOperation(Func<Task<OperationResult>> action)
-    {
-        OperationResult? res = default(OperationResult);
-        Exception? failure = null;
-
-        try
-        {
-            isLoading = true;
-            await Task.Delay(10);
-            StateHasChanged();
-
-            res = await action();
-        }
-        catch (Exception ex)
-        {
-            failure = ex;
-        }
-        finally
-        {
-            isLoading = false;
-            StateHasChanged();
-        }
-
-        if (failure != null)
-        {
-            Logger.LogError(failure, failure.Message);
-            ShowErrorMessage(failure.Message);
-        }
-        else
-        {
-            if (res is {Success: false })
-            {
-                Logger.LogError(res.Message);
-                ShowErrorMessage($"Error: {res.Message}");
-            }
-        }
-
-        return res;
-    }
-
+    
     private async Task BuildSend()
     {
-        var operationResult = await LongOperation(async () =>
+        var operationResult = await notificationComponent.LongOperation(async () =>
         {
             var accountInfo = GetAccountInfoFromStorage();
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
@@ -695,7 +589,7 @@
 
     private async Task SendCoins()
     {
-        var operationResult = await LongOperation(async () =>
+        var operationResult = await notificationComponent.LongOperation(async () =>
         {
             sendConfirmModal = false;
 
@@ -708,7 +602,7 @@
         {
             _sendInfo = new SendInfo();
             
-            ShowNotificationMessage("Sent complete!");
+            notificationComponent.ShowNotificationMessage("Sent complete!");
         }
     }
 
@@ -759,4 +653,9 @@
         return storage.GetAccountInfo(network.Name);
     }
 
+    private void showCoinControlModal()
+    {
+        coinControlModal = true;
+        StateHasChanged();
+    }
 }
