@@ -3,11 +3,13 @@
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Blockcore.NBitcoin
+@using Angor.Client.Services
 
 @inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
+@inject ISessionStorage SessionStorage;
 @inject NavigationManager NavigationManager
 @inject INetworkConfiguration _NetworkConfiguration
 
@@ -218,7 +220,7 @@
                 }
                 else
                 {
-                    findProject = storage.GetBrowseProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+                    findProject = SessionStorage.GetProjectById(ProjectId);
 
                     if (findProject != null)
                     {

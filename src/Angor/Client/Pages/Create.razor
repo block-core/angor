@@ -2,7 +2,6 @@
 @using Angor.Shared.Models
 @using Angor.Shared
 @using Angor.Client.Storage
-@using Angor.Shared.Protocol
 @using Blockcore.Consensus.TransactionInfo
 @using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
@@ -10,7 +9,6 @@
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 
-@inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
@@ -18,7 +16,6 @@
 @inject IWalletOperations _WalletOperations
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IRelayService _RelayService
-@inject IIndexerService _IndexerService
 
 @inject ISignService _SignService
 
@@ -259,11 +256,21 @@
             if (!response.Success)
                 return response;
 
+            storage.AddFounderProject(project);
+            
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
             
-            await _RelayService.AddProjectAsync(project, NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()));
+            var resultId = await _RelayService.AddProjectAsync(project, NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()));
+
+            _RelayService.RegisterOKMessageHandler(_ =>
+            {
+                if (_.EventId != resultId) 
+                    return;
+                if (!_.Accepted)
+                    notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+            });
             
-            // todo this code must be reviewed again as we send the recovery private key to the signing server
+    // todo this code must be reviewed again as we send the recovery private key to the signing server
 
             var key = _derivationOperations.DeriveFounderRecoveryPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
 
@@ -276,7 +283,7 @@
         {
             notificationComponent.ShowNotificationMessage("Project created", 1);
 
-            storage.AddFounderProject(project);
+            //storage.AddFounderProject(project); 
 
             NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
         }

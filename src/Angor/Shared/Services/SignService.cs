@@ -1,5 +1,10 @@
-﻿using System.Net.Http.Json;
-using Angor.Shared.Models;
+﻿using Angor.Shared.Models;
+using Microsoft.Extensions.Logging;
+using Nostr.Client.Client;
+using Nostr.Client.Communicator;
+using Nostr.Client.Keys;
+using Nostr.Client.Messages;
+using Nostr.Client.Requests;
 
 namespace Angor.Client.Services
 {
@@ -12,25 +17,51 @@ namespace Angor.Client.Services
     public class SignService : ISignService
     {
 
-        private readonly HttpClient _httpClient;
-        private readonly string _baseUrl = "/api/TestSign"; // "https://your-base-url/api/test";
+        private static INostrClient _nostrClient;
+        private static INostrCommunicator _nostrCommunicator;
 
-        public SignService(HttpClient httpClient)
+        public SignService(ILogger<NostrWebsocketClient> _logger)
         {
-            _httpClient = httpClient;
+            _nostrCommunicator = new NostrWebsocketCommunicator(new Uri("ws://angor-relay.test"));
+
+            _nostrCommunicator.Name = "angor-relay.test";
+            _nostrCommunicator.ReconnectTimeout = null;
+            
+            _nostrCommunicator.DisconnectionHappened.Subscribe(info =>
+            {
+                _logger.LogError(info.Exception, "Relay disconnected, type: {type}, reason: {reason}.", info.Type, info.CloseStatus);
+                _nostrCommunicator.Start();
+            });
+            _nostrCommunicator.MessageReceived.Subscribe(info => _logger.LogInformation(info.Text, "Relay message received, type: {type}", info.MessageType));
+            
+            _nostrCommunicator.StartOrFail();
+            
+            _nostrClient = new NostrWebsocketClient(_nostrCommunicator, _logger);
         }
 
         public async Task AddSignKeyAsync(ProjectInfo project, string founderRecoveryPrivateKey)
         {
-            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}", new SignData { ProjectIdentifier = project.ProjectIdentifier, FounderRecoveryPrivateKey = founderRecoveryPrivateKey });
-            response.EnsureSuccessStatusCode();
+            // var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}", new SignData { ProjectIdentifier = project.ProjectIdentifier, FounderRecoveryPrivateKey = founderRecoveryPrivateKey });
+            // response.EnsureSuccessStatusCode();
         }
 
-        public async Task<SignatureInfo> GetInvestmentSigsAsync(SignRecoveryRequest signRecoveryRequest)
+        public Task<SignatureInfo> GetInvestmentSigsAsync(SignRecoveryRequest signRecoveryRequest)
         {
-            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/sign", signRecoveryRequest);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<SignatureInfo>();
+            var sender = NostrPrivateKey.FromHex(signRecoveryRequest.InvestorNostrPrivateKey);
+            var receiver = NostrPublicKey.FromHex(signRecoveryRequest.NostrPubKey);
+
+            var ev = new NostrEvent
+            {
+                CreatedAt = DateTime.UtcNow,
+                Content = $"Test private message from C# client"
+            };
+
+            var encrypted = ev.EncryptDirect(sender, receiver);
+            var signed = encrypted.Sign(sender);
+
+            _nostrClient.Send(new NostrEventRequest(signed));
+
+            return Task.FromResult(new SignatureInfo());
         }
     }
 }
