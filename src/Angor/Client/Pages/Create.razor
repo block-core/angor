@@ -166,7 +166,7 @@
         }
     };
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         hasWallet = _walletStorage.HasWallet();
 
@@ -184,7 +184,7 @@
             project.NostrPubKey = projectsKeys.NostrPubKey;
         }
 
-        return Task.CompletedTask;
+        await _RelayService.ConnectToRelaysAsync();
     }
 
     private async Task CreatProject()
@@ -262,7 +262,7 @@
             
             var resultId = await _RelayService.AddProjectAsync(project, NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()));
 
-            _RelayService.RegisterOKMessageHandler(_ =>
+            _RelayService.RegisterOKMessageHandler(resultId, _ =>
             {
                 if (_.EventId != resultId) 
                     return;
