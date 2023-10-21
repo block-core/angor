@@ -110,10 +110,17 @@
 
                         <hr>
 
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                        </div>
+
+                        <hr>
+
                         <h6 class="mt-3 mb-2">Stages</h6>
                         @foreach (var item in selected)
                         {
-                            <p class="mb-1">@item.Key</p>
+                            <p style="font-size: 0.7em;" class="mb-1">@item.Key</p>
                         }
 
                         <hr>
@@ -143,6 +150,8 @@
 
     private ProjectInfo project;
 
+    private FeeData feeData = new();
+
     List<(Transaction Transaction, string TrxId)> transactions = new();
 
     Dictionary<string, string> selected = new();
@@ -166,6 +175,8 @@
     List<StageData> stageDatas = new();
 
     Transaction signedTransaction;
+    FounderContext founderContext;
+    int selectedStageId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -286,9 +297,14 @@
 
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
+            selectedStageId = stageId;
 
-            FounderContext founderContext = new FounderContext { ProjectInfo = project, ProjectSeeders = new ProjectSeeders() };
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+
+            founderContext = new FounderContext { ProjectInfo = project, ProjectSeeders = new ProjectSeeders() };
 
             foreach (var item in selected)
             {
@@ -306,7 +322,7 @@
 
             var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet(), keys.Index);
 
-            signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, stageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeEstimation.First());
+            signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
 
             return new OperationResult { Success = true };
         });
@@ -318,6 +334,33 @@
         else
         {
             notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private void FeeRangeChanged(ChangeEventArgs e)
+    {
+        var selectedItem = e.Value?.ToString();
+
+        if (selectedItem != null)
+        {
+            if (int.TryParse(selectedItem, out int res))
+            {
+                if (res <= feeData.FeeEstimations.Fees.Count)
+                {
+                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+
+                    var accountInfo = storage.GetAccountInfo(network.Name);
+                    var address = accountInfo.GetNextReceiveAddress();
+                    var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
+
+                    var keys = storage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
+                    var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet(), keys.Index);
+
+                    signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
+
+                    StateHasChanged();
+                }
+            }
         }
     }
 

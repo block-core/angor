@@ -263,7 +263,7 @@
                                 <hr>
 
                                 <div class="mb-3">
-                                    <label for="feeRange" class="form-label">Feerate for @_sendInfo.FeeBlockCount blocks is @_sendInfo.FeeRate BTC</label>
+                                    <label for="feeRange" class="form-label">Feerate for @_sendInfo.FeeBlockCount blocks is @_sendInfo.FeeRate sats</label>
                                     <input type="range" class="form-range" id="feeRange" @bind="FeePosition" @oninput="FeeRangeChanged" min="@FeeMin" max="@_feeMax">
                                 </div>
                                 
@@ -389,7 +389,7 @@
     string symbol = "BTC";
 
     // Max index for the range input
-        private const int FeeMin = 1;
+    private int FeeMin = 1;
     private int _feeMax = 3;
     DateTime _lastFeeRefresh = DateTime.MinValue;
 

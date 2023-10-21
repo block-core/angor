@@ -106,6 +106,13 @@
 
                         <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
                         <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
+                        
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                        </div>
 
                         <hr>
 
@@ -164,7 +171,13 @@
     private ProjectInfo project;
     private bool showCreateModal;
     Transaction signedTransaction;
+    Transaction unSignedTransaction;
+    //InvestorContext context;
+
     SignatureInfo recoverySigs;
+    
+    private FeeData feeData = new();
+    
 
     protected override async Task OnInitializedAsync()
     {
@@ -275,46 +288,23 @@
 
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            var network = _NetworkConfiguration.GetNetwork();
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
             var investorKey = _derivationOperations.DeriveInvestorKey(_walletStorage.GetWallet(), project.FounderKey);
-
-            InvestorContext context = new InvestorContext
-            {
-                ProjectInfo = project,
-                ChangeAddress = accountInfo.GetNextChangeReceiveAddress(),
-                InvestorKey = investorKey,
-            };
-
+            
             if (Investment.IsSeeder)
             {
                 var seederHash = _derivationOperations.DeriveSeederSecretHash(_walletStorage.GetWallet(), project.FounderKey);
-
-                context.InvestorSecretHash = seederHash;
             }
 
-            var transaction = _InvestorTransactionActions.CreateInvestmentTransaction(context.ProjectInfo, context.InvestorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
+            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project, investorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
-
-            // remove signatures when requesting founder to sign 
-            var strippedInvestmentTransaction = network.CreateTransaction(signedTransaction.ToHex());
-            strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
-
-            recoverySigs = await _SignService.GetInvestmentSigsAsync(new SignRecoveryRequest
-            {
-                ProjectIdentifier = project.ProjectIdentifier, 
-                InvestmentTransaction = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory)
-            });
-
-            // validate the signatures
-            _InvestorTransactionActions.CheckInvestorRecoverySignatures(context.ProjectInfo, signedTransaction, recoverySigs);
-
-            // link the trx to the signatures
-            recoverySigs.TransactionId = signedTransaction.GetHash().ToString();
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
             return new OperationResult { Success = true };
 
@@ -330,13 +320,49 @@
         }
     }
 
+    private void FeeRangeChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+
+        if (selected != null)
+        {
+            if (int.TryParse(selected, out int res))
+            {
+                if (res <= feeData.FeeEstimations.Fees.Count)
+                {
+                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+                   
+                    var accountInfo = storage.GetAccountInfo(network.Name);
+
+                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
     private async Task Send()
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             showCreateModal = false;
+            
+            // remove signatures when requesting founder to sign 
+            var strippedInvestmentTransaction = network.CreateTransaction(signedTransaction.ToHex());
+            strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
 
-            var network = _NetworkConfiguration.GetNetwork();
+            recoverySigs = await _SignService.GetInvestmentSigsAsync(new SignRecoveryRequest
+            {
+                ProjectIdentifier = project.ProjectIdentifier, 
+                InvestmentTransaction = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory)
+            });
+
+            // validate the signatures
+            _InvestorTransactionActions.CheckInvestorRecoverySignatures(project, signedTransaction, recoverySigs);
+
+            // link the trx to the signatures
+            recoverySigs.TransactionId = signedTransaction.GetHash().ToString();
 
             storage.AddOrUpdateSignatures(recoverySigs);
 
