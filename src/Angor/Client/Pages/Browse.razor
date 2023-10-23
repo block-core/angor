@@ -39,7 +39,7 @@
             }
             else
             {
-                foreach (var project in projects.OrderByDescending(d => d.StartDate))
+                foreach (var project in projects) //TODO set order (block created ?)
                 {
                     <div class="card mb-3">
                         <div class="card-body">

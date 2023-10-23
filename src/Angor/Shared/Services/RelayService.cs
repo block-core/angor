@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.Diagnostics;
+using System.Reactive.Linq;
 using Angor.Shared.Models;
 using Nostr.Client.Requests;
 using Microsoft.Extensions.Logging;
@@ -12,8 +13,8 @@ namespace Angor.Shared.Services
 {
     public class RelayService : IRelayService
     {
-        private static NostrWebsocketClient _nostrClient;
-        private static INostrCommunicator _nostrCommunicator;
+        private static NostrWebsocketClient? _nostrClient;
+        private static INostrCommunicator? _nostrCommunicator;
         
         private ILogger<RelayService> _logger;
 
@@ -21,7 +22,7 @@ namespace Angor.Shared.Services
         private ILogger<NostrWebsocketCommunicator> _communicatorLogger;
 
         private Dictionary<string, IDisposable> subscriptions = new();
-        //private Dictionary<string, Action<NostrOkResponse>> OkVerificationActions = new();
+        private Dictionary<string, Action<NostrOkResponse>> OkVerificationActions = new();
 
         public RelayService(
             ILogger<RelayService> logger, 
@@ -35,64 +36,21 @@ namespace Angor.Shared.Services
 
         public async Task ConnectToRelaysAsync()
         {
-            if (_nostrCommunicator != null)
-                return;
-
-            _nostrCommunicator = new NostrWebsocketCommunicator(new Uri("ws://angor-relay.test"))
+            if (_nostrCommunicator == null)
             {
-                Name = "angor-relay.test",
-                ReconnectTimeout = null //TODO need to check what is the actual best time to set here
-            };
-
-            _nostrCommunicator.DisconnectionHappened.Subscribe(info =>
-            {
-                if (info.Exception != null)
-                    _communicatorLogger.LogError(info.Exception, "Relay disconnected, type: {Type}, reason: {CloseStatus}", info.Type, info.CloseStatusDescription);
-                else
-                    _communicatorLogger.LogInformation( "Relay disconnected, type: {Type}, reason: {CloseStatus}", info.Type, info.CloseStatusDescription);
-
-            });
-            
-            _nostrCommunicator.MessageReceived.Subscribe(info =>
-            {
-                _communicatorLogger.LogInformation("message received on communicator - {Text} Relay message received, type: {MessageType}",info.Text, info.MessageType);
-            });
+                SetupNostrCommunicator();
+            }
             
             await _nostrCommunicator.StartOrFail();
 
-            _nostrClient = new NostrWebsocketClient(_nostrCommunicator, _clientLogger);
-
-            _nostrClient.Streams.UnknownMessageStream.Subscribe(_ => _clientLogger.LogInformation($"UnknownMessageStream {_}",_.MessageType));
-            _nostrClient.Streams.EventStream.Subscribe(_ => _clientLogger.LogInformation($"EventStream {_.Subscription}", _.AdditionalData));
-            _nostrClient.Streams.EoseStream.Subscribe(_ => _clientLogger.LogInformation($"EoseStream on subscription - {_.Subscription}", _.AdditionalData));
-            _nostrClient.Streams.NoticeStream.Subscribe(_ => _clientLogger.LogInformation($"NoticeStream {_.Message}"));
-            _nostrClient.Streams.UnknownRawStream.Subscribe(_ => _clientLogger.LogInformation($"UnknownRawStream {_.Message}"));
-            _nostrClient.Streams.OkStream. Subscribe(_ =>
-            {
-                _clientLogger.LogInformation($"OkStream {_.Accepted} message - {_.Message}");
-                // if(OkVerificationSubscription.ContainsKey(_.EventId))
-                // {
-                //     OkVerificationActions[_.EventId](_);
-                //     OkVerificationActions.Remove(_.EventId);
-                // }
-            });
-            
-            _nostrClient.Streams.EoseStream.Subscribe(_ =>
-            {
-                if (!subscriptions.ContainsKey(_.Subscription)) 
-                    return;
-                _clientLogger.LogInformation($"Disposing of subscription - {_.Subscription}");
-                subscriptions[_.Subscription].Dispose();
-                subscriptions.Remove(_.Subscription);
-                _clientLogger.LogInformation($"subscription disposed - {_.Subscription}");
-            });
-            
-
+            if (_nostrClient != null)
+                return;
+            SetupNostrClient();
         }
 
         public void RegisterOKMessageHandler(string eventId, Action<NostrOkResponse> action)
         {
-            //OkVerificationActions.Add(eventId,action);
+            OkVerificationActions.Add(eventId,action);
         }
 
         public Task RequestProjectDataAsync<T>(Action<T> responseDataAction,params string[] nostrPubKeys)
@@ -140,8 +98,11 @@ namespace Angor.Shared.Services
             var signed = GetNip78NostrEvent(project, content)
                 .Sign(key);
 
+            if (_nostrClient == null)
+                throw new InvalidOperationException();
+            
             _nostrClient.Send(new NostrEventRequest(signed));
-
+            
             return Task.FromResult(signed.Id);
         }
 
@@ -181,6 +142,68 @@ namespace Angor.Shared.Services
             };
             
             return ev;
+        }
+        
+        
+        private void SetupNostrClient()
+        {
+            _nostrClient = new NostrWebsocketClient(_nostrCommunicator, _clientLogger);
+            
+            _nostrClient.Streams.UnknownMessageStream.Subscribe(_ => _clientLogger.LogError($"UnknownMessageStream {_.MessageType} {_.AdditionalData}"));
+            _nostrClient.Streams.EventStream.Subscribe(_ => _clientLogger.LogInformation($"EventStream {_.Subscription} {_.AdditionalData}"));
+            _nostrClient.Streams.NoticeStream.Subscribe(_ => _clientLogger.LogError($"NoticeStream {_.Message}"));
+            _nostrClient.Streams.UnknownRawStream.Subscribe(_ => _clientLogger.LogError($"UnknownRawStream {_.Message}"));
+            
+            _nostrClient.Streams.OkStream.Subscribe(_ =>
+            {
+                _clientLogger.LogInformation($"OkStream {_.Accepted} message - {_.Message}");
+
+                if (_.EventId != null && OkVerificationActions.ContainsKey(_.EventId))
+                {
+                    OkVerificationActions[_.EventId](_);
+                    OkVerificationActions.Remove(_.EventId);
+                }
+            });
+
+            _nostrClient.Streams.EoseStream.Subscribe(_ =>
+            {
+                _clientLogger.LogInformation($"EoseStream {_.Subscription} message - {_.AdditionalData}");
+                
+                if (!subscriptions.ContainsKey(_.Subscription))
+                    return;
+                
+                _clientLogger.LogInformation($"Disposing of subscription - {_.Subscription}");
+                subscriptions[_.Subscription].Dispose();
+                subscriptions.Remove(_.Subscription);
+                _clientLogger.LogInformation($"subscription disposed - {_.Subscription}");
+            });
+        }
+
+        private void SetupNostrCommunicator()
+        {
+            _nostrCommunicator = new NostrWebsocketCommunicator(new Uri("ws://angor-relay.test"))
+            {
+                Name = "angor-relay.test",
+                ReconnectTimeout = null //TODO need to check what is the actual best time to set here
+            };
+
+            _nostrCommunicator.DisconnectionHappened.Subscribe(info =>
+            {
+                if (info.Exception != null)
+                    _communicatorLogger.LogError(info.Exception,
+                        "Relay disconnected, type: {Type}, reason: {CloseStatus}", info.Type,
+                        info.CloseStatusDescription);
+                else
+                    _communicatorLogger.LogInformation("Relay disconnected, type: {Type}, reason: {CloseStatus}",
+                        info.Type, info.CloseStatusDescription);
+            });
+
+            _nostrCommunicator.MessageReceived.Subscribe(info =>
+            {
+                _communicatorLogger.LogInformation(
+                    "message received on communicator - {Text} Relay message received, type: {MessageType}",
+                    info.Text, info.MessageType);
+            });
         }
     }
 
