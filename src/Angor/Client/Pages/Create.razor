@@ -9,6 +9,8 @@
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 
+@inherits BaseComponent
+
 @inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
@@ -118,6 +120,13 @@
 
                         <hr>
 
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                        </div>
+
+                        <hr>
+
                         <h6 class="mt-3 mb-2">Stages</h6>
                         @foreach (var stage in project.Stages)
                         {
@@ -145,14 +154,15 @@
 
 @code {
 
-    private NotificationComponent notificationComponent;
-
     private bool sendConfirmModal;
     private bool hasWallet;
     private bool showCreateModal;
 
+    Transaction unsignedTransaction;
     Transaction signedTransaction;
 
+    private FeeData feeData = new();
+    
     private ProjectInfo project = new ProjectInfo
     {
         StartDate = DateTime.UtcNow,
@@ -219,14 +229,16 @@
 
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            var network = _NetworkConfiguration.GetNetwork();
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            var transaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000);
+            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), transaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
             project.TransactionId = signedTransaction.GetHash().ToString();
 
@@ -244,13 +256,33 @@
         }
     }
 
+    private void FeeRangeChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+
+        if (selected != null)
+        {
+            if (int.TryParse(selected, out int res))
+            {
+                if (res <= feeData.FeeEstimations.Fees.Count)
+                {
+                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+
+                    var accountInfo = storage.GetAccountInfo(network.Name);
+
+                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
     private async Task Send()
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             showCreateModal = false;
-
-            var network = _NetworkConfiguration.GetNetwork();
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 

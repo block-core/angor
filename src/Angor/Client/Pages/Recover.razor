@@ -107,8 +107,16 @@
                         <p class="mb-1">The amount to be recovered in to a penalty = @StageInfo.Items.Where(s=> !s.IsSpent).Sum(s=> s.Amount) BTC</p>
 
                         <p class="mb-1">The penalty duration is @((project.PenaltyDate - DateTime.UtcNow).Days) days </p>
+                        
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="RecoveryFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                        </div>
 
                         <hr>
+
                         <p class="mt-3">Are you sure you want to recover these funds?</p>
                     </div>
                     <div class="modal-footer">
@@ -136,6 +144,14 @@
                         <p class="mb-1">Send to @releaseRecoveryTransaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
 
                         <hr>
+
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="ReleaseFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                        </div>
+
+                        <hr>
+
                         <p class="mt-3">Are you sure you want to release these funds from the penalty?</p>
                     </div>
                     <div class="modal-footer">
@@ -163,6 +179,14 @@
                         <p class="mb-1">Send to @endOfProjectTransaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
 
                         <hr>
+
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="EndOfProjectFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                        </div>
+
+                        <hr>
+
                         <p class="mt-3">Are you sure you want to claim these funds?</p>
                     </div>
                     <div class="modal-footer">
@@ -186,6 +210,7 @@
     private bool showEndOfProjectModal = false;
 
     private Transaction? investmentTransaction; 
+    private Transaction? unsignedRecoveryTransaction;
     private Transaction? recoveryTransaction;
     private Transaction? releaseRecoveryTransaction;
     private Transaction? endOfProjectTransaction;
@@ -193,6 +218,9 @@
     StageData StageInfo = new();
     string explorerLink;
     SignatureInfo recoverySigs;
+
+    private FeeData feeData = new();
+
 
     public class StageData
     {
@@ -355,7 +383,7 @@
 
         StageInfo.CanRecover = StageInfo.Items.Any(a => a.IsSpent == false);
         StageInfo.TotalSpendable = StageInfo.Items.Where(a => !a.IsSpent).Sum(a => a.Amount);
-        StageInfo.CanRelease = StageInfo.Items.Any(a => a.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty);
+        StageInfo.CanRelease = (StageInfo.Items.Any(a => a.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && DateTime.UtcNow > project.PenaltyDate);
         StageInfo.TotalInPenalty = StageInfo.Items.Where(t => t.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty).Sum(t => t.Amount);
         StageInfo.EndOfProject = project.ExpiryDate < DateTime.Now;
     }
@@ -364,14 +392,17 @@
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
             recoverySigs = storage.GetSignaturess().First(p => p.ProjectIdentifier == ProjectId);
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
 
-            recoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project, investmentTransaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+            unsignedRecoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project, investmentTransaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
             // remove outputs that have been spent
             List<TxOut> removeTxout = new();
@@ -380,16 +411,16 @@
             {
                 if (item.IsSpent)
                 {
-                    removeTxout.Add(recoveryTransaction.Outputs[item.StageIndex]); 
-                    removeTxin.Add(recoveryTransaction.Inputs[item.StageIndex]);
+                    removeTxout.Add(unsignedRecoveryTransaction.Outputs[item.StageIndex]);
+                    removeTxin.Add(unsignedRecoveryTransaction.Inputs[item.StageIndex]);
                 }
             }
 
-            foreach (var txOut in removeTxout) recoveryTransaction.Outputs.Remove(txOut);
-            foreach (var txIn in removeTxin) recoveryTransaction.Inputs.Remove(txIn);
+            foreach (var txOut in removeTxout) unsignedRecoveryTransaction.Outputs.Remove(txOut);
+            foreach (var txIn in removeTxin) unsignedRecoveryTransaction.Inputs.Remove(txIn);
 
             // add fee to the recovery trx
-            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), recoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeEstimation.First());
+            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
             recoverySigs.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
 
@@ -405,6 +436,30 @@
         else
         {
             notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private void RecoveryFeeRangeChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+
+        if (selected != null)
+        {
+            if (int.TryParse(selected, out int res))
+            {
+                if (res <= feeData.FeeEstimations.Fees.Count)
+                {
+                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+                   
+                    var accountInfo = storage.GetAccountInfo(network.Name);
+
+                    recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+
+                    recoverySigs.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
+
+                    StateHasChanged();
+                }
+            }
         }
     }
 
@@ -438,7 +493,10 @@
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
             var accountInfo = storage.GetAccountInfo(network.Name);
 
@@ -451,7 +509,7 @@
             }
 
             releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project, investmentTransaction, recoveryTransaction,
-                accountInfo.GetNextChangeReceiveAddress(), feeEstimation.First(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+                accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
             recoverySigs.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
 
@@ -467,6 +525,33 @@
         else
         {
             notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private void ReleaseFeeRangeChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+
+        if (selected != null)
+        {
+            if (int.TryParse(selected, out int res))
+            {
+                if (res <= feeData.FeeEstimations.Fees.Count)
+                {
+                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+                   
+                    var accountInfo = storage.GetAccountInfo(network.Name);
+
+                    var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+
+                    releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project, investmentTransaction, recoveryTransaction,
+                        accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+
+                    recoverySigs.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
+
+                    StateHasChanged();
+                }
+            }
         }
     }
 
@@ -501,7 +586,11 @@
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            var feeEstimation = await _WalletOperations.GetFeeEstimationAsync();
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+
 
             var accountInfo = storage.GetAccountInfo(network.Name);
 
@@ -510,11 +599,11 @@
             var fromStage = StageInfo.Items.First(f => f.IsSpent == false);
 
             endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project, fromStage.StageIndex,
-                accountInfo.GetNextChangeReceiveAddress(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), feeEstimation.First());
+                accountInfo.GetNextChangeReceiveAddress(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), feeData.SelectedFeeEstimation);
 
             recoverySigs.EndOfProjectTransactionId = endOfProjectTransaction.GetHash().ToString();
 
-            Logger.LogInformation($"rndOfProjectTransactionId={recoverySigs.EndOfProjectTransactionId}");
+            Logger.LogInformation($"EndOfProjectTransactionId={recoverySigs.EndOfProjectTransactionId}");
 
             return new OperationResult { Success = true };
         });
@@ -526,6 +615,35 @@
         else
         {
             notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private void EndOfProjectFeeRangeChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+
+        if (selected != null)
+        {
+            if (int.TryParse(selected, out int res))
+            {
+                if (res <= feeData.FeeEstimations.Fees.Count)
+                {
+                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+
+                    var accountInfo = storage.GetAccountInfo(network.Name);
+
+                    var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+
+                    var fromStage = StageInfo.Items.First(f => f.IsSpent == false);
+
+                    endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project, fromStage.StageIndex,
+                        accountInfo.GetNextChangeReceiveAddress(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), feeData.SelectedFeeEstimation);
+
+                    recoverySigs.EndOfProjectTransactionId = endOfProjectTransaction.GetHash().ToString();
+
+                    StateHasChanged();
+                }
+            }
         }
     }
 
