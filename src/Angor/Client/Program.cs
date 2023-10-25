@@ -6,7 +6,9 @@ using Angor.Shared;
 using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
+using Angor.Shared.Services;
 using Blazored.LocalStorage;
+using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -17,11 +19,13 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddBlazoredSessionStorage();
 
 builder.Services.AddTransient<INetworkConfiguration, NetworkConfiguration>();
 builder.Services.AddTransient<IHdOperations, HdOperations>();
 builder.Services.AddTransient <IClientStorage, ClientStorage>();
 builder.Services.AddTransient <IWalletStorage, WalletStorage>();
+builder.Services.AddScoped<ISessionStorage, LocalSessionStorage>();
 builder.Services.AddTransient<IWalletOperations, WalletOperations>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();

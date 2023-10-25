@@ -32,12 +32,14 @@ public class DerivationOperations : IDerivationOperations
             var founderKey = DeriveFounderKey(walletWords, i);
             var founderRecoveryKey = DeriveFounderRecoveryKey(walletWords, i);
             var projectIdentifier = DeriveAngorKey(founderKey, angorTestKey);
-
+            var nostrPubKey = DeriveNostrPubKey(walletWords, i);
+            
             founderKeyCollection.Keys.Add(new FounderKeys
             {
                 ProjectIdentifier = projectIdentifier,
                 FounderRecoveryKey = founderRecoveryKey,
                 FounderKey = founderKey,
+                NostrPubKey = nostrPubKey, 
                 Index = i
             });
         }
@@ -176,6 +178,34 @@ public class DerivationOperations : IDerivationOperations
 
         return extPubKey.PubKey.ToHex();
     }
+    
+    public string DeriveNostrPubKey(WalletWords walletWords, int index)
+    {
+        // founder key is derived from the path m/5'
+
+        Network network = _networkConfiguration.GetNetwork();
+
+        ExtKey extendedKey;
+        try
+        {
+            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        }
+        catch (NotSupportedException ex)
+        {
+            _logger.LogError("Exception occurred: {0}", ex.ToString());
+
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid mnemonic words.");
+
+            throw;
+        }
+
+        var path = $"m/44'/1237'/{index}/0/0";
+
+        ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
+
+        return extPubKey.PubKey.ToHex();
+    }
 
     public string DeriveFounderRecoveryKey(WalletWords walletWords, int index)
     {
@@ -259,6 +289,36 @@ public class DerivationOperations : IDerivationOperations
         }
 
         var path = $"m/6'/{index}'";
+
+        ExtKey extKey = extendedKey.Derive(new KeyPath(path));
+
+        return extKey.PrivateKey;
+    }
+    
+    public Key DeriveProjectNostrPrivateKey(WalletWords walletWords, int index)
+    {
+        // founder key is derived from the path m/5'
+
+
+        Network network = _networkConfiguration.GetNetwork();
+
+
+        ExtKey extendedKey;
+        try
+        {
+            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        }
+        catch (NotSupportedException ex)
+        {
+            _logger.LogError("Exception occurred: {0}", ex.ToString());
+
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid mnemonic words.");
+
+            throw;
+        }
+
+        var path = $"m/44'/1237'/{index}/0/0";
 
         ExtKey extKey = extendedKey.Derive(new KeyPath(path));
 

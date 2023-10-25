@@ -2,16 +2,14 @@
 @using Angor.Shared.Models
 @using Angor.Shared
 @using Angor.Client.Storage
-@using Angor.Shared.Protocol
 @using Blockcore.Consensus.TransactionInfo
 @using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
+@using Angor.Shared.Services
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 
 @inherits BaseComponent
-
-@inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
@@ -19,7 +17,6 @@
 @inject IWalletOperations _WalletOperations
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IRelayService _RelayService
-@inject IIndexerService _IndexerService
 
 @inject ISignService _SignService
 
@@ -178,7 +175,7 @@
         }
     };
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         hasWallet = _walletStorage.HasWallet();
 
@@ -193,9 +190,10 @@
             project.FounderKey = projectsKeys.FounderKey;
             project.FounderRecoveryKey = projectsKeys.FounderRecoveryKey;
             project.ProjectIdentifier = projectsKeys.ProjectIdentifier;
+            project.NostrPubKey = projectsKeys.NostrPubKey;
         }
 
-        return Task.CompletedTask;
+        await _RelayService.ConnectToRelaysAsync();
     }
 
     private async Task CreatProject()
@@ -236,7 +234,7 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000);
+            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000, project.NostrPubKey);
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
@@ -289,9 +287,21 @@
             if (!response.Success)
                 return response;
 
-            await _RelayService.AddProjectAsync(project);
+            storage.AddFounderProject(project);
+            
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+            
+            var resultId = await _RelayService.AddProjectAsync(project, NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()));
 
-            // todo this code must be reviewed again as we send the recovery private key to the signing server
+            _RelayService.RegisterOKMessageHandler(resultId, _ =>
+            {
+                if (_.EventId != resultId) 
+                    return;
+                if (!_.Accepted)
+                    notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+            });
+            
+    // todo this code must be reviewed again as we send the recovery private key to the signing server
 
             var key = _derivationOperations.DeriveFounderRecoveryPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
 
@@ -304,7 +314,7 @@
         {
             notificationComponent.ShowNotificationMessage("Project created", 1);
 
-            storage.AddFounderProject(project);
+            //storage.AddFounderProject(project); 
 
             NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
         }
