@@ -67,9 +67,11 @@ public class WalletOperations : IWalletOperations
     {
         Network network = _networkConfiguration.GetNetwork();
 
-        var changeOutput = transaction.AddOutput(Money.Zero, BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
+        var clonedTransaction = network.CreateTransaction(transaction.ToHex());
 
-        var virtualSize = transaction.GetVirtualSize(4);
+        var changeOutput = clonedTransaction.AddOutput(Money.Zero, BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
+
+        var virtualSize = clonedTransaction.GetVirtualSize(4);
         var fee = new FeeRate(Money.Satoshis(feeRate.FeeRate)).GetFee(virtualSize);
         
         var utxoDataWithPaths = FindOutputsForTransaction((long)fee, accountInfo);
@@ -82,7 +84,7 @@ public class WalletOperations : IWalletOperations
         // add all inputs
         foreach (var coin in coins.coins)
         {
-            transaction.AddInput(new TxIn(coin.Outpoint, null));
+            clonedTransaction.AddInput(new TxIn(coin.Outpoint, null));
         }
 
         // sign each new input
@@ -91,14 +93,14 @@ public class WalletOperations : IWalletOperations
         {
             var key = coins.keys[index];
 
-            var input = transaction.Inputs.Single(p => p.PrevOut == coin.Outpoint);
-            var signature = transaction.SignInput(network, key, coin, SigHash.All);
+            var input = clonedTransaction.Inputs.Single(p => p.PrevOut == coin.Outpoint);
+            var signature = clonedTransaction.SignInput(network, key, coin, SigHash.All);
             input.WitScript = new WitScript(Op.GetPushOp(signature.ToBytes()), Op.GetPushOp(key.PubKey.ToBytes()));
 
             index++;
         }
 
-        return transaction;
+        return clonedTransaction;
     }
 
     public async Task<OperationResult<Transaction>> SendAmountToAddress(WalletWords walletWords, SendInfo sendInfo) //TODO change the passing of wallet words as parameter after refactoring is complete
