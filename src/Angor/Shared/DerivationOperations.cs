@@ -22,12 +22,32 @@ public class DerivationOperations : IDerivationOperations
         _logger = logger;
         _networkConfiguration = networkConfiguration;
     }
+    
+    private ExtKey GetExtendedKey(WalletWords walletWords)
+    {
+        ExtKey extendedKey;
+        try
+        {
+            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        }
+        catch (NotSupportedException ex)
+        {
+            _logger.LogError("Exception occurred: {0}", ex.ToString());
+
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid mnemonic words.");
+
+            throw;
+        }
+
+        return extendedKey;
+    }
 
     public FounderKeyCollection DeriveProjectKeys(WalletWords walletWords, string angorTestKey)
     {
         FounderKeyCollection founderKeyCollection = new();
 
-        for (int i = 1; i <= 5; i++)
+        for (int i = 1; i <= 15; i++)
         {
             var founderKey = DeriveFounderKey(walletWords, i);
             var founderRecoveryKey = DeriveFounderRecoveryKey(walletWords, i);
@@ -63,22 +83,7 @@ public class DerivationOperations : IDerivationOperations
 
     public string DeriveSeederSecretHash(WalletWords walletWords, string founderKey)
     {
-        Network network = _networkConfiguration.GetNetwork();
-
-        ExtKey extendedKey;
-        try
-        {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
-        }
-        catch (NotSupportedException ex)
-        {
-            _logger.LogError("Exception occurred: {0}", ex.ToString());
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
-            throw;
-        }
+        ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var projectid = this.DeriveProjectId(founderKey);
 
@@ -95,22 +100,7 @@ public class DerivationOperations : IDerivationOperations
 
     public string DeriveInvestorKey(WalletWords walletWords, string founderKey)
     {
-        Network network = _networkConfiguration.GetNetwork();
-
-        ExtKey extendedKey;
-        try
-        {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
-        }
-        catch (NotSupportedException ex)
-        {
-            _logger.LogError("Exception occurred: {0}", ex.ToString());
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
-            throw;
-        }
+        ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var projectid = this.DeriveProjectId(founderKey);
 
@@ -123,22 +113,7 @@ public class DerivationOperations : IDerivationOperations
 
     public Key DeriveInvestorPrivateKey(WalletWords walletWords, string founderKey)
     {
-        Network network = _networkConfiguration.GetNetwork();
-
-        ExtKey extendedKey;
-        try
-        {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
-        }
-        catch (NotSupportedException ex)
-        {
-            _logger.LogError("Exception occurred: {0}", ex.ToString());
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
-            throw;
-        }
+        ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var projectid = this.DeriveProjectId(founderKey);
 
@@ -154,23 +129,7 @@ public class DerivationOperations : IDerivationOperations
     public string DeriveFounderKey(WalletWords walletWords, int index)
     {
         // founder key is derived from the path m/5'
-
-        Network network = _networkConfiguration.GetNetwork();
-
-        ExtKey extendedKey;
-        try
-        {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
-        }
-        catch (NotSupportedException ex)
-        {
-            _logger.LogError("Exception occurred: {0}", ex.ToString());
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
-            throw;
-        }
+        ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var path = $"m/5'/{index}'";
 
@@ -181,30 +140,13 @@ public class DerivationOperations : IDerivationOperations
     
     public string DeriveNostrPubKey(WalletWords walletWords, int index)
     {
-        // founder key is derived from the path m/5'
-
-        Network network = _networkConfiguration.GetNetwork();
-
-        ExtKey extendedKey;
-        try
-        {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
-        }
-        catch (NotSupportedException ex)
-        {
-            _logger.LogError("Exception occurred: {0}", ex.ToString());
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
-            throw;
-        }
+        ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var path = $"m/44'/1237'/{index}/0/0";
 
-        ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
+        ExtKey extKey = extendedKey.Derive(new KeyPath(path));
 
-        return extPubKey.PubKey.ToHex();
+        return extKey.PrivateKey.PubKey.ToHex();
     }
 
     public string DeriveFounderRecoveryKey(WalletWords walletWords, int index)
@@ -213,20 +155,7 @@ public class DerivationOperations : IDerivationOperations
 
         Network network = _networkConfiguration.GetNetwork();
 
-        ExtKey extendedKey;
-        try
-        {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
-        }
-        catch (NotSupportedException ex)
-        {
-            _logger.LogError("Exception occurred: {0}", ex.ToString());
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
-            throw;
-        }
+        ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var path = $"m/6'/{index}'";
 
@@ -238,25 +167,7 @@ public class DerivationOperations : IDerivationOperations
     public Key DeriveFounderPrivateKey(WalletWords walletWords, int index)
     {
         // founder key is derived from the path m/5'
-
-
-        Network network = _networkConfiguration.GetNetwork();
-
-
-        ExtKey extendedKey;
-        try
-        {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
-        }
-        catch (NotSupportedException ex)
-        {
-            _logger.LogError("Exception occurred: {0}", ex.ToString());
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
-            throw;
-        }
+        ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var path = $"m/5'/{index}'";
 
@@ -298,25 +209,7 @@ public class DerivationOperations : IDerivationOperations
     public Key DeriveProjectNostrPrivateKey(WalletWords walletWords, int index)
     {
         // founder key is derived from the path m/5'
-
-
-        Network network = _networkConfiguration.GetNetwork();
-
-
-        ExtKey extendedKey;
-        try
-        {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
-        }
-        catch (NotSupportedException ex)
-        {
-            _logger.LogError("Exception occurred: {0}", ex.ToString());
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
-            throw;
-        }
+        ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var path = $"m/44'/1237'/{index}/0/0";
 

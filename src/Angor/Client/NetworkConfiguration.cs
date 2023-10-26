@@ -16,16 +16,16 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public IndexerUrl GetIndexerUrl()
     {
-        // return new IndexerUrl{Symbol = "", Url = "http://10.22.156.65:9910/api"};
+         return new IndexerUrl{Symbol = "", Url = "http://10.22.156.65:9910/api"};
         //return new IndexerUrl { Symbol = "", Url = "http://207.180.254.78:9910/api" };
-        return new IndexerUrl { Symbol = "", Url = "https://tbtc.indexer.angor.io/api" };
+        //return new IndexerUrl { Symbol = "", Url = "https://tbtc.indexer.angor.io/api" };
     }
 
     public IndexerUrl GetExplorerUrl()
     {
-        //return new IndexerUrl { Symbol = "", Url = "http://10.22.156.65:9911/btc/explorer" };
+        return new IndexerUrl { Symbol = "", Url = "http://10.22.156.65:9911/btc/explorer" };
         //return new IndexerUrl { Symbol = "", Url = "http://207.180.254.78:9911/btc/explorer" };
-        return new IndexerUrl { Symbol = "", Url = "https://explorer.angor.io/btc/explorer" };
+        //return new IndexerUrl { Symbol = "", Url = "https://explorer.angor.io/btc/explorer" };
     }
 
     public static List<ProjectInfo> CreateFakeProjects()
