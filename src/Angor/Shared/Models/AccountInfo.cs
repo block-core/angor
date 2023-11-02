@@ -11,6 +11,8 @@ public class AccountInfo
     public List<AddressInfo> AddressesInfo { get; set; } = new();
     public List<AddressInfo> ChangeAddressesInfo { get; set; } = new();
 
+    public int InvestmentsCount { get; set; }
+    
     public string? GetNextReceiveAddress()
     {
         return AddressesInfo.Last()?.Address;
