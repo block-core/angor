@@ -8,6 +8,9 @@
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
+@using Nostr.Client.Json
+@using Nostr.Client.Messages
+@using Nostr.Client.Messages.Metadata
 
 @inherits BaseComponent
 @inject IDerivationOperations _derivationOperations
@@ -15,8 +18,8 @@
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
-@inject INetworkConfiguration _NetworkConfiguration
 @inject IRelayService _RelayService
+@inject IClipboardService _clipboardService
 
 @inject ISignService _SignService
 
@@ -33,6 +36,63 @@
 
     <NotificationComponent @ref="notificationComponent"/>
 
+    @if (!nostrProfileCreated)
+    {
+        <EditForm Model="NostrMetadata" OnValidSubmit="CreatNostrProfile">
+            
+            <div class="mb-3">
+                <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
+                <InputText id="NostrPublicKey" @bind-Value="project.NostrPubKey" class="form-control" placeholder="@project.NostrPubKey" readonly />
+                
+                @* <button @onclick="CopyWordsToClibboardAsync" class="btn btn-success">Copy NSec to clipboard</button> *@
+                
+            </div>
+                    
+            
+            <div class="mb-3">
+                <label for="NostrMetadataName" class="form-label">Project name</label>
+                <InputText id="NostrMetadataName" @bind-Value="NostrMetadata.Name" class="form-control" placeholder="Enter the project name"/>
+            </div>
+            
+            <div class="mb-3">
+                <label for="NostrMetadataAbout" class="form-label">About</label>
+                <InputTextArea id="NostrMetadataAbout" @bind-Value="NostrMetadata.About" class="form-control" placeholder="Enter details about the project"/>
+            </div>
+
+            <div class="mb-3">
+                <label for="NostrMetadataName" class="form-label">Project website</label>
+                <InputText id="NostrMetadataName" @bind-Value="NostrMetadata.Website" class="form-control" placeholder="Enter the project name"/>
+            </div>
+            
+            <div class="mb-3">
+                <label for="NostrMetadataBanner" class="form-label">Banner</label>
+                <InputText id="NostrMetadataBanner" @bind-Value="NostrMetadata.Banner" class="form-control"/>
+            </div>
+            
+            <div class="mb-3">
+                <label for="NostrMetadataNip05" class="form-label">Nip 05</label>
+                <InputText id="NostrMetadataNip05" @bind-Value="NostrMetadata.Nip05" class="form-control"/>
+            </div>
+            
+            <div class="mb-3">
+                <label for="NostrMetadataNip57" class="form-label">Nip 57 (zaps)</label>
+                <InputText id="NostrMetadataNip57" @bind-Value="NostrMetadata.Nip57" class="form-control"/>
+            </div>
+            
+            <div class="mb-3">
+                <label for="NostrMetadataPicture" class="form-label">Image</label>
+                <InputText id="NostrMetadataPicture" @bind-Value="NostrMetadata.Picture" class="form-control" placeholder="Select a project picture"/>
+            </div>
+            
+                    <!-- Save & Publish Buttons -->
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-success">Next</button>
+                    </div>
+            
+        </EditForm>
+    }
+    else
+    {
     <EditForm Model="project" OnValidSubmit="CreatProject">
         
         <!-- Angor Fee Key -->
@@ -91,7 +151,7 @@
             <button type="submit" class="btn btn-success">Next</button>
         </div>
     </EditForm>
-    
+    }
     @if (showCreateModal)
     {
         <!-- Confirmation Modal -->
@@ -166,14 +226,30 @@
         PenaltyDate = DateTime.UtcNow.AddDays(100),
         ExpiryDate = DateTime.UtcNow.AddDays(50),
         TargetAmount = 100,
-        TransactionId = "unknowen",
+        CreationTransactionId = "unknowen",
         Stages = new List<Stage>
         {
-            new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
-            new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
-            new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) },
+            new () { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
+            new () { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
+            new () { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) },
         }
     };
+
+    private class NostrMetadataCollection
+    {
+        public string Name { get; set; }
+        public string Website { get; set; }
+        public string About { get; set; }
+        public string Picture { get; set; }
+        public string Nip05 { get; set; }
+        public string Lud16 { get; set; }
+        public string Banner { get; set; }
+        public string Nip57 { get; set; }
+    }
+    
+    NostrMetadataCollection NostrMetadata = new ();
+    bool nostrProfileCreated;
+    bool applicationDataOnNostr;
 
     protected override async Task OnInitializedAsync()
     {
@@ -194,6 +270,53 @@
         }
 
         await _RelayService.ConnectToRelaysAsync();
+
+        await _RelayService.RequestProjectEventsoByPubKeyAsync(project.NostrPubKey, _ =>
+        {
+            nostrProfileCreated = _.Kind == NostrKind.Metadata;
+
+            if (_.Kind == NostrKind.ApplicationSpecificData) //In case of a crashed application in the middle of the call
+            {
+                var nostrProject = Newtonsoft.Json.JsonConvert.DeserializeObject<ProjectInfo>(_.Content!, NostrSerializer.Settings);
+                var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectIdentifier == nostrProject!.ProjectIdentifier);
+                if (findProject == null)
+                    storage.AddFounderProject(nostrProject!);
+                NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");   
+            }
+            
+            StateHasChanged();
+        });
+    }
+
+    private async Task CreatNostrProfile()
+    {
+        var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+        
+        var resultId = await _RelayService.CreateNostrProfileAsync(new NostrMetadata
+        {
+            About = NostrMetadata.About, 
+            Banner = NostrMetadata.Banner, 
+            Lud16 = NostrMetadata.Lud16,
+            Name = NostrMetadata.Name,
+            Nip05 = NostrMetadata.Nip05, 
+            Nip57 = NostrMetadata.Nip57, 
+            Picture = NostrMetadata.Picture,
+            AdditionalData = new Dictionary<string, object>
+            {
+                {"website",NostrMetadata.Website},
+                {"display_name",NostrMetadata.Name}
+            }
+        }, NBitcoin.DataEncoders.Encoders.Hex.EncodeData((byte[])nostrKey.ToBytes()));
+        
+        _RelayService.RegisterOKMessageHandler(resultId, _ =>
+        {
+            if (_.EventId != resultId) 
+                return;
+            if (!_.Accepted)
+                notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+            nostrProfileCreated = true;
+            StateHasChanged();
+        });
     }
 
     private async Task CreatProject()
@@ -238,7 +361,7 @@
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
-            project.TransactionId = signedTransaction.GetHash().ToString();
+            project.CreationTransactionId = signedTransaction.GetHash().ToString();
 
             return new OperationResult { Success = true };
 
@@ -281,18 +404,22 @@
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             showCreateModal = false;
-
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
-
-            if (!response.Success)
-                return response;
-
-            storage.AddFounderProject(project);
             
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
             
             var resultId = await _RelayService.AddProjectAsync(project, NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()));
+            
+            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
+            if (!response.Success)
+            {
+                await _RelayService.DeleteProjectAsync(resultId, NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()));
+                //storage.AddFounderProject(project); TODO remove from storage
+                return response;
+            }
+            
+            storage.AddFounderProject(project);
+            
             _RelayService.RegisterOKMessageHandler(resultId, _ =>
             {
                 if (_.EventId != resultId) 
@@ -333,4 +460,13 @@
     {
         project.Stages.Remove(stage);
     }
+
+    private async Task CopyWordsToClibboardAsync()
+    {
+        var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+        var nsec = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
+        await _clipboardService.WriteTextAsync(nsec);
+        StateHasChanged();
+    }
+
 }

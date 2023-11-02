@@ -2,7 +2,6 @@
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
-@using Angor.Shared.Protocol
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Angor.Client.Services
@@ -12,15 +11,13 @@
 @inherits BaseComponent
 
 @inject ILogger<Invest> _Logger;
-@inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
+@inject ISessionStorage SessionStorage;
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
-@inject INetworkConfiguration _NetworkConfiguration
 
-@inject IIndexerService _IndexerService
 @inject ISignService _SignService
 
 @inject IInvestorTransactionActions _InvestorTransactionActions
@@ -202,7 +199,7 @@
                 }
                 else
                 {
-                    findProject = storage.GetBrowseProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+                    findProject = SessionStorage.GetProjectById(ProjectId);
 
                     if (findProject != null)
                     {
@@ -352,10 +349,16 @@
             var strippedInvestmentTransaction = network.CreateTransaction(signedTransaction.ToHex());
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
 
+            var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
+
+            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), accountInfo.InvestmentsCount + 1);
+
             recoverySigs = await _SignService.GetInvestmentSigsAsync(new SignRecoveryRequest
             {
                 ProjectIdentifier = project.ProjectIdentifier, 
-                InvestmentTransaction = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory)
+                InvestmentTransaction = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                NostrPubKey = project.NostrPubKey,
+                InvestorNostrPrivateKey = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes())
             });
 
             // validate the signatures

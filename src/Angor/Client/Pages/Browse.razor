@@ -85,7 +85,7 @@
                 .Select(_ => _.NostrPubKey)
                 .Where(nostrPubKey => !projectCreators.Contains(nostrPubKey)));
         
-        await _RelayService.RequestProjectDataAsync<ProjectInfo>(_ =>
+        await _RelayService.LookupProjectsInfoByPubKeysAsync<ProjectInfo>(_ =>
         {
             if (!SessionStorage.IsProjectInStorageById(_.ProjectIdentifier))
                 SessionStorage.StoreProjectInfo(_);

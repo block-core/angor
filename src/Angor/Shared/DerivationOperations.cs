@@ -6,7 +6,6 @@ using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
-using System.IO;
 
 namespace Angor.Shared;
 
@@ -146,7 +145,7 @@ public class DerivationOperations : IDerivationOperations
 
         ExtKey extKey = extendedKey.Derive(new KeyPath(path));
 
-        return extKey.PrivateKey.PubKey.ToHex();
+        return extKey.PrivateKey.PubKey.ToHex()[2..]; //Need the pub key without prefix TODO find a better way to get the Schnorr pub key
     }
 
     public string DeriveFounderRecoveryKey(WalletWords walletWords, int index)
