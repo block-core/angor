@@ -1,5 +1,6 @@
 ﻿using Angor.Shared.Models;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Nostr.Client.Client;
 using Nostr.Client.Communicator;
 using Nostr.Client.Keys;
@@ -52,8 +53,10 @@ namespace Angor.Client.Services
 
             var ev = new NostrEvent
             {
+                Kind = NostrKind.EncryptedDm,
                 CreatedAt = DateTime.UtcNow,
-                Content = $"Test private message from C# client"
+                Content = JsonConvert.SerializeObject(new {text = "The transaction to be signed", signRecoveryRequest.ProjectIdentifier,signRecoveryRequest.InvestmentTransaction}),
+                Tags = new NostrEventTags(new []{NostrEventTag.Profile(sender.DerivePublicKey().Hex)})
             };
 
             var encrypted = ev.EncryptDirect(sender, receiver);
