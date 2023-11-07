@@ -1,0 +1,39 @@
+Softchains License Agreement
+
+Copyright (c) 2023, Blockcore, Softchains
+
+Definitions:
+
+"Software": The Softchains and associated documentation.
+
+"Licensed Work": Any version of the Software made available under this License.
+
+"Non-Commercial Purposes" is defined as the use of the Software in a manner that:
+ 1. Does Not Generate Revenue: The Software or any derivative thereof is not directly sold, rented, licensed, or otherwise used as a means to generate revenue or financial gain.
+ 2. Not Part of Revenue-Generating Activities: The Software or any derivative thereof is not used as a part of, or in conjunction with, any revenue-generating activities, including but not limited to, commercial services, product offerings, or advertising.
+ 3. Personal, Educational, or Research Use: The Software is used primarily for personal experimentation, educational purposes, academic research, or other non-profit activities that are not intended to produce direct or indirect financial profit.
+ 4. Charitable Organizations: Use by recognized non-profit or charitable organizations, provided such use does not result in generating revenue beyond what is necessary for the basic operation and sustenance of the organization.
+
+1. Grant of License:
+  Permission is granted to any person obtaining a copy of this Software to view, review, and use the Software for Non-Commercial Purposes, subject to the conditions listed below.
+
+2. Restrictions:
+  a. Commercial Use: Before using the Software for commercial purposes, you must obtain a separate license or written permission from Softchains.
+  b. Fee Structure: All transactions executed using the Software or any derivative thereof must adhere to the fee structure established by Softchains, to addresses specified by Softchains on current and future code releases.
+  c. No Distribution: You may not distribute or sublicense the Software without explicit permission from Softchains.
+
+3. Contributions:
+  Contributions to the Software are welcome. However, by submitting contributions, you agree that Softchains retains all rights to use, modify, and distribute those contributions as they see fit, without any obligation to credit the contributor.
+
+4. Disclaimer of Warranty and Limitation of Liability:
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

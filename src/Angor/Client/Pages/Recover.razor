@@ -1,0 +1,676 @@
+﻿@page "/recover/{ProjectId}"
+
+@using Angor.Shared
+@using Angor.Client.Storage
+@using Angor.Client.Services
+@using Angor.Shared.Models
+@using Angor.Shared.ProtocolNew
+@using Blockcore.Consensus.TransactionInfo
+@using Blockcore.NBitcoin
+@using Blockcore.NBitcoin.DataEncoders
+
+@inject IClientStorage storage;
+@inject IIndexerService _IndexerService
+@inject INetworkConfiguration _NetworkConfiguration
+@inject IDerivationOperations _derivationOperations
+@inject IWalletOperations _WalletOperations
+@inject IInvestorTransactionActions _InvestorTransactionActions
+@inject ILogger<Recover> Logger;
+
+@inherits BaseComponent
+
+@if (!hasWallet)
+{
+    NavigationManager.NavigateTo($"/wallet");
+    return;
+}
+
+<h3>Recover funds</h3>
+
+<div class="container">
+
+    <NotificationComponent @ref="notificationComponent" />
+
+    <p style="margin-bottom: 20px;">
+        Project ID: <span id="transactionID">@ProjectId</span>
+    </p>
+
+    <p style="margin-bottom: 20px;">
+        Transaction ID: <span id="transactionID">@StageInfo.Trxid</span> | 
+        <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
+    </p>
+    
+    <p>Total funds to recover = @StageInfo.TotalSpendable BTC</p>
+    
+    @if (StageInfo.CanRelease)
+    {
+        <p>Total funds in penalty = @StageInfo.TotalInPenalty BTC</p>
+    }
+
+    @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
+    {
+        <button class="btn btn-primary me-2" @onclick="PrepareToRecoverCoins">Recover Funds</button>
+    }
+    
+    @if (StageInfo.CanRelease)
+    {
+        <button class="btn btn-secondary me-2" @onclick="PrepareToReleaseCoins">Release Funds</button>
+    }
+    
+    @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
+    {
+        <button class="btn btn-primary" @onclick="PrepareEndOfProjectCoins">End of project</button>
+    }
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Stage Details</th>
+                <th>Address</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in StageInfo.Items)
+            {
+                <tr>
+                    <td>@item.Amount BTC</td>
+                    <td>@item.OutputAddress</td>
+                    <td>
+                        @if (item.IsSpent)
+                        {
+                            <span class="text-primary">@item.SpentTo</span>
+                        }
+                        else
+                        {
+                            <span class="text-success">Not Spent</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (showRecoveryModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Recovery Confirmation</h5>
+                        <button type="button" class="btn-close" @onclick="() => showRecoveryModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        <p class="mb-1">The number of stages to be recovered is @StageInfo.Items.Count(s => !s.IsSpent) </p>
+
+                        <p class="mb-1">The amount to be recovered in to a penalty = @StageInfo.Items.Where(s=> !s.IsSpent).Sum(s=> s.Amount) BTC</p>
+
+                        <p class="mb-1">The penalty duration is @((project.PenaltyDate - DateTime.UtcNow).Days) days </p>
+                        
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="RecoveryFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                        </div>
+
+                        <hr>
+
+                        <p class="mt-3">Are you sure you want to recover these funds?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => showRecoveryModal = false">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="RecoverCoins">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    
+    @if (showRecoveryReleaseModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Release Recovery Confirmation</h5>
+                        <button type="button" class="btn-close" @onclick="() => showRecoveryReleaseModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        <p class="mb-1">The amount to be released from the penalty = @Money.Satoshis(releaseRecoveryTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) BTC</p>
+
+                        <p class="mb-1">Send to @releaseRecoveryTransaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="ReleaseFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                        </div>
+
+                        <hr>
+
+                        <p class="mt-3">Are you sure you want to release these funds from the penalty?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => showRecoveryReleaseModal = false">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="ReleaseCoins">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    
+    @if (showEndOfProjectModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">End Of project Confirmation</h5>
+                        <button type="button" class="btn-close" @onclick="() => showEndOfProjectModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        <p class="mb-1">The amount to claim back after project ended = @Money.Satoshis(endOfProjectTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) BTC</p>
+
+                        <p class="mb-1">Send to @endOfProjectTransaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="EndOfProjectFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                        </div>
+
+                        <hr>
+
+                        <p class="mt-3">Are you sure you want to claim these funds?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => showEndOfProjectModal = false">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="EndOfProjectCoins">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter]
+    public string ProjectId { get; set; }
+    private ProjectInfo project;
+
+    private bool showRecoveryModal = false;
+    private bool showRecoveryReleaseModal = false;
+    private bool showEndOfProjectModal = false;
+
+    private Transaction? investmentTransaction; 
+    private Transaction? unsignedRecoveryTransaction;
+    private Transaction? recoveryTransaction;
+    private Transaction? releaseRecoveryTransaction;
+    private Transaction? endOfProjectTransaction;
+
+    StageData StageInfo = new();
+    string explorerLink;
+    SignatureInfo recoverySigs;
+
+    private FeeData feeData = new();
+
+
+    public class StageData
+    {
+        public string Trxid;
+
+        public QueryTransaction TransactionInfo;
+        public decimal TotalSpendable;
+        public decimal TotalInPenalty;
+        public bool CanRecover;
+        public bool CanRelease;
+        public bool EndOfProject;
+
+        public List<StageDataTrx> Items = new ();
+    }
+
+    public class StageDataTrx
+    {
+        public int StageIndex;
+
+        public int Outputindex;
+        public string OutputAddress;
+        public decimal Amount;
+        public bool IsSpent;
+        public string SpentTo;
+
+        public ProjectScriptType ProjectScriptType;
+    } 
+
+    protected override async Task OnInitializedAsync()
+    {
+        project = storage.GetProjects().First(p => p.ProjectIdentifier == ProjectId);
+        recoverySigs = storage.GetSignaturess().First(s => s.ProjectIdentifier == ProjectId);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (hasWallet)
+            {
+                var operationResult = await notificationComponent.LongOperation(async () =>
+                {
+                    await FindInvestments();
+
+                    await CheckSpentFund();
+
+                    return new OperationResult { Success = true };
+
+                });
+
+                if (operationResult.Success)
+                {
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task FindInvestments()
+    {
+        var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
+
+        var trx = trxs.First(f => f.TransactionId == recoverySigs.TransactionId);
+
+        if (investmentTransaction == null)
+        {
+            var trxHex = await _IndexerService.GetTransactionHexByIdAsync(recoverySigs.TransactionId);
+            investmentTransaction = network.CreateTransaction(trxHex);
+        }
+
+        var trxInfo = await _IndexerService.GetTransactionInfoByIdAsync(trx.TransactionId);
+
+        StageInfo.Trxid = trx.TransactionId;
+        StageInfo.TransactionInfo = trxInfo;
+        
+        explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{trx.TransactionId}";
+
+        StageInfo.Items.Clear();
+
+        int stageIndex = 0;
+        foreach (var stageInfo in project.Stages)
+        {
+            var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
+
+            var insert = new StageDataTrx
+            {
+                OutputAddress = output.Address,
+                Outputindex = stageIndex + 2,
+                Amount = Money.Satoshis(output.Balance).ToUnit(MoneyUnit.BTC),
+                StageIndex = stageIndex,
+                IsSpent = false,
+                
+            };
+
+            StageInfo.Items.Add(insert);
+
+            stageIndex++;
+        }
+    }
+
+    private async Task CheckSpentFund()
+    {
+        foreach (var item in StageInfo.Items)
+        {
+            var output = StageInfo.TransactionInfo.Outputs.ElementAt(item.Outputindex);
+
+            if (!string.IsNullOrEmpty(output.SpentInTransaction))
+            {
+                item.IsSpent = true;
+
+                if (output.SpentInTransaction == recoverySigs.RecoveryTransactionId)
+                {
+                    if (!string.IsNullOrEmpty(recoverySigs.RecoveryReleaseTransactionId))
+                    {
+                        item.SpentTo = "Recovered after penalty";
+                        item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Unknown };
+                    }
+                    else
+                    {
+                        item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty };
+                        var days = (project.PenaltyDate - DateTime.Now).Days;
+                        item.SpentTo = days > 0 ? $"Penalty, released in {days} days" : "Penalty can be released";
+                    }
+                }
+                else
+                {
+                    // try to resolve the destination
+                    var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+
+                    var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == StageInfo.Trxid && input.InputIndex == item.Outputindex);
+
+                    if (input != null && investmentTransaction != null)
+                    {
+                        item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project, investmentTransaction, item.StageIndex, input.WitScript);
+
+                        switch (item.ProjectScriptType.ScriptType)
+                        {
+                            case ProjectScriptTypeEnum.Founder:
+                            {
+                                item.SpentTo = "Spent by founder";
+                                break;
+                            }
+                            case ProjectScriptTypeEnum.InvestorWithPenalty:
+                            {
+                                var days = (project.PenaltyDate - DateTime.Now).Days;
+                                item.SpentTo = days > 0 ? $"Penalty, released in {days} days" : "Penalty can be released";
+                                break;
+                            }
+                            case ProjectScriptTypeEnum.EndOfProject:
+                            case ProjectScriptTypeEnum.InvestorNoPenalty:
+                            {
+                                item.SpentTo = $"Spent by investor";
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        StageInfo.CanRecover = StageInfo.Items.Any(a => a.IsSpent == false);
+        StageInfo.TotalSpendable = StageInfo.Items.Where(a => !a.IsSpent).Sum(a => a.Amount);
+        StageInfo.CanRelease = (StageInfo.Items.Any(a => a.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && DateTime.UtcNow > project.PenaltyDate);
+        StageInfo.TotalInPenalty = StageInfo.Items.Where(t => t.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty).Sum(t => t.Amount);
+        StageInfo.EndOfProject = project.ExpiryDate < DateTime.Now;
+    }
+
+    private async Task PrepareToRecoverCoins()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+
+            recoverySigs = storage.GetSignaturess().First(p => p.ProjectIdentifier == ProjectId);
+            var accountInfo = storage.GetAccountInfo(network.Name);
+
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+
+            unsignedRecoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project, investmentTransaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+
+            // remove outputs that have been spent
+            List<TxOut> removeTxout = new();
+            List<TxIn> removeTxin = new();
+            foreach (var item in StageInfo.Items)
+            {
+                if (item.IsSpent)
+                {
+                    removeTxout.Add(unsignedRecoveryTransaction.Outputs[item.StageIndex]);
+                    removeTxin.Add(unsignedRecoveryTransaction.Inputs[item.StageIndex]);
+                }
+            }
+
+            foreach (var txOut in removeTxout) unsignedRecoveryTransaction.Outputs.Remove(txOut);
+            foreach (var txIn in removeTxin) unsignedRecoveryTransaction.Inputs.Remove(txIn);
+
+            // add fee to the recovery trx
+            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+
+            recoverySigs.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
+
+            Logger.LogInformation($"recoveryTransaction={recoverySigs.RecoveryTransactionId}");
+
+            return new OperationResult { Success = true };
+        });
+
+        if (operationResult.Success)
+        {
+            showRecoveryModal = true;
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private void RecoveryFeeRangeChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+
+        if (selected != null)
+        {
+            if (int.TryParse(selected, out int res))
+            {
+                if (res <= feeData.FeeEstimations.Fees.Count)
+                {
+                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+                   
+                    var accountInfo = storage.GetAccountInfo(network.Name);
+
+                    recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+
+                    recoverySigs.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
+
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task RecoverCoins()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            showRecoveryModal = false;
+
+            storage.AddOrUpdateSignatures(recoverySigs);
+
+            var response = await _WalletOperations.PublishTransactionAsync(network, recoveryTransaction);
+
+            if (!response.Success)
+                return response;
+
+            return new OperationResult { Success = response.Success, Message = response.Message };
+        });
+
+        if (operationResult.Success)
+        {
+            notificationComponent.ShowNotificationMessage("Done", 1);
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private async Task PrepareToReleaseCoins()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+
+            if (recoveryTransaction == null)
+            {
+                var trxHex = await _IndexerService.GetTransactionHexByIdAsync(recoverySigs.RecoveryTransactionId);
+                recoveryTransaction = network.CreateTransaction(trxHex);
+            }
+
+            releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project, investmentTransaction, recoveryTransaction,
+                accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+
+            recoverySigs.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
+
+            Logger.LogInformation($"recoveryReleaseTransactionId={recoverySigs.RecoveryTransactionId}");
+
+            return new OperationResult { Success = true };
+        });
+
+        if (operationResult.Success)
+        {
+            showRecoveryReleaseModal = true;
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private void ReleaseFeeRangeChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+
+        if (selected != null)
+        {
+            if (int.TryParse(selected, out int res))
+            {
+                if (res <= feeData.FeeEstimations.Fees.Count)
+                {
+                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+                   
+                    var accountInfo = storage.GetAccountInfo(network.Name);
+
+                    var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+
+                    releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project, investmentTransaction, recoveryTransaction,
+                        accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+
+                    recoverySigs.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
+
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task ReleaseCoins()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            showRecoveryReleaseModal = false;
+
+            storage.AddOrUpdateSignatures(recoverySigs);
+
+            var response = await _WalletOperations.PublishTransactionAsync(network, releaseRecoveryTransaction);
+
+            if (!response.Success)
+                return response;
+
+            return new OperationResult { Success = response.Success, Message = response.Message };
+        });
+
+        if (operationResult.Success)
+        {
+            notificationComponent.ShowNotificationMessage("Done", 1);
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+
+    private async Task PrepareEndOfProjectCoins()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+
+            var fromStage = StageInfo.Items.First(f => f.IsSpent == false);
+
+            endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project, fromStage.StageIndex,
+                accountInfo.GetNextChangeReceiveAddress(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), feeData.SelectedFeeEstimation);
+
+            recoverySigs.EndOfProjectTransactionId = endOfProjectTransaction.GetHash().ToString();
+
+            Logger.LogInformation($"EndOfProjectTransactionId={recoverySigs.EndOfProjectTransactionId}");
+
+            return new OperationResult { Success = true };
+        });
+
+        if (operationResult.Success)
+        {
+            showEndOfProjectModal = true;
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private void EndOfProjectFeeRangeChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+
+        if (selected != null)
+        {
+            if (int.TryParse(selected, out int res))
+            {
+                if (res <= feeData.FeeEstimations.Fees.Count)
+                {
+                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+
+                    var accountInfo = storage.GetAccountInfo(network.Name);
+
+                    var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+
+                    var fromStage = StageInfo.Items.First(f => f.IsSpent == false);
+
+                    endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project, fromStage.StageIndex,
+                        accountInfo.GetNextChangeReceiveAddress(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), feeData.SelectedFeeEstimation);
+
+                    recoverySigs.EndOfProjectTransactionId = endOfProjectTransaction.GetHash().ToString();
+
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task EndOfProjectCoins()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            showEndOfProjectModal = false;
+
+            storage.AddOrUpdateSignatures(recoverySigs);
+
+            var response = await _WalletOperations.PublishTransactionAsync(network, endOfProjectTransaction);
+
+            if (!response.Success)
+                return response;
+
+            return new OperationResult { Success = response.Success, Message = response.Message };
+        });
+
+        if (operationResult.Success)
+        {
+            notificationComponent.ShowNotificationMessage("Done", 1);
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+}

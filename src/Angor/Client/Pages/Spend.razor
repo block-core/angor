@@ -1,0 +1,410 @@
+﻿@page "/spend/{ProjectId}"
+@using Angor.Shared
+@using Angor.Client.Storage
+@using Angor.Client.Services
+@using Angor.Shared.Models
+@using Angor.Shared.ProtocolNew
+@using Blockcore.Consensus.TransactionInfo
+@using Blockcore.NBitcoin
+@using Blockcore.NBitcoin.DataEncoders
+
+@inject HttpClient Http
+@inject IClientStorage storage;
+@inject IIndexerService _IndexerService
+@inject INetworkConfiguration _NetworkConfiguration
+@inject IDerivationOperations _derivationOperations
+@inject IWalletOperations _WalletOperations
+@inject IFounderTransactionActions _founderTransactionActions
+
+@inherits BaseComponent
+
+@if (!hasWallet)
+{
+    NavigationManager.NavigateTo($"/wallet");
+    return;
+}
+
+<h3>Founder Stage Claim</h3>
+<h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
+
+<div class="container">
+
+    <NotificationComponent @ref="notificationComponent" />
+
+    @foreach (var stage in stageDatas)
+    {
+        bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
+        var investedCount = stage.Items.Count(c => c.IsSepnt == false);
+        var investedAmount = stage.Items.Where(c => c.IsSepnt == false).Sum(c => c.Amount);
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount BTC (@investedCount trx) </h5>
+                    @if (stageisActive)
+                    {
+                        <button class="btn btn-success" @onclick="() => ClaimCoins(stage.StageIndex)">Claim Coins</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-warning" disabled>In @((stage.Stage.ReleaseDate - DateTime.UtcNow).Days) Days</button>
+                    }
+                    
+                </div>
+                <p class="card-subtitle text-muted mb-2">Estimated completion time: @stage.Stage.ReleaseDate.ToString("dd/MM/yyyy")</p>
+
+                <button @onclick="() => Expand(stage.StageIndex)" class="btn btn-link d-block text-decoration-none text-end">
+                    <i class="bi bi-chevron-double-down"></i> Expand
+                </button>
+
+
+                @if (stage.StageIndex == expandedStageId)
+                {
+                    <div class="mt-3">
+                        @foreach (var transaction in stage.Items)
+                        {
+                            bool isTicked = selected.ContainsKey(transaction.Trxid);
+
+                            <div class="d-flex mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" disabled="@(!stageisActive || transaction.IsSepnt)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <p class="mb-0">
+                                        @transaction.Amount BTC - utxo : @transaction.Trxid-@transaction.Outputindex 
+                                      
+                                        @if (transaction.IsSepnt)
+                                        {
+                                            <p class="text-primary">spent</p>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-success">unspent</p>
+                                        }
+
+                                    </p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    
+    @if (showCreateModal)
+    {
+        <!-- Confirmation Modal -->
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmation</h5>
+                        <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        
+                        <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
+
+                        <p class="mb-1">The transactions to be spent @signedTransaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) BTC</p>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                        </div>
+
+                        <hr>
+
+                        <h6 class="mt-3 mb-2">Stages</h6>
+                        @foreach (var item in selected)
+                        {
+                            <p style="font-size: 0.7em;" class="mb-1">@item.Key</p>
+                        }
+
+                        <hr>
+
+                        <p class="mt-3">Are you sure you want to continue?</p>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="Send">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+
+</div>
+
+
+@code {
+    [Parameter]
+    public string ProjectId { get; set; }
+
+    private int? expandedStageId;
+    private bool showCreateModal;
+
+    private ProjectInfo project;
+
+    private FeeData feeData = new();
+
+    List<(Transaction Transaction, string TrxId)> transactions = new();
+
+    Dictionary<string, string> selected = new();
+
+    public class StageData
+    {
+        public int StageIndex;
+        public Stage Stage;
+        public List<StageDataTrx> Items = new ();
+    }
+
+    public class StageDataTrx
+    {
+        public string Trxid;
+        public int Outputindex;
+        public string OutputAddress;
+        public decimal Amount;
+        public bool IsSepnt;
+    } 
+
+    List<StageData> stageDatas = new();
+
+    Transaction signedTransaction;
+    FounderContext founderContext;
+    int selectedStageId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        project = storage.GetFounderProjects().First(p => p.ProjectIdentifier == ProjectId);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (hasWallet)
+            {
+                var operationResult = await notificationComponent.LongOperation(async () =>
+                {
+                    await FindInvestments();
+
+                    await CheckSpentFund();
+
+                    return new OperationResult { Success = true };
+
+                });
+
+                if (operationResult.Success)
+                {
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task FindInvestments()
+    {
+        var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
+
+        var network = _NetworkConfiguration.GetNetwork();
+
+        var tasks = trxs.Select(async _ =>
+        {
+            var hex = await _IndexerService.GetTransactionHexByIdAsync(_.TransactionId);
+            return new { hex, _.TransactionId };
+        });
+
+        var trxHexList = await Task.WhenAll(tasks);
+
+        foreach (var trx in trxHexList)
+        {
+            transactions.Add((network.CreateTransaction(trx.hex), trx.TransactionId));
+        }
+
+        int stageIndex = 0;
+        foreach (var stage in project.Stages)
+        {
+            var stageItem = new StageData
+            {
+                Stage = stage,
+                StageIndex = stageIndex + 1,
+            };
+
+            foreach (var item in transactions)
+            {
+                var insert = new StageDataTrx
+                {
+                    Trxid = item.TrxId,
+                    OutputAddress = item.Transaction.Outputs[stageIndex + 2].ScriptPubKey.WitHash.GetAddress(network).ToString(),
+                    Outputindex = stageIndex + 2,
+                    Amount = item.Transaction.Outputs[stageIndex + 2].Value.ToUnit(MoneyUnit.BTC),
+                };
+
+                stageItem.Items.Add(insert);
+            }
+
+            stageIndex++;
+            stageDatas.Add(stageItem);
+        }
+    }
+
+    private async Task CheckSpentFund()
+    {
+        IndexerUrl indexer = _NetworkConfiguration.GetIndexerUrl();
+
+        List<QueryTransaction> trxs = new();
+
+        foreach (StageData stageData in stageDatas)
+        {
+            foreach (var item in stageData.Items)
+            {
+                if (item.IsSepnt)
+                    continue;
+
+                QueryTransaction? trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
+
+                if (trx == null)
+                {
+                    var url = $"/query/transaction/{item.Trxid}";
+
+                    Console.WriteLine($"fetching {url}");
+
+                    var response = await Http.GetAsync(indexer.Url + url);
+                    trx = await response.Content.ReadFromJsonAsync<QueryTransaction>();
+
+                    trxs.Add(trx);
+                }
+
+                var output = trx.Outputs.First(outp => outp.Index == item.Outputindex);
+
+
+                if (!string.IsNullOrEmpty(output.SpentInTransaction))
+                {
+                    item.IsSepnt = true;
+                }
+            }
+        }
+    }
+
+    private async Task ClaimCoins(int stageId)
+    {
+        var network = _NetworkConfiguration.GetNetwork();
+
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            selectedStageId = stageId;
+
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+
+            founderContext = new FounderContext { ProjectInfo = project, ProjectSeeders = new ProjectSeeders() };
+
+            foreach (var item in selected)
+            {
+                var trx = transactions.First(f => f.TrxId == item.Key);
+
+                founderContext.InvestmentTrasnactionsHex.Add(trx.Transaction.ToHex(network.Consensus.ConsensusFactory));
+            }
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var address = accountInfo.GetNextReceiveAddress();
+            var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
+
+            var keys = storage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
+
+
+            var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet(), keys.Index);
+
+            signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
+
+            return new OperationResult { Success = true };
+        });
+
+        if (operationResult.Success)
+        {
+            showCreateModal = true;
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private void FeeRangeChanged(ChangeEventArgs e)
+    {
+        var selectedItem = e.Value?.ToString();
+
+        if (selectedItem != null)
+        {
+            if (int.TryParse(selectedItem, out int res))
+            {
+                if (res <= feeData.FeeEstimations.Fees.Count)
+                {
+                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+
+                    var accountInfo = storage.GetAccountInfo(network.Name);
+                    var address = accountInfo.GetNextReceiveAddress();
+                    var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
+
+                    var keys = storage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
+                    var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet(), keys.Index);
+
+                    signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
+
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task Send()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            showCreateModal = false;
+
+            var network = _NetworkConfiguration.GetNetwork();
+
+            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+
+            if (!response.Success)
+                return response;
+
+            return new OperationResult { Success = response.Success, Message = response.Message };
+        });
+
+        if (operationResult.Success)
+        {
+            notificationComponent.ShowNotificationMessage("Done", 1);
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private void Expand(int stageId)
+    {
+        expandedStageId = expandedStageId == stageId ? null : stageId;
+    }
+
+    private void HandleCheckboxChange(string trxId)
+    {
+        
+        if (selected.ContainsKey(trxId))
+        {
+            selected.Remove(trxId);
+        }
+        else
+        {
+            selected.Add(trxId, null);
+        }
+    }
+}

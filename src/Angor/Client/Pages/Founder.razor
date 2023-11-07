@@ -1,0 +1,74 @@
+﻿@page "/founder"
+@using Angor.Shared
+@using Angor.Client.Storage
+@using Angor.Shared.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IWalletStorage _walletStorage;
+@inject IClientStorage storage;
+
+@if (!hasWallet)
+{
+    NavigationManager.NavigateTo($"/wallet");
+    return;
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h3>Founder Page</h3>
+
+            <NotificationComponent @ref="notificationComponent"/>
+
+            <p>Welcome to the founder page! Here you can create a new project or view your existing project.</p>
+            
+            <p>Creating a project requires an on-chain transaction and a nostr did</p>
+
+            @if (founderprojects.Count == 0)
+            {
+                <p>No projects found.</p>
+            }
+            else
+            {
+                foreach (var project in founderprojects)
+                {
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">@project.ProjectIdentifier</h5>
+                            <p class="card-text">Nostr ID: <a href="/" target="_blank">@(new Blockcore.NBitcoin.Key().PubKey.ToHex())</a></p>
+                            <NavLink href=@($"/view/{project.ProjectIdentifier}") class="btn btn-primary">View Project</NavLink>
+                        </div>
+                    </div>
+                }
+            }
+
+            <button class="btn btn-primary mb-3" @onclick="NavigateToCreateProject">Create Project</button>
+            
+        </div>
+    </div>
+</div>
+
+@code {
+    private string founderKey;
+    private string projectId;
+    private List<ProjectInfo> founderprojects = new();
+    private bool hasWallet;
+
+    private NotificationComponent notificationComponent;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        hasWallet = _walletStorage.HasWallet();
+
+        if (hasWallet)
+        {
+            founderprojects = storage.GetFounderProjects();
+        }
+    }
+
+    private void NavigateToCreateProject()
+    {
+        NavigationManager.NavigateTo("/create");
+    }
+}

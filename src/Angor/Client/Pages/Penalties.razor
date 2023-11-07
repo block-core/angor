@@ -1,0 +1,154 @@
+﻿@page "/penalties"
+@using Angor.Shared
+@using Angor.Client.Storage
+@using Angor.Shared.Models
+@using Angor.Client.Services
+@using Blockcore.Consensus.ScriptInfo
+@using Blockcore.NBitcoin
+
+@inject HttpClient Http
+@inject IDerivationOperations _derivationOperations
+@inject IWalletStorage _walletStorage;
+@inject IClientStorage storage;
+@inject NavigationManager NavigationManager
+@inject INetworkConfiguration _NetworkConfiguration
+@inject IIndexerService _IndexerService
+
+@inherits BaseComponent
+
+@if (!hasWallet)
+{
+    NavigationManager.NavigateTo($"/wallet");
+    return;
+}
+
+<div class="container mt-4">
+    <h3>View Penalties</h3>
+
+    <NotificationComponent @ref="notificationComponent" />
+
+    @if (!penaltyProjects.Any())
+    {
+        <p><em>No penalties found...</em></p>
+    }
+    else
+    {
+        <!-- Penalties Details Section -->
+        <div class="row mt-4">
+            <div class="col">
+                <h4>Penalties Details</h4>
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Project ID</th>
+                            <th>Amount in Penalty</th>
+                            <th>Days Left</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var penalty in penaltyProjects)
+                        {
+                            <tr>
+                                <td>@penalty.ProjectIdentifier</td>
+                                <td>@penalty.Amount BTC</td>
+                                <td>
+                                    @if (penalty.IsExpired)
+                                    {
+                                        if (penalty.IsReleased)
+                                        {
+                                            <button disabled class="btn btn-secondary">Penalty Released</button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-info" @onclick="() => ClaimPenalty(penalty.ProjectIdentifier)">Claim Penalty</button>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <button disabled class="btn btn-warning">Penalty Release in @penalty.DaysLeftForPenalty days</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<PenaltiesData> penaltyProjects = new(); // Assuming this is the model name
+    private bool hasWallet = true; // Placeholder, actual value should come from your backend
+                                   // Add any required variables and methods here
+    public class PenaltiesData
+    {
+        public string ProjectIdentifier;
+        public string RecoveryTransactionId;
+        public bool IsReleased;
+        public bool IsExpired;
+        public decimal Amount;
+        public int DaysLeftForPenalty;
+    }
+
+   
+    protected override async Task OnInitializedAsync()
+    {
+        if (hasWallet)
+        {
+            var recoveries = storage.GetSignaturess();
+            var projects = storage.GetProjects();
+
+            foreach (var signatureInfo in recoveries)
+            {
+                if (!string.IsNullOrEmpty(signatureInfo.RecoveryTransactionId))
+                {
+                    var project = projects.First(p => p.ProjectIdentifier == signatureInfo.ProjectIdentifier);
+
+
+                    penaltyProjects.Add(new PenaltiesData
+                    {
+                        ProjectIdentifier = signatureInfo.ProjectIdentifier,
+                        RecoveryTransactionId = signatureInfo.RecoveryTransactionId,
+                        DaysLeftForPenalty = (project.PenaltyDate - DateTime.Now).Days,
+                        IsExpired = (project.PenaltyDate - DateTime.Now).Days <= 0,
+                        IsReleased = !string.IsNullOrEmpty(signatureInfo.RecoveryReleaseTransactionId),
+                    });
+                }
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (hasWallet)
+            {
+                var operationResult = await notificationComponent.LongOperation(async () =>
+                {
+                    foreach (var penaltyProject in penaltyProjects)
+                    {
+                        var recoveryTansaction = await _IndexerService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
+                        
+                        var totalsats = recoveryTansaction.Outputs.Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);
+                        penaltyProject.Amount = Money.Satoshis(totalsats).ToUnit(MoneyUnit.BTC);
+                    }
+
+                    return new OperationResult { Success = true };
+
+                });
+
+                if (operationResult.Success)
+                {
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private void ClaimPenalty(string projectId)
+    {
+        NavigationManager.NavigateTo($"/recover/{projectId}");
+    }
+}

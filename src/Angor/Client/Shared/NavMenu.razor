@@ -1,0 +1,106 @@
+﻿@using Angor.Client.Storage
+@using System.Reflection
+@inject IWalletStorage _walletStorage;
+@inject NavMenuState NavMenuState;
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Angor</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+        
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="wallet">
+                <span class="oi oi-plus" aria-hidden="true"></span> Wallet
+            </NavLink>
+        </div>
+        
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="browse">
+                <span class="oi oi-calculator" aria-hidden="true"></span> Browse
+            </NavLink>
+        </div>
+        
+        @if (hasWallet)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="investor">
+                    <span class="oi oi-dashboard" aria-hidden="true"></span> Projects
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="founder">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Founder
+                </NavLink>
+            </div>
+        }
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="settings">
+                <span class="oi oi-calculator" aria-hidden="true"></span> Settings
+            </NavLink>
+        </div>
+
+        @*  <div class="nav-item px-3">
+            <NavLink class="nav-link" href="CheckTransactionCode">
+                <span class="oi oi-plus" aria-hidden="true"></span> CheckTransactionCode
+            </NavLink>
+        </div>*@
+    </nav>
+    
+    <div class="nav-footer">
+        <div class="text-muted small">Version: @softwareVersion</div>
+    </div>
+
+</div>
+
+
+
+@code {
+    private bool collapseNavMenu = true;
+    private bool hasWallet;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private string softwareVersion = "0.0.0";
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    protected override void OnInitialized()
+    {
+        hasWallet = _walletStorage.HasWallet();
+
+        NavMenuState.OnChange += NavMenuStateOnOnChange;
+
+        // Get the current assembly (the assembly of your Blazor app)
+        Assembly assembly = Assembly.GetEntryAssembly();
+
+        // Get the assembly's version information
+        Version version = assembly.GetName().Version;
+
+        // Convert the version to a string
+        softwareVersion = version.ToString();
+    }
+
+    private void NavMenuStateOnOnChange()
+    {
+        hasWallet = _walletStorage.HasWallet();
+        StateHasChanged();
+    }
+
+}

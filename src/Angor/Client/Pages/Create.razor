@@ -1,0 +1,336 @@
+@page "/create"
+@using Angor.Shared.Models
+@using Angor.Shared
+@using Angor.Client.Storage
+@using Blockcore.Consensus.TransactionInfo
+@using Angor.Client.Services
+@using Angor.Shared.ProtocolNew
+@using Angor.Shared.Services
+@using Blockcore.NBitcoin
+@using Blockcore.NBitcoin.DataEncoders
+
+@inherits BaseComponent
+@inject IDerivationOperations _derivationOperations
+@inject IWalletStorage _walletStorage;
+@inject IClientStorage storage;
+@inject NavigationManager NavigationManager
+@inject IWalletOperations _WalletOperations
+@inject INetworkConfiguration _NetworkConfiguration
+@inject IRelayService _RelayService
+
+@inject ISignService _SignService
+
+@inject IFounderTransactionActions _founderTransactionActions
+
+@if (!hasWallet)
+{
+    NavigationManager.NavigateTo($"/wallet");
+    return;
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Create New Project</h1>
+
+    <NotificationComponent @ref="notificationComponent"/>
+
+    <EditForm Model="project" OnValidSubmit="CreatProject">
+        
+        <!-- Angor Fee Key -->
+        <div class="mb-3">
+            <label for="angorFeeKey" class="form-label">Project identifier</label>
+            <InputText id="angorFeeKey" @bind-Value="project.ProjectIdentifier" class="form-control" placeholder="Enter angor fee key" readonly />
+        </div>
+
+        <!-- Founder Key -->
+        <div class="mb-3">
+            <label for="founderKey" class="form-label">Founder Key</label>
+            <InputText id="founderKey" @bind-Value="project.FounderKey" class="form-control" placeholder="Enter founder key" readonly />
+        </div>
+
+        <!-- Start Date -->
+        <div class="mb-3">
+            <label for="startDate" class="form-label">Start Date</label>
+            <InputDate id="startDate" @bind-Value="project.StartDate" class="form-control"/>
+        </div>
+
+        <!-- Penalty Date -->
+        <div class="mb-3">
+            <label for="penaltyDate" class="form-label">Penalty Date</label>
+            <InputDate id="penaltyDate" @bind-Value="project.PenaltyDate" class="form-control"/>
+        </div>
+
+        <!-- Expiry Date -->
+        <div class="mb-3">
+            <label for="expiryDate" class="form-label">Expiry Date</label>
+            <InputDate id="expiryDate" @bind-Value="project.ExpiryDate" class="form-control"/>
+        </div>
+
+        <!-- Target Amount -->
+        <div class="mb-3">
+            <label for="targetAmount" class="form-label">Target Amount</label>
+            <InputNumber id="targetAmount" @bind-Value="project.TargetAmount" class="form-control" placeholder="Enter target amount"/>
+        </div>
+
+        <!-- Stages -->
+        <h3 class="mb-3">Stages</h3>
+        @foreach (var stage in project.Stages)
+        {
+            <div class="mb-3">
+                <label class="form-label">Stage @project.Stages.IndexOf(stage)</label>
+                <div class="input-group">
+                    <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1"/>
+                    <InputDate @bind-Value="stage.ReleaseDate" class="form-control"/>
+                    <button type="button" class="btn btn-danger" @onclick="() => RemoveStage(stage)">Remove</button>
+                </div>
+            </div>
+        }
+        <button type="button" class="btn btn-primary mb-3" @onclick="AddStage">Add Stage</button>
+
+        <!-- Save & Publish Buttons -->
+        <div class="mb-3">
+            <button type="submit" class="btn btn-success">Next</button>
+        </div>
+    </EditForm>
+    
+    @if (showCreateModal)
+    {
+        <!-- Confirmation Modal -->
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmation</h5>
+                        <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
+                        <p class="mb-1"><strong>Founder Key:</strong> @project.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
+
+                        <p class="mb-1"><strong>Target amount:</strong> @project.TargetAmount BTC</p>
+
+                        <p class="mb-1"><strong>Start date:</strong> @project.StartDate.ToString("dd/MM/yyyy") in @((project.StartDate - DateTime.Now).Days) days</p>
+                        <p class="mb-1"><strong>Expiry date:</strong> @project.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ExpiryDate - DateTime.Now).Days) days</p>
+                        <p class="mb-1"><strong>Penalty date:</strong> @project.PenaltyDate.ToString("dd/MM/yyyy") in @((project.PenaltyDate - DateTime.Now).Days) days</p>
+
+                        <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
+                        <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                        </div>
+
+                        <hr>
+
+                        <h6 class="mt-3 mb-2">Stages</h6>
+                        @foreach (var stage in project.Stages)
+                        {
+                            <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
+                                <p class="mb-1"><strong>Stage percent:</strong> @stage.AmountToRelease % </p>
+                                <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.StartDate).Days) days after project starts </p>
+                            </div>
+                        }
+                        
+                        <hr>
+
+                        <p class="mt-3">Are you sure you want to continue?</p>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="Send">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+
+@code {
+
+    private bool sendConfirmModal;
+    private bool hasWallet;
+    private bool showCreateModal;
+
+    Transaction unsignedTransaction;
+    Transaction signedTransaction;
+
+    private FeeData feeData = new();
+    
+    private ProjectInfo project = new ProjectInfo
+    {
+        StartDate = DateTime.UtcNow,
+        PenaltyDate = DateTime.UtcNow.AddDays(100),
+        ExpiryDate = DateTime.UtcNow.AddDays(50),
+        TargetAmount = 100,
+        TransactionId = "unknowen",
+        Stages = new List<Stage>
+        {
+            new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
+            new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
+            new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) },
+        }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        hasWallet = _walletStorage.HasWallet();
+
+        if (hasWallet)
+        {
+            var projects = storage.GetFounderProjects();
+            var keys = storage.GetFounderKeys();
+            var latestProject = projects.MaxBy(p => p.ProjectIndex);
+            var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectIndex + 1 ?? 1);
+
+            project.ProjectIndex = projectsKeys.Index;
+            project.FounderKey = projectsKeys.FounderKey;
+            project.FounderRecoveryKey = projectsKeys.FounderRecoveryKey;
+            project.ProjectIdentifier = projectsKeys.ProjectIdentifier;
+            project.NostrPubKey = projectsKeys.NostrPubKey;
+        }
+
+        await _RelayService.ConnectToRelaysAsync();
+    }
+
+    private async Task CreatProject()
+    {
+        if (project.Stages.Count() < 3)
+        {
+            notificationComponent.ShowErrorMessage("There must be at least 3 stages");
+            return;
+        }
+
+        if (project.Stages.Sum(s => s.AmountToRelease) != 100)
+        {
+            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
+            return;
+        }
+
+        var projects = storage.GetFounderProjects();
+
+        if (projects.Any(a => project.ProjectIdentifier == a.ProjectIdentifier))
+        {
+            notificationComponent.ShowErrorMessage("This wallet already has a project with this index");
+            return;
+        }
+
+        DateTime prev = DateTime.UtcNow;
+        foreach (var stage in project.Stages)
+        {
+            if ((stage.ReleaseDate - prev).Days < 0)
+                notificationComponent.ShowErrorMessage("Stages must be chronological");
+        }
+
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            var accountInfo = storage.GetAccountInfo(network.Name);
+
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+
+            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000, project.NostrPubKey);
+
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+
+            project.TransactionId = signedTransaction.GetHash().ToString();
+
+            return new OperationResult { Success = true };
+
+        });
+
+        if (operationResult.Success)
+        {
+            showCreateModal = true;
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private void FeeRangeChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+
+        if (selected != null)
+        {
+            if (int.TryParse(selected, out int res))
+            {
+                if (res <= feeData.FeeEstimations.Fees.Count)
+                {
+                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+
+                    var accountInfo = storage.GetAccountInfo(network.Name);
+
+                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task Send()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            showCreateModal = false;
+
+            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+
+            if (!response.Success)
+                return response;
+
+            storage.AddFounderProject(project);
+            
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+            
+            var resultId = await _RelayService.AddProjectAsync(project, NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()));
+
+            _RelayService.RegisterOKMessageHandler(resultId, _ =>
+            {
+                if (_.EventId != resultId) 
+                    return;
+                if (!_.Accepted)
+                    notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+            });
+            
+    // todo this code must be reviewed again as we send the recovery private key to the signing server
+
+            var key = _derivationOperations.DeriveFounderRecoveryPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+
+            await _SignService.AddSignKeyAsync(project, Encoders.Hex.EncodeData(key.ToBytes()));
+
+            return new OperationResult { Success = response.Success, Message = response.Message };
+        });
+
+        if (operationResult.Success)
+        {
+            notificationComponent.ShowNotificationMessage("Project created", 1);
+
+            //storage.AddFounderProject(project); 
+
+            NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    private void AddStage()
+    {
+        project.Stages.Add(new Stage { ReleaseDate = DateTime.UtcNow });
+    }
+
+    private void RemoveStage(Stage stage)
+    {
+        project.Stages.Remove(stage);
+    }
+}

@@ -1,0 +1,128 @@
+﻿@using Angor.Shared.Models
+
+@inject ILogger<NotificationComponent> Logger;
+
+
+<div class="row mt-4">
+    <div class="col">
+
+        @if (isLoading)
+        {
+            <div class="loader-wrapper">
+                <div class="loader"></div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(notificationMessage))
+        {
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-md-10">
+                    <div class="alert alert-info fixed-bottom w-70 d-flex justify-content-between align-items-center" role="alert" style="left: 20%; right: 20%">
+                        @notificationMessage
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Error
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" @onclick="ClearErrorMessage"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>@errorMessage</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light" @onclick="ClearErrorMessage">Dismiss</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+@code {
+    private string notificationMessage;
+    private string errorMessage;
+    private bool isLoading;
+
+    public void ShowNotificationMessage(string message, int delaySeconds = 5)
+    {
+        Task.Run(async () =>
+        {
+            notificationMessage = message;
+            StateHasChanged(); // This will cause Blazor to re-render the component
+
+            await Task.Delay(TimeSpan.FromSeconds(delaySeconds)); // Wait for 5 seconds
+
+            notificationMessage = null;
+            StateHasChanged(); // This will cause Blazor to re-render the component
+        });
+    }
+
+    public void ShowErrorMessage(string? message)
+    {
+        if (!string.IsNullOrEmpty(message))
+        {
+            errorMessage = message;
+            StateHasChanged();
+        }
+    }
+
+    private void ClearErrorMessage()
+    {
+        errorMessage = string.Empty;
+        StateHasChanged();
+    }
+
+    public async Task<OperationResult> LongOperation(Func<Task<OperationResult>> action)
+    {
+        OperationResult? res = default(OperationResult);
+        Exception? failure = null;
+
+        try
+        {
+            isLoading = true;
+            await Task.Delay(10);
+            StateHasChanged();
+
+            res = await action();
+        }
+        catch (Exception ex)
+        {
+            failure = ex;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+
+        if (failure != null)
+        {
+            Logger.LogError(failure, failure.Message);
+            ShowErrorMessage(failure.Message);
+        }
+        else
+        {
+            if (res is {Success: false })
+            {
+                Logger.LogError(res.Message);
+                ShowErrorMessage($"Error: {res.Message}");
+            }
+        }
+
+        return res ?? new OperationResult { Success = false };
+    }
+}
+

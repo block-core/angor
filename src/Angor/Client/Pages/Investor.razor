@@ -1,0 +1,94 @@
+﻿@page "/investor"
+@using Angor.Client.Storage
+@using Angor.Shared.Models
+
+@inject IClientStorage storage;
+@inject NavigationManager NavigationManager
+@inject IWalletStorage _walletStorage;
+
+@if (!hasWallet)
+{
+    NavigationManager.NavigateTo($"/wallet");
+    return;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="mb-4">Invested Projects</h1>
+        <button class="btn btn-secondary" @onclick="NavigateToPenalties">View Penalties</button>
+    </div>    
+    <NotificationComponent @ref="notificationComponent"/>
+    
+    <!-- Summary Statistics -->
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+        <div class="col">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Projects</h5>
+                    <p class="card-text">@projects.Count</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Total invested</h5>
+                    <p class="card-text"> @projects.Sum(s => s.TargetAmount) BTC</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Total Stages</h5>
+                    <p class="card-text">@projects.Sum(s => s.Stages.Count)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- List of Projects -->
+    <h2 class="mb-4">Your Projects</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach(var project in projects)
+        {
+            <div class="col">
+                <div class="card">
+                    <img src="https://via.placeholder.com/150" class="card-img-top" alt="Project Image">
+                    <div class="card-body">
+                        <h5 class="card-title">Project Title</h5>
+                        <p class="card-text">@project.ProjectIdentifier</p>
+                        <p class="card-text">Short project description...</p>
+                        <NavLink href=@($"/view/{project.ProjectIdentifier}") class="btn btn-primary">View Project</NavLink>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+
+    private NotificationComponent notificationComponent;
+
+    private List<ProjectInfo> projects;
+    private bool hasWallet;
+
+    protected override Task OnInitializedAsync()
+    {
+        hasWallet = _walletStorage.HasWallet();
+
+        if (hasWallet)
+        {
+            projects = storage.GetProjects() ?? NetworkConfiguration.CreateFakeProjects();
+
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void NavigateToPenalties()
+    {
+        NavigationManager.NavigateTo("/penalties");
+    }
+}

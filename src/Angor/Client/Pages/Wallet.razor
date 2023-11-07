@@ -1,0 +1,664 @@
+@page "/wallet"
+@using Blockcore.NBitcoin
+@using Angor.Shared
+@using Blockcore.Networks
+@using Angor.Client.Services
+@using Angor.Client.Storage
+@using Angor.Shared.Models
+
+@inject HttpClient Http
+@inject IClientStorage storage;
+@inject IWalletStorage _walletStorage;
+@inject ILogger<Wallet> Logger;
+@inject INetworkConfiguration _networkConfiguration;
+@inject IWalletOperations _walletOperations
+@inject IClipboardService _clipboardService
+@inject IDerivationOperations _derivationOperations
+@inject NavMenuState NavMenuState
+
+@inherits BaseComponent
+
+<PageTitle>Wallet and balances</PageTitle>
+
+<div class="container my-4">
+    <h1>Wallet and balances</h1>
+    
+    <NotificationComponent @ref="notificationComponent" />
+
+
+    <!-- This part of the page is visible only if the wallet is found -->
+    @if (!hasWallet)
+    {
+        <!-- No Wallet found -->
+        <div class="row mt-4">
+            <div class="col">
+                <div class="alert alert-info" role="alert">No Wallet Found</div>
+                <!-- Adding a button to create a wallet -->
+                @*<button class="btn btn-primary mt-2" @onclick="CreateWallet">Create Wallet</button>*@
+
+                <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" @onclick="() => walletWordsCreateModal = true">Create Wallet</button>
+
+            </div>
+
+            @if (walletWordsCreateModal)
+            {
+                <!-- Wallet Words Create Modal -->
+                <div class="modal fade show d-block" id="walletWordsCreateModal" tabindex="-1" aria-labelledby="walletWordsCreateModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="walletWordsCreateModalLabel">Create Wallet</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="walletWordsTextArea">Paste your wallet words here or generate a new wallet:</label>
+                                    <textarea class="form-control" id="walletWordsTextArea" rows="3" @bind="newWalletWords"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="additionalPassphraseInput">Additional Passphrase (optional):</label>
+                                    <input type="text" class="form-control" id="additionalPassphraseInput" @bind="newWalletWordsPassphrase"/>
+                                </div>
+                                <div class="mb-3">
+                                    <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
+                                </div>
+                                <div class="mb-3">
+                                    <button class="btn btn-success" @onclick="CreateWalletAsync" data-bs-dismiss="modal">Create Wallet</button>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- Section 1 -->
+        <div class="row mt-4">
+            <div class="col">
+
+                <div class="mb-3">
+                    <span class="fs-4">Confirmed balance: </span>
+                    <span class="fs-3"><strong> @Money.Satoshis(localAccountInfo.TotalBalance).ToUnit(MoneyUnit.BTC) @symbol</strong></span> <!-- replace this with actual balance -->
+                </div>
+
+                @if (localAccountInfo.TotalUnConfirmedBalance > 0)
+                {
+                    <div class="mb-3">
+                        <span class="fs-6">Unconfirmed balance: </span>
+                        <span class="fs-5"> @Money.Satoshis(localAccountInfo.TotalUnConfirmedBalance).ToUnit(MoneyUnit.BTC) @symbol</span> <!-- replace this with actual unconfirmed balance -->
+                    </div>
+                }
+
+                <!-- Replace '#' in 'data-bs-target' with the id of your modal -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" @onclick="() => walletWordsModal = true">Show Wallet Words</button>
+                
+                <button class="btn btn-primary" @onclick="RefreshBalance">Refresh Balance</button>
+                
+            </div>
+            
+            @if (walletWordsModal)
+            {
+                <!-- Wallet Words Modal -->
+                <div class="modal fade show d-block" id="walletWordsModal" tabindex="-1" aria-labelledby="walletWordsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="walletWordsModalLabel">Wallet Words</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+
+                                @if (string.IsNullOrEmpty(walletWords))
+                                {
+                                    <!-- Show words button with warning -->
+                                    <div class="mb-3">
+                                        <button class="btn btn-warning" @onclick="ShowWords">Show Words</button>
+                                        <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <!-- Wallet words will be shown here -->
+                                    <p>@walletWords</p>
+
+                                    if (!string.IsNullOrEmpty(walletWordsPassphrase))
+                                    {
+                                        <p>This wallet has a pass phrase!</p>
+                                    }
+
+                                    <!-- Copy words to clipboard -->
+                                    <div class="mb-3">
+                                        <button class="btn btn-danger" @onclick="CopyWordsToClibboard">Copy To clipboard</button>
+                                        <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
+                                    </div>
+                                }
+
+                                <!-- Delete wallet button -->
+                                <div class="mb-3">
+                                    <button class="btn btn-danger" @onclick="DeleteWallet" data-bs-dismiss="modal">Delete Wallet</button>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+
+        <!-- Section 2 -->
+        <div class="row mt-4">
+            <div class="col-lg-12">
+                <h2>Receive</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <h4 class="card-title">Receive Address</h4>
+                                <p id="receive-address" class="card-text">@localAccountInfo.GetNextReceiveAddress()</p>
+                                <button class="btn btn-primary" onclick="@CopyNextReceiveAddress">Copy Address</button>
+                            </div>
+                            <div class="col-lg-6">
+                                <h4 class="card-title">QR Code</h4>
+                                <!-- Replace the src with your actual QR code -->
+                                <img src="https://via.placeholder.com/150" class="card-img-top qrcode" alt="QR Code" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+            
+        
+        
+
+
+        <!-- Section 3 -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <h2 class="mb-3">Send</h2>
+
+                <form>
+                    <div class="mb-3">
+                        <label for="sendToAddress" class="form-label">Send to Address</label>
+                        <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="sendAmount" class="form-label">Amount</label>
+                        <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
+                    </div>
+
+                    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" @onclick="() => coinControlModal = true">Coin Control</button>
+                    
+                    <!-- New Send button that triggers a confirmation dialog -->
+                    <button type="button" class="btn btn-primary mb-3" onclick="@BuildSend">Send</button>
+
+                </form>
+            </div>
+
+            @if (coinControlModal)
+            {
+                <!-- Coin Control Modal -->
+                <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => coinControlModal = false" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <!-- The tick boxes and amounts will go here -->
+
+                                <p>Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) BTC</p>
+
+                                @foreach (var addressInfo in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
+                                {
+                                    @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                    {
+                                        bool isTicked = _sendInfo.SendUtxos.ContainsKey(addressUtxoItem.outpoint.ToString());
+
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="@isTicked" id="@addressUtxoItem" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
+                                            <label class="form-check-label" style="font-size: 0.7em;" for="@addressUtxoItem">
+                                                @($"{addressUtxoItem.outpoint} - {Money.Satoshis(@addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} BTC")
+                                            </label>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => coinControlModal = false">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (sendConfirmModal)
+            {
+                <!-- Send Confirmation Modal -->
+                <div class="modal fade show d-block" id="sendConfirmModal" tabindex="-1" aria-labelledby="sendConfirmModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="sendConfirmModalLabel">Confirmation</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="() => sendConfirmModal = false"></button>
+                            </div>
+                            <div class="modal-body">
+                                Are you sure you want to send <strong>@_sendInfo.SendAmount BTC</strong> to <strong> @_sendInfo.SendToAddress?</strong>
+                                
+                                <br/>
+
+                                The fee for this transaction will be <strong>@_sendInfo.SendFee</strong>
+                               
+                                <hr>
+
+                                <div class="mb-3">
+                                    <label for="feeRange" class="form-label">Feerate for @_sendInfo.FeeBlockCount blocks is @_sendInfo.FeeRate sats</label>
+                                    <input type="range" class="form-range" id="feeRange" @bind="FeePosition" @oninput="FeeRangeChanged" min="@FeeMin" max="@_feeMax">
+                                </div>
+                                
+                                <hr>
+                                
+                                The change address is <strong>@_sendInfo.ChangeAddress</strong>
+                                
+                                <br/>
+
+                                The selected inputs:
+                                
+                                @foreach (var infoSendUtxo in _sendInfo.SendUtxos)
+                                {
+                                    <br />
+                                    <p style="font-size: 0.7em;">@Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) BTC - @infoSendUtxo.Key</p>
+                                }
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => sendConfirmModal = false">Cancel</button>
+                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="@SendCoins">Confirm</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+       
+
+
+        <!-- Section 4 -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <h2 class="mb-3">Addresses and Amounts</h2>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Address</th>
+                            <th scope="col">Amount</th>
+                            <th scope="col">Path</th>
+                            <th scope="col">UTXO count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    
+                        @foreach (var addressInfo in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
+                        {
+                            var total = addressInfo.Balance;
+                            var count = addressInfo.UtxoData.Count();
+
+                            if (total > 0)
+                            {
+                                <tr data-bs-toggle="collapse" class="clickable-row" data-bs-target="#@addressInfo.Address" aria-expanded="false" aria-controls="collapseExample1">
+                                    <td>@addressInfo.Address</td>
+                                    <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) BTC</td>
+                                    <td>@addressInfo.HdPath</td>
+                                    <td>@count</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3">
+                                            <div class="collapse" id="@addressInfo.Address">
+                                            <div class="card card-body">
+                                                <!-- Inner table goes here -->
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th scope="col">Coin</th>
+                                                            <th scope="col">Amount</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                                    {
+                                                        <tr>
+                                                            <td>@($"{addressUtxoItem.outpoint}")</td>
+                                                            <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) BTC </td>
+                                                        </tr>
+                                                    }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    <!-- More rows go here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+
+
+@code {
+    
+    private bool hasWallet;
+
+    private bool busy = false;
+
+    private string? walletWords;
+    private string? walletWordsPassphrase;
+    private string? newWalletWords;
+    private string? newWalletWordsPassphrase;
+   
+    private bool sendConfirmModal;
+    private bool coinControlModal;
+    private bool walletWordsModal;
+    private bool walletWordsCreateModal;
+
+    private AccountInfo localAccountInfo = new();
+
+    private int feeRange = 0;
+    private int FeePosition = 1;
+    private SendInfo _sendInfo = new ();
+
+    private FeeEstimations FeeEstimations = new ();
+
+    string symbol = "BTC";
+
+    // Max index for the range input
+    private int FeeMin = 1;
+    private int _feeMax = 3;
+    DateTime _lastFeeRefresh = DateTime.MinValue;
+
+    protected override Task OnInitializedAsync()
+    {
+        hasWallet = _walletStorage.HasWallet();
+
+        if (hasWallet)
+        {
+            localAccountInfo = GetAccountInfoFromStorage();
+            var network = _networkConfiguration.GetNetwork();
+            symbol = network.CoinTicker;
+        }
+        return Task.CompletedTask;
+    }
+    
+    private async Task RefreshBalance()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            var network = _networkConfiguration.GetNetwork();
+            var accountInfo = GetAccountInfoFromStorage();
+            
+            await _walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
+            
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+
+            storage.SetAccountInfo(network.Name, accountInfo);
+            
+            localAccountInfo = accountInfo;
+            
+            return new OperationResult { Success = true };
+        });
+        
+        //TODO notify user in the UI in case the refresh failed 
+    }
+
+    private async Task CreateWalletAsync()
+    {
+        if (string.IsNullOrEmpty(newWalletWords)) throw new ArgumentNullException();
+
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            walletWordsCreateModal = false;
+
+            WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
+            var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            Network network = _networkConfiguration.GetNetwork();
+            
+            _walletStorage.SaveWalletWords(data);
+            storage.SetAccountInfo(network.Name,accountInfo);
+            
+            // pre-derive the angor wallet keys 
+            FounderKeyCollection founderKeyCollection = _derivationOperations.DeriveProjectKeys(data, NetworkConfiguration.AngorTestKey);
+            storage.SetFounderKeys(founderKeyCollection);
+
+            return new OperationResult { Success = true };
+        });
+
+        if (operationResult?.Success ?? false)
+        {
+            hasWallet = _walletStorage.HasWallet();
+            ClearWalletWords();
+            localAccountInfo = GetAccountInfoFromStorage();
+
+            NavMenuState.NotifyStateChanged();
+        }
+    }
+
+    private void ShowWords()
+    {
+        var data  = _walletStorage.GetWallet();
+        walletWords = data.Words;
+        walletWordsPassphrase = data.Passphrase;
+        StateHasChanged();
+    }
+
+    private async Task CopyWordsToClibboard()
+    {
+        if (string.IsNullOrEmpty(walletWords))
+        {
+            throw new InvalidOperationException();
+        }
+
+        await _clipboardService.WriteTextAsync(walletWords);
+        ClearWalletWords();
+        StateHasChanged();
+    }
+    
+    private void ClearWalletWords()
+    {
+        walletWords = null;
+        walletWordsPassphrase = null;
+        newWalletWords = null;
+        newWalletWordsPassphrase = null;
+    }
+
+    private void WalletWordsClose()
+    {
+        walletWords = null;
+    }
+
+    private void DeleteWallet()
+    {
+        walletWordsModal = false;
+        storage.DeleteAccountInfo(_networkConfiguration.GetNetwork().Name);
+        storage.DeleteWalletPubkey();
+        _walletStorage.DeleteWallet();
+        storage.DeleteFounderKeys();
+        hasWallet = _walletStorage.HasWallet();
+        ClearWalletWords();
+        StateHasChanged();
+
+        NavMenuState.NotifyStateChanged();
+    }
+
+    private void GenerateNewWalletWords()
+    {
+        newWalletWords = _walletOperations.GenerateWalletWords();
+    }
+
+    public  async Task CopyNextReceiveAddress()
+    {
+        var address = localAccountInfo.GetNextReceiveAddress();
+
+        if (string.IsNullOrEmpty(address))
+        {
+            notificationComponent.ShowErrorMessage("New address was not created");
+            return;
+        }
+
+        await _clipboardService.WriteTextAsync(address);
+    }
+    
+    private async Task RefreshFee()
+    {
+        // refresh fee if last refresh was 60 seconds ago
+
+        if (_sendInfo.FeeRateSat == 0 || _lastFeeRefresh.AddSeconds(60) < DateTime.UtcNow)
+        {
+            var fees = await _walletOperations.GetFeeEstimationAsync();
+
+            FeeEstimations.Fees = fees.ToList();
+
+            _feeMax = FeeEstimations.Fees.Count;
+
+            var feeItem = FeeEstimations?.Fees.MinBy(c => c.Confirmations);
+
+            if (feeItem != null)
+            {
+                _sendInfo.FeeBlockCount = feeItem.Confirmations;
+                _sendInfo.FeeRateSat = feeItem.FeeRate;
+            }
+
+            _lastFeeRefresh = DateTime.UtcNow;
+        }
+    }
+    
+    private async Task BuildSend()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            var accountInfo = GetAccountInfoFromStorage();
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+
+            localAccountInfo = accountInfo;
+            
+            await RefreshFee();
+
+            if (FeeEstimations.Fees.Count == 0)
+            {
+                return new OperationResult { Success = false, Message = "Unable top calculate fee" };
+            }
+
+            // by default select the highest fee
+            var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[0];
+
+            FeePosition = 1;
+
+            _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
+            _sendInfo.FeeRateSat = estimationsFee.FeeRate;
+
+            if (string.IsNullOrEmpty(_sendInfo.ChangeAddress))
+            {
+                _sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.HasHistory == false).Address;
+            }
+            
+            _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);
+
+            return new OperationResult { Success = true };
+        });
+
+        if (operationResult is {Success:true})
+        {
+            sendConfirmModal = true;
+        }
+
+    }
+
+    private async Task SendCoins()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            sendConfirmModal = false;
+
+            var wallet = _walletStorage.GetWallet();
+
+            return await _walletOperations.SendAmountToAddress(wallet, _sendInfo);
+        });
+
+        if (operationResult is { Success: true })
+        {
+            _sendInfo = new SendInfo();
+            
+            notificationComponent.ShowNotificationMessage("Sent complete!");
+        }
+    }
+
+    private void HandleCheckboxChange(UtxoData addressUtxoItem, string hdPath)
+    {
+        // Here you can handle the change
+        // Note: replace AddressUtxoItem with the actual type of addressUtxoItem
+        
+        if (_sendInfo.SendUtxos.ContainsKey(addressUtxoItem.outpoint.ToString()))
+        {
+            _sendInfo.SendUtxos.Remove(addressUtxoItem.outpoint.ToString());
+        }
+        else
+        {
+            _sendInfo.SendUtxos.Add(addressUtxoItem.outpoint.ToString(), new UtxoDataWithPath { HdPath = hdPath, UtxoData = addressUtxoItem });
+        }
+    }
+
+    private void FeeRangeChanged(ChangeEventArgs e)
+    {
+        // Here you can handle the fee range change
+        // The new value is in e.Value
+
+        var selected = e.Value?.ToString();
+
+        if (selected != null)
+        {
+            if (int.TryParse(selected, out int res))
+            {
+                if (res <= FeeEstimations.Fees.Count)
+                {
+                    var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+                   
+                    _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
+                    _sendInfo.FeeRateSat = estimationsFee.FeeRate;
+                    var accountInfo = GetAccountInfoFromStorage();
+                    _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);
+                    
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private AccountInfo GetAccountInfoFromStorage()
+    {
+        var network = _networkConfiguration.GetNetwork();
+        return storage.GetAccountInfo(network.Name);
+    }
+
+    private void showCoinControlModal()
+    {
+        coinControlModal = true;
+        StateHasChanged();
+    }
+}

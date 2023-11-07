@@ -1,0 +1,122 @@
+﻿@page "/browse"
+@using Angor.Client.Services
+@using Angor.Shared.Models
+@using Angor.Shared.Services
+@using Nostr.Client.Keys
+@inject ISessionStorage SessionStorage;
+@inject NavigationManager NavigationManager
+@inject IRelayService _RelayService
+@inject IIndexerService _IndexerService
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h3>Browse Projects</h3>
+
+            <NotificationComponent @ref="notificationComponent"/>
+            
+            <!-- Search form -->
+            <form @onsubmit="SearchProjects">
+                <div class="mb-3">
+                    <label for="searchQuery" class="form-label">Search</label>
+                    <input type="text" id="searchQuery" @bind="searchQuery" class="form-control" placeholder="Enter search query" />
+                </div>
+                <button type="submit" class="btn btn-primary" disabled="@searchInProgress">Search</button>
+                <br /> <br />
+            </form>
+
+            <!-- List of projects -->
+            @if (projects.Count == 0)
+            {
+                @if (searchInProgress)
+                {
+                    <div class="loader"></div>
+                }
+                else
+                {
+                    <p>No projects found.</p>
+                }
+            }
+            else
+            {
+                foreach (var project in projects) //TODO set order (block created ?)
+                {
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">@project.ProjectIdentifier</h5>
+                            <p class="card-text">Nostr ID: <a href="/" target="_blank">@(NostrPublicKey.FromHex(project.NostrPubKey).Bech32)</a></p>
+                            @if (SessionStorage.IsProjectInStorageById(project.ProjectIdentifier))
+                            {
+                                <button @onclick="() => ImportProject(project.ProjectIdentifier)" class="btn btn-primary">View</button>
+                            }
+                            else
+                            {
+                                <div class="loader"></div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    NotificationComponent notificationComponent;
+    private string searchQuery;
+    bool searchInProgress = false;
+
+    private List<ProjectIndexerData> projects= new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await _RelayService.ConnectToRelaysAsync();
+    }
+
+    private async Task SearchProjects()
+    {
+        searchInProgress = true;
+        var blockchainProjects = await _IndexerService.GetProjectsAsync();
+        
+        var projectCreators = SessionStorage.GetProjectSubscribedList();
+
+        projectCreators.AddRange(
+            blockchainProjects
+                .Select(_ => _.NostrPubKey)
+                .Where(nostrPubKey => !projectCreators.Contains(nostrPubKey)));
+        
+        await _RelayService.RequestProjectDataAsync<ProjectInfo>(_ =>
+        {
+            if (!SessionStorage.IsProjectInStorageById(_.ProjectIdentifier))
+                SessionStorage.StoreProjectInfo(_);
+            StateHasChanged();
+        },
+            projectCreators.ToArray());
+        
+        SessionStorage.SetProjectSubscribedList(projectCreators);
+        
+        foreach (var blockchainProject in blockchainProjects)
+        {
+            if (projects.All(_ => _.ProjectIdentifier != blockchainProject.ProjectIdentifier))
+            {
+                projects.Add(blockchainProject);
+            }
+        }
+
+        searchInProgress = false;
+        StateHasChanged();
+    }
+
+    private void ImportProject(string projectIdentifier)
+    {
+        if (SessionStorage.IsProjectInStorageById(projectIdentifier))
+        {
+            _RelayService.CloseConnection();
+            NavigationManager.NavigateTo($"/view/{projectIdentifier}");
+        }
+        else
+        {
+            notificationComponent.ShowNotificationMessage("The project was not loaded from the relay yet");   
+        }
+    }
+}

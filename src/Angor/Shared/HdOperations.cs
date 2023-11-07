@@ -1,0 +1,281 @@
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.BIP32;
+using Blockcore.NBitcoin.BIP39;
+using Blockcore.Networks;
+using Blockcore.Utilities;
+
+namespace Angor.Shared;
+
+public interface IHdOperations
+{
+    ExtKey GetExtendedKey(string mnemonic, string? passphrase = null);
+    string GetAccountHdPath(int purpose, int coinType, int accountIndex);
+    //ExtPubKey GetExtendedPublicKey(Key privateKey, byte[] chainCode, int purpose, int coinType, int accountIndex);
+    ExtPubKey GetExtendedPublicKey(Key privateKey, byte[] chainCode, string hdPath);
+    //PubKey GeneratePublicKey(string accountExtPubKey, int index, bool isChange);
+    PubKey GeneratePublicKey(ExtPubKey accountExtPubKey, int index, bool isChange);
+    string CreateHdPath(int purpose, int coinType, int accountIndex, bool isChange, int addressIndex);
+}
+
+public class HdOperations : IHdOperations
+    {
+        /// <summary>
+        /// Generates an HD public key derived from an extended public key.
+        /// </summary>
+        /// <param name="accountExtPubKey">The extended public key used to generate child keys.</param>
+        /// <param name="index">The index of the child key to generate.</param>
+        /// <param name="isChange">A value indicating whether the public key to generate corresponds to a change address.</param>
+        /// <returns>
+        /// An HD public key derived from an extended public key.
+        /// </returns>
+        public PubKey GeneratePublicKey(string accountExtPubKey, int index, bool isChange)
+        {
+            Guard.NotEmpty(accountExtPubKey, nameof(accountExtPubKey));
+
+            return GeneratePublicKey(ExtPubKey.Parse(accountExtPubKey), index, isChange);
+        }
+
+        /// <summary>
+        /// Generates an HD public key derived from an extended public key.
+        /// </summary>
+        /// <param name="accountExtPubKey">The extended public key used to generate child keys.</param>
+        /// <param name="index">The index of the child key to generate.</param>
+        /// <param name="isChange">A value indicating whether the public key to generate corresponds to a change address.</param>
+        /// <returns>
+        /// An HD public key derived from an extended public key.
+        /// </returns>
+        public PubKey GeneratePublicKey(ExtPubKey accountExtPubKey, int index, bool isChange)
+        {
+            Guard.NotNull(accountExtPubKey, nameof(accountExtPubKey));
+
+            int change = isChange ? 1 : 0;
+            var keyPath = new KeyPath($"{change}/{index}");
+            // TODO: Should probably explicitly be passing the network into Parse
+            ExtPubKey extPubKey = accountExtPubKey.Derive(keyPath);
+            return extPubKey.PubKey;
+        }
+
+        /// <summary>
+        /// Gets the extended private key for an account.
+        /// </summary>
+        /// <param name="privateKey">The private key from which to generate the extended private key.</param>
+        /// <param name="chainCode">The chain code used in creating the extended private key.</param>
+        /// <param name="hdPath">The HD path of the account for which to get the extended private key.</param>
+        /// <param name="network">The network for which to generate this extended private key.</param>
+        public static ISecret GetExtendedPrivateKey(Key privateKey, byte[] chainCode, string hdPath, Network network)
+        {
+            Guard.NotNull(privateKey, nameof(privateKey));
+            Guard.NotNull(chainCode, nameof(chainCode));
+            Guard.NotEmpty(hdPath, nameof(hdPath));
+            Guard.NotNull(network, nameof(network));
+
+            // Get the extended key.
+            var seedExtKey = new ExtKey(privateKey, chainCode);
+            ExtKey addressExtKey = seedExtKey.Derive(new KeyPath(hdPath));
+            BitcoinExtKey addressPrivateKey = addressExtKey.GetWif(network);
+            return addressPrivateKey;
+        }
+
+        /// <summary>
+        /// Gets the extended public key for an account.
+        /// </summary>
+        /// <param name="privateKey">The private key from which to generate the extended public key.</param>
+        /// <param name="chainCode">The chain code used in creating the extended public key.</param>
+        /// <param name="purpose">Purpose of the coin this account is in.</param>
+        /// <param name="coinType">Type of the coin of the account for which to generate an extended public key.</param>
+        /// <param name="accountIndex">Index of the account for which to generate an extended public key.</param>
+        /// <returns>The extended public key for an account, used to derive child keys.</returns>
+        public ExtPubKey GetExtendedPublicKey(Key privateKey, byte[] chainCode, int purpose, int coinType, int accountIndex)
+        {
+            Guard.NotNull(privateKey, nameof(privateKey));
+            Guard.NotNull(chainCode, nameof(chainCode));
+
+            string accountHdPath = GetAccountHdPath(purpose, coinType, accountIndex);
+            return GetExtendedPublicKey(privateKey, chainCode, accountHdPath);
+        }
+
+        /// <summary>
+        /// Gets the extended public key corresponding to an HD path.
+        /// </summary>
+        /// <param name="privateKey">The private key from which to generate the extended public key.</param>
+        /// <param name="chainCode">The chain code used in creating the extended public key.</param>
+        /// <param name="hdPath">The HD path for which to get the extended public key.</param>
+        /// <returns>The extended public key, used to derive child keys.</returns>
+        public ExtPubKey GetExtendedPublicKey(Key privateKey, byte[] chainCode, string hdPath)
+        {
+            Guard.NotNull(privateKey, nameof(privateKey));
+            Guard.NotNull(chainCode, nameof(chainCode));
+            Guard.NotEmpty(hdPath, nameof(hdPath));
+
+            // get extended private key
+            var seedExtKey = new ExtKey(privateKey, chainCode);
+            ExtKey addressExtKey = seedExtKey.Derive(new KeyPath(hdPath));
+            ExtPubKey extPubKey = addressExtKey.Neuter();
+            return extPubKey;
+        }
+
+        /// <summary>
+        /// Gets the HD path of an account.
+        /// </summary>
+        /// <param name="purpose">Purpose of the coin this account is in.</param>
+        /// <param name="coinType">Type of the coin this account is in.</param>
+        /// <param name="accountIndex">Index of the account.</param>
+        /// <returns>The HD path of an account.</returns>
+        public string GetAccountHdPath(int purpose, int coinType, int accountIndex)
+        {
+            return $"m/{purpose}'/{coinType}'/{accountIndex}'";
+        }
+
+        /// <summary>
+        /// Gets the extended key generated by this mnemonic and passphrase.
+        /// </summary>
+        /// <param name="mnemonic">The mnemonic used to generate the key.</param>
+        /// <param name="passphrase">The passphrase used in generating the key.</param>
+        /// <returns>The extended key generated by this mnemonic and passphrase.</returns>
+        /// <remarks>This key is sometimes referred to as the 'root seed' or the 'master key'.</remarks>
+        public ExtKey GetExtendedKey(string mnemonic, string? passphrase = null)
+        {
+            Guard.NotEmpty(mnemonic, nameof(mnemonic));
+
+            return GetExtendedKey(new Mnemonic(mnemonic), passphrase);
+        }
+
+        /// <summary>
+        /// Gets the extended key generated by this mnemonic and passphrase.
+        /// </summary>
+        /// <param name="mnemonic">The mnemonic used to generate the key.</param>
+        /// <param name="passphrase">The passphrase used in generating the key.</param>
+        /// <returns>The extended key generated by this mnemonic and passphrase.</returns>
+        /// <remarks>This key is sometimes referred to as the 'root seed' or the 'master key'.</remarks>
+        private static ExtKey GetExtendedKey(Mnemonic mnemonic, string? passphrase = null)
+        {
+            Guard.NotNull(mnemonic, nameof(mnemonic));
+
+            return mnemonic.DeriveExtKey(passphrase);
+        }
+
+        /// <summary>
+        /// Creates an address' HD path, according to BIP 44.
+        /// </summary>
+        /// <param name="purpose">Purpose of the coin this account is in.</param>
+        /// <param name="coinType">Type of coin in the HD path.</param>
+        /// <param name="accountIndex">Index of the account in the HD path.</param>
+        /// <param name="isChange">A value indicating whether the HD path to generate corresponds to a change address.</param>
+        /// <param name="addressIndex">Index of the address in the HD path.</param>
+        /// <returns>The HD path.</returns>
+        /// <remarks>Refer to <seealso cref="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#path-levels"/> for the format of the HD path.</remarks>
+        public string CreateHdPath(int purpose, int coinType, int accountIndex, bool isChange, int addressIndex)
+        {
+            int change = isChange ? 1 : 0;
+            return $"m/{purpose}'/{coinType}'/{accountIndex}'/{change}/{addressIndex}";
+        }
+
+        /// <summary>
+        /// Gets the type of coin this HD path is for.
+        /// </summary>
+        /// <param name="hdPath">The HD path.</param>
+        /// <returns>The type of coin. <seealso cref="https://github.com/satoshilabs/slips/blob/master/slip-0044.md"/>.</returns>
+        /// <exception cref="FormatException">An exception is thrown if the HD path is not well-formed.</exception>
+        /// <remarks>Refer to <seealso cref="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#path-levels"/> for the format of the HD path.</remarks>
+        public static int GetCoinType(string hdPath)
+        {
+            Guard.NotEmpty(hdPath, nameof(hdPath));
+
+            string[] pathElements = hdPath.Split('/');
+            if (pathElements.Length < 3)
+                throw new FormatException($"Could not parse CoinType from HdPath {hdPath}.");
+
+            if (int.TryParse(pathElements[2].Replace("'", string.Empty), out int coinType))
+            {
+                return coinType;
+            }
+
+            throw new FormatException($"Could not parse CoinType from HdPath {hdPath}.");
+        }
+
+        /// <summary>
+        /// Gets the purpose field of this HD path.
+        /// </summary>
+        /// <param name="hdPath">The HD path.</param>
+        /// <returns>The purpose of the coin. <seealso cref="https://github.com/satoshilabs/slips/blob/master/slip-0044.md"/>.</returns>
+        /// <exception cref="FormatException">An exception is thrown if the HD path is not well-formed.</exception>
+        /// <remarks>Refer to <seealso cref="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#path-levels"/> for the format of the HD path.</remarks>
+        public static int GetPurpose(string hdPath)
+        {
+            Guard.NotEmpty(hdPath, nameof(hdPath));
+
+            string[] pathElements = hdPath.Split('/');
+            if (pathElements.Length < 3)
+                throw new FormatException($"Could not parse Purpose from HdPath {hdPath}.");
+
+            if (int.TryParse(pathElements[1].Replace("'", string.Empty), out int purpose))
+            {
+                return purpose;
+            }
+
+            throw new FormatException($"Could not parse Purpose from HdPath {hdPath}.");
+        }
+
+        /// <summary>
+        /// Gets the account index of coin this HD path is for.
+        /// </summary>
+        /// <param name="hdPath">The HD path.</param>
+        /// <returns>The type of coin. <seealso cref="https://github.com/satoshilabs/slips/blob/master/slip-0044.md"/>.</returns>
+        /// <exception cref="FormatException">An exception is thrown if the HD path is not well-formed.</exception>
+        /// <remarks>Refer to <seealso cref="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#path-levels"/> for the format of the HD path.</remarks>
+        public static int GetAccountIndex(string hdPath)
+        {
+            Guard.NotEmpty(hdPath, nameof(hdPath));
+
+            string[] pathElements = hdPath.Split('/');
+            if (pathElements.Length < 4)
+                throw new FormatException($"Could not parse CoinType from HdPath {hdPath}.");
+
+            if (int.TryParse(pathElements[3].Replace("'", string.Empty), out int accountIndex))
+            {
+                return accountIndex;
+            }
+
+            throw new FormatException($"Could not parse account index from HdPath {hdPath}.");
+        }
+
+        /// <summary>
+        /// Determines whether the HD path corresponds to a change address.
+        /// </summary>
+        /// <param name="hdPath">The HD path.</param>
+        /// <returns>A value indicating if the HD path corresponds to a change address.</returns>
+        /// <exception cref="FormatException">An exception is thrown if the HD path is not well-formed.</exception>
+        /// <remarks>Refer to <seealso cref="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#path-levels"/> for the format of the HD path.</remarks>
+        public static bool IsChangeAddress(string hdPath)
+        {
+            Guard.NotEmpty(hdPath, nameof(hdPath));
+
+            string[] hdPathParts = hdPath.Split('/');
+            if (hdPathParts.Length < 5)
+                throw new FormatException($"Could not parse value from HdPath {hdPath}.");
+
+            if (int.TryParse(hdPathParts[4], out int result))
+            {
+                return result == 1;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Decrypts the encrypted private key (seed).
+        /// </summary>
+        /// <param name="encryptedSeed">The encrypted seed to decrypt.</param>
+        /// <param name="password">The password used to decrypt the encrypted seed.</param>
+        /// <param name="network">The network this seed applies to.</param>
+        /// <returns>The decrypted private key.</returns>
+        public static Key DecryptSeed(string encryptedSeed, string password, Network network)
+        {
+            Guard.NotEmpty(encryptedSeed, nameof(encryptedSeed));
+            Guard.NotEmpty(password, nameof(password));
+            Guard.NotNull(network, nameof(network));
+
+            return Key.Parse(encryptedSeed, password, network);
+        }
+    }
+    

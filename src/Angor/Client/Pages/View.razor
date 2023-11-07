@@ -1,0 +1,259 @@
+﻿@page "/view/{ProjectId}"
+@using Angor.Shared
+@using Angor.Client.Storage
+@using Angor.Shared.Models
+@using Blockcore.NBitcoin
+@using Angor.Client.Services
+
+@inject HttpClient Http
+@inject IDerivationOperations _derivationOperations
+@inject IWalletStorage _walletStorage;
+@inject IClientStorage storage;
+@inject ISessionStorage SessionStorage;
+@inject NavigationManager NavigationManager
+@inject INetworkConfiguration _NetworkConfiguration
+
+<div class="container mt-4">
+    <h3>View Project</h3>
+
+    @if (!hasWallet)
+    {
+        NavigationManager.NavigateTo($"/wallet");
+        return;
+    }
+
+    <NotificationComponent @ref="notificationComponent" />
+
+    @if (project == null)
+    {
+        <p><em>project not found...</em></p>
+    }
+    else
+    {
+        <!-- Project Details Section -->
+        <div class="row mt-4">
+            <div class="col">
+                <h4>Project Details</h4>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
+                        <a href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
+                        <p class="card-text">Founder Key: @project.FounderKey</p>
+                        <p class="card-text">Start Date: @project.StartDate.ToString("dd/MM/yyyy")</p>
+                        <p class="card-text">Penalty Date: @project.PenaltyDate.ToString("dd/MM/yyyy")</p>
+                        <p class="card-text">Expiry Date: @project.ExpiryDate.ToString("dd/MM/yyyy")</p>
+                        <p class="card-text">Target Amount: @project.TargetAmount</p>
+                        <h5>Stages:</h5>
+                        @foreach (var stage in project.Stages)
+                        {
+                            <hr /> <!-- This adds a horizontal line -->
+                            <p class="card-text">Amount to Release: @stage.AmountToRelease%</p>
+                            <p class="card-text">Release Date: @stage.ReleaseDate.ToString("dd/MM/yyyy")</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selected Seeders Section -->
+        <div class="row mt-4">
+            <div class="col">
+                <h4>Selected Seeders</h4>
+                @if (SelectedSeeders.Any())
+                {
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Seeder Hash</th>
+                            <th>Amount</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var seeder in SelectedSeeders)
+                        {
+                            <tr>
+                                <td>@seeder.Hash</td>
+                                <td>@seeder.Amount</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p>No seeders yet.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="row mt-4">
+            <div class="col">
+                <h4>Stats</h4>
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-text">Total Raised: @projectStats.TotalRaised BTC</p>
+                        <p class="card-text">Total Investors: @projectStats.TotalInvestors</p>
+                        <p class="card-text">Total Seeders: @projectStats.TotalSeeders seeders</p>
+                        <p class="card-text">Time Left for Investing: @projectStats.TimeLeft days</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invest Button Section -->
+        <div class="row mt-4">
+            <div class="col">
+                <h4>Invest</h4>
+
+                    @if (founder) 
+                    {
+                        <p>You are the founder.</p>
+                         <NavLink href=@($"/spend/{project.ProjectIdentifier}") class="btn btn-primary">Spend Funds</NavLink>
+                        
+                    }
+                    else if (invested)
+                    {
+                        <p>You have already invested in this project.
+
+                            <a href="@myProjectExplorerLink" target="_blank">View the transaction on the explorer.</a>
+                        </p>
+
+                        <button class="btn btn-danger" @onclick="RecoverFunds">Recover</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-primary" @onclick="InvestInProject">Invest</button>
+                    }
+            </div>
+        </div>
+
+        <!-- Nostr Clients and Events Section -->
+        <div class="row mt-4">
+            <div class="col">
+                <h4>View on nostr</h4>
+
+                @if (NostrClients.Any())
+                {
+                    <ul>
+                        @foreach (var client in NostrClients)
+                        {
+                            <li>@client</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>No clients found for this project.</p>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string ProjectId { get; set; }
+
+    private ProjectInfo? project;
+
+    private NotificationComponent notificationComponent;
+
+    private bool sendConfirmModal;
+    private bool hasWallet;
+
+    string myProjectExplorerLink;
+    string projectExplorerLink;
+
+    private List<(string Hash, int Amount)> SelectedSeeders = new List<(string hash, int amount)>
+    {
+        { (new uint256().ToString(), 10) },
+        { (new uint256().ToString(), 20) },
+    };
+
+    public class ProjectStats
+    {
+        public int TotalRaised { get; set; }
+        public int TotalInvestors { get; set; }
+        public int TotalSeeders { get; set; }
+        public int TimeLeft { get; set; }
+    };
+
+    ProjectStats projectStats = new ProjectStats
+    {
+        TimeLeft = 7,
+        TotalInvestors = 150,
+        TotalRaised = 240,
+        TotalSeeders = 7
+    };
+
+    bool founder = false;
+    bool invested = false;
+
+    private List<string> NostrClients = new List<string> { "link1", "link2" };
+
+    protected override Task OnInitializedAsync()
+    {
+        hasWallet = _walletStorage.HasWallet();
+
+        if (hasWallet)
+        {
+            var findProject = storage.GetProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+
+            if (findProject != null)
+            {
+                invested = true;
+                project = findProject;
+
+                var myProject = storage.GetSignaturess().First(s => s.ProjectIdentifier == ProjectId);
+                myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{myProject.TransactionId}";
+            }
+            else
+            {
+                findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+
+                if (findProject != null)
+                {
+                    founder = true;
+                    invested = true;
+                    project = findProject;
+                }
+                else
+                {
+                    findProject = SessionStorage.GetProjectById(ProjectId);
+
+                    if (findProject != null)
+                    {
+                        project = findProject;
+                    }
+                }
+            }
+
+            if (project != null)
+            {
+                projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.TransactionId}";
+            }
+        }
+        
+        return Task.CompletedTask;
+    }
+
+    private async Task RefreshBalance()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            await Task.Delay(1000);
+
+            return new OperationResult { Success = true };
+        });
+    }
+    private async Task RecoverFunds()
+    {
+        NavigationManager.NavigateTo($"/recover/{ProjectId}");
+    }
+
+    private async Task InvestInProject()
+    {
+        NavigationManager.NavigateTo($"/invest/{ProjectId}");
+    }
+}
