@@ -12,6 +12,7 @@
 @using Nostr.Client.Messages
 @using Nostr.Client.Messages.Metadata
 
+@implements IDisposable
 @inherits BaseComponent
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
@@ -35,20 +36,18 @@
     <h1 class="mb-4">Create New Project</h1>
 
     <NotificationComponent @ref="notificationComponent"/>
-
+    @if (project.NostrPubKey != null)
+    { //TODO this is just to be able to log in to the nostr client, need to get a proper way to get the nostr keys
+        <div class="mb-3">
+            <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
+            <InputText id="NostrPublicKey" @bind-Value="project.NostrPubKey" class="form-control" placeholder="@project.NostrPubKey" readonly/>
+            <button @onclick="CopyWordsToClibboardAsync" class="btn btn-success">Copy NSec to clipboard</button>
+        </div>
+    }
+    
     @if (!nostrProfileCreated)
     {
         <EditForm Model="NostrMetadata" OnValidSubmit="CreatNostrProfile">
-            
-            <div class="mb-3">
-                <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
-                <InputText id="NostrPublicKey" @bind-Value="project.NostrPubKey" class="form-control" placeholder="@project.NostrPubKey" readonly />
-                
-                @* <button @onclick="CopyWordsToClibboardAsync" class="btn btn-success">Copy NSec to clipboard</button> *@
-                
-            </div>
-                    
-            
             <div class="mb-3">
                 <label for="NostrMetadataName" class="form-label">Project name</label>
                 <InputText id="NostrMetadataName" @bind-Value="NostrMetadata.Name" class="form-control" placeholder="Enter the project name"/>
@@ -467,6 +466,11 @@
         var nsec = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
         await _clipboardService.WriteTextAsync(nsec);
         StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _RelayService.CloseConnection();
     }
 
 }

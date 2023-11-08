@@ -8,6 +8,8 @@
 @using Angor.Shared.ProtocolNew
 @using Blockcore.NBitcoin.DataEncoders
 
+@inject IJSRuntime JS
+
 @inherits BaseComponent
 
 @inject ILogger<Invest> _Logger;
@@ -175,6 +177,7 @@
     
     private FeeData feeData = new();
     
+    private IJSInProcessObjectReference? javascriptNostrToolsModule;
 
     protected override async Task OnInitializedAsync()
     {
@@ -212,6 +215,13 @@
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./Pages/invest.razor.js");
+        }
     }
 
     private Task CheckIfSeederTimeHasPassed()
@@ -353,10 +363,13 @@
 
             var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), accountInfo.InvestmentsCount + 1);
 
+            var encriptecContent = await javascriptNostrToolsModule.InvokeAsync<string>("encryptNostr", Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes()), project.NostrPubKey, strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory));
+            
             recoverySigs = await _SignService.GetInvestmentSigsAsync(new SignRecoveryRequest
             {
                 ProjectIdentifier = project.ProjectIdentifier, 
-                InvestmentTransaction = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                //InvestmentTransaction = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                content = encriptecContent,
                 NostrPubKey = project.NostrPubKey,
                 InvestorNostrPrivateKey = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes())
             });

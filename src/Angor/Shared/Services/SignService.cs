@@ -55,13 +55,18 @@ namespace Angor.Client.Services
             {
                 Kind = NostrKind.EncryptedDm,
                 CreatedAt = DateTime.UtcNow,
-                Content = JsonConvert.SerializeObject(new {text = "The transaction to be signed", signRecoveryRequest.ProjectIdentifier,signRecoveryRequest.InvestmentTransaction}),
+                Content = signRecoveryRequest.content,
                 Tags = new NostrEventTags(new []{NostrEventTag.Profile(sender.DerivePublicKey().Hex)})
             };
 
-            var encrypted = ev.EncryptDirect(sender, receiver);
-            var signed = encrypted.Sign(sender);
+            // var encrypted = ev.EncryptDirect(sender, receiver); Blazor does not support AES so needs to be done manually in the UI
+            // var signed = encrypted.Sign(sender);
 
+            var signed = ev.Sign(sender);
+
+            var test = JsonConvert.SerializeObject(signed);
+            Console.WriteLine(test);
+            
             _nostrClient.Send(new NostrEventRequest(signed));
 
             return Task.FromResult(new SignatureInfo());
