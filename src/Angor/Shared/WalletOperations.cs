@@ -373,7 +373,7 @@ public class WalletOperations : IWalletOperations
         var offset = 0;
         List<UtxoData> allItems = new();
         
-        IndexerUrl indexer = _networkConfiguration.GetIndexerUrl();
+        SettingsUrl indexer = _networkConfiguration.GetIndexerUrl();
 
         do
         {

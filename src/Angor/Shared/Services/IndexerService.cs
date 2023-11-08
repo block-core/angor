@@ -101,7 +101,7 @@ namespace Angor.Client.Services
 
         public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int offset , int limit)
         {
-            IndexerUrl indexer = _networkConfiguration.GetIndexerUrl();
+            SettingsUrl indexer = _networkConfiguration.GetIndexerUrl();
 
             var url = $"/query/address/{address}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
 
@@ -117,7 +117,7 @@ namespace Angor.Client.Services
 
         public async Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations)
         {
-            IndexerUrl indexer = _networkConfiguration.GetIndexerUrl();
+            SettingsUrl indexer = _networkConfiguration.GetIndexerUrl();
 
             var url = confirmations.Aggregate("/stats/fee?", (current, block) => current + $@"confirmations={block}&");
 
@@ -136,7 +136,7 @@ namespace Angor.Client.Services
 
         public async Task<string> GetTransactionHexByIdAsync(string transactionId)
         {
-            IndexerUrl indexer = _networkConfiguration.GetIndexerUrl();
+            SettingsUrl indexer = _networkConfiguration.GetIndexerUrl();
 
             var url = $"/query/transaction/{transactionId}/hex";
             
@@ -150,7 +150,7 @@ namespace Angor.Client.Services
 
         public async Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId)
         {
-            IndexerUrl indexer = _networkConfiguration.GetIndexerUrl();
+            SettingsUrl indexer = _networkConfiguration.GetIndexerUrl();
 
             var url = $"/query/transaction/{transactionId}";
             
