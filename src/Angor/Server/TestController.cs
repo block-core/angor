@@ -100,20 +100,20 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
         [HttpPost]
         public async Task Post([FromBody] SignData project)
         {
-            await _storage.AddKey(project.ProjectIdentifier, project.FounderRecoveryPrivateKey);
+            await _storage.AddKey(project.ProjectIdentifier, project);
         }
 
         [HttpPost]
         [Route("sign")]
         public async Task<SignatureInfo> Post([FromBody] SignRecoveryRequest signRecoveryRequest)
         {
-            var key = await _storage.GetKey(signRecoveryRequest.ProjectIdentifier);
+            var key = await _storage.GetKeys(signRecoveryRequest.ProjectIdentifier);
 
             var project = (await _storage.Get()).First(f => f.ProjectIdentifier == signRecoveryRequest.ProjectIdentifier);
-
+            
             // build sigs
             var recoverytrx = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(project, _networkConfiguration.GetNetwork().CreateTransaction(signRecoveryRequest.InvestmentTransaction));
-            var sigs = _founderTransactionActions.SignInvestorRecoveryTransactions(project, signRecoveryRequest.InvestmentTransaction, recoverytrx, key);
+            var sigs = _founderTransactionActions.SignInvestorRecoveryTransactions(project, signRecoveryRequest.InvestmentTransaction, recoverytrx, key.founderSigningPrivateKey);
 
             return sigs;
         }
