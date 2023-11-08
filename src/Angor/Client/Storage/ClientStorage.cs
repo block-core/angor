@@ -128,4 +128,17 @@ public class ClientStorage : IClientStorage
 
         return ret ?? new List<SignatureInfo>();
     }
+
+    public SettingsInfo GetSettingsInfo()
+    {
+        var ret = _storage.GetItem<SettingsInfo>("settings-info");
+
+        return ret ?? new SettingsInfo();
+
+    }
+
+    public void SetSettingsInfo(SettingsInfo settingsInfo)
+    {
+        _storage.SetItem("settings-info", settingsInfo);
+    }
 }
