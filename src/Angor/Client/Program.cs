@@ -24,6 +24,7 @@ builder.Services.AddBlazoredSessionStorage();
 builder.Services.AddTransient<INetworkConfiguration, NetworkConfiguration>();
 builder.Services.AddTransient<IHdOperations, HdOperations>();
 builder.Services.AddTransient <IClientStorage, ClientStorage>();
+builder.Services.AddTransient<INetworkStorage, ClientStorage>();
 builder.Services.AddTransient <IWalletStorage, WalletStorage>();
 builder.Services.AddScoped<ISessionStorage, LocalSessionStorage>();
 builder.Services.AddTransient<IWalletOperations, WalletOperations>();
@@ -35,6 +36,7 @@ builder.Services.AddScoped<InvestmentOperations>();
 builder.Services.AddScoped<IIndexerService, IndexerService>();
 builder.Services.AddScoped<IRelayService, RelayService>();
 builder.Services.AddScoped<ISignService, SignService>();
+builder.Services.AddScoped<INetworkService, NetworkService>();
 
 builder.Services.AddTransient<IFounderTransactionActions, FounderTransactionActions>();
 builder.Services.AddTransient<ISeederTransactionActions, SeederTransactionActions>();

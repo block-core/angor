@@ -2,21 +2,31 @@
 @using Angor.Client.Storage;
 @using Angor.Shared
 @using Angor.Shared.Models;
+@using Angor.Client.Services
 
+@inherits BaseComponent
 @inject INetworkConfiguration _networkConfiguration
 @inject IClientStorage _clientStorage
+@inject INetworkService _networkService
 
 <div class="container">
+    
+    <NotificationComponent @ref="notificationComponent" />
+
     <div class="row">
         <div class="col">
-            <h3>Settings</h3><br />
+            <h3>Settings</h3><br/>
 
-            <!-- Network Info Section -->
-@*            <h4>Network Information</h4>
-*@            <p>Network Type: <strong>@networkType</strong></p>
+            <p>Network Type: <strong>@networkType</strong></p>
+            <p>Explorer url: <a href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">@_networkConfiguration.GetDefaultExplorerUrl().First().Url</a> </p>
 
-            <hr /> <!-- Line separator -->
-            <br />
+            <hr/> <!-- Line separator -->
+            <br/>
+            
+            <div class="d-flex justify-content-end">
+                <button class="btn btn-info" @onclick="Refresh">Refresh</button>
+            </div>   
+
             <!-- Indexers Section -->
             <h4>Indexers</h4>
             <form @onsubmit="AddIndexer">
@@ -28,39 +38,39 @@
 
             <table class="table">
                 <thead>
-                    <tr>
-                        <th>Link</th>
-                        <th>Status</th>
-                        <th>Default</th>
-                        <th></th>
-                    </tr>
+                <tr>
+                    <th>Link</th>
+                    <th>Status</th>
+                    <th>Default</th>
+                    <th></th>
+                </tr>
                 </thead>
                 <tbody>
-                    @foreach (var indexer in settingsInfo.Indexers)
-                    {
-                        <tr>
-                            <td><a href="@indexer.Url" target="_blank">@indexer.Url</a></td>
-                            <td style="color:@(indexer.IsOnline ? "green" : "red");">@(indexer.IsOnline ? "Online" : "Offline")</td>
-                            <td>
-                                @if (indexer.IsPrimary)
-                                {
-                                    <button class="btn btn-primary btn-sm" disabled>Primary</button>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-secondary btn-sm" @onclick="() => SetPrimaryIndexer(indexer)">Set</button>
-                                }
-                            </td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">Delete</button>
-                            </td>
-                        </tr>
-                    }
+                @foreach (var indexer in settingsInfo.Indexers)
+                {
+                    <tr>
+                        <td><a href="@indexer.Url" target="_blank">@indexer.Url</a></td>
+                        <td style="color: @(indexer.IsOnline ? "green" : "red");">@(indexer.IsOnline ? "Online" : "Offline")</td>
+                        <td>
+                            @if (indexer.IsPrimary)
+                            {
+                                <button class="btn btn-primary btn-sm" disabled>Primary</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary btn-sm" @onclick="() => SetPrimaryIndexer(indexer)">Set</button>
+                            }
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">Delete</button>
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
 
-            <br />
-           @* <hr />*@ <!-- Line separator -->
+            <br/>
+            @* <hr />*@ <!-- Line separator -->
             <!-- Nostr Relays Section -->
 
             <h4>Nostr Relays</h4>
@@ -73,34 +83,34 @@
 
             <table class="table">
                 <thead>
-                    <tr>
-                        <th>Link</th>
-                        <th>Status</th>
-                        <th>Default</th>
-                        <th></th>
-                    </tr>
+                <tr>
+                    <th>Link</th>
+                    <th>Status</th>
+                    <th>Default</th>
+                    <th></th>
+                </tr>
                 </thead>
                 <tbody>
-                    @foreach (var relay in settingsInfo.Relays)
-                    {
-                        <tr>
-                            <td><a href="@relay.Url" target="_blank">@relay.Url</a></td>
-                            <td style="color:@(relay.IsOnline ? "green" : "red");">@(relay.IsOnline ? "Online" : "Offline")</td>
-                            <td>
-                                @if (relay.IsPrimary)
-                                {
-                                    <button class="btn btn-primary btn-sm" disabled>Primary</button>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-secondary btn-sm" @onclick="() => SetPrimaryRelay(relay)">Set</button>
-                                }
-                            </td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">Delete</button>
-                            </td>
-                        </tr>
-                    }
+                @foreach (var relay in settingsInfo.Relays)
+                {
+                    <tr>
+                        <td><a href="@relay.Url" target="_blank">@relay.Url</a></td>
+                        <td style="color: @(relay.IsOnline ? "green" : "red");">@(relay.IsOnline ? "Online" : "Offline")</td>
+                        <td>
+                            @if (relay.IsPrimary)
+                            {
+                                <button class="btn btn-primary btn-sm" disabled>Primary</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary btn-sm" @onclick="() => SetPrimaryRelay(relay)">Set</button>
+                            }
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">Delete</button>
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
 
@@ -122,8 +132,7 @@
 
         if(!settingsInfo.Indexers.Any())
         {
-            settingsInfo.Indexers.Add(_networkConfiguration.GetIndexerUrl());
-            settingsInfo.Indexers.First().IsPrimary = true;
+            settingsInfo.Indexers.AddRange(_networkConfiguration.GetDefaultIndexerUrls());
             _clientStorage.SetSettingsInfo(settingsInfo);
         }
 
@@ -132,7 +141,15 @@
         return base.OnInitializedAsync();
     }
 
-    private void AddIndexer()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Refresh();
+        }
+    }
+
+    private async Task AddIndexer()
     {
         if (!string.IsNullOrWhiteSpace(newIndexerLink))
         {
@@ -141,13 +158,15 @@
                 throw new Exception("url exists");
             }
 
-            settingsInfo.Indexers.Add(new SettingsUrl { Url = newIndexerLink, IsPrimary = !settingsInfo.Relays.Any() });
+            settingsInfo.Indexers.Add(new SettingsUrl { Url = newIndexerLink, IsPrimary = !settingsInfo.Indexers.Any() });
             _clientStorage.SetSettingsInfo(settingsInfo);
             newIndexerLink = string.Empty;
         }
+
+        await Refresh();
     }
 
-    private void AddRelay()
+    private async Task AddRelay()
     {
         if (!string.IsNullOrWhiteSpace(newRelayLink))
         {
@@ -160,6 +179,8 @@
             _clientStorage.SetSettingsInfo(settingsInfo);
             newRelayLink = string.Empty;
         }
+
+        await Refresh();
     }
 
     private void RemoveIndexer(string url)
@@ -184,10 +205,6 @@
 
     private void SetPrimaryIndexer(SettingsUrl indexer)
     {
-        // Logic to set the selected indexer as primary
-        // This will likely involve updating the indexer.IsPrimary property
-        // and then saving the changes to your data store or configuration
-
         foreach (var idx in settingsInfo.Indexers)
         {
             if (idx.Url == indexer.Url)
@@ -202,16 +219,11 @@
 
         _clientStorage.SetSettingsInfo(settingsInfo);
 
-        // Update the UI after changes
         StateHasChanged();
     }
 
     private void SetPrimaryRelay(SettingsUrl indexer)
     {
-        // Logic to set the selected indexer as primary
-        // This will likely involve updating the indexer.IsPrimary property
-        // and then saving the changes to your data store or configuration
-
         foreach (var idx in settingsInfo.Relays)
         {
             if (idx.Url == indexer.Url)
@@ -226,7 +238,23 @@
 
         _clientStorage.SetSettingsInfo(settingsInfo);
 
-        // Update the UI after changes
         StateHasChanged();
+    }
+
+    private async Task Refresh()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            await _networkService.CheckServices();
+
+            return new OperationResult { Success = true };
+
+        });
+
+        if (operationResult.Success)
+        {
+            settingsInfo = _clientStorage.GetSettingsInfo();
+            StateHasChanged();
+        }        
     }
 }

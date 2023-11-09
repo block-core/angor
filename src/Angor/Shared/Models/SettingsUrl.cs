@@ -14,5 +14,7 @@ public class SettingsUrl
     public bool IsPrimary { get; set; }
 
     public bool IsOnline { get; set; }
+
+    public DateTime LastCheck { get; set; }
 }
 

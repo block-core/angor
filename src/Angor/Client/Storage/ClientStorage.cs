@@ -1,9 +1,10 @@
+using Angor.Shared;
 using Angor.Shared.Models;
 using Blazored.LocalStorage;
 
 namespace Angor.Client.Storage;
 
-public class ClientStorage : IClientStorage
+public class ClientStorage : IClientStorage, INetworkStorage
 {
     private readonly ISyncLocalStorageService _storage;
 
@@ -140,5 +141,15 @@ public class ClientStorage : IClientStorage
     public void SetSettingsInfo(SettingsInfo settingsInfo)
     {
         _storage.SetItem("settings-info", settingsInfo);
+    }
+
+    public SettingsInfo GetSettings()
+    {
+        return GetSettingsInfo();
+    }
+
+    public void SetSettings(SettingsInfo settingsInfo)
+    {
+        SetSettingsInfo(settingsInfo);
     }
 }

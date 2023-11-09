@@ -8,4 +8,13 @@ public interface INetworkConfiguration
     Network GetNetwork();
     SettingsUrl GetIndexerUrl();
     SettingsUrl GetExplorerUrl();
+    List<SettingsUrl> GetDefaultIndexerUrls();
+    List<SettingsUrl> GetDefaultRelayUrls();
+    List<SettingsUrl> GetDefaultExplorerUrl();
+}
+
+public interface INetworkStorage
+{
+    SettingsInfo GetSettings();
+    void SetSettings(SettingsInfo settingsInfo);
 }

@@ -28,6 +28,30 @@ public class NetworkConfiguration : INetworkConfiguration
         return new SettingsUrl { Name = "", Url = "https://explorer.angor.io/btc/explorer" };
     }
 
+    public List<SettingsUrl> GetDefaultIndexerUrls()
+    {
+        return new List<SettingsUrl>
+        {
+            new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io/api", IsPrimary = true },
+        };
+    }
+
+    public List<SettingsUrl> GetDefaultRelayUrls()
+    {
+        return new List<SettingsUrl>
+        {
+            //new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io/api", IsPrimary = true },
+        };
+    }
+
+    public List<SettingsUrl> GetDefaultExplorerUrl()
+    {
+        return new List<SettingsUrl>
+        {
+            new SettingsUrl { Name = "", Url = "https://explorer.angor.io/btc/explorer", IsPrimary = true },
+        };
+    }
+
     public static List<ProjectInfo> CreateFakeProjects()
     {
         return new List<ProjectInfo>

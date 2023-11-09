@@ -1,7 +1,9 @@
 ﻿@using Angor.Client.Storage
 @using System.Reflection
+@using Angor.Client.Services
 @inject IWalletStorage _walletStorage;
 @inject NavMenuState NavMenuState;
+@inject INetworkService _networkService;
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -76,6 +78,9 @@
 
     private string softwareVersion = "0.0.0";
 
+    private Timer _timer;
+    private int _elapsedCount = 0;
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
@@ -95,6 +100,15 @@
 
         // Convert the version to a string
         softwareVersion = version.ToString();
+
+        _timer = new Timer(TimerElapsed, null, TimeSpan.Zero, TimeSpan.FromMinutes(1)); // Tick every 1 min
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await _networkService.CheckServices();
+
+        await base.OnInitializedAsync();
     }
 
     private void NavMenuStateOnOnChange()
@@ -103,4 +117,14 @@
         StateHasChanged();
     }
 
+    private void TimerElapsed(object state)
+    {
+        _networkService.CheckServices();
+    }
+
+    public void Dispose()
+    {
+         // Clean up the timer when the component is disposed
+        _timer?.Dispose();
+    }
 }
