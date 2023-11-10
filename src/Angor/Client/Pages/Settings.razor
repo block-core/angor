@@ -136,6 +136,12 @@
             _clientStorage.SetSettingsInfo(settingsInfo);
         }
 
+        if(!settingsInfo.Relays.Any())
+        {
+            settingsInfo.Relays.AddRange(_networkConfiguration.GetDefaultRelayUrls());
+            _clientStorage.SetSettingsInfo(settingsInfo);
+        }
+
         networkType = _networkConfiguration.GetNetwork().Name;
 
         return base.OnInitializedAsync();
@@ -153,9 +159,24 @@
     {
         if (!string.IsNullOrWhiteSpace(newIndexerLink))
         {
+            if (!Uri.TryCreate(newIndexerLink, UriKind.Absolute, out Uri? uri))
+            {
+                notificationComponent.ShowErrorMessage($"invalid url {newIndexerLink}");
+                return;
+            }
+
+            if (!(uri.Scheme == "http" || uri.Scheme == "https"))
+            {
+                notificationComponent.ShowErrorMessage($"invalid url {newIndexerLink} schema must be http or https");
+                return;
+            }
+
+            newIndexerLink = new Uri($"{uri.Scheme}://{uri.Host}/").ToString();
+
             if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
             {
-                throw new Exception("url exists");
+                notificationComponent.ShowErrorMessage($"url exists {newIndexerLink}");
+                return;
             }
 
             settingsInfo.Indexers.Add(new SettingsUrl { Url = newIndexerLink, IsPrimary = !settingsInfo.Indexers.Any() });
@@ -170,9 +191,24 @@
     {
         if (!string.IsNullOrWhiteSpace(newRelayLink))
         {
+            if (!Uri.TryCreate(newRelayLink, UriKind.Absolute, out Uri? uri))
+            {
+                notificationComponent.ShowErrorMessage($"invalid url {newRelayLink}");
+                return;
+            }
+
+            if (!(uri.Scheme == "ws" || uri.Scheme == "wss"))
+            {
+                notificationComponent.ShowErrorMessage($"invalid url {newRelayLink} schema must be ws or wss");
+                return;
+            }
+
+            newRelayLink = new Uri($"{uri.Scheme}://{uri.Host}/").ToString();
+
             if (settingsInfo.Relays.Any(a => a.Url == newRelayLink))
             {
-                throw new Exception("url exists");
+                notificationComponent.ShowErrorMessage($"url exists {newRelayLink}");
+                return;
             }
 
             settingsInfo.Relays.Add(new SettingsUrl { Url = newRelayLink, IsPrimary = !settingsInfo.Relays.Any() });
@@ -189,7 +225,15 @@
         if (res != null)
         {
             settingsInfo.Indexers.Remove(res);
+            
+            if (res.IsPrimary && settingsInfo.Indexers.Any())
+            {
+                var next = settingsInfo.Indexers.OrderBy(a => a.IsOnline).First();
+                next.IsPrimary = true;
+            }
+            
             _clientStorage.SetSettingsInfo(settingsInfo);
+
         }
     }
 
@@ -199,6 +243,13 @@
         if (res != null)
         {
             settingsInfo.Relays.Remove(res);
+            
+            if (res.IsPrimary && settingsInfo.Relays.Any())
+            {
+                var next = settingsInfo.Relays.OrderBy(a => a.IsOnline).First();
+                next.IsPrimary = true;
+            }
+
             _clientStorage.SetSettingsInfo(settingsInfo);
         }
     }

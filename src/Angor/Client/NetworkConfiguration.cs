@@ -32,7 +32,7 @@ public class NetworkConfiguration : INetworkConfiguration
     {
         return new List<SettingsUrl>
         {
-            new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io/api", IsPrimary = true },
+            new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io", IsPrimary = true },
         };
     }
 
@@ -40,7 +40,7 @@ public class NetworkConfiguration : INetworkConfiguration
     {
         return new List<SettingsUrl>
         {
-            //new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io/api", IsPrimary = true },
+            new SettingsUrl { Name = "", Url = "wss://relay.angor.io", IsPrimary = true },
         };
     }
 

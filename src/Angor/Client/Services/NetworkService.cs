@@ -39,7 +39,8 @@ namespace Angor.Client.Services
 
                     try
                     {
-                        var response = await _httpClient.GetAsync($"{indexerUrl}/api/stats/heartbeat");
+                        var uri = new Uri(indexerUrl.Url);
+                        var response = await _httpClient.GetAsync($"{uri}api/stats/heartbeat");
 
                         if (response.IsSuccessStatusCode)
                         {
@@ -67,7 +68,8 @@ namespace Angor.Client.Services
                     try
                     {
                         var uri = new Uri(relayUrl.Url);
-                        var response = await _httpClient.GetAsync(uri);
+                        var httpUri = uri.Scheme == "wss" ? new Uri($"https://{uri.Host}/") : new Uri($"http://{uri.Host}/");
+                        var response = await _httpClient.GetAsync(httpUri);
 
                         if (response.IsSuccessStatusCode)
                         {
@@ -93,7 +95,23 @@ namespace Angor.Client.Services
         {
             var settings = _networkStorage.GetSettings();
 
-            return settings.Indexers.First(p => p.IsPrimary);
+            var ret = settings.Indexers.First(p => p.IsPrimary);
+
+            return ret;
+        }
+
+        public SettingsUrl GetPrimaryRelay()
+        {
+            var settings = _networkStorage.GetSettings();
+
+            return settings.Relays.First(p => p.IsPrimary);
+        }
+
+        public List<SettingsUrl> GetRelays()
+        {
+            var settings = _networkStorage.GetSettings();
+
+            return settings.Relays;
         }
     }
 }
