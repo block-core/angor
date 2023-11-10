@@ -55,9 +55,9 @@ namespace Angor.Client.Services
 
         public async Task<List<ProjectIndexerData>> GetProjectsAsync()
         {
-            var indexer = _networkConfiguration.GetIndexerUrl();
+            var indexer = _networkService.GetPrimaryIndexer();
             // todo: dan - make this proper paging
-            var response = await _httpClient.GetAsync($"{indexer.Url}/query/Angor/projects?offset=0&limit=50");
+            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects?offset=0&limit=50");
             _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>();
@@ -65,8 +65,8 @@ namespace Angor.Client.Services
 
         public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)
         {
-            var indexer = _networkConfiguration.GetIndexerUrl();
-            var response = await _httpClient.GetAsync($"{indexer.Url}/query/Angor/projects/{projectId}/investments");
+            var indexer = _networkService.GetPrimaryIndexer();
+            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/investments");
             _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
@@ -74,9 +74,9 @@ namespace Angor.Client.Services
 
         public async Task<string> PublishTransactionAsync(string trxHex)
         {
-            var indexer = _networkConfiguration.GetIndexerUrl();
+            var indexer = _networkService.GetPrimaryIndexer();
 
-            var endpoint = Path.Combine(indexer.Url, "command/send");
+            var endpoint = Path.Combine(indexer.Url, "/api/command/send");
 
             var response = await _httpClient.PostAsync(endpoint, new StringContent(trxHex));
             _networkService.CheckAndHandleError(response);
@@ -92,8 +92,8 @@ namespace Angor.Client.Services
         public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data)
         {
             //check all new addresses for balance or a history
-            var urlBalance = "/query/addresses/balance";
-            var indexer = _networkConfiguration.GetIndexerUrl();
+            var urlBalance = "/api/query/addresses/balance";
+            var indexer = _networkService.GetPrimaryIndexer();
             var response = await _httpClient.PostAsJsonAsync(indexer.Url + urlBalance,
                 data.Select(_ => _.Address).ToArray());
             _networkService.CheckAndHandleError(response);
@@ -108,9 +108,9 @@ namespace Angor.Client.Services
 
         public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int offset , int limit)
         {
-            SettingsUrl indexer = _networkConfiguration.GetIndexerUrl();
+            var indexer = _networkService.GetPrimaryIndexer();
 
-            var url = $"/query/address/{address}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
+            var url = $"/api/query/address/{address}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
 
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
@@ -125,9 +125,9 @@ namespace Angor.Client.Services
 
         public async Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations)
         {
-            SettingsUrl indexer = _networkConfiguration.GetIndexerUrl();
+            var indexer = _networkService.GetPrimaryIndexer();
 
-            var url = confirmations.Aggregate("/stats/fee?", (current, block) => current + $@"confirmations={block}&");
+            var url = confirmations.Aggregate("/api/stats/fee?", (current, block) => current + $@"confirmations={block}&");
 
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
@@ -144,9 +144,9 @@ namespace Angor.Client.Services
 
         public async Task<string> GetTransactionHexByIdAsync(string transactionId)
         {
-            SettingsUrl indexer = _networkConfiguration.GetIndexerUrl();
+            var indexer = _networkService.GetPrimaryIndexer();
 
-            var url = $"/query/transaction/{transactionId}/hex";
+            var url = $"/api/query/transaction/{transactionId}/hex";
             
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
@@ -159,9 +159,9 @@ namespace Angor.Client.Services
 
         public async Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId)
         {
-            SettingsUrl indexer = _networkConfiguration.GetIndexerUrl();
+            var indexer = _networkService.GetPrimaryIndexer();
 
-            var url = $"/query/transaction/{transactionId}";
+            var url = $"/api/query/transaction/{transactionId}";
             
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);

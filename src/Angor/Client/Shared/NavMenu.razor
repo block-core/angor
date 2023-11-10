@@ -102,7 +102,7 @@
         // Convert the version to a string
         softwareVersion = version.ToString();
 
-        _timer = new Timer(TimerElapsed, null, TimeSpan.Zero, TimeSpan.FromMinutes(5)); // Tick every 5 min
+        //_timer = new Timer(TimerElapsed, null, TimeSpan.Zero, TimeSpan.FromMinutes(5)); // Tick every 5 min
     }
 
     protected override async Task OnInitializedAsync()
@@ -120,7 +120,8 @@
 
     private void TimerElapsed(object state)
     {
-        _networkService.CheckServices();
+        // for now we disable the timer because on each call to the indexer capture and update the sate on failures
+        //_networkService.CheckServices();
     }
 
     public void Dispose()

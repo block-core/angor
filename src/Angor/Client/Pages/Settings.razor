@@ -152,7 +152,7 @@
     {
         if (firstRender)
         {
-            await Refresh();
+            await Refresh(false);
         }
     }
 
@@ -185,7 +185,7 @@
             newIndexerLink = string.Empty;
         }
 
-        await Refresh();
+        await Refresh(false);
     }
 
     private async Task AddRelay()
@@ -217,7 +217,7 @@
             newRelayLink = string.Empty;
         }
 
-        await Refresh();
+        await Refresh(false);
     }
 
     private void RemoveIndexer(string url)
@@ -295,9 +295,14 @@
 
     private async Task Refresh()
     {
+        await Refresh(true);
+    }
+
+    private async Task Refresh(bool forace)
+    {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            await _networkService.CheckServices();
+            await _networkService.CheckServices(forace);
 
             return new OperationResult { Success = true };
 
