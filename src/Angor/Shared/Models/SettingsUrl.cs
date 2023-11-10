@@ -13,8 +13,15 @@ public class SettingsUrl
 
     public bool IsPrimary { get; set; }
 
-    public bool IsOnline { get; set; }
+    public UrlStatus Status { get; set; }
 
     public DateTime LastCheck { get; set; }
+}
+
+public enum UrlStatus
+{
+    Offline,
+    NotReady,
+    Online
 }
 

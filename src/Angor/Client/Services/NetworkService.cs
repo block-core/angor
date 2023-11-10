@@ -38,7 +38,7 @@ namespace Angor.Client.Services
 
                         if (response.IsSuccessStatusCode)
                         {
-                            indexerUrl.IsOnline = true;
+                            indexerUrl.Status = UrlStatus.Online;
                         }
                         else
                         {
@@ -47,7 +47,7 @@ namespace Angor.Client.Services
                     }
                     catch (Exception ex)
                     {
-                        indexerUrl.IsOnline = false;
+                        indexerUrl.Status = UrlStatus.Offline;
                         _logger.LogError(ex, $"Failed to check indexer status url = {indexerUrl.Url}");
                     }
                 }
@@ -67,7 +67,7 @@ namespace Angor.Client.Services
 
                         if (response.IsSuccessStatusCode)
                         {
-                            relayUrl.IsOnline = true;
+                            relayUrl.Status = UrlStatus.Online;
                         }
                         else
                         {
@@ -76,7 +76,7 @@ namespace Angor.Client.Services
                     }
                     catch (Exception ex)
                     {
-                        relayUrl.IsOnline = false;
+                        relayUrl.Status = UrlStatus.Offline;
                         _logger.LogError(ex, $"Failed to check relay status url = {relayUrl.Url}");
                     }
                 }
@@ -120,7 +120,7 @@ namespace Angor.Client.Services
 
                     if (host != null)
                     {
-                        host.IsOnline = false;
+                        host.Status = UrlStatus.Offline;
                         _networkStorage.SetSettings(settings);
                     }
                 }

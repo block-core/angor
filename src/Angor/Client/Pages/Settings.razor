@@ -51,7 +51,7 @@
                 {
                     <tr>
                         <td><a href="@indexer.Url" target="_blank">@indexer.Url</a></td>
-                        <td style="color: @(indexer.IsOnline ? "green" : "red");">@(indexer.IsOnline ? "Online" : "Offline")</td>
+                            <td style="color: @(indexer.Status == UrlStatus.Online ? "green" : indexer.Status == UrlStatus.NotReady ? "yellow" :  "red");">@indexer.Status.ToString()</td>
                         <td>
                             @if (indexer.IsPrimary)
                             {
@@ -96,7 +96,7 @@
                 {
                     <tr>
                         <td><a href="@relay.Url" target="_blank">@relay.Url</a></td>
-                        <td style="color: @(relay.IsOnline ? "green" : "red");">@(relay.IsOnline ? "Online" : "Offline")</td>
+                            <td style="color: @(relay.Status == UrlStatus.Online ? "green" : relay.Status == UrlStatus.NotReady ? "yellow" :  "red");">@relay.Status.ToString()</td>
                         <td>
                             @if (relay.IsPrimary)
                             {
@@ -229,7 +229,7 @@
             
             if (res.IsPrimary && settingsInfo.Indexers.Any())
             {
-                var next = settingsInfo.Indexers.OrderBy(a => a.IsOnline).First();
+                var next = settingsInfo.Indexers.OrderBy(a => a.Status).First();
                 next.IsPrimary = true;
             }
             
@@ -247,7 +247,7 @@
             
             if (res.IsPrimary && settingsInfo.Relays.Any())
             {
-                var next = settingsInfo.Relays.OrderBy(a => a.IsOnline).First();
+                var next = settingsInfo.Relays.OrderBy(a => a.Status).First();
                 next.IsPrimary = true;
             }
 
