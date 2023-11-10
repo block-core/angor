@@ -9,9 +9,11 @@ namespace Angor.Client.Services
 {
     public interface INetworkService
     {
-        Task CheckServices();
+        Task CheckServices(bool force = false);
 
         SettingsUrl GetPrimaryIndexer();
+        SettingsUrl GetPrimaryRelay();
+        List<SettingsUrl> GetRelays();
     }
 
     public class NetworkService : INetworkService
@@ -27,13 +29,13 @@ namespace Angor.Client.Services
             _logger = logger;
         }
 
-        public async Task CheckServices()
+        public async Task CheckServices(bool force = false)
         {
             var settings = _networkStorage.GetSettings();
 
             foreach (var indexerUrl  in settings.Indexers)
             {
-                if ((DateTime.UtcNow - indexerUrl.LastCheck).Minutes > 1)
+                if (force || (DateTime.UtcNow - indexerUrl.LastCheck).Minutes > 10)
                 {
                     indexerUrl.LastCheck = DateTime.UtcNow;
 
@@ -61,7 +63,7 @@ namespace Angor.Client.Services
 
             foreach (var relayUrl in settings.Relays)
             {
-                if ((DateTime.UtcNow - relayUrl.LastCheck).Minutes > 1)
+                if (force || (DateTime.UtcNow - relayUrl.LastCheck).Minutes > 1)
                 {
                     relayUrl.LastCheck = DateTime.UtcNow;
 

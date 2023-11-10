@@ -101,7 +101,7 @@
         // Convert the version to a string
         softwareVersion = version.ToString();
 
-        _timer = new Timer(TimerElapsed, null, TimeSpan.Zero, TimeSpan.FromMinutes(1)); // Tick every 1 min
+        _timer = new Timer(TimerElapsed, null, TimeSpan.Zero, TimeSpan.FromMinutes(5)); // Tick every 5 min
     }
 
     protected override async Task OnInitializedAsync()
