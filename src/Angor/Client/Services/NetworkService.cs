@@ -1,4 +1,5 @@
-﻿using Angor.Shared;
+﻿using System.Net;
+using Angor.Shared;
 using Microsoft.JSInterop;
 using System.Net.WebSockets;
 using Angor.Shared.Models;
@@ -7,15 +8,6 @@ using Angor.Client.Storage;
 
 namespace Angor.Client.Services
 {
-    public interface INetworkService
-    {
-        Task CheckServices(bool force = false);
-
-        SettingsUrl GetPrimaryIndexer();
-        SettingsUrl GetPrimaryRelay();
-        List<SettingsUrl> GetRelays();
-    }
-
     public class NetworkService : INetworkService
     {
         private readonly INetworkStorage _networkStorage;
@@ -114,6 +106,25 @@ namespace Angor.Client.Services
             var settings = _networkStorage.GetSettings();
 
             return settings.Relays;
+        }
+
+        public void CheckAndHandleError(HttpResponseMessage httpResponseMessage)
+        {
+            if (!httpResponseMessage.IsSuccessStatusCode)
+            {
+                if (httpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+                {
+                    var settings = _networkStorage.GetSettings();
+
+                    var host = settings.Indexers.FirstOrDefault(a => new Uri(a.Url).Host == httpResponseMessage.RequestMessage?.RequestUri?.Host);
+
+                    if (host != null)
+                    {
+                        host.IsOnline = false;
+                        _networkStorage.SetSettings(settings);
+                    }
+                }
+            }
         }
     }
 }

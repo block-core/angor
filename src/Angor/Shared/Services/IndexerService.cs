@@ -1,6 +1,7 @@
 ﻿using Angor.Shared.Models;
 using Angor.Shared;
 using System.Net.Http.Json;
+using Angor.Shared.Services;
 using static System.Net.WebRequestMethods;
 
 namespace Angor.Client.Services
@@ -43,11 +44,13 @@ namespace Angor.Client.Services
     {
         private readonly INetworkConfiguration _networkConfiguration;
         private readonly HttpClient _httpClient;
+        private readonly INetworkService _networkService;
 
-        public IndexerService(INetworkConfiguration networkConfiguration, HttpClient httpClient)
+        public IndexerService(INetworkConfiguration networkConfiguration, HttpClient httpClient, INetworkService networkService)
         {
             _networkConfiguration = networkConfiguration;
             _httpClient = httpClient;
+            _networkService = networkService;
         }
 
         public async Task<List<ProjectIndexerData>> GetProjectsAsync()
@@ -55,6 +58,7 @@ namespace Angor.Client.Services
             var indexer = _networkConfiguration.GetIndexerUrl();
             // todo: dan - make this proper paging
             var response = await _httpClient.GetAsync($"{indexer.Url}/query/Angor/projects?offset=0&limit=50");
+            _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>();
         }
@@ -63,6 +67,7 @@ namespace Angor.Client.Services
         {
             var indexer = _networkConfiguration.GetIndexerUrl();
             var response = await _httpClient.GetAsync($"{indexer.Url}/query/Angor/projects/{projectId}/investments");
+            _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
         }
@@ -73,14 +78,15 @@ namespace Angor.Client.Services
 
             var endpoint = Path.Combine(indexer.Url, "command/send");
 
-            var res = await _httpClient.PostAsync(endpoint, new StringContent(trxHex));
-
-            if (res.IsSuccessStatusCode)
+            var response = await _httpClient.PostAsync(endpoint, new StringContent(trxHex));
+            _networkService.CheckAndHandleError(response);
+            
+            if (response.IsSuccessStatusCode)
                 return string.Empty;
 
-            var content = await res.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync();
 
-            return res.ReasonPhrase + content;
+            return response.ReasonPhrase + content;
         }
 
         public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data)
@@ -90,6 +96,7 @@ namespace Angor.Client.Services
             var indexer = _networkConfiguration.GetIndexerUrl();
             var response = await _httpClient.PostAsJsonAsync(indexer.Url + urlBalance,
                 data.Select(_ => _.Address).ToArray());
+            _networkService.CheckAndHandleError(response);
 
             if (!response.IsSuccessStatusCode)
                 throw new InvalidOperationException(response.ReasonPhrase);
@@ -106,6 +113,7 @@ namespace Angor.Client.Services
             var url = $"/query/address/{address}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
 
             var response = await _httpClient.GetAsync(indexer.Url + url);
+            _networkService.CheckAndHandleError(response);
 
             if (!response.IsSuccessStatusCode)
                 throw new InvalidOperationException(response.ReasonPhrase);
@@ -122,8 +130,8 @@ namespace Angor.Client.Services
             var url = confirmations.Aggregate("/stats/fee?", (current, block) => current + $@"confirmations={block}&");
 
             var response = await _httpClient.GetAsync(indexer.Url + url);
+            _networkService.CheckAndHandleError(response);
 
-            
             if (!response.IsSuccessStatusCode)
                 // todo: uncomment this when the fee endpoint works
                 //    throw new InvalidOperationException(response.ReasonPhrase);
@@ -141,7 +149,8 @@ namespace Angor.Client.Services
             var url = $"/query/transaction/{transactionId}/hex";
             
             var response = await _httpClient.GetAsync(indexer.Url + url);
-            
+            _networkService.CheckAndHandleError(response);
+
             if (!response.IsSuccessStatusCode)
                 throw new InvalidOperationException(response.ReasonPhrase);
 
@@ -155,6 +164,7 @@ namespace Angor.Client.Services
             var url = $"/query/transaction/{transactionId}";
             
             var response = await _httpClient.GetAsync(indexer.Url + url);
+            _networkService.CheckAndHandleError(response);
 
             if (!response.IsSuccessStatusCode)
                 throw new InvalidOperationException(response.ReasonPhrase);
