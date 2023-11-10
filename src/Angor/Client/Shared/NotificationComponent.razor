@@ -1,7 +1,8 @@
 ﻿@using Angor.Shared.Models
+@using Angor.Shared.Services
 
 @inject ILogger<NotificationComponent> Logger;
-
+@inject INetworkService networkService;
 
 <div class="row mt-4">
     <div class="col">
@@ -112,6 +113,7 @@
         {
             Logger.LogError(failure, failure.Message);
             ShowErrorMessage(failure.Message);
+            networkService.HandleException(failure);
         }
         else
         {

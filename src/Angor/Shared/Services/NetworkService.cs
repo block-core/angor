@@ -1,12 +1,8 @@
 ﻿using System.Net;
-using Angor.Shared;
-using Microsoft.JSInterop;
-using System.Net.WebSockets;
 using Angor.Shared.Models;
-using Angor.Shared.Services;
-using Angor.Client.Storage;
+using Microsoft.Extensions.Logging;
 
-namespace Angor.Client.Services
+namespace Angor.Shared.Services
 {
     public class NetworkService : INetworkService
     {
@@ -124,6 +120,21 @@ namespace Angor.Client.Services
                         _networkStorage.SetSettings(settings);
                     }
                 }
+            }
+        }
+
+        public void HandleException(Exception exception)
+        {
+            if (exception is HttpRequestException httpRequestException)
+            {
+                // dont block the caller
+                Task.Run(async () =>
+                {
+                    // this code will run outside of the UI thread, however wasm is single threaded so it will block the UI, 
+                    // we should consider using a cancellation token in this case that will not cancel after a shorter time to block the UI for too long 
+
+                    await CheckServices(true);
+                });
             }
         }
     }
