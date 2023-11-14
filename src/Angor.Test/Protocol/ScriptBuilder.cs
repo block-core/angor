@@ -1,8 +1,9 @@
+using Angor.Shared;
 using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
 
-namespace Angor.Shared.Protocol;
+namespace Angor.Test.Protocol;
 
 public class ScriptBuilder
 {

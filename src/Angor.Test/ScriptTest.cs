@@ -1,7 +1,7 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Angor.Shared.Protocol;
+using Angor.Test.Protocol;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 

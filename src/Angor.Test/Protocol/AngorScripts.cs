@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using System.Text;
+using Angor.Shared;
 using Angor.Shared.Models;
 using Blockcore.NBitcoin;
 using NBitcoin;
@@ -7,7 +8,7 @@ using NBitcoin.Crypto;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
 
 
-namespace Angor.Shared.Protocol
+namespace Angor.Test.Protocol
 {
     public class AngorScripts
     {
