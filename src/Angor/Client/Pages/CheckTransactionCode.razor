@@ -159,7 +159,7 @@ else
                 },
                 ExpiryDate = DateTime.Now.AddDays(1),
                 FounderKey = Encoders.Hex.EncodeData(privateFounderKey.Neuter().PubKey.ToBytes()),
-                PenaltyDate = DateTime.Now.AddMinutes(1000),
+                PenaltyDays = 100,
                 StartDate = DateTime.Now,
                 TargetAmount = 10,
                 ProjectIdentifier = derivationOperations.DeriveAngorKey(Encoders.Hex.EncodeData(privateFounderKey.Neuter().PubKey.ToBytes()),angorRootKey),
@@ -172,7 +172,7 @@ else
 
         context.TransactionHex = transaction.ToHex();
 
-        recoveryTransaction = SeederTransactionActions.BuildRecoverSeederFundsTransaction(context.ProjectInfo, transaction, context.ProjectInfo.PenaltyDate, testAddress.PubKey.ToHex());
+        recoveryTransaction = SeederTransactionActions.BuildRecoverSeederFundsTransaction(context.ProjectInfo, transaction, context.ProjectInfo.PenaltyDays, testAddress.PubKey.ToHex());
 
         var signatures = FounderTransactionActions.SignInvestorRecoveryTransactions(context.ProjectInfo, context.TransactionHex, recoveryTransaction, Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()));
 

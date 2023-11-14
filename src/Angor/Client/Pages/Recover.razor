@@ -106,7 +106,7 @@
 
                         <p class="mb-1">The amount to be recovered in to a penalty = @StageInfo.Items.Where(s=> !s.IsSpent).Sum(s=> s.Amount) BTC</p>
 
-                        <p class="mb-1">The penalty duration is @((project.PenaltyDate - DateTime.UtcNow).Days) days </p>
+                        <p class="mb-1">The penalty duration is @project.PenaltyDays days </p>
                         
                         <hr>
 
@@ -323,6 +323,8 @@
 
     private async Task CheckSpentFund()
     {
+        var penaltyExpieryDate = Utils.UnixTimeToDateTime(StageInfo.TransactionInfo.Timestamp).AddDays(project.PenaltyDays);
+
         foreach (var item in StageInfo.Items)
         {
             var output = StageInfo.TransactionInfo.Outputs.ElementAt(item.Outputindex);
@@ -341,7 +343,7 @@
                     else
                     {
                         item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty };
-                        var days = (project.PenaltyDate - DateTime.Now).Days;
+                        var days = (penaltyExpieryDate - DateTime.Now).Days;
                         item.SpentTo = days > 0 ? $"Penalty, released in {days} days" : "Penalty can be released";
                     }
                 }
@@ -365,7 +367,7 @@
                             }
                             case ProjectScriptTypeEnum.InvestorWithPenalty:
                             {
-                                var days = (project.PenaltyDate - DateTime.Now).Days;
+                                var days = (penaltyExpieryDate - DateTime.Now).Days;
                                 item.SpentTo = days > 0 ? $"Penalty, released in {days} days" : "Penalty can be released";
                                 break;
                             }
@@ -383,7 +385,7 @@
 
         StageInfo.CanRecover = StageInfo.Items.Any(a => a.IsSpent == false);
         StageInfo.TotalSpendable = StageInfo.Items.Where(a => !a.IsSpent).Sum(a => a.Amount);
-        StageInfo.CanRelease = (StageInfo.Items.Any(a => a.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && DateTime.UtcNow > project.PenaltyDate);
+        StageInfo.CanRelease = (StageInfo.Items.Any(a => a.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && DateTime.UtcNow > penaltyExpieryDate);
         StageInfo.TotalInPenalty = StageInfo.Items.Where(t => t.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty).Sum(t => t.Amount);
         StageInfo.EndOfProject = project.ExpiryDate < DateTime.Now;
     }

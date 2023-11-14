@@ -246,7 +246,7 @@ public class InvestmentOperations
 
                 var spendingScript = ScriptBuilder.GetInvestorPenaltyTransactionScript(
                     investorReceiveAddress,
-                    context.ProjectInfo.PenaltyDate);
+                    context.ProjectInfo.PenaltyDays);
                 
                 stageTransaction.Outputs.Add(new NBitcoin.TxOut(_.TxOut.Value,
                     new NBitcoin.Script(spendingScript.WitHash.ScriptPubKey.ToBytes())));

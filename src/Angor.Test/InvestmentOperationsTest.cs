@@ -419,7 +419,7 @@ namespace Angor.Test
                     FounderKey = funderKey,
                     FounderRecoveryKey = funderRecoveryKey,
                     ProjectIdentifier = angorKey,
-                    PenaltyDate = DateTime.UtcNow.AddDays(5),
+                    PenaltyDays = 5,
                     ProjectSeeders = new ProjectSeeders()
                 },
                 InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
@@ -519,7 +519,7 @@ namespace Angor.Test
                         FounderKey = funderKey,
                         FounderRecoveryKey = funderRecoveryKey,
                         ProjectIdentifier = angorKey,
-                        PenaltyDate = DateTime.UtcNow.AddDays(5),
+                        PenaltyDays = 5,
                         ProjectSeeders = new ProjectSeeders
                         {
                             Threshold = 2,
@@ -632,7 +632,7 @@ namespace Angor.Test
                         FounderKey = funderKey,
                         FounderRecoveryKey = funderRecoveryKey,
                         ProjectIdentifier = angorKey,
-                        PenaltyDate = DateTime.UtcNow.AddDays(5),
+                        PenaltyDays = 5,
                         ProjectSeeders = new ProjectSeeders()
                     },
                     InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes()),

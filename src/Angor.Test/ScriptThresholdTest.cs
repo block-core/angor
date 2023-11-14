@@ -1,4 +1,5 @@
 using Angor.Shared;
+using Angor.Shared.Protocol;
 
 namespace Angor.Test
 {

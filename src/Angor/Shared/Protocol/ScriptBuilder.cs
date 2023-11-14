@@ -1,10 +1,8 @@
+using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.Crypto;
-using System.Collections.Generic;
-using Angor.Shared.Models;
 
-namespace Angor.Shared;
+namespace Angor.Shared.Protocol;
 
 public class ScriptBuilder
 {
@@ -55,16 +53,19 @@ public class ScriptBuilder
         return (pubKey, secretHash);
     }
 
-    public static Script GetInvestorPenaltyTransactionScript(string investorKey, DateTime punishmentLockTime)
+    public static Script GetInvestorPenaltyTransactionScript(string investorKey, int punishmentLockDays)
     {
-        var unixTime = Utils.DateTimeToUnixTime(punishmentLockTime);
-        
+        //var unixTime = Utils.DateTimeToUnixTime(punishmentLockTime);
+
+        //var totalSeconds = (uint)TimeSpan.FromDays(punishmentLockDays).TotalSeconds;
+        var sequence = new Sequence(TimeSpan.FromDays(punishmentLockDays));
+
         return new(new List<Op>
         {
             Op.GetPushOp(new NBitcoin.PubKey(investorKey).ToBytes()),
             OpcodeType.OP_CHECKSIGVERIFY,
-            Op.GetPushOp(unixTime),
-            OpcodeType.OP_CHECKLOCKTIMEVERIFY
+            Op.GetPushOp((uint)sequence),
+            OpcodeType.OP_CHECKSEQUENCEVERIFY
         });
     }
 

@@ -59,7 +59,7 @@ public class NetworkConfiguration : INetworkConfiguration
                 new ProjectInfo
                 {
                     StartDate = DateTime.UtcNow,
-                    PenaltyDate = DateTime.UtcNow,
+                    PenaltyDays = 100,
                     ExpiryDate = DateTime.UtcNow,
                     TargetAmount = 300,
                     ProjectIdentifier = "angor" + Guid.NewGuid().ToString("N"),
@@ -73,7 +73,7 @@ public class NetworkConfiguration : INetworkConfiguration
                 new ProjectInfo
                 {
                     StartDate = DateTime.UtcNow,
-                    PenaltyDate = DateTime.UtcNow,
+                    PenaltyDays = 100,
                     ExpiryDate = DateTime.UtcNow,
                     TargetAmount = 200,
                     ProjectIdentifier = "angor" + Guid.NewGuid().ToString("N"),
@@ -87,7 +87,7 @@ public class NetworkConfiguration : INetworkConfiguration
                 new ProjectInfo
                 {
                     StartDate = DateTime.UtcNow,
-                    PenaltyDate = DateTime.UtcNow,
+                    PenaltyDays = 100,
                     ExpiryDate = DateTime.UtcNow,
                     TargetAmount = 100,
                     ProjectIdentifier = "angor" + Guid.NewGuid().ToString("N"),

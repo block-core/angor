@@ -117,10 +117,10 @@ public class InvestmentTransactionBuilderTest : AngorTestData
         
         var investmentTrx = Networks.Bitcoin.Testnet().Consensus.ConsensusFactory.CreateTransaction(investmentTrxHex);
 
-        _investmentScriptBuilder.Setup(_ => _.GetInvestorPenaltyTransactionScript(It.IsAny<string>(), It.IsAny<DateTime>()))
+        _investmentScriptBuilder.Setup(_ => _.GetInvestorPenaltyTransactionScript(It.IsAny<string>(), It.IsAny<int>()))
             .Returns(new Key().ScriptPubKey);
 
-        var recoveryTransaction = _sut.BuildUpfrontRecoverFundsTransaction(new ProjectInfo { Stages = new List<Stage> { new Stage(), new Stage(), new Stage() } }, investmentTrx, DateTime.Now.AddMonths(6),
+        var recoveryTransaction = _sut.BuildUpfrontRecoverFundsTransaction(new ProjectInfo { Stages = new List<Stage> { new Stage(), new Stage(), new Stage() } }, investmentTrx, 180,
             Encoders.Hex.EncodeData(changeAddress.PubKey.ToBytes()));
 
         //All inputs are from the investment transaction outputs
@@ -137,14 +137,14 @@ public class InvestmentTransactionBuilderTest : AngorTestData
         var investmentTrx = Networks.Bitcoin.Testnet().Consensus.ConsensusFactory.CreateTransaction(investmentTrxHex);
 
         var expectedAddress = Encoders.Hex.EncodeData(changeAddress.PubKey.ToBytes());
-        var expectedDateTime = DateTime.Now.AddMonths(6);
+        var expectedDays = 180;
         var expectedScript = new Key().ScriptPubKey;
         
-        _investmentScriptBuilder.Setup(_ => _.GetInvestorPenaltyTransactionScript(expectedAddress, expectedDateTime))
+        _investmentScriptBuilder.Setup(_ => _.GetInvestorPenaltyTransactionScript(expectedAddress, expectedDays))
             .Returns(expectedScript);
 
         var recoveryTransaction = _sut.BuildUpfrontRecoverFundsTransaction(new ProjectInfo { Stages = new List<Stage> { new Stage(), new Stage(), new Stage() } }, investmentTrx, 
-            expectedDateTime, expectedAddress);
+            expectedDays, expectedAddress);
         
         //All outputs pay to the penalty script
         Assert.Contains(recoveryTransaction.Outputs,

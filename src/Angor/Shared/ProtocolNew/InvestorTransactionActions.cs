@@ -89,7 +89,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
-        return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDate, investorKey);
+        return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDays, investorKey);
     }
 
     public Transaction BuildAndSignRecoverReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
@@ -99,12 +99,14 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
         var spendingScript = _investmentScriptBuilder.GetInvestorPenaltyTransactionScript(
             investorKey,
-            projectInfo.PenaltyDate);
+            projectInfo.PenaltyDays);
 
         var network = _networkConfiguration.GetNetwork();
         var transaction = network.CreateTransaction();
 
-        transaction.LockTime = Utils.DateTimeToUnixTime(projectInfo.PenaltyDate.AddMinutes(1));
+        //transaction.LockTime = Utils.DateTimeToUnixTime(projectInfo.PenaltyDays.AddMinutes(1));
+
+        transaction.Version = 2; // to trigger bip68 rules
 
         // add the output address
         transaction.Outputs.Add(new Blockcore.Consensus.TransactionInfo.TxOut(Money.Zero, Blockcore.NBitcoin.BitcoinAddress.Create(investorReceiveAddress, network)));
@@ -115,7 +117,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             if (output.TxOut.ScriptPubKey == spendingScript.WitHash.ScriptPubKey)
             {
                 // this is a penalty output
-                transaction.Inputs.Add(new Blockcore.Consensus.TransactionInfo.TxIn(output.ToOutPoint()) { Sequence = new Blockcore.NBitcoin.Sequence(transaction.LockTime.Value)});
+                transaction.Inputs.Add(new Blockcore.Consensus.TransactionInfo.TxIn(output.ToOutPoint()) { Sequence = new Blockcore.NBitcoin.Sequence(TimeSpan.FromDays(projectInfo.PenaltyDays)) });
 
                 transaction.Outputs[0].Value += output.TxOut.Value;
             }
@@ -225,7 +227,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
-        var recoveryTransaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDate, investorKey);
+        var recoveryTransaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDays, investorKey);
 
         var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
         var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
@@ -267,7 +269,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
      {
          var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
-        var recoveryTransaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDate, investorKey);
+        var recoveryTransaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDays, investorKey);
 
         var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
         var nBitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);

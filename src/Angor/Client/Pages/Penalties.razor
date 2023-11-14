@@ -110,8 +110,8 @@
                     {
                         ProjectIdentifier = signatureInfo.ProjectIdentifier,
                         RecoveryTransactionId = signatureInfo.RecoveryTransactionId,
-                        DaysLeftForPenalty = (project.PenaltyDate - DateTime.Now).Days,
-                        IsExpired = (project.PenaltyDate - DateTime.Now).Days <= 0,
+                        //DaysLeftForPenalty = (project.PenaltyDays - DateTime.Now).Days,
+                        //IsExpired = (project.PenaltyDays - DateTime.Now).Days <= 0,
                         IsReleased = !string.IsNullOrEmpty(signatureInfo.RecoveryReleaseTransactionId),
                     });
                 }
@@ -127,12 +127,20 @@
             {
                 var operationResult = await notificationComponent.LongOperation(async () =>
                 {
+                    var projects = storage.GetProjects();
+
                     foreach (var penaltyProject in penaltyProjects)
                     {
                         var recoveryTansaction = await _IndexerService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
                         
                         var totalsats = recoveryTansaction.Outputs.Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);
                         penaltyProject.Amount = Money.Satoshis(totalsats).ToUnit(MoneyUnit.BTC);
+
+                        var project = projects.First(p => p.ProjectIdentifier == penaltyProject.ProjectIdentifier);
+
+                        var expieryDate = Utils.UnixTimeToDateTime(recoveryTansaction.Timestamp).AddDays(project.PenaltyDays);
+                        penaltyProject.DaysLeftForPenalty = (expieryDate - DateTimeOffset.UtcNow).Days;
+                        penaltyProject.IsExpired = (expieryDate - DateTimeOffset.UtcNow).Days <= 0;
                     }
 
                     return new OperationResult { Success = true };

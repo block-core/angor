@@ -6,7 +6,7 @@ namespace Angor.Shared.ProtocolNew.Scripts;
 
 public interface IInvestmentScriptBuilder
 {
-    Script GetInvestorPenaltyTransactionScript(string investorKey, DateTime punishmentLockTime);
+    Script GetInvestorPenaltyTransactionScript(string investorKey, int punishmentLockDays);
 
     ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
         uint256? hashOfSecret = null);
