@@ -79,7 +79,7 @@ namespace Angor.Test
                     new ProjectScriptsBuilder(_derivationOperations),
                     new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
                 new InvestmentTransactionBuilder(_networkConfiguration.Object,
-                    new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+                    new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder()),
                 new TaprootScriptBuilder(), _networkConfiguration.Object);
 
             _investorTransactionActions = new InvestorTransactionActions(new NullLogger<InvestorTransactionActions>(),
@@ -90,7 +90,7 @@ namespace Angor.Test
                     new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
                 new InvestmentTransactionBuilder(_networkConfiguration.Object,
                     new ProjectScriptsBuilder(_derivationOperations),
-                    new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+                    new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder()),
                 new TaprootScriptBuilder(), _networkConfiguration.Object);
 
             _founderTransactionActions = new FounderTransactionActions(new NullLogger<FounderTransactionActions>(), _networkConfiguration.Object,

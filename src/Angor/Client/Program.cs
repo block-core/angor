@@ -31,7 +31,6 @@ builder.Services.AddTransient<IWalletOperations, WalletOperations>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
 builder.Services.AddScoped<NavMenuState>();
-builder.Services.AddScoped<InvestmentOperations>();
 
 builder.Services.AddScoped<IIndexerService, IndexerService>();
 builder.Services.AddScoped<IRelayService, RelayService>();

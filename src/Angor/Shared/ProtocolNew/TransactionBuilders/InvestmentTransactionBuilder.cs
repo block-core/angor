@@ -13,13 +13,15 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly IProjectScriptsBuilder _projectScriptsBuilder;
     private readonly IInvestmentScriptBuilder _investmentScriptBuilder;
+    private readonly ITaprootScriptBuilder _taprootScriptBuilder;
 
     public InvestmentTransactionBuilder(INetworkConfiguration networkConfiguration, IProjectScriptsBuilder projectScriptsBuilder, 
-        IInvestmentScriptBuilder investmentScriptBuilder)
+        IInvestmentScriptBuilder investmentScriptBuilder, ITaprootScriptBuilder taprootScriptBuilder)
     {
         _networkConfiguration = networkConfiguration;
         _projectScriptsBuilder = projectScriptsBuilder;
         _investmentScriptBuilder = investmentScriptBuilder;
+        _taprootScriptBuilder = taprootScriptBuilder;
     }
 
     public Transaction BuildInvestmentTransaction(ProjectInfo projectInfo, Script opReturnScript, 
@@ -37,7 +39,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         var investorInfoOutput = new TxOut(new Money(0), opReturnScript);
         investmentTransaction.AddOutput(investorInfoOutput);
 
-        var stagesScripts = projectScripts.Select(_ => AngorScripts.CreateStage(network, _)); //TODO replace angor scripts
+        var stagesScripts = projectScripts.Select(_ => _taprootScriptBuilder.CreateStage(network, _));
 
         var stagesOutputs = stagesScripts.Select((_, i) =>
             new TxOut(new Money(Convert.ToInt64(totalInvestmentAmount * (projectInfo.Stages[i].AmountToRelease / 100))),

@@ -45,7 +45,7 @@ public class WalletOperationsTest : AngorTestData
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
             new ProjectScriptsBuilder(_derivationOperations),
             new SpendingTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
-            new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+            new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder()),
             new TaprootScriptBuilder(),
             _networkConfiguration.Object);
 

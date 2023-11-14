@@ -25,7 +25,8 @@ public class InvestmentTransactionBuilderTest : AngorTestData
         
         _sut = new InvestmentTransactionBuilder(_networkConfiguration.Object,
             _projectScriptsBuilder.Object,
-            _investmentScriptBuilder.Object);
+            _investmentScriptBuilder.Object,
+            new TaprootScriptBuilder());
     }
     
     private Script GivenTheAngorFeeScript(ProjectInfo projectInvestmentInfo)
