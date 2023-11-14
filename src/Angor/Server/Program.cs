@@ -32,7 +32,7 @@ builder.Services.AddSingleton<ISpendingTransactionBuilder, SpendingTransactionBu
 builder.Services.AddSingleton<IInvestmentTransactionBuilder, InvestmentTransactionBuilder>();
 builder.Services.AddSingleton<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
 builder.Services.AddSingleton<ITaprootScriptBuilder, TaprootScriptBuilder>();
-
+builder.Services.AddSingleton<ITestNostrSigningFromRelay, TestNostrSigningFromRelay>();
 
 var app = builder.Build();
 

@@ -1,6 +1,7 @@
-﻿using Angor.Shared.Models;
+﻿using System.Net.Http.Json;
+using System.Reactive.Linq;
+using Angor.Shared.Models;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Nostr.Client.Client;
 using Nostr.Client.Communicator;
 using Nostr.Client.Keys;
@@ -11,19 +12,22 @@ namespace Angor.Client.Services
 {
     public interface ISignService
     {
-        Task AddSignKeyAsync(ProjectInfo project, string founderRecoveryPrivateKey);
-        Task<SignatureInfo> GetInvestmentSigsAsync(SignRecoveryRequest signRecoveryRequest);
+        Task AddSignKeyAsync(ProjectInfo project, string founderRecoveryPrivateKey, string nostrPrivateKey);
+        Task<string> RequestInvestmentSigsAsync(SignRecoveryRequest signRecoveryRequest, Action<string> action);
     }
 
     public class SignService : ISignService
     {
 
+        private HttpClient _httpClient;
         private static INostrClient _nostrClient;
         private static INostrCommunicator _nostrCommunicator;
 
-        public SignService(ILogger<NostrWebsocketClient> _logger)
+        private List<IDisposable> subscriptions = new ();
+        public SignService(ILogger<NostrWebsocketClient> _logger, HttpClient httpClient)
         {
-            _nostrCommunicator = new NostrWebsocketCommunicator(new Uri("ws://angor-relay.test"));
+            _httpClient = httpClient;
+            _nostrCommunicator = new NostrWebsocketCommunicator(new Uri("wss://relay.angor.io"));
 
             _nostrCommunicator.Name = "angor-relay.test";
             _nostrCommunicator.ReconnectTimeout = null;
@@ -40,36 +44,61 @@ namespace Angor.Client.Services
             _nostrClient = new NostrWebsocketClient(_nostrCommunicator, _logger);
         }
 
-        public async Task AddSignKeyAsync(ProjectInfo project, string founderRecoveryPrivateKey)
+        public async Task AddSignKeyAsync(ProjectInfo project, string founderRecoveryPrivateKey, string nostrPrivateKey)
         {
-            // var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}", new SignData { ProjectIdentifier = project.ProjectIdentifier, FounderRecoveryPrivateKey = founderRecoveryPrivateKey });
-            // response.EnsureSuccessStatusCode();
+            var response = await _httpClient.PostAsJsonAsync($"/api/TestSign",
+                new SignData
+                {
+                    ProjectIdentifier = project.ProjectIdentifier, 
+                    FounderRecoveryPrivateKey = founderRecoveryPrivateKey,
+                    NostrPrivateKey = nostrPrivateKey
+                });
+             response.EnsureSuccessStatusCode();
         }
 
-        public Task<SignatureInfo> GetInvestmentSigsAsync(SignRecoveryRequest signRecoveryRequest)
+        public Task<string> RequestInvestmentSigsAsync(SignRecoveryRequest signRecoveryRequest, Action<string> action)
         {
             var sender = NostrPrivateKey.FromHex(signRecoveryRequest.InvestorNostrPrivateKey);
-            var receiver = NostrPublicKey.FromHex(signRecoveryRequest.NostrPubKey);
-
+            //var receiver = NostrPublicKey.FromHex(signRecoveryRequest.NostrPubKey);
+            
             var ev = new NostrEvent
             {
                 Kind = NostrKind.EncryptedDm,
                 CreatedAt = DateTime.UtcNow,
                 Content = signRecoveryRequest.content,
-                Tags = new NostrEventTags(new []{NostrEventTag.Profile(sender.DerivePublicKey().Hex)})
+                Tags = new NostrEventTags(new []{NostrEventTag.Profile(signRecoveryRequest.NostrPubKey)})
             };
 
-            // var encrypted = ev.EncryptDirect(sender, receiver); Blazor does not support AES so needs to be done manually in the UI
+            // Blazor does not support AES so needs to be done manually in the UI
+            // var encrypted = ev.EncryptDirect(sender, receiver); 
             // var signed = encrypted.Sign(sender);
 
             var signed = ev.Sign(sender);
+            var timeOfMessage = DateTime.UtcNow;
 
-            var test = JsonConvert.SerializeObject(signed);
-            Console.WriteLine(test);
-            
             _nostrClient.Send(new NostrEventRequest(signed));
 
-            return Task.FromResult(new SignatureInfo());
+            var nostrPubKey = sender.DerivePublicKey().Hex;
+            
+            _nostrClient.Send(new NostrRequest(nostrPubKey, new NostrFilter
+            {
+                Authors = new []{signRecoveryRequest.NostrPubKey},
+                P = new []{nostrPubKey},
+                Kinds = new[] { NostrKind.EncryptedDm},
+                Since = timeOfMessage
+            }));
+
+            var subscription = _nostrClient.Streams.EventStream
+                .Where(_ => _.Subscription == nostrPubKey)
+                .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
+                .Subscribe(_ =>
+                {
+                    action.Invoke(_.Event.Content);
+                });
+            
+            subscriptions.Add(subscription); //TODO dispose of if after the signatures have been received
+            
+            return Task.FromResult(signed.Id!);
         }
     }
 }

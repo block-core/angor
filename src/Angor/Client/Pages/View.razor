@@ -12,6 +12,7 @@
 @inject ISessionStorage SessionStorage;
 @inject NavigationManager NavigationManager
 @inject INetworkConfiguration _NetworkConfiguration
+@inject IClipboardService _clipboardService
 
 <div class="container mt-4">
     <h3>View Project</h3>
@@ -111,6 +112,15 @@
                         <p>You are the founder.</p>
                          <NavLink href=@($"/spend/{project.ProjectIdentifier}") class="btn btn-primary">Spend Funds</NavLink>
                         
+                        @if (project.NostrPubKey != null)
+                        { //TODO this is just to be able to log in to the nostr client, need to get a proper way to get the nostr keys
+                            <div class="mb-3">
+                                <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
+                                <InputText id="NostrPublicKey" @bind-Value="project.NostrPubKey" class="form-control" placeholder="@project.NostrPubKey" readonly/>
+                                <button @onclick="CopyWordsToClibboardAsync" class="btn btn-success">Copy NSec to clipboard</button>
+                            </div>
+                        }
+                         
                     }
                     else if (invested)
                     {
@@ -255,5 +265,14 @@
     private async Task InvestInProject()
     {
         NavigationManager.NavigateTo($"/invest/{ProjectId}");
+    }
+    
+    
+    private async Task CopyWordsToClibboardAsync()
+    {
+        var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+        var nsec = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
+        await _clipboardService.WriteTextAsync(nsec);
+        StateHasChanged();
     }
 }
