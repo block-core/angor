@@ -170,14 +170,13 @@ namespace Angor.Shared.Services
         public Task<string> DeleteProjectAsync(string eventId, string hexPrivateKey)
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
-            
+
             var deleteEvent = new NostrEvent
             {
-                Content = "Failed to publish the transaction to the blockchain",
-                CreatedAt = DateTime.UtcNow,
                 Kind = NostrKind.EventDeletion,
-                Tags = new NostrEventTags(new NostrEventTag("e", eventId),
-                    new NostrEventTag("a",$"{NostrKind.Metadata}:{key.DerivePublicKey().Hex}"))
+                CreatedAt = DateTime.UtcNow,
+                Content = "Failed to publish the transaction to the blockchain",
+                Tags = new NostrEventTags(NostrEventTag.Event(eventId))
             }.Sign(key);
 
             _nostrClient.Send(deleteEvent);

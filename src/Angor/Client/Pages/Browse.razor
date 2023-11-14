@@ -77,6 +77,8 @@
     {
         searchInProgress = true;
         var blockchainProjects = await _IndexerService.GetProjectsAsync();
+
+        blockchainProjects = blockchainProjects.Where(_ => _.NostrPubKey != null).ToList();
         
         var projectCreators = SessionStorage.GetProjectSubscribedList();
 

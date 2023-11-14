@@ -405,7 +405,7 @@
 
             if (!response.Success)
             {
-                await _RelayService.DeleteProjectAsync(resultId, NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()));
+                await _RelayService.DeleteProjectAsync(resultId, nostrKeyHex);
                 //storage.AddFounderProject(project); TODO remove from storage
                 return response;
             }
