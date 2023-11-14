@@ -20,7 +20,6 @@
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
 @inject IRelayService _RelayService
-@inject IClipboardService _clipboardService
 
 @inject ISignService _SignService
 
@@ -36,15 +35,7 @@
     <h1 class="mb-4">Create New Project</h1>
 
     <NotificationComponent @ref="notificationComponent"/>
-    @if (project.NostrPubKey != null)
-    { //TODO this is just to be able to log in to the nostr client, need to get a proper way to get the nostr keys
-        <div class="mb-3">
-            <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
-            <InputText id="NostrPublicKey" @bind-Value="project.NostrPubKey" class="form-control" placeholder="@project.NostrPubKey" readonly/>
-            <button @onclick="CopyWordsToClibboardAsync" class="btn btn-success">Copy NSec to clipboard</button>
-        </div>
-    }
-    
+
     @if (!nostrProfileCreated)
     {
         <EditForm Model="NostrMetadata" OnValidSubmit="CreatNostrProfile">
@@ -405,8 +396,10 @@
             showCreateModal = false;
             
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+
+            var nostrKeyHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
             
-            var resultId = await _RelayService.AddProjectAsync(project, NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()));
+            var resultId = await _RelayService.AddProjectAsync(project, nostrKeyHex);
             
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
@@ -427,11 +420,10 @@
                     notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
             });
             
-    // todo this code must be reviewed again as we send the recovery private key to the signing server
-
+            // todo this code must be reviewed again as we send the recovery private key to the signing server
             var key = _derivationOperations.DeriveFounderRecoveryPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
 
-            await _SignService.AddSignKeyAsync(project, Encoders.Hex.EncodeData(key.ToBytes()));
+            await _SignService.AddSignKeyAsync(project, Encoders.Hex.EncodeData(key.ToBytes()), nostrKeyHex);
 
             return new OperationResult { Success = response.Success, Message = response.Message };
         });
@@ -458,14 +450,6 @@
     private void RemoveStage(Stage stage)
     {
         project.Stages.Remove(stage);
-    }
-
-    private async Task CopyWordsToClibboardAsync()
-    {
-        var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
-        var nsec = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
-        await _clipboardService.WriteTextAsync(nsec);
-        StateHasChanged();
     }
 
     public void Dispose()

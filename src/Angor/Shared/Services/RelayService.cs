@@ -258,7 +258,7 @@ namespace Angor.Shared.Services
 
         private void SetupNostrCommunicator()
         {
-            _nostrCommunicator = new NostrWebsocketCommunicator(new Uri("ws://angor-relay.test"))
+            _nostrCommunicator = new NostrWebsocketCommunicator(new Uri("wss://relay.angor.io"))
             {
                 Name = "angor-relay.test",
                 ReconnectTimeout = null //TODO need to check what is the actual best time to set here
