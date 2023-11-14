@@ -1,0 +1,136 @@
+version: "2.4"
+
+volumes:
+  database:
+    name: btc-db
+  blockchain:
+    name: btc-data
+
+services:
+  indexer:
+    container_name: btc-indexer
+    image: blockcore/indexer:0.2.44
+    mem_limit: 1024m
+    cpus: 0.200
+    environment:
+      VIRTUAL_HOST: btc.indexer.blockcore.net
+      VIRTUAL_PORT: 9910
+      VIRTUAL_PROTO: http
+      VIRTUAL_NETWORK: proxy
+      LETSENCRYPT_HOST: btc.indexer.blockcore.net
+      LETSENCRYPT_EMAIL: admin@blockcore.net
+      ASPNETCORE_URLS: http://+:9910
+    command: ["--chain=BTC", "--Network:RPCPort=38332"]
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      chain:
+        condition: service_healthy
+    ports:
+      - 9910:9910 # Make this a public node.
+    networks:
+      - btcnetwork
+      - proxy
+
+  chain:
+    container_name: btc-chain
+    image: blockcore/bitcoin-core:24.0.1
+    mem_limit: 10240m
+    cpus: 0.200
+    # healthcheck:
+    #   test: curl --fail http://localhost:37220/api/Node/status || exit 1
+    #   interval: 10ss
+    #   retries: 5
+    #   start_period: 5s
+    #   timeout: 10s
+    command: ["bitcoind", "-signet=1", "-server=1", "-rpcworkqueue=50", "-txindex=0", "-rpcallowip=10.202.0.0/8", "-rpcallowip=10.201.0.0/8", "-rpcallowip=192.168.0.0/8", "-rpcallowip=172.0.0.0/8", "-rpcbind=0.0.0.0", "-rpcuser=rpcuser", "-rpcpassword=rpcpassword"] 
+    restart: unless-stopped
+    stop_grace_period: 15m
+    volumes:
+      - blockchain:/bitcoin/.bitcoin
+    ports:
+      - 38333:38333 # Make this a public node.
+    networks:
+      - btcnetwork
+
+  mongo:
+    container_name: btc-mongo
+    image: mongo:5.0.12
+    mem_limit: 2048m
+    cpus: 0.200
+
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+    restart: unless-stopped
+    stop_grace_period: 5m
+    volumes:
+      - database:/data/db
+      - database:/data/configdb
+    networks:
+      - btcnetwork
+      
+  explorer:
+    container_name: explorer
+    image: blockcore/explorer:0.2.28
+    mem_limit: 256m
+    cpus: 0.200
+    environment:
+      VIRTUAL_HOST: explorer.coinvault.io
+      VIRTUAL_PORT: 9911
+      VIRTUAL_NETWORK: proxy
+      VIRTUAL_PROTO: http
+      LETSENCRYPT_HOST: explorer.coinvault.io
+      LETSENCRYPT_EMAIL: admin@blockcore.net
+      ASPNETCORE_URLS: http://+:9910
+    command: ["--chain=BTC"]
+    ports:
+      - 9911:9911 # Make this a public node.
+    restart: unless-stopped
+    networks:
+      - proxy
+      - btcnetwork
+
+networks:
+  btcnetwork:
+    external: false
+    name: btcnetwork
+  proxy:
+    external: true
+    name: proxy
+
+  # tipbot:
+  #   container_name: strat-tipbot
+  #   image: blockcore/tipbot:0.1.8
+  #   env_file:
+  #     - tipbot.env
+  #   command: ["--chain=STRAT"]
+  #   restart: unless-stopped
+  #   depends_on:
+  #       - tipbot-database
+  #       - tipbot-chain
+    
+  # tipbot-chain:
+  #   container_name: strat-tipbot-chain
+  #   image: blockcore/node-strat:1.0.29
+  #   command: ["-server=1", "-txindex=0", "-rpcallowip=172.0.0.0/8", "-rpcbind=0.0.0.0", "-apiuri=http://0.0.0.0:37221", "-rpcuser=rpcuser", "-rpcpassword=rpcpassword"]
+  #   restart: unless-stopped
+  #   stop_grace_period: 15m
+  #   volumes:
+  #     - tipbot-blockchain:/root/.blockcore
+
+  # tipbot-database:
+  #   container_name: strat-tipbot-db
+  #   image: mcr.microsoft.com/mssql/server:2019-latest
+  #   env_file:
+  #     - tipbot.env
+  #   environment:
+  #     ACCEPT_EULA: "Y"
+  #   restart: unless-stopped
+  #   volumes:
+  #     - tipbot-database:/var/opt/mssql
