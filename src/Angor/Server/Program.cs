@@ -32,7 +32,7 @@ builder.Services.AddSingleton<ISpendingTransactionBuilder, SpendingTransactionBu
 builder.Services.AddSingleton<IInvestmentTransactionBuilder, InvestmentTransactionBuilder>();
 builder.Services.AddSingleton<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
 builder.Services.AddSingleton<ITaprootScriptBuilder, TaprootScriptBuilder>();
-
+builder.Services.AddSingleton<ITestNostrSigningFromRelay, TestNostrSigningFromRelay>(); //TODO change this from a test class when the flow is complete
 
 var app = builder.Build();
 

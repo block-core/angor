@@ -1,10 +1,7 @@
 #nullable enable
-using Blockcore.AtomicSwaps.Server.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Polly;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
 using Angor.Shared.Models;
 
 namespace Angor.Server
@@ -15,6 +12,16 @@ namespace Angor.Server
         public string Key { get; set; }
 
         public string Data { get; set; }
+    }
+    
+    public class ProjectKeys
+    {
+        [Key]
+        public string Key { get; set; }
+
+        public string nostrPrivateKey { get; set; }
+        
+        public string founderSigningPrivateKey { get; set; }
     }
     
     public class ProjectIndexerData
@@ -32,26 +39,6 @@ namespace Angor.Server
         [Key]
         public string TrxId { get; set; }
         public string TrxHex { get; set; }
-    }
-
-    public class ProjectContext : DbContext
-    {
-        public DbSet<SerializeData> Projects { get; set; }
-        public string DbPath { get; }
-
-        public ProjectContext(string path)
-        {
-            DbPath = path;
-        }
-
-        // The following configures EF to create a Sqlite database file in the
-        // special "local" folder for your platform.
-        protected override void OnConfiguring(DbContextOptionsBuilder options)
-            => options.UseSqlite($"Data Source={DbPath}");
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-        }
     }
 
     public class TestStorageService 
@@ -99,15 +86,31 @@ namespace Angor.Server
             await context.SaveChangesAsync();
         }
 
-        public async Task AddKey(string projectid, string founderRecoveryPrivateKey)
+        public async Task AddKey(string projectid, string founderKey)
         {
             await using var context = new ProjectContext(dbPath);
 
-            context.Projects.Add(new SerializeData { Key = "key:" + projectid, Data = founderRecoveryPrivateKey });
+            context.Projects.Add(new SerializeData { Key = "key:" + projectid, Data =  founderKey });
+
+            await context.SaveChangesAsync();
+        }
+        
+        public async Task AddKey(string projectid, SignData signData)
+        {
+            await using var context = new ProjectContext(dbPath);
+
+            context.ProjectKeys.Add(new ProjectKeys { Key = projectid, founderSigningPrivateKey =  signData.FounderRecoveryPrivateKey, nostrPrivateKey = signData.NostrPrivateKey });
 
             await context.SaveChangesAsync();
         }
 
+        public async Task<ProjectKeys> GetKeys(string projectid)
+        {
+            await using var context = new ProjectContext(dbPath);
+
+            return context.ProjectKeys.First(_ => _.Key == projectid);
+        }
+        
         public async Task<string> GetKey(string projectid)
         {
             await using var context = new ProjectContext(dbPath);

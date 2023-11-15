@@ -2,25 +2,25 @@
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
-@using Angor.Shared.Protocol
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
 @using Blockcore.NBitcoin.DataEncoders
+@using JSException = Microsoft.JSInterop.JSException
+
+@inject IJSRuntime JS
 
 @inherits BaseComponent
 
 @inject ILogger<Invest> _Logger;
-@inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
+@inject ISessionStorage SessionStorage;
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
-@inject INetworkConfiguration _NetworkConfiguration
 
-@inject IIndexerService _IndexerService
 @inject ISignService _SignService
 
 @inject IInvestorTransactionActions _InvestorTransactionActions
@@ -43,7 +43,8 @@
     <p>You are founder.</p>
     return;
 }
-
+@if(recoverySigs == null)
+{
 <div class="container py-3">
     <h2 class="mb-4">Investment Page</h2>
     <p>Here is a small explanation of the project. You can <a href="view/@ProjectId">view more details about the project here</a>.</p>
@@ -143,27 +144,42 @@
     }
 
     <!-- Stages Breakdown -->
-    @if (StagesBreakdown != null)
+            @if (StagesBreakdown != null)
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h4>Stages Breakdown</h4>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var stage in StagesBreakdown)
+                        {
+                            <p>Stage @stage.StageNumber: invest @stage.Amount BTC that will released on @stage.StageDateTime.ToString("dd/MM/yyyy") (@stage.DaysFromStartDate days) </p>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+}
+    @if (recoverySigs != null)
     {
-        <div class="card mt-3">
-            <div class="card-header">
-                <h4>Stages Breakdown</h4>
-            </div>
-            <div class="card-body">
-                @foreach (var stage in StagesBreakdown)
-                {
-                    <p>Stage @stage.StageNumber: invest @stage.Amount BTC that will released on @stage.StageDateTime.ToString("dd/MM/yyyy") (@stage.DaysFromStartDate days) </p>
-                }
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">The founder has signed the recovery transaction</h5>
+                        <button type="button" class="btn-success" @onclick="PublishSignedTransactionAsync">Invest</button>
+                    </div>
+                </div>
             </div>
         </div>
     }
-</div>
 
 @code {
+
     [Parameter]
     public string ProjectId { get; set; }
 
-    public InvestmentModel Investment { get; set; } = new InvestmentModel {InvestmentAmount = 10};
+    public InvestmentModel Investment { get; set; } = new InvestmentModel { InvestmentAmount = 10 };
     private bool IsSeederTimePassed { get; set; }
     private List<StageBreakdown> StagesBreakdown { get; set; } = new();
     bool founder = false;
@@ -172,12 +188,12 @@
     private bool showCreateModal;
     Transaction signedTransaction;
     Transaction unSignedTransaction;
-    //InvestorContext context;
 
     SignatureInfo recoverySigs;
-    
+
     private FeeData feeData = new();
-    
+
+    private IJSInProcessObjectReference? javascriptNostrToolsModule;
 
     protected override async Task OnInitializedAsync()
     {
@@ -202,7 +218,7 @@
                 }
                 else
                 {
-                    findProject = storage.GetBrowseProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+                    findProject = SessionStorage.GetProjectById(ProjectId);
 
                     if (findProject != null)
                     {
@@ -215,6 +231,24 @@
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                //TODO import the nostr tool module directly to c# class
+                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./Pages/invest.razor.js?version=" + DateTime.UtcNow.Ticks);
+            }
+            catch (JSException e)
+            {
+                Console.WriteLine(e);
+                notificationComponent.ShowErrorMessage(e.Message);
+            }
+
+        }
     }
 
     private Task CheckIfSeederTimeHasPassed()
@@ -352,14 +386,73 @@
             var strippedInvestmentTransaction = network.CreateTransaction(signedTransaction.ToHex());
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
 
-            recoverySigs = await _SignService.GetInvestmentSigsAsync(new SignRecoveryRequest
-            {
-                ProjectIdentifier = project.ProjectIdentifier, 
-                InvestmentTransaction = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory)
-            });
+            var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
 
-            // validate the signatures
-            _InvestorTransactionActions.CheckInvestorRecoverySignatures(project, signedTransaction, recoverySigs);
+            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), accountInfo.InvestmentsCount + 1);
+
+            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes()); 
+            
+            var encryptedContent = await javascriptNostrToolsModule.InvokeAsync<string>(
+                "encryptNostr",
+                nostrPrivateKeyHex,
+                project.NostrPubKey,
+                strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory));
+
+            var eventId = await _SignService.RequestInvestmentSigsAsync(new SignRecoveryRequest
+            {
+                ProjectIdentifier = project.ProjectIdentifier,
+                content = encryptedContent,
+                NostrPubKey = project.NostrPubKey,
+                InvestorNostrPrivateKey = nostrPrivateKeyHex
+            }, async _ =>
+                {
+                    var test = await javascriptNostrToolsModule.InvokeAsync<string>(
+                        "decryptNostr",
+                        nostrPrivateKeyHex,
+                        project.NostrPubKey,
+                        _);
+
+                    _Logger.LogInformation("signature : " + test);
+                    
+                    recoverySigs ??= new SignatureInfo();
+
+
+                    recoverySigs.Signatures.Add(new SignatureInfoItem
+                    {
+                        Signature = test, StageIndex = recoverySigs.Signatures.Count()
+                    });
+                    
+
+                    if (recoverySigs.Signatures.Count == project.Stages.Count())
+                    {
+                        StateHasChanged();    
+                    }
+                    
+                });
+
+            return new OperationResult { Success = true, };
+        });
+
+        if (operationResult.Success)
+        {
+            notificationComponent.ShowNotificationMessage("Project created", 1);
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
+    }
+
+    public async Task PublishSignedTransactionAsync()
+    {
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            var validSignatures = _InvestorTransactionActions.CheckInvestorRecoverySignatures(project, signedTransaction, recoverySigs);
+
+            if (!validSignatures)
+            {
+                return new OperationResult { Success = false, Message = "The signatures returned from the founder failed validation" };
+            }
 
             // link the trx to the signatures
             recoverySigs.TransactionId = signedTransaction.GetHash().ToString();
@@ -368,18 +461,15 @@
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
-            if (!response.Success)
-                return response;
-
-            return new OperationResult { Success = response.Success, Message = response.Message };
+            return !response.Success ? response : new OperationResult { Success = true };
         });
 
         if (operationResult.Success)
         {
-            notificationComponent.ShowNotificationMessage("Project created", 1);
+            notificationComponent.ShowNotificationMessage("Invested in project", 1);
 
             storage.AddProject(project);
-
+            
             NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
         }
         else

@@ -1,5 +1,6 @@
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.DataEncoders;
 
 namespace Angor.Shared.ProtocolNew.Scripts;
 
@@ -27,7 +28,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
     {
         return new Script(OpcodeType.OP_RETURN,
             Op.GetPushOp(new PubKey(founderKey).ToBytes()),
-            Op.GetPushOp(new NBitcoin.PubKey(nostrPuKey).GetTaprootFullPubKey().ToBytes()));
+            Op.GetPushOp(Encoders.Hex.DecodeData(nostrPuKey)));
     }
 
     public Script BuildSeederInfoScript(string investorKey, uint256 secretHash)
