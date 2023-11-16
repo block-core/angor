@@ -77,6 +77,8 @@
     {
         searchInProgress = true;
         var blockchainProjects = await _IndexerService.GetProjectsAsync();
+
+        blockchainProjects = blockchainProjects.Where(_ => _.NostrPubKey != null).ToList();
         
         var projectCreators = SessionStorage.GetProjectSubscribedList();
 
@@ -85,7 +87,7 @@
                 .Select(_ => _.NostrPubKey)
                 .Where(nostrPubKey => !projectCreators.Contains(nostrPubKey)));
         
-        await _RelayService.RequestProjectDataAsync<ProjectInfo>(_ =>
+        await _RelayService.LookupProjectsInfoByPubKeysAsync<ProjectInfo>(_ =>
         {
             if (!SessionStorage.IsProjectInStorageById(_.ProjectIdentifier))
                 SessionStorage.StoreProjectInfo(_);

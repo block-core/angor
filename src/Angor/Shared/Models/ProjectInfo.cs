@@ -17,6 +17,6 @@ public class ProjectInfo
     public DateTime ExpiryDate { get; set; }
     public decimal TargetAmount { get; set; }
     public List<Stage> Stages { get; set; } = new();
-    public string TransactionId { get; set; }
+    public string CreationTransactionId { get; set; }
     public ProjectSeeders ProjectSeeders { get; set; } = new();
 }

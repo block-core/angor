@@ -1,12 +1,13 @@
-﻿using System.Diagnostics;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using Angor.Shared.Models;
 using Nostr.Client.Requests;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Client;
 using Nostr.Client.Communicator;
+using Nostr.Client.Json;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
+using Nostr.Client.Messages.Metadata;
 using Nostr.Client.Responses;
 
 namespace Angor.Shared.Services
@@ -40,12 +41,13 @@ namespace Angor.Shared.Services
             {
                 SetupNostrCommunicator();
             }
+
+            if (_nostrClient == null)
+            {
+                SetupNostrClient();
+            }
             
             await _nostrCommunicator.StartOrFail();
-
-            if (_nostrClient != null)
-                return;
-            SetupNostrClient();
         }
 
         public void RegisterOKMessageHandler(string eventId, Action<NostrOkResponse> action)
@@ -53,27 +55,56 @@ namespace Angor.Shared.Services
             OkVerificationActions.Add(eventId,action);
         }
 
-        public Task RequestProjectDataAsync<T>(Action<T> responseDataAction,params string[] nostrPubKeys)
+        public Task LookupProjectsInfoByPubKeysAsync<T>(Action<T> responseDataAction,params string[] nostrPubKeys)
         {
-            string subscriptionName = "ProjectInfoLookups";
-            _nostrClient.Send(new NostrRequest(subscriptionName, new NostrFilter
+            const string subscriptionName = "ProjectInfoLookups";
+            
+            if (_nostrClient == null) 
+                throw new InvalidOperationException("The nostr client is null");
+
+            var request = new NostrRequest(subscriptionName, new NostrFilter
             {
                 Authors = nostrPubKeys,
-                Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata, (NostrKind)30402 },
-            }));
+                Kinds = new[] { NostrKind.ApplicationSpecificData }, //, NostrKind.Metadata, (NostrKind)30402 },
+            });
+
+            _nostrClient.Send(request);
 
             if (!subscriptions.ContainsKey(subscriptionName))
             {
                 var subscription = _nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionName)
-                    .Where(_ => nostrPubKeys.Contains(_.Event.Pubkey))
+                    //.Where(_ => nostrPubKeys.Contains(_.Event.Pubkey))
                     .Select(_ => _.Event)
                     .Subscribe(ev =>
                     {
-                        responseDataAction(Newtonsoft.Json.JsonConvert.DeserializeObject<T>(ev.Content));
+                        responseDataAction(Newtonsoft.Json.JsonConvert.DeserializeObject<T>(ev.Content, NostrSerializer.Settings));
                     });
 
                 subscriptions.Add(subscriptionName, subscription);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task RequestProjectEventsoByPubKeyAsync(string nostrPubKey, Action<NostrEvent> onResponseAction)
+        {
+            if (_nostrClient == null) throw new InvalidOperationException("The nostr client is null");
+            _nostrClient.Send(new NostrRequest(nostrPubKey, new NostrFilter
+            {
+                Authors = new []{nostrPubKey[2..]},
+                Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata},
+            }));
+
+            if (!subscriptions.ContainsKey(nostrPubKey))
+            {
+                var subscription = _nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == nostrPubKey)
+                    .Where(_ => _.Event is not null)
+                    .Select(_ => _.Event)
+                    .Subscribe(onResponseAction!);
+
+                subscriptions.Add(nostrPubKey, subscription);
             }
 
             return Task.CompletedTask;
@@ -87,15 +118,20 @@ namespace Angor.Shared.Services
             }
             _nostrClient?.Dispose();
             _nostrCommunicator?.Dispose();
+            _nostrClient = null;
+            _nostrCommunicator = null;
         }
 
         public Task<string> AddProjectAsync(ProjectInfo project, string hexPrivateKey)
         {
-            var content = Newtonsoft.Json.JsonConvert.SerializeObject(project);
-
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
+
+            if (!project.NostrPubKey.Contains(key.DerivePublicKey().Hex))
+                throw new ArgumentException($"The nostr pub key on the project does not fit the npub calculated from the nsec {project.NostrPubKey} {key.DerivePublicKey().Hex}");
             
-            var signed = GetNip78NostrEvent(project, content)
+            var content = Newtonsoft.Json.JsonConvert.SerializeObject(project, NostrSerializer.Settings);
+            
+            var signed = GetNip78NostrEvent(content)
                 .Sign(key);
 
             if (_nostrClient == null)
@@ -106,14 +142,55 @@ namespace Angor.Shared.Services
             return Task.FromResult(signed.Id);
         }
 
-        private static NostrEvent GetNip78NostrEvent(ProjectInfo project, string content)
+        public Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string hexPrivateKey)
+        {
+            var key = NostrPrivateKey.FromHex(hexPrivateKey);
+
+            var content = Newtonsoft.Json.JsonConvert.SerializeObject(metadata, NostrSerializer.Settings);
+            
+            var signed = new NostrEvent
+                {
+                    Kind = NostrKind.Metadata,
+                    CreatedAt = DateTime.UtcNow,
+                    Content = content,
+                    Tags = new NostrEventTags( //TODO need to find the correct tags for the event
+                        new NostrEventTag("d", "AngorApp", "Create a new project event"),
+                        new NostrEventTag("L", "#projectInfo"),
+                        new NostrEventTag("l", "ProjectDeclaration", "#projectInfo"))
+                }.Sign(key);
+
+            if (_nostrClient == null)
+                throw new InvalidOperationException();
+            
+            _nostrClient.Send(new NostrEventRequest(signed));
+            
+            return Task.FromResult(signed.Id);
+        }
+
+        public Task<string> DeleteProjectAsync(string eventId, string hexPrivateKey)
+        {
+            var key = NostrPrivateKey.FromHex(hexPrivateKey);
+
+            var deleteEvent = new NostrEvent
+            {
+                Kind = NostrKind.EventDeletion,
+                CreatedAt = DateTime.UtcNow,
+                Content = "Failed to publish the transaction to the blockchain",
+                Tags = new NostrEventTags(NostrEventTag.Event(eventId))
+            }.Sign(key);
+
+            _nostrClient.Send(deleteEvent);
+            
+            return Task.FromResult(deleteEvent.Id);
+        }
+        
+        private static NostrEvent GetNip78NostrEvent( string content)
         {
             var ev = new NostrEvent
             {
                 Kind = NostrKind.ApplicationSpecificData,
                 CreatedAt = DateTime.UtcNow,
                 Content = content,
-                Pubkey = project.NostrPubKey,
                 Tags = new NostrEventTags( //TODO need to find the correct tags for the event
                     new NostrEventTag("d", "AngorApp", "Create a new project event"),
                     new NostrEventTag("L", "#projectInfo"),
@@ -129,7 +206,6 @@ namespace Angor.Shared.Services
                 Kind = (NostrKind)30402,
                 CreatedAt = DateTime.UtcNow,
                 Content = content,
-                Pubkey = project.NostrPubKey,
                 Tags = new NostrEventTags( //TODO need to find the correct tags for the event
                     new NostrEventTag("d", "AngorApp", "Create a new project event"),
                     new NostrEventTag("title", "New project :)"),
@@ -181,7 +257,7 @@ namespace Angor.Shared.Services
 
         private void SetupNostrCommunicator()
         {
-            _nostrCommunicator = new NostrWebsocketCommunicator(new Uri("ws://angor-relay.test"))
+            _nostrCommunicator = new NostrWebsocketCommunicator(new Uri("wss://relay.angor.io"))
             {
                 Name = "angor-relay.test",
                 ReconnectTimeout = null //TODO need to check what is the actual best time to set here
