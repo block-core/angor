@@ -8,7 +8,7 @@ using NBitcoin.Crypto;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
 
 
-namespace Angor.Test.Protocol
+namespace Angor.Test.DataBuilders
 {
     public class AngorScripts
     {

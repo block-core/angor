@@ -1,5 +1,5 @@
 using Angor.Shared;
-using Angor.Test.Protocol;
+using Angor.Test.DataBuilders;
 
 namespace Angor.Test
 {

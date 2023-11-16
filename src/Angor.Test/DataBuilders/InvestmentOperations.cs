@@ -20,7 +20,7 @@ using TxOut = Blockcore.Consensus.TransactionInfo.TxOut;
 using Utils = NBitcoin.Utils;
 using WitScript = NBitcoin.WitScript;
 
-namespace Angor.Test.Protocol;
+namespace Angor.Test.DataBuilders;
 
 public class InvestmentOperations
 {

@@ -3,7 +3,7 @@ using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
 
-namespace Angor.Test.Protocol;
+namespace Angor.Test.DataBuilders;
 
 public class ScriptBuilder
 {

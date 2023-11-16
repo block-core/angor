@@ -3,7 +3,7 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.Networks;
 
-namespace Angor.Test.Protocol;
+namespace Angor.Test.DataBuilders;
 
 public class ProjectOperations
 {

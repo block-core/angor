@@ -104,8 +104,6 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var network = _networkConfiguration.GetNetwork();
         var transaction = network.CreateTransaction();
 
-        //transaction.LockTime = Utils.DateTimeToUnixTime(projectInfo.PenaltyDays.AddMinutes(1));
-
         transaction.Version = 2; // to trigger bip68 rules
 
         // add the output address

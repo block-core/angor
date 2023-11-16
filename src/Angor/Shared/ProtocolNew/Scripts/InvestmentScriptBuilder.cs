@@ -15,11 +15,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 
     public Script GetInvestorPenaltyTransactionScript(string investorKey, int punishmentLockDays)
     {
-        // var unixTime = Utils.DateTimeToUnixTime(punishmentLockDays);
-
         var sequence = new Sequence(TimeSpan.FromDays(punishmentLockDays));
-
-        //var totalSeconds = (uint)TimeSpan.FromDays(punishmentLockDays).TotalSeconds;
 
         return new(new List<Op>
         {

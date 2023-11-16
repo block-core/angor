@@ -110,8 +110,6 @@
                     {
                         ProjectIdentifier = signatureInfo.ProjectIdentifier,
                         RecoveryTransactionId = signatureInfo.RecoveryTransactionId,
-                        //DaysLeftForPenalty = (project.PenaltyDays - DateTime.Now).Days,
-                        //IsExpired = (project.PenaltyDays - DateTime.Now).Days <= 0,
                         IsReleased = !string.IsNullOrEmpty(signatureInfo.RecoveryReleaseTransactionId),
                     });
                 }
