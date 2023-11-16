@@ -1,10 +1,11 @@
 ﻿using System.Reactive.Linq;
+using System.Text.Json;
 using Angor.Shared.Models;
+using Angor.Shared.Utilities;
 using Nostr.Client.Requests;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Client;
 using Nostr.Client.Communicator;
-using Nostr.Client.Json;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 using Nostr.Client.Messages.Metadata;
@@ -74,11 +75,10 @@ namespace Angor.Shared.Services
             {
                 var subscription = _nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionName)
-                    //.Where(_ => nostrPubKeys.Contains(_.Event.Pubkey))
                     .Select(_ => _.Event)
                     .Subscribe(ev =>
                     {
-                        responseDataAction(Newtonsoft.Json.JsonConvert.DeserializeObject<T>(ev.Content, NostrSerializer.Settings));
+                        responseDataAction(JsonSerializer.Deserialize<T>(ev.Content,settings));
                     });
 
                 subscriptions.Add(subscriptionName, subscription);
@@ -129,7 +129,7 @@ namespace Angor.Shared.Services
             if (!project.NostrPubKey.Contains(key.DerivePublicKey().Hex))
                 throw new ArgumentException($"The nostr pub key on the project does not fit the npub calculated from the nsec {project.NostrPubKey} {key.DerivePublicKey().Hex}");
             
-            var content = Newtonsoft.Json.JsonConvert.SerializeObject(project, NostrSerializer.Settings);
+            var content = JsonSerializer.Serialize(project,settings);
             
             var signed = GetNip78NostrEvent(content)
                 .Sign(key);
@@ -146,7 +146,7 @@ namespace Angor.Shared.Services
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
-            var content = Newtonsoft.Json.JsonConvert.SerializeObject(metadata, NostrSerializer.Settings);
+            var content = JsonSerializer.Serialize(metadata,settings);
             
             var signed = new NostrEvent
                 {
@@ -281,6 +281,20 @@ namespace Angor.Shared.Services
                     info.Text, info.MessageType);
             });
         }
+        
+        private JsonSerializerOptions settings =>  new ()
+        {
+            // Equivalent to Formatting = Formatting.None
+            WriteIndented = false,
+
+            // Equivalent to NullValueHandling = NullValueHandling.Ignore
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+
+            // PropertyNamingPolicy equivalent to CamelCasePropertyNamesContractResolver
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+
+            Converters = { new UnixDateTimeConverter() }
+        };
     }
 
 }

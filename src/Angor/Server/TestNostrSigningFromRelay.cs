@@ -101,51 +101,18 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
         
         _nostrClient.Streams.EventStream.Where(_ => _.Subscription == nostrPubKey + "1")
             .Where(_ => _.Event.Kind == NostrKind.ApplicationSpecificData)
-            //.Where(_ => _.Event.Pubkey == nostrPubKey)
             .Subscribe(_ =>
             {
                 _clientLogger.LogInformation("application specific data" + _.Event.Content);
-                _storage.Add(JsonConvert.DeserializeObject<ProjectInfo>(_.Event.Content,NostrSerializer.Settings));
+                _storage.Add(System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Event.Content));
             });
 
         _nostrClient.Streams.EventStream.Where(_ => _.Subscription == nostrPubKey + "2")
             .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
-         //   .Where(_ => _.Event.Tags.ContainsTag("p",nostrPubKey))
             .Select(_ => _.Event as NostrEncryptedEvent)
             .Subscribe(nostrEvent =>
             {
-                _clientLogger.LogInformation("encrypted direct message");
-                var project = (_storage.Get().GetAwaiter().GetResult()).First(_ => _.ProjectIdentifier == projectIdentifier);
-                var transactionHex = nostrEvent.DecryptContent(nostrPrivateKey);
-
-                _clientLogger.LogInformation(transactionHex);
-                
-                var sig = signProject(transactionHex,project,projectKeys.founderSigningPrivateKey);
-
-                var stages = sig.Signatures.Select(_ =>  _.Signature );
-
-                foreach (var stage in sig.Signatures)
-                {
-                    var sigJson = JsonConvert.SerializeObject(stage.Signature);
-                    //JsonConvert.SerializeObject(sig.Signatures.OrderBy(_ => _.StageIndex).Select(_ => _.Signature), NostrSerializer.Settings);
-
-                    _logger.LogInformation($"Signature to send for stage {stage.StageIndex}: {sigJson}");
-
-                    var ev = new NostrEvent
-                    {
-                        Kind = NostrKind.EncryptedDm,
-                        CreatedAt = DateTime.UtcNow,
-                        Content = sigJson,
-                        Tags = new NostrEventTags(new[] { NostrEventTag.Profile(nostrEvent.Pubkey) })
-                    };
-
-                    var signed = NostrEncryptedEvent.EncryptDirectMessage(ev, nostrPrivateKey)
-                        .Sign(nostrPrivateKey);
-
-                    _nostrClient.Send(new NostrEventRequest(signed));
-                }
-
-
+                SignInvestorTransactionsAsync(projectIdentifier, nostrEvent, nostrPrivateKey, projectKeys);
             });
         
         _nostrClient.Send(new NostrRequest( nostrPubKey + "1", new NostrFilter
@@ -154,13 +121,45 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
             Kinds = new[] { NostrKind.ApplicationSpecificData },
             Limit = 1
         }));
-        
+
         _nostrClient.Send(new NostrRequest(nostrPubKey + "2", new NostrFilter
         {
-            P = new []{nostrPubKey},
-            Kinds = new[] {NostrKind.EncryptedDm },
+            P = new[] { nostrPubKey },
+            Kinds = new[] { NostrKind.EncryptedDm },
             Since = DateTime.UtcNow
         }));
+    }
+
+    private void SignInvestorTransactionsAsync(string projectIdentifier, NostrEncryptedEvent? nostrEvent,
+        NostrPrivateKey nostrPrivateKey, ProjectKeys projectKeys)
+    {
+        _clientLogger.LogInformation("encrypted direct message");
+        var project = (_storage.Get().GetAwaiter().GetResult()).First(_ => _.ProjectIdentifier == projectIdentifier);
+        var transactionHex = nostrEvent.DecryptContent(nostrPrivateKey);
+
+        _clientLogger.LogInformation(transactionHex);
+
+        var sig = signProject(transactionHex, project, projectKeys.founderSigningPrivateKey);
+        
+        foreach (var stage in sig.Signatures)
+        {
+            var sigJson = System.Text.Json.JsonSerializer.Serialize(stage.Signature);
+
+            _logger.LogInformation($"Signature to send for stage {stage.StageIndex}: {sigJson}");
+
+            var ev = new NostrEvent
+            {
+                Kind = NostrKind.EncryptedDm,
+                CreatedAt = DateTime.UtcNow,
+                Content = sigJson,
+                Tags = new NostrEventTags(new[] { NostrEventTag.Profile(nostrEvent.Pubkey) })
+            };
+
+            var signed = NostrEncryptedEvent.EncryptDirectMessage(ev, nostrPrivateKey)
+                .Sign(nostrPrivateKey);
+
+            _nostrClient.Send(new NostrEventRequest(signed));
+        }
     }
 
     private SignatureInfo signProject(string transactionHex,ProjectInfo info, string founderSigningPrivateKey)

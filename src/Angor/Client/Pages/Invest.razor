@@ -2,12 +2,13 @@
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
-@using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
 @using Blockcore.NBitcoin.DataEncoders
 @using JSException = Microsoft.JSInterop.JSException
+@using Money = Blockcore.NBitcoin.Money
+@using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
 
 @inject IJSRuntime JS
 
@@ -160,16 +161,19 @@
             }
         </div>
 }
-    @if (recoverySigs != null)
+    @if (recoverySigs?.Signatures.Count == project.Stages.Count)
     {
-        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">The founder has signed the recovery transaction</h5>
-                        <button type="button" class="btn-success" @onclick="PublishSignedTransactionAsync">Invest</button>
-                    </div>
-                </div>
+        <div class="card">
+            <div class="card-body">
+                @if (!validatingsignaturs)
+                {
+                    <h5 class="modal-title">The founder has signed the recovery transaction</h5>
+                    <button type="button" class="btn-success" @onclick="PublishSignedTransactionAsync">Invest</button>
+                }
+                else
+                {
+                    <div class="loader"></div>
+                }
             </div>
         </div>
     }
@@ -190,6 +194,7 @@
     Transaction unSignedTransaction;
 
     SignatureInfo recoverySigs;
+    bool validatingsignaturs;
 
     private FeeData feeData = new();
 
@@ -404,31 +409,7 @@
                 content = encryptedContent,
                 NostrPubKey = project.NostrPubKey,
                 InvestorNostrPrivateKey = nostrPrivateKeyHex
-            }, async _ =>
-                {
-                    var test = await javascriptNostrToolsModule.InvokeAsync<string>(
-                        "decryptNostr",
-                        nostrPrivateKeyHex,
-                        project.NostrPubKey,
-                        _);
-
-                    _Logger.LogInformation("signature : " + test);
-                    
-                    recoverySigs ??= new SignatureInfo();
-
-
-                    recoverySigs.Signatures.Add(new SignatureInfoItem
-                    {
-                        Signature = test, StageIndex = recoverySigs.Signatures.Count()
-                    });
-                    
-
-                    if (recoverySigs.Signatures.Count == project.Stages.Count())
-                    {
-                        StateHasChanged();    
-                    }
-                    
-                });
+            }, async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
 
             return new OperationResult { Success = true, };
         });
@@ -443,8 +424,34 @@
         }
     }
 
+    private async Task HandleSignatureReceivedAsync(string? nostrPrivateKeyHex, string _)
+    {
+        var signatureJson = await javascriptNostrToolsModule.InvokeAsync<string>(
+            "decryptNostr",
+            nostrPrivateKeyHex,
+            project.NostrPubKey,
+            _);
+
+        var signature = System.Text.Json.JsonSerializer.Deserialize<string>(signatureJson);
+
+        _Logger.LogInformation("signature : " + signatureJson);
+
+        recoverySigs ??= new SignatureInfo();
+
+        recoverySigs.Signatures.Add(new SignatureInfoItem
+        {
+            Signature = signature, StageIndex = recoverySigs.Signatures.Count()
+        });
+
+        if (recoverySigs.Signatures.Count == project.Stages.Count())
+        {
+            StateHasChanged();
+        }
+    }
+
     public async Task PublishSignedTransactionAsync()
     {
+        validatingsignaturs = true;
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             var validSignatures = _InvestorTransactionActions.CheckInvestorRecoverySignatures(project, signedTransaction, recoverySigs);
@@ -461,7 +468,9 @@
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
-            return !response.Success ? response : new OperationResult { Success = true };
+            //TODO David remove signatures from storage on fail?
+            
+            return response.Success ? new SuccessOperationResult() : response;
         });
 
         if (operationResult.Success)
@@ -474,7 +483,9 @@
         }
         else
         {
+            validatingsignaturs = false;
             notificationComponent.ShowErrorMessage(operationResult.Message);
+            StateHasChanged();
         }
     }
 
