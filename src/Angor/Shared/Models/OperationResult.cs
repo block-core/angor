@@ -6,6 +6,14 @@ public class OperationResult
     public bool Success { get; set; }
 }
 
+public class SuccessOperationResult : OperationResult
+{
+    public SuccessOperationResult()
+    {
+        Success = true;
+    }
+}
+
 public class OperationResult<T> : OperationResult 
 {
     public T? Data { get; set; }
