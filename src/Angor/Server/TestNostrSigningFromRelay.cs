@@ -4,6 +4,7 @@ using System.Text.Json;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.ProtocolNew;
+using Angor.Shared.Utilities;
 using Newtonsoft.Json;
 using Nostr.Client.Client;
 using Nostr.Client.Communicator;
@@ -104,7 +105,8 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
             .Subscribe(_ =>
             {
                 _clientLogger.LogInformation("application specific data" + _.Event.Content);
-                _storage.Add(System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Event.Content));
+                var data = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Event.Content, settings);
+                _storage.Add(data);
             });
 
         _nostrClient.Streams.EventStream.Where(_ => _.Subscription == nostrPubKey + "2")
@@ -175,10 +177,25 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
 
         return sig;
     }
+
+    private JsonSerializerOptions settings => new()
+    {
+        // Equivalent to Formatting = Formatting.None
+        WriteIndented = false,
+
+        // Equivalent to NullValueHandling = NullValueHandling.Ignore
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+
+        // PropertyNamingPolicy equivalent to CamelCasePropertyNamesContractResolver
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+
+        Converters = { new UnixDateTimeConverter() }
+    };
 }
 
 public interface ITestNostrSigningFromRelay
 {
     public Task SignTransactionsFromNostrAsync(string projectIdentifier);
 }
+
 

@@ -110,7 +110,14 @@ namespace Angor.Server
 
             return context.ProjectKeys.First(_ => _.Key == projectid);
         }
-        
+
+        public async Task<IEnumerable<ProjectKeys>> GetAllKeys()
+        {
+            await using var context = new ProjectContext(dbPath);
+
+            return context.ProjectKeys.ToList();
+        }
+
         public async Task<string> GetKey(string projectid)
         {
             await using var context = new ProjectContext(dbPath);

@@ -416,7 +416,7 @@
 
         if (operationResult.Success)
         {
-            notificationComponent.ShowNotificationMessage("Project created", 1);
+            notificationComponent.ShowNotificationMessage("Signature request sent", 1);
         }
         else
         {
@@ -436,7 +436,7 @@
 
         _Logger.LogInformation("signature : " + signatureJson);
 
-        recoverySigs ??= new SignatureInfo();
+        recoverySigs ??= new SignatureInfo() { ProjectIdentifier = project.ProjectIdentifier};
 
         recoverySigs.Signatures.Add(new SignatureInfoItem
         {
