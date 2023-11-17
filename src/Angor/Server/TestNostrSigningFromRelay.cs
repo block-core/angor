@@ -142,26 +142,21 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
         _clientLogger.LogInformation(transactionHex);
 
         var sig = signProject(transactionHex, project, projectKeys.founderSigningPrivateKey);
-        
-        foreach (var stage in sig.Signatures)
+
+        var sigJson = System.Text.Json.JsonSerializer.Serialize(sig, settings);
+        _logger.LogInformation($"Signature to send for stage {sig.ProjectIdentifier} : {sigJson}");
+        var ev = new NostrEvent
         {
-            var sigJson = System.Text.Json.JsonSerializer.Serialize(stage.Signature);
+            Kind = NostrKind.EncryptedDm,
+            CreatedAt = DateTime.UtcNow,
+            Content = sigJson,
+            Tags = new NostrEventTags(new[] { NostrEventTag.Profile(nostrEvent.Pubkey) })
+        };
 
-            _logger.LogInformation($"Signature to send for stage {stage.StageIndex}: {sigJson}");
+        var signed = NostrEncryptedEvent.EncryptDirectMessage(ev, nostrPrivateKey)
+            .Sign(nostrPrivateKey);
 
-            var ev = new NostrEvent
-            {
-                Kind = NostrKind.EncryptedDm,
-                CreatedAt = DateTime.UtcNow,
-                Content = sigJson,
-                Tags = new NostrEventTags(new[] { NostrEventTag.Profile(nostrEvent.Pubkey) })
-            };
-
-            var signed = NostrEncryptedEvent.EncryptDirectMessage(ev, nostrPrivateKey)
-                .Sign(nostrPrivateKey);
-
-            _nostrClient.Send(new NostrEventRequest(signed));
-        }
+        _nostrClient.Send(new NostrEventRequest(signed));
     }
 
     private SignatureInfo signProject(string transactionHex,ProjectInfo info, string founderSigningPrivateKey)
