@@ -76,9 +76,7 @@ namespace Angor.Client.Services
         {
             var indexer = _networkService.GetPrimaryIndexer();
 
-            var endpoint = Path.Combine(indexer.Url, "/api/command/send");
-
-            var response = await _httpClient.PostAsync(endpoint, new StringContent(trxHex));
+            var response = await _httpClient.PostAsync($"{indexer.Url}/api/command/send", new StringContent(trxHex));
             _networkService.CheckAndHandleError(response);
             
             if (response.IsSuccessStatusCode)
