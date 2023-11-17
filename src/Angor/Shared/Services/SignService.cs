@@ -13,7 +13,7 @@ namespace Angor.Client.Services
     public interface ISignService
     {
         Task AddSignKeyAsync(ProjectInfo project, string founderRecoveryPrivateKey, string nostrPrivateKey);
-        Task<string> RequestInvestmentSigsAsync(SignRecoveryRequest signRecoveryRequest, Action<string> action);
+        Task<string> RequestInvestmentSigsAsync(SignRecoveryRequest signRecoveryRequest, Func<string,Task> action);
     }
 
     public class SignService : ISignService
@@ -56,7 +56,7 @@ namespace Angor.Client.Services
              response.EnsureSuccessStatusCode();
         }
 
-        public Task<string> RequestInvestmentSigsAsync(SignRecoveryRequest signRecoveryRequest, Action<string> action)
+        public Task<string> RequestInvestmentSigsAsync(SignRecoveryRequest signRecoveryRequest, Func<string,Task> action)
         {
             var sender = NostrPrivateKey.FromHex(signRecoveryRequest.InvestorNostrPrivateKey);
             //var receiver = NostrPublicKey.FromHex(signRecoveryRequest.NostrPubKey);
@@ -85,7 +85,8 @@ namespace Angor.Client.Services
                 Authors = new []{signRecoveryRequest.NostrPubKey},
                 P = new []{nostrPubKey},
                 Kinds = new[] { NostrKind.EncryptedDm},
-                Since = timeOfMessage
+                Since = timeOfMessage,
+                Limit = 1
             }));
 
             var subscription = _nostrClient.Streams.EventStream

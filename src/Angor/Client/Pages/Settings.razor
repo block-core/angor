@@ -166,13 +166,13 @@
                 return;
             }
 
-            if (!(uri.Scheme == "http" || uri.Scheme == "https"))
+            if (uri.Scheme is not ("http" or "https"))
             {
                 notificationComponent.ShowErrorMessage($"invalid url {newIndexerLink} schema must be http or https");
                 return;
             }
 
-            newIndexerLink = new Uri($"{uri.Scheme}://{uri.Host}/").ToString();
+            newIndexerLink = new Uri($"{uri.Scheme}://{uri.Host}").ToString();
 
             if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
             {
@@ -198,13 +198,13 @@
                 return;
             }
 
-            if (!(uri.Scheme == "ws" || uri.Scheme == "wss"))
+            if (uri.Scheme is not ("ws" or "wss"))
             {
                 notificationComponent.ShowErrorMessage($"invalid url {newRelayLink} schema must be ws or wss");
                 return;
             }
 
-            newRelayLink = new Uri($"{uri.Scheme}://{uri.Host}/").ToString();
+            newRelayLink = new Uri($"{uri.Scheme}://{uri.Host}").ToString();
 
             if (settingsInfo.Relays.Any(a => a.Url == newRelayLink))
             {
