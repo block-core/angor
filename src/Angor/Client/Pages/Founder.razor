@@ -1,11 +1,11 @@
 ﻿@page "/founder"
-@using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
-@inject HttpClient Http
+@using Angor.Shared.Services
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
+@inject IRelayService  RelayService;
 
 @if (!hasWallet)
 {
@@ -24,19 +24,20 @@
             
             <p>Creating a project requires an on-chain transaction and a nostr did</p>
 
-            @if (founderprojects.Count == 0)
+            @if (founderProjects.Count == 0)
             {
                 <p>No projects found.</p>
             }
             else
             {
-                foreach (var project in founderprojects)
+                foreach (var project in founderProjects)
                 {
                     <div class="card mb-3">
                         <div class="card-body">
-                            <h5 class="card-title">@project.ProjectIdentifier</h5>
+                            <h5 class="card-title">@project.ProjectInfo.ProjectIdentifier</h5>
                             <p class="card-text">Nostr ID: <a href="/" target="_blank">@(new Blockcore.NBitcoin.Key().PubKey.ToHex())</a></p>
-                            <NavLink href=@($"/view/{project.ProjectIdentifier}") class="btn btn-primary">View Project</NavLink>
+                            <NavLink href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-primary">View Project</NavLink>
+                            @if (!project.InvestmentRequeests) { <h4 class="text-warning-emphasis">Investments requests require approval!!!</h4> } 
                         </div>
                     </div>
                 }
@@ -51,11 +52,13 @@
 @code {
     private string founderKey;
     private string projectId;
-    private List<ProjectInfo> founderprojects = new();
+    private List<founderProject> founderProjects = new();
     private bool hasWallet;
 
     private NotificationComponent notificationComponent;
 
+
+    DateTime? TODO;
 
     protected override async Task OnInitializedAsync()
     {
@@ -63,12 +66,37 @@
 
         if (hasWallet)
         {
-            founderprojects = storage.GetFounderProjects();
+            foreach (var projectInfo in storage.GetFounderProjects())
+            {
+                founderProjects.Add(new founderProject{ProjectInfo = projectInfo});
+            }
+
+            if (founderProjects.Any())
+            {
+                await RelayService.ConnectToRelaysAsync();
+
+                foreach (var founderProject in founderProjects)
+                {
+                    await RelayService.LookupDirectMessagesForPubKeyAsync(founderProject.ProjectInfo.NostrPubKey, TODO,
+                        _ =>
+                        {
+                            founderProject.InvestmentRequeests = true;
+                            StateHasChanged();
+                        });
+                }
+            }
         }
+    }
+    
+    private class founderProject
+    {
+        public ProjectInfo ProjectInfo { get; set; }
+        public bool InvestmentRequeests { get; set; }
     }
 
     private void NavigateToCreateProject()
     {
         NavigationManager.NavigateTo("/create");
     }
+
 }

@@ -14,5 +14,7 @@ public interface IRelayService
     Task<string> DeleteProjectAsync(string eventId, string hexPrivateKey);
     Task LookupProjectsInfoByPubKeysAsync<T>(Action<T> responseDataAction,params string[] nostrPubKey);
     Task RequestProjectEventsoByPubKeyAsync(string nostrPubKey, Action<NostrEvent> onResponseAction);
+
+    Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, Action<NostrEvent> onResponseAction);
     void CloseConnection();
 }

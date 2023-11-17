@@ -267,7 +267,7 @@
 
             if (_.Kind == NostrKind.ApplicationSpecificData) //In case of a crashed application in the middle of the call
             {
-                var nostrProject = Newtonsoft.Json.JsonConvert.DeserializeObject<ProjectInfo>(_.Content!, NostrSerializer.Settings);
+                var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content!, RelayService.settings);
                 var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectIdentifier == nostrProject!.ProjectIdentifier);
                 if (findProject == null)
                     storage.AddFounderProject(nostrProject!);
