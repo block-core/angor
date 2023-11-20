@@ -2,8 +2,6 @@ using Angor.Server;
 using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Angor.Shared.ProtocolNew;
-using Blockcore.AtomicSwaps.Server;
-using Microsoft.AspNetCore.ResponseCompression;
 using DataConfigOptions = Angor.Server.DataConfigOptions;
 using Angor.Client;
 using Angor.Shared;

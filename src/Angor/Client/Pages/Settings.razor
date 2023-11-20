@@ -172,7 +172,7 @@
                 return;
             }
 
-            newIndexerLink = new Uri($"{uri.Scheme}://{uri.Host}").ToString();
+            newIndexerLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri;
 
             if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
             {
@@ -298,11 +298,11 @@
         await Refresh(true);
     }
 
-    private async Task Refresh(bool forace)
+    private async Task Refresh(bool force)
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            await _networkService.CheckServices(forace);
+            await _networkService.CheckServices(force);
 
             return new OperationResult { Success = true };
 

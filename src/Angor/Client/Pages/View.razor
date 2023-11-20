@@ -239,7 +239,7 @@
             }
             else
             {
-                findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+                findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId).ProjectInfo;
 
                 if (findProject != null)
                 {

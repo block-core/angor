@@ -2,10 +2,13 @@
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Angor.Shared.Services
+@using Angor.Client.Services
+@using Angor.Client.Models
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
 @inject IRelayService  RelayService;
+@inject IIndexerService _IndexerService
 
 @if (!hasWallet)
 {
@@ -24,25 +27,38 @@
             
             <p>Creating a project requires an on-chain transaction and a nostr did</p>
 
-            @if (founderProjects.Count == 0)
+        </div>
+    </div>
+
+           <div class="row">
+                <div class="col">
+    @if (founderProjects.Count == 0)
             {
                 <p>No projects found.</p>
+                
+                @if (scanningForProjects)
+                {
+                    <div class="small loader"></div>
+                }
+                else
+                {
+                    <button class="btn btn-primary mb-4" @onclick="LookupProjectKeysOnIndexerAsync">Scan for founder projects</button>   
+                    <br/>
+                }
+                
+
             }
             else
             {
                 foreach (var project in founderProjects)
                 {
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">@project.ProjectInfo.ProjectIdentifier</h5>
-                            <p class="card-text">Nostr ID: <a href="/" target="_blank">@(new Blockcore.NBitcoin.Key().PubKey.ToHex())</a></p>
-                            <NavLink href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-primary">View Project</NavLink>
-                            @if (!project.InvestmentRequeests) { <h4 class="text-warning-emphasis">Investments requests require approval!!!</h4> } 
-                        </div>
-                    </div>
+                    <Founder_Project ProjectInfo="@project"></Founder_Project>
                 }
             }
-
+            </div>
+        </div>
+    <div class="row">
+        <div class="col">
             <button class="btn btn-primary mb-3" @onclick="NavigateToCreateProject">Create Project</button>
             
         </div>
@@ -52,13 +68,14 @@
 @code {
     private string founderKey;
     private string projectId;
-    private List<founderProject> founderProjects = new();
+    private List<FounderProject> founderProjects = new();
     private bool hasWallet;
+    bool scanningForProjects;
 
     private NotificationComponent notificationComponent;
 
 
-    DateTime? TODO;
+    
 
     protected override async Task OnInitializedAsync()
     {
@@ -66,37 +83,46 @@
 
         if (hasWallet)
         {
-            foreach (var projectInfo in storage.GetFounderProjects())
-            {
-                founderProjects.Add(new founderProject{ProjectInfo = projectInfo});
-            }
-
-            if (founderProjects.Any())
-            {
-                await RelayService.ConnectToRelaysAsync();
-
-                foreach (var founderProject in founderProjects)
-                {
-                    await RelayService.LookupDirectMessagesForPubKeyAsync(founderProject.ProjectInfo.NostrPubKey, TODO,
-                        _ =>
-                        {
-                            founderProject.InvestmentRequeests = true;
-                            StateHasChanged();
-                        });
-                }
-            }
+            founderProjects = storage.GetFounderProjects();
         }
     }
-    
-    private class founderProject
-    {
-        public ProjectInfo ProjectInfo { get; set; }
-        public bool InvestmentRequeests { get; set; }
-    }
 
+    private async Task LookupProjectKeysOnIndexerAsync()
+    {
+        scanningForProjects = true;
+        await RelayService.ConnectToRelaysAsync();
+        
+        var keys = storage.GetFounderKeys();
+
+        var founderProjectsToLookup = new List<string>();
+
+        foreach (var key in keys.Keys)
+        {
+            if (founderProjects.Exists(_ => _.ProjectInfo.ProjectIdentifier == key.ProjectIdentifier))
+                continue;
+
+            var indexerProject = await _IndexerService.GetProjectByIdAsync(key.ProjectIdentifier);
+
+            if (indexerProject == null)
+                break;
+
+            founderProjectsToLookup.Add(key.NostrPubKey);
+        }
+
+        if (founderProjectsToLookup.Any())
+            await RelayService.LookupProjectsInfoByPubKeysAsync<ProjectInfo>(_ =>
+            {
+                var founderProject = new FounderProject { ProjectInfo = _ };
+                storage.AddFounderProject(founderProject);
+                founderProjects.Add(founderProject);
+                scanningForProjects = false;
+                StateHasChanged();
+
+            }, founderProjectsToLookup.ToArray());
+    }
+    
     private void NavigateToCreateProject()
     {
         NavigationManager.NavigateTo("/create");
     }
-
 }

@@ -112,7 +112,7 @@ namespace Angor.Shared.Services
             return Task.CompletedTask;
         }
 
-        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, Action<NostrEvent> onResponseAction)//, Action<NostrEoseResponse> onEoseAction)
+        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)//, Action<NostrEoseResponse> onEoseAction)
         {
             if (_nostrClient == null) 
                 throw new InvalidOperationException("The nostr client is null");
@@ -123,7 +123,8 @@ namespace Angor.Shared.Services
             {
                 P = new[] { nostrPubKey },
                 Kinds = new[] { NostrKind.EncryptedDm },
-                Since = since
+                Since = since,
+                Limit = limit
             }));
 
             if (!userSubscriptions.ContainsKey(subscriptionKey))

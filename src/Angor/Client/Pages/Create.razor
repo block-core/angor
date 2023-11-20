@@ -8,9 +8,9 @@
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
-@using Nostr.Client.Json
 @using Nostr.Client.Messages
 @using Nostr.Client.Messages.Metadata
+@using Angor.Client.Models
 
 @implements IDisposable
 @inherits BaseComponent
@@ -249,8 +249,8 @@
         {
             var projects = storage.GetFounderProjects();
             var keys = storage.GetFounderKeys();
-            var latestProject = projects.MaxBy(p => p.ProjectIndex);
-            var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectIndex + 1 ?? 1);
+            var latestProject = projects.MaxBy(p => p.ProjectInfo.ProjectIndex);
+            var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectInfo.ProjectIndex + 1 ?? 1);
 
             project.ProjectIndex = projectsKeys.Index;
             project.FounderKey = projectsKeys.FounderKey;
@@ -267,10 +267,12 @@
 
             if (_.Kind == NostrKind.ApplicationSpecificData) //In case of a crashed application in the middle of the call
             {
-                var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content!, RelayService.settings);
-                var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectIdentifier == nostrProject!.ProjectIdentifier);
+                if (_.Content == null)
+                    return;
+                var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
+                var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == nostrProject!.ProjectIdentifier);
                 if (findProject == null)
-                    storage.AddFounderProject(nostrProject!);
+                    storage.AddFounderProject(new FounderProject{ProjectInfo = nostrProject});
                 NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");   
             }
             
@@ -325,7 +327,7 @@
 
         var projects = storage.GetFounderProjects();
 
-        if (projects.Any(a => project.ProjectIdentifier == a.ProjectIdentifier))
+        if (projects.Any(a => project.ProjectIdentifier == a.ProjectInfo.ProjectIdentifier))
         {
             notificationComponent.ShowErrorMessage("This wallet already has a project with this index");
             return;
@@ -409,8 +411,8 @@
                 //storage.AddFounderProject(project); TODO remove from storage
                 return response;
             }
-            
-            storage.AddFounderProject(project);
+
+            storage.AddFounderProject(new FounderProject { ProjectInfo = project });
             
             _RelayService.RegisterOKMessageHandler(resultId, _ =>
             {
