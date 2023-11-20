@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using DataConfigOptions = Angor.Server.DataConfigOptions;
 using Angor.Client;
 using Angor.Shared;
+using Blockcore.AtomicSwaps.Server.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +62,13 @@ app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 
-
+// trigger the relay to send over messages
+var storage = app.Services.GetService<TestStorageService>();
+var relay = app.Services.GetService<ITestNostrSigningFromRelay>();
+var projects = storage.GetAllKeys().Result;
+foreach (var project in projects)
+{
+    relay.SignTransactionsFromNostrAsync(project.Key).Wait();
+}
 
 app.Run();

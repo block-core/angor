@@ -1,10 +1,9 @@
-﻿using Angor.Shared;
+﻿using System.Text;
+using Angor.Shared;
 using Angor.Shared.Models;
-using Angor.Shared.Protocol;
 using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;
 using NBitcoin.Policy;
-using System.Text;
 using BitcoinAddress = Blockcore.NBitcoin.BitcoinAddress;
 using FeeRate = Blockcore.NBitcoin.FeeRate;
 using IndexedTxOut = NBitcoin.IndexedTxOut;
@@ -20,6 +19,8 @@ using TransactionBuilder = Blockcore.Consensus.TransactionInfo.TransactionBuilde
 using TxOut = Blockcore.Consensus.TransactionInfo.TxOut;
 using Utils = NBitcoin.Utils;
 using WitScript = NBitcoin.WitScript;
+
+namespace Angor.Test.DataBuilders;
 
 public class InvestmentOperations
 {
@@ -246,7 +247,7 @@ public class InvestmentOperations
 
                 var spendingScript = ScriptBuilder.GetInvestorPenaltyTransactionScript(
                     investorReceiveAddress,
-                    context.ProjectInfo.PenaltyDate);
+                    context.ProjectInfo.PenaltyDays);
                 
                 stageTransaction.Outputs.Add(new NBitcoin.TxOut(_.TxOut.Value,
                     new NBitcoin.Script(spendingScript.WitHash.ScriptPubKey.ToBytes())));

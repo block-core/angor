@@ -45,7 +45,7 @@ public class WalletOperationsTest : AngorTestData
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
             new ProjectScriptsBuilder(_derivationOperations),
             new SpendingTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
-            new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+            new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder()),
             new TaprootScriptBuilder(),
             _networkConfiguration.Object);
 
@@ -150,7 +150,7 @@ public class WalletOperationsTest : AngorTestData
         projectInfo.TargetAmount = 3;
         projectInfo.StartDate = DateTime.UtcNow;
         projectInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
-        projectInfo.PenaltyDate= DateTime.UtcNow.AddDays(10);
+        projectInfo.PenaltyDays= 10;
         projectInfo.Stages = new List<Stage>
         {
             new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },

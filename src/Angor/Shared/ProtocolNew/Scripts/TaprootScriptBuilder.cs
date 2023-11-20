@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using System.Text;
 using Angor.Shared.Models;
-using Angor.Shared.Protocol;
 using Blockcore.NBitcoin;
 using NBitcoin;
 using NBitcoin.Crypto;
@@ -11,6 +10,15 @@ namespace Angor.Shared.ProtocolNew.Scripts;
 
 public class TaprootScriptBuilder : ITaprootScriptBuilder
 {
+    public Script CreateStage(Blockcore.Networks.Network network, ProjectScripts scripts)
+    {
+        var treeInfo = BuildTaprootSpendInfo(scripts);
+
+        var address = treeInfo.OutputPubKey.GetAddress(NetworkMapper.Map(network));
+
+        return new Script(address.ScriptPubKey.ToBytes());
+    }
+
     public Script CreateControlBlock(ProjectScripts scripts, Expression<Func<ProjectScripts,Script>> scriptSelector)
     {
         var treeInfo = BuildTaprootSpendInfo(scripts);

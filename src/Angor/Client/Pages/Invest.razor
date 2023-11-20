@@ -5,10 +5,12 @@
 @using Blockcore.NBitcoin
 @using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
+@using Angor.Shared.Utilities
 @using Blockcore.NBitcoin.DataEncoders
 @using JSException = Microsoft.JSInterop.JSException
 @using Money = Blockcore.NBitcoin.Money
 @using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
+@using System.Text.Json
 
 @inject IJSRuntime JS
 
@@ -104,7 +106,7 @@
 
                         <p class="mb-1"><strong>Start date:</strong> @project.StartDate.ToString("dd/MM/yyyy") in @((project.StartDate - DateTime.Now).Days) days</p>
                         <p class="mb-1"><strong>Expiry date:</strong> @project.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ExpiryDate - DateTime.Now).Days) days</p>
-                        <p class="mb-1"><strong>Penalty date:</strong> @project.PenaltyDate.ToString("dd/MM/yyyy") in @((project.PenaltyDate - DateTime.Now).Days) days</p>
+                        <p class="mb-1"><strong>Penalty days:</strong> @project.PenaltyDays days</p>
 
                         <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
                         <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
@@ -416,7 +418,7 @@
 
         if (operationResult.Success)
         {
-            notificationComponent.ShowNotificationMessage("Project created", 1);
+            notificationComponent.ShowNotificationMessage("Signature request sent", 5);
         }
         else
         {
@@ -426,28 +428,39 @@
 
     private async Task HandleSignatureReceivedAsync(string? nostrPrivateKeyHex, string _)
     {
+        recoverySigs ??= new SignatureInfo() { ProjectIdentifier = project.ProjectIdentifier};
+
         var signatureJson = await javascriptNostrToolsModule.InvokeAsync<string>(
             "decryptNostr",
             nostrPrivateKeyHex,
             project.NostrPubKey,
             _);
 
-        var signature = System.Text.Json.JsonSerializer.Deserialize<string>(signatureJson);
-
         _Logger.LogInformation("signature : " + signatureJson);
 
-        recoverySigs ??= new SignatureInfo();
+        var res = System.Text.Json.JsonSerializer.Deserialize<SignatureInfo>(signatureJson, settings);
 
-        recoverySigs.Signatures.Add(new SignatureInfoItem
+        if (res.ProjectIdentifier == recoverySigs.ProjectIdentifier)
         {
-            Signature = signature, StageIndex = recoverySigs.Signatures.Count()
-        });
-
-        if (recoverySigs.Signatures.Count == project.Stages.Count())
-        {
-            StateHasChanged();
+            recoverySigs.Signatures = res.Signatures;
         }
+
+        StateHasChanged();
     }
+
+    private JsonSerializerOptions settings => new()
+    {
+    // Equivalent to Formatting = Formatting.None
+        WriteIndented = false,
+
+    // Equivalent to NullValueHandling = NullValueHandling.Ignore
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+
+    // PropertyNamingPolicy equivalent to CamelCasePropertyNamesContractResolver
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+
+        Converters = { new UnixDateTimeConverter() }
+    };
 
     public async Task PublishSignedTransactionAsync()
     {
@@ -475,7 +488,7 @@
 
         if (operationResult.Success)
         {
-            notificationComponent.ShowNotificationMessage("Invested in project", 1);
+            notificationComponent.ShowNotificationMessage("Invested in project", 5);
 
             storage.AddProject(project);
             

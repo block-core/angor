@@ -105,8 +105,8 @@
 
         <!-- Penalty Date -->
         <div class="mb-3">
-            <label for="penaltyDate" class="form-label">Penalty Date</label>
-            <InputDate id="penaltyDate" @bind-Value="project.PenaltyDate" class="form-control"/>
+            <label for="penaltyDays" class="form-label">Penalty Days</label>
+            <InputNumber id="penaltyDays" @bind-Value="project.PenaltyDays" class="form-control" />
         </div>
 
         <!-- Expiry Date -->
@@ -160,7 +160,7 @@
 
                         <p class="mb-1"><strong>Start date:</strong> @project.StartDate.ToString("dd/MM/yyyy") in @((project.StartDate - DateTime.Now).Days) days</p>
                         <p class="mb-1"><strong>Expiry date:</strong> @project.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ExpiryDate - DateTime.Now).Days) days</p>
-                        <p class="mb-1"><strong>Penalty date:</strong> @project.PenaltyDate.ToString("dd/MM/yyyy") in @((project.PenaltyDate - DateTime.Now).Days) days</p>
+                        <p class="mb-1"><strong>Penalty days:</strong> @project.PenaltyDays days</p>
 
                         <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
                         <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
@@ -213,7 +213,7 @@
     private ProjectInfo project = new ProjectInfo
     {
         StartDate = DateTime.UtcNow,
-        PenaltyDate = DateTime.UtcNow.AddDays(100),
+        PenaltyDays = 100,
         ExpiryDate = DateTime.UtcNow.AddDays(50),
         TargetAmount = 100,
         CreationTransactionId = "unknowen",

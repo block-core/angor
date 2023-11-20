@@ -13,7 +13,7 @@ public class ProjectInfo
     
     public string NostrPubKey { get; set; }
     public DateTime StartDate { get; set; }
-    public DateTime PenaltyDate { get; set; }
+    public int PenaltyDays { get; set; }
     public DateTime ExpiryDate { get; set; }
     public decimal TargetAmount { get; set; }
     public List<Stage> Stages { get; set; } = new();

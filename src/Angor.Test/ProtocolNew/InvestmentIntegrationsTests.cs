@@ -4,6 +4,7 @@ using Angor.Shared.Networks;
 using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
+using Angor.Test.DataBuilders;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
@@ -79,7 +80,7 @@ namespace Angor.Test
                     new ProjectScriptsBuilder(_derivationOperations),
                     new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
                 new InvestmentTransactionBuilder(_networkConfiguration.Object,
-                    new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+                    new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder()),
                 new TaprootScriptBuilder(), _networkConfiguration.Object);
 
             _investorTransactionActions = new InvestorTransactionActions(new NullLogger<InvestorTransactionActions>(),
@@ -90,7 +91,7 @@ namespace Angor.Test
                     new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
                 new InvestmentTransactionBuilder(_networkConfiguration.Object,
                     new ProjectScriptsBuilder(_derivationOperations),
-                    new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+                    new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder()),
                 new TaprootScriptBuilder(), _networkConfiguration.Object);
 
             _founderTransactionActions = new FounderTransactionActions(new NullLogger<FounderTransactionActions>(), _networkConfiguration.Object,
@@ -258,8 +259,8 @@ namespace Angor.Test
             projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
                 _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
-            
-            projectInvestmentInfo.PenaltyDate = DateTime.Now.AddMonths(6);
+
+            projectInvestmentInfo.PenaltyDays = 180;
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
@@ -433,7 +434,7 @@ namespace Angor.Test
                     FounderKey = funderKey,
                     FounderRecoveryKey = founderRecoveryKey,
                     ProjectIdentifier = angorKey,
-                    PenaltyDate = DateTime.UtcNow.AddDays(5),
+                    PenaltyDays = 5,
                     ProjectSeeders = new ProjectSeeders()
                 },
                 InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes()),
@@ -449,7 +450,7 @@ namespace Angor.Test
 
             var recoveryTransaction = _seederTransactionActions.BuildRecoverSeederFundsTransaction(investorContext.ProjectInfo, 
                 investmentTransaction,
-                investorContext.ProjectInfo.PenaltyDate, Encoders.Hex.EncodeData(seederFundsRecoveryKey.PubKey.ToBytes()));
+                investorContext.ProjectInfo.PenaltyDays, Encoders.Hex.EncodeData(seederFundsRecoveryKey.PubKey.ToBytes()));
 
             var founderSignatures = _founderTransactionActions.SignInvestorRecoveryTransactions(investorContext.ProjectInfo,
                 investmentTransaction.ToHex(),recoveryTransaction,
@@ -493,7 +494,7 @@ namespace Angor.Test
                     TargetAmount = 3,
                     StartDate = DateTime.UtcNow,
                     ExpiryDate = DateTime.UtcNow.AddDays(5),
-                    PenaltyDate = DateTime.UtcNow.AddDays(5),
+                    PenaltyDays = 5,
                     Stages = new List<Stage>
                     {
                         new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },

@@ -13,16 +13,16 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         _seederScriptTreeBuilder = seederScriptTreeBuilder;
     }
 
-    public Script GetInvestorPenaltyTransactionScript(string investorKey, DateTime punishmentLockTime)
+    public Script GetInvestorPenaltyTransactionScript(string investorKey, int punishmentLockDays)
     {
-        var unixTime = Utils.DateTimeToUnixTime(punishmentLockTime);
-        
+        var sequence = new Sequence(TimeSpan.FromDays(punishmentLockDays));
+
         return new(new List<Op>
         {
             Op.GetPushOp(new NBitcoin.PubKey(investorKey).ToBytes()),
             OpcodeType.OP_CHECKSIGVERIFY,
-            Op.GetPushOp(unixTime),
-            OpcodeType.OP_CHECKLOCKTIMEVERIFY
+            Op.GetPushOp((uint)sequence),
+            OpcodeType.OP_CHECKSEQUENCEVERIFY
         });
     }
 

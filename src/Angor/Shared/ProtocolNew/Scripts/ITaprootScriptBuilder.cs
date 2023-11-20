@@ -6,6 +6,8 @@ namespace Angor.Shared.ProtocolNew.Scripts;
 
 public interface ITaprootScriptBuilder
 {
+    Script CreateStage(Blockcore.Networks.Network network, ProjectScripts scripts);
+
     public Script CreateControlBlock(ProjectScripts scripts, Expression<Func<ProjectScripts, Script>> func);
 
     (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts, int threshold,

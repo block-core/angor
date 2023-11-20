@@ -4,6 +4,7 @@ using System.Text.Json;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.ProtocolNew;
+using Angor.Shared.Utilities;
 using Newtonsoft.Json;
 using Nostr.Client.Client;
 using Nostr.Client.Communicator;
@@ -104,7 +105,8 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
             .Subscribe(_ =>
             {
                 _clientLogger.LogInformation("application specific data" + _.Event.Content);
-                _storage.Add(System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Event.Content));
+                var data = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Event.Content, settings);
+                _storage.Add(data);
             });
 
         _nostrClient.Streams.EventStream.Where(_ => _.Subscription == nostrPubKey + "2")
@@ -140,26 +142,21 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
         _clientLogger.LogInformation(transactionHex);
 
         var sig = signProject(transactionHex, project, projectKeys.founderSigningPrivateKey);
-        
-        foreach (var stage in sig.Signatures)
+
+        var sigJson = System.Text.Json.JsonSerializer.Serialize(sig, settings);
+        _logger.LogInformation($"Signature to send for stage {sig.ProjectIdentifier} : {sigJson}");
+        var ev = new NostrEvent
         {
-            var sigJson = System.Text.Json.JsonSerializer.Serialize(stage.Signature);
+            Kind = NostrKind.EncryptedDm,
+            CreatedAt = DateTime.UtcNow,
+            Content = sigJson,
+            Tags = new NostrEventTags(new[] { NostrEventTag.Profile(nostrEvent.Pubkey) })
+        };
 
-            _logger.LogInformation($"Signature to send for stage {stage.StageIndex}: {sigJson}");
+        var signed = NostrEncryptedEvent.EncryptDirectMessage(ev, nostrPrivateKey)
+            .Sign(nostrPrivateKey);
 
-            var ev = new NostrEvent
-            {
-                Kind = NostrKind.EncryptedDm,
-                CreatedAt = DateTime.UtcNow,
-                Content = sigJson,
-                Tags = new NostrEventTags(new[] { NostrEventTag.Profile(nostrEvent.Pubkey) })
-            };
-
-            var signed = NostrEncryptedEvent.EncryptDirectMessage(ev, nostrPrivateKey)
-                .Sign(nostrPrivateKey);
-
-            _nostrClient.Send(new NostrEventRequest(signed));
-        }
+        _nostrClient.Send(new NostrEventRequest(signed));
     }
 
     private SignatureInfo signProject(string transactionHex,ProjectInfo info, string founderSigningPrivateKey)
@@ -175,10 +172,25 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
 
         return sig;
     }
+
+    private JsonSerializerOptions settings => new()
+    {
+        // Equivalent to Formatting = Formatting.None
+        WriteIndented = false,
+
+        // Equivalent to NullValueHandling = NullValueHandling.Ignore
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+
+        // PropertyNamingPolicy equivalent to CamelCasePropertyNamesContractResolver
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+
+        Converters = { new UnixDateTimeConverter() }
+    };
 }
 
 public interface ITestNostrSigningFromRelay
 {
     public Task SignTransactionsFromNostrAsync(string projectIdentifier);
 }
+
 
