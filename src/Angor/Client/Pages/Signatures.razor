@@ -1,0 +1,124 @@
+﻿@page "/signatures/{ProjectIdentifier}"
+@using Angor.Shared
+@using Angor.Client.Storage
+@using Angor.Shared.Models
+@using Angor.Client.Services
+@using Blockcore.Consensus.ScriptInfo
+@using Blockcore.NBitcoin
+
+@inject HttpClient Http
+@inject IDerivationOperations _derivationOperations
+@inject IWalletStorage _walletStorage;
+@inject IClientStorage storage;
+@inject NavigationManager NavigationManager
+@inject INetworkConfiguration _NetworkConfiguration
+@inject IIndexerService _IndexerService
+
+@inherits BaseComponent
+
+@if (!hasWallet)
+{
+    NavigationManager.NavigateTo($"/wallet");
+    return;
+}
+
+<h3>Pending Signatures</h3>
+
+<div class="container mt-4">
+    
+    Project ID: <span id="transactionID">@ProjectIdentifier</span>
+
+    <NotificationComponent @ref="notificationComponent" />
+        
+    @if (!pendingSignatures.Any())
+    {
+        <p><em>No pending signatures yet...</em></p>
+    }
+    else
+    {
+        <!-- Signatures Details Section -->
+        <div class="row mt-4">
+            <div class="col">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                    <tr>
+                        <th>Amount to Invest</th>
+                        <th>Time Arrived</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var signature in pendingSignatures)
+                    {
+                        <tr>
+                            <td>@signature.AmountToInvest BTC</td>
+                            <td>@signature.TimeArrived.ToString("g")</td>
+                            <td>
+                                <button class="btn btn-success" @onclick="() => ApproveSignature(signature)">Approve</button>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string ProjectIdentifier { get; set; }
+
+    private List<SignatureRequest> pendingSignatures = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (hasWallet)
+        {
+            pendingSignatures = await FetchPendingSignatures(ProjectIdentifier);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (hasWallet)
+            {
+                var operationResult = await notificationComponent.LongOperation(async () =>
+                {
+                    return new OperationResult { Success = true };
+
+                });
+
+                if (operationResult.Success)
+                {
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+    private async Task<List<SignatureRequest>> FetchPendingSignatures(string projectId)
+    {
+        return new List<SignatureRequest>()
+        {
+            new SignatureRequest {AmountToInvest = 10, TimeArrived = DateTime.UtcNow},
+            new SignatureRequest {AmountToInvest = 20, TimeArrived = DateTime.UtcNow}
+        }; 
+    }
+
+    private async Task ApproveSignature(SignatureRequest signature)
+    {
+         // Implementation to approve the signature
+    }
+
+    public class SignatureRequest
+    {
+        public int Id { get; set; }
+
+        public decimal AmountToInvest { get; set; }
+
+        public DateTime TimeArrived { get; set; }
+
+    }
+}
