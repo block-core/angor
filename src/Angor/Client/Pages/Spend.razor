@@ -180,7 +180,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        project = storage.GetFounderProjects().First(p => p.ProjectInfo.ProjectIdentifier == ProjectId).ProjectInfo;
+        project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
