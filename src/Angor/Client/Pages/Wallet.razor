@@ -169,15 +169,13 @@
                             <div class="col-lg-6">
                                 <h4 class="card-title">QR Code</h4>
                                 <!-- Replace the src with your actual QR code -->
-                                <img src="https://via.placeholder.com/150" class="card-img-top qrcode" alt="QR Code" />
+                                <img src="data:image /png;base64,@base64qrcode" class="card-img-top qrcode" alt="QR Code" />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-            
-        
         
 
 
@@ -391,6 +389,8 @@
     private int _feeMax = 3;
     DateTime _lastFeeRefresh = DateTime.MinValue;
 
+    private string base64qrcode;
+
     protected override Task OnInitializedAsync()
     {
         hasWallet = _walletStorage.HasWallet();
@@ -399,6 +399,9 @@
         {
             localAccountInfo = GetAccountInfoFromStorage();
         }
+
+        GenerateQRCode();
+
         return Task.CompletedTask;
     }
     
@@ -475,7 +478,7 @@
         ClearWalletWords();
         StateHasChanged();
     }
-    
+
     private void ClearWalletWords()
     {
         walletWords = null;
@@ -520,7 +523,30 @@
 
         await _clipboardService.WriteTextAsync(address);
     }
-    
+
+    private static string lastqrcode;
+    private static string lastaddress;
+
+    private void GenerateQRCode()
+    {
+        if (lastaddress == localAccountInfo.GetNextReceiveAddress())
+        {
+            base64qrcode = lastqrcode;
+            return;
+        }
+
+        Task.Run(() =>
+        {
+            var address = localAccountInfo.GetNextReceiveAddress();
+
+            base64qrcode = Util.GenerateQRCode(address);
+            lastqrcode = base64qrcode;
+            lastaddress = address;
+
+            StateHasChanged();
+        });
+    }
+
     private async Task RefreshFee()
     {
         // refresh fee if last refresh was 60 seconds ago
