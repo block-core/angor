@@ -14,6 +14,8 @@
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IClipboardService _clipboardService
 
+@inherits BaseComponent
+
 <div class="container mt-4">
     <h3>View Project</h3>
 
@@ -32,136 +34,148 @@
     else
     {
         <!-- Project Details Section -->
-        <div class="row mt-4">
-            <div class="col">
+        <div class="card mb-3">
+            <div class="card-header">
                 <h4>Project Details</h4>
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
-                        <a href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
-                        <p class="card-text">Founder Key: @project.FounderKey</p>
-                        <p class="card-text">Start Date: @project.StartDate.ToString("dd/MM/yyyy")</p>
-                        <p class="card-text">Penalty Days: @project.PenaltyDays</p>
-                        <p class="card-text">Expiry Date: @project.ExpiryDate.ToString("dd/MM/yyyy")</p>
-                        <p class="card-text">Target Amount: @project.TargetAmount</p>
-                        <h5>Stages:</h5>
-                        @foreach (var stage in project.Stages)
-                        {
-                            <hr /> <!-- This adds a horizontal line -->
-                            <p class="card-text">Amount to Release: @stage.AmountToRelease%</p>
-                            <p class="card-text">Release Date: @stage.ReleaseDate.ToString("dd/MM/yyyy")</p>
-                        }
-                    </div>
-                </div>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
+                <a href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
+                <p class="card-text">Founder Key: @project.FounderKey</p>
+                <p class="card-text">Start Date: @project.StartDate.ToString("dd/MM/yyyy")</p>
+                <p class="card-text">Penalty Days: @project.PenaltyDays</p>
+                <p class="card-text">Expiry Date: @project.ExpiryDate.ToString("dd/MM/yyyy")</p>
+                <p class="card-text">Target Amount: @project.TargetAmount</p>
             </div>
         </div>
 
-        <!-- Selected Seeders Section -->
-        <div class="row mt-4">
-            <div class="col">
-                <h4>Selected Seeders</h4>
-                @if (SelectedSeeders.Any())
-                {
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th>Seeder Hash</th>
-                            <th>Amount</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var seeder in SelectedSeeders)
+        <!-- Stages Section -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h4>Stages</h4>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Stage </th>
+                        <th>Stage %</th>
+                        <th>Release Date</th>
+                        <!-- Other headers -->
+                    </tr>
+                    </thead>
+                    <tbody>
+                        @for (int index = 0; index < project.Stages.Count; index++)
                         {
                             <tr>
-                                <td>@seeder.Hash</td>
-                                <td>@seeder.Amount</td>
+                                <td>@(index + 1)</td>
+                                <td>@project.Stages[index].AmountToRelease %</td>
+                                <td>@project.Stages[index].ReleaseDate.ToString("dd/MM/yyyy")</td>
+                                <!-- Other stage details -->
                             </tr>
                         }
-                        </tbody>
-                    </table>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Seeders Section -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h4>Selected Seeders</h4>
+            </div>
+            <div class="card-body">
+                @if (SelectedSeeders.Any())
+                {
+                    <!-- Seeders table -->
                 }
                 else
                 {
-                    <p>No seeders yet.</p>
+                    <p><i class="bi bi-exclamation-triangle-fill"></i> No seeders yet.</p>
                 }
             </div>
         </div>
 
         <!-- Stats Section -->
-        <div class="row mt-4">
-            <div class="col">
+        <div class="card mb-3">
+            <div class="card-header">
                 <h4>Stats</h4>
-                <div class="card">
-                    <div class="card-body">
-                        <p class="card-text">Total Raised: @projectStats.TotalRaised BTC</p>
-                        <p class="card-text">Total Investors: @projectStats.TotalInvestors</p>
-                        <p class="card-text">Total Seeders: @projectStats.TotalSeeders seeders</p>
-                        <p class="card-text">Time Left for Investing: @projectStats.TimeLeft days</p>
+            </div>
+            <div class="card-body">
+                <!-- Progress bar section -->
+                <div class="progress mb-2">
+                    <div class="progress-bar" role="progressbar" style="width: @projectStats.FundingProgressPercent%;" aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+
+                <!-- Additional details section -->
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <p class="card-text mb-0">Total Raised: @projectStats.TotalRaised BTC</p>
+                        <p class="card-text mb-0">Total Investors: @projectStats.TotalInvestors</p>
+                        <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>
+                        <p class="card-text mb-0">Time Left for Investing: @projectStats.TimeLeft days</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Invest Button Section -->
-        <div class="row mt-4">
-            <div class="col">
-                <h4>Invest</h4>
 
-                    @if (founder)
-                    {
-                        <p>You are the founder.</p>
-
-                        <div class="mb-3">
-                            <!-- Buttons Spend Funds and Approve Signature next to each other -->
-                            <NavLink href=@($"/spend/{project.ProjectIdentifier}") class="btn btn-primary me-2">Spend Funds</NavLink>
-                            <NavLink href=@($"/signatures/{project.ProjectIdentifier}") class="btn btn-primary">Approve signature</NavLink>
-                        </div>
-
-                        @if (project.NostrPubKey != null)
-                        {
-                            <div class="mb-3">
-                                <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
-                                <div class="input-group">
-                                    <InputText id="NostrPublicKey" @bind-Value="project.NostrPubKey" class="form-control" placeholder="@project.NostrPubKey" readonly/>
-                                    <button @onclick="CopyWordsToClibboardAsync" class="btn btn-success">Copy NSec to clipboard</button>
-                                </div>
-                            </div>
-                        }
-
-                    }
-                    else if (invested)
-                    {
-                        <p>You have already invested in this project.
-
-                            <a href="@myProjectExplorerLink" target="_blank">View the transaction on the explorer.</a>
-                        </p>
-
-                        <button class="btn btn-danger" @onclick="RecoverFunds">Recover</button>
-                    }
-                    else
-                    {
-                        <button class="btn btn-primary" @onclick="InvestInProject">Invest</button>
-                    }
+        <!-- Actions Section -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h4>Actions</h4>
             </div>
-        </div>
-
-        <!-- Nostr Clients and Events Section -->
-        <div class="row mt-4">
-            <div class="col">
-                <h4>View on nostr</h4>
-
-                @if (NostrClients.Any())
+            <div class="card-body">
+                @if (founder)
                 {
-                    <ul>
-                        @foreach (var client in NostrClients)
-                        {
-                            <li>@client</li>
-                        }
-                    </ul>
+                    <p>You are the founder.</p>
+
+                    <div class="mb-3">
+                        <!-- Buttons Spend Funds and Approve Signature next to each other -->
+                        <NavLink href=@($"/spend/{project.ProjectIdentifier}") class="btn btn-primary me-2">Spend Funds</NavLink>
+                        <NavLink href=@($"/signatures/{project.ProjectIdentifier}") class="btn btn-primary">Approve signature</NavLink>
+                    </div>
+
+                    @if (project.NostrPubKey != null)
+                    {
+                        <div class="mb-3">
+                            <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
+                            <div class="input-group">
+                                <InputText id="NostrPublicKey" @bind-Value="project.NostrPubKey" class="form-control" placeholder="@project.NostrPubKey" readonly/>
+                                <button @onclick="CopyWordsToClibboardAsync" class="btn btn-success">Copy NSec to clipboard</button>
+                            </div>
+                        </div>
+                    }
+
+                }
+                else if (invested)
+                {
+                    <p>You have already invested in this project.
+
+                        <a href="@myProjectExplorerLink" target="_blank">View the transaction on the explorer.</a>
+                    </p>
+
+                    <button class="btn btn-danger" @onclick="RecoverFunds">Recover</button>
                 }
                 else
                 {
-                    <p>No clients found for this project.</p>
+                    <button class="btn btn-primary" @onclick="InvestInProject">Invest</button>
+                }
+            </div>
+        </div>
+      
+
+        <!-- Relays Section -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h4>Relays</h4>
+            </div>
+            <div class="card-body">
+                @foreach (var relay in NostrClients)
+                {
+                    <a href="@relay" target="_blank" class="d-block mb-2">
+                        <i class="bi bi-globe"></i> @relay
+                    </a>
                 }
             </div>
         </div>
@@ -174,10 +188,7 @@
 
     private ProjectInfo? project;
 
-    private NotificationComponent notificationComponent;
-
     private bool sendConfirmModal;
-    private bool hasWallet;
 
     string myProjectExplorerLink;
     string projectExplorerLink;
@@ -194,6 +205,8 @@
         public int TotalInvestors { get; set; }
         public int TotalSeeders { get; set; }
         public int TimeLeft { get; set; }
+        public int FundingProgressPercent { get; set; }
+        
     };
 
     ProjectStats projectStats = new ProjectStats
@@ -201,18 +214,17 @@
         TimeLeft = 7,
         TotalInvestors = 150,
         TotalRaised = 240,
-        TotalSeeders = 7
+        TotalSeeders = 7,
+        FundingProgressPercent = 50,
     };
 
     bool founder = false;
     bool invested = false;
 
-    private List<string> NostrClients = new List<string> { "link1", "link2" };
+    private List<string> NostrClients = new List<string> { "wss://relay.angor.io", "wss://relay.angor1.io" };
 
     protected override Task OnInitializedAsync()
     {
-        hasWallet = _walletStorage.HasWallet();
-
         if (hasWallet)
         {
             var findProject = storage.GetProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
