@@ -83,14 +83,14 @@
 
                 <div class="mb-3">
                     <span class="fs-4">Confirmed balance: </span>
-                    <span class="fs-3"><strong> @Money.Satoshis(localAccountInfo.TotalBalance).ToUnit(MoneyUnit.BTC) @symbol</strong></span> <!-- replace this with actual balance -->
+                    <span class="fs-3"><strong> @Money.Satoshis(localAccountInfo.TotalBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong></span> <!-- replace this with actual balance -->
                 </div>
 
                 @if (localAccountInfo.TotalUnConfirmedBalance > 0)
                 {
                     <div class="mb-3">
                         <span class="fs-6">Unconfirmed balance: </span>
-                        <span class="fs-5"> @Money.Satoshis(localAccountInfo.TotalUnConfirmedBalance).ToUnit(MoneyUnit.BTC) @symbol</span> <!-- replace this with actual unconfirmed balance -->
+                        <span class="fs-5"> @Money.Satoshis(localAccountInfo.TotalUnConfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span> <!-- replace this with actual unconfirmed balance -->
                     </div>
                 }
 
@@ -218,7 +218,7 @@
                             <div class="modal-body">
                                 <!-- The tick boxes and amounts will go here -->
 
-                                <p>Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) BTC</p>
+                                <p>Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
                                 @foreach (var addressInfo in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
                                 {
@@ -229,7 +229,7 @@
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" value="@isTicked" id="@addressUtxoItem" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
                                             <label class="form-check-label" style="font-size: 0.7em;" for="@addressUtxoItem">
-                                                @($"{addressUtxoItem.outpoint} - {Money.Satoshis(@addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} BTC")
+                                                @($"{addressUtxoItem.outpoint} - {Money.Satoshis(@addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} {@network.CoinTicker}")
                                             </label>
                                         </div>
                                     }
@@ -254,7 +254,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="() => sendConfirmModal = false"></button>
                             </div>
                             <div class="modal-body">
-                                Are you sure you want to send <strong>@_sendInfo.SendAmount BTC</strong> to <strong> @_sendInfo.SendToAddress?</strong>
+                                Are you sure you want to send <strong>@_sendInfo.SendAmount @network.CoinTicker</strong> to <strong> @_sendInfo.SendToAddress?</strong>
                                 
                                 <br/>
 
@@ -278,7 +278,7 @@
                                 @foreach (var infoSendUtxo in _sendInfo.SendUtxos)
                                 {
                                     <br />
-                                    <p style="font-size: 0.7em;">@Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) BTC - @infoSendUtxo.Key</p>
+                                    <p style="font-size: 0.7em;">@Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker - @infoSendUtxo.Key</p>
                                 }
 
                             </div>
@@ -320,7 +320,7 @@
                             {
                                 <tr data-bs-toggle="collapse" class="clickable-row" data-bs-target="#@addressInfo.Address" aria-expanded="false" aria-controls="collapseExample1">
                                     <td>@addressInfo.Address</td>
-                                    <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) BTC</td>
+                                    <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
                                     <td>@addressInfo.HdPath</td>
                                     <td>@count</td>
                                 </tr>
@@ -341,7 +341,7 @@
                                                     {
                                                         <tr>
                                                             <td>@($"{addressUtxoItem.outpoint}")</td>
-                                                            <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) BTC </td>
+                                                                <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
                                                         </tr>
                                                     }
                                                     </tbody>
@@ -386,8 +386,6 @@
 
     private FeeEstimations FeeEstimations = new ();
 
-    string symbol = "BTC";
-
     // Max index for the range input
     private int FeeMin = 1;
     private int _feeMax = 3;
@@ -400,8 +398,6 @@
         if (hasWallet)
         {
             localAccountInfo = GetAccountInfoFromStorage();
-            var network = _networkConfiguration.GetNetwork();
-            symbol = network.CoinTicker;
         }
         return Task.CompletedTask;
     }

@@ -40,7 +40,7 @@
         <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount BTC (@investedCount trx) </h5>
+                    <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
                     @if (stageisActive)
                     {
                         <button class="btn btn-success" @onclick="() => ClaimCoins(stage.StageIndex)">Claim Coins</button>
@@ -71,8 +71,8 @@
                                 </div>
                                 <div class="flex-grow-1 ms-3">
                                     <p class="mb-0">
-                                        @transaction.Amount BTC - utxo : @transaction.Trxid-@transaction.Outputindex 
-                                      
+                                        @transaction.Amount @network.CoinTicker - utxo : @transaction.Trxid-@transaction.Outputindex
+
                                         @if (transaction.IsSepnt)
                                         {
                                             <p class="text-primary">spent</p>
@@ -106,7 +106,7 @@
                         
                         <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
 
-                        <p class="mb-1">The transactions to be spent @signedTransaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) BTC</p>
+                        <p class="mb-1">The transactions to be spent @signedTransaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
 
                         <hr>
 

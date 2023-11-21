@@ -50,7 +50,7 @@
                         {
                             <tr>
                                 <td>@penalty.ProjectIdentifier</td>
-                                <td>@penalty.Amount BTC</td>
+                                <td>@penalty.Amount @network.CoinTicker</td>
                                 <td>
                                     @if (penalty.IsExpired)
                                     {

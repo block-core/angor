@@ -156,7 +156,7 @@
                         <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
                         <p class="mb-1"><strong>Founder Key:</strong> @project.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
 
-                        <p class="mb-1"><strong>Target amount:</strong> @project.TargetAmount BTC</p>
+                        <p class="mb-1"><strong>Target amount:</strong> @project.TargetAmount @network.CoinTicker</p>
 
                         <p class="mb-1"><strong>Start date:</strong> @project.StartDate.ToString("dd/MM/yyyy") in @((project.StartDate - DateTime.Now).Days) days</p>
                         <p class="mb-1"><strong>Expiry date:</strong> @project.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ExpiryDate - DateTime.Now).Days) days</p>

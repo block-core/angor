@@ -6,6 +6,8 @@
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
 
+@inherits BaseComponent
+
 @if (!hasWallet)
 {
     NavigationManager.NavigateTo($"/wallet");
@@ -33,7 +35,7 @@
             <div class="card text-white bg-success">
                 <div class="card-body">
                     <h5 class="card-title">Total invested</h5>
-                    <p class="card-text"> @projects.Sum(s => s.TargetAmount) BTC</p>
+                    <p class="card-text"> @projects.Sum(s => s.TargetAmount) @network.CoinTicker</p>
                 </div>
             </div>
         </div>
@@ -69,10 +71,7 @@
 
 @code {
 
-    private NotificationComponent notificationComponent;
-
     private List<ProjectInfo> projects;
-    private bool hasWallet;
 
     protected override Task OnInitializedAsync()
     {

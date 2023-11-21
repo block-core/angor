@@ -40,11 +40,11 @@
         <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
     </p>
     
-    <p>Total funds to recover = @StageInfo.TotalSpendable BTC</p>
+    <p>Total funds to recover = @StageInfo.TotalSpendable @network.CoinTicker</p>
     
     @if (StageInfo.CanRelease)
     {
-        <p>Total funds in penalty = @StageInfo.TotalInPenalty BTC</p>
+        <p>Total funds in penalty = @StageInfo.TotalInPenalty @network.CoinTicker</p>
     }
 
     @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
@@ -74,7 +74,7 @@
             @foreach (var item in StageInfo.Items)
             {
                 <tr>
-                    <td>@item.Amount BTC</td>
+                    <td>@item.Amount @network.CoinTicker</td>
                     <td>@item.OutputAddress</td>
                     <td>
                         @if (item.IsSpent)
@@ -104,7 +104,7 @@
 
                         <p class="mb-1">The number of stages to be recovered is @StageInfo.Items.Count(s => !s.IsSpent) </p>
 
-                        <p class="mb-1">The amount to be recovered in to a penalty = @StageInfo.Items.Where(s=> !s.IsSpent).Sum(s=> s.Amount) BTC</p>
+                        <p class="mb-1">The amount to be recovered in to a penalty = @StageInfo.Items.Where(s=> !s.IsSpent).Sum(s=> s.Amount) @network.CoinTicker</p>
 
                         <p class="mb-1">The penalty duration is @project.PenaltyDays days </p>
                         
@@ -139,7 +139,7 @@
                     </div>
                     <div class="modal-body">
 
-                        <p class="mb-1">The amount to be released from the penalty = @Money.Satoshis(releaseRecoveryTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) BTC</p>
+                        <p class="mb-1">The amount to be released from the penalty = @Money.Satoshis(releaseRecoveryTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
                         <p class="mb-1">Send to @releaseRecoveryTransaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
 
@@ -174,7 +174,7 @@
                     </div>
                     <div class="modal-body">
 
-                        <p class="mb-1">The amount to claim back after project ended = @Money.Satoshis(endOfProjectTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) BTC</p>
+                        <p class="mb-1">The amount to claim back after project ended = @Money.Satoshis(endOfProjectTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
                         <p class="mb-1">Send to @endOfProjectTransaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
 
