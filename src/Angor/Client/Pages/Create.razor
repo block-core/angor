@@ -8,9 +8,9 @@
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
-@using Nostr.Client.Json
 @using Nostr.Client.Messages
 @using Nostr.Client.Messages.Metadata
+@using Angor.Client.Models
 
 @implements IDisposable
 @inherits BaseComponent
@@ -225,19 +225,7 @@
         }
     };
 
-    private class NostrMetadataCollection
-    {
-        public string Name { get; set; }
-        public string Website { get; set; }
-        public string About { get; set; }
-        public string Picture { get; set; }
-        public string Nip05 { get; set; }
-        public string Lud16 { get; set; }
-        public string Banner { get; set; }
-        public string Nip57 { get; set; }
-    }
-    
-    NostrMetadataCollection NostrMetadata = new ();
+    ProjectMetadata NostrMetadata = new ();
     bool nostrProfileCreated;
     bool applicationDataOnNostr;
 
@@ -249,8 +237,8 @@
         {
             var projects = storage.GetFounderProjects();
             var keys = storage.GetFounderKeys();
-            var latestProject = projects.MaxBy(p => p.ProjectIndex);
-            var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectIndex + 1 ?? 1);
+            var latestProject = projects.MaxBy(p => p.ProjectInfo.ProjectIndex);
+            var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectInfo.ProjectIndex + 1 ?? 1);
 
             project.ProjectIndex = projectsKeys.Index;
             project.FounderKey = projectsKeys.FounderKey;
@@ -261,16 +249,18 @@
 
         await _RelayService.ConnectToRelaysAsync();
 
-        await _RelayService.RequestProjectEventsoByPubKeyAsync(project.NostrPubKey, _ =>
+        await _RelayService.RequestProjectCreateEventsByPubKeyAsync(project.NostrPubKey, _ =>
         {
             nostrProfileCreated = _.Kind == NostrKind.Metadata;
 
             if (_.Kind == NostrKind.ApplicationSpecificData) //In case of a crashed application in the middle of the call
             {
-                var nostrProject = Newtonsoft.Json.JsonConvert.DeserializeObject<ProjectInfo>(_.Content!, NostrSerializer.Settings);
-                var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectIdentifier == nostrProject!.ProjectIdentifier);
+                if (_.Content == null)
+                    return;
+                var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
+                var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == nostrProject!.ProjectIdentifier);
                 if (findProject == null)
-                    storage.AddFounderProject(nostrProject!);
+                    storage.AddFounderProject(new FounderProject{ProjectInfo = nostrProject});
                 NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");   
             }
             
@@ -282,21 +272,8 @@
     {
         var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
         
-        var resultId = await _RelayService.CreateNostrProfileAsync(new NostrMetadata
-        {
-            About = NostrMetadata.About, 
-            Banner = NostrMetadata.Banner, 
-            Lud16 = NostrMetadata.Lud16,
-            Name = NostrMetadata.Name,
-            Nip05 = NostrMetadata.Nip05, 
-            Nip57 = NostrMetadata.Nip57, 
-            Picture = NostrMetadata.Picture,
-            AdditionalData = new Dictionary<string, object>
-            {
-                {"website",NostrMetadata.Website},
-                {"display_name",NostrMetadata.Name}
-            }
-        }, NBitcoin.DataEncoders.Encoders.Hex.EncodeData((byte[])nostrKey.ToBytes()));
+        var resultId = await _RelayService.CreateNostrProfileAsync( NostrMetadata.ToNostrMetadata(), 
+            NBitcoin.DataEncoders.Encoders.Hex.EncodeData((byte[])nostrKey.ToBytes()));
         
         _RelayService.RegisterOKMessageHandler(resultId, _ =>
         {
@@ -325,7 +302,7 @@
 
         var projects = storage.GetFounderProjects();
 
-        if (projects.Any(a => project.ProjectIdentifier == a.ProjectIdentifier))
+        if (projects.Any(a => project.ProjectIdentifier == a.ProjectInfo.ProjectIdentifier))
         {
             notificationComponent.ShowErrorMessage("This wallet already has a project with this index");
             return;
@@ -409,8 +386,8 @@
                 //storage.AddFounderProject(project); TODO remove from storage
                 return response;
             }
-            
-            storage.AddFounderProject(project);
+
+            storage.AddFounderProject(new FounderProject { ProjectInfo = project });
             
             _RelayService.RegisterOKMessageHandler(resultId, _ =>
             {

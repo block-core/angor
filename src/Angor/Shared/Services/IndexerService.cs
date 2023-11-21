@@ -1,4 +1,5 @@
-﻿using Angor.Shared.Models;
+﻿using System.Net;
+using Angor.Shared.Models;
 using Angor.Shared;
 using System.Net.Http.Json;
 using Angor.Shared.Services;
@@ -9,6 +10,7 @@ namespace Angor.Client.Services
     public interface IIndexerService
     {
         Task<List<ProjectIndexerData>> GetProjectsAsync();
+        Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId);
         Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId);
         Task<string> PublishTransactionAsync(string trxHex);
         Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data);
@@ -61,6 +63,20 @@ namespace Angor.Client.Services
             _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>();
+        }
+
+        public async Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId)
+        {
+            var indexer = _networkService.GetPrimaryIndexer();
+            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}");
+            _networkService.CheckAndHandleError(response);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+            
+            return await response.Content.ReadFromJsonAsync<ProjectIndexerData>();
         }
 
         public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)

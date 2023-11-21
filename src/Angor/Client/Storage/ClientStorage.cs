@@ -1,3 +1,4 @@
+using Angor.Client.Models;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Blazored.LocalStorage;
@@ -71,40 +72,20 @@ public class ClientStorage : IClientStorage, INetworkStorage
         return ret ?? new List<ProjectInfo>();
     }
 
-    public void AddFounderProject(ProjectInfo project)
+    public void AddFounderProject(FounderProject project)
     {
-        var ret = GetProjects();
+        var ret = GetFounderProjects();
 
         ret.Add(project);
 
         _storage.SetItem("founder-projects", ret);
     }
 
-    public List<ProjectInfo> GetFounderProjects()
+    public List<FounderProject> GetFounderProjects()
     {
-        var ret = _storage.GetItem<List<ProjectInfo>>("founder-projects");
+        var ret = _storage.GetItem<List<FounderProject>>("founder-projects");
 
-        return ret ?? new List<ProjectInfo>();
-    }
-
-
-    public void AddBrowseProject(ProjectInfo project)
-    {
-        var ret = GetBrowseProjects();
-
-        if (ret.FirstOrDefault(f => f.ProjectIdentifier == project.ProjectIdentifier) == null)
-        {
-            ret.Add(project);
-        }
-
-        _storage.SetItem("browse-projects", ret);
-    }
-
-    public List<ProjectInfo> GetBrowseProjects()
-    {
-        var ret = _storage.GetItem<List<ProjectInfo>>("browse-projects");
-
-        return ret ?? new List<ProjectInfo>();
+        return ret ?? new List<FounderProject>();
     }
 
     public void AddOrUpdateSignatures(SignatureInfo signatureInfo)

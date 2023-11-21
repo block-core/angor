@@ -1,3 +1,4 @@
+using Angor.Client.Models;
 using Angor.Shared.Models;
 
 namespace Angor.Client.Storage
@@ -14,10 +15,8 @@ namespace Angor.Client.Storage
         void DeleteAccountInfo(string network);
         void AddProject(ProjectInfo project);
         List<ProjectInfo> GetProjects();
-        void AddFounderProject(ProjectInfo project);
-        List<ProjectInfo> GetFounderProjects();
-        void AddBrowseProject(ProjectInfo project);
-        List<ProjectInfo> GetBrowseProjects();
+        void AddFounderProject(FounderProject project);
+        List<FounderProject> GetFounderProjects();
         void AddOrUpdateSignatures(SignatureInfo signatureInfo);
         List<SignatureInfo> GetSignaturess();
         SettingsInfo GetSettingsInfo();

@@ -23,7 +23,9 @@ namespace Angor.Shared.Services
         private ILogger<NostrWebsocketClient> _clientLogger; 
         private ILogger<NostrWebsocketCommunicator> _communicatorLogger;
 
-        private Dictionary<string, IDisposable> subscriptions = new();
+        private Dictionary<string, IDisposable> userSubscriptions = new();
+        private Dictionary<string, IDisposable> userEoseSubscriptions = new();
+        private List<IDisposable> serviceSubscriptions = new();
         private Dictionary<string, Action<NostrOkResponse>> OkVerificationActions = new();
 
         public RelayService(
@@ -71,7 +73,7 @@ namespace Angor.Shared.Services
 
             _nostrClient.Send(request);
 
-            if (!subscriptions.ContainsKey(subscriptionName))
+            if (!userSubscriptions.ContainsKey(subscriptionName))
             {
                 var subscription = _nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionName)
@@ -81,22 +83,22 @@ namespace Angor.Shared.Services
                         responseDataAction(JsonSerializer.Deserialize<T>(ev.Content,settings));
                     });
 
-                subscriptions.Add(subscriptionName, subscription);
+                userSubscriptions.Add(subscriptionName, subscription);
             }
 
             return Task.CompletedTask;
         }
 
-        public Task RequestProjectEventsoByPubKeyAsync(string nostrPubKey, Action<NostrEvent> onResponseAction)
+        public Task RequestProjectCreateEventsByPubKeyAsync(string nostrPubKey, Action<NostrEvent> onResponseAction)
         {
             if (_nostrClient == null) throw new InvalidOperationException("The nostr client is null");
             _nostrClient.Send(new NostrRequest(nostrPubKey, new NostrFilter
             {
-                Authors = new []{nostrPubKey[2..]},
+                Authors = new []{nostrPubKey},
                 Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata},
             }));
 
-            if (!subscriptions.ContainsKey(nostrPubKey))
+            if (!userSubscriptions.ContainsKey(nostrPubKey))
             {
                 var subscription = _nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == nostrPubKey)
@@ -104,18 +106,55 @@ namespace Angor.Shared.Services
                     .Select(_ => _.Event)
                     .Subscribe(onResponseAction!);
 
-                subscriptions.Add(nostrPubKey, subscription);
+                userSubscriptions.Add(nostrPubKey, subscription);
             }
+
+            return Task.CompletedTask;
+        }
+
+        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)//, Action<NostrEoseResponse> onEoseAction)
+        {
+            if (_nostrClient == null) 
+                throw new InvalidOperationException("The nostr client is null");
+
+            var subscriptionKey = nostrPubKey + "DM";
+            
+            _nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                P = new[] { nostrPubKey },
+                Kinds = new[] { NostrKind.EncryptedDm },
+                Since = since,
+                Limit = limit
+            }));
+
+            if (!userSubscriptions.ContainsKey(subscriptionKey))
+            {
+                var subscription = _nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event is not null)
+                    .Select(_ => _.Event)
+                    .Subscribe(onResponseAction!);
+
+                userSubscriptions.Add(subscriptionKey, subscription);
+            }
+            
+            // if (!userEoseSubscriptions.ContainsKey(subscriptionKey))
+            // {
+            //     var subscriptionEOSE = _nostrClient.Streams.EoseStream
+            //         .Where(_ => _.Subscription == subscriptionKey)
+            //         .Subscribe(onEoseAction);
+            //
+            //     userEoseSubscriptions.Add(subscriptionKey, subscriptionEOSE);
+            // }
 
             return Task.CompletedTask;
         }
 
         public void CloseConnection()
         {
-            foreach (var subscription in subscriptions.Values)
-            {
-                subscription.Dispose();
-            }
+            userSubscriptions.Values.ToList().ForEach(_ => _.Dispose());
+            userEoseSubscriptions.Values.ToList().ForEach(_ => _.Dispose());
+            serviceSubscriptions.ForEach(_ => _.Dispose());
             _nostrClient?.Dispose();
             _nostrCommunicator?.Dispose();
             _nostrClient = null;
@@ -225,12 +264,12 @@ namespace Angor.Shared.Services
         {
             _nostrClient = new NostrWebsocketClient(_nostrCommunicator, _clientLogger);
             
-            _nostrClient.Streams.UnknownMessageStream.Subscribe(_ => _clientLogger.LogError($"UnknownMessageStream {_.MessageType} {_.AdditionalData}"));
-            _nostrClient.Streams.EventStream.Subscribe(_ => _clientLogger.LogInformation($"EventStream {_.Subscription} {_.AdditionalData}"));
-            _nostrClient.Streams.NoticeStream.Subscribe(_ => _clientLogger.LogError($"NoticeStream {_.Message}"));
-            _nostrClient.Streams.UnknownRawStream.Subscribe(_ => _clientLogger.LogError($"UnknownRawStream {_.Message}"));
+            serviceSubscriptions.Add(_nostrClient.Streams.UnknownMessageStream.Subscribe(_ => _clientLogger.LogError($"UnknownMessageStream {_.MessageType} {_.AdditionalData}")));
+            serviceSubscriptions.Add(_nostrClient.Streams.EventStream.Subscribe(_ => _clientLogger.LogInformation($"EventStream {_.Subscription} {_.AdditionalData}")));
+            serviceSubscriptions.Add(_nostrClient.Streams.NoticeStream.Subscribe(_ => _clientLogger.LogError($"NoticeStream {_.Message}")));
+            serviceSubscriptions.Add(_nostrClient.Streams.UnknownRawStream.Subscribe(_ => _clientLogger.LogError($"UnknownRawStream {_.Message}")));
             
-            _nostrClient.Streams.OkStream.Subscribe(_ =>
+            serviceSubscriptions.Add( _nostrClient.Streams.OkStream.Subscribe(_ =>
             {
                 _clientLogger.LogInformation($"OkStream {_.Accepted} message - {_.Message}");
 
@@ -239,20 +278,21 @@ namespace Angor.Shared.Services
                     OkVerificationActions[_.EventId](_);
                     OkVerificationActions.Remove(_.EventId);
                 }
-            });
+            }));
 
-            _nostrClient.Streams.EoseStream.Subscribe(_ =>
+            serviceSubscriptions.Add(_nostrClient.Streams.EoseStream.Subscribe(_ =>
             {
                 _clientLogger.LogInformation($"EoseStream {_.Subscription} message - {_.AdditionalData}");
                 
-                if (!subscriptions.ContainsKey(_.Subscription))
+                if (!userSubscriptions.ContainsKey(_.Subscription))
                     return;
                 
                 _clientLogger.LogInformation($"Disposing of subscription - {_.Subscription}");
-                subscriptions[_.Subscription].Dispose();
-                subscriptions.Remove(_.Subscription);
+                _nostrClient.Send(new NostrCloseRequest(_.Subscription));
+                userSubscriptions[_.Subscription].Dispose();
+                userSubscriptions.Remove(_.Subscription);
                 _clientLogger.LogInformation($"subscription disposed - {_.Subscription}");
-            });
+            }));
         }
 
         private void SetupNostrCommunicator()
@@ -263,7 +303,7 @@ namespace Angor.Shared.Services
                 ReconnectTimeout = null //TODO need to check what is the actual best time to set here
             };
 
-            _nostrCommunicator.DisconnectionHappened.Subscribe(info =>
+            serviceSubscriptions.Add(_nostrCommunicator.DisconnectionHappened.Subscribe(info =>
             {
                 if (info.Exception != null)
                     _communicatorLogger.LogError(info.Exception,
@@ -272,17 +312,17 @@ namespace Angor.Shared.Services
                 else
                     _communicatorLogger.LogInformation("Relay disconnected, type: {Type}, reason: {CloseStatus}",
                         info.Type, info.CloseStatusDescription);
-            });
+            }));
 
-            _nostrCommunicator.MessageReceived.Subscribe(info =>
+            serviceSubscriptions.Add(_nostrCommunicator.MessageReceived.Subscribe(info =>
             {
                 _communicatorLogger.LogInformation(
                     "message received on communicator - {Text} Relay message received, type: {MessageType}",
                     info.Text, info.MessageType);
-            });
+            }));
         }
-        
-        private JsonSerializerOptions settings =>  new ()
+
+        public static JsonSerializerOptions settings =>  new ()
         {
             // Equivalent to Formatting = Formatting.None
             WriteIndented = false,
