@@ -4,6 +4,7 @@
 @using Angor.Shared.Services
 @using Angor.Client.Services
 @using Angor.Client.Models
+@using Angor.Client.Components
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
@@ -29,13 +30,13 @@
 
         </div>
     </div>
-
-           <div class="row">
-                <div class="col">
+    
     @if (founderProjects.Count == 0)
-            {
-                <p>No projects found.</p>
+    {
+        <p>No projects found.</p>
                 
+        <div class="row">
+            <div class="col">
                 @if (scanningForProjects)
                 {
                     <div class="small loader"></div>
@@ -45,27 +46,31 @@
                     <button class="btn btn-primary mb-4" @onclick="LookupProjectKeysOnIndexerAsync">Scan for founder projects</button>   
                     <br/>
                 }
-                
-
-            }
-            else
-            {
-                foreach (var project in founderProjects)
-                {
-                    <ProductItem ProjectInfo="@project"></ProductItem>
-                }
-            }
             </div>
         </div>
+                
+    }
+    else
+    {
+        foreach (var project in founderProjects)
+        {
+            <div class="row">
+                <div class="col">
+                    <FounderProjectItem FounderProject="@project"></FounderProjectItem>
+                </div>
+            </div>
+        }
+    }
+  
     <div class="row">
         <div class="col">
             <button class="btn btn-primary mb-3" @onclick="NavigateToCreateProject">Create Project</button>
-            
         </div>
     </div>
 </div>
 
-@code {
+
+           @code {
     private string founderKey;
     private string projectId;
     private List<FounderProject> founderProjects = new();

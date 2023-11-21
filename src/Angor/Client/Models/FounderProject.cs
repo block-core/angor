@@ -4,6 +4,7 @@ namespace Angor.Client.Models;
 
 public class FounderProject
 {
-    public ProjectInfo ProjectInfo { get; set; }
-    public DateTime? LastRequestSignedTime { get; set; }
+    public ProjectMetadata Metadata { get; set; }
+    public ProjectInfo? ProjectInfo { get; set; }
+    public DateTime? LastRequestForSignaturesTime { get; set; }
 }

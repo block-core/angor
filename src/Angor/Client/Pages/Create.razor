@@ -225,19 +225,7 @@
         }
     };
 
-    private class NostrMetadataCollection
-    {
-        public string Name { get; set; }
-        public string Website { get; set; }
-        public string About { get; set; }
-        public string Picture { get; set; }
-        public string Nip05 { get; set; }
-        public string Lud16 { get; set; }
-        public string Banner { get; set; }
-        public string Nip57 { get; set; }
-    }
-    
-    NostrMetadataCollection NostrMetadata = new ();
+    ProjectMetadata NostrMetadata = new ();
     bool nostrProfileCreated;
     bool applicationDataOnNostr;
 
@@ -261,7 +249,7 @@
 
         await _RelayService.ConnectToRelaysAsync();
 
-        await _RelayService.RequestProjectEventsoByPubKeyAsync(project.NostrPubKey, _ =>
+        await _RelayService.RequestProjectCreateEventsByPubKeyAsync(project.NostrPubKey, _ =>
         {
             nostrProfileCreated = _.Kind == NostrKind.Metadata;
 
@@ -284,21 +272,8 @@
     {
         var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
         
-        var resultId = await _RelayService.CreateNostrProfileAsync(new NostrMetadata
-        {
-            About = NostrMetadata.About, 
-            Banner = NostrMetadata.Banner, 
-            Lud16 = NostrMetadata.Lud16,
-            Name = NostrMetadata.Name,
-            Nip05 = NostrMetadata.Nip05, 
-            Nip57 = NostrMetadata.Nip57, 
-            Picture = NostrMetadata.Picture,
-            AdditionalData = new Dictionary<string, object>
-            {
-                {"website",NostrMetadata.Website},
-                {"display_name",NostrMetadata.Name}
-            }
-        }, NBitcoin.DataEncoders.Encoders.Hex.EncodeData((byte[])nostrKey.ToBytes()));
+        var resultId = await _RelayService.CreateNostrProfileAsync( NostrMetadata.ToNostrMetadata(), 
+            NBitcoin.DataEncoders.Encoders.Hex.EncodeData((byte[])nostrKey.ToBytes()));
         
         _RelayService.RegisterOKMessageHandler(resultId, _ =>
         {

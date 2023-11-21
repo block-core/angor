@@ -89,12 +89,12 @@ namespace Angor.Shared.Services
             return Task.CompletedTask;
         }
 
-        public Task RequestProjectEventsoByPubKeyAsync(string nostrPubKey, Action<NostrEvent> onResponseAction)
+        public Task RequestProjectCreateEventsByPubKeyAsync(string nostrPubKey, Action<NostrEvent> onResponseAction)
         {
             if (_nostrClient == null) throw new InvalidOperationException("The nostr client is null");
             _nostrClient.Send(new NostrRequest(nostrPubKey, new NostrFilter
             {
-                Authors = new []{nostrPubKey[2..]},
+                Authors = new []{nostrPubKey},
                 Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata},
             }));
 
@@ -288,6 +288,7 @@ namespace Angor.Shared.Services
                     return;
                 
                 _clientLogger.LogInformation($"Disposing of subscription - {_.Subscription}");
+                _nostrClient.Send(new NostrCloseRequest(_.Subscription));
                 userSubscriptions[_.Subscription].Dispose();
                 userSubscriptions.Remove(_.Subscription);
                 _clientLogger.LogInformation($"subscription disposed - {_.Subscription}");
