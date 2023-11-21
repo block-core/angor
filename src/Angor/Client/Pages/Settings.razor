@@ -172,7 +172,7 @@
                 return;
             }
 
-            newIndexerLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri;
+            newIndexerLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
 
             if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
             {
@@ -204,7 +204,7 @@
                 return;
             }
 
-            newRelayLink = new Uri($"{uri.Scheme}://{uri.Host}").ToString();
+            newRelayLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
 
             if (settingsInfo.Relays.Any(a => a.Url == newRelayLink))
             {
