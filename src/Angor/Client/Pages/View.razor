@@ -142,7 +142,7 @@
                             <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                             <div class="input-group">
                                 <InputText id="NostrPublicKey" @bind-Value="project.NostrPubKey" class="form-control" placeholder="@project.NostrPubKey" readonly/>
-                                <button @onclick="CopyWordsToClibboardAsync" class="btn btn-success">Copy NSec to clipboard</button>
+                                <button @onclick="CopyWordsToClipboardAsync" class="btn btn-success">Copy NSec to clipboard</button>
                             </div>
                         </div>
                     }
@@ -287,7 +287,7 @@
     }
     
     
-    private async Task CopyWordsToClibboardAsync()
+    private async Task CopyWordsToClipboardAsync()
     {
         var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
         var nsec = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
