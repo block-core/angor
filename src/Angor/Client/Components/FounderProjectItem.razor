@@ -13,7 +13,7 @@
         </div>
     }
     <div class="card-body">
-        <h1 class="card-title">@FounderProject.Metadata.Name</h1>
+        <h1 class="card-title">@FounderProject.Metadata?.Name</h1>
         <h2 class="card-subtitle">@FounderProject.ProjectInfo.ProjectIdentifier</h2>
         <p class="card-text">Nostr ID: <a href="/" target="_blank">@FounderProject.ProjectInfo.NostrPubKey</a></p>
         <NavLink href=@($"/view/{FounderProject.ProjectInfo.ProjectIdentifier}") class="btn btn-primary">View Project</NavLink>
