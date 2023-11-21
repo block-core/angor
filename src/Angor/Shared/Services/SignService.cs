@@ -6,6 +6,7 @@ using Nostr.Client.Client;
 using Nostr.Client.Communicator;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
+using Nostr.Client.Messages.Direct;
 using Nostr.Client.Requests;
 
 namespace Angor.Client.Services
@@ -14,6 +15,8 @@ namespace Angor.Client.Services
     {
         Task AddSignKeyAsync(ProjectInfo project, string founderRecoveryPrivateKey, string nostrPrivateKey);
         Task<string> RequestInvestmentSigsAsync(SignRecoveryRequest signRecoveryRequest, Func<string,Task> action);
+
+        Task LookupInvestmentRequestsAsync(string nostrPubKey, DateTime? since, Func<string,Task> action);
     }
 
     public class SignService : ISignService
@@ -100,6 +103,34 @@ namespace Angor.Client.Services
             subscriptions.Add(subscription); //TODO dispose of if after the signatures have been received
             
             return Task.FromResult(signed.Id!);
+        }
+
+        public Task LookupInvestmentRequestsAsync(string nostrPubKey, DateTime? since, Func<string, Task> action)
+        {
+            var subscriptionKey = nostrPubKey + "sig_req";
+            
+            _nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                P = new[] { nostrPubKey },
+                Kinds = new[] { NostrKind.EncryptedDm },
+                Since = since
+            }));
+
+            var subscription = _nostrClient.Streams.EventStream
+                .Where(_ => _.Subscription == subscriptionKey)
+                //.Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
+                .Select(_ => _.Event)
+                .Subscribe(_ =>
+                {
+                    action.Invoke(_.Content);
+                });
+
+            if (!subscriptions.Contains(subscription))
+            {
+                subscriptions.Add(subscription);
+            }
+
+            return Task.CompletedTask;
         }
     }
 }
