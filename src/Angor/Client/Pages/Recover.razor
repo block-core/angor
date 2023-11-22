@@ -65,8 +65,8 @@
     <table class="table">
         <thead>
             <tr>
-                <th>Stage Details</th>
-                <th>Address</th>
+                <th>Stage </th>
+                <th>Amount</th>
                 <th>Status</th>
             </tr>
         </thead>
@@ -74,8 +74,8 @@
             @foreach (var item in StageInfo.Items)
             {
                 <tr>
+                    <td>@(item.StageIndex + 1)</td>
                     <td>@item.Amount @network.CoinTicker</td>
-                    <td>@item.OutputAddress</td>
                     <td>
                         @if (item.IsSpent)
                         {
