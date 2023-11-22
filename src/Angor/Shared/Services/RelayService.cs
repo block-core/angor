@@ -123,6 +123,7 @@ namespace Angor.Shared.Services
             {
                 P = new[] { nostrPubKey },
                 Kinds = new[] { NostrKind.EncryptedDm },
+                A = new []{ NostrCoordinatesIdentifierTag(nostrPubKey)},
                 Since = since,
                 Limit = limit
             }));
@@ -148,6 +149,11 @@ namespace Angor.Shared.Services
             // }
 
             return Task.CompletedTask;
+        }
+        
+        private string NostrCoordinatesIdentifierTag(string nostrPubKey)
+        {
+            return $"{(int)NostrKind.ApplicationSpecificData}:{nostrPubKey}:AngorApp";
         }
 
         public void CloseConnection()

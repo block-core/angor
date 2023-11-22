@@ -6,7 +6,6 @@ using Nostr.Client.Client;
 using Nostr.Client.Communicator;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
-using Nostr.Client.Messages.Direct;
 using Nostr.Client.Requests;
 
 namespace Angor.Client.Services
@@ -16,7 +15,11 @@ namespace Angor.Client.Services
         Task AddSignKeyAsync(ProjectInfo project, string founderRecoveryPrivateKey, string nostrPrivateKey);
         Task<string> RequestInvestmentSigsAsync(SignRecoveryRequest signRecoveryRequest, Func<string,Task> action);
 
-        Task LookupInvestmentRequestsAsync(string nostrPubKey, DateTime? since, Func<string,Task> action);
+        Task LookupInvestmentRequestsAsync(string nostrPubKey, DateTime? since, Action<string, string, DateTime> action,
+            Action onAllMessagesReceived);
+
+        DateTime SendSignaturesToInvestor(string encryptedSignatureInfo, string nostrPrivateKey,
+            string investorNostrPubKey);
     }
 
     public class SignService : ISignService
@@ -63,13 +66,18 @@ namespace Angor.Client.Services
         {
             var sender = NostrPrivateKey.FromHex(signRecoveryRequest.InvestorNostrPrivateKey);
             //var receiver = NostrPublicKey.FromHex(signRecoveryRequest.NostrPubKey);
-            
+
             var ev = new NostrEvent
             {
                 Kind = NostrKind.EncryptedDm,
                 CreatedAt = DateTime.UtcNow,
-                Content = signRecoveryRequest.content,
-                Tags = new NostrEventTags(new []{NostrEventTag.Profile(signRecoveryRequest.NostrPubKey)})
+                Content = signRecoveryRequest.EncryptedContent,
+                Tags = new NostrEventTags(new[]
+                {
+                    NostrEventTag.Profile(signRecoveryRequest.NostrPubKey),
+                    new NostrEventTag(NostrEventTag.CoordinatesIdentifier,
+                        NostrCoordinatesIdentifierTag(signRecoveryRequest.NostrPubKey))
+                })
             };
 
             // Blazor does not support AES so needs to be done manually in the UI
@@ -105,7 +113,7 @@ namespace Angor.Client.Services
             return Task.FromResult(signed.Id!);
         }
 
-        public Task LookupInvestmentRequestsAsync(string nostrPubKey, DateTime? since, Func<string, Task> action)
+        public Task LookupInvestmentRequestsAsync(string nostrPubKey, DateTime? since, Action<string,string,DateTime> action, Action onAllMessagesReceived)
         {
             var subscriptionKey = nostrPubKey + "sig_req";
             
@@ -113,6 +121,7 @@ namespace Angor.Client.Services
             {
                 P = new[] { nostrPubKey },
                 Kinds = new[] { NostrKind.EncryptedDm },
+                A = new []{ NostrCoordinatesIdentifierTag(nostrPubKey)},
                 Since = since
             }));
 
@@ -122,7 +131,7 @@ namespace Angor.Client.Services
                 .Select(_ => _.Event)
                 .Subscribe(_ =>
                 {
-                    action.Invoke(_.Content);
+                    action.Invoke(_.Pubkey,_.Content, _.CreatedAt.Value);
                 });
 
             if (!subscriptions.Contains(subscription))
@@ -130,7 +139,39 @@ namespace Angor.Client.Services
                 subscriptions.Add(subscription);
             }
 
+            var todo =  _nostrClient.Streams.EoseStream
+                .Where(_ => _.Subscription == subscriptionKey)
+                .Subscribe(_ => onAllMessagesReceived.Invoke());
+
             return Task.CompletedTask;
+        }
+
+        public DateTime SendSignaturesToInvestor(string encryptedSignatureInfo, string nostrPrivateKeyHex, string investorNostrPubKey)
+        {
+            var nostrPrivateKey = NostrPrivateKey.FromHex(nostrPrivateKeyHex);
+
+            var ev = new NostrEvent
+            {
+                Kind = NostrKind.EncryptedDm,
+                CreatedAt = DateTime.UtcNow,
+                Content = encryptedSignatureInfo,
+                Tags = new NostrEventTags(new []
+                {
+                    NostrEventTag.Profile(investorNostrPubKey),
+                    new NostrEventTag(NostrEventTag.CoordinatesIdentifier,NostrCoordinatesIdentifierTag(nostrPrivateKey.DerivePublicKey().Hex))
+                })
+            };
+
+            var signed = ev.Sign(nostrPrivateKey);
+
+            _nostrClient.Send(new NostrEventRequest(signed));
+
+            return ev.CreatedAt.Value;
+        }
+
+        private string NostrCoordinatesIdentifierTag(string nostrPubKey)
+        {
+            return $"{(int)NostrKind.ApplicationSpecificData}:{nostrPubKey}:AngorApp";
         }
     }
 }

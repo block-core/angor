@@ -215,7 +215,7 @@
             }
             else
             {
-                findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId).ProjectInfo;
+                findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
 
                 if (findProject != null)
                 {
@@ -247,14 +247,13 @@
             try
             {
                 //TODO import the nostr tool module directly to c# class
-                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./Pages/invest.razor.js?version=" + DateTime.UtcNow.Ticks);
+                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
             }
             catch (JSException e)
             {
                 Console.WriteLine(e);
                 notificationComponent.ShowErrorMessage(e.Message);
             }
-
         }
     }
 
@@ -408,7 +407,7 @@
             var eventId = await _SignService.RequestInvestmentSigsAsync(new SignRecoveryRequest
             {
                 ProjectIdentifier = project.ProjectIdentifier,
-                content = encryptedContent,
+                EncryptedContent = encryptedContent,
                 NostrPubKey = project.NostrPubKey,
                 InvestorNostrPrivateKey = nostrPrivateKeyHex
             }, async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));

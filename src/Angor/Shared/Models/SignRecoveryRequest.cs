@@ -9,5 +9,5 @@ public class SignRecoveryRequest
     
     public string InvestmentTransaction { get; set; }
 
-    public string content { get; set; }
+    public string EncryptedContent { get; set; }
 }
