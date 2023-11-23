@@ -12,9 +12,3 @@ public interface INetworkConfiguration
     List<SettingsUrl> GetDefaultRelayUrls();
     List<SettingsUrl> GetDefaultExplorerUrl();
 }
-
-public interface INetworkStorage
-{
-    SettingsInfo GetSettings();
-    void SetSettings(SettingsInfo settingsInfo);
-}

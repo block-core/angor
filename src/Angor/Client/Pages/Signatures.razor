@@ -232,6 +232,8 @@
 
         FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorPubKey);
 
+        storage.UpdateFounderProject(FounderProject);
+        
         pendingSignatures.Remove(signature);
         approvedSignatures.Add(signature);
         StateHasChanged();

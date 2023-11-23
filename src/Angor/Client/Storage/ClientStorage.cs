@@ -88,6 +88,19 @@ public class ClientStorage : IClientStorage, INetworkStorage
         return ret ?? new List<FounderProject>();
     }
 
+    public void UpdateFounderProject(FounderProject project)
+    {
+        var ret = _storage.GetItem<List<FounderProject>>("founder-projects");
+        var item = ret.FirstOrDefault(f => f.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
+
+        if (item != null)
+        {
+            ret.Remove(item);   
+        }
+        
+        ret.Add(project);
+    }
+
     public void AddOrUpdateSignatures(SignatureInfo signatureInfo)
     {
         var ret = GetSignaturess();
