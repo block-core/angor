@@ -11,6 +11,7 @@
 @using Money = Blockcore.NBitcoin.Money
 @using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
 @using System.Text.Json
+@using Angor.Shared.Services
 
 @inject IJSRuntime JS
 
@@ -20,7 +21,7 @@
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
-@inject ISessionStorage SessionStorage;
+@inject ICacheStorage SessionStorage;
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
 

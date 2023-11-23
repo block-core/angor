@@ -4,12 +4,13 @@
 @using Angor.Shared.Models
 @using Blockcore.NBitcoin
 @using Angor.Client.Services
+@using Angor.Shared.Services
 
 @inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
-@inject ISessionStorage SessionStorage;
+@inject ICacheStorage SessionStorage;
 @inject NavigationManager NavigationManager
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IClipboardService _clipboardService

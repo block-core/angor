@@ -115,15 +115,15 @@
         }
 
         if (founderProjectsToLookup.Any())
-            await RelayService.LookupProjectsInfoByPubKeysAsync<ProjectInfo>(_ =>
+            RelayService.LookupProjectsInfoByPubKeys<ProjectInfo>(_ =>
             {
                 var founderProject = new FounderProject { ProjectInfo = _ };
                 storage.AddFounderProject(founderProject);
                 founderProjects.Add(founderProject);
                 scanningForProjects = false;
-                StateHasChanged();
-
-            }, founderProjectsToLookup.ToArray());
+            },
+                () => StateHasChanged()
+                , founderProjectsToLookup.ToArray());
     }
     
     private void NavigateToCreateProject()

@@ -58,7 +58,7 @@ namespace Angor.Shared.Services
             OkVerificationActions.Add(eventId,action);
         }
 
-        public Task LookupProjectsInfoByPubKeysAsync<T>(Action<T> responseDataAction,params string[] nostrPubKeys)
+        public void LookupProjectsInfoByPubKeys<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,params string[] nostrPubKeys)
         {
             const string subscriptionName = "ProjectInfoLookups";
             
@@ -68,7 +68,7 @@ namespace Angor.Shared.Services
             var request = new NostrRequest(subscriptionName, new NostrFilter
             {
                 Authors = nostrPubKeys,
-                Kinds = new[] { NostrKind.ApplicationSpecificData }, //, NostrKind.Metadata, (NostrKind)30402 },
+                Kinds = new[] { NostrKind.ApplicationSpecificData }
             });
 
             _nostrClient.Send(request);
@@ -86,7 +86,12 @@ namespace Angor.Shared.Services
                 userSubscriptions.Add(subscriptionName, subscription);
             }
 
-            return Task.CompletedTask;
+            if (OnEndOfStreamAction != null)
+            {
+                //TODO dispose of the subscription
+                _nostrClient.Streams.EoseStream.Where(_ => _.Subscription == subscriptionName)
+                    .Subscribe(_ => OnEndOfStreamAction.Invoke());
+            }
         }
 
         public Task RequestProjectCreateEventsByPubKeyAsync(string nostrPubKey, Action<NostrEvent> onResponseAction)
