@@ -1,9 +1,11 @@
 @using Angor.Shared.Services
 @using Angor.Client.Models
+@using Angor.Client.Storage
 @using Nostr.Client.Messages
 @using Nostr.Client.Messages.Metadata
 
 @inject IRelayService  RelayService;
+@inject IClientStorage Storage;
 
 <div class="card mb-3">
     @if (InvestmentRequests)
@@ -43,6 +45,7 @@
                 
                 var metadata = System.Text.Json.JsonSerializer.Deserialize<NostrMetadata>(_.Content, Angor.Shared.Services.RelayService.settings);
                 FounderProject.Metadata = ProjectMetadata.Parse(metadata);
+                Storage.UpdateFounderProject(FounderProject);
                 StateHasChanged();
             });
         }

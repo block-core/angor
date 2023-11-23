@@ -112,7 +112,7 @@ namespace Angor.Shared.Services
             return Task.CompletedTask;
         }
 
-        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)//, Action<NostrEoseResponse> onEoseAction)
+        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)
         {
             if (_nostrClient == null) 
                 throw new InvalidOperationException("The nostr client is null");
@@ -138,15 +138,6 @@ namespace Angor.Shared.Services
 
                 userSubscriptions.Add(subscriptionKey, subscription);
             }
-            
-            // if (!userEoseSubscriptions.ContainsKey(subscriptionKey))
-            // {
-            //     var subscriptionEOSE = _nostrClient.Streams.EoseStream
-            //         .Where(_ => _.Subscription == subscriptionKey)
-            //         .Subscribe(onEoseAction);
-            //
-            //     userEoseSubscriptions.Add(subscriptionKey, subscriptionEOSE);
-            // }
 
             return Task.CompletedTask;
         }

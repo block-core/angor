@@ -78,7 +78,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         ret.Add(project);
 
-        _storage.SetItem("founder-projects", ret);
+        _storage.SetItem("founder-projects", ret.OrderBy(_ => _.ProjectInfo.ProjectIndex));
     }
 
     public List<FounderProject> GetFounderProjects()
@@ -90,15 +90,18 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
     public void UpdateFounderProject(FounderProject project)
     {
-        var ret = _storage.GetItem<List<FounderProject>>("founder-projects");
-        var item = ret.FirstOrDefault(f => f.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
+        var projects = _storage.GetItem<List<FounderProject>>("founder-projects");
+        
+        var item = projects.FirstOrDefault(f => f.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
 
         if (item != null)
         {
-            ret.Remove(item);   
+            projects.Remove(item);   
         }
         
-        ret.Add(project);
+        projects.Add(project);
+        
+        _storage.SetItem("founder-projects", projects.OrderBy(_ => _.ProjectInfo.ProjectIndex));
     }
 
     public void AddOrUpdateSignatures(SignatureInfo signatureInfo)
