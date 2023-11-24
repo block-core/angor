@@ -13,8 +13,12 @@ namespace Angor.Client.Storage
         AccountInfo GetAccountInfo(string network);
         void SetAccountInfo(string network, AccountInfo items);
         void DeleteAccountInfo(string network);
-        void AddProject(ProjectInfo project);
-        List<ProjectInfo> GetProjects();
+        void AddInvestmentProject(ProjectInfo project);
+        void UpdateInvestmentProject(ProjectInfo project);
+        List<ProjectInfo> GetInvestmentProjects();
+        // void AddInvestmentProject(InvestorProject project);
+        // void UpdateInvestmentProject(InvestorProject project);
+        // List<InvestorProject> GetInvestmentProjects();
         void AddFounderProject(FounderProject project);
         List<FounderProject> GetFounderProjects();
         void UpdateFounderProject(FounderProject project);

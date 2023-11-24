@@ -251,7 +251,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        project = storage.GetProjects().First(p => p.ProjectIdentifier == ProjectId);
+        project = storage.GetInvestmentProjects().First(p => p.ProjectIdentifier == ProjectId);
         recoverySigs = storage.GetSignaturess().First(s => s.ProjectIdentifier == ProjectId);
     }
 

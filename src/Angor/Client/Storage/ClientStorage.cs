@@ -56,16 +56,30 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.RemoveItem(string.Format(utxoKey,network));
     }
 
-    public void AddProject(ProjectInfo project)
+    public void AddInvestmentProject(ProjectInfo project)
     {
-        var ret = GetProjects();
+        var ret = GetInvestmentProjects();
 
         ret.Add(project);
 
         _storage.SetItem("projects", ret);
     }
 
-    public List<ProjectInfo> GetProjects()
+    public void UpdateInvestmentProject(ProjectInfo project)
+    {
+        var ret = GetInvestmentProjects();
+
+        var item = ret.First(_ => _.ProjectIdentifier == project.ProjectIdentifier);
+
+        if(!ret.Remove(item)) 
+            throw new InvalidOperationException();
+
+        ret.Add(project);
+
+        _storage.SetItem("projects", ret);
+    }
+
+    public List<ProjectInfo> GetInvestmentProjects()
     {
         var ret =  _storage.GetItem<List<ProjectInfo>>("projects");
 

@@ -228,15 +228,16 @@
     {
         if (hasWallet)
         {
-            var findProject = storage.GetProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+            var findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
 
             if (findProject != null)
             {
-                invested = true;
                 project = findProject;
 
-                var myProject = storage.GetSignaturess().First(s => s.ProjectIdentifier == ProjectId);
-                myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{myProject.TransactionId}";
+                var investedProject = storage.GetSignaturess().First(s => s.ProjectIdentifier == ProjectId);
+                
+                invested = investedProject.Signatures.Any();
+                myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investedProject.TransactionId}";
             }
             else
             {
