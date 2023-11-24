@@ -396,11 +396,6 @@
                 if (!_.Accepted)
                     notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
             });
-            
-            // todo this code must be reviewed again as we send the recovery private key to the signing server
-            var key = _derivationOperations.DeriveFounderRecoveryPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
-
-            await _SignService.AddSignKeyAsync(project, Encoders.Hex.EncodeData(key.ToBytes()), nostrKeyHex);
 
             return new OperationResult { Success = response.Success, Message = response.Message };
         });
