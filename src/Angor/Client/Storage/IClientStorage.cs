@@ -16,10 +16,7 @@ namespace Angor.Client.Storage
         void AddInvestmentProject(ProjectInfo project);
         void UpdateInvestmentProject(ProjectInfo project);
         List<ProjectInfo> GetInvestmentProjects();
-        // void AddInvestmentProject(InvestorProject project);
-        // void UpdateInvestmentProject(InvestorProject project);
-        // List<InvestorProject> GetInvestmentProjects();
-        void AddFounderProject(FounderProject project);
+        void AddFounderProject(params FounderProject[] projects);
         List<FounderProject> GetFounderProjects();
         void UpdateFounderProject(FounderProject project);
         void AddOrUpdateSignatures(SignatureInfo signatureInfo);

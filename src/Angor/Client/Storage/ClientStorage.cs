@@ -86,11 +86,11 @@ public class ClientStorage : IClientStorage, INetworkStorage
         return ret ?? new List<ProjectInfo>();
     }
 
-    public void AddFounderProject(FounderProject project)
+    public void AddFounderProject(params FounderProject[] projects)
     {
         var ret = GetFounderProjects();
 
-        ret.Add(project);
+        ret.AddRange(projects);
 
         _storage.SetItem("founder-projects", ret.OrderBy(_ => _.ProjectInfo.ProjectIndex));
     }

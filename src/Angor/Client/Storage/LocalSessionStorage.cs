@@ -30,7 +30,7 @@ public class LocalSessionStorage : ICacheStorage
         return _sessionStorageService.ContainKey(projectId);
     }
 
-    public List<ProjectIndexerData> GetProjectIndexerData()
+    public List<ProjectIndexerData>? GetProjectIndexerData()
     {
         return _sessionStorageService.GetItem<List<ProjectIndexerData>>(BrowseIndexerData);
     }

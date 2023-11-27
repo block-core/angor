@@ -5,6 +5,8 @@
 @using Angor.Client.Services
 @using Angor.Client.Models
 @using Angor.Client.Components
+@using Nostr.Client.Messages
+@using System.Text.Json
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
@@ -115,15 +117,31 @@
         }
 
         if (founderProjectsToLookup.Any())
-            RelayService.LookupProjectsInfoByPubKeys<ProjectInfo>(_ =>
+            RelayService.RequestProjectCreateEventsByPubKey(e =>
             {
-                var founderProject = new FounderProject { ProjectInfo = _ };
-                storage.AddFounderProject(founderProject);
-                founderProjects.Add(founderProject);
-                scanningForProjects = false;
+                switch (e)
+                {
+                    case { Kind: NostrKind.Metadata }:
+                        var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
+                        var founderProject = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
+                        if (founderProject != null)
+                            founderProject.Metadata = nostrMetadata;
+                        else
+                            notificationComponent.ShowNotificationMessage($"Couldn't find the project details for the project {nostrMetadata.Name} try adding the missing relay."); //TODO  
+                        break;
+                    case { Kind: NostrKind.ApplicationSpecificData }:
+                        var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
+                        founderProjects.Add(new FounderProject { ProjectInfo = projectInfo });
+                        break;
+                }
             },
-                () => StateHasChanged()
-                , founderProjectsToLookup.ToArray());
+                () =>
+                {
+                    scanningForProjects = false;
+                    storage.AddFounderProject(founderProjects.ToArray());
+                    StateHasChanged();
+                },
+                founderProjectsToLookup.ToArray());
     }
     
     private void NavigateToCreateProject()

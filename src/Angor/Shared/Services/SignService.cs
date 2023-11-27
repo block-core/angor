@@ -30,7 +30,8 @@ namespace Angor.Client.Services
         private static INostrClient _nostrClient;
         private static INostrCommunicator _nostrCommunicator;
 
-        private List<IDisposable> subscriptions = new ();
+        private Dictionary<string,IDisposable> subscriptions = new ();
+        private Dictionary<string, Action> eoseActions = new();
         public SignService(ILogger<NostrWebsocketClient> _logger, HttpClient httpClient)
         {
             _httpClient = httpClient;
@@ -49,6 +50,26 @@ namespace Angor.Client.Services
             _nostrCommunicator.StartOrFail();
             
             _nostrClient = new NostrWebsocketClient(_nostrCommunicator, _logger);
+
+            _nostrClient.Streams.EoseStream.Subscribe(_ =>
+            {
+                _logger.LogInformation("End of stream on subscription" + _.Subscription);
+
+                if (eoseActions.ContainsKey(_.Subscription))
+                {
+                    _logger.LogInformation("Invoking end of stream event on subscription" + _.Subscription);
+                    eoseActions[_.Subscription].Invoke();
+                    eoseActions.Remove(_.Subscription);
+                }
+
+                if (subscriptions.ContainsKey(_.Subscription))
+                {
+                    _logger.LogInformation("Closing and disposing of subscription - " + _.Subscription);
+                    _nostrClient.Send(new NostrCloseRequest(_.Subscription));
+                    subscriptions[_.Subscription].Dispose();
+                    subscriptions.Remove(_.Subscription);
+                }
+            });
         }
 
         public async Task AddSignKeyAsync(ProjectInfo project, string founderRecoveryPrivateKey, string nostrPrivateKey)
@@ -101,7 +122,7 @@ namespace Angor.Client.Services
                     action.Invoke(_.Event.Content);
                 });
             
-            subscriptions.Add(subscription);
+            subscriptions.TryAdd(projectNostrPubKey,subscription);
             
             _nostrClient.Send(new NostrRequest(projectNostrPubKey, new NostrFilter
             {
@@ -126,11 +147,8 @@ namespace Angor.Client.Services
                     action.Invoke(_.Pubkey,_.Content, _.CreatedAt.Value);
                 });
 
-            if (!subscriptions.Contains(subscription))
-            {
-                subscriptions.Add(subscription);
-            }
-            
+            subscriptions.TryAdd(subscriptionKey, subscription);
+
             _nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 P = new[] { nostrPubKey },
@@ -139,9 +157,7 @@ namespace Angor.Client.Services
                 Since = since
             }));
             
-            var todo =  _nostrClient.Streams.EoseStream
-                .Where(_ => _.Subscription == subscriptionKey)
-                .Subscribe(_ => onAllMessagesReceived.Invoke());
+            eoseActions.TryAdd(subscriptionKey,onAllMessagesReceived);
 
             return Task.CompletedTask;
         }

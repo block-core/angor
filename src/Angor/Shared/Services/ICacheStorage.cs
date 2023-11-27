@@ -9,6 +9,6 @@ public interface ICacheStorage
     ProjectInfo? GetProjectById(string projectId);
     bool IsProjectInStorageById(string projectId);
 
-    List<ProjectIndexerData> GetProjectIndexerData();
+    List<ProjectIndexerData>? GetProjectIndexerData();
     void SetProjectIndexerData(List<ProjectIndexerData> list);
 }

@@ -249,23 +249,23 @@
 
         await _RelayService.ConnectToRelaysAsync();
 
-        await _RelayService.RequestProjectCreateEventsByPubKeyAsync(project.NostrPubKey, _ =>
+        _RelayService.RequestProjectCreateEventsByPubKey(_ => //TODO change the state to be storage driven and not event driven
         {
             nostrProfileCreated = _.Kind == NostrKind.Metadata;
 
-            if (_.Kind == NostrKind.ApplicationSpecificData) //In case of a crashed application in the middle of the call
-            {
-                if (_.Content == null)
-                    return;
-                var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
-                var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == nostrProject!.ProjectIdentifier);
-                if (findProject == null)
-                    storage.AddFounderProject(new FounderProject{ProjectInfo = nostrProject});
-                NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");   
-            }
-            
-            StateHasChanged();
-        });
+            if (_.Kind != NostrKind.ApplicationSpecificData)
+                return; //In case of a crashed application in the middle of the call
+
+            if (_.Content == null)
+                return;
+            var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
+            var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == nostrProject!.ProjectIdentifier);
+            if (findProject == null)
+                storage.AddFounderProject(new FounderProject { ProjectInfo = nostrProject });
+            NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");
+        },
+            StateHasChanged,
+            project.NostrPubKey);
     }
 
     private async Task CreatNostrProfile()
@@ -383,7 +383,6 @@
             if (!response.Success)
             {
                 await _RelayService.DeleteProjectAsync(resultId, nostrKeyHex);
-                //storage.AddFounderProject(project); TODO remove from storage
                 return response;
             }
 
@@ -403,8 +402,6 @@
         if (operationResult.Success)
         {
             notificationComponent.ShowNotificationMessage("Project created", 1);
-
-            //storage.AddFounderProject(project); 
 
             NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
         }

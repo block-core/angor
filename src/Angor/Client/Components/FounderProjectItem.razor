@@ -1,6 +1,7 @@
 @using Angor.Shared.Services
 @using Angor.Client.Models
 @using Angor.Client.Storage
+@using Angor.Shared.Models
 @using Nostr.Client.Messages
 @using Nostr.Client.Messages.Metadata
 
@@ -36,20 +37,6 @@
     {
         await RelayService.ConnectToRelaysAsync();
 
-        if (FounderProject.Metadata == null)
-        {
-            await RelayService.RequestProjectCreateEventsByPubKeyAsync(FounderProject.ProjectInfo.NostrPubKey, _ =>
-            {
-                if (_.Kind != NostrKind.Metadata) 
-                    return;
-                
-                var metadata = System.Text.Json.JsonSerializer.Deserialize<NostrMetadata>(_.Content, Angor.Shared.Services.RelayService.settings);
-                FounderProject.Metadata = ProjectMetadata.Parse(metadata);
-                Storage.UpdateFounderProject(FounderProject);
-                StateHasChanged();
-            });
-        }
-        
         await RelayService.LookupDirectMessagesForPubKeyAsync(FounderProject.ProjectInfo.NostrPubKey, FounderProject.LastRequestForSignaturesTime, 1,
             _ =>
             {
