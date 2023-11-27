@@ -24,7 +24,7 @@ namespace Angor.Shared.Services
         private ILogger<NostrWebsocketCommunicator> _communicatorLogger;
 
         private Dictionary<string, IDisposable> userSubscriptions = new();
-        private Dictionary<string, IDisposable> userEoseSubscriptions = new();
+        private Dictionary<string, Action> userEoseActions = new();
         private List<IDisposable> serviceSubscriptions = new();
         private Dictionary<string, Action<NostrOkResponse>> OkVerificationActions = new();
 
@@ -58,7 +58,7 @@ namespace Angor.Shared.Services
             OkVerificationActions.Add(eventId,action);
         }
 
-        public Task LookupProjectsInfoByPubKeysAsync<T>(Action<T> responseDataAction,params string[] nostrPubKeys)
+        public void LookupProjectsInfoByPubKeys<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,params string[] nostrPubKeys)
         {
             const string subscriptionName = "ProjectInfoLookups";
             
@@ -68,7 +68,7 @@ namespace Angor.Shared.Services
             var request = new NostrRequest(subscriptionName, new NostrFilter
             {
                 Authors = nostrPubKeys,
-                Kinds = new[] { NostrKind.ApplicationSpecificData }, //, NostrKind.Metadata, (NostrKind)30402 },
+                Kinds = new[] { NostrKind.ApplicationSpecificData }
             });
 
             _nostrClient.Send(request);
@@ -86,33 +86,37 @@ namespace Angor.Shared.Services
                 userSubscriptions.Add(subscriptionName, subscription);
             }
 
-            return Task.CompletedTask;
+            if (OnEndOfStreamAction != null)
+            {
+                userEoseActions.Add(subscriptionName,OnEndOfStreamAction);
+            }
         }
 
-        public Task RequestProjectCreateEventsByPubKeyAsync(string nostrPubKey, Action<NostrEvent> onResponseAction)
+        public void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,params string[] nostrPubKeys)
         {
+            var subscriptionKey = Guid.NewGuid().ToString().Replace("-","");
             if (_nostrClient == null) throw new InvalidOperationException("The nostr client is null");
-            _nostrClient.Send(new NostrRequest(nostrPubKey, new NostrFilter
+            _nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
-                Authors = new []{nostrPubKey},
+                Authors = nostrPubKeys,
                 Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata},
             }));
 
-            if (!userSubscriptions.ContainsKey(nostrPubKey))
-            {
-                var subscription = _nostrClient.Streams.EventStream
-                    .Where(_ => _.Subscription == nostrPubKey)
-                    .Where(_ => _.Event is not null)
-                    .Select(_ => _.Event)
-                    .Subscribe(onResponseAction!);
+            if (userSubscriptions.ContainsKey(subscriptionKey)) 
+                return;
+            
+            var subscription = _nostrClient.Streams.EventStream
+                .Where(_ => _.Subscription == subscriptionKey)
+                .Where(_ => _.Event is not null)
+                .Select(_ => _.Event)
+                .Subscribe(onResponseAction!);
 
-                userSubscriptions.Add(nostrPubKey, subscription);
-            }
+            userSubscriptions.Add(subscriptionKey, subscription);
 
-            return Task.CompletedTask;
+            userEoseActions.TryAdd(subscriptionKey, onEoseAction);
         }
 
-        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)//, Action<NostrEoseResponse> onEoseAction)
+        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)
         {
             if (_nostrClient == null) 
                 throw new InvalidOperationException("The nostr client is null");
@@ -123,6 +127,7 @@ namespace Angor.Shared.Services
             {
                 P = new[] { nostrPubKey },
                 Kinds = new[] { NostrKind.EncryptedDm },
+                A = new []{ NostrCoordinatesIdentifierTag(nostrPubKey)},
                 Since = since,
                 Limit = limit
             }));
@@ -137,23 +142,18 @@ namespace Angor.Shared.Services
 
                 userSubscriptions.Add(subscriptionKey, subscription);
             }
-            
-            // if (!userEoseSubscriptions.ContainsKey(subscriptionKey))
-            // {
-            //     var subscriptionEOSE = _nostrClient.Streams.EoseStream
-            //         .Where(_ => _.Subscription == subscriptionKey)
-            //         .Subscribe(onEoseAction);
-            //
-            //     userEoseSubscriptions.Add(subscriptionKey, subscriptionEOSE);
-            // }
 
             return Task.CompletedTask;
+        }
+        
+        private string NostrCoordinatesIdentifierTag(string nostrPubKey)
+        {
+            return $"{(int)NostrKind.ApplicationSpecificData}:{nostrPubKey}:AngorApp";
         }
 
         public void CloseConnection()
         {
             userSubscriptions.Values.ToList().ForEach(_ => _.Dispose());
-            userEoseSubscriptions.Values.ToList().ForEach(_ => _.Dispose());
             serviceSubscriptions.ForEach(_ => _.Dispose());
             _nostrClient?.Dispose();
             _nostrCommunicator?.Dispose();
@@ -283,10 +283,17 @@ namespace Angor.Shared.Services
             serviceSubscriptions.Add(_nostrClient.Streams.EoseStream.Subscribe(_ =>
             {
                 _clientLogger.LogInformation($"EoseStream {_.Subscription} message - {_.AdditionalData}");
-                
-                if (!userSubscriptions.ContainsKey(_.Subscription))
+
+                if (userEoseActions.ContainsKey(_.Subscription))
+                {
+                    _clientLogger.LogInformation($"Invoking action on EOSE - {_.Subscription}");
+                    userEoseActions[_.Subscription].Invoke();
+                    userEoseActions.Remove(_.Subscription);
+                    _clientLogger.LogInformation($"Removed action on EOSE for subscription - {_.Subscription}");
+                }
+
+                if (!userSubscriptions.ContainsKey(_.Subscription)) 
                     return;
-                
                 _clientLogger.LogInformation($"Disposing of subscription - {_.Subscription}");
                 _nostrClient.Send(new NostrCloseRequest(_.Subscription));
                 userSubscriptions[_.Subscription].Dispose();

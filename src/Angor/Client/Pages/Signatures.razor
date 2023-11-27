@@ -3,8 +3,15 @@
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Angor.Client.Services
-@using Blockcore.Consensus.ScriptInfo
+@using Angor.Shared.ProtocolNew
+@using Angor.Shared.Services
+@using Angor.Client.Models
 @using Blockcore.NBitcoin
+@using Blockcore.NBitcoin.DataEncoders
+@using System.Text.Json
+@using Angor.Shared.Utilities
+
+@inject IJSRuntime JS
 
 @inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
@@ -13,6 +20,10 @@
 @inject NavigationManager NavigationManager
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IIndexerService _IndexerService
+@inject IRelayService RelayService
+@inject ISignService SignService
+@inject IInvestorTransactionActions InvestorTransactionActions
+@inject IFounderTransactionActions FounderTransactionActions
 
 @inherits BaseComponent
 
@@ -48,10 +59,10 @@
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach (var signature in pendingSignatures)
+                    @foreach (var signature in pendingSignatures.Where(_ => _.TransactionHex != null))
                     {
                         <tr>
-                                <td>@signature.AmountToInvest @network.CoinTicker</td>
+                            <td>@signature.AmountToInvest @network.CoinTicker</td>
                             <td>@signature.TimeArrived.ToString("g")</td>
                             <td>
                                 <button class="btn btn-success" @onclick="() => ApproveSignature(signature)">Approve</button>
@@ -65,60 +76,208 @@
     }
 </div>
 
+<div class="container mt-4">
+    
+    @if (!approvedSignatures.Any())
+    {
+        <p><em>No investments to approve yet...</em></p>
+    }
+    else
+    {
+        <!-- Signatures Details Section -->
+        <div class="row mt-4">
+            <div class="col">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                    <tr>
+                        <th>Amount Invested</th>
+                        <th>Time Arrived</th>
+                        <th>Time Of Approval</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var signature in approvedSignatures)
+                    {
+                        <tr>
+                            <td>@signature.AmountToInvest @network.CoinTicker</td>
+                            <td>@signature.TimeArrived.ToString("g")</td>
+                            <td>@signature.TimeAproved.ToString("g")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
 @code {
     [Parameter]
     public string ProjectIdentifier { get; set; }
 
+    public FounderProject FounderProject { get; set; }
     private List<SignatureRequest> pendingSignatures = new();
+    
+    private List<SignatureRequest> approvedSignatures = new();
 
+    private IJSInProcessObjectReference? javascriptNostrToolsModule;
+
+    int numberOfSignaturesHandled;
+    
     protected override async Task OnInitializedAsync()
     {
         if (hasWallet)
         {
-            pendingSignatures = await FetchPendingSignatures(ProjectIdentifier);
+            FounderProject = storage.GetFounderProjects()
+                .FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier)
+                             ?? throw new ArgumentException("The project was not found, try to scan in the founder page");
+
+            await FetchPendingSignatures(FounderProject);
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender || javascriptNostrToolsModule == null)
         {
-            if (hasWallet)
+            try
             {
-                var operationResult = await notificationComponent.LongOperation(async () =>
-                {
-                    return new OperationResult { Success = true };
+                //TODO import the nostr tool module directly to c# class
+                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
+            }
+            catch (JSException e)
+            {
+                Console.WriteLine(e);
+                notificationComponent.ShowErrorMessage(e.Message);
+            }
+        }
+        
+        if (numberOfSignaturesHandled < pendingSignatures.Count)
+        {
+            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
 
-                });
+            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-                if (operationResult.Success)
+            foreach (var pendingSignature in pendingSignatures)
+            {
+                pendingSignature.TransactionHex = await javascriptNostrToolsModule.InvokeAsync<string>(
+                    "decryptNostr",
+                    nostrPrivateKeyHex,
+                    pendingSignature.investorPubKey,
+                    pendingSignature.TransactionHex);
+
+                try
                 {
+                    var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.TransactionHex);
+
+                    pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3) //Todo get the actual outputs with taproot type
+                        .Sum(_ => _.TxOut.Value);
+                    
                     StateHasChanged();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    Console.WriteLine(pendingSignature.TransactionHex);
+                    pendingSignature.TransactionHex = null;
+                }
+                finally
+                {
+                    numberOfSignaturesHandled++;   
                 }
             }
         }
     }
-    private async Task<List<SignatureRequest>> FetchPendingSignatures(string projectId)
+    
+    bool messagesReceived;
+
+    private async Task FetchPendingSignatures(FounderProject project)
     {
-        return new List<SignatureRequest>()
+        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, project.LastRequestForSignaturesTime , async (investorPubKey,encryptedMessage, requestTime) =>
         {
-            new SignatureRequest {AmountToInvest = 10, TimeArrived = DateTime.UtcNow},
-            new SignatureRequest {AmountToInvest = 20, TimeArrived = DateTime.UtcNow}
-        }; 
+            messagesReceived = true;
+            var signatureRequest = new SignatureRequest
+            {
+                investorPubKey = investorPubKey,
+                TimeArrived = requestTime,
+                TransactionHex = encryptedMessage //To be encrypted after js interop is loaded
+            };
+                
+            pendingSignatures.Add(signatureRequest);
+        }, 
+            () =>
+            {
+                if (messagesReceived)
+                    StateHasChanged();
+            });
     }
 
     private async Task ApproveSignature(SignatureRequest signature)
     {
-         // Implementation to approve the signature
+        var key = _derivationOperations.DeriveFounderRecoveryPrivateKey(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
+
+        var signatureInfo = signProject(signature.TransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
+        
+        var sigJson = System.Text.Json.JsonSerializer.Serialize(signatureInfo, settings);
+        
+        var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
+
+        var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());  
+        
+        var encryptedContent = await javascriptNostrToolsModule.InvokeAsync<string>(
+            "encryptNostr",
+            nostrPrivateKeyHex,
+            signature.investorPubKey,
+            sigJson);
+
+        FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorPubKey);
+
+        storage.UpdateFounderProject(FounderProject);
+        
+        pendingSignatures.Remove(signature);
+        approvedSignatures.Add(signature);
+        StateHasChanged();
+    }
+    
+    private SignatureInfo signProject(string transactionHex,ProjectInfo info, string founderSigningPrivateKey)
+    {
+        var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
+
+        // build sigs
+        var recoveryTrx = InvestorTransactionActions.BuildRecoverInvestorFundsTransaction(info, investorTrx);
+        var sig = FounderTransactionActions.SignInvestorRecoveryTransactions(info, transactionHex, recoveryTrx, founderSigningPrivateKey);
+
+        if (!InvestorTransactionActions.CheckInvestorRecoverySignatures(info, investorTrx, sig))
+            throw new InvalidOperationException();
+
+        return sig;
     }
 
     public class SignatureRequest
     {
-        public int Id { get; set; }
+        public string investorPubKey { get; set; }
 
         public decimal AmountToInvest { get; set; }
 
         public DateTime TimeArrived { get; set; }
+        public DateTime TimeAproved { get; set; }
 
+        public string? TransactionHex { get; set; }
     }
+    
+    
+    //TODO move the settings to a common place
+    private JsonSerializerOptions settings => new()
+    {
+    // Equivalent to Formatting = Formatting.None
+        WriteIndented = false,
+
+    // Equivalent to NullValueHandling = NullValueHandling.Ignore
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+
+    // PropertyNamingPolicy equivalent to CamelCasePropertyNamesContractResolver
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+
+        Converters = { new UnixDateTimeConverter() }
+    };
 }

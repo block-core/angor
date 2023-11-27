@@ -1,9 +1,12 @@
 @using Angor.Shared.Services
 @using Angor.Client.Models
+@using Angor.Client.Storage
+@using Angor.Shared.Models
 @using Nostr.Client.Messages
 @using Nostr.Client.Messages.Metadata
 
 @inject IRelayService  RelayService;
+@inject IClientStorage Storage;
 
 <div class="card mb-3">
     @if (InvestmentRequests)
@@ -13,9 +16,12 @@
         </div>
     }
     <div class="card-body">
-        <h1 class="card-title">@FounderProject.Metadata?.Name</h1>
-        <h2 class="card-subtitle">@FounderProject.ProjectInfo.ProjectIdentifier</h2>
-        <p class="card-text">Nostr ID: <a href="/" target="_blank">@FounderProject.ProjectInfo.NostrPubKey</a></p>
+        <h3 class="card-title">@FounderProject.Metadata?.Name</h3>
+        <p class="card-subtitle">@FounderProject.Metadata?.About</p>
+        <p class="card-text">
+            Project ID: @FounderProject.ProjectInfo.ProjectIdentifier<br/>
+            Nostr ID:   <a href="/" target="_blank">@FounderProject.ProjectInfo.NostrPubKey</a>
+        </p>
         <NavLink href=@($"/view/{FounderProject.ProjectInfo.ProjectIdentifier}") class="btn btn-primary">View Project</NavLink>
     </div>
 </div>
@@ -31,19 +37,6 @@
     {
         await RelayService.ConnectToRelaysAsync();
 
-        if (FounderProject.Metadata == null)
-        {
-            await RelayService.RequestProjectCreateEventsByPubKeyAsync(FounderProject.ProjectInfo.NostrPubKey, _ =>
-            {
-                if (_.Kind != NostrKind.Metadata) 
-                    return;
-                
-                var metadata = System.Text.Json.JsonSerializer.Deserialize<NostrMetadata>(_.Content, Angor.Shared.Services.RelayService.settings);
-                FounderProject.Metadata = ProjectMetadata.Parse(metadata);
-                StateHasChanged();
-            });
-        }
-        
         await RelayService.LookupDirectMessagesForPubKeyAsync(FounderProject.ProjectInfo.NostrPubKey, FounderProject.LastRequestForSignaturesTime, 1,
             _ =>
             {

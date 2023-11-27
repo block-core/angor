@@ -56,29 +56,43 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.RemoveItem(string.Format(utxoKey,network));
     }
 
-    public void AddProject(ProjectInfo project)
+    public void AddInvestmentProject(ProjectInfo project)
     {
-        var ret = GetProjects();
+        var ret = GetInvestmentProjects();
 
         ret.Add(project);
 
         _storage.SetItem("projects", ret);
     }
 
-    public List<ProjectInfo> GetProjects()
+    public void UpdateInvestmentProject(ProjectInfo project)
+    {
+        var ret = GetInvestmentProjects();
+
+        var item = ret.First(_ => _.ProjectIdentifier == project.ProjectIdentifier);
+
+        if(!ret.Remove(item)) 
+            throw new InvalidOperationException();
+
+        ret.Add(project);
+
+        _storage.SetItem("projects", ret);
+    }
+
+    public List<ProjectInfo> GetInvestmentProjects()
     {
         var ret =  _storage.GetItem<List<ProjectInfo>>("projects");
 
         return ret ?? new List<ProjectInfo>();
     }
 
-    public void AddFounderProject(FounderProject project)
+    public void AddFounderProject(params FounderProject[] projects)
     {
         var ret = GetFounderProjects();
 
-        ret.Add(project);
+        ret.AddRange(projects);
 
-        _storage.SetItem("founder-projects", ret);
+        _storage.SetItem("founder-projects", ret.OrderBy(_ => _.ProjectInfo.ProjectIndex));
     }
 
     public List<FounderProject> GetFounderProjects()
@@ -86,6 +100,22 @@ public class ClientStorage : IClientStorage, INetworkStorage
         var ret = _storage.GetItem<List<FounderProject>>("founder-projects");
 
         return ret ?? new List<FounderProject>();
+    }
+
+    public void UpdateFounderProject(FounderProject project)
+    {
+        var projects = _storage.GetItem<List<FounderProject>>("founder-projects");
+        
+        var item = projects.FirstOrDefault(f => f.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
+
+        if (item != null)
+        {
+            projects.Remove(item);   
+        }
+        
+        projects.Add(project);
+        
+        _storage.SetItem("founder-projects", projects.OrderBy(_ => _.ProjectInfo.ProjectIndex));
     }
 
     public void AddOrUpdateSignatures(SignatureInfo signatureInfo)

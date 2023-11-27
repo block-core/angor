@@ -1,14 +1,15 @@
 using Angor.Client.Services;
 using Angor.Shared.Models;
+using Angor.Shared.Services;
 using Blazored.SessionStorage;
 
 namespace Angor.Client.Storage;
 
-public class LocalSessionStorage : ISessionStorage
+public class LocalSessionStorage : ICacheStorage
 {
     private ISyncSessionStorageService _sessionStorageService;
-
-    private const string NostrKeyEventStreamSubscription = "subscriptions";
+    
+    private const string BrowseIndexerData = "subscriptions";
 
     public LocalSessionStorage(ISyncSessionStorageService sessionStorageService)
     {
@@ -20,31 +21,6 @@ public class LocalSessionStorage : ISessionStorage
         _sessionStorageService.SetItem(project.ProjectIdentifier,project);
     }
 
-    public void AddProjectToSubscribedList(string nostrPubKey)
-    {
-        var list = _sessionStorageService.GetItem<List<string>>(NostrKeyEventStreamSubscription) ?? new List<string>();
-
-        list.Add(nostrPubKey);
-
-        _sessionStorageService.SetItem(NostrKeyEventStreamSubscription, list);
-    }
-
-    public List<string> GetProjectSubscribedList()
-    {
-        return _sessionStorageService.GetItem<List<string>>(NostrKeyEventStreamSubscription) ?? new List<string>();
-    }
-    public void SetProjectSubscribedList(List<string> list)
-    {
-        _sessionStorageService.SetItem<List<string>>(NostrKeyEventStreamSubscription,list);
-    }
-
-    public bool IsProjectInSubscribedList(string nostrPubKey)
-    {
-        var list = _sessionStorageService.GetItem<List<string>>(NostrKeyEventStreamSubscription) ?? new List<string>();
-
-        return list.Contains(nostrPubKey);
-    }
-
     public ProjectInfo? GetProjectById(string projectId)
     {
         return _sessionStorageService.GetItem<ProjectInfo>(projectId);
@@ -54,15 +30,13 @@ public class LocalSessionStorage : ISessionStorage
         return _sessionStorageService.ContainKey(projectId);
     }
 
-    public void StoreProjectInfoEventId(string eventId, string projectInfo)
+    public List<ProjectIndexerData>? GetProjectIndexerData()
     {
-        _sessionStorageService.SetItem(eventId,projectInfo);
+        return _sessionStorageService.GetItem<List<ProjectIndexerData>>(BrowseIndexerData);
     }
 
-    public ProjectInfo GetProjectInfoByEventId(string eventId)
+    public void SetProjectIndexerData(List<ProjectIndexerData> list)
     {
-        var projectIdentifier = _sessionStorageService.GetItem<string>(eventId);
-
-        return _sessionStorageService.GetItem<ProjectInfo>(projectIdentifier);
+        _sessionStorageService.SetItem(BrowseIndexerData,list);
     }
 }

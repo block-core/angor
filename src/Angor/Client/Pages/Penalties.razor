@@ -97,7 +97,7 @@
         if (hasWallet)
         {
             var recoveries = storage.GetSignaturess();
-            var projects = storage.GetProjects();
+            var projects = storage.GetInvestmentProjects();
 
             foreach (var signatureInfo in recoveries)
             {
@@ -125,7 +125,7 @@
             {
                 var operationResult = await notificationComponent.LongOperation(async () =>
                 {
-                    var projects = storage.GetProjects();
+                    var projects = storage.GetInvestmentProjects();
 
                     foreach (var penaltyProject in penaltyProjects)
                     {
