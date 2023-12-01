@@ -44,7 +44,13 @@
 
 @if (founder)
 {
-    <p>You are founder.</p>
+    <p>You are the founder.</p>
+    return;
+}
+
+@if(project == null)
+{
+    <p>The project was not found.</p>
     return;
 }
 
@@ -197,7 +203,7 @@
     private List<StageBreakdown> StagesBreakdown { get; set; } = new();
     bool founder = false;
     bool invested = false;
-    private ProjectInfo project;
+    private ProjectInfo? project;
     private bool showCreateModal;
     Transaction? signedTransaction;
     Transaction unSignedTransaction;
@@ -231,17 +237,11 @@
                 if (findProject != null)
                 {
                     founder = true;
-                    invested = true;
                     project = findProject;
                 }
                 else
                 {
-                    findProject = SessionStorage.GetProjectById(ProjectId);
-
-                    if (findProject != null)
-                    {
-                        project = findProject;
-                    }
+                    project = SessionStorage.GetProjectById(ProjectId);
                 }
             }
         }
@@ -251,7 +251,7 @@
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
         
 
-        if (recoverySigs?.Signatures.Any() ==false)
+        if (project != null && recoverySigs?.Signatures.Any() ==false)
         {
             var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
             
@@ -303,7 +303,7 @@
             StagesBreakdown.Clear();
             int index = 1;
 
-            foreach (var stage in project.Stages)
+            foreach (var stage in project!.Stages)
             {
                 var insert = new StageBreakdown
                 {
@@ -344,9 +344,11 @@
             return;
         }
 
-        var projects = storage.GetInvestmentProjects();
+        var signatures = storage.GetSignaturess();
 
-        if (projects.Any(a => project.ProjectIdentifier == a.ProjectIdentifier))
+        recoverySigs = signatures?.FirstOrDefault(_ => _.ProjectIdentifier == project.ProjectIdentifier);
+
+        if (recoverySigs?.Signatures.Any() ?? false)
         {
             notificationComponent.ShowErrorMessage("You already invested");
             return;
@@ -419,7 +421,7 @@
             // remove signatures when requesting founder to sign 
             recoverySigs = new()
             {
-                ProjectIdentifier = project.ProjectIdentifier,
+                ProjectIdentifier = project!.ProjectIdentifier,
                 SignedTransactionHex = signedTransaction!.ToHex()
             };
 
