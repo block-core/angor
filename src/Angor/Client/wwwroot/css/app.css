@@ -176,14 +176,15 @@ tr[style*="cursor: pointer;"]:hover {
     justify-content: center;
     align-items: center;
     z-index: 9999;
+    flex-direction: column;
 }
 
 .loader {
-    border: 8px solid #eaeaea; /* Light grey for the base circle */
-    border-top: 8px solid #f7931a; /* Bitcoin orange for the rotating part */
+    border: 12px solid #eaeaea; /* Light grey for the base circle */
+    border-top: 12px solid #f7931a; /* Bitcoin orange for the rotating part */
     border-radius: 50%;
-    width: 60px; /* Smaller width */
-    height: 60px; /* Smaller height */
+    width: 100px; /* Smaller width */
+    height: 100px; /* Smaller height */
     animation: spin 2s linear infinite;
     background: url('../bitcoin-logo.png') no-repeat center;
     background-size: 90%; /* Adjust the size of the logo as needed */
@@ -208,4 +209,11 @@ tr[style*="cursor: pointer;"]:hover {
     100% {
         transform: rotate(360deg);
     }
+}
+
+.loading-text {
+    color: #333; /* Or any color you want for the text */
+    font-size: 20px; /* Adjust the size as you prefer */
+    margin-bottom: 20px; /* Distance from the loader */
+    /* Add any additional styling as needed */
 }
