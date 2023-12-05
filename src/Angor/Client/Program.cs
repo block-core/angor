@@ -47,11 +47,7 @@ builder.Services.AddTransient<IInvestmentTransactionBuilder, InvestmentTransacti
 builder.Services.AddTransient<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
 builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 
-
-
-
-
-
+builder.Services.AddSingleton<INostrCommunicationFactory,NostrCommunicationFactory>();
 
 
 await builder.Build().RunAsync();

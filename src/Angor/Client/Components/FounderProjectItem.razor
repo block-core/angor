@@ -35,8 +35,6 @@
     
     protected override async Task OnInitializedAsync()
     {
-        await RelayService.ConnectToRelaysAsync();
-
         await RelayService.LookupDirectMessagesForPubKeyAsync(FounderProject.ProjectInfo.NostrPubKey, FounderProject.LastRequestForSignaturesTime, 1,
             _ =>
             {

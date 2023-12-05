@@ -1,9 +1,8 @@
-﻿using System.Net.Http.Json;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using Angor.Shared.Models;
+using Angor.Shared.Services;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Client;
-using Nostr.Client.Communicator;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 using Nostr.Client.Requests;
@@ -12,7 +11,6 @@ namespace Angor.Client.Services
 {
     public interface ISignService
     {
-        Task AddSignKeyAsync(ProjectInfo project, string founderRecoveryPrivateKey, string nostrPrivateKey);
         DateTime RequestInvestmentSigs(SignRecoveryRequest signRecoveryRequest);
         void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime sigRequestSentTime, Func<string, Task> action);
 
@@ -25,33 +23,19 @@ namespace Angor.Client.Services
 
     public class SignService : ISignService
     {
-
-        private HttpClient _httpClient;
-        private static INostrClient _nostrClient;
-        private static INostrCommunicator _nostrCommunicator;
-
+        private readonly INostrCommunicationFactory _communicationFactory;
+        private readonly INetworkService _networkService;
+        
         private Dictionary<string,IDisposable> subscriptions = new ();
         private Dictionary<string, Action> eoseActions = new();
-        public SignService(ILogger<NostrWebsocketClient> _logger, HttpClient httpClient)
+        public SignService(ILogger<NostrWebsocketClient> _logger, HttpClient httpClient, INostrCommunicationFactory communicationFactory, INetworkService networkService)
         {
-            _httpClient = httpClient;
-            _nostrCommunicator = new NostrWebsocketCommunicator(new Uri("wss://relay.angor.io"));
+            _communicationFactory = communicationFactory;
+            _networkService = networkService;
+            
+            var nostrClient = _communicationFactory.CreateClient(_networkService);
 
-            _nostrCommunicator.Name = "angor-relay.test";
-            _nostrCommunicator.ReconnectTimeout = null;
-            
-            _nostrCommunicator.DisconnectionHappened.Subscribe(info =>
-            {
-                _logger.LogError(info.Exception, "Relay disconnected, type: {type}, reason: {reason}.", info.Type, info.CloseStatus);
-                _nostrCommunicator.Start();
-            });
-            _nostrCommunicator.MessageReceived.Subscribe(info => _logger.LogInformation(info.Text, "Relay message received, type: {type}", info.MessageType));
-            
-            _nostrCommunicator.StartOrFail();
-            
-            _nostrClient = new NostrWebsocketClient(_nostrCommunicator, _logger);
-
-            _nostrClient.Streams.EoseStream.Subscribe(_ =>
+            nostrClient.Streams.EoseStream.Subscribe(_ =>
             {
                 _logger.LogInformation("End of stream on subscription" + _.Subscription);
 
@@ -65,23 +49,11 @@ namespace Angor.Client.Services
                 if (subscriptions.ContainsKey(_.Subscription))
                 {
                     _logger.LogInformation("Closing and disposing of subscription - " + _.Subscription);
-                    _nostrClient.Send(new NostrCloseRequest(_.Subscription));
+                    nostrClient.Send(new NostrCloseRequest(_.Subscription));
                     subscriptions[_.Subscription].Dispose();
                     subscriptions.Remove(_.Subscription);
                 }
             });
-        }
-
-        public async Task AddSignKeyAsync(ProjectInfo project, string founderRecoveryPrivateKey, string nostrPrivateKey)
-        {
-            var response = await _httpClient.PostAsJsonAsync($"/api/TestSign",
-                new SignData
-                {
-                    ProjectIdentifier = project.ProjectIdentifier, 
-                    FounderRecoveryPrivateKey = founderRecoveryPrivateKey,
-                    NostrPrivateKey = nostrPrivateKey
-                });
-             response.EnsureSuccessStatusCode();
         }
 
         public DateTime RequestInvestmentSigs(SignRecoveryRequest signRecoveryRequest)
@@ -93,12 +65,9 @@ namespace Angor.Client.Services
                 Kind = NostrKind.EncryptedDm,
                 CreatedAt = DateTime.UtcNow,
                 Content = signRecoveryRequest.EncryptedContent,
-                Tags = new NostrEventTags(new[]
-                {
-                    NostrEventTag.Profile(signRecoveryRequest.NostrPubKey),
-                    new NostrEventTag(NostrEventTag.CoordinatesIdentifier,
-                        NostrCoordinatesIdentifierTag(signRecoveryRequest.NostrPubKey))
-                })
+                Tags = new NostrEventTags(
+                    NostrEventTag.Profile(signRecoveryRequest.NostrPubKey), 
+                    new NostrEventTag(NostrEventTag.CoordinatesIdentifier, NostrCoordinatesIdentifierTag(signRecoveryRequest.NostrPubKey)))
             };
 
             // Blazor does not support AES so needs to be done manually in the UI
@@ -107,14 +76,17 @@ namespace Angor.Client.Services
 
             var signed = ev.Sign(sender);
 
-            _nostrClient.Send(new NostrEventRequest(signed));
+            var nostrClient = _communicationFactory.CreateClient(_networkService);
+            nostrClient.Send(new NostrEventRequest(signed));
 
             return signed.CreatedAt!.Value;
         }
 
         public void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime sigRequestSentTime, Func<string, Task> action)
         {
-            var subscription = _nostrClient.Streams.EventStream
+            var nostrClient = _communicationFactory.CreateClient(_networkService);
+            
+            var subscription = nostrClient.Streams.EventStream
                 .Where(_ => _.Subscription == projectNostrPubKey)
                 .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
                 .Subscribe(_ =>
@@ -124,7 +96,7 @@ namespace Angor.Client.Services
             
             subscriptions.TryAdd(projectNostrPubKey,subscription);
             
-            _nostrClient.Send(new NostrRequest(projectNostrPubKey, new NostrFilter
+            nostrClient.Send(new NostrRequest(projectNostrPubKey, new NostrFilter
             {
                 Authors = new[] { projectNostrPubKey }, //From founder
                 P = new[] { investorNostrPubKey }, // To investor
@@ -137,9 +109,10 @@ namespace Angor.Client.Services
 
         public Task LookupInvestmentRequestsAsync(string nostrPubKey, DateTime? since, Action<string,string,DateTime> action, Action onAllMessagesReceived)
         {
+            var nostrClient = _communicationFactory.CreateClient(_networkService);
             var subscriptionKey = nostrPubKey + "sig_req";
             
-            var subscription = _nostrClient.Streams.EventStream
+            var subscription = nostrClient.Streams.EventStream
                 .Where(_ => _.Subscription == subscriptionKey)
                 .Select(_ => _.Event)
                 .Subscribe(_ =>
@@ -149,7 +122,7 @@ namespace Angor.Client.Services
 
             subscriptions.TryAdd(subscriptionKey, subscription);
 
-            _nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 P = new[] { nostrPubKey },
                 Kinds = new[] { NostrKind.EncryptedDm },
@@ -180,7 +153,8 @@ namespace Angor.Client.Services
 
             var signed = ev.Sign(nostrPrivateKey);
 
-            _nostrClient.Send(new NostrEventRequest(signed));
+            var nostrClient = _communicationFactory.CreateClient(_networkService);
+            nostrClient.Send(new NostrEventRequest(signed));
 
             return ev.CreatedAt.Value;
         }

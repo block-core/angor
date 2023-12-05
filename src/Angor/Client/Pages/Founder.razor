@@ -97,7 +97,6 @@
     private async Task LookupProjectKeysOnIndexerAsync()
     {
         scanningForProjects = true;
-        await RelayService.ConnectToRelaysAsync();
         
         var keys = storage.GetFounderKeys();
 

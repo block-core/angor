@@ -1,4 +1,6 @@
 ﻿using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using Angor.Shared.Models;
 using Microsoft.Extensions.Logging;
 
@@ -49,6 +51,8 @@ namespace Angor.Shared.Services
                 }
             }
 
+            var nostrHeaderMediaType = new MediaTypeWithQualityHeaderValue("application/nostr+json");
+            _httpClient.DefaultRequestHeaders.Accept.Add(nostrHeaderMediaType);
             foreach (var relayUrl in settings.Relays)
             {
                 if (force || (DateTime.UtcNow - relayUrl.LastCheck).Minutes > 1)
@@ -59,11 +63,14 @@ namespace Angor.Shared.Services
                     {
                         var uri = new Uri(relayUrl.Url);
                         var httpUri = uri.Scheme == "wss" ? new Uri($"https://{uri.Host}/") : new Uri($"http://{uri.Host}/");
+                        
                         var response = await _httpClient.GetAsync(httpUri);
 
                         if (response.IsSuccessStatusCode)
                         {
                             relayUrl.Status = UrlStatus.Online;
+                            var relayInfo = await response.Content.ReadFromJsonAsync<NostrRelayInfo>();
+                            relayUrl.Name = relayInfo?.Name ?? string.Empty;
                         }
                         else
                         {
@@ -78,6 +85,7 @@ namespace Angor.Shared.Services
                 }
             }
 
+            _httpClient.DefaultRequestHeaders.Accept.Remove(nostrHeaderMediaType);
             _networkStorage.SetSettings(settings);
         }
 

@@ -57,7 +57,7 @@
                                 }
                                 else
                                 {
-                                    <p class="text-warning">The project information was not found on the relay</p>
+                                    <p class="text-warning">The project information was not found on the relays (<a href="/settings" target="_self">add missing relay</a>)</p>
                                 }
                             }
                         </div>
@@ -77,8 +77,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await _RelayService.ConnectToRelaysAsync();
-
         projects = SessionStorage.GetProjectIndexerData() ?? new();
     }
 
