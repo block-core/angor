@@ -179,16 +179,14 @@ tr[style*="cursor: pointer;"]:hover {
 }
 
 .loader {
-    border: 16px solid #f3f3f3;
+    border: 8px solid #eaeaea; /* Light grey for the base circle */
+    border-top: 8px solid #f7931a; /* Bitcoin orange for the rotating part */
     border-radius: 50%;
-    border-top: 16px solid blue;
-    border-right: 16px solid green;
-    border-bottom: 16px solid red;
-    border-left: 16px solid pink;
-    width: 120px;
-    height: 120px;
-    -webkit-animation: spin 2s linear infinite; /* Safari */
+    width: 60px; /* Smaller width */
+    height: 60px; /* Smaller height */
     animation: spin 2s linear infinite;
+    background: url('../bitcoin-logo.png') no-repeat center;
+    background-size: 90%; /* Adjust the size of the logo as needed */
 }
 
 /* Safari */
