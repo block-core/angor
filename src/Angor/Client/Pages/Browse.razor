@@ -39,29 +39,25 @@
             }
             else
             {
-                foreach (var project in projects) //TODO set order (block created ?)
+                foreach (var project in projects.OrderByDescending(project => project.CreatedOnBlock))
                 {
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">@project.ProjectIdentifier</h5>
-                            <p class="card-text">Nostr ID: <a href="/" target="_blank">@(NostrPublicKey.FromHex(project.NostrPubKey).Bech32)</a></p>
-                            @if (SessionStorage.IsProjectInStorageById(project.ProjectIdentifier))
-                            {
-                                <button @onclick="() => ViewProjectDetails(project.ProjectIdentifier)" class="btn btn-primary">View</button>
-                            }
-                            else
-                            {
-                                if (searchInProgress)
+                    @if (SessionStorage.IsProjectInStorageById(project.ProjectIdentifier)) //TODO should we show that projects exist but the user needs to add the right relay?
+                    {
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">@project.ProjectIdentifier</h5>
+                                <p class="card-text">Nostr ID: <a href="/" target="_blank">@(NostrPublicKey.FromHex(project.NostrPubKey).Bech32)</a></p>
+                                @if(searchInProgress)
                                 {
                                     <div class="loader"></div>
                                 }
                                 else
                                 {
-                                    <p class="text-warning">The project information was not found on the relays (<a href="/settings" target="_self">add missing relay</a>)</p>
+                                    <button @onclick="() => ViewProjectDetails(project.ProjectIdentifier)" class="btn btn-primary">View</button>
                                 }
-                            }
+                            </div>
                         </div>
-                    </div>
+                    }
                 }
             }
         </div>

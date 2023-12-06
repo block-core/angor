@@ -20,12 +20,6 @@
 <div class="container mt-4">
     <h3>View Project</h3>
 
-    @if (!hasWallet)
-    {
-        NavigationManager.NavigateTo($"/wallet");
-        return;
-    }
-
     <NotificationComponent @ref="notificationComponent" />
 
     @if (project == null)
@@ -226,8 +220,6 @@
 
     protected override Task OnInitializedAsync()
     {
-        if (hasWallet)
-        {
             var findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
 
             if (findProject != null)
@@ -264,7 +256,6 @@
             {
                 projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
             }
-        }
         
         return Task.CompletedTask;
     }
@@ -285,7 +276,10 @@
 
     private async Task InvestInProject()
     {
-        NavigationManager.NavigateTo($"/invest/{ProjectId}");
+        if (hasWallet)
+            NavigationManager.NavigateTo($"/invest/{ProjectId}");
+        else
+            notificationComponent.ShowNotificationMessage("You must create a wallet if you want to invest");
     }
     
     
