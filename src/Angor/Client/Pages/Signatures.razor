@@ -62,7 +62,7 @@
                     @foreach (var signature in pendingSignatures.Where(_ => _.TransactionHex != null))
                     {
                         <tr>
-                            <td>@signature.AmountToInvest @network.CoinTicker</td>
+                            <td>@Money.Satoshis(signature.AmountToInvest).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
                             <td>@signature.TimeArrived.ToString("g")</td>
                             <td>
                                 <button class="btn btn-success" @onclick="() => ApproveSignature(signature)">Approve</button>

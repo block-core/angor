@@ -61,7 +61,9 @@
     {
         <button class="btn btn-primary" @onclick="PrepareEndOfProjectCoins">End of project</button>
     }
-
+    
+    <br/>
+    <br />
     <table class="table">
         <thead>
             <tr>
@@ -343,8 +345,8 @@
                     else
                     {
                         item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty };
-                        var days = (penaltyExpieryDate - DateTime.Now).Days;
-                        item.SpentTo = days > 0 ? $"Penalty, released in {days} days" : "Penalty can be released";
+                        var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                        item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
                     }
                 }
                 else
@@ -367,8 +369,8 @@
                             }
                             case ProjectScriptTypeEnum.InvestorWithPenalty:
                             {
-                                var days = (penaltyExpieryDate - DateTime.Now).Days;
-                                item.SpentTo = days > 0 ? $"Penalty, released in {days} days" : "Penalty can be released";
+                                    var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                                    item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
                                 break;
                             }
                             case ProjectScriptTypeEnum.EndOfProject:
