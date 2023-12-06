@@ -28,4 +28,6 @@ public interface IWalletOperations
     Transaction AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo,
         FeeEstimation feeRate);
+
+    void UpdateAccountInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction, string changeAddress);
 }

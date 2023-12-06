@@ -594,7 +594,16 @@
 
             var wallet = _walletStorage.GetWallet();
 
-            return await _walletOperations.SendAmountToAddress(wallet, _sendInfo);
+            var res = await _walletOperations.SendAmountToAddress(wallet, _sendInfo);
+
+            if (res.Success)
+            {
+                _walletOperations.UpdateAccountInfoWithSpentTransaction(localAccountInfo, res.Data, _sendInfo.ChangeAddress);
+                localAccountInfo.CalculateBalance();
+                storage.SetAccountInfo(network.Name, localAccountInfo);
+            }
+
+            return res;
         });
 
         if (operationResult is { Success: true })
@@ -648,7 +657,6 @@
 
     private AccountInfo GetAccountInfoFromStorage()
     {
-        var network = _networkConfiguration.GetNetwork();
         return storage.GetAccountInfo(network.Name);
     }
 

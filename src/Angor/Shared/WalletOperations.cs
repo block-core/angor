@@ -128,8 +128,90 @@ public class WalletOperations : IWalletOperations
             .SendEstimatedFees(new FeeRate(Money.Coins(sendInfo.FeeRate)));
 
         var signedTransaction = builder.BuildTransaction(true);
-        
+
         return await PublishTransactionAsync(network, signedTransaction);
+    }
+
+    private void UpdatePendingLists(AccountInfo accountInfo)
+    {
+        // remove from the pending remove list if it was removed from the indexer
+        var pendingRemove = accountInfo.PendingRemove.ToList();
+        foreach (var utxoData in pendingRemove)
+        {
+            foreach (var addressInfo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo))
+            {
+                if (addressInfo.Address == utxoData.address)
+                {
+                    if (addressInfo.UtxoData.All(_ => _.outpoint.ToString() != utxoData.outpoint.ToString()))
+                    {
+                        accountInfo.PendingRemove.Remove(utxoData);
+                    }
+                }
+            }
+        }
+
+        // remove from the pending add if it was removed from the indexer
+        var pendingAdd = accountInfo.PendingAdd.ToList();
+        foreach (var utxoData in pendingAdd)
+        {
+            foreach (var addressInfo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo))
+            {
+                if (addressInfo.Address == utxoData.address)
+                {
+                    if (addressInfo.UtxoData.Any(_ => _.outpoint.ToString() == utxoData.outpoint.ToString()))
+                    {
+                        accountInfo.PendingAdd.Remove(utxoData);
+                    }
+                }
+            }
+        }
+    }
+
+    public void UpdateAccountInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction, string changeAddress)
+    {
+        Network network = _networkConfiguration.GetNetwork();
+
+        var outputs = transaction.Outputs.AsIndexedOutputs();
+        var inputs = transaction.Inputs.Select(_ => _.PrevOut).ToList();
+        
+        foreach (var addressInfo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo))
+        {
+            // find all spent inputs to mark them as spent
+            foreach (var utxoData in addressInfo.UtxoData)
+            {
+                foreach (var outPoint in inputs)
+                {
+                    if (utxoData.outpoint.ToString() == outPoint.ToString())
+                    {
+                        if (accountInfo.PendingRemove.All(_ => _.outpoint != utxoData.outpoint))
+                        {
+                            accountInfo.PendingRemove.Add(utxoData);
+                        }
+                    }
+                }
+            }
+
+            // find all new outputs to mark them as unspent
+            foreach (var output in outputs)
+            {
+                if (output.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString() == addressInfo.Address)
+                {
+                    var outpoint = new Outpoint { outputIndex = (int)output.N, transactionId = transaction.GetHash().ToString() };
+
+                    if (accountInfo.PendingAdd.All(_ => _.outpoint != outpoint))
+                    {
+                        accountInfo.PendingAdd.Add(new UtxoData
+                        {
+                            address = addressInfo.Address,
+                            scriptHex = output.TxOut.ScriptPubKey.ToHex(),
+                            outpoint = outpoint,
+                            blockIndex = 0,
+                            value = output.TxOut.Value
+                        });
+                    }
+                }
+            }
+        }
     }
 
     public async Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,Transaction signedTransaction)
@@ -305,7 +387,9 @@ public class WalletOperations : IWalletOperations
             accountInfo.ChangeAddressesInfo.Add(changeAddressInfo);
         }
 
-        accountInfo.TotalBalance = accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo).SelectMany(s => s.UtxoData).Sum(s => s.value);
+        UpdatePendingLists(accountInfo);
+
+        accountInfo.CalculateBalance();
     }
 
     private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
@@ -369,12 +453,14 @@ public class WalletOperations : IWalletOperations
 
     public async Task<(string address, List<UtxoData> data)> FetchUtxoForAddressAsync(string address)
     {
+        // cap utxo count to max 1000 items, this is
+        // mainly to get miner wallets to work fine
+        var maxutxo = 1000; 
+
         var limit = 50;
         var offset = 0;
         List<UtxoData> allItems = new();
         
-        SettingsUrl indexer = _networkConfiguration.GetIndexerUrl();
-
         do
         {
             // this is inefficient look at headers to know when to stop
@@ -386,6 +472,9 @@ public class WalletOperations : IWalletOperations
             allItems.AddRange(utxo);
 
             if (utxo.Count < limit)
+                break;
+
+            if(allItems.Count >= maxutxo)
                 break;
 
             offset += limit;
