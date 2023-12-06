@@ -11,83 +11,27 @@ using Nostr.Client.Responses;
 
 namespace Angor.Shared.Services
 {
-    public class RelayService : IRelayService
+    public class RelayService : RelaySubscriptionsHanding,IRelayService
     {
         private ILogger<RelayService> _logger;
         private INostrCommunicationFactory _communicationFactory;
         private INetworkService networkService;
         
-        private Dictionary<string, SubscriptionCallCounter<IDisposable>> userSubscriptions = new();
-        private Dictionary<string, SubscriptionCallCounter<Action>> userEoseActions = new();
+
         private readonly List<IDisposable> _serviceSubscriptions;
-        private Dictionary<string, SubscriptionCallCounter<Action<NostrOkResponse>>> OkVerificationActions = new();
-
-        private class SubscriptionCallCounter<T>
-        {
-            public SubscriptionCallCounter(T item)
-            {
-                Item = item;
-            }
-
-            public int NumberOfInvocations { get; set; }
-            public T Item { get; }
-        }
         
-        public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService)
+        public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService,ILogger<RelaySubscriptionsHanding> baseLogger) 
+            : base(baseLogger,communicationFactory,networkService)
         {
             _logger = logger;
             _communicationFactory = communicationFactory;
             this.networkService = networkService;
 
-            var nostrClient = _communicationFactory.CreateClient(this.networkService);
+            var nostrClient = _communicationFactory.GetOrCreateClient(this.networkService);
             
-            _serviceSubscriptions = new();            
-            _serviceSubscriptions.Add( nostrClient.Streams.OkStream.Subscribe(_ =>
-            {
-                _logger.LogInformation($"OkStream {_.Accepted} message - {_.Message}");
-
-                if (OkVerificationActions.TryGetValue(_?.EventId ?? string.Empty, out SubscriptionCallCounter<Action<NostrOkResponse>> value))
-                {
-                    value.NumberOfInvocations++;
-                    value.Item(_);
-                    if (value.NumberOfInvocations == _communicationFactory.GetNumberOfRelaysConnected())
-                    {
-                        OkVerificationActions.Remove(_.EventId ?? string.Empty);
-                    }
-                }
-            }));
-            
-            _serviceSubscriptions.Add(nostrClient.Streams.EoseStream.Subscribe(_ =>
-            {
-                _logger.LogInformation($"EoseStream {_.Subscription} message - {_.AdditionalData}");
-
-                if (userEoseActions.TryGetValue(_.Subscription, out SubscriptionCallCounter<Action> value))
-                {
-                    value.NumberOfInvocations++;
-                    if (userEoseActions[_.Subscription].NumberOfInvocations == _communicationFactory.GetNumberOfRelaysConnected())
-                    {
-                        _logger.LogInformation($"Invoking action on EOSE - {_.Subscription}");
-                        value.Item.Invoke();
-                        userEoseActions.Remove(_.Subscription);
-                        _logger.LogInformation($"Removed action on EOSE for subscription - {_.Subscription}");   
-                    }
-                }
-
-                if (!userSubscriptions.ContainsKey(_.Subscription)) 
-                    return;
-
-                userSubscriptions[_.Subscription].NumberOfInvocations++;
-                
-                if (userSubscriptions[_.Subscription].NumberOfInvocations != _communicationFactory.GetNumberOfRelaysConnected()) 
-                    return;
-                
-                _logger.LogInformation($"Disposing of subscription - {_.Subscription}");
-                nostrClient.Send(new NostrCloseRequest(_.Subscription));
-                userSubscriptions[_.Subscription].Item.Dispose();
-                userSubscriptions.Remove(_.Subscription);
-                _logger.LogInformation($"subscription disposed - {_.Subscription}");
-            }));
-            
+            _serviceSubscriptions = new();
+            _serviceSubscriptions.Add(nostrClient.Streams.OkStream.Subscribe(HandleOkMessages));
+            _serviceSubscriptions.Add(nostrClient.Streams.EoseStream.Subscribe(HandleEoseMessages));
         }
 
         public void RegisterOKMessageHandler(string eventId, Action<NostrOkResponse> action)
@@ -99,7 +43,7 @@ namespace Angor.Shared.Services
         {
             const string subscriptionName = "ProjectInfoLookups";
             
-            var nostrClient = _communicationFactory.CreateClient(networkService);
+            var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
             
             if (nostrClient == null) 
                 throw new InvalidOperationException("The nostr client is null");
@@ -135,7 +79,7 @@ namespace Angor.Shared.Services
         {
             var subscriptionKey = Guid.NewGuid().ToString().Replace("-","");
             
-            var nostrClient = _communicationFactory.CreateClient(networkService);
+            var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
             
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
@@ -159,7 +103,7 @@ namespace Angor.Shared.Services
 
         public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)
         {
-            var nostrClient = _communicationFactory.CreateClient(networkService);
+            var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
 
             var subscriptionKey = nostrPubKey + "DM";
             
@@ -193,10 +137,8 @@ namespace Angor.Shared.Services
 
         public void CloseConnection()
         {
-            userSubscriptions.Values.ToList().ForEach(_ => _.Item.Dispose());
             _serviceSubscriptions.ForEach(subscription => subscription.Dispose());
-            _communicationFactory.Dispose();
-            
+            Dispose();
         }
 
         public Task<string> AddProjectAsync(ProjectInfo project, string hexPrivateKey)
@@ -211,7 +153,7 @@ namespace Angor.Shared.Services
             var signed = GetNip78NostrEvent(content)
                 .Sign(key);
 
-            var nostrClient = _communicationFactory.CreateClient(networkService);
+            var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
             
             nostrClient.Send(new NostrEventRequest(signed));
             
@@ -235,7 +177,7 @@ namespace Angor.Shared.Services
                         new NostrEventTag("l", "ProjectDeclaration", "#projectInfo"))
                 }.Sign(key);
 
-            var nostrClient = _communicationFactory.CreateClient(networkService);
+            var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
             
             nostrClient.Send(new NostrEventRequest(signed));
             
@@ -254,7 +196,7 @@ namespace Angor.Shared.Services
                 Tags = new NostrEventTags(NostrEventTag.Event(eventId))
             }.Sign(key);
 
-            var nostrClient = _communicationFactory.CreateClient(networkService);
+            var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
             nostrClient.Send(deleteEvent);
             
             return Task.FromResult(deleteEvent.Id);
