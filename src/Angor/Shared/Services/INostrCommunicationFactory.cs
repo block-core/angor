@@ -2,8 +2,9 @@ using Nostr.Client.Client;
 
 namespace Angor.Shared.Services;
 
-public interface INostrCommunicationFactory : IDisposable
+public interface INostrCommunicationFactory
 {
-    INostrClient CreateClient(INetworkService networkService);
+    INostrClient GetOrCreateClient(INetworkService networkService);
+    void CloseClientConnection();
     int GetNumberOfRelaysConnected();
 }

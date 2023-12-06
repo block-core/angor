@@ -4,7 +4,6 @@
 @using Angor.Shared.Models
 @using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
-@using Angor.Shared.Services
 @using Angor.Client.Models
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
@@ -13,14 +12,10 @@
 
 @inject IJSRuntime JS
 
-@inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
-@inject INetworkConfiguration _NetworkConfiguration
-@inject IIndexerService _IndexerService
-@inject IRelayService RelayService
 @inject ISignService SignService
 @inject IInvestorTransactionActions InvestorTransactionActions
 @inject IFounderTransactionActions FounderTransactionActions

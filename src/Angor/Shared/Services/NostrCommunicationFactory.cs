@@ -5,7 +5,7 @@ using Nostr.Client.Communicator;
 
 namespace Angor.Shared.Services;
 
-public class NostrCommunicationFactory : INostrCommunicationFactory
+public class NostrCommunicationFactory : IDisposable,INostrCommunicationFactory
 {
     private readonly ILogger<NostrWebsocketClient> _clientLogger; 
     private readonly ILogger<NostrWebsocketCommunicator> _communicatorLogger;
@@ -20,7 +20,7 @@ public class NostrCommunicationFactory : INostrCommunicationFactory
         _serviceSubscriptions = new();
     }
 
-    public INostrClient CreateClient(INetworkService networkService)
+    public INostrClient GetOrCreateClient(INetworkService networkService)
     {
         _nostrMultiWebsocketClient ??= new NostrMultiWebsocketClient(_clientLogger);
         
@@ -38,6 +38,11 @@ public class NostrCommunicationFactory : INostrCommunicationFactory
         _serviceSubscriptions.Add(_nostrMultiWebsocketClient.Streams.UnknownRawStream.Subscribe(_ => _clientLogger.LogError($"UnknownRawStream {_.Message}")));
         
         return _nostrMultiWebsocketClient;
+    }
+
+    public void CloseClientConnection()
+    {
+        Dispose();
     }
 
     public int GetNumberOfRelaysConnected()
