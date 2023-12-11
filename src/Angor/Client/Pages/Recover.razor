@@ -102,7 +102,7 @@
                         <h5 class="modal-title">Recovery Confirmation</h5>
                         <button type="button" class="btn-close" @onclick="() => showRecoveryModal = false"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body modal-body-scroll">
 
                         <p class="mb-1">The number of stages to be recovered is @StageInfo.Items.Count(s => !s.IsSpent) </p>
 
@@ -139,7 +139,7 @@
                         <h5 class="modal-title">Release Recovery Confirmation</h5>
                         <button type="button" class="btn-close" @onclick="() => showRecoveryReleaseModal = false"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body modal-body-scroll">
 
                         <p class="mb-1">The amount to be released from the penalty = @Money.Satoshis(releaseRecoveryTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
@@ -174,7 +174,7 @@
                         <h5 class="modal-title">End Of project Confirmation</h5>
                         <button type="button" class="btn-close" @onclick="() => showEndOfProjectModal = false"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body modal-body-scroll">
 
                         <p class="mb-1">The amount to claim back after project ended = @Money.Satoshis(endOfProjectTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 

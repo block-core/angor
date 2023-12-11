@@ -50,7 +50,7 @@
                                 <h5 class="modal-title" id="walletWordsCreateModalLabel">Create Wallet</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" aria-label="Close"></button>
                             </div>
-                            <div class="modal-body">
+                            <div class="modal-body modal-body-scroll">
                                 <div class="mb-3">
                                     <label for="walletWordsTextArea">Paste your wallet words here or generate a new wallet:</label>
                                     <textarea class="form-control" id="walletWordsTextArea" rows="3" @bind="newWalletWords"></textarea>
@@ -111,7 +111,7 @@
                                 <h5 class="modal-title" id="walletWordsModalLabel">Wallet Words</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" aria-label="Close"></button>
                             </div>
-                            <div class="modal-body">
+                            <div class="modal-body modal-body-scroll">
 
                                 @if (string.IsNullOrEmpty(walletWords))
                                 {
@@ -215,7 +215,7 @@
                                 <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => coinControlModal = false" aria-label="Close"></button>
                             </div>
-                            <div class="modal-body">
+                            <div class="modal-body modal-body-scroll">
                                 <!-- The tick boxes and amounts will go here -->
 
                                 <p>Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -253,7 +253,7 @@
                                 <h5 class="modal-title" id="sendConfirmModalLabel">Confirmation</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="() => sendConfirmModal = false"></button>
                             </div>
-                            <div class="modal-body">
+                            <div class="modal-body modal-body-scroll">
                                 Are you sure you want to send <strong>@_sendInfo.SendAmount @network.CoinTicker</strong> to <strong> @_sendInfo.SendToAddress?</strong>
                                 
                                 <br/>

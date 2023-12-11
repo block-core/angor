@@ -460,7 +460,7 @@ public class WalletOperations : IWalletOperations
     {
         // cap utxo count to max 1000 items, this is
         // mainly to get miner wallets to work fine
-        var maxutxo = 1000; 
+        var maxutxo = 200; 
 
         var limit = 50;
         var offset = 0;
@@ -474,16 +474,37 @@ public class WalletOperations : IWalletOperations
             if (utxo == null || !utxo.Any())
                 break;
 
+            for (var index = 0; index < allItems.Count; index++)
+            {
+                var dataAll = allItems[index];
+                for (var i = 0; i < utxo.Count; i++)
+                {
+                    var data = utxo[i];
+                    if (dataAll.outpoint.ToString() == data.outpoint.ToString())
+                    {
+                        _logger.LogWarning($"utxo duplicte {dataAll.outpoint.ToString()} position all = {index} position income {i}");
+                    }
+                }
+            }
+
+
             allItems.AddRange(utxo);
 
             if (utxo.Count < limit)
                 break;
 
-            if(allItems.Count >= maxutxo)
+            if (allItems.Count >= maxutxo)
+            {
+                _logger.LogWarning($"utxo scan for address {address} was stopped after the limit of {maxutxo} was reached.");
                 break;
+            }
+                
 
             offset += limit;
         } while (true);
+
+        // todo: dan - this is a hack until the endpoint offset is fixed
+        allItems = allItems.DistinctBy(d => d.outpoint.ToString()).ToList();
 
         return (address, allItems);
     }

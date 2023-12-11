@@ -105,7 +105,7 @@
                             <h5 class="modal-title">Confirmation</h5>
                             <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body modal-body-scroll">
                             <p class ="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
                             <p class="mb-1"><strong>Founder Key:</strong> @project.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
 
@@ -194,7 +194,14 @@
                 </div>
                 <div class="card-body">
                     <p>Waiting for the founder to sign the investment request</p>
-                   @* <button type="button" class="btn-success" @onclick="LookupSignature">Refresh</button>*@
+                   
+                    <div class="long-duration-loader">
+                        <div class="spinner"></div>
+                        <div class="progress-bar"></div>
+                        <div class="loader-text">Processing...</div>
+                    </div>
+
+                    @* <button type="button" class="btn-success" @onclick="LookupSignature">Refresh</button>*@
                 </div>
             </div>
         }
