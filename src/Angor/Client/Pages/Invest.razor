@@ -226,38 +226,41 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (hasWallet)
+        if (!hasWallet)
         {
-            var signatures = storage.GetSignaturess();
+            NavigationManager.NavigateTo($"/wallet");
+        }
 
-            var findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+        var signatures = storage.GetSignaturess();
+
+        var findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+
+        if (findProject != null)
+        {
+            project = findProject;
+
+            recoverySigs = signatures?.FirstOrDefault(_ => _.ProjectIdentifier == project.ProjectIdentifier);
+            invested = recoverySigs?.Signatures.Any() ?? false;
+        }
+        else
+        {
+            findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
 
             if (findProject != null)
             {
+                founder = true;
                 project = findProject;
-                
-                recoverySigs = signatures?.FirstOrDefault(_ => _.ProjectIdentifier == project.ProjectIdentifier);
-                invested = recoverySigs?.Signatures.Any() ?? false;
             }
             else
             {
-                findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
-
-                if (findProject != null)
-                {
-                    founder = true;
-                    project = findProject;
-                }
-                else
-                {
-                    project = SessionStorage.GetProjectById(ProjectId);
-                }
+                project = SessionStorage.GetProjectById(ProjectId);
             }
         }
 
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
+
 
         if (project != null && recoverySigs?.Signatures.Any() == false)
         {
