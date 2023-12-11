@@ -85,7 +85,12 @@ namespace Angor.Shared.Services
         {
             var settings = _networkStorage.GetSettings();
 
-            var ret = settings.Indexers.First(p => p.IsPrimary);
+            var ret = settings.Indexers.FirstOrDefault(p => p.IsPrimary);
+
+            if (ret == null)
+            {
+                throw new ApplicationException("No indexer found go to settings to add an indexer.");
+            }
 
             return ret;
         }
@@ -94,7 +99,15 @@ namespace Angor.Shared.Services
         {
             var settings = _networkStorage.GetSettings();
 
-            return settings.Relays.First(p => p.IsPrimary);
+            var ret = settings.Relays.FirstOrDefault(p => p.IsPrimary);
+
+            if (ret == null)
+            {
+                throw new ApplicationException("No relay found go to settings to add a relay.");
+            }
+
+            return ret;
+
         }
 
         public List<SettingsUrl> GetRelays()

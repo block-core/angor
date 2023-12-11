@@ -170,25 +170,34 @@
         }
     }
     
-    @if(recoverySigs?.Signatures.Any() == true)
+    @if (recoverySigs != null)
     {
-        <div class="align-content-center">
-            @if (!validatingsignaturs)
-            {
-                <h5 class="modal-title">The founder has signed the recovery transaction</h5>
-                <button type="button" class="btn-success" @onclick="PublishSignedTransactionAsync">Invest</button>
-            }
-            else
-            {
-                <div class="loader"></div>
-            }
-        </div>
-    }
-    else
-    {
-        <div class="align-content-center">
-            <p>Waiting for the founder to sign the investment request</p>
-        </div>
+        @if (recoverySigs?.Signatures.Any() == true)
+        {
+            <div class="align-content-center">
+                @if (!validatingsignaturs)
+                {
+                    <h5 class="modal-title">The founder has signed the recovery transaction</h5>
+                    <button type="button" class="btn-success" @onclick="PublishSignedTransactionAsync">Invest</button>
+                }
+                else
+                {
+                    <div class="loader"></div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h4>Waiting for the founder</h4>
+                </div>
+                <div class="card-body">
+                    <p>Waiting for the founder to sign the investment request</p>
+                   @* <button type="button" class="btn-success" @onclick="LookupSignature">Refresh</button>*@
+                </div>
+            </div>
+        }
     }
 </div>
 
@@ -249,16 +258,15 @@
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
-        
 
-        if (project != null && recoverySigs?.Signatures.Any() ==false)
+        if (project != null && recoverySigs?.Signatures.Any() == false)
         {
             var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
-            
+
             var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), accountInfo.InvestmentsCount + 1);
 
-            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes()); 
-            
+            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+
             _SignService.LookupSignatureForInvestmentRequest(
                 NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
                 , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning,
