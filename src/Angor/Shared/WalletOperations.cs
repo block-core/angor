@@ -474,20 +474,6 @@ public class WalletOperations : IWalletOperations
             if (utxo == null || !utxo.Any())
                 break;
 
-            for (var index = 0; index < allItems.Count; index++)
-            {
-                var dataAll = allItems[index];
-                for (var i = 0; i < utxo.Count; i++)
-                {
-                    var data = utxo[i];
-                    if (dataAll.outpoint.ToString() == data.outpoint.ToString())
-                    {
-                        _logger.LogWarning($"utxo duplicte {dataAll.outpoint.ToString()} position all = {index} position income {i}");
-                    }
-                }
-            }
-
-
             allItems.AddRange(utxo);
 
             if (utxo.Count < limit)
