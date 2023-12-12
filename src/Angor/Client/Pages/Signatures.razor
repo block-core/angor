@@ -8,10 +8,12 @@
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 @using System.Text.Json
-@using Angor.Shared.Utilities
+@using Angor.Shared.Services
+@using System.Globalization
 
 @inject IJSRuntime JS
 
+@inject ILogger<Signatures> _Logger
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
@@ -36,7 +38,7 @@
 
     <NotificationComponent @ref="notificationComponent" />
         
-    @if (!pendingSignatures.Any())
+    @if (!signaturesRequests.Any())
     {
         <p><em>No pending signatures yet...</em></p>
     }
@@ -50,53 +52,23 @@
                     <tr>
                         <th>Amount to Invest</th>
                         <th>Time Arrived</th>
-                        <th>Action</th>
+                        <th>Status</th>
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach (var signature in pendingSignatures.Where(_ => _.TransactionHex != null))
+                    @foreach (var signature in signaturesRequests.Where(_ => _ is { TransactionHex: not null,TimeApproved: null }))
                     {
                         <tr>
-                            <td>@signature.AmountToInvest @network.CoinTicker</td>
+                            <td>@signature.AmountToInvest.ToString(CultureInfo.CurrentCulture) @network.CoinTicker</td>
                             <td>@signature.TimeArrived.ToString("g")</td>
-                            <td>
-                                <button class="btn btn-success" @onclick="() => ApproveSignature(signature)">Approve</button>
-                            </td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    }
-</div>
-
-<div class="container mt-4">
-    
-    @if (!approvedSignatures.Any())
-    {
-        <p><em>No investments to approve yet...</em></p>
-    }
-    else
-    {
-        <!-- Signatures Details Section -->
-        <div class="row mt-4">
-            <div class="col">
-                <table class="table table-bordered table-hover">
-                    <thead>
-                    <tr>
-                        <th>Amount Invested</th>
-                        <th>Time Arrived</th>
-                        <th>Time Of Approval</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var signature in approvedSignatures)
-                    {
-                        <tr>
-                            <td>@signature.AmountToInvest @network.CoinTicker</td>
-                            <td>@signature.TimeArrived.ToString("g")</td>
-                            <td>@signature.TimeAproved.ToString("g")</td>
+                            @if (signature.TimeApproved is null)
+                                {
+                                    <td><button class="btn btn-success" @onclick="() => ApproveSignature(signature)">Approve</button></td>
+                                }
+                                else
+                                {
+                                    <td>Approved on - @signature.TimeApproved.ToString()</td>
+                                }
                         </tr>
                     }
                     </tbody>
@@ -111,16 +83,14 @@
     public string ProjectIdentifier { get; set; }
 
     public FounderProject FounderProject { get; set; }
-    private List<SignatureRequest> pendingSignatures = new();
-    
-    private List<SignatureRequest> approvedSignatures = new();
-
+    private List<SignatureRequest> signaturesRequests = new();
     private IJSInProcessObjectReference? javascriptNostrToolsModule;
 
     int numberOfSignaturesHandled;
     
     protected override async Task OnInitializedAsync()
     {
+        _Logger.LogDebug("OnInitializedAsync");
         if (hasWallet)
         {
             FounderProject = storage.GetFounderProjects()
@@ -129,14 +99,17 @@
 
             await FetchPendingSignatures(FounderProject);
         }
+        _Logger.LogDebug("End of OnInitializedAsync");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        _Logger.LogDebug("OnAfterRenderAsync");
         if (firstRender || javascriptNostrToolsModule == null)
         {
             try
             {
+                _Logger.LogDebug("load nostr tools");
                 //TODO import the nostr tool module directly to c# class
                 javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
             }
@@ -147,13 +120,15 @@
             }
         }
         
-        if (numberOfSignaturesHandled < pendingSignatures.Count)
+        _Logger.LogDebug($"handled = {numberOfSignaturesHandled}, pending ={signaturesRequests.Count}");
+        
+        if (numberOfSignaturesHandled < signaturesRequests.Count(x => x.AmountToInvest > 0))
         {
             var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            foreach (var pendingSignature in pendingSignatures)
+            foreach (var pendingSignature in signaturesRequests.Where(_ => _.AmountToInvest == 0))
             {
                 pendingSignature.TransactionHex = await javascriptNostrToolsModule.InvokeAsync<string>(
                     "decryptNostr",
@@ -167,13 +142,11 @@
 
                     pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3) //Todo get the actual outputs with taproot type
                         .Sum(_ => _.TxOut.Value);
-                    
-                    StateHasChanged();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    Console.WriteLine(pendingSignature.TransactionHex);
+                    _Logger.LogDebug(pendingSignature.TransactionHex);
                     pendingSignature.TransactionHex = null;
                 }
                 finally
@@ -181,16 +154,29 @@
                     numberOfSignaturesHandled++;   
                 }
             }
+            _Logger.LogDebug($"Calling StateHasChanged in OnAfterRenderAsync");
+            StateHasChanged();
         }
+        
+        _Logger.LogDebug("OnAfterRenderAsync Completed");
     }
     
     bool messagesReceived;
 
     private async Task FetchPendingSignatures(FounderProject project)
     {
-        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, project.LastRequestForSignaturesTime , async (investorPubKey,encryptedMessage, requestTime) =>
+        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, project.LastRequestForSignaturesTime , async 
+            (investorPubKey,encryptedMessage, requestTime) =>
         {
+            _Logger.LogDebug($"Event received");
+            
+            if (signaturesRequests.Any(_ => _.investorPubKey == investorPubKey))
+                return; //multiple relays could mean the same massage multiple times
+            
+            _Logger.LogDebug($"Event received is new");
+            
             messagesReceived = true;
+            
             var signatureRequest = new SignatureRequest
             {
                 investorPubKey = investorPubKey,
@@ -198,12 +184,19 @@
                 TransactionHex = encryptedMessage //To be encrypted after js interop is loaded
             };
                 
-            pendingSignatures.Add(signatureRequest);
+            signaturesRequests.Add(signatureRequest);
+            _Logger.LogDebug($"Added to pendingSignatures");
         }, 
             () =>
             {
-                if (messagesReceived)
-                    StateHasChanged();
+                _Logger.LogDebug($"End of messages");
+                
+                if (!messagesReceived) 
+                    return;
+                
+                _Logger.LogDebug($"Calling StateHasChanged in EOSE");
+                StateHasChanged();
+                messagesReceived = false;
             });
     }
 
@@ -213,7 +206,7 @@
 
         var signatureInfo = signProject(signature.TransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
         
-        var sigJson = System.Text.Json.JsonSerializer.Serialize(signatureInfo, settings);
+        var sigJson = JsonSerializer.Serialize(signatureInfo, RelayService.settings);
         
         var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
 
@@ -229,8 +222,9 @@
 
         storage.UpdateFounderProject(FounderProject);
         
-        pendingSignatures.Remove(signature);
-        approvedSignatures.Add(signature);
+        signaturesRequests.Single(_ => _.investorPubKey == signature.investorPubKey && _.TimeApproved is null)
+            .TimeApproved = FounderProject.LastRequestForSignaturesTime;
+        
         StateHasChanged();
     }
     
@@ -255,24 +249,8 @@
         public decimal AmountToInvest { get; set; }
 
         public DateTime TimeArrived { get; set; }
-        public DateTime TimeAproved { get; set; }
+        public DateTime? TimeApproved { get; set; }
 
         public string? TransactionHex { get; set; }
     }
-    
-    
-    //TODO move the settings to a common place
-    private JsonSerializerOptions settings => new()
-    {
-    // Equivalent to Formatting = Formatting.None
-        WriteIndented = false,
-
-    // Equivalent to NullValueHandling = NullValueHandling.Ignore
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-
-    // PropertyNamingPolicy equivalent to CamelCasePropertyNamesContractResolver
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-
-        Converters = { new UnixDateTimeConverter() }
-    };
 }
