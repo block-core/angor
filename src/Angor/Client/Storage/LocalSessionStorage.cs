@@ -40,13 +40,13 @@ public class LocalSessionStorage : ICacheStorage
         _sessionStorageService.SetItem(BrowseIndexerData,list);
     }
 
-    public List<Outpoint> GetPendingSpendUtxo()
+    public UnconfirmedInfo GetUnconfirmedInfo()
     {
-        return _sessionStorageService.GetItem<List<Outpoint>>("pending-utxo") ?? new List<Outpoint>();
+        return _sessionStorageService.GetItem<UnconfirmedInfo>("unconfirmed-info") ?? new UnconfirmedInfo();
     }
 
-    public void SetPendingSpentUtxo(List<Outpoint> list)
+    public void SetUnconfirmedInfo(UnconfirmedInfo unconfirmedInfo)
     {
-        _sessionStorageService.SetItem("pending-utxo", list);
+        _sessionStorageService.SetItem("unconfirmed-info", unconfirmedInfo);
     }
 }

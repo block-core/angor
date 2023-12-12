@@ -10,14 +10,13 @@
 @using Blockcore.NBitcoin.DataEncoders
 @using ITransactionSignature = NBitcoin.ITransactionSignature
 
-@inject HttpClient Http
 @inject IClientStorage storage;
+@inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IDerivationOperations _derivationOperations
 @inject IWalletOperations _WalletOperations
 @inject IFounderTransactionActions _founderTransactionActions
-@inject ICacheStorage _CacheStorage
 
 @inherits BaseComponent
 
@@ -256,10 +255,8 @@
 
     private async Task CheckSpentFund()
     {
-        // check if any of the outputs is in pending state
-        var pending = _CacheStorage.GetPendingSpendUtxo();
-
         List<QueryTransaction> trxs = new();
+        var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
         foreach (StageData stageData in stageDatas)
         {
@@ -283,18 +280,14 @@
                 {
                     item.IsSepnt = true;
 
-                    // remove it if is found in pending.
-                    var reomove = pending.FirstOrDefault(a => a.ToString() == new Outpoint { transactionId = item.Trxid, outputIndex = item.Outputindex }.ToString());
-                    if (reomove != null)
-                    {
-                        pending.Remove(reomove);
-                        _CacheStorage.SetPendingSpentUtxo(pending);
-                    }
+                    _WalletOperations.RemoveInputsAndOutputsFromPending(unconfirmedInfo, item.Trxid);
+                    _WalletOperations.RemoveInputsAndOutputsFromPending(unconfirmedInfo, output.SpentInTransaction);
+                    _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
 
                     continue;
                 }
 
-                if (pending.Any(a => a.ToString() == new Outpoint { transactionId = item.Trxid, outputIndex = item.Outputindex }.ToString()))
+                if (unconfirmedInfo.PendingSpent.Any(a => a.ToString() == new Outpoint { transactionId = item.Trxid, outputIndex = item.Outputindex }.ToString()))
                 {
                     item.IsSepnt = true;
                 }
@@ -384,23 +377,16 @@
                 return response;
 
             // add all outptus to the pending list
-            var pending = _CacheStorage.GetPendingSpendUtxo();
-            StageData stageData = stageDatas.First(_ => _.StageIndex == selectedStageId);
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
+            _WalletOperations.AddInputsAndOutputsAsPending(unconfirmedInfo, signedTransaction);
+            _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
 
-            foreach (var input in signedTransaction.Inputs)
+            // mark stage as spent
+            stageDatas.FirstOrDefault(_ => _.StageIndex == selectedStageId)?.Items.ForEach(_ =>
             {
-                pending.Add(new Outpoint { transactionId = input.PrevOut.Hash.ToString(), outputIndex = (int)input.PrevOut.N });
-
-                foreach (var item in stageData.Items)
-                {
-                    if (item.Trxid == input.PrevOut.Hash.ToString() && item.Outputindex == input.PrevOut.N)
-                    {
-                        item.IsSepnt = true;
-                    }
-                }
-            }
-
-            _CacheStorage.SetPendingSpentUtxo(pending);
+                if (signedTransaction.Inputs.Any(a => _.Trxid == a.PrevOut.Hash.ToString() && _.Outputindex == a.PrevOut.N))
+                    _.IsSepnt = true;
+            });
 
             return new OperationResult { Success = response.Success, Message = response.Message };
         });
@@ -408,7 +394,6 @@
         if (operationResult.Success)
         {
             notificationComponent.ShowNotificationMessage("Done", 1);
-            StateHasChanged();
         }
         else
         {

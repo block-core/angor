@@ -17,6 +17,7 @@
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
+@inject ICacheStorage _cacheStorage;
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
 @inject IRelayService _RelayService
@@ -318,6 +319,7 @@
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             var accountInfo = storage.GetAccountInfo(network.Name);
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
@@ -326,7 +328,7 @@
 
             unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000, project.NostrPubKey);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, unconfirmedInfo, feeData.SelectedFeeEstimation);
 
             project.CreationTransactionId = signedTransaction.GetHash().ToString();
 
@@ -357,8 +359,9 @@
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
+                    var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, unconfirmedInfo, feeData.SelectedFeeEstimation);
 
                     StateHasChanged();
                 }

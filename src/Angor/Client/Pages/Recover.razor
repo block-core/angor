@@ -5,11 +5,13 @@
 @using Angor.Client.Services
 @using Angor.Shared.Models
 @using Angor.Shared.ProtocolNew
+@using Angor.Shared.Services
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 
 @inject IClientStorage storage;
+@inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IDerivationOperations _derivationOperations
@@ -419,6 +421,7 @@
 
             recoverySigs = storage.GetSignaturess().First(p => p.ProjectIdentifier == ProjectId);
             var accountInfo = storage.GetAccountInfo(network.Name);
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
 
@@ -440,7 +443,7 @@
             foreach (var txIn in removeTxin) unsignedRecoveryTransaction.Inputs.Remove(txIn);
 
             // add fee to the recovery trx
-            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, unconfirmedInfo, feeData.SelectedFeeEstimation);
 
             recoverySigs.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
 
@@ -472,8 +475,9 @@
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
                    
                     var accountInfo = storage.GetAccountInfo(network.Name);
+                    var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
-                    recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+                    recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, unconfirmedInfo, feeData.SelectedFeeEstimation);
 
                     recoverySigs.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
 

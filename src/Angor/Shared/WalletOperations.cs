@@ -39,12 +39,12 @@ public class WalletOperations : IWalletOperations
     }
     
     public Transaction AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo,
+        WalletWords walletWords, AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo,
         FeeEstimation feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
-        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
+        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo, unconfirmedInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
         var builder = new TransactionBuilder(network)
@@ -60,9 +60,8 @@ public class WalletOperations : IWalletOperations
         return signTransaction;
     }
 
-
     public Transaction AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo,
+        WalletWords walletWords, AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo,
         FeeEstimation feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
@@ -74,7 +73,7 @@ public class WalletOperations : IWalletOperations
         var virtualSize = clonedTransaction.GetVirtualSize(4);
         var fee = new FeeRate(Money.Satoshis(feeRate.FeeRate)).GetFee(virtualSize);
         
-        var utxoDataWithPaths = FindOutputsForTransaction((long)fee, accountInfo);
+        var utxoDataWithPaths = FindOutputsForTransaction((long)fee, accountInfo, unconfirmedInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
         var totalSats = coins.coins.Sum(s => s.Amount.Satoshi);
@@ -132,10 +131,10 @@ public class WalletOperations : IWalletOperations
         return await PublishTransactionAsync(network, signedTransaction);
     }
 
-    private void UpdatePendingLists(AccountInfo accountInfo)
+    private void UpdatePendingLists(AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo)
     {
         // remove from the pending remove list if it was removed from the indexer
-        var pendingRemove = accountInfo.PendingRemove.ToList();
+        var pendingRemove = unconfirmedInfo.PendingSpent.ToList();
         foreach (var utxoData in pendingRemove)
         {
             foreach (var addressInfo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo))
@@ -144,14 +143,14 @@ public class WalletOperations : IWalletOperations
                 {
                     if (addressInfo.UtxoData.All(_ => _.outpoint.ToString() != utxoData.outpoint.ToString()))
                     {
-                        accountInfo.PendingRemove.Remove(utxoData);
+                        unconfirmedInfo.PendingSpent.Remove(utxoData);
                     }
                 }
             }
         }
 
         // remove from the pending add if it was removed from the indexer
-        var pendingAdd = accountInfo.PendingAdd.ToList();
+        var pendingAdd = unconfirmedInfo.PendingReceive.ToList();
         foreach (var utxoData in pendingAdd)
         {
             foreach (var addressInfo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo))
@@ -160,14 +159,65 @@ public class WalletOperations : IWalletOperations
                 {
                     if (addressInfo.UtxoData.Any(_ => _.outpoint.ToString() == utxoData.outpoint.ToString()))
                     {
-                        accountInfo.PendingAdd.Remove(utxoData);
+                        unconfirmedInfo.PendingReceive.Remove(utxoData);
                     }
                 }
             }
         }
     }
 
-    public void UpdateAccountInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction, string changeAddress)
+    public void RemoveInputsAndOutputsFromPending(UnconfirmedInfo unconfirmedInfo, string trxid)
+    {
+        foreach (var utxoData in unconfirmedInfo.PendingSpent.ToList())
+        {
+            if (utxoData.outpoint.transactionId == trxid)
+            {
+                unconfirmedInfo.PendingSpent.Remove(utxoData);
+            }
+        }
+
+        foreach (var utxoData in unconfirmedInfo.PendingReceive.ToList())
+        {
+            if (utxoData.outpoint.transactionId == trxid)
+            {
+                unconfirmedInfo.PendingReceive.Remove(utxoData);
+            }
+        }
+    }
+
+    public void AddInputsAndOutputsAsPending(UnconfirmedInfo unconfirmedInfo, Blockcore.Consensus.TransactionInfo.Transaction transaction)
+    {
+        var inputs = transaction.Inputs.Select(_ => _.PrevOut).ToList();
+        var outputs = transaction.Outputs.AsIndexedOutputs();
+
+        foreach (var outPoint in inputs)
+        {
+            if (unconfirmedInfo.PendingSpent.All(_ => _.outpoint.ToString() != outPoint.ToString()))
+            {
+                unconfirmedInfo.PendingSpent.Add(new UtxoData
+                {
+                    outpoint = new Outpoint { outputIndex = (int)outPoint.N, transactionId = outPoint.Hash.ToString() },
+                });
+            }
+        }
+
+        foreach (var output in outputs)
+        {
+            var outpoint = new Outpoint { outputIndex = (int)output.N, transactionId = transaction.GetHash().ToString() };
+
+            if (unconfirmedInfo.PendingReceive.All(_ => _.outpoint != outpoint))
+            {
+                unconfirmedInfo.PendingReceive.Add(new UtxoData
+                {
+                    scriptHex = output.TxOut.ScriptPubKey.ToHex(),
+                    outpoint = outpoint,
+                    value = output.TxOut.Value
+                });
+            }
+        }
+    }
+
+    public void UpdateAccountInfoWithSpentTransaction(AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo, Blockcore.Consensus.TransactionInfo.Transaction transaction)
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -183,9 +233,9 @@ public class WalletOperations : IWalletOperations
                 {
                     if (utxoData.outpoint.ToString() == outPoint.ToString())
                     {
-                        if (accountInfo.PendingRemove.All(_ => _.outpoint != utxoData.outpoint))
+                        if (unconfirmedInfo.PendingSpent.All(_ => _.outpoint.ToString() != utxoData.outpoint.ToString()))
                         {
-                            accountInfo.PendingRemove.Add(utxoData);
+                            unconfirmedInfo.PendingSpent.Add(utxoData);
                         }
                     }
                 }
@@ -198,9 +248,9 @@ public class WalletOperations : IWalletOperations
                 {
                     var outpoint = new Outpoint { outputIndex = (int)output.N, transactionId = transaction.GetHash().ToString() };
 
-                    if (accountInfo.PendingAdd.All(_ => _.outpoint != outpoint))
+                    if (unconfirmedInfo.PendingReceive.All(_ => _.outpoint != outpoint))
                     {
-                        accountInfo.PendingAdd.Add(new UtxoData
+                        unconfirmedInfo.PendingReceive.Add(new UtxoData
                         {
                             address = addressInfo.Address,
                             scriptHex = output.TxOut.ScriptPubKey.ToHex(),
@@ -226,7 +276,7 @@ public class WalletOperations : IWalletOperations
         return new OperationResult<Transaction> { Success = false, Message = res };
     }
 
-    public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
+    public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo)
     {
         var utxos = accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo);
 
@@ -238,7 +288,7 @@ public class WalletOperations : IWalletOperations
                      .OrderBy(o => o.utxo.blockIndex)
                      .ThenByDescending(o => o.utxo.value))
         {
-            if (accountInfo.PendingRemove.Any(p => p.outpoint.ToString() == utxoData.utxo.outpoint.ToString()))
+            if (unconfirmedInfo.PendingSpent.Any(p => p.outpoint.ToString() == utxoData.utxo.outpoint.ToString()))
             {
                 continue;
             }
@@ -361,7 +411,7 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    public async Task UpdateAccountInfoWithNewAddressesAsync(AccountInfo accountInfo)
+    public async Task UpdateAccountInfoWithNewAddressesAsync(AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo)
     {
         ExtKey.UseBCForHMACSHA512 = true;
         Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
@@ -392,9 +442,7 @@ public class WalletOperations : IWalletOperations
             accountInfo.ChangeAddressesInfo.Add(changeAddressInfo);
         }
 
-        UpdatePendingLists(accountInfo);
-
-        accountInfo.CalculateBalance();
+        UpdatePendingLists(accountInfo, unconfirmedInfo);
     }
 
     private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
@@ -517,13 +565,13 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    public decimal CalculateTransactionFee(SendInfo sendInfo,AccountInfo accountInfo, long feeRate)
+    public decimal CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo, long feeRate)
     {
         var network = _networkConfiguration.GetNetwork();
 
         if (sendInfo.SendUtxos.Count == 0)
         {
-            var utxosToSpend = FindOutputsForTransaction(sendInfo.SendAmountSat, accountInfo);
+            var utxosToSpend = FindOutputsForTransaction(sendInfo.SendAmountSat, accountInfo, unconfirmedInfo);
 
             foreach (var data in utxosToSpend) //TODO move this out of the fee calculation
             {

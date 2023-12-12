@@ -5,9 +5,11 @@
 @using Angor.Client.Services
 @using Angor.Client.Storage
 @using Angor.Shared.Models
+@using Angor.Shared.Services
 
 @inject HttpClient Http
 @inject IClientStorage storage;
+@inject ICacheStorage _cacheStorage;
 @inject IWalletStorage _walletStorage;
 @inject ILogger<Wallet> Logger;
 @inject INetworkConfiguration _networkConfiguration;
@@ -83,14 +85,14 @@
 
                 <div class="mb-3">
                     <span class="fs-4">Confirmed balance: </span>
-                    <span class="fs-3"><strong> @Money.Satoshis(localAccountInfo.TotalBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong></span> <!-- replace this with actual balance -->
+                    <span class="fs-3"><strong> @Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong></span> <!-- replace this with actual balance -->
                 </div>
 
-                @if (localAccountInfo.TotalUnConfirmedBalance > 0)
+                @if (accountBalanceInfo.TotalUnconfirmedBalance > 0)
                 {
                     <div class="mb-3">
                         <span class="fs-6">Unconfirmed balance: </span>
-                        <span class="fs-5"> @Money.Satoshis(localAccountInfo.TotalUnConfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span> <!-- replace this with actual unconfirmed balance -->
+                        <span class="fs-5"> @Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span> <!-- replace this with actual unconfirmed balance -->
                     </div>
                 }
 
@@ -163,7 +165,7 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <h4 class="card-title">Receive Address</h4>
-                                <p id="receive-address" class="card-text">@localAccountInfo.GetNextReceiveAddress()</p>
+                                <p id="receive-address" class="card-text">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</p>
                                 <button class="btn btn-primary" onclick="@CopyNextReceiveAddress">Copy Address</button>
                             </div>
                             <div class="col-lg-6">
@@ -220,7 +222,7 @@
 
                                 <p>Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
-                                @foreach (var addressInfo in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
+                                @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AddressesInfo.Union(accountBalanceInfo.AccountInfo.ChangeAddressesInfo))
                                 {
                                     @foreach (var addressUtxoItem in addressInfo.UtxoData)
                                     {
@@ -310,8 +312,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                    
-                        @foreach (var addressInfo in localAccountInfo.AddressesInfo.Union(localAccountInfo.ChangeAddressesInfo))
+
+                        @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AddressesInfo.Union(accountBalanceInfo.AccountInfo.ChangeAddressesInfo))
                         {
                             var total = addressInfo.Balance;
                             var count = addressInfo.UtxoData.Count();
@@ -378,11 +380,11 @@
     private bool walletWordsModal;
     private bool walletWordsCreateModal;
 
-    private AccountInfo localAccountInfo = new();
-
     private int feeRange = 0;
     private int FeePosition = 1;
     private SendInfo _sendInfo = new ();
+
+    private AccountBalanceInfo accountBalanceInfo = new AccountBalanceInfo();
 
     private FeeEstimations FeeEstimations = new ();
 
@@ -397,8 +399,12 @@
 
         if (hasWallet)
         {
-            localAccountInfo = GetAccountInfoFromStorage();
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
+
+            accountBalanceInfo = AccountBalanceInfo.GetBalance(accountInfo, unconfirmedInfo);
         }
+
         return Task.CompletedTask;
     }
     
@@ -406,17 +412,18 @@
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            var network = _networkConfiguration.GetNetwork();
-            var accountInfo = GetAccountInfoFromStorage();
-            
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
+
             await _walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
             
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo, unconfirmedInfo);
 
             storage.SetAccountInfo(network.Name, accountInfo);
-            
-            localAccountInfo = accountInfo;
-            
+            _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
+
+            accountBalanceInfo = AccountBalanceInfo.GetBalance(accountInfo, unconfirmedInfo);
+
             return new OperationResult { Success = true };
         });
         
@@ -433,8 +440,7 @@
 
             WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
-            Network network = _networkConfiguration.GetNetwork();
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo, new UnconfirmedInfo());
             
             _walletStorage.SaveWalletWords(data);
             storage.SetAccountInfo(network.Name,accountInfo);
@@ -450,7 +456,7 @@
         {
             hasWallet = _walletStorage.HasWallet();
             ClearWalletWords();
-            localAccountInfo = GetAccountInfoFromStorage();
+            var accountInfo = storage.GetAccountInfo(network.Name);
 
             NavMenuState.NotifyStateChanged();
         }
@@ -510,7 +516,8 @@
 
     public  async Task CopyNextReceiveAddress()
     {
-        var address = localAccountInfo.GetNextReceiveAddress();
+        var accountInfo = storage.GetAccountInfo(network.Name);
+        var address = accountInfo.GetNextReceiveAddress();
 
         if (string.IsNullOrEmpty(address))
         {
@@ -549,10 +556,13 @@
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            var accountInfo = GetAccountInfoFromStorage();
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
-            localAccountInfo = accountInfo;
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo, unconfirmedInfo);
+
+            storage.SetAccountInfo(network.Name, accountInfo);
+            _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
             
             await RefreshFee();
 
@@ -574,7 +584,7 @@
                 _sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.HasHistory == false).Address;
             }
             
-            _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);
+            _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, unconfirmedInfo, estimationsFee.FeeRate);
 
             return new OperationResult { Success = true };
         });
@@ -593,14 +603,17 @@
             sendConfirmModal = false;
 
             var wallet = _walletStorage.GetWallet();
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
             var res = await _walletOperations.SendAmountToAddress(wallet, _sendInfo);
 
             if (res.Success)
             {
-                _walletOperations.UpdateAccountInfoWithSpentTransaction(localAccountInfo, res.Data, _sendInfo.ChangeAddress);
-                localAccountInfo.CalculateBalance();
-                storage.SetAccountInfo(network.Name, localAccountInfo);
+                _walletOperations.UpdateAccountInfoWithSpentTransaction(accountInfo, unconfirmedInfo, res.Data);
+                accountBalanceInfo = AccountBalanceInfo.GetBalance(accountInfo, unconfirmedInfo);
+                storage.SetAccountInfo(network.Name, accountInfo);
+                _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
             }
 
             return res;
@@ -646,18 +659,15 @@
                    
                     _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
                     _sendInfo.FeeRateSat = estimationsFee.FeeRate;
-                    var accountInfo = GetAccountInfoFromStorage();
-                    _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);
+                    var accountInfo = storage.GetAccountInfo(network.Name);
+                    var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
+
+                    _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, unconfirmedInfo, estimationsFee.FeeRate);
                     
                     StateHasChanged();
                 }
             }
         }
-    }
-
-    private AccountInfo GetAccountInfoFromStorage()
-    {
-        return storage.GetAccountInfo(network.Name);
     }
 
     private void showCoinControlModal()
