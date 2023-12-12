@@ -42,6 +42,11 @@
     
     <p>Total funds to recover = @StageInfo.TotalSpendable @network.CoinTicker</p>
     
+    @if (StageInfo.Trxid == null)
+    {
+        <p class="text-bg-danger">Transaction was not found it may still be confirming</p>
+    }
+
     @if (StageInfo.CanRelease)
     {
         <p>Total funds in penalty = @StageInfo.TotalInPenalty @network.CoinTicker</p>
@@ -285,7 +290,13 @@
     {
         var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
 
-        var trx = trxs.First(f => f.TransactionId == recoverySigs.TransactionId);
+        var trx = trxs.FirstOrDefault(f => f.TransactionId == recoverySigs.TransactionId);
+
+        if (trx == null)
+        {
+            explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{recoverySigs.TransactionId}";
+            return;
+        }
 
         if (investmentTransaction == null)
         {
@@ -325,6 +336,11 @@
 
     private async Task CheckSpentFund()
     {
+        if (StageInfo.TransactionInfo == null)
+        {
+            return;
+        }
+
         var penaltyExpieryDate = Utils.UnixTimeToDateTime(StageInfo.TransactionInfo.Timestamp).AddDays(project.PenaltyDays);
 
         foreach (var item in StageInfo.Items)

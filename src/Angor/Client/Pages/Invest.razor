@@ -174,16 +174,24 @@
     {
         @if (recoverySigs?.Signatures.Any() == true)
         {
-            <div class="align-content-center">
-                @if (!validatingsignaturs)
-                {
-                    <h5 class="modal-title">The founder has signed the recovery transaction</h5>
-                    <button type="button" class="btn-success" @onclick="PublishSignedTransactionAsync">Invest</button>
-                }
-                else
-                {
-                    <div class="loader"></div>
-                }
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h4>Founder has signed</h4>
+                </div>
+                <div class="card-body">
+                    
+                    @if (!validatingsignaturs)
+                    {
+                        <p class="modal-title">The founder has signed the recovery transaction, you may now invest.</p>
+                        <br/>
+                        <button type="button" class="btn btn-success" @onclick="PublishSignedTransactionAsync">Invest</button>
+                    }
+                    else
+                    {
+                        <div class="loader"></div>
+                    }
+
+                </div>
             </div>
         }
         else
@@ -194,11 +202,11 @@
                 </div>
                 <div class="card-body">
                     <p>Waiting for the founder to sign the investment request</p>
-                   
+                    
                     <div class="long-duration-loader">
                         <div class="spinner"></div>
                         <div class="progress-bar"></div>
-                        <div class="loader-text">Processing...</div>
+                        <div class="loader-text">Waiting...</div>
                     </div>
 
                     @* <button type="button" class="btn-success" @onclick="LookupSignature">Refresh</button>*@
