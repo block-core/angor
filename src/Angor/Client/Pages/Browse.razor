@@ -73,8 +73,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await _RelayService.ConnectToRelaysAsync();
-
         projects = SessionStorage.GetProjectIndexerData() ?? new();
     }
 
