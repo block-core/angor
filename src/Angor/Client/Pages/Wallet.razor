@@ -5,6 +5,7 @@
 @using Angor.Client.Services
 @using Angor.Client.Storage
 @using Angor.Shared.Models
+@using Angor.Client.Components
 
 @inject IClientStorage storage;
 @inject IWalletStorage _walletStorage;
@@ -24,8 +25,7 @@
     
     <NotificationComponent @ref="notificationComponent" />
 
-
-    <!-- This part of the page is visible only if the wallet is found -->
+<!-- This part of the page is visible only if the wallet is found -->
     @if (!hasWallet)
     {
         <!-- No Wallet found -->
@@ -162,21 +162,17 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <h4 class="card-title">Receive Address</h4>
-                                <p id="receive-address" class="card-text">@localAccountInfo.GetNextReceiveAddress()</p>
+                                <p id="receive-address" class="card-text">@nextReceiveAddress</p>
                                 <button class="btn btn-primary" onclick="@CopyNextReceiveAddress">Copy Address</button>
                             </div>
-                            <div class="col-lg-6">
-                                <h4 class="card-title">QR Code</h4>
-                                <!-- Replace the src with your actual QR code -->
-                                <img src="https://via.placeholder.com/150" class="card-img-top qrcode" alt="QR Code" />
-                            </div>
+
+                            <ShowQrCode @ref="showQrCode" Data="@nextReceiveAddress" />
+                          
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-            
-        
         
 
 
@@ -390,6 +386,10 @@
     private int _feeMax = 3;
     DateTime _lastFeeRefresh = DateTime.MinValue;
 
+    string? nextReceiveAddress = string.Empty;
+
+    ShowQrCode showQrCode;
+
     protected override Task OnInitializedAsync()
     {
         hasWallet = _walletStorage.HasWallet();
@@ -397,7 +397,9 @@
         if (hasWallet)
         {
             localAccountInfo = GetAccountInfoFromStorage();
+            nextReceiveAddress = localAccountInfo.GetNextReceiveAddress();
         }
+
         return Task.CompletedTask;
     }
     
@@ -415,7 +417,11 @@
             storage.SetAccountInfo(network.Name, accountInfo);
             
             localAccountInfo = accountInfo;
-            
+
+            nextReceiveAddress = localAccountInfo.GetNextReceiveAddress();
+
+            showQrCode.GenerateQRCode(nextReceiveAddress);
+
             return new OperationResult { Success = true };
         });
         
@@ -474,7 +480,7 @@
         ClearWalletWords();
         StateHasChanged();
     }
-    
+
     private void ClearWalletWords()
     {
         walletWords = null;
@@ -509,17 +515,15 @@
 
     public  async Task CopyNextReceiveAddress()
     {
-        var address = localAccountInfo.GetNextReceiveAddress();
-
-        if (string.IsNullOrEmpty(address))
+        if (string.IsNullOrEmpty(nextReceiveAddress))
         {
             notificationComponent.ShowErrorMessage("New address was not created");
             return;
         }
 
-        await _clipboardService.WriteTextAsync(address);
+        await _clipboardService.WriteTextAsync(nextReceiveAddress);
     }
-    
+
     private async Task RefreshFee()
     {
         // refresh fee if last refresh was 60 seconds ago
