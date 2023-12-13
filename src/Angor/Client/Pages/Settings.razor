@@ -86,6 +86,7 @@
                 <thead>
                 <tr>
                     <th>Link</th>
+                    <th>Name</th>
                     <th>Status</th>
                     <th>Default</th>
                     <th></th>
@@ -96,7 +97,8 @@
                 {
                     <tr>
                         <td><a href="@relay.Url" target="_blank">@relay.Url</a></td>
-                            <td style="color: @(relay.Status == UrlStatus.Online ? "green" : relay.Status == UrlStatus.NotReady ? "yellow" :  "red");">@relay.Status.ToString()</td>
+                        <td>@relay.Name</td>
+                        <td style="color: @(relay.Status == UrlStatus.Online ? "green" : relay.Status == UrlStatus.NotReady ? "yellow" :  "red");">@relay.Status.ToString()</td>
                         <td>
                             @if (relay.IsPrimary)
                             {

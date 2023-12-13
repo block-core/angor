@@ -1,17 +1,12 @@
 ﻿@page "/penalties"
-@using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Angor.Client.Services
 @using Blockcore.Consensus.ScriptInfo
 @using Blockcore.NBitcoin
 
-@inject HttpClient Http
-@inject IDerivationOperations _derivationOperations
-@inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
-@inject INetworkConfiguration _NetworkConfiguration
 @inject IIndexerService _IndexerService
 
 @inherits BaseComponent

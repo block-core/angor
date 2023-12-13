@@ -7,7 +7,6 @@ namespace Angor.Shared.Services;
 
 public interface IRelayService
 {
-    Task ConnectToRelaysAsync();
     void RegisterOKMessageHandler(string eventId, Action<NostrOkResponse> action);
     Task<string> AddProjectAsync(ProjectInfo project, string nsec);
     Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string nsec);

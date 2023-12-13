@@ -1,0 +1,58 @@
+@using Angor.Shared.Services
+@using Angor.Client.Models
+@using Nostr.Client.Messages
+@using Nostr.Client.Messages.Metadata
+@using QRCoder
+
+
+<div class="col-lg-6">
+    <h4 class="card-title">QR Code</h4>
+    @if (!string.IsNullOrEmpty(base64qrcode))
+    {
+        <img src="data:image /png;base64,@base64qrcode" class="card-img-top qrcode" alt="QR Code"/>
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    public string Data { get; set; }
+
+    private static string lastqrcode;
+    private static string lastaddress;
+    private string base64qrcode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        GenerateQRCode(Data);
+    }
+
+    public Task GenerateQRCode(string newData)
+    {
+        Data = newData;
+
+        if (lastaddress == Data)
+        {
+            base64qrcode = lastqrcode;
+            return Task.CompletedTask;
+        }
+
+        return Task.Run(() =>
+        {
+            base64qrcode = GenerateQRCodeInternal(Data);
+            lastqrcode = base64qrcode;
+            lastaddress = Data;
+
+            StateHasChanged();
+
+        });
+    }
+
+    public static string GenerateQRCodeInternal(string content)
+    {
+        using QRCodeGenerator qrGenerator = new QRCodeGenerator();
+        using QRCodeData qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.Q);
+        using PngByteQRCode pngByteQRCode = new PngByteQRCode(qrCodeData);
+        return Convert.ToBase64String(pngByteQRCode.GetGraphic(10));
+    }
+}

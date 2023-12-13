@@ -248,8 +248,6 @@
             project.NostrPubKey = projectsKeys.NostrPubKey;
         }
 
-        await _RelayService.ConnectToRelaysAsync();
-
         _RelayService.RequestProjectCreateEventsByPubKey(_ => //TODO change the state to be storage driven and not event driven
         {
             nostrProfileCreated = _.Kind == NostrKind.Metadata;

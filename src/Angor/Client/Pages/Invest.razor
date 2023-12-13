@@ -499,6 +499,9 @@
 
     private async Task HandleSignatureReceivedAsync(string? nostrPrivateKeyHex, string _)
     {
+        if (recoverySigs?.Signatures.Any() ?? false) //multiple relays for the same message
+            return;
+        
         var signatureJson = await javascriptNostrToolsModule.InvokeAsync<string>(
             "decryptNostr", nostrPrivateKeyHex, project.NostrPubKey, _);
         
