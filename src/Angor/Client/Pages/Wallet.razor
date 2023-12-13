@@ -162,20 +162,25 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-lg-6">
-                                <h4 class="card-title">Receive Address</h4>
-                                <p id="receive-address" class="card-text">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</p>
-                                <button class="btn btn-primary" onclick="@CopyNextReceiveAddress">Copy Address</button>
-                            </div>
+                            <div class="col-lg-6 d-flex align-items-center">
+                                <div class="address-container-wrapper">
+                                    <div class="address-container">
+                                        <div class="d-flex align-items-center">
+                                            <p id="receive-address" class="card-text mb-0">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</p>
+                                            <button class="btn btn-outline-secondary btn-sm address-copy-button" @onclick="CopyNextReceiveAddress">
+                                                <i class="oi oi-file"></i> 
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
 
-                            <ShowQrCode @ref="showQrCode" Data="@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()" />
-                          
+                                <ShowQrCode @ref="showQrCode" Data="@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()" />
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
 
 
         <!-- Section 3 -->

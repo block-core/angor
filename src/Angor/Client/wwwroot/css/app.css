@@ -221,6 +221,29 @@ tr[style*="cursor: pointer;"]:hover {
     /* Add any additional styling as needed */
 }
 
+.address-container {
+    background-color: #f8f9fa; /* Light background */
+    border: 1px solid #ddd; /* Light border */
+    border-radius: 10px; /* Rounded corners */
+    padding: 10px; /* Padding inside the container */
+    cursor: pointer; /* Change cursor on hover */
+    text-align: center; /* Center-align the text */
+    margin-top: 10px; /* Spacing from the QR code */
+}
+
+.address-container:hover {
+    background-color: #e9ecef; /* Slightly darker background on hover */
+}
+
+.address-container-wrapper {
+    max-width: 450px; /* Adjust as needed */
+    margin-right: 30px; /* Space between address and QR code button */
+}
+
+.address-copy-button {
+    margin-left: 10px; /* Space between address and button */
+    cursor: pointer;
+}
 
 /*long duration spinner*/
 
