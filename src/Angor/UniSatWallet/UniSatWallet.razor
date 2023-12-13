@@ -1,0 +1,101 @@
+﻿@page "/unisatwallet"
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime;
+
+<PageTitle>UniSat Wallet</PageTitle>
+
+<style>
+
+    h1 {
+        color: #333;
+    }
+
+    p {
+        margin-bottom: 10px;
+        color: #555;
+    }
+
+    a {
+        color: #007bff;
+        text-decoration: none;
+    }
+
+    button {
+        background-color: #007bff;
+        color: #fff;
+        padding: 10px;
+        border: none;
+        cursor: pointer;
+        margin-bottom: 10px;
+    }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+</style>
+
+
+<h1>UniSat Wallet!</h1>
+
+@if (!HasUniSatWallet)
+{
+    <p>No UniSat Wallet detected. Please install <a href="https://chromewebstore.google.com/detail/unisat-wallet/ppbibelpcjmhbdihakflkdcoccbgbkpo" target="_blank">UniSat Wallet</a>.</p>
+}
+else
+{
+    <p>Click the button to connect to UniSat Wallet:</p>
+    <button @onclick="ConnectUniSatWallet">Connect to UniSat Wallet</button>
+
+    <p>Get UniSat Accounts:</p>
+    <button @onclick="GetUniSatAccounts">Get UniSat Accounts</button>
+    <p>@accountsResult</p>
+
+    <p>Get UniSat Network:</p>
+    <button @onclick="GetUniSatNetwork">Get UniSat Network</button>
+    <p>@networkResult</p>
+
+    <p>Switch UniSat Network:</p>
+    <button @onclick="SwitchUniSatNetwork">Switch UniSat Network</button>
+    <p>@switchNetworkResult</p>
+
+    <p>Get UniSat Public Key:</p>
+    <button @onclick="GetUniSatPublicKey">Get UniSat Public Key</button>
+    <p>@publicKeyResult</p>
+
+    <p>Get UniSat Balance:</p>
+    <button @onclick="GetUniSatBalance">Get UniSat Balance</button>
+    <p>@balanceResult</p>
+
+    <p>Get UniSat Inscriptions:</p>
+    <button @onclick="GetUniSatInscriptions">Get UniSat Inscriptions</button>
+    <p>@inscriptionsResult</p>
+
+    <p>Send Bitcoin UniSat:</p>
+    <button @onclick="SendBitcoinUniSat">Send Bitcoin UniSat</button>
+    <p>@sendBitcoinResult</p>
+
+    <p>Send Inscription UniSat:</p>
+    <button @onclick="SendInscriptionUniSat">Send Inscription UniSat</button>
+    <p>@sendInscriptionResult</p>
+
+    <p>Sign Message UniSat:</p>
+    <button @onclick="SignMessageUniSat">Sign Message UniSat</button>
+    <p>@signMessageResult</p>
+
+    <p>Push Transaction UniSat:</p>
+    <button @onclick="PushTransactionUniSat">Push Transaction UniSat</button>
+    <p>@pushTransactionResult</p>
+
+    <p>Sign Psbt UniSat:</p>
+    <button @onclick="SignPsbtUniSat">Sign Psbt UniSat</button>
+    <p>@signPsbtResult</p>
+
+    <p>Sign Psbts UniSat:</p>
+    <button @onclick="SignPsbtsUniSat">Sign Psbts UniSat</button>
+    <p>@signPsbtsResult</p>
+
+    <p>Push Psbt UniSat:</p>
+    <button @onclick="PushPsbtUniSat">Push Psbt UniSat</button>
+    <p>@pushPsbtResult</p>
+
+ }
