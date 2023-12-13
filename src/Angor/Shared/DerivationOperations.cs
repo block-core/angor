@@ -216,6 +216,22 @@ public class DerivationOperations : IDerivationOperations
 
         return extKey.PrivateKey;
     }
+    
+    public async Task<Key> DeriveProjectNostrPrivateKeyAsync(WalletWords walletWords, int index)
+    {
+        // founder key is derived from the path m/5'
+        ExtKey extendedKey = GetExtendedKey(walletWords);
+
+        var path = $"m/44'/1237'/{index}/0/0";
+
+        var task = Task.Run(() => extendedKey.Derive(new KeyPath(path)));
+
+        await Task.WhenAll(task);
+
+        ExtKey extKey =  task.Result;
+
+        return extKey.PrivateKey;
+    }
 
     public uint DeriveProjectId(string founderKey)
     {

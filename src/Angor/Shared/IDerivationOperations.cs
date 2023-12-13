@@ -20,4 +20,5 @@ public interface IDerivationOperations
 
     Key DeriveFounderRecoveryPrivateKey(WalletWords walletWords, int index);
     Key DeriveProjectNostrPrivateKey(WalletWords walletWords, int index);
+    Task<Key> DeriveProjectNostrPrivateKeyAsync(WalletWords walletWords, int index);
 }

@@ -47,21 +47,27 @@
         <!-- Signatures Details Section -->
         <div class="row mt-4">
             <div class="col">
-                <table class="table table-bordered table-hover">
-                    <thead>
-                    <tr>
-                        <th>Amount to Invest</th>
-                        <th>Time Arrived</th>
-                        <th>Status</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var signature in signaturesRequests.Where(_ => _ is { TransactionHex: not null,TimeApproved: null }))
-                    {
+                @if (messagesReceived)
+                {
+                    <div class="loader"></div>
+                }
+                else
+                {
+                    <table class="table table-bordered table-hover">
+                        <thead>
                         <tr>
-                            <td>@signature.AmountToInvest.ToString(CultureInfo.CurrentCulture) @network.CoinTicker</td>
-                            <td>@signature.TimeArrived.ToString("g")</td>
-                            @if (signature.TimeApproved is null)
+                            <th>Investment amount</th>
+                            <th>Received at</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var signature in signaturesRequests.Where(_ => _ is { TransactionHex: not null, AmountToInvest: not null }))
+                        {
+                            <tr>
+                                <td>@signature.AmountToInvest?.ToString(CultureInfo.CurrentCulture) @network.CoinTicker</td>
+                                <td>@signature.TimeArrived.ToString("g")</td>
+                                @if (signature.TimeApproved is null)
                                 {
                                     <td><button class="btn btn-success" @onclick="() => ApproveSignature(signature)">Approve</button></td>
                                 }
@@ -69,10 +75,11 @@
                                 {
                                     <td>Approved on - @signature.TimeApproved.ToString()</td>
                                 }
-                        </tr>
-                    }
-                    </tbody>
-                </table>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
             </div>
         </div>
     }
@@ -85,8 +92,6 @@
     public FounderProject FounderProject { get; set; }
     private List<SignatureRequest> signaturesRequests = new();
     private IJSInProcessObjectReference? javascriptNostrToolsModule;
-
-    int numberOfSignaturesHandled;
     
     protected override async Task OnInitializedAsync()
     {
@@ -105,7 +110,7 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         _Logger.LogDebug("OnAfterRenderAsync");
-        if (firstRender || javascriptNostrToolsModule == null)
+        if (javascriptNostrToolsModule == null && signaturesRequests.Any())
         {
             try
             {
@@ -117,18 +122,19 @@
             {
                 Console.WriteLine(e);
                 notificationComponent.ShowErrorMessage(e.Message);
+                return;
             }
         }
         
-        _Logger.LogDebug($"handled = {numberOfSignaturesHandled}, pending ={signaturesRequests.Count}");
+        _Logger.LogDebug("handled = {Count}, total = {SignaturesRequestsCount}", signaturesRequests.Count(x => x.AmountToInvest.HasValue), signaturesRequests.Count);
         
-        if (numberOfSignaturesHandled < signaturesRequests.Count(x => x.AmountToInvest > 0))
+        if (signaturesRequests.Any(x => x.AmountToInvest == null))
         {
-            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
+            var nostrPrivateKey = await _derivationOperations.DeriveProjectNostrPrivateKeyAsync(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            foreach (var pendingSignature in signaturesRequests.Where(_ => _.AmountToInvest == 0))
+            foreach (var pendingSignature in signaturesRequests.Where(_ => _.AmountToInvest == null))
             {
                 pendingSignature.TransactionHex = await javascriptNostrToolsModule.InvokeAsync<string>(
                     "decryptNostr",
@@ -149,12 +155,9 @@
                     _Logger.LogDebug(pendingSignature.TransactionHex);
                     pendingSignature.TransactionHex = null;
                 }
-                finally
-                {
-                    numberOfSignaturesHandled++;   
-                }
             }
             _Logger.LogDebug($"Calling StateHasChanged in OnAfterRenderAsync");
+            messagesReceived = false;
             StateHasChanged();
         }
         
@@ -196,7 +199,6 @@
                 
                 _Logger.LogDebug($"Calling StateHasChanged in EOSE");
                 StateHasChanged();
-                messagesReceived = false;
             });
     }
 
@@ -208,7 +210,7 @@
         
         var sigJson = JsonSerializer.Serialize(signatureInfo, RelayService.settings);
         
-        var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
+        var nostrPrivateKey = await _derivationOperations.DeriveProjectNostrPrivateKeyAsync(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
 
         var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());  
         
@@ -246,7 +248,7 @@
     {
         public string investorPubKey { get; set; }
 
-        public decimal AmountToInvest { get; set; }
+        public decimal? AmountToInvest { get; set; }
 
         public DateTime TimeArrived { get; set; }
         public DateTime? TimeApproved { get; set; }
