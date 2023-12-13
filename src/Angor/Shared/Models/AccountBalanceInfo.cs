@@ -12,9 +12,9 @@ public class AccountBalanceInfo
     public static AccountBalanceInfo GetBalance(AccountInfo account, UnconfirmedInfo unconfirmedInfo)
     {
         var balance = account.AddressesInfo.Concat(account.ChangeAddressesInfo).SelectMany(s => s.UtxoData).Sum(s => s.value);
-        var balanceSpent = unconfirmedInfo.PendingSpent.Sum(s => s.value);
+        var balanceSpent = unconfirmedInfo.AccountPendingSpent.Sum(s => s.value);
 
-        var balanceUnconfirmed = unconfirmedInfo.PendingReceive.Sum(s => s.value);
+        var balanceUnconfirmed = unconfirmedInfo.AccountPendingReceive.Sum(s => s.value);
 
         return new AccountBalanceInfo
         {

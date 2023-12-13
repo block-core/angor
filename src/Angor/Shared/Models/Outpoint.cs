@@ -17,4 +17,9 @@ public class Outpoint
     {
         return new OutPoint(uint256.Parse(transactionId), outputIndex);
     }
+
+    public static Outpoint FromOutPoint(OutPoint outPoint)
+    {
+        return new Outpoint { outputIndex = (int)outPoint.N, transactionId = outPoint.Hash.ToString() };
+    }
 }

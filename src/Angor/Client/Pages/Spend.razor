@@ -257,6 +257,7 @@
     {
         List<QueryTransaction> trxs = new();
         var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
+        bool modified = false;
 
         foreach (StageData stageData in stageDatas)
         {
@@ -280,18 +281,22 @@
                 {
                     item.IsSepnt = true;
 
-                    _WalletOperations.RemoveInputsAndOutputsFromPending(unconfirmedInfo, item.Trxid);
-                    _WalletOperations.RemoveInputsAndOutputsFromPending(unconfirmedInfo, output.SpentInTransaction);
-                    _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
+                    unconfirmedInfo.RemoveInputsFromPending(item.Trxid);
+                    modified = true;
 
                     continue;
                 }
 
-                if (unconfirmedInfo.PendingSpent.Any(a => a.ToString() == new Outpoint { transactionId = item.Trxid, outputIndex = item.Outputindex }.ToString()))
+                if (unconfirmedInfo.PendingSpent.Any(intput => intput.ToString() == new Outpoint { transactionId = item.Trxid, outputIndex = item.Outputindex }.ToString()))
                 {
                     item.IsSepnt = true;
                 }
             }
+        }
+
+        if (modified)
+        {
+            _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
         }
     }
 
@@ -377,8 +382,10 @@
                 return response;
 
             // add all outptus to the pending list
+            var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
-            _WalletOperations.AddInputsAndOutputsAsPending(unconfirmedInfo, signedTransaction);
+            _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, unconfirmedInfo, signedTransaction);
+            unconfirmedInfo.AddInputsAsPending(signedTransaction);
             _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
 
             // mark stage as spent

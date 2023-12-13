@@ -1,7 +1,35 @@
+using Blockcore.Networks;
+
 namespace Angor.Shared.Models;
 
 public class UnconfirmedInfo
 {
-    public List<UtxoData> PendingReceive { get; set; } = new();
-    public List<UtxoData> PendingSpent { get; set; } = new();
+    public List<UtxoData> AccountPendingReceive { get; set; } = new();
+    public List<UtxoData> AccountPendingSpent { get; set; } = new();
+
+    public List<Outpoint> PendingSpent { get; set; } = new();
+
+    public void RemoveInputsFromPending(string trxid)
+    {
+        foreach (var input in PendingSpent.ToList())
+        {
+            if (input.transactionId == trxid)
+            {
+                PendingSpent.Remove(input);
+            }
+        }
+    }
+
+    public void AddInputsAsPending(Blockcore.Consensus.TransactionInfo.Transaction transaction)
+    {
+        var inputs = transaction.Inputs.Select(_ => _.PrevOut).ToList();
+
+        foreach (var outPoint in inputs)
+        {
+            if (PendingSpent.All(input => input.ToString() != outPoint.ToString()))
+            {
+                PendingSpent.Add(Outpoint.FromOutPoint(outPoint));
+            }
+        }
+    }
 }

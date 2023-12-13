@@ -610,7 +610,7 @@
 
             if (res.Success)
             {
-                _walletOperations.UpdateAccountInfoWithSpentTransaction(accountInfo, unconfirmedInfo, res.Data);
+                _walletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, unconfirmedInfo, res.Data);
                 accountBalanceInfo = AccountBalanceInfo.GetBalance(accountInfo, unconfirmedInfo);
                 storage.SetAccountInfo(network.Name, accountInfo);
                 _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);

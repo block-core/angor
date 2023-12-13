@@ -29,8 +29,5 @@ public interface IWalletOperations
         WalletWords walletWords, AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo,
         FeeEstimation feeRate);
 
-    void UpdateAccountInfoWithSpentTransaction(AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo, Transaction transaction);
-
-    void AddInputsAndOutputsAsPending(UnconfirmedInfo unconfirmedInfo, Blockcore.Consensus.TransactionInfo.Transaction transaction);
-    void RemoveInputsAndOutputsFromPending(UnconfirmedInfo unconfirmedInfo, string trxid);
+    void UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo, Transaction transaction);
 }
