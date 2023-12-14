@@ -22,4 +22,9 @@ public class Outpoint
     {
         return new Outpoint { outputIndex = (int)outPoint.N, transactionId = outPoint.Hash.ToString() };
     }
+
+    public static Outpoint Create(string trxid, int index)
+    {
+        return new Outpoint { outputIndex = index, transactionId = trxid };
+    }
 }

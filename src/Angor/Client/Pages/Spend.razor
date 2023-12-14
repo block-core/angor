@@ -36,8 +36,8 @@
     @foreach (var stage in stageDatas)
     {
         bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
-        var investedCount = stage.Items.Count(c => c.IsSepnt == false);
-        var investedAmount = stage.Items.Where(c => c.IsSepnt == false).Sum(c => c.Amount);
+        var investedCount = stage.Items.Count(c => c.IsSpent == false);
+        var investedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
 
         <div class="card mb-3">
             <div class="card-body">
@@ -69,13 +69,13 @@
 
                             <div class="d-flex mb-2">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" disabled="@(!stageisActive || transaction.IsSepnt)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
+                                    <input class="form-check-input" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
                                 </div>
                                 <div class="flex-grow-1 ms-3">
                                     <p class="mb-0">
                                         @transaction.Amount @network.CoinTicker - utxo : @transaction.Trxid-@transaction.Outputindex
 
-                                        @if (transaction.IsSepnt)
+                                        @if (transaction.IsSpent)
                                         {
                                             <p class="text-primary">spent</p>
                                         }
@@ -171,7 +171,7 @@
         public int Outputindex;
         public string OutputAddress;
         public decimal Amount;
-        public bool IsSepnt;
+        public bool IsSpent;
     } 
 
     List<StageData> stageDatas = new();
@@ -263,7 +263,7 @@
         {
             foreach (var item in stageData.Items)
             {
-                if (item.IsSepnt)
+                if (item.IsSpent)
                     continue;
 
                 QueryTransaction? trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
@@ -279,17 +279,17 @@
 
                 if (!string.IsNullOrEmpty(output.SpentInTransaction))
                 {
-                    item.IsSepnt = true;
+                    item.IsSpent = true;
 
-                    unconfirmedInfo.RemoveInputsFromPending(item.Trxid);
+                    unconfirmedInfo.RemoveInputFromPending(Outpoint.Create(item.Trxid, item.Outputindex));
                     modified = true;
 
                     continue;
                 }
 
-                if (unconfirmedInfo.PendingSpent.Any(intput => intput.ToString() == new Outpoint { transactionId = item.Trxid, outputIndex = item.Outputindex }.ToString()))
+                if (unconfirmedInfo.IsInPendingSpent(Outpoint.Create(item.Trxid, item.Outputindex)))
                 {
-                    item.IsSepnt = true;
+                    item.IsSpent = true;
                 }
             }
         }
@@ -392,7 +392,7 @@
             stageDatas.FirstOrDefault(_ => _.StageIndex == selectedStageId)?.Items.ForEach(_ =>
             {
                 if (signedTransaction.Inputs.Any(a => _.Trxid == a.PrevOut.Hash.ToString() && _.Outputindex == a.PrevOut.N))
-                    _.IsSepnt = true;
+                    _.IsSpent = true;
             });
 
             return new OperationResult { Success = response.Success, Message = response.Message };

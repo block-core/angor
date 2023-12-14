@@ -9,11 +9,16 @@ public class UnconfirmedInfo
 
     public List<Outpoint> PendingSpent { get; set; } = new();
 
-    public void RemoveInputsFromPending(string trxid)
+    public bool IsInPendingSpent(Outpoint outpoint)
+    {
+        return PendingSpent.Any(intput => intput.ToString() == outpoint.ToString());
+    }
+
+    public void RemoveInputFromPending(Outpoint outpoint)
     {
         foreach (var input in PendingSpent.ToList())
         {
-            if (input.transactionId == trxid)
+            if (input.ToString() == outpoint.ToString())
             {
                 PendingSpent.Remove(input);
             }
