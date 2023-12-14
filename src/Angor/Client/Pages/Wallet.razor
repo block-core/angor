@@ -162,12 +162,12 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-lg-6 d-flex align-items-center">
+                            <div class="col-lg-12 d-flex align-items-center justify-content-between">
                                 <div class="address-container-wrapper">
                                     <div class="address-container">
                                         <div class="d-flex align-items-center">
                                             <p id="receive-address" class="card-text mb-0">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</p>
-                                            <button class="btn btn-outline-secondary btn-sm address-copy-button" @onclick="CopyNextReceiveAddress">
+                                            <button class="btn btn-outline-secondary btn-sm address-copy-button ml-2" @onclick="CopyNextReceiveAddress">
                                                 <i class="oi oi-file"></i> 
                                             </button>
                                         </div>

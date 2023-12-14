@@ -8,15 +8,14 @@
 @inject IClipboardService _clipboardService
 
 <!-- Trigger Button -->
-<div class="col-md-4" style="padding-top: 10px;">
-    <button class="btn btn-secondary qr-button" @onclick="ShowModal">Show QR Code</button>
-</div>
+<button class="btn btn-secondary qr-button" @onclick="ShowModal">Show QR Code</button>
 
 <!-- Modal -->
 @if (showModal)
 {
     <div class="modal fade show d-block" id="qrcodeModal" tabindex="-1" aria-labelledby="qrcodeModalLabel" aria-hidden="true">
-        <div class="modal-dialog custom-modal-size"> <!-- Custom modal size -->
+        <div class="modal-dialog custom-modal-size">
+            <!-- Custom modal size -->
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="coinControlModalLabel">QR Code</h5>
@@ -28,7 +27,7 @@
                         <div class="d-flex align-items-center">
                             <p id="receive-address" class="card-text mb-0">@Data</p>
                             <button class="btn btn-outline-secondary btn-sm address-copy-button" @onclick="CopyToClipboard">
-                                <i class="oi oi-file"></i> 
+                                <i class="oi oi-file"></i>
                             </button>
                         </div>
                     </div>
@@ -62,7 +61,7 @@
     public void GenerateQRCode(string newData)
     {
         Data = newData;
-        
+
         base64qrcode = GenerateQRCodeInternal(Data);
 
         StateHasChanged();
@@ -100,7 +99,5 @@
         width: 100%; /* Image takes full width of the modal body */
         height: auto; /* Maintain aspect ratio */
     }
-
-
 
 </style>
