@@ -10,7 +10,15 @@ public class AccountInfo
     public List<AddressInfo> ChangeAddressesInfo { get; set; } = new();
 
     public int InvestmentsCount { get; set; } //TODO David handle the set logic
-    
+
+    public IEnumerable<AddressInfo> AllAddresses()
+    {
+        foreach (var addressInfo in AddressesInfo.Concat(ChangeAddressesInfo))
+        {
+            yield return addressInfo;
+        }
+    }
+
     public string? GetNextReceiveAddress()
     {
         return AddressesInfo.Last()?.Address;

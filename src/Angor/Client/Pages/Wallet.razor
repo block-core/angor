@@ -313,7 +313,7 @@
                     </thead>
                     <tbody>
 
-                        @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AddressesInfo.Union(accountBalanceInfo.AccountInfo.ChangeAddressesInfo))
+                        @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AllAddresses())
                         {
                             var total = addressInfo.Balance;
                             var count = addressInfo.UtxoData.Count();
@@ -404,7 +404,7 @@
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
-            accountBalanceInfo = AccountBalanceInfo.GetBalance(accountInfo, unconfirmedInfo);
+            accountBalanceInfo.CalculateBalance(accountInfo, unconfirmedInfo);
         }
 
         return Task.CompletedTask;
@@ -424,7 +424,7 @@
             storage.SetAccountInfo(network.Name, accountInfo);
             _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
 
-            accountBalanceInfo = AccountBalanceInfo.GetBalance(accountInfo, unconfirmedInfo);
+            accountBalanceInfo.CalculateBalance(accountInfo, unconfirmedInfo);
 
             showQrCode.GenerateQRCode(accountBalanceInfo.AccountInfo.GetNextReceiveAddress());
 
@@ -502,7 +502,8 @@
     private void DeleteWallet()
     {
         walletWordsModal = false;
-        storage.DeleteAccountInfo(_networkConfiguration.GetNetwork().Name);
+        storage.DeleteAccountInfo(network.Name);
+        _cacheStorage.DeleteUnconfirmedInfo();
         storage.DeleteWalletPubkey();
         _walletStorage.DeleteWallet();
         storage.DeleteFounderKeys();
@@ -615,7 +616,7 @@
             if (res.Success)
             {
                 _walletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, unconfirmedInfo, res.Data);
-                accountBalanceInfo = AccountBalanceInfo.GetBalance(accountInfo, unconfirmedInfo);
+                accountBalanceInfo.CalculateBalance(accountInfo, unconfirmedInfo);
                 storage.SetAccountInfo(network.Name, accountInfo);
                 _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
             }

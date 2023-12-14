@@ -5,23 +5,20 @@ public class AccountBalanceInfo
     public long TotalBalance { get; set; }
     public long TotalUnconfirmedBalance { get; set; }
 
-
     public AccountInfo AccountInfo { get; private set; } = new ();
     public UnconfirmedInfo UnconfirmedInfo { get; private set; } = new ();
 
-    public static AccountBalanceInfo GetBalance(AccountInfo account, UnconfirmedInfo unconfirmedInfo)
+    public void CalculateBalance(AccountInfo account, UnconfirmedInfo unconfirmedInfo)
     {
-        var balance = account.AddressesInfo.Concat(account.ChangeAddressesInfo).SelectMany(s => s.UtxoData).Sum(s => s.value);
-        var balanceSpent = unconfirmedInfo.AccountPendingSpent.Sum(s => s.value);
+        AccountInfo = account;
+        UnconfirmedInfo = unconfirmedInfo;
 
-        var balanceUnconfirmed = unconfirmedInfo.AccountPendingReceive.Sum(s => s.value);
+        var balance = AccountInfo.AllAddresses().SelectMany(s => s.UtxoData).Sum(s => s.value);
+        var balanceSpent = UnconfirmedInfo.AccountPendingSpent.Sum(s => s.value);
 
-        return new AccountBalanceInfo
-        {
-            TotalBalance = balance - balanceSpent,
-            TotalUnconfirmedBalance = balanceUnconfirmed,
-            AccountInfo = account,
-            UnconfirmedInfo = unconfirmedInfo
-        };
+        var balanceUnconfirmed = UnconfirmedInfo.AccountPendingReceive.Sum(s => s.value);
+
+        TotalBalance = balance - balanceSpent;
+        TotalUnconfirmedBalance = balanceUnconfirmed;
     }
 }

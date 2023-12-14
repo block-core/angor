@@ -438,6 +438,13 @@
         StageInfo.TotalInPenalty = StageInfo.Items.Where(t => t.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty).Sum(t => t.Amount);
         StageInfo.EndOfProject = project.ExpiryDate < DateTime.Now;
     }
+    
+    private void AddTransactionToPending(Transaction transaction)
+    {
+        var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
+        unconfirmedInfo.AddInputsAsPending(recoveryTransaction);
+        _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
+    }
 
     private async Task PrepareToRecoverCoins()
     {
@@ -529,9 +536,7 @@
             if (!response.Success)
                 return response;
 
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
-            unconfirmedInfo.AddInputsAsPending(recoveryTransaction);
-            _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
+            AddTransactionToPending(recoveryTransaction);
 
             return new OperationResult { Success = response.Success, Message = response.Message };
         });
@@ -625,9 +630,7 @@
             if (!response.Success)
                 return response;
 
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
-            unconfirmedInfo.AddInputsAsPending(releaseRecoveryTransaction);
-            _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
+            AddTransactionToPending(releaseRecoveryTransaction);
 
             return new OperationResult { Success = response.Success, Message = response.Message };
         });
@@ -641,7 +644,6 @@
             notificationComponent.ShowErrorMessage(operationResult.Message);
         }
     }
-
 
     private async Task PrepareEndOfProjectCoins()
     {
@@ -721,9 +723,7 @@
             if (!response.Success)
                 return response;
 
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
-            unconfirmedInfo.AddInputsAsPending(endOfProjectTransaction);
-            _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
+            AddTransactionToPending(endOfProjectTransaction);
 
             return new OperationResult { Success = response.Success, Message = response.Message };
         });
@@ -737,5 +737,4 @@
             notificationComponent.ShowErrorMessage(operationResult.Message);
         }
     }
-
 }

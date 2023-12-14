@@ -49,4 +49,8 @@ public class LocalSessionStorage : ICacheStorage
     {
         _sessionStorageService.SetItem("unconfirmed-info", unconfirmedInfo);
     }
+    public void DeleteUnconfirmedInfo()
+    {
+        _sessionStorageService.RemoveItem("unconfirmed-info");
+    }
 }

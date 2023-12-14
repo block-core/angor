@@ -12,4 +12,5 @@ public interface ICacheStorage
     void SetProjectIndexerData(List<ProjectIndexerData> list);
     UnconfirmedInfo GetUnconfirmedInfo();
     void SetUnconfirmedInfo(UnconfirmedInfo unconfirmedInfo);
+    void DeleteUnconfirmedInfo();
 }

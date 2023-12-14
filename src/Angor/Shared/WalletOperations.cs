@@ -137,7 +137,7 @@ public class WalletOperations : IWalletOperations
         var pendingRemove = unconfirmedInfo.AccountPendingSpent.ToList();
         foreach (var utxoData in pendingRemove)
         {
-            foreach (var addressInfo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo))
+            foreach (var addressInfo in accountInfo.AllAddresses())
             {
                 if (addressInfo.Address == utxoData.address)
                 {
@@ -153,7 +153,7 @@ public class WalletOperations : IWalletOperations
         var pendingAdd = unconfirmedInfo.AccountPendingReceive.ToList();
         foreach (var utxoData in pendingAdd)
         {
-            foreach (var addressInfo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo))
+            foreach (var addressInfo in accountInfo.AllAddresses())
             {
                 if (addressInfo.Address == utxoData.address)
                 {
@@ -173,7 +173,7 @@ public class WalletOperations : IWalletOperations
         var outputs = transaction.Outputs.AsIndexedOutputs();
         var inputs = transaction.Inputs.Select(_ => _.PrevOut).ToList();
         
-        foreach (var addressInfo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo))
+        foreach (var addressInfo in accountInfo.AllAddresses())
         {
             // find all spent inputs to mark them as spent
             foreach (var utxoData in addressInfo.UtxoData)
@@ -227,21 +227,15 @@ public class WalletOperations : IWalletOperations
 
     public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo)
     {
-        var utxos = accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo);
-
         var utxosToSpend = new List<UtxoDataWithPath>();
 
         long total = 0;
-        foreach (var utxoData in utxos.SelectMany(_ => _.UtxoData
+        foreach (var utxoData in accountInfo.AllAddresses().SelectMany(_ => _.UtxoData
+                         .Where(utxow => unconfirmedInfo.AccountPendingSpent.All(p => p.outpoint.ToString() != utxow.outpoint.ToString()))
                          .Select(u => new { path = _.HdPath, utxo = u }))
                      .OrderBy(o => o.utxo.blockIndex)
                      .ThenByDescending(o => o.utxo.value))
         {
-            if (unconfirmedInfo.AccountPendingSpent.Any(p => p.outpoint.ToString() == utxoData.utxo.outpoint.ToString()))
-            {
-                continue;
-            }
-
             utxosToSpend.Add(new UtxoDataWithPath { HdPath = utxoData.path, UtxoData = utxoData.utxo });
 
             total += utxoData.utxo.value;
