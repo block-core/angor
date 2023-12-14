@@ -193,6 +193,26 @@ tr[style*="cursor: pointer;"]:hover {
     background-size: 90%; /* Adjust the size of the logo as needed */
 }
 
+.loader-slow {
+    border: 12px solid #eaeaea; /* Light grey for the base circle */
+    border-top: 12px solid #f7931a; /* Bitcoin orange for the rotating part */
+    border-radius: 50%;
+    width: 100px; /* Smaller width */
+    height: 100px; /* Smaller height */
+    animation: spin 20s linear infinite;
+    background: url('../bitcoin-logo.png') no-repeat center;
+    background-size: 90%; /* Adjust the size of the logo as needed */
+    margin: 0 auto;
+}
+
+.loader-slow-container {
+    display: flex; /* Enable Flexbox */
+    justify-content: center; /* Center children horizontally */
+    align-items: center; /* Center children vertically */
+    width: 100%; /* Full width of the container */
+    height: 100px; /* Adjust the height as needed */
+}
+
 /* Safari */
 @-webkit-keyframes spin {
     0% {
@@ -243,58 +263,4 @@ tr[style*="cursor: pointer;"]:hover {
 .address-copy-button {
     margin-left: 10px; /* Space between address and button */
     cursor: pointer;
-}
-
-/*long duration spinner*/
-
-.long-duration-loader {
-    width: 100px;
-    height: 100px;
-    position: relative;
-}
-
-.spinner {
-    border: 8px solid #e0e0e0; /* Light color for base */
-    border-top: 8px solid #3498db; /* Calming blue for spinner */
-    border-radius: 50%;
-    width: 100%;
-    height: 100%;
-    animation: spin 20s linear infinite;
-}
-
-.progress-bar {
-    position: absolute;
-    bottom: 0;
-    background: #2ecc71; /* Green color for progress */
-    height: 10%;
-    animation: fillBar 864000s linear forwards; /* Long duration for filling */
-}
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes fillBar {
-    0% {
-        width: 0%;
-    }
-
-    100% {
-        width: 100%;
-    }
-}
-
-.loader-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 14px;
-    color: #333;
 }

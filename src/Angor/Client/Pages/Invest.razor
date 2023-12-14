@@ -197,20 +197,14 @@
         }
         else
         {
-            <div class="card mt-3">
+            <div class="card mt-3 text-center">
                 <div class="card-header">
-                    <h4>Waiting for the founder</h4>
+                    <h4>Waiting for the founder to approve</h4>
                 </div>
                 <div class="card-body">
-                    <p>Waiting for the founder to sign the investment request</p>
+                    @*<p>Waiting for the founder to sign the investment request</p>*@
                     
-                    <div class="long-duration-loader">
-                        <div class="spinner"></div>
-                        <div class="progress-bar"></div>
-                        <div class="loader-text">Waiting...</div>
-                    </div>
-
-                    @* <button type="button" class="btn-success" @onclick="LookupSignature">Refresh</button>*@
+                    <div class="loader-slow"></div>
                 </div>
             </div>
         }

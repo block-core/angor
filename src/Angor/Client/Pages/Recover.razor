@@ -46,7 +46,7 @@
     
     @if (trxNotFound)
     {
-        <p class="text-bg-danger">Transaction was not found it may still be confirming</p>
+        <p class="alert alert-danger">Transaction was not found it may still be confirming</p>
     }
 
     @if (StageInfo.CanRelease)
@@ -442,7 +442,7 @@
     private void AddTransactionToPending(Transaction transaction)
     {
         var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
-        unconfirmedInfo.AddInputsAsPending(recoveryTransaction);
+        unconfirmedInfo.AddInputsAsPending(transaction);
         _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
     }
 
