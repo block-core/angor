@@ -92,6 +92,9 @@
     public FounderProject FounderProject { get; set; }
     private List<SignatureRequest> signaturesRequests = new();
     private IJSInProcessObjectReference? javascriptNostrToolsModule;
+
+    bool messagesReceived;
+    bool scanedForApprovals;
     
     protected override async Task OnInitializedAsync()
     {
@@ -130,6 +133,12 @@
         
         if (signaturesRequests.Any(x => x.AmountToInvest == null))
         {
+            if (!scanedForApprovals)
+            {
+                FetchFounderApprovalsSignatures(FounderProject);
+                return;
+            }
+            
             var nostrPrivateKey = await _derivationOperations.DeriveProjectNostrPrivateKeyAsync(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
@@ -164,11 +173,11 @@
         _Logger.LogDebug("OnAfterRenderAsync Completed");
     }
     
-    bool messagesReceived;
+    
 
     private async Task FetchPendingSignatures(FounderProject project)
     {
-        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, project.LastRequestForSignaturesTime , async 
+        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,// project.LastRequestForSignaturesTime , async 
             (investorPubKey,encryptedMessage, requestTime) =>
         {
             _Logger.LogDebug($"Event received");
@@ -199,6 +208,48 @@
                 
                 _Logger.LogDebug($"Calling StateHasChanged in EOSE");
                 StateHasChanged();
+            });
+    }
+    
+    private void FetchFounderApprovalsSignatures(FounderProject project)
+    {
+        SignService.LookupInvestmentRequestApprovals(project.ProjectInfo.NostrPubKey,  
+            (investorPubKey, requestTime) =>
+            {
+                _Logger.LogDebug($"Event received");
+
+                var signatureRequest = signaturesRequests.FirstOrDefault(_ => _.investorPubKey == investorPubKey);
+                
+                if (signatureRequest is null || signatureRequest.TimeApproved != null)
+                    return; //multiple relays could mean the same massage multiple times
+            
+                _Logger.LogDebug($"The event received is new");
+                
+                signatureRequest.TimeApproved = requestTime;
+                
+                _Logger.LogDebug($"Added to pendingSignatures");
+            }, 
+            () =>
+            {
+                scanedForApprovals = true;
+                
+                if (signaturesRequests.Any(_ => _.TimeApproved != null))
+                {
+                    var latestApprovedTime = signaturesRequests
+                        .Where(x => x.TimeApproved != null)
+                        .Max(x => x.TimeArrived);
+                    
+                    if (FounderProject.LastRequestForSignaturesTime is null || FounderProject.LastRequestForSignaturesTime < latestApprovedTime)
+                    {
+                        FounderProject.LastRequestForSignaturesTime = latestApprovedTime;
+                        storage.UpdateFounderProject(FounderProject);   
+                    }
+                    
+                    _Logger.LogDebug($"Calling StateHasChanged in EOSE");
+                    StateHasChanged();
+                }
+                
+                _Logger.LogDebug($"End of messages on EOSE");
             });
     }
 

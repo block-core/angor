@@ -106,6 +106,30 @@ namespace Angor.Client.Services
             return Task.CompletedTask;
         }
 
+        public void LookupInvestmentRequestApprovals(string nostrPubKey, Action<string, DateTime> action, Action onAllMessagesReceived)
+        {
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            var subscriptionKey = nostrPubKey + "sig_res";
+            
+            var subscription = nostrClient.Streams.EventStream
+                .Where(_ => _.Subscription == subscriptionKey)
+                .Select(_ => _.Event)
+                .Subscribe(_ =>
+                {
+                    action.Invoke(_.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier), _.CreatedAt.Value);
+                });
+            
+            userSubscriptions.TryAdd(subscriptionKey,  new SubscriptionCallCounter<IDisposable>(subscription));
+            userEoseActions.TryAdd(subscriptionKey,new SubscriptionCallCounter<Action>(onAllMessagesReceived));
+            
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                Authors = new[] { nostrPubKey }, //From founder
+                Kinds = new[] { NostrKind.EncryptedDm },
+                A = new[] { NostrCoordinatesIdentifierTag(nostrPubKey) }, //Only signature requests
+            }));
+        }
+
         public DateTime SendSignaturesToInvestor(string encryptedSignatureInfo, string nostrPrivateKeyHex, string investorNostrPubKey)
         {
             var nostrPrivateKey = NostrPrivateKey.FromHex(nostrPrivateKeyHex);

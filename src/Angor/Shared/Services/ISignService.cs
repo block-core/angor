@@ -9,6 +9,9 @@ public interface ISignService
 
     Task LookupInvestmentRequestsAsync(string nostrPubKey, DateTime? since, Action<string, string, DateTime> action,
         Action onAllMessagesReceived);
+    
+    void LookupInvestmentRequestApprovals(string nostrPubKey, Action<string, DateTime> action,
+        Action onAllMessagesReceived);
 
     DateTime SendSignaturesToInvestor(string encryptedSignatureInfo, string nostrPrivateKey,
         string investorNostrPubKey);

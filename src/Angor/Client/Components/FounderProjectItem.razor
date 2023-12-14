@@ -35,7 +35,7 @@
     
     protected override async Task OnInitializedAsync()
     {
-        await RelayService.LookupDirectMessagesForPubKeyAsync(FounderProject.ProjectInfo.NostrPubKey, FounderProject.LastRequestForSignaturesTime, 1,
+        await RelayService.LookupDirectMessagesForPubKeyAsync(FounderProject.ProjectInfo.NostrPubKey, FounderProject.LastRequestForSignaturesTime?.AddSeconds(1), 1,
             _ =>
             {
                 if (InvestmentRequests)
