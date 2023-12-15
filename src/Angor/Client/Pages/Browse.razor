@@ -27,35 +27,25 @@
             </form>
 
             <!-- List of projects -->
-            @if (projects.Count == 0)
+            @if (searchInProgress)
             {
-                @if (searchInProgress)
-                {
-                    <div class="loader"></div>
-                }
-                else
-                {
-                    <p>No projects found.</p>
-                }
+                <div class="loader"></div>
             }
             else
             {
-                foreach (var project in projects.OrderByDescending(project => project.CreatedOnBlock))
+                @if (projects.Count == 0)
                 {
-                    @if (SessionStorage.IsProjectInStorageById(project.ProjectIdentifier)) //TODO should we show that projects exist but the user needs to add the right relay?
+                    <p>No projects found.</p>
+                }
+                else
+                {
+                    foreach (var project in projects.OrderByDescending(project => project.CreatedOnBlock))
                     {
                         <div class="card mb-3">
                             <div class="card-body">
                                 <h5 class="card-title">@project.ProjectIdentifier</h5>
                                 <p class="card-text">Nostr ID: <a href="/" target="_blank">@(NostrPublicKey.FromHex(project.NostrPubKey).Bech32)</a></p>
-                                @if (searchInProgress)
-                                {
-                                    <div class="loader"></div>
-                                }
-                                else
-                                {
-                                    <button @onclick="() => ViewProjectDetails(project.ProjectIdentifier)" class="btn btn-primary">View</button>
-                                }
+                                <button @onclick="() => ViewProjectDetails(project.ProjectIdentifier)" class="btn btn-primary">View</button>
                             </div>
                         </div>
                     }
@@ -104,7 +94,14 @@
                     if (!SessionStorage.IsProjectInStorageById(_.ProjectIdentifier))
                         SessionStorage.StoreProjectInfo(_);
                 },
-                    OnEndOfStreamAction: StateHasChanged,
+                    OnEndOfStreamAction:() =>
+                    {
+                        projects = projects //Remove projects that were not found on the relays
+                            .Where(_ => SessionStorage.IsProjectInStorageById(_.ProjectIdentifier))
+                            .ToList();
+                        
+                        StateHasChanged();
+                    },
                     nostrPubKey: projectsForLookup);
 
             StateHasChanged();
