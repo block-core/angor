@@ -19,24 +19,25 @@
     return;
 }
 
-<div class="container">
+<div class="container my-4">
+    <h1>Founder Page</h1>
+    
+    <NotificationComponent @ref="notificationComponent"/>
+
     <div class="row">
         <div class="col">
-            <h3>Founder Page</h3>
-
-            <NotificationComponent @ref="notificationComponent"/>
 
             <p>Welcome to the founder page! Here you can create a new project or view your existing project.</p>
-            
+
             <p>Creating a project requires an on-chain transaction and a nostr did</p>
 
         </div>
     </div>
-    
+
     @if (founderProjects.Count == 0)
     {
         <p>No projects found.</p>
-                
+
         <div class="row">
             <div class="col">
                 @if (scanningForProjects)
@@ -45,12 +46,12 @@
                 }
                 else
                 {
-                    <button class="btn btn-primary mb-4" @onclick="LookupProjectKeysOnIndexerAsync">Scan for founder projects</button>   
+                    <button class="btn btn-primary mb-4" @onclick="LookupProjectKeysOnIndexerAsync">Scan for founder projects</button>
                     <br/>
                 }
             </div>
         </div>
-                
+
     }
     else
     {
@@ -63,7 +64,7 @@
             </div>
         }
     }
-  
+
     <div class="row">
         <div class="col">
             <button class="btn btn-primary mb-3" @onclick="NavigateToCreateProject">Create Project</button>

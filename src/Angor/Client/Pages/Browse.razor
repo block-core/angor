@@ -8,21 +8,22 @@
 @inject IRelayService _RelayService
 @inject IIndexerService _IndexerService
 
-<div class="container">
+<div class="container my-4">
+    <h1>Browse Projects</h1>
+    
+    <NotificationComponent @ref="notificationComponent"/>
+
     <div class="row">
         <div class="col">
-            <h3>Browse Projects</h3>
 
-            <NotificationComponent @ref="notificationComponent"/>
-            
             <!-- Search form -->
             <form @onsubmit="SearchProjects">
                 <div class="mb-3">
                     <label for="searchQuery" class="form-label">Search</label>
-                    <input type="text" id="searchQuery" @bind="searchQuery" class="form-control" placeholder="Enter search query" />
+                    <input type="text" id="searchQuery" @bind="searchQuery" class="form-control" placeholder="Enter search query"/>
                 </div>
                 <button type="submit" class="btn btn-primary" disabled="@searchInProgress">Search</button>
-                <br /> <br />
+                <br/> <br/>
             </form>
 
             <!-- List of projects -->
@@ -47,7 +48,7 @@
                             <div class="card-body">
                                 <h5 class="card-title">@project.ProjectIdentifier</h5>
                                 <p class="card-text">Nostr ID: <a href="/" target="_blank">@(NostrPublicKey.FromHex(project.NostrPubKey).Bech32)</a></p>
-                                @if(searchInProgress)
+                                @if (searchInProgress)
                                 {
                                     <div class="loader"></div>
                                 }

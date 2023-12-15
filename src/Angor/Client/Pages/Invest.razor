@@ -30,7 +30,6 @@
 
 @inject IInvestorTransactionActions _InvestorTransactionActions
 
-
 @if (!hasWallet)
 {
     NavigationManager.NavigateTo($"/wallet");
@@ -56,7 +55,7 @@
 }
 
 <div class="container py-3">
-    <h2 class="mb-4">Investment Page</h2>
+    <h1 class="mb-4">Investment Page</h1>
     <p>Here is a small explanation of the project. You can <a href="view/@ProjectId">view more details about the project here</a>.</p>
     
     <p>ProjectId: @ProjectId</p>
