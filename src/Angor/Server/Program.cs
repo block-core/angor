@@ -6,6 +6,8 @@ using DataConfigOptions = Angor.Server.DataConfigOptions;
 using Angor.Client;
 using Angor.Shared;
 using Blockcore.AtomicSwaps.Server.Controllers;
+using Angor.Client.Services;
+using Angor.Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +22,11 @@ builder.Services.AddSingleton<TestStorageServiceIndexer>();
 
 // types needed to build investor sigs
 builder.Services.AddSingleton<INetworkConfiguration, NetworkConfiguration>();
+builder.Services.AddSingleton<INetworkService, NetworkServiceMock>();
 builder.Services.AddSingleton<IHdOperations, HdOperations>();
+builder.Services.AddSingleton<IWalletOperations, WalletOperations>();
+builder.Services.AddSingleton<IIndexerService, IndexerService>();
+builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddSingleton<IDerivationOperations, DerivationOperations>();
 builder.Services.AddSingleton<IFounderTransactionActions, FounderTransactionActions>();
 builder.Services.AddSingleton<ISeederTransactionActions, SeederTransactionActions>();
