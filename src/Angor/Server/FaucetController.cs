@@ -91,7 +91,7 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 
             if (res.Success)
             {
-                return Ok();
+                return Ok(signedTransaction.ToHex(_networkConfiguration.GetNetwork().Consensus.ConsensusFactory));
             }
                 
             return BadRequest(res.Message);
