@@ -114,6 +114,11 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
             throw new NotImplementedException();
         }
 
+        public void AddSettingsIfNotExist()
+        {
+            throw new NotImplementedException();
+        }
+
         public SettingsUrl GetPrimaryIndexer()
         {
             return new SettingsUrl { Url = "https://tbtc.indexer.angor.io" };
