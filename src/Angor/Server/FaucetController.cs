@@ -59,7 +59,7 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
             if (!PendingUtxo.Any())
             {
                 // we assume a miner wallet so for now just ignore amounts and send a utxo to the request address  
-                var utxos = await _indexerService.FetchUtxoAsync(addressInfo.Address, 510, 5);
+                var utxos = await _indexerService.FetchUtxoAsync(addressInfo.Address, 0, 20);
 
                 lock (PendingUtxo)
                 {
