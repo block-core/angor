@@ -133,6 +133,8 @@
     {
         _networkService.AddSettingsIfNotExist();
 
+        settingsInfo = _clientStorage.GetSettingsInfo();
+
         networkType = _networkConfiguration.GetNetwork().Name;
 
         return base.OnInitializedAsync();
