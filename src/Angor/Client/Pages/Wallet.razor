@@ -7,6 +7,7 @@
 @using Angor.Shared.Models
 @using Angor.Client.Components
 
+@inject HttpClient _httpClient;
 @inject IClientStorage storage;
 @inject IWalletStorage _walletStorage;
 @inject ILogger<Wallet> Logger;
@@ -163,7 +164,12 @@
                             <div class="col-lg-6">
                                 <h4 class="card-title">Receive Address</h4>
                                 <p id="receive-address" class="card-text">@nextReceiveAddress</p>
-                                <button class="btn btn-primary" onclick="@CopyNextReceiveAddress">Copy Address</button>
+                                <button class="btn btn-primary mr-2" onclick="@CopyNextReceiveAddress">Copy Address</button>
+                                
+                                @if (network.NetworkType == NetworkType.Testnet)
+                                {
+                                    <button class="btn btn-secondary" @onclick="GetTestCoins">Get some test coins</button>
+                                }
                             </div>
 
                             <ShowQrCode @ref="showQrCode" Data="@nextReceiveAddress" />
@@ -659,5 +665,34 @@
     {
         coinControlModal = true;
         StateHasChanged();
+    }
+
+    private async Task GetTestCoins()
+    {
+        if (Money.Satoshis(localAccountInfo.TotalBalance).ToUnit(MoneyUnit.BTC) > 10)
+        {
+            notificationComponent.ShowNotificationMessage("you already have coins!");
+            return;
+        }
+
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            var res = await _httpClient.GetAsync($"/api/faucet/send/{localAccountInfo.GetNextReceiveAddress()}");
+
+            if (res.IsSuccessStatusCode)
+            {
+                var trxhex =  await res.Content.ReadAsStringAsync();
+                var trx = network.CreateTransaction(trxhex);
+                localAccountInfo.TotalUnConfirmedBalance = trx.Outputs.FirstOrDefault()?.Value.Satoshi ?? 50;
+                return new OperationResult { Success = true };
+            }
+
+            return new OperationResult { Success = false, Message  = await res.Content.ReadAsStringAsync()};
+        });
+
+        if (operationResult is { Success: true })
+        {
+            notificationComponent.ShowNotificationMessage("Success!");
+        }
     }
 }

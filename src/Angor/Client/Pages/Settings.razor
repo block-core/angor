@@ -131,19 +131,7 @@
 
     protected override Task OnInitializedAsync()
     {
-        settingsInfo = _clientStorage.GetSettingsInfo();
-
-        if(!settingsInfo.Indexers.Any())
-        {
-            settingsInfo.Indexers.AddRange(_networkConfiguration.GetDefaultIndexerUrls());
-            _clientStorage.SetSettingsInfo(settingsInfo);
-        }
-
-        if(!settingsInfo.Relays.Any())
-        {
-            settingsInfo.Relays.AddRange(_networkConfiguration.GetDefaultRelayUrls());
-            _clientStorage.SetSettingsInfo(settingsInfo);
-        }
+        _networkService.AddSettingsIfNotExist();
 
         networkType = _networkConfiguration.GetNetwork().Name;
 
