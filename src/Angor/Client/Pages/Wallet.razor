@@ -669,11 +669,11 @@
 
     private async Task GetTestCoins()
     {
-        //if (Money.Satoshis(localAccountInfo.TotalBalance).ToUnit(MoneyUnit.BTC) > 10)
-        //{
-        //    notificationComponent.ShowNotificationMessage("you already have coins!");
-        //    return;
-        //}
+        if (Money.Satoshis(localAccountInfo.TotalBalance).ToUnit(MoneyUnit.BTC) > 10)
+        {
+            notificationComponent.ShowNotificationMessage("you already have coins!");
+            return;
+        }
 
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
@@ -695,5 +695,4 @@
             notificationComponent.ShowNotificationMessage("Success!");
         }
     }
-
 }
