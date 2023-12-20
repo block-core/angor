@@ -1,7 +1,6 @@
 @page "/wallet"
 @using Blockcore.NBitcoin
 @using Angor.Shared
-@using Blockcore.Networks
 @using Angor.Client.Services
 @using Angor.Client.Storage
 @using Angor.Shared.Models
@@ -12,7 +11,6 @@
 @inject ICacheStorage _cacheStorage;
 @inject IWalletStorage _walletStorage;
 @inject ILogger<Wallet> Logger;
-@inject INetworkConfiguration _networkConfiguration;
 @inject IWalletOperations _walletOperations
 @inject IClipboardService _clipboardService
 @inject IDerivationOperations _derivationOperations
@@ -402,9 +400,9 @@
         if (hasWallet)
         {
             var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
-            accountBalanceInfo.CalculateBalance(accountInfo, unconfirmedInfo);
+            accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
         }
 
         return Task.CompletedTask;
@@ -415,16 +413,16 @@
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
             await _walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
             
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo, unconfirmedInfo);
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
             storage.SetAccountInfo(network.Name, accountInfo);
-            _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
+            _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
 
-            accountBalanceInfo.CalculateBalance(accountInfo, unconfirmedInfo);
+            accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
 
             showQrCode.GenerateQRCode(accountBalanceInfo.AccountInfo.GetNextReceiveAddress());
 
@@ -444,7 +442,7 @@
 
             WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo, new UnconfirmedInfo());
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
             
             _walletStorage.SaveWalletWords(data);
             storage.SetAccountInfo(network.Name,accountInfo);
@@ -562,12 +560,10 @@
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo, unconfirmedInfo);
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
             storage.SetAccountInfo(network.Name, accountInfo);
-            _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
             
             await RefreshFee();
 
@@ -589,7 +585,7 @@
                 _sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.HasHistory == false).Address;
             }
             
-            _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, unconfirmedInfo, estimationsFee.FeeRate);
+            _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);
 
             return new OperationResult { Success = true };
         });
@@ -609,16 +605,17 @@
 
             var wallet = _walletStorage.GetWallet();
             var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
             var res = await _walletOperations.SendAmountToAddress(wallet, _sendInfo);
 
             if (res.Success)
             {
-                _walletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, unconfirmedInfo, res.Data);
-                accountBalanceInfo.CalculateBalance(accountInfo, unconfirmedInfo);
+                var pendingInbound = _walletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, res.Data);
+                unconfirmedInfo.AddRange(pendingInbound);
+                accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
                 storage.SetAccountInfo(network.Name, accountInfo);
-                _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
+                _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
             }
 
             return res;
@@ -665,9 +662,8 @@
                     _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
                     _sendInfo.FeeRateSat = estimationsFee.FeeRate;
                     var accountInfo = storage.GetAccountInfo(network.Name);
-                    var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
-                    _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, unconfirmedInfo, estimationsFee.FeeRate);
+                    _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);
                     
                     StateHasChanged();
                 }

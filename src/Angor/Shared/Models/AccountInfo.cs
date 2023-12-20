@@ -28,4 +28,34 @@ public class AccountInfo
     {
         return ChangeAddressesInfo.Last()?.Address;
     }
+
+    public bool IsInPendingSpent(Outpoint outpoint)
+    {
+        return AllAddresses()
+            .SelectMany(x => x.UtxoData)
+            .Any(x => x.outpoint.ToString() == outpoint.ToString());
+    }
+
+    public bool RemoveInputFromPending(Outpoint outpoint)
+    {
+        foreach (var addressInfo in AddressesInfo)
+        {
+            var utxo = addressInfo.UtxoData.FirstOrDefault(x => x.outpoint.ToString() == outpoint.ToString());
+
+            if (utxo is null) continue;
+            addressInfo.UtxoData.Remove(utxo);
+            return true;
+        }
+        
+        foreach (var addressInfo in ChangeAddressesInfo)
+        {
+            var utxo = addressInfo.UtxoData.FirstOrDefault(x => x.outpoint.ToString() == outpoint.ToString());
+
+            if (utxo is null) continue;
+            addressInfo.UtxoData.Remove(utxo);
+            return true;
+        }
+
+        return false;
+    }
 }

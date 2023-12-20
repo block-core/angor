@@ -39,12 +39,11 @@ public class WalletOperations : IWalletOperations
     }
     
     public Transaction AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo,
-        FeeEstimation feeRate)
+        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
-        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo, unconfirmedInfo);
+        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
         var builder = new TransactionBuilder(network)
@@ -61,8 +60,7 @@ public class WalletOperations : IWalletOperations
     }
 
     public Transaction AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo,
-        FeeEstimation feeRate)
+        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -73,7 +71,7 @@ public class WalletOperations : IWalletOperations
         var virtualSize = clonedTransaction.GetVirtualSize(4);
         var fee = new FeeRate(Money.Satoshis(feeRate.FeeRate)).GetFee(virtualSize);
         
-        var utxoDataWithPaths = FindOutputsForTransaction((long)fee, accountInfo, unconfirmedInfo);
+        var utxoDataWithPaths = FindOutputsForTransaction((long)fee, accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
         var totalSats = coins.coins.Sum(s => s.Amount.Satoshi);
@@ -131,86 +129,36 @@ public class WalletOperations : IWalletOperations
         return await PublishTransactionAsync(network, signedTransaction);
     }
 
-    private void UpdateAccountPendingLists(AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo)
-    {
-        // remove from the pending remove list if it was removed from the indexer
-        var pendingRemove = unconfirmedInfo.AccountPendingSpent.ToList();
-        foreach (var utxoData in pendingRemove)
-        {
-            foreach (var addressInfo in accountInfo.AllAddresses())
-            {
-                if (addressInfo.Address == utxoData.address)
-                {
-                    if (addressInfo.UtxoData.All(_ => _.outpoint.ToString() != utxoData.outpoint.ToString()))
-                    {
-                        unconfirmedInfo.AccountPendingSpent.Remove(utxoData);
-                    }
-                }
-            }
-        }
-
-        // remove from the pending add if it was removed from the indexer
-        var pendingAdd = unconfirmedInfo.AccountPendingReceive.ToList();
-        foreach (var utxoData in pendingAdd)
-        {
-            foreach (var addressInfo in accountInfo.AllAddresses())
-            {
-                if (addressInfo.Address == utxoData.address)
-                {
-                    if (addressInfo.UtxoData.Any(_ => _.outpoint.ToString() == utxoData.outpoint.ToString()))
-                    {
-                        unconfirmedInfo.AccountPendingReceive.Remove(utxoData);
-                    }
-                }
-            }
-        }
-    }
-
-    public void UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo, Transaction transaction)
+    public List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction)
     {
         Network network = _networkConfiguration.GetNetwork();
-
-        var outputs = transaction.Outputs.AsIndexedOutputs();
-        var inputs = transaction.Inputs.Select(_ => _.PrevOut).ToList();
         
-        foreach (var addressInfo in accountInfo.AllAddresses())
+        var inputs = transaction.Inputs.Select(_ => _.PrevOut.ToString()).ToList();
+
+        var accountChangeAddresses = accountInfo.ChangeAddressesInfo.Select(x => x.Address);
+        
+        var transactionHash = transaction.GetHash().ToString();
+
+        foreach (var utxoData in accountInfo.AllAddresses().SelectMany(x => x.UtxoData))
         {
             // find all spent inputs to mark them as spent
-            foreach (var utxoData in addressInfo.UtxoData)
-            {
-                foreach (var outPoint in inputs)
-                {
-                    if (utxoData.outpoint.ToString() == outPoint.ToString())
-                    {
-                        if (unconfirmedInfo.AccountPendingSpent.All(_ => _.outpoint.ToString() != utxoData.outpoint.ToString()))
-                        {
-                            unconfirmedInfo.AccountPendingSpent.Add(utxoData);
-                        }
-                    }
-                }
-            }
-
-            // find all new outputs to mark them as unspent
-            foreach (var output in outputs)
-            {
-                if (output.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString() == addressInfo.Address)
-                {
-                    var outpoint = new Outpoint { outputIndex = (int)output.N, transactionId = transaction.GetHash().ToString() };
-
-                    if (unconfirmedInfo.AccountPendingReceive.All(_ => _.outpoint != outpoint))
-                    {
-                        unconfirmedInfo.AccountPendingReceive.Add(new UtxoData
-                        {
-                            address = addressInfo.Address,
-                            scriptHex = output.TxOut.ScriptPubKey.ToHex(),
-                            outpoint = outpoint,
-                            blockIndex = 0,
-                            value = output.TxOut.Value
-                        });
-                    }
-                }
-            }
+            if (inputs.Contains(utxoData.outpoint.ToString()))
+                utxoData.InMempoolTransaction = true;
         }
+        
+        return transaction.Outputs.AsIndexedOutputs()
+                .Where(x => 
+                    accountChangeAddresses.Contains(x.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString()))
+                .Select<IndexedTxOut, UtxoData>(x =>
+                    new UtxoData
+                    {
+                        address = x.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString(),
+                        scriptHex = x.TxOut.ScriptPubKey.ToHex(),
+                        outpoint = new Outpoint(  transactionHash ,(int)x.N),
+                        blockIndex = 0,
+                        value = x.TxOut.Value
+                    })
+                .ToList();;
     }
 
     public async Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,Transaction signedTransaction)
@@ -225,13 +173,13 @@ public class WalletOperations : IWalletOperations
         return new OperationResult<Transaction> { Success = false, Message = res };
     }
 
-    public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo)
+    public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
     {
         var utxosToSpend = new List<UtxoDataWithPath>();
 
         long total = 0;
         foreach (var utxoData in accountInfo.AllAddresses().SelectMany(_ => _.UtxoData
-                         .Where(utxow => unconfirmedInfo.AccountPendingSpent.All(p => p.outpoint.ToString() != utxow.outpoint.ToString()))
+                         .Where(utxow => utxow.InMempoolTransaction == false)
                          .Select(u => new { path = _.HdPath, utxo = u }))
                      .OrderBy(o => o.utxo.blockIndex)
                      .ThenByDescending(o => o.utxo.value))
@@ -354,7 +302,7 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    public async Task UpdateAccountInfoWithNewAddressesAsync(AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo)
+    public async Task UpdateAccountInfoWithNewAddressesAsync(AccountInfo accountInfo)
     {
         ExtKey.UseBCForHMACSHA512 = true;
         Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
@@ -368,7 +316,16 @@ public class WalletOperations : IWalletOperations
         {
             var addressInfoToDelete = accountInfo.AddressesInfo.SingleOrDefault(_ => _.Address == addressInfo.Address);
             if (addressInfoToDelete != null)
+            {
+                //TODO need to update the indexer response with mempool utxo as well so it is always consistant
+                foreach (var utxoData in addressInfo.UtxoData.Where(x => x.InMempoolTransaction))
+                {
+                    var outpoint = utxoData.outpoint.ToString();
+                    var newUtxo = addressInfo.UtxoData.FirstOrDefault(x => x.outpoint.ToString() == outpoint);
+                    if (newUtxo != null) newUtxo.InMempoolTransaction = true;
+                }
                 accountInfo.AddressesInfo.Remove(addressInfoToDelete);
+            }
             
             accountInfo.AddressesInfo.Add(addressInfo);
         }
@@ -379,13 +336,20 @@ public class WalletOperations : IWalletOperations
         foreach (var changeAddressInfo in changeItems)
         {
             var addressInfoToDelete = accountInfo.ChangeAddressesInfo.SingleOrDefault(_ => _.Address == changeAddressInfo.Address);
-            if (addressInfoToDelete != null) 
+            if (addressInfoToDelete != null)
+            {
+                //TODO need to update the indexer response with mempool utxo as well so it is always consistant
+                foreach (var utxoData in addressInfoToDelete.UtxoData.Where(x => x.InMempoolTransaction))
+                {
+                    var outpoint = utxoData.outpoint.ToString();
+                    var newUtxo = addressInfoToDelete.UtxoData.FirstOrDefault(x => x.outpoint.ToString() == outpoint);
+                    if (newUtxo != null) newUtxo.InMempoolTransaction = true;
+                }
                 accountInfo.ChangeAddressesInfo.Remove(addressInfoToDelete);
+            }
             
             accountInfo.ChangeAddressesInfo.Add(changeAddressInfo);
         }
-
-        UpdateAccountPendingLists(accountInfo, unconfirmedInfo);
     }
 
     private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
@@ -508,13 +472,13 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    public decimal CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, UnconfirmedInfo unconfirmedInfo, long feeRate)
+    public decimal CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, long feeRate)
     {
         var network = _networkConfiguration.GetNetwork();
 
         if (sendInfo.SendUtxos.Count == 0)
         {
-            var utxosToSpend = FindOutputsForTransaction(sendInfo.SendAmountSat, accountInfo, unconfirmedInfo);
+            var utxosToSpend = FindOutputsForTransaction(sendInfo.SendAmountSat, accountInfo);
 
             foreach (var data in utxosToSpend) //TODO move this out of the fee calculation
             {

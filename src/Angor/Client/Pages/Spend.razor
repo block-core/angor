@@ -255,8 +255,7 @@
     private async Task CheckSpentFund()
     {
         List<QueryTransaction> trxs = new();
-        var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
-        bool modified = false;
+        var accountInfo = storage.GetAccountInfo(network.Name);
 
         foreach (StageData stageData in stageDatas)
         {
@@ -280,22 +279,13 @@
                 {
                     item.IsSpent = true;
 
-                    unconfirmedInfo.RemoveInputFromPending(Outpoint.Create(item.Trxid, item.Outputindex));
-                    modified = true;
+                    accountInfo.RemoveInputFromPending(new Outpoint(item.Trxid, item.Outputindex));
 
                     continue;
                 }
 
-                if (unconfirmedInfo.IsInPendingSpent(Outpoint.Create(item.Trxid, item.Outputindex)))
-                {
-                    item.IsSpent = true;
-                }
+                item.IsSpent = accountInfo.IsInPendingSpent(new Outpoint(item.Trxid, item.Outputindex));
             }
-        }
-
-        if (modified)
-        {
-            _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
         }
     }
 
@@ -382,10 +372,10 @@
 
             // add all outptus to the pending list
             var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
-            _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, unconfirmedInfo, signedTransaction);
-            unconfirmedInfo.AddInputsAsPending(signedTransaction);
-            _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
+            var pendingInbound = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction);
+            unconfirmedInfo.AddRange(pendingInbound);
+            _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
 
             // mark stage as spent
             stageDatas.FirstOrDefault(_ => _.StageIndex == selectedStageId)?.Items.ForEach(_ =>

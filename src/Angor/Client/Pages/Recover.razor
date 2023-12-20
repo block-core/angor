@@ -344,28 +344,34 @@
             return;
         }
 
-        var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
+        var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
         bool modified = false;
 
         foreach (var infoOutput in StageInfo.TransactionInfo.Outputs)
         {
             if (!string.IsNullOrEmpty(infoOutput.SpentInTransaction))
             {
-                unconfirmedInfo.RemoveInputFromPending(Outpoint.Create(StageInfo.TransactionInfo.TransactionId, infoOutput.Index));
-                modified = true;
+                var spent = unconfirmedInfo.FirstOrDefault(x => x.outpoint.transactionId == StageInfo.TransactionInfo.TransactionId &&
+                x.outpoint.outputIndex == infoOutput.Index);
+
+                if (spent != null)
+                {
+                    unconfirmedInfo.Remove(spent);
+                    modified = true;
+                }
             }
         }
 
         if (modified)
         {
-            _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
+            _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
         }
 
         var penaltyExpieryDate = Utils.UnixTimeToDateTime(StageInfo.TransactionInfo.Timestamp).AddDays(project.PenaltyDays);
-
+        var accountInfo = storage.GetAccountInfo(network.Name);
         foreach (var item in StageInfo.Items)
         {
-            if (unconfirmedInfo.IsInPendingSpent(Outpoint.Create(StageInfo.Trxid, item.Outputindex)))
+            if (accountInfo.IsInPendingSpent(new Outpoint(StageInfo.Trxid, item.Outputindex)))
             {
                 item.IsSpent = true;
                 item.SpentTo = "pending confirmations";
@@ -439,9 +445,12 @@
     
     private void AddTransactionToPending(Transaction transaction)
     {
-        var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
-        unconfirmedInfo.AddInputsAsPending(transaction);
-        _cacheStorage.SetUnconfirmedInfo(unconfirmedInfo);
+        var accountInfo = storage.GetAccountInfo(network.Name);
+        var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
+        var pendingInbound = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, transaction);
+        unconfirmedInfo.AddRange(pendingInbound);
+        _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
+        storage.SetAccountInfo(network.Name,accountInfo);
     }
 
     private async Task PrepareToRecoverCoins()
@@ -455,7 +464,6 @@
 
             recoverySigs = storage.GetSignaturess().First(p => p.ProjectIdentifier == ProjectId);
             var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
 
@@ -477,7 +485,7 @@
             foreach (var txIn in removeTxin) unsignedRecoveryTransaction.Inputs.Remove(txIn);
 
             // add fee to the recovery trx
-            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, unconfirmedInfo, feeData.SelectedFeeEstimation);
+            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
             recoverySigs.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
 
@@ -509,9 +517,8 @@
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
                    
                     var accountInfo = storage.GetAccountInfo(network.Name);
-                    var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
-                    recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, unconfirmedInfo, feeData.SelectedFeeEstimation);
+                    recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
                     recoverySigs.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
 

@@ -377,7 +377,6 @@
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
@@ -393,7 +392,7 @@
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project, investorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, _walletStorage.GetWallet(), accountInfo, unconfirmedInfo, feeData.SelectedFeeEstimation);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
             storage.AddInvestmentProject(project); //TODO David need to verify that this is the correct place to change state in storage
             
@@ -424,9 +423,8 @@
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
                    
                     var accountInfo = storage.GetAccountInfo(network.Name);
-                    var unconfirmedInfo = _cacheStorage.GetUnconfirmedInfo();
-
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, _walletStorage.GetWallet(), accountInfo, unconfirmedInfo, feeData.SelectedFeeEstimation);
+                    
+                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
                     StateHasChanged();
                 }

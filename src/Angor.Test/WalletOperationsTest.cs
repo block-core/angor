@@ -75,11 +75,11 @@ public class WalletOperationsTest : AngorTestData
         {
             var res = new List<UtxoData>
             {
-                new UtxoData
+                new ()
                 {
                     address =address, 
                     value = Money.Satoshis(amount).Satoshi, 
-                    outpoint = new Outpoint {outputIndex = outputIndex++, transactionId = uint256.Zero.ToString() }, 
+                    outpoint = new Outpoint( uint256.Zero.ToString(),outputIndex++ ), 
                     scriptHex = new Blockcore.NBitcoin.BitcoinWitPubKeyAddress(address,network).ScriptPubKey.ToHex()
                 }
             };
@@ -89,7 +89,7 @@ public class WalletOperationsTest : AngorTestData
 
         _sut.UpdateDataForExistingAddressesAsync(accountInfo).Wait();
 
-        _sut.UpdateAccountInfoWithNewAddressesAsync(accountInfo, new UnconfirmedInfo()).Wait();
+        _sut.UpdateAccountInfoWithNewAddressesAsync(accountInfo).Wait();
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public class WalletOperationsTest : AngorTestData
         recoveryTransaction.Outputs.RemoveAt(0);
         recoveryTransaction.Inputs.RemoveAt(0);
 
-        var recoveryTransactions = _sut.AddFeeAndSignTransaction(changeAddress, recoveryTransaction, words, accountInfo, new UnconfirmedInfo(), new FeeEstimation { FeeRate = 3000 });
+        var recoveryTransactions = _sut.AddFeeAndSignTransaction(changeAddress, recoveryTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
 
         // add the inputs of the investment trx
         List<Blockcore.NBitcoin.Coin> coins = new();
@@ -168,7 +168,7 @@ public class WalletOperationsTest : AngorTestData
         var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, projectInfo.FounderKey);
 
         var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investorKey, Money.Coins(investmentAmount).Satoshi);
-        var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, new UnconfirmedInfo(), new FeeEstimation { FeeRate = 3000 });
+        var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
         var strippedInvestmentTransaction = network.CreateTransaction(signedInvestmentTransaction.ToHex());
         strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
         Assert.Equal(signedInvestmentTransaction.GetHash(), strippedInvestmentTransaction.GetHash());
@@ -184,7 +184,7 @@ public class WalletOperationsTest : AngorTestData
         recoveryTransaction.Outputs.RemoveAt(0);
         recoveryTransaction.Inputs.RemoveAt(0);
 
-        var signedRecoveryTransaction = _sut.AddFeeAndSignTransaction(accountInfo.GetNextReceiveAddress(), recoveryTransaction, words, accountInfo, new UnconfirmedInfo(), new FeeEstimation { FeeRate = 3000 });
+        var signedRecoveryTransaction = _sut.AddFeeAndSignTransaction(accountInfo.GetNextReceiveAddress(), recoveryTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
 
         // add the inputs of the investment trx
         List<Blockcore.NBitcoin.Coin> coins = new();

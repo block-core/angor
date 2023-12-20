@@ -10,7 +10,7 @@ public interface ICacheStorage
     bool IsProjectInStorageById(string projectId);
     List<ProjectIndexerData>? GetProjectIndexerData();
     void SetProjectIndexerData(List<ProjectIndexerData> list);
-    UnconfirmedInfo GetUnconfirmedInfo();
-    void SetUnconfirmedInfo(UnconfirmedInfo unconfirmedInfo);
+    List<UtxoData> GetUnconfirmedInboundFunds();
+    void SetUnconfirmedInboundFunds(List<UtxoData> unconfirmedInfo);
     void DeleteUnconfirmedInfo();
 }

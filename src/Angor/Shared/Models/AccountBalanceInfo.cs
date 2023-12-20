@@ -6,17 +6,22 @@ public class AccountBalanceInfo
     public long TotalUnconfirmedBalance { get; set; }
 
     public AccountInfo AccountInfo { get; private set; } = new ();
-    public UnconfirmedInfo UnconfirmedInfo { get; private set; } = new ();
+    
+    public List<UtxoData> AccountPendingReceive { get; set; } = new();
 
-    public void CalculateBalance(AccountInfo account, UnconfirmedInfo unconfirmedInfo)
+    public void UpdateAccountBalanceInfo(AccountInfo account,List<UtxoData> accountPendingReceive)
     {
         AccountInfo = account;
-        UnconfirmedInfo = unconfirmedInfo;
+        AccountPendingReceive = accountPendingReceive;
 
-        var balance = AccountInfo.AllAddresses().SelectMany(s => s.UtxoData).Sum(s => s.value);
-        var balanceSpent = UnconfirmedInfo.AccountPendingSpent.Sum(s => s.value);
+        var balance = AccountInfo.AllAddresses().SelectMany(s => s.UtxoData)
+            .Sum(s => s.value);
+        
+        var balanceSpent = AccountInfo.AllAddresses().SelectMany(s => s.UtxoData
+                .Where(u => u.InMempoolTransaction))
+            .Sum(s => s.value);
 
-        var balanceUnconfirmed = UnconfirmedInfo.AccountPendingReceive.Sum(s => s.value);
+        var balanceUnconfirmed = AccountPendingReceive.Sum(s => s.value);
 
         TotalBalance = balance - balanceSpent;
         TotalUnconfirmedBalance = balanceUnconfirmed;

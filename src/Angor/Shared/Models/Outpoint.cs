@@ -1,6 +1,3 @@
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-
 namespace Angor.Shared.Models;
 
 public class Outpoint
@@ -8,23 +5,15 @@ public class Outpoint
     public string transactionId { get; set; }
     public int outputIndex { get; set; }
 
+    public Outpoint(){ } //Required for JSON serializer
+    
+    public Outpoint(string trxid, int index)
+    {
+        outputIndex = index; transactionId = trxid;
+    }
+    
     public override string ToString()
     {
         return $"{transactionId}-{outputIndex}";
-    }
-
-    public OutPoint ToOutPoint()
-    {
-        return new OutPoint(uint256.Parse(transactionId), outputIndex);
-    }
-
-    public static Outpoint FromOutPoint(OutPoint outPoint)
-    {
-        return new Outpoint { outputIndex = (int)outPoint.N, transactionId = outPoint.Hash.ToString() };
-    }
-
-    public static Outpoint Create(string trxid, int index)
-    {
-        return new Outpoint { outputIndex = index, transactionId = trxid };
     }
 }
