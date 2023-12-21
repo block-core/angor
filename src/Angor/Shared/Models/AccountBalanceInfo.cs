@@ -9,7 +9,7 @@ public class AccountBalanceInfo
     
     public List<UtxoData> AccountPendingReceive { get; set; } = new();
 
-    public void UpdateAccountBalanceInfo(AccountInfo account,List<UtxoData> accountPendingReceive)
+    public void UpdateAccountBalanceInfo(AccountInfo account, List<UtxoData> accountPendingReceive)
     {
         AccountInfo = account;
         AccountPendingReceive = accountPendingReceive;

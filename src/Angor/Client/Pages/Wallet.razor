@@ -6,7 +6,9 @@
 @using Angor.Shared.Models
 @using Angor.Shared.Services
 @using Angor.Client.Components
+@using Blockcore.Networks
 
+@inject HttpClient _httpClient;
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
 @inject IWalletStorage _walletStorage;
@@ -95,8 +97,13 @@
 
                 <!-- Replace '#' in 'data-bs-target' with the id of your modal -->
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" @onclick="() => walletWordsModal = true">Show Wallet Words</button>
+
+                <button class="btn btn-primary ml-2" @onclick="RefreshBalance">Refresh Balance</button>
                 
-                <button class="btn btn-primary" @onclick="RefreshBalance">Refresh Balance</button>
+                @if (network.NetworkType == NetworkType.Testnet && accountBalanceInfo.TotalBalance < 10)
+                {
+                    <button class="btn btn-secondary ml-2" @onclick="GetTestCoins">Get some test coins</button>
+                }
                 
             </div>
             
@@ -157,6 +164,7 @@
         <div class="row mt-4">
             <div class="col-lg-12">
                 <h2>Receive</h2>
+
                 <div class="card">
                     <div class="card-body">
                         <div class="row">
@@ -171,7 +179,7 @@
                                         </div>
                                     </div>
                                 </div>
-
+                                
                                 <ShowQrCode @ref="showQrCode" Data="@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()" />
                             </div>
                         </div>
@@ -455,7 +463,8 @@
             
             _walletStorage.SaveWalletWords(data);
             storage.SetAccountInfo(network.Name,accountInfo);
-            
+            accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
+
             // pre-derive the angor wallet keys 
             FounderKeyCollection founderKeyCollection = _derivationOperations.DeriveProjectKeys(data, NetworkConfiguration.AngorTestKey);
             storage.SetFounderKeys(founderKeyCollection);
@@ -684,5 +693,40 @@
     {
         coinControlModal = true;
         StateHasChanged();
+    }
+
+    private async Task GetTestCoins()
+    {
+        if (Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC) > 10)
+        {
+            notificationComponent.ShowNotificationMessage("you already have coins!");
+            return;
+        }
+
+        var operationResult = await notificationComponent.LongOperation(async () =>
+        {
+            var receiveAddress = accountBalanceInfo.AccountInfo.GetNextReceiveAddress();
+
+            var res = await _httpClient.GetAsync($"/api/faucet/send/{receiveAddress}");
+
+            if (res.IsSuccessStatusCode)
+            {
+                var trxhex =  await res.Content.ReadAsStringAsync();
+                var trx = network.CreateTransaction(trxhex);
+                var unconfirmedInboundFunds = _cacheStorage.GetUnconfirmedInboundFunds();
+                unconfirmedInboundFunds.Add(new UtxoData { InMempoolTransaction = true, address = receiveAddress, value = trx.Outputs.FirstOrDefault()?.Value.Satoshi ?? Money.Coins(50).Satoshi, outpoint = new Outpoint(trx.GetHash().ToString(), 0) });
+                _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInboundFunds);
+                accountBalanceInfo.UpdateAccountBalanceInfo(accountBalanceInfo.AccountInfo, unconfirmedInboundFunds);
+
+                return new OperationResult { Success = true };
+            }
+
+            return new OperationResult { Success = false, Message  = await res.Content.ReadAsStringAsync()};
+        });
+
+        if (operationResult is { Success: true })
+        {
+            notificationComponent.ShowNotificationMessage("Success!");
+        }
     }
 }

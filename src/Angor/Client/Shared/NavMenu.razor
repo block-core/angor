@@ -107,6 +107,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _networkService.AddSettingsIfNotExist();
+
         await _networkService.CheckServices();
 
         await base.OnInitializedAsync();

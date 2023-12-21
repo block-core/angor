@@ -11,12 +11,31 @@ namespace Angor.Shared.Services
         private readonly INetworkStorage _networkStorage;
         private readonly HttpClient _httpClient;
         private readonly ILogger<NetworkService> _logger;
+        private readonly INetworkConfiguration _networkConfiguration;
 
-        public NetworkService(INetworkStorage networkStorage, HttpClient httpClient, ILogger<NetworkService> logger)
+        public NetworkService(INetworkStorage networkStorage, HttpClient httpClient, ILogger<NetworkService> logger, INetworkConfiguration networkConfiguration)
         {
             _networkStorage = networkStorage;
             _httpClient = httpClient;
             _logger = logger;
+            _networkConfiguration = networkConfiguration;
+        }
+
+        public void AddSettingsIfNotExist()
+        {
+            var settings = _networkStorage.GetSettings();
+
+            if (!settings.Indexers.Any())
+            {
+                settings.Indexers.AddRange(_networkConfiguration.GetDefaultIndexerUrls());
+                _networkStorage.SetSettings(settings);
+            }
+
+            if (!settings.Relays.Any())
+            {
+                settings.Relays.AddRange(_networkConfiguration.GetDefaultRelayUrls());
+                _networkStorage.SetSettings(settings);
+            }
         }
 
         public async Task CheckServices(bool force = false)
