@@ -61,7 +61,14 @@ public class RelaySubscriptionsHanding : IDisposable
             if (userEoseActions[_.Subscription].NumberOfInvocations == _communicationFactory.GetNumberOfRelaysConnected())
             {
                 _logger.LogInformation($"Invoking action on EOSE - {_.Subscription}");
-                value.Item.Invoke();
+                try
+                {
+                    value.Item.Invoke();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e,"Failed to invoke end of events event action");
+                }
                 userEoseActions.Remove(_.Subscription);
                 _logger.LogInformation($"Removed action on EOSE for subscription - {_.Subscription}");   
             }

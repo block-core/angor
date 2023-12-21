@@ -26,6 +26,7 @@ public interface IWalletOperations
         Transaction signedTransaction);
 
     Transaction AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo,
-        FeeEstimation feeRate);
+        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate);
+
+    List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction);
 }

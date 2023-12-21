@@ -39,4 +39,18 @@ public class LocalSessionStorage : ICacheStorage
     {
         _sessionStorageService.SetItem(BrowseIndexerData,list);
     }
+
+    public List<UtxoData> GetUnconfirmedInboundFunds()
+    {
+        return _sessionStorageService.GetItem<List<UtxoData>>("unconfirmed-info") ?? new ();
+    }
+
+    public void SetUnconfirmedInboundFunds(List<UtxoData> unconfirmedInfo)
+    {
+        _sessionStorageService.SetItem("unconfirmed-info", unconfirmedInfo);
+    }
+    public void DeleteUnconfirmedInfo()
+    {
+        _sessionStorageService.RemoveItem("unconfirmed-info");
+    }
 }

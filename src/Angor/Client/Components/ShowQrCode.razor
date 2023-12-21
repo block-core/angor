@@ -1,51 +1,70 @@
 @using Angor.Shared.Services
 @using Angor.Client.Models
+@using Angor.Client.Services
 @using Nostr.Client.Messages
 @using Nostr.Client.Messages.Metadata
 @using QRCoder
 
+@inject IClipboardService _clipboardService
 
-<div class="col-lg-6">
-    <h4 class="card-title">QR Code</h4>
-    @if (!string.IsNullOrEmpty(base64qrcode))
-    {
-        <img src="data:image /png;base64,@base64qrcode" class="card-img-top qrcode" alt="QR Code"/>
-    }
-</div>
+<!-- Trigger Button -->
+<button class="btn btn-secondary qr-button" @onclick="ShowModal">Show QR Code</button>
+
+<!-- Modal -->
+@if (showModal)
+{
+    <div class="modal fade show d-block" id="qrcodeModal" tabindex="-1" aria-labelledby="qrcodeModalLabel" aria-hidden="true">
+        <div class="modal-dialog custom-modal-size">
+            <!-- Custom modal size -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="coinControlModalLabel">QR Code</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="HideModal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img src="data:image/png;base64,@base64qrcode" class="qrcode-image" alt="QR Code" />
+                    <div class="address-container">
+                        <div class="d-flex align-items-center">
+                            <p id="receive-address" class="card-text mb-0">@Data</p>
+                            <button class="btn btn-outline-secondary btn-sm address-copy-button" @onclick="CopyToClipboard">
+                                <i class="oi oi-file"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
 
 @code {
 
     [Parameter]
     public string Data { get; set; }
 
-    private static string lastqrcode;
-    private static string lastaddress;
     private string base64qrcode;
 
-    protected override async Task OnInitializedAsync()
+    private bool showModal = false;
+
+    private void ShowModal()
     {
         GenerateQRCode(Data);
+        showModal = true;
     }
 
-    public Task GenerateQRCode(string newData)
+    private void HideModal()
+    {
+        showModal = false;
+    }
+
+    public void GenerateQRCode(string newData)
     {
         Data = newData;
 
-        if (lastaddress == Data)
-        {
-            base64qrcode = lastqrcode;
-            return Task.CompletedTask;
-        }
+        base64qrcode = GenerateQRCodeInternal(Data);
 
-        return Task.Run(() =>
-        {
-            base64qrcode = GenerateQRCodeInternal(Data);
-            lastqrcode = base64qrcode;
-            lastaddress = Data;
-
-            StateHasChanged();
-
-        });
+        StateHasChanged();
     }
 
     public static string GenerateQRCodeInternal(string content)
@@ -55,4 +74,30 @@
         using PngByteQRCode pngByteQRCode = new PngByteQRCode(qrCodeData);
         return Convert.ToBase64String(pngByteQRCode.GetGraphic(10));
     }
+
+    private async Task CopyToClipboard()
+    {
+        await _clipboardService.WriteTextAsync(Data);
+
+    }
 }
+
+<style>
+    .custom-modal-size {
+        max-width: 450px; /* Adjust this value as needed */
+    }
+
+    .modal-content {
+        padding: 10px; /* Reduced padding */
+    }
+
+    .modal-body {
+        padding: 10px; /* Reduced padding */
+    }
+
+    .qrcode-image {
+        width: 100%; /* Image takes full width of the modal body */
+        height: auto; /* Maintain aspect ratio */
+    }
+
+</style>

@@ -4,12 +4,14 @@
 @using Angor.Client.Services
 @using Angor.Shared.Models
 @using Angor.Shared.ProtocolNew
+@using Angor.Shared.Services
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
+@using ITransactionSignature = NBitcoin.ITransactionSignature
 
-@inject HttpClient Http
 @inject IClientStorage storage;
+@inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IDerivationOperations _derivationOperations
@@ -24,18 +26,17 @@
     return;
 }
 
-<h3>Founder Stage Claim</h3>
-<h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
-
-<div class="container">
+<div class="container my-4">
+    <h1>Founder Stage Claim</h1>
+    <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
 
     <NotificationComponent @ref="notificationComponent" />
 
     @foreach (var stage in stageDatas)
     {
         bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
-        var investedCount = stage.Items.Count(c => c.IsSepnt == false);
-        var investedAmount = stage.Items.Where(c => c.IsSepnt == false).Sum(c => c.Amount);
+        var investedCount = stage.Items.Count(c => c.IsSpent == false);
+        var investedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
 
         <div class="card mb-3">
             <div class="card-body">
@@ -43,7 +44,7 @@
                     <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
                     @if (stageisActive)
                     {
-                        <button class="btn btn-success" @onclick="() => ClaimCoins(stage.StageIndex)">Claim Coins</button>
+                        <button class="btn btn-success" disabled="@(investedCount == 0)" @onclick="() => ClaimCoins(stage.StageIndex)">Claim Coins</button>
                     }
                     else
                     {
@@ -67,13 +68,13 @@
 
                             <div class="d-flex mb-2">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" disabled="@(!stageisActive || transaction.IsSepnt)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
+                                    <input class="form-check-input" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
                                 </div>
                                 <div class="flex-grow-1 ms-3">
                                     <p class="mb-0">
                                         @transaction.Amount @network.CoinTicker - utxo : @transaction.Trxid-@transaction.Outputindex
 
-                                        @if (transaction.IsSepnt)
+                                        @if (transaction.IsSpent)
                                         {
                                             <p class="text-primary">spent</p>
                                         }
@@ -102,7 +103,7 @@
                         <h5 class="modal-title">Confirmation</h5>
                         <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body modal-body-scroll">
                         
                         <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
 
@@ -169,7 +170,7 @@
         public int Outputindex;
         public string OutputAddress;
         public decimal Amount;
-        public bool IsSepnt;
+        public bool IsSpent;
     } 
 
     List<StageData> stageDatas = new();
@@ -210,8 +211,6 @@
     private async Task FindInvestments()
     {
         var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
-
-        var network = _NetworkConfiguration.GetNetwork();
 
         var tasks = trxs.Select(async _ =>
         {
@@ -255,46 +254,43 @@
 
     private async Task CheckSpentFund()
     {
-        SettingsUrl indexer = _NetworkConfiguration.GetIndexerUrl();
-
         List<QueryTransaction> trxs = new();
+        var accountInfo = storage.GetAccountInfo(network.Name);
 
         foreach (StageData stageData in stageDatas)
         {
             foreach (var item in stageData.Items)
             {
-                if (item.IsSepnt)
+                if (item.IsSpent)
                     continue;
 
                 QueryTransaction? trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
 
                 if (trx == null)
                 {
-                    var url = $"/query/transaction/{item.Trxid}";
-
-                    Console.WriteLine($"fetching {url}");
-
-                    var response = await Http.GetAsync(indexer.Url + url);
-                    trx = await response.Content.ReadFromJsonAsync<QueryTransaction>();
+                    trx = await _IndexerService.GetTransactionInfoByIdAsync(item.Trxid);
 
                     trxs.Add(trx);
                 }
 
                 var output = trx.Outputs.First(outp => outp.Index == item.Outputindex);
 
-
                 if (!string.IsNullOrEmpty(output.SpentInTransaction))
                 {
-                    item.IsSepnt = true;
+                    item.IsSpent = true;
+
+                    accountInfo.RemoveInputFromPending(new Outpoint(item.Trxid, item.Outputindex));
+
+                    continue;
                 }
+
+                item.IsSpent = accountInfo.IsInPendingSpent(new Outpoint(item.Trxid, item.Outputindex));
             }
         }
     }
 
     private async Task ClaimCoins(int stageId)
     {
-        var network = _NetworkConfiguration.GetNetwork();
-
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             selectedStageId = stageId;
@@ -318,7 +314,6 @@
             var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
 
             var keys = storage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
-
 
             var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet(), keys.Index);
 
@@ -370,12 +365,24 @@
         {
             showCreateModal = false;
 
-            var network = _NetworkConfiguration.GetNetwork();
-
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
             if (!response.Success)
                 return response;
+
+            // add all outptus to the pending list
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
+            var pendingInbound = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction);
+            unconfirmedInfo.AddRange(pendingInbound);
+            _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
+
+            // mark stage as spent
+            stageDatas.FirstOrDefault(_ => _.StageIndex == selectedStageId)?.Items.ForEach(_ =>
+            {
+                if (signedTransaction.Inputs.Any(a => _.Trxid == a.PrevOut.Hash.ToString() && _.Outputindex == a.PrevOut.N))
+                    _.IsSpent = true;
+            });
 
             return new OperationResult { Success = response.Success, Message = response.Message };
         });

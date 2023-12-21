@@ -39,8 +39,7 @@ public class WalletOperations : IWalletOperations
     }
     
     public Transaction AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo,
-        FeeEstimation feeRate)
+        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -60,10 +59,8 @@ public class WalletOperations : IWalletOperations
         return signTransaction;
     }
 
-
     public Transaction AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo,
-        FeeEstimation feeRate)
+        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -128,8 +125,40 @@ public class WalletOperations : IWalletOperations
             .SendEstimatedFees(new FeeRate(Money.Coins(sendInfo.FeeRate)));
 
         var signedTransaction = builder.BuildTransaction(true);
-        
+
         return await PublishTransactionAsync(network, signedTransaction);
+    }
+
+    public List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction)
+    {
+        Network network = _networkConfiguration.GetNetwork();
+        
+        var inputs = transaction.Inputs.Select(_ => _.PrevOut.ToString()).ToList();
+
+        var accountChangeAddresses = accountInfo.ChangeAddressesInfo.Select(x => x.Address);
+        
+        var transactionHash = transaction.GetHash().ToString();
+
+        foreach (var utxoData in accountInfo.AllAddresses().SelectMany(x => x.UtxoData))
+        {
+            // find all spent inputs to mark them as spent
+            if (inputs.Contains(utxoData.outpoint.ToString()))
+                utxoData.InMempoolTransaction = true;
+        }
+        
+        return transaction.Outputs.AsIndexedOutputs()
+                .Where(x => 
+                    accountChangeAddresses.Contains(x.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString()))
+                .Select<IndexedTxOut, UtxoData>(x =>
+                    new UtxoData
+                    {
+                        address = x.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString(),
+                        scriptHex = x.TxOut.ScriptPubKey.ToHex(),
+                        outpoint = new Outpoint(  transactionHash ,(int)x.N),
+                        blockIndex = 0,
+                        value = x.TxOut.Value
+                    })
+                .ToList();;
     }
 
     public async Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,Transaction signedTransaction)
@@ -146,12 +175,11 @@ public class WalletOperations : IWalletOperations
 
     public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
     {
-        var utxos = accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo);
-
         var utxosToSpend = new List<UtxoDataWithPath>();
 
         long total = 0;
-        foreach (var utxoData in utxos.SelectMany(_ => _.UtxoData
+        foreach (var utxoData in accountInfo.AllAddresses().SelectMany(_ => _.UtxoData
+                         .Where(utxow => utxow.InMempoolTransaction == false)
                          .Select(u => new { path = _.HdPath, utxo = u }))
                      .OrderBy(o => o.utxo.blockIndex)
                      .ThenByDescending(o => o.utxo.value))
@@ -288,7 +316,16 @@ public class WalletOperations : IWalletOperations
         {
             var addressInfoToDelete = accountInfo.AddressesInfo.SingleOrDefault(_ => _.Address == addressInfo.Address);
             if (addressInfoToDelete != null)
+            {
+                //TODO need to update the indexer response with mempool utxo as well so it is always consistant
+                foreach (var utxoData in addressInfo.UtxoData.Where(x => x.InMempoolTransaction))
+                {
+                    var outpoint = utxoData.outpoint.ToString();
+                    var newUtxo = addressInfo.UtxoData.FirstOrDefault(x => x.outpoint.ToString() == outpoint);
+                    if (newUtxo != null) newUtxo.InMempoolTransaction = true;
+                }
                 accountInfo.AddressesInfo.Remove(addressInfoToDelete);
+            }
             
             accountInfo.AddressesInfo.Add(addressInfo);
         }
@@ -299,13 +336,20 @@ public class WalletOperations : IWalletOperations
         foreach (var changeAddressInfo in changeItems)
         {
             var addressInfoToDelete = accountInfo.ChangeAddressesInfo.SingleOrDefault(_ => _.Address == changeAddressInfo.Address);
-            if (addressInfoToDelete != null) 
+            if (addressInfoToDelete != null)
+            {
+                //TODO need to update the indexer response with mempool utxo as well so it is always consistant
+                foreach (var utxoData in addressInfoToDelete.UtxoData.Where(x => x.InMempoolTransaction))
+                {
+                    var outpoint = utxoData.outpoint.ToString();
+                    var newUtxo = addressInfoToDelete.UtxoData.FirstOrDefault(x => x.outpoint.ToString() == outpoint);
+                    if (newUtxo != null) newUtxo.InMempoolTransaction = true;
+                }
                 accountInfo.ChangeAddressesInfo.Remove(addressInfoToDelete);
+            }
             
             accountInfo.ChangeAddressesInfo.Add(changeAddressInfo);
         }
-
-        accountInfo.TotalBalance = accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo).SelectMany(s => s.UtxoData).Sum(s => s.value);
     }
 
     private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
@@ -369,12 +413,14 @@ public class WalletOperations : IWalletOperations
 
     public async Task<(string address, List<UtxoData> data)> FetchUtxoForAddressAsync(string address)
     {
+        // cap utxo count to max 1000 items, this is
+        // mainly to get miner wallets to work fine
+        var maxutxo = 200; 
+
         var limit = 50;
         var offset = 0;
         List<UtxoData> allItems = new();
         
-        SettingsUrl indexer = _networkConfiguration.GetIndexerUrl();
-
         do
         {
             // this is inefficient look at headers to know when to stop
@@ -388,8 +434,18 @@ public class WalletOperations : IWalletOperations
             if (utxo.Count < limit)
                 break;
 
+            if (allItems.Count >= maxutxo)
+            {
+                _logger.LogWarning($"utxo scan for address {address} was stopped after the limit of {maxutxo} was reached.");
+                break;
+            }
+                
+
             offset += limit;
         } while (true);
+
+        // todo: dan - this is a hack until the endpoint offset is fixed
+        allItems = allItems.DistinctBy(d => d.outpoint.ToString()).ToList();
 
         return (address, allItems);
     }
@@ -416,7 +472,7 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    public decimal CalculateTransactionFee(SendInfo sendInfo,AccountInfo accountInfo, long feeRate)
+    public decimal CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, long feeRate)
     {
         var network = _networkConfiguration.GetNetwork();
 

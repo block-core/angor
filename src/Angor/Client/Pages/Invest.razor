@@ -21,6 +21,7 @@
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
+@inject ICacheStorage _cacheStorage;
 @inject ICacheStorage SessionStorage;
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
@@ -28,7 +29,6 @@
 @inject ISignService _SignService
 
 @inject IInvestorTransactionActions _InvestorTransactionActions
-
 
 @if (!hasWallet)
 {
@@ -55,7 +55,7 @@
 }
 
 <div class="container py-3">
-    <h2 class="mb-4">Investment Page</h2>
+    <h1 class="mb-4">Investment Page</h1>
     <p>Here is a small explanation of the project. You can <a href="view/@ProjectId">view more details about the project here</a>.</p>
     
     <p>ProjectId: @ProjectId</p>
@@ -105,7 +105,7 @@
                             <h5 class="modal-title">Confirmation</h5>
                             <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body modal-body-scroll">
                             <p class ="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
                             <p class="mb-1"><strong>Founder Key:</strong> @project.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
 
@@ -170,25 +170,43 @@
         }
     }
     
-    @if(recoverySigs?.Signatures.Any() == true)
+    @if (recoverySigs != null)
     {
-        <div class="align-content-center">
-            @if (!validatingsignaturs)
-            {
-                <h5 class="modal-title">The founder has signed the recovery transaction</h5>
-                <button type="button" class="btn-success" @onclick="PublishSignedTransactionAsync">Invest</button>
-            }
-            else
-            {
-                <div class="loader"></div>
-            }
-        </div>
-    }
-    else
-    {
-        <div class="align-content-center">
-            <p>Waiting for the founder to sign the investment request</p>
-        </div>
+        @if (recoverySigs?.Signatures.Any() == true)
+        {
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h4>Founder has signed</h4>
+                </div>
+                <div class="card-body">
+                    
+                    @if (!validatingsignaturs)
+                    {
+                        <p class="modal-title">The founder has signed the recovery transaction, you may now invest.</p>
+                        <br/>
+                        <button type="button" class="btn btn-success" @onclick="PublishSignedTransactionAsync">Invest</button>
+                    }
+                    else
+                    {
+                        <div class="loader"></div>
+                    }
+
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card mt-3 text-center">
+                <div class="card-header">
+                    <h4>Waiting for the founder to approve</h4>
+                </div>
+                <div class="card-body">
+                    @*<p>Waiting for the founder to sign the investment request</p>*@
+                    
+                    <div class="loader-slow"></div>
+                </div>
+            </div>
+        }
     }
 </div>
 
@@ -405,7 +423,7 @@
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
                    
                     var accountInfo = storage.GetAccountInfo(network.Name);
-
+                    
                     signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
                     StateHasChanged();
@@ -514,6 +532,14 @@
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
+            
+            var spendUtxos = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction);
+            
+            unspentInfo.AddRange(spendUtxos);
+            SessionStorage.SetUnconfirmedInboundFunds(unspentInfo);
+            
             return response.Success ? new SuccessOperationResult() : response;
         });
 
@@ -525,7 +551,7 @@
         }
         else
         {
-    //TODO David remove signatures from storage on fail?
+            //TODO David remove signatures from storage on fail?
             validatingsignaturs = false;
             notificationComponent.ShowErrorMessage(operationResult.Message);
             StateHasChanged();

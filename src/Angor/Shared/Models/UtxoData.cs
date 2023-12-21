@@ -9,6 +9,8 @@ public class UtxoData
     public int blockIndex { get; set; }
     public bool coinBase { get; set; }
     public bool coinStake { get; set; }
+
+    public bool InMempoolTransaction { get; set; }
 }
 
 public class UtxoDataWithPath

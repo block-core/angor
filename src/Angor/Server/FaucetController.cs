@@ -80,7 +80,7 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 
             Transaction trx = network.CreateTransaction();
             trx.AddOutput(Money.Satoshis(list.First().UtxoData.value) - Money.Satoshis(10000), BitcoinWitPubKeyAddress.Create(address, network));
-            trx.AddInput(new TxIn { PrevOut = list.First().UtxoData.outpoint.ToOutPoint() });
+            trx.AddInput(new TxIn { PrevOut = OutPoint.Parse(list.First().UtxoData.outpoint.ToString()) });
 
             var signedTransaction = new TransactionBuilder(network)
                 .AddCoins(coins)

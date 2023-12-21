@@ -183,7 +183,7 @@ else
             SendToAddress = privateFounderKey.Neuter().PubKey.GetSegwitAddress(network).ToString()
         };
 
-        _walletOperations.CalculateTransactionFee(sendInfo, localAccountInfo, 1000);
+        _walletOperations.CalculateTransactionFee(sendInfo, localAccountInfo,  1000);
 
         var fee = await _walletOperations.GetFeeEstimationAsync();
 
@@ -193,8 +193,7 @@ else
         founderTransaction = FounderTransactionActions.SpendFounderStage(context.ProjectInfo, new List<string>(){ transaction.ToHex()}, 1,
             testAddress.ScriptPubKey , privateFounderKey.PrivateKey.ToHex(network.Consensus.ConsensusFactory), fee.First());
         
-        transaction = _walletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transaction, walletWords, localAccountInfo,
-            fee.First());
+        transaction = _walletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transaction, walletWords, localAccountInfo, fee.First());
         
         ShowTransaction = true;
     }

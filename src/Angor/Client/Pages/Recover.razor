@@ -5,11 +5,13 @@
 @using Angor.Client.Services
 @using Angor.Shared.Models
 @using Angor.Shared.ProtocolNew
+@using Angor.Shared.Services
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 
 @inject IClientStorage storage;
+@inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IDerivationOperations _derivationOperations
@@ -25,10 +27,8 @@
     return;
 }
 
-<h3>Recover funds</h3>
-
-<div class="container">
-
+<div class="container my-4">
+    <h1>Recover funds</h1>
     <NotificationComponent @ref="notificationComponent" />
 
     <p style="margin-bottom: 20px;">
@@ -42,6 +42,11 @@
     
     <p>Total funds to recover = @StageInfo.TotalSpendable @network.CoinTicker</p>
     
+    @if (trxNotFound)
+    {
+        <p class="alert alert-danger">Transaction was not found it may still be confirming</p>
+    }
+
     @if (StageInfo.CanRelease)
     {
         <p>Total funds in penalty = @StageInfo.TotalInPenalty @network.CoinTicker</p>
@@ -61,7 +66,9 @@
     {
         <button class="btn btn-primary" @onclick="PrepareEndOfProjectCoins">End of project</button>
     }
-
+    
+    <br/>
+    <br />
     <table class="table">
         <thead>
             <tr>
@@ -100,7 +107,7 @@
                         <h5 class="modal-title">Recovery Confirmation</h5>
                         <button type="button" class="btn-close" @onclick="() => showRecoveryModal = false"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body modal-body-scroll">
 
                         <p class="mb-1">The number of stages to be recovered is @StageInfo.Items.Count(s => !s.IsSpent) </p>
 
@@ -137,7 +144,7 @@
                         <h5 class="modal-title">Release Recovery Confirmation</h5>
                         <button type="button" class="btn-close" @onclick="() => showRecoveryReleaseModal = false"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body modal-body-scroll">
 
                         <p class="mb-1">The amount to be released from the penalty = @Money.Satoshis(releaseRecoveryTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
@@ -172,7 +179,7 @@
                         <h5 class="modal-title">End Of project Confirmation</h5>
                         <button type="button" class="btn-close" @onclick="() => showEndOfProjectModal = false"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body modal-body-scroll">
 
                         <p class="mb-1">The amount to claim back after project ended = @Money.Satoshis(endOfProjectTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
@@ -221,7 +228,7 @@
 
     private FeeData feeData = new();
 
-
+    private bool trxNotFound = false;
     public class StageData
     {
         public string Trxid;
@@ -283,7 +290,16 @@
     {
         var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
 
-        var trx = trxs.First(f => f.TransactionId == recoverySigs.TransactionId);
+        var trx = trxs.FirstOrDefault(f => f.TransactionId == recoverySigs.TransactionId);
+
+        if (trx == null)
+        {
+            explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{recoverySigs.TransactionId}";
+            trxNotFound = true;
+            return;
+        }
+
+        trxNotFound = false;
 
         if (investmentTransaction == null)
         {
@@ -323,10 +339,47 @@
 
     private async Task CheckSpentFund()
     {
-        var penaltyExpieryDate = Utils.UnixTimeToDateTime(StageInfo.TransactionInfo.Timestamp).AddDays(project.PenaltyDays);
+        if (StageInfo.TransactionInfo == null)
+        {
+            return;
+        }
 
+        var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
+        bool modified = false;
+
+        foreach (var infoOutput in StageInfo.TransactionInfo.Outputs)
+        {
+            if (!string.IsNullOrEmpty(infoOutput.SpentInTransaction))
+            {
+                var spent = unconfirmedInfo.FirstOrDefault(x => x.outpoint.transactionId == StageInfo.TransactionInfo.TransactionId &&
+                x.outpoint.outputIndex == infoOutput.Index);
+
+                if (spent != null)
+                {
+                    unconfirmedInfo.Remove(spent);
+                    modified = true;
+                }
+            }
+        }
+
+        if (modified)
+        {
+            _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
+        }
+
+        var penaltyExpieryDate = Utils.UnixTimeToDateTime(StageInfo.TransactionInfo.Timestamp).AddDays(project.PenaltyDays);
+        var accountInfo = storage.GetAccountInfo(network.Name);
         foreach (var item in StageInfo.Items)
         {
+            if (accountInfo.IsInPendingSpent(new Outpoint(StageInfo.Trxid, item.Outputindex)))
+            {
+                item.IsSpent = true;
+                item.SpentTo = "pending confirmations";
+                item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Unknown };
+
+                continue;
+            }
+
             var output = StageInfo.TransactionInfo.Outputs.ElementAt(item.Outputindex);
 
             if (!string.IsNullOrEmpty(output.SpentInTransaction))
@@ -343,8 +396,8 @@
                     else
                     {
                         item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty };
-                        var days = (penaltyExpieryDate - DateTime.Now).Days;
-                        item.SpentTo = days > 0 ? $"Penalty, released in {days} days" : "Penalty can be released";
+                        var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                        item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
                     }
                 }
                 else
@@ -367,8 +420,8 @@
                             }
                             case ProjectScriptTypeEnum.InvestorWithPenalty:
                             {
-                                var days = (penaltyExpieryDate - DateTime.Now).Days;
-                                item.SpentTo = days > 0 ? $"Penalty, released in {days} days" : "Penalty can be released";
+                                    var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                                    item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
                                 break;
                             }
                             case ProjectScriptTypeEnum.EndOfProject:
@@ -388,6 +441,16 @@
         StageInfo.CanRelease = (StageInfo.Items.Any(a => a.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && DateTime.UtcNow > penaltyExpieryDate);
         StageInfo.TotalInPenalty = StageInfo.Items.Where(t => t.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty).Sum(t => t.Amount);
         StageInfo.EndOfProject = project.ExpiryDate < DateTime.Now;
+    }
+    
+    private void AddTransactionToPending(Transaction transaction)
+    {
+        var accountInfo = storage.GetAccountInfo(network.Name);
+        var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
+        var pendingInbound = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, transaction);
+        unconfirmedInfo.AddRange(pendingInbound);
+        _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
+        storage.SetAccountInfo(network.Name,accountInfo);
     }
 
     private async Task PrepareToRecoverCoins()
@@ -477,6 +540,8 @@
 
             if (!response.Success)
                 return response;
+
+            AddTransactionToPending(recoveryTransaction);
 
             return new OperationResult { Success = response.Success, Message = response.Message };
         });
@@ -570,6 +635,8 @@
             if (!response.Success)
                 return response;
 
+            AddTransactionToPending(releaseRecoveryTransaction);
+
             return new OperationResult { Success = response.Success, Message = response.Message };
         });
 
@@ -582,7 +649,6 @@
             notificationComponent.ShowErrorMessage(operationResult.Message);
         }
     }
-
 
     private async Task PrepareEndOfProjectCoins()
     {
@@ -662,6 +728,8 @@
             if (!response.Success)
                 return response;
 
+            AddTransactionToPending(endOfProjectTransaction);
+
             return new OperationResult { Success = response.Success, Message = response.Message };
         });
 
@@ -674,5 +742,4 @@
             notificationComponent.ShowErrorMessage(operationResult.Message);
         }
     }
-
 }

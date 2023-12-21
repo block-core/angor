@@ -17,6 +17,7 @@
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
+@inject ICacheStorage _cacheStorage;
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
 @inject IRelayService _RelayService
@@ -152,7 +153,7 @@
                         <h5 class="modal-title">Confirmation</h5>
                         <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body modal-body-scroll">
                         <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
                         <p class="mb-1"><strong>Founder Key:</strong> @project.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
 
@@ -316,6 +317,7 @@
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             var accountInfo = storage.GetAccountInfo(network.Name);
+            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
@@ -355,6 +357,7 @@
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
+                    var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
                     signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 

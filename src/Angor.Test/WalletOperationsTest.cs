@@ -75,11 +75,11 @@ public class WalletOperationsTest : AngorTestData
         {
             var res = new List<UtxoData>
             {
-                new UtxoData
+                new ()
                 {
                     address =address, 
                     value = Money.Satoshis(amount).Satoshi, 
-                    outpoint = new Outpoint {outputIndex = outputIndex++, transactionId = uint256.Zero.ToString() }, 
+                    outpoint = new Outpoint( uint256.Zero.ToString(),outputIndex++ ), 
                     scriptHex = new Blockcore.NBitcoin.BitcoinWitPubKeyAddress(address,network).ScriptPubKey.ToHex()
                 }
             };

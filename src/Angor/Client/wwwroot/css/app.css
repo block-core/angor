@@ -27,7 +27,10 @@ h1:focus {
     background-color: #FFFBF5;
 }
 
-
+.modal-body-scroll {
+    max-height: 500px; /* Adjust this value based on your needs */
+    overflow-y: auto;
+}
 
 
 
@@ -190,6 +193,26 @@ tr[style*="cursor: pointer;"]:hover {
     background-size: 90%; /* Adjust the size of the logo as needed */
 }
 
+.loader-slow {
+    border: 12px solid #eaeaea; /* Light grey for the base circle */
+    border-top: 12px solid #f7931a; /* Bitcoin orange for the rotating part */
+    border-radius: 50%;
+    width: 100px; /* Smaller width */
+    height: 100px; /* Smaller height */
+    animation: spin 20s linear infinite;
+    background: url('../bitcoin-logo.png') no-repeat center;
+    background-size: 90%; /* Adjust the size of the logo as needed */
+    margin: 0 auto;
+}
+
+.loader-slow-container {
+    display: flex; /* Enable Flexbox */
+    justify-content: center; /* Center children horizontally */
+    align-items: center; /* Center children vertically */
+    width: 100%; /* Full width of the container */
+    height: 100px; /* Adjust the height as needed */
+}
+
 /* Safari */
 @-webkit-keyframes spin {
     0% {
@@ -216,4 +239,28 @@ tr[style*="cursor: pointer;"]:hover {
     font-size: 20px; /* Adjust the size as you prefer */
     margin-bottom: 20px; /* Distance from the loader */
     /* Add any additional styling as needed */
+}
+
+.address-container {
+    background-color: #f8f9fa; /* Light background */
+    border: 1px solid #ddd; /* Light border */
+    border-radius: 10px; /* Rounded corners */
+    padding: 10px; /* Padding inside the container */
+    cursor: pointer; /* Change cursor on hover */
+    text-align: center; /* Center-align the text */
+    margin-top: 10px; /* Spacing from the QR code */
+}
+
+.address-container:hover {
+    background-color: #e9ecef; /* Slightly darker background on hover */
+}
+
+.address-container-wrapper {
+    max-width: 450px; /* Adjust as needed */
+    margin-right: 30px; /* Space between address and QR code button */
+}
+
+.address-copy-button {
+    margin-left: 10px; /* Space between address and button */
+    cursor: pointer;
 }

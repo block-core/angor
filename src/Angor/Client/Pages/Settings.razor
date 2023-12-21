@@ -10,13 +10,13 @@
 @inject IClientStorage _clientStorage
 @inject INetworkService _networkService
 
-<div class="container">
-    
+<div class="container my-4">
+    <h1>Settings</h1><br/>
+
     <NotificationComponent @ref="notificationComponent" />
 
     <div class="row">
         <div class="col">
-            <h3>Settings</h3><br/>
 
             <p>Network Type: <strong>@networkType</strong></p>
             <p>Explorer url: <a href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">@_networkConfiguration.GetDefaultExplorerUrl().First().Url</a> </p>
