@@ -532,6 +532,14 @@
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
+            
+            var spendUtxos = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction);
+            
+            unspentInfo.AddRange(spendUtxos);
+            SessionStorage.SetUnconfirmedInboundFunds(unspentInfo);
+            
             return response.Success ? new SuccessOperationResult() : response;
         });
 

@@ -71,7 +71,7 @@ namespace Angor.Shared.Services
 
             if (OnEndOfStreamAction != null)
             {
-                userEoseActions.Add(subscriptionName,new SubscriptionCallCounter<Action>(OnEndOfStreamAction));
+                userEoseActions.TryAdd(subscriptionName,new SubscriptionCallCounter<Action>(OnEndOfStreamAction));
             }
         }
 

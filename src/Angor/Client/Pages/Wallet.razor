@@ -413,16 +413,25 @@
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
             var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
+            var unconfirmedInboundFunds = _cacheStorage.GetUnconfirmedInboundFunds();
 
             await _walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
             
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
             storage.SetAccountInfo(network.Name, accountInfo);
-            _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
+            
+            var utxos = accountInfo.AllAddresses()
+                .SelectMany(x => x.UtxoData)
+                .Select(x => x.outpoint.ToString());
 
-            accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
+            var spentToUpdate = unconfirmedInboundFunds
+                .RemoveAll(x => utxos.Contains(x.outpoint.ToString()));
+            
+            if (spentToUpdate > 0)
+                _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInboundFunds);
+
+            accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInboundFunds);
 
             showQrCode.GenerateQRCode(accountBalanceInfo.AccountInfo.GetNextReceiveAddress());
 
