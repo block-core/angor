@@ -84,7 +84,6 @@
 
             var projectsForLookup = projectsNotInList
                 .Where(_ => _.NostrPubKey != null) //For old projects in the indexer
-                 //.Where(_ => !SessionStorage.IsProjectInStorageById(_.ProjectIdentifier))
                 .Select(_ => _.NostrPubKey)
                 .ToArray();
 
@@ -94,14 +93,14 @@
                     if (!SessionStorage.IsProjectInStorageById(_.ProjectIdentifier))
                         SessionStorage.StoreProjectInfo(_);
                 },
-                    OnEndOfStreamAction:() =>
+                    OnEndOfStreamAction: () =>
                     {
                         projects = projects //Remove projects that were not found on the relays
                             .Where(_ => SessionStorage.IsProjectInStorageById(_.ProjectIdentifier))
                             .ToList();
-                        
+
                         SessionStorage.SetProjectIndexerData(projects);
-                        
+
                         StateHasChanged();
                     },
                     nostrPubKey: projectsForLookup);
