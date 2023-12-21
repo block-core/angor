@@ -244,11 +244,10 @@
                         FounderProject.LastRequestForSignaturesTime = latestApprovedTime;
                         storage.UpdateFounderProject(FounderProject);   
                     }
-                    
-                    _Logger.LogDebug($"Calling StateHasChanged in EOSE");
-                    StateHasChanged();
                 }
                 
+                _Logger.LogDebug($"Calling StateHasChanged in EOSE");
+                StateHasChanged();
                 _Logger.LogDebug($"End of messages on EOSE");
             });
     }
