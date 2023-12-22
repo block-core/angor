@@ -5,10 +5,14 @@
 @using Angor.Client.Services
 @using Angor.Shared.Services
 
-@inherits BaseComponent
 @inject INetworkConfiguration _networkConfiguration
-@inject IClientStorage _clientStorage
 @inject INetworkService _networkService
+@inject IClientStorage _clientStorage
+@inject ICacheStorage _cacheStorage;
+@inject IWalletStorage _walletStorage;
+@inject NavMenuState NavMenuState
+
+@inherits BaseComponent
 
 <div class="container my-4">
     <h1>Settings</h1><br/>
@@ -20,6 +24,50 @@
 
             <p>Network Type: <strong>@networkType</strong></p>
             <p>Explorer url: <a href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">@_networkConfiguration.GetDefaultExplorerUrl().First().Url</a> </p>
+            
+            <div class="d-flex justify-content-end">
+                <button class="btn btn-danger" @onclick="() => showWipeallModal = true">Wipe All Storage</button>
+            </div>
+
+            @if (showWipeallModal)
+            {
+                <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="coinControlModalLabel">Wipe Storage</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body modal-body-scroll">
+                                <div class="alert alert-danger" role="alert">
+                                    <h5>Are you sure you want to wipe all storage?</h5>
+                                </div>                                
+                                
+                                <p>This will wipe your wallet as well!</p>
+
+                                <!-- Checkbox for confirmation -->
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                    <label class="form-check-label" for="confirmWipeCheckbox">
+                                        I confirm I have a backup of my wallet words, yes wipe all data from this device.
+                                    </label>
+                                </div>
+                                <br/>
+                                @if (showConfirmWipeMessage)
+                                {
+                                    <p class="text-bg-danger">Please tick the box to wipe all storage!</p>
+                                }
+
+                                <button class="btn btn-danger" @onclick="WipteAllData">Wipe Storage</button>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            }
 
             <hr/> <!-- Line separator -->
             <br/>
@@ -126,6 +174,10 @@
     private string newRelayLink;
 
     private string networkType;
+
+    private bool showWipeallModal = false;
+    private bool confirmWipe = false;
+    private bool showConfirmWipeMessage = false;
 
     private SettingsInfo settingsInfo;
 
@@ -305,5 +357,33 @@
             settingsInfo = _clientStorage.GetSettingsInfo();
             StateHasChanged();
         }        
+    }
+
+    private void WipteAllData()
+    {
+        if (!confirmWipe)
+        {
+            showConfirmWipeMessage = true;
+            return;
+        }
+
+        _clientStorage.DeleteAccountInfo(network.Name);
+        _cacheStorage.DeleteUnconfirmedInfo();
+        _clientStorage.DeleteWalletPubkey();
+        _walletStorage.DeleteWallet();
+        _clientStorage.DeleteFounderKeys();
+        _clientStorage.DeleteFounderProjects();
+        _clientStorage.DeleteInvestmentProjects();
+        _clientStorage.DeleteSignatures();
+
+        _cacheStorage.WipeSession();
+
+        showWipeallModal = false;
+        showConfirmWipeMessage = false;
+
+        hasWallet = _walletStorage.HasWallet();
+        StateHasChanged();
+
+        NavMenuState.NotifyStateChanged();
     }
 }

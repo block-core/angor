@@ -16,11 +16,14 @@ namespace Angor.Client.Storage
         void AddInvestmentProject(ProjectInfo project);
         void UpdateInvestmentProject(ProjectInfo project);
         List<ProjectInfo> GetInvestmentProjects();
+        void DeleteInvestmentProjects();
         void AddFounderProject(params FounderProject[] projects);
         List<FounderProject> GetFounderProjects();
         void UpdateFounderProject(FounderProject project);
+        void DeleteFounderProjects();
         void AddOrUpdateSignatures(SignatureInfo signatureInfo);
-        List<SignatureInfo> GetSignaturess();
+        List<SignatureInfo> GetSignatures();
+        void DeleteSignatures();
         SettingsInfo GetSettingsInfo();
         void SetSettingsInfo(SettingsInfo settingsInfo);
     }

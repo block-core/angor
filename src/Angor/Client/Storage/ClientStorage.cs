@@ -79,6 +79,11 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem("projects", ret);
     }
 
+    public void DeleteInvestmentProjects()
+    {
+        _storage.RemoveItem("projects");
+    }
+
     public List<ProjectInfo> GetInvestmentProjects()
     {
         var ret =  _storage.GetItem<List<ProjectInfo>>("projects");
@@ -118,9 +123,14 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem("founder-projects", projects.OrderBy(_ => _.ProjectInfo.ProjectIndex));
     }
 
+    public void DeleteFounderProjects()
+    {
+        _storage.RemoveItem("founder-projects");
+    }
+
     public void AddOrUpdateSignatures(SignatureInfo signatureInfo)
     {
-        var ret = GetSignaturess();
+        var ret = GetSignatures();
 
         var item = ret.FirstOrDefault(f => f.ProjectIdentifier == signatureInfo.ProjectIdentifier);
 
@@ -134,11 +144,21 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem("recovery-signatures", ret);
     }
 
-    public List<SignatureInfo> GetSignaturess()
+    public List<SignatureInfo> GetSignatures()
     {
         var ret = _storage.GetItem<List<SignatureInfo>>("recovery-signatures");
 
         return ret ?? new List<SignatureInfo>();
+    }
+
+    public void DeleteSignatures()
+    {
+        // signatures are valuable to have so to avoid losing them forever 
+        // we just store them in new entry we will lever use again.
+        var sigs = GetSignatures();
+        _storage.SetItem($"recovery-signatures-{DateTime.UtcNow.Ticks}", sigs);
+
+        _storage.RemoveItem("recovery-signatures");
     }
 
     public SettingsInfo GetSettingsInfo()
