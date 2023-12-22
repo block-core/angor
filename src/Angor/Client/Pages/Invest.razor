@@ -240,7 +240,7 @@
             NavigationManager.NavigateTo($"/wallet");
         }
 
-        var signatures = storage.GetSignaturess();
+        var signatures = storage.GetSignatures();
 
         var findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
 
@@ -364,7 +364,7 @@
             return;
         }
 
-        var signatures = storage.GetSignaturess();
+        var signatures = storage.GetSignatures();
 
         recoverySigs = signatures?.FirstOrDefault(_ => _.ProjectIdentifier == project.ProjectIdentifier);
 

@@ -226,7 +226,7 @@
             {
                 project = findProject;
 
-                var investedProject = storage.GetSignaturess().First(s => s.ProjectIdentifier == ProjectId);
+                var investedProject = storage.GetSignatures().First(s => s.ProjectIdentifier == ProjectId);
                 
                 invested = investedProject.Signatures.Any();
                 myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investedProject.TransactionId}";

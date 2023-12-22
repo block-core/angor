@@ -259,7 +259,7 @@
     protected override async Task OnInitializedAsync()
     {
         project = storage.GetInvestmentProjects().First(p => p.ProjectIdentifier == ProjectId);
-        recoverySigs = storage.GetSignaturess().First(s => s.ProjectIdentifier == ProjectId);
+        recoverySigs = storage.GetSignatures().First(s => s.ProjectIdentifier == ProjectId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -462,7 +462,7 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            recoverySigs = storage.GetSignaturess().First(p => p.ProjectIdentifier == ProjectId);
+            recoverySigs = storage.GetSignatures().First(p => p.ProjectIdentifier == ProjectId);
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
