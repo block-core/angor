@@ -13,7 +13,7 @@ namespace Angor.Client.Services
         Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId);
         Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId);
         Task<string> PublishTransactionAsync(string trxHex);
-        Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data);
+        Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false);
         Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset);
         Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations);
 
@@ -104,10 +104,10 @@ namespace Angor.Client.Services
             return response.ReasonPhrase + content;
         }
 
-        public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data)
+        public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false)
         {
             //check all new addresses for balance or a history
-            var urlBalance = "/api/query/addresses/balance";
+            var urlBalance = $"/api/query/addresses/balance?includeUnconfirmed={includeUnconfirmed}";
             var indexer = _networkService.GetPrimaryIndexer();
             var response = await _httpClient.PostAsJsonAsync(indexer.Url + urlBalance,
                 data.Select(_ => _.Address).ToArray());

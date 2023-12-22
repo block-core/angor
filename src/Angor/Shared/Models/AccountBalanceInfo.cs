@@ -14,16 +14,29 @@ public class AccountBalanceInfo
         AccountInfo = account;
         AccountPendingReceive = accountPendingReceive;
 
-        var balance = AccountInfo.AllAddresses().SelectMany(s => s.UtxoData)
-            .Sum(s => s.value);
-        
-        var balanceSpent = AccountInfo.AllAddresses().SelectMany(s => s.UtxoData
-                .Where(u => u.InMempoolTransaction))
-            .Sum(s => s.value);
+        long balanceConfirmed = 0;
+        long balanceUnconfirmed = 0;
+        long balanceSpent = 0;
 
-        var balanceUnconfirmed = AccountPendingReceive.Sum(s => s.value);
+        foreach (var utxoData in AccountInfo.AllUtxos())
+        {
+            if (utxoData.PendingSpent)
+            {
+                balanceSpent += utxoData.value;
+            }
+            else if(utxoData.blockIndex > 0)
+            {
+                balanceConfirmed += utxoData.value;
+            }
+            else
+            {
+                balanceUnconfirmed += utxoData.value;
+            }
+        }
 
-        TotalBalance = balance - balanceSpent;
+        balanceUnconfirmed += AccountPendingReceive.Sum(s => s.value);
+
+        TotalBalance = balanceConfirmed;
         TotalUnconfirmedBalance = balanceUnconfirmed;
     }
 }

@@ -143,7 +143,7 @@ public class WalletOperations : IWalletOperations
         {
             // find all spent inputs to mark them as spent
             if (inputs.Contains(utxoData.outpoint.ToString()))
-                utxoData.InMempoolTransaction = true;
+                utxoData.PendingSpent = true;
         }
         
         return transaction.Outputs.AsIndexedOutputs()
@@ -179,7 +179,7 @@ public class WalletOperations : IWalletOperations
 
         long total = 0;
         foreach (var utxoData in accountInfo.AllAddresses().SelectMany(_ => _.UtxoData
-                         .Where(utxow => utxow.InMempoolTransaction == false)
+                         .Where(utxow => utxow.PendingSpent == false)
                          .Select(u => new { path = _.HdPath, utxo = u }))
                      .OrderBy(o => o.utxo.blockIndex)
                      .ThenByDescending(o => o.utxo.value))
@@ -293,12 +293,25 @@ public class WalletOperations : IWalletOperations
 
         var (address, utxoList) = await FetchUtxoForAddressAsync(addressInfo.Address);
         
-        if (utxoList.Count != addressInfo.UtxoData.Count ||
-            utxoList.Where((_, i) => _.outpoint.transactionId != addressInfo.UtxoData[i].outpoint.transactionId)
-                .Any())
+        if (utxoList.Count != addressInfo.UtxoData.Count 
+            || addressInfo.UtxoData.Any(_ => _.blockIndex == 0) 
+            || utxoList.Where((_, i) => _.outpoint.transactionId != addressInfo.UtxoData[i].outpoint.transactionId).Any())
         {
+            CopyPendingSpentUtxos(addressInfo.UtxoData, utxoList);
             addressInfo.UtxoData.Clear();
             addressInfo.UtxoData.AddRange(utxoList);
+        }
+    }
+
+    private void CopyPendingSpentUtxos(List<UtxoData> from, List<UtxoData> to)
+    {
+        foreach (var utxoFrom in from.Where(x => x.PendingSpent))
+        {
+            var newUtxo = to.FirstOrDefault(x => x.outpoint.ToString() == utxoFrom.outpoint.ToString());
+            if (newUtxo != null)
+            {
+                newUtxo.PendingSpent = true;
+            }
         }
     }
 
@@ -312,43 +325,35 @@ public class WalletOperations : IWalletOperations
         var (index, items) = await FetchAddressesDataForPubKeyAsync(accountInfo.LastFetchIndex, accountInfo.ExtPubKey, network, false);
 
         accountInfo.LastFetchIndex = index;
-        foreach (var addressInfo in items)
+        foreach (var addressInfoToAdd in items)
         {
-            var addressInfoToDelete = accountInfo.AddressesInfo.SingleOrDefault(_ => _.Address == addressInfo.Address);
+            var addressInfoToDelete = accountInfo.AddressesInfo.SingleOrDefault(_ => _.Address == addressInfoToAdd.Address);
             if (addressInfoToDelete != null)
             {
-                //TODO need to update the indexer response with mempool utxo as well so it is always consistant
-                foreach (var utxoData in addressInfo.UtxoData.Where(x => x.InMempoolTransaction))
-                {
-                    var outpoint = utxoData.outpoint.ToString();
-                    var newUtxo = addressInfo.UtxoData.FirstOrDefault(x => x.outpoint.ToString() == outpoint);
-                    if (newUtxo != null) newUtxo.InMempoolTransaction = true;
-                }
+                // TODO need to update the indexer response with mempool utxo as well so it is always consistant
+
+                CopyPendingSpentUtxos(addressInfoToDelete.UtxoData, addressInfoToAdd.UtxoData);
                 accountInfo.AddressesInfo.Remove(addressInfoToDelete);
             }
             
-            accountInfo.AddressesInfo.Add(addressInfo);
+            accountInfo.AddressesInfo.Add(addressInfoToAdd);
         }
 
         var (changeIndex, changeItems) = await FetchAddressesDataForPubKeyAsync(accountInfo.LastFetchChangeIndex, accountInfo.ExtPubKey, network, true);
 
         accountInfo.LastFetchChangeIndex = changeIndex;
-        foreach (var changeAddressInfo in changeItems)
+        foreach (var changeAddressInfoToAdd in changeItems)
         {
-            var addressInfoToDelete = accountInfo.ChangeAddressesInfo.SingleOrDefault(_ => _.Address == changeAddressInfo.Address);
-            if (addressInfoToDelete != null)
+            var changeAddressInfoToDelete = accountInfo.ChangeAddressesInfo.SingleOrDefault(_ => _.Address == changeAddressInfoToAdd.Address);
+            if (changeAddressInfoToDelete != null)
             {
-                //TODO need to update the indexer response with mempool utxo as well so it is always consistant
-                foreach (var utxoData in addressInfoToDelete.UtxoData.Where(x => x.InMempoolTransaction))
-                {
-                    var outpoint = utxoData.outpoint.ToString();
-                    var newUtxo = addressInfoToDelete.UtxoData.FirstOrDefault(x => x.outpoint.ToString() == outpoint);
-                    if (newUtxo != null) newUtxo.InMempoolTransaction = true;
-                }
-                accountInfo.ChangeAddressesInfo.Remove(addressInfoToDelete);
+                // TODO need to update the indexer response with mempool utxo as well so it is always consistant
+
+                CopyPendingSpentUtxos(changeAddressInfoToDelete.UtxoData, changeAddressInfoToAdd.UtxoData);
+                accountInfo.ChangeAddressesInfo.Remove(changeAddressInfoToDelete);
             }
             
-            accountInfo.ChangeAddressesInfo.Add(changeAddressInfo);
+            accountInfo.ChangeAddressesInfo.Add(changeAddressInfoToAdd);
         }
     }
 
@@ -368,7 +373,7 @@ public class WalletOperations : IWalletOperations
                 .ToList();
 
             //check all new addresses for balance or a history
-            addressesNotEmpty = await _indexerService.GetAdressBalancesAsync(newAddressesToCheck);
+            addressesNotEmpty = await _indexerService.GetAdressBalancesAsync(newAddressesToCheck, true);
 
             if (addressesNotEmpty.Length < newAddressesToCheck.Count)
                 newEmptyAddress = newAddressesToCheck[addressesNotEmpty.Length];
@@ -439,7 +444,6 @@ public class WalletOperations : IWalletOperations
                 _logger.LogWarning($"utxo scan for address {address} was stopped after the limit of {maxutxo} was reached.");
                 break;
             }
-                
 
             offset += limit;
         } while (true);

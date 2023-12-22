@@ -7,10 +7,10 @@ public class UtxoData
     public string scriptHex { get; set; }
     public long value { get; set; }
     public int blockIndex { get; set; }
-    public bool coinBase { get; set; }
-    public bool coinStake { get; set; }
+    //public bool coinBase { get; set; }
+    //public bool coinStake { get; set; }
 
-    public bool InMempoolTransaction { get; set; }
+    public bool PendingSpent { get; set; }
 }
 
 public class UtxoDataWithPath

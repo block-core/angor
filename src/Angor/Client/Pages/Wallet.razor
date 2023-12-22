@@ -429,9 +429,8 @@
 
             storage.SetAccountInfo(network.Name, accountInfo);
             
-            var utxos = accountInfo.AllAddresses()
-                .SelectMany(x => x.UtxoData)
-                .Select(x => x.outpoint.ToString());
+            var utxos = accountInfo.AllUtxos()
+                .Select(x => x.outpoint.ToString()).ToList();
 
             var spentToUpdate = unconfirmedInboundFunds
                 .RemoveAll(x => utxos.Contains(x.outpoint.ToString()));
@@ -714,7 +713,7 @@
                 var trxhex =  await res.Content.ReadAsStringAsync();
                 var trx = network.CreateTransaction(trxhex);
                 var unconfirmedInboundFunds = _cacheStorage.GetUnconfirmedInboundFunds();
-                unconfirmedInboundFunds.Add(new UtxoData { InMempoolTransaction = true, address = receiveAddress, value = trx.Outputs.FirstOrDefault()?.Value.Satoshi ?? Money.Coins(50).Satoshi, outpoint = new Outpoint(trx.GetHash().ToString(), 0) });
+                unconfirmedInboundFunds.Add(new UtxoData { PendingSpent = true, address = receiveAddress, value = trx.Outputs.FirstOrDefault()?.Value.Satoshi ?? Money.Coins(50).Satoshi, outpoint = new Outpoint(trx.GetHash().ToString(), 0) });
                 _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInboundFunds);
                 accountBalanceInfo.UpdateAccountBalanceInfo(accountBalanceInfo.AccountInfo, unconfirmedInboundFunds);
 

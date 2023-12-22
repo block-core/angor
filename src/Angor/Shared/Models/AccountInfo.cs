@@ -19,6 +19,14 @@ public class AccountInfo
         }
     }
 
+    public IEnumerable<UtxoData> AllUtxos()
+    {
+        foreach (var utxo in AllAddresses().SelectMany(_ => _.UtxoData))
+        {
+            yield return utxo;
+        }
+    }
+
     public string? GetNextReceiveAddress()
     {
         return AddressesInfo.Last()?.Address;
