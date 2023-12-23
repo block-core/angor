@@ -26,5 +26,6 @@ namespace Angor.Client.Storage
         void DeleteSignatures();
         SettingsInfo GetSettingsInfo();
         void SetSettingsInfo(SettingsInfo settingsInfo);
+        void WipeStorage();
     }
 }

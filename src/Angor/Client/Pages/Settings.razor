@@ -367,15 +367,7 @@
             return;
         }
 
-        _clientStorage.DeleteAccountInfo(network.Name);
-        _cacheStorage.DeleteUnconfirmedInfo();
-        _clientStorage.DeleteWalletPubkey();
-        _walletStorage.DeleteWallet();
-        _clientStorage.DeleteFounderKeys();
-        _clientStorage.DeleteFounderProjects();
-        _clientStorage.DeleteInvestmentProjects();
-        _clientStorage.DeleteSignatures();
-
+        _clientStorage.WipeStorage();
         _cacheStorage.WipeSession();
 
         showWipeallModal = false;
