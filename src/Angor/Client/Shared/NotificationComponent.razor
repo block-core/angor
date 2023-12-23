@@ -86,6 +86,12 @@
         StateHasChanged();
     }
 
+    public void StopLoading()
+    {
+        isLoading = false;
+        StateHasChanged();
+    }
+
     public async Task<OperationResult> LongOperation(Func<Task<OperationResult>> action)
     {
         OperationResult? res = default(OperationResult);

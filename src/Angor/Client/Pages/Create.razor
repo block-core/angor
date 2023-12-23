@@ -44,7 +44,7 @@
                 <label for="NostrMetadataName" class="form-label">Project name</label>
                 <InputText id="NostrMetadataName" @bind-Value="NostrMetadata.Name" class="form-control" placeholder="Enter the project name"/>
             </div>
-            
+
             <div class="mb-3">
                 <label for="NostrMetadataAbout" class="form-label">About</label>
                 <InputTextArea id="NostrMetadataAbout" @bind-Value="NostrMetadata.About" class="form-control" placeholder="Enter details about the project"/>
@@ -54,95 +54,96 @@
                 <label for="NostrMetadataName" class="form-label">Project website</label>
                 <InputText id="NostrMetadataName" @bind-Value="NostrMetadata.Website" class="form-control" placeholder="Enter the project name"/>
             </div>
-            
+
             <div class="mb-3">
                 <label for="NostrMetadataBanner" class="form-label">Banner</label>
                 <InputText id="NostrMetadataBanner" @bind-Value="NostrMetadata.Banner" class="form-control"/>
             </div>
-            
+
             <div class="mb-3">
                 <label for="NostrMetadataNip05" class="form-label">Nip 05</label>
                 <InputText id="NostrMetadataNip05" @bind-Value="NostrMetadata.Nip05" class="form-control"/>
             </div>
-            
+
             <div class="mb-3">
                 <label for="NostrMetadataNip57" class="form-label">Nip 57 (zaps)</label>
                 <InputText id="NostrMetadataNip57" @bind-Value="NostrMetadata.Nip57" class="form-control"/>
             </div>
-            
+
             <div class="mb-3">
                 <label for="NostrMetadataPicture" class="form-label">Image</label>
                 <InputText id="NostrMetadataPicture" @bind-Value="NostrMetadata.Picture" class="form-control" placeholder="Select a project picture"/>
             </div>
-            
-                    <!-- Save & Publish Buttons -->
-                    <div class="mb-3">
-                        <button type="submit" class="btn btn-success">Next</button>
-                    </div>
-            
+
+            <!-- Save & Publish Buttons -->
+            <div class="mb-3">
+                <button type="submit" class="btn btn-success">Next</button>
+            </div>
+
         </EditForm>
     }
     else
     {
-    <EditForm Model="project" OnValidSubmit="CreatProject">
-        
-        <!-- Angor Fee Key -->
-        <div class="mb-3">
-            <label for="angorFeeKey" class="form-label">Project identifier</label>
-            <InputText id="angorFeeKey" @bind-Value="project.ProjectIdentifier" class="form-control" placeholder="Enter angor fee key" readonly />
-        </div>
+        <EditForm Model="project" OnValidSubmit="CreatProject">
 
-        <!-- Founder Key -->
-        <div class="mb-3">
-            <label for="founderKey" class="form-label">Founder Key</label>
-            <InputText id="founderKey" @bind-Value="project.FounderKey" class="form-control" placeholder="Enter founder key" readonly />
-        </div>
-
-        <!-- Start Date -->
-        <div class="mb-3">
-            <label for="startDate" class="form-label">Start Date</label>
-            <InputDate id="startDate" @bind-Value="project.StartDate" class="form-control"/>
-        </div>
-
-        <!-- Penalty Date -->
-        <div class="mb-3">
-            <label for="penaltyDays" class="form-label">Penalty Days</label>
-            <InputNumber id="penaltyDays" @bind-Value="project.PenaltyDays" class="form-control" />
-        </div>
-
-        <!-- Expiry Date -->
-        <div class="mb-3">
-            <label for="expiryDate" class="form-label">Expiry Date</label>
-            <InputDate id="expiryDate" @bind-Value="project.ExpiryDate" class="form-control"/>
-        </div>
-
-        <!-- Target Amount -->
-        <div class="mb-3">
-            <label for="targetAmount" class="form-label">Target Amount</label>
-            <InputNumber id="targetAmount" @bind-Value="project.TargetAmount" class="form-control" placeholder="Enter target amount"/>
-        </div>
-
-        <!-- Stages -->
-        <h3 class="mb-3">Stages</h3>
-        @foreach (var stage in project.Stages)
-        {
+            <!-- Angor Fee Key -->
             <div class="mb-3">
-                <label class="form-label">Stage @project.Stages.IndexOf(stage)</label>
-                <div class="input-group">
-                    <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1"/>
-                    <InputDate @bind-Value="stage.ReleaseDate" class="form-control"/>
-                    <button type="button" class="btn btn-danger" @onclick="() => RemoveStage(stage)">Remove</button>
-                </div>
+                <label for="angorFeeKey" class="form-label">Project identifier</label>
+                <InputText id="angorFeeKey" @bind-Value="project.ProjectIdentifier" class="form-control" placeholder="Enter angor fee key" readonly/>
             </div>
-        }
-        <button type="button" class="btn btn-primary mb-3" @onclick="AddStage">Add Stage</button>
 
-        <!-- Save & Publish Buttons -->
-        <div class="mb-3">
-            <button type="submit" class="btn btn-success">Next</button>
-        </div>
-    </EditForm>
+            <!-- Founder Key -->
+            <div class="mb-3">
+                <label for="founderKey" class="form-label">Founder Key</label>
+                <InputText id="founderKey" @bind-Value="project.FounderKey" class="form-control" placeholder="Enter founder key" readonly/>
+            </div>
+
+            <!-- Start Date -->
+            <div class="mb-3">
+                <label for="startDate" class="form-label">Start Date</label>
+                <InputDate id="startDate" @bind-Value="project.StartDate" class="form-control"/>
+            </div>
+
+            <!-- Penalty Date -->
+            <div class="mb-3">
+                <label for="penaltyDays" class="form-label">Penalty Days</label>
+                <InputNumber id="penaltyDays" @bind-Value="project.PenaltyDays" class="form-control"/>
+            </div>
+
+            <!-- Expiry Date -->
+            <div class="mb-3">
+                <label for="expiryDate" class="form-label">Expiry Date</label>
+                <InputDate id="expiryDate" @bind-Value="project.ExpiryDate" class="form-control"/>
+            </div>
+
+            <!-- Target Amount -->
+            <div class="mb-3">
+                <label for="targetAmount" class="form-label">Target Amount</label>
+                <InputNumber id="targetAmount" @bind-Value="project.TargetAmount" class="form-control" placeholder="Enter target amount"/>
+            </div>
+
+            <!-- Stages -->
+            <h3 class="mb-3">Stages</h3>
+            @foreach (var stage in project.Stages)
+            {
+                <div class="mb-3">
+                    <label class="form-label">Stage @project.Stages.IndexOf(stage)</label>
+                    <div class="input-group">
+                        <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1"/>
+                        <InputDate @bind-Value="stage.ReleaseDate" class="form-control"/>
+                        <button type="button" class="btn btn-danger" @onclick="() => RemoveStage(stage)">Remove</button>
+                    </div>
+                </div>
+            }
+            <button type="button" class="btn btn-primary mb-3" @onclick="AddStage">Add Stage</button>
+
+            <!-- Save & Publish Buttons -->
+            <div class="mb-3">
+                <button type="submit" class="btn btn-success">Next</button>
+            </div>
+        </EditForm>
     }
+
     @if (showCreateModal)
     {
         <!-- Confirmation Modal -->
@@ -183,7 +184,7 @@
                                 <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.StartDate).Days) days after project starts </p>
                             </div>
                         }
-                        
+
                         <hr>
 
                         <p class="mt-3">Are you sure you want to continue?</p>
@@ -203,7 +204,6 @@
 @code {
 
     private bool sendConfirmModal;
-    private bool hasWallet;
     private bool showCreateModal;
 
     Transaction unsignedTransaction;
@@ -232,8 +232,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        hasWallet = _walletStorage.HasWallet();
-
         if (hasWallet)
         {
             var projects = storage.GetFounderProjects();
@@ -247,42 +245,81 @@
             project.ProjectIdentifier = projectsKeys.ProjectIdentifier;
             project.NostrPubKey = projectsKeys.NostrPubKey;
         }
-
-        _RelayService.RequestProjectCreateEventsByPubKey(_ => //TODO change the state to be storage driven and not event driven
-        {
-            nostrProfileCreated = _.Kind == NostrKind.Metadata;
-
-            if (_.Kind != NostrKind.ApplicationSpecificData)
-                return; //In case of a crashed application in the middle of the call
-
-            if (_.Content == null)
-                return;
-            var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
-            var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == nostrProject!.ProjectIdentifier);
-            if (findProject == null)
-                storage.AddFounderProject(new FounderProject { ProjectInfo = nostrProject });
-            NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");
-        },
-            StateHasChanged,
-            project.NostrPubKey);
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (hasWallet)
+            {
+                var operationResult = await notificationComponent.LongOperation(async () =>
+                {
+                    _RelayService.RequestProjectCreateEventsByPubKey(_ => //TODO change the state to be storage driven and not event driven
+                    {
+                        nostrProfileCreated = _.Kind == NostrKind.Metadata;
+
+                        if (_.Kind != NostrKind.ApplicationSpecificData)
+                            return; //In case of a crashed application in the middle of the call
+
+                        if (_.Content == null)
+                            return;
+                        var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
+                        var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == nostrProject!.ProjectIdentifier);
+                        if (findProject == null)
+                            storage.AddFounderProject(new FounderProject { ProjectInfo = nostrProject });
+                        NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");
+                    }, () => 
+                    {
+                        notificationComponent.StopLoading();
+                        StateHasChanged();
+                    },project.NostrPubKey);
+
+                    // let the request a few seconds to look for a project
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+
+                    return new SuccessOperationResult();
+                });
+
+                if (operationResult.Success)
+                {
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+
 
     private async Task CreatNostrProfile()
     {
-        var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
-        
-        var resultId = await _RelayService.CreateNostrProfileAsync( NostrMetadata.ToNostrMetadata(), 
-            NBitcoin.DataEncoders.Encoders.Hex.EncodeData((byte[])nostrKey.ToBytes()));
-        
-        _RelayService.RegisterOKMessageHandler(resultId, _ =>
+        var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            if (_.EventId != resultId) 
-                return;
-            if (!_.Accepted)
-                notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
-            nostrProfileCreated = true;
-            StateHasChanged();
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+
+            var resultId = await _RelayService.CreateNostrProfileAsync(NostrMetadata.ToNostrMetadata(),
+                NBitcoin.DataEncoders.Encoders.Hex.EncodeData((byte[])nostrKey.ToBytes()));
+
+            _RelayService.RegisterOKMessageHandler(resultId, _ =>
+            {
+                if (_.EventId != resultId)
+                    return;
+                if (!_.Accepted)
+                    notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+                nostrProfileCreated = true;
+                StateHasChanged();
+            });
+
+            return new SuccessOperationResult();
         });
+
+        if (operationResult.Success)
+        {
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
+        }
     }
 
     private async Task CreatProject()
