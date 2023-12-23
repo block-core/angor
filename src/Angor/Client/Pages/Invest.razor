@@ -281,7 +281,7 @@
 
             _SignService.LookupSignatureForInvestmentRequest(
                 NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
-                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning,
+                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
         }
     }
@@ -472,7 +472,7 @@
 
             _SignService.LookupSignatureForInvestmentRequest(
                 NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
-                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning,
+                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
             
             return new OperationResult { Success = true, };

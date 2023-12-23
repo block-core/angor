@@ -373,6 +373,8 @@
         showWipeallModal = false;
         showConfirmWipeMessage = false;
 
+        _networkService.AddSettingsIfNotExist();
+
         hasWallet = _walletStorage.HasWallet();
         StateHasChanged();
 

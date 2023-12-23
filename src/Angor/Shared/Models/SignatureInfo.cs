@@ -8,6 +8,6 @@ public class SignatureInfo
     public string RecoveryReleaseTransactionId { get; set; }
     public string EndOfProjectTransactionId { get; set; }
     public List<SignatureInfoItem> Signatures { get; set; } = new();
-    public DateTime TimeOfRequestForSigning { get; set; }
+    public DateTime? TimeOfRequestForSigning { get; set; }
     public string? SignedTransactionHex { get; set; }
 }
