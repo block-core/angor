@@ -1,4 +1,4 @@
-## Angor is a decentralized crowdfunding platform built on the Bitcoin network. 
+## Angor is a decentralized crowdfunding platform built on Bitcoin and nostr. 
 #### Think of it as a trustless, risk-minimized ICO.
 
 With Angor, investors maintain complete control of their funds by locking coins into special timelock contracts until they need to be used.  
