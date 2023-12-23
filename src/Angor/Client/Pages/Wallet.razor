@@ -100,7 +100,7 @@
 
                 <button class="btn btn-primary ml-2" @onclick="RefreshBalance">Refresh Balance</button>
                 
-                @if (network.NetworkType == NetworkType.Testnet && accountBalanceInfo.TotalBalance < 10)
+                @if (network.NetworkType == NetworkType.Testnet && accountBalanceInfo.TotalBalance < Money.Coins(10).Satoshi)
                 {
                     <button class="btn btn-secondary ml-2" @onclick="GetTestCoins">Get some test coins</button>
                 }
@@ -696,7 +696,7 @@
 
     private async Task GetTestCoins()
     {
-        if (Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC) > 10)
+        if (Money.Satoshis(accountBalanceInfo.TotalBalance + accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) > 10)
         {
             notificationComponent.ShowNotificationMessage("you already have coins!");
             return;

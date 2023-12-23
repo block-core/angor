@@ -8,6 +8,7 @@
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
+@using Angor.Shared.Utilities
 @using ITransactionSignature = NBitcoin.ITransactionSignature
 
 @inject IClientStorage storage;
@@ -255,7 +256,8 @@
     private async Task CheckSpentFund()
     {
         List<QueryTransaction> trxs = new();
-        var accountInfo = storage.GetAccountInfo(network.Name);
+        var unconfirmedOutbound = _cacheStorage.GetUnconfirmedOutboundFunds();
+        bool updateUnconfirmedOutbound = false;
 
         foreach (StageData stageData in stageDatas)
         {
@@ -279,13 +281,18 @@
                 {
                     item.IsSpent = true;
 
-                    accountInfo.RemoveInputFromPending(new Outpoint(item.Trxid, item.Outputindex));
-
+                    updateUnconfirmedOutbound |= LinqExtension.Remove(unconfirmedOutbound, new Outpoint(item.Trxid, item.Outputindex));
+                    
                     continue;
                 }
 
-                item.IsSpent = accountInfo.IsInPendingSpent(new Outpoint(item.Trxid, item.Outputindex));
+                item.IsSpent = LinqExtension.Contains(unconfirmedOutbound, new Outpoint(item.Trxid, item.Outputindex));
             }
+        }
+
+        if (updateUnconfirmedOutbound)
+        {
+            _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
         }
     }
 
@@ -372,10 +379,14 @@
 
             // add all outptus to the pending list
             var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
+            var unconfirmedInbound = _cacheStorage.GetUnconfirmedInboundFunds();
             var pendingInbound = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction);
-            unconfirmedInfo.AddRange(pendingInbound);
-            _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
+            unconfirmedInbound.AddRange(pendingInbound);
+            _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInbound);
+
+            var unconfirmedOutbound = _cacheStorage.GetUnconfirmedOutboundFunds();
+            unconfirmedOutbound.AddRange(signedTransaction.Inputs.Select(_ => new Outpoint(_.PrevOut.Hash.ToString(), (int)_.PrevOut.N)));
+            _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
 
             // mark stage as spent
             stageDatas.FirstOrDefault(_ => _.StageIndex == selectedStageId)?.Items.ForEach(_ =>

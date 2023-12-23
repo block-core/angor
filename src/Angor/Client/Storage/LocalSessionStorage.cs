@@ -42,13 +42,24 @@ public class LocalSessionStorage : ICacheStorage
 
     public List<UtxoData> GetUnconfirmedInboundFunds()
     {
-        return _sessionStorageService.GetItem<List<UtxoData>>("unconfirmed-info") ?? new ();
+        return _sessionStorageService.GetItem<List<UtxoData>>("unconfirmed-inbound") ?? new ();
+    }
+
+    public List<Outpoint> GetUnconfirmedOutboundFunds()
+    {
+        return _sessionStorageService.GetItem<List<Outpoint>>("unconfirmed-outbound") ?? new();
     }
 
     public void SetUnconfirmedInboundFunds(List<UtxoData> unconfirmedInfo)
     {
-        _sessionStorageService.SetItem("unconfirmed-info", unconfirmedInfo);
+        _sessionStorageService.SetItem("unconfirmed-inbound", unconfirmedInfo);
     }
+
+    public void SetUnconfirmedOutboundFunds(List<Outpoint> unconfirmedInfo)
+    {
+        _sessionStorageService.SetItem("unconfirmed-outbound", unconfirmedInfo);
+    }
+
     public void DeleteUnconfirmedInfo()
     {
         _sessionStorageService.RemoveItem("unconfirmed-info");

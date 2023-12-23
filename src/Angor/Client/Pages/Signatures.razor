@@ -63,7 +63,7 @@
                         @foreach (var signature in signaturesRequests.Where(_ => _ is { TransactionHex: not null, AmountToInvest: not null }))
                         {
                             <tr>
-                                <td>@signature.AmountToInvest?.ToString(CultureInfo.CurrentCulture) @network.CoinTicker</td>
+                                <td>@Money.Coins(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
                                 <td>@signature.TimeArrived.ToString("g")</td>
                                 @if (signature.TimeApproved is null)
                                 {
@@ -154,7 +154,7 @@
                     var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.TransactionHex);
 
                     pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3) //Todo get the actual outputs with taproot type
-                        .Sum(_ => _.TxOut.Value);
+                        .Sum(_ => _.TxOut.Value.ToUnit(MoneyUnit.BTC));
                 }
                 catch (Exception e)
                 {

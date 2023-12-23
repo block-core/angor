@@ -11,7 +11,10 @@ public interface ICacheStorage
     List<ProjectIndexerData>? GetProjectIndexerData();
     void SetProjectIndexerData(List<ProjectIndexerData> list);
     List<UtxoData> GetUnconfirmedInboundFunds();
+    List<Outpoint> GetUnconfirmedOutboundFunds();
     void SetUnconfirmedInboundFunds(List<UtxoData> unconfirmedInfo);
+    void SetUnconfirmedOutboundFunds(List<Outpoint> unconfirmedInfo);
+
     void DeleteUnconfirmedInfo();
     void WipeSession();
 }

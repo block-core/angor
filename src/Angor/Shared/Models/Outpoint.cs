@@ -1,6 +1,6 @@
 namespace Angor.Shared.Models;
 
-public class Outpoint
+public class Outpoint 
 {
     public string transactionId { get; set; }
     public int outputIndex { get; set; }

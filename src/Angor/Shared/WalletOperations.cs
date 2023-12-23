@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net.Http.Json;
 using System.Text;
 using Angor.Client.Services;
@@ -135,30 +136,37 @@ public class WalletOperations : IWalletOperations
         
         var inputs = transaction.Inputs.Select(_ => _.PrevOut.ToString()).ToList();
 
-        var accountChangeAddresses = accountInfo.ChangeAddressesInfo.Select(x => x.Address);
+        var accountChangeAddresses = accountInfo.ChangeAddressesInfo.Select(x => x.Address).ToList();
         
         var transactionHash = transaction.GetHash().ToString();
 
-        foreach (var utxoData in accountInfo.AllAddresses().SelectMany(x => x.UtxoData))
+        foreach (var utxoData in accountInfo.AllUtxos())
         {
             // find all spent inputs to mark them as spent
             if (inputs.Contains(utxoData.outpoint.ToString()))
                 utxoData.PendingSpent = true;
         }
-        
-        return transaction.Outputs.AsIndexedOutputs()
-                .Where(x => 
-                    accountChangeAddresses.Contains(x.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString()))
-                .Select<IndexedTxOut, UtxoData>(x =>
-                    new UtxoData
-                    {
-                        address = x.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString(),
-                        scriptHex = x.TxOut.ScriptPubKey.ToHex(),
-                        outpoint = new Outpoint(  transactionHash ,(int)x.N),
-                        blockIndex = 0,
-                        value = x.TxOut.Value
-                    })
-                .ToList();;
+
+        List<UtxoData> list = new();
+
+        foreach (var output in transaction.Outputs.AsIndexedOutputs())
+        {
+            var address = output.TxOut.ScriptPubKey.GetDestinationAddress(network)?.ToString();
+
+            if (address != null && accountChangeAddresses.Contains(address))
+            {
+                list.Add(new UtxoData
+                {
+                    address = output.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString(),
+                    scriptHex = output.TxOut.ScriptPubKey.ToHex(),
+                    outpoint = new Outpoint(transactionHash, (int)output.N),
+                    blockIndex = 0,
+                    value = output.TxOut.Value
+                });
+            }
+        }
+
+        return list;
     }
 
     public async Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,Transaction signedTransaction)

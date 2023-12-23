@@ -524,13 +524,16 @@
                 return new OperationResult { Success = false, Message = "The signatures returned from the founder failed validation" };
             }
 
+            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+
+            if (!response.Success)
+                return response;
+
             // link the trx to the signatures
             recoverySigs.TransactionId = signedTransaction.GetHash().ToString();
             recoverySigs.SignedTransactionHex = null;
             
             storage.AddOrUpdateSignatures(recoverySigs);
-
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();

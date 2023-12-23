@@ -6,6 +6,7 @@
 @using Angor.Shared.Models
 @using Angor.Shared.ProtocolNew
 @using Angor.Shared.Services
+@using Angor.Shared.Utilities
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
@@ -344,34 +345,27 @@
             return;
         }
 
-        var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
+        var unconfirmedOutbound = _cacheStorage.GetUnconfirmedOutboundFunds();
         bool modified = false;
 
         foreach (var infoOutput in StageInfo.TransactionInfo.Outputs)
         {
             if (!string.IsNullOrEmpty(infoOutput.SpentInTransaction))
             {
-                var spent = unconfirmedInfo.FirstOrDefault(x => x.outpoint.transactionId == StageInfo.TransactionInfo.TransactionId &&
-                x.outpoint.outputIndex == infoOutput.Index);
-
-                if (spent != null)
-                {
-                    unconfirmedInfo.Remove(spent);
-                    modified = true;
-                }
+                modified |= LinqExtension.Remove(unconfirmedOutbound, new Outpoint(StageInfo.TransactionInfo.TransactionId, infoOutput.Index));
             }
         }
 
         if (modified)
         {
-            _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
+            _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
         }
 
         var penaltyExpieryDate = Utils.UnixTimeToDateTime(StageInfo.TransactionInfo.Timestamp).AddDays(project.PenaltyDays);
-        var accountInfo = storage.GetAccountInfo(network.Name);
+        
         foreach (var item in StageInfo.Items)
         {
-            if (accountInfo.IsInPendingSpent(new Outpoint(StageInfo.Trxid, item.Outputindex)))
+            if (LinqExtension.Contains(unconfirmedOutbound, new Outpoint(StageInfo.Trxid, item.Outputindex)))
             {
                 item.IsSpent = true;
                 item.SpentTo = "pending confirmations";
@@ -446,11 +440,15 @@
     private void AddTransactionToPending(Transaction transaction)
     {
         var accountInfo = storage.GetAccountInfo(network.Name);
-        var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
-        var pendingInbound = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, transaction);
-        unconfirmedInfo.AddRange(pendingInbound);
-        _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
+        var unconfirmedInbound = _cacheStorage.GetUnconfirmedInboundFunds();
+        var unconfirmedOutbound = _cacheStorage.GetUnconfirmedOutboundFunds();
+
+        unconfirmedInbound.AddRange(_WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, transaction));
+        unconfirmedOutbound.AddRange(transaction.Inputs.Select(_ => new Outpoint(_.PrevOut.Hash.ToString(), (int)_.PrevOut.N)));
+
         storage.SetAccountInfo(network.Name,accountInfo);
+        _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInbound);
+        _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
     }
 
     private async Task PrepareToRecoverCoins()
