@@ -59,7 +59,7 @@ public class WalletOperationsTest : AngorTestData
         var network = _networkConfiguration.Object.GetNetwork();
 
         int callCount = 0;
-        _indexerService.Setup(_ => _.GetAdressBalancesAsync(It.IsAny<List<AddressInfo>>())).Returns<List<AddressInfo>>(info =>
+        _indexerService.Setup(_ => _.GetAdressBalancesAsync(It.IsAny<List<AddressInfo>>(), It.IsAny<bool>())).Returns((List<AddressInfo> info, bool conf) =>
         {
             if (callCount == 1)
                 return Task.FromResult(Enumerable.Empty<AddressBalance>().ToArray());
