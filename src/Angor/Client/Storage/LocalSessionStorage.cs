@@ -1,3 +1,4 @@
+using Angor.Client.Models;
 using Angor.Client.Services;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
@@ -21,10 +22,26 @@ public class LocalSessionStorage : ICacheStorage
         _sessionStorageService.SetItem(project.ProjectIdentifier,project);
     }
 
+    public ProjectMetadata? GetProjectMetadataByPubkey(string pubkey)
+    {
+        return _sessionStorageService.GetItem<ProjectMetadata>(pubkey);
+    }
+
+    public void StoreProjectMetadata(string pubkey, ProjectMetadata projectMetadata)
+    {
+        _sessionStorageService.SetItem(pubkey, projectMetadata);
+    }
+
+    public bool IsProjectMetadataStorageByPubkey(string pubkey)
+    {
+        return _sessionStorageService.ContainKey(pubkey);
+    }
+
     public ProjectInfo? GetProjectById(string projectId)
     {
         return _sessionStorageService.GetItem<ProjectInfo>(projectId);
     }
+
     public bool IsProjectInStorageById(string projectId)
     {
         return _sessionStorageService.ContainKey(projectId);
