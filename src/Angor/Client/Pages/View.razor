@@ -35,6 +35,17 @@
             </div>
             <div class="card-body">
                 <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
+                
+                @if (SessionStorage.IsProjectMetadataStorageByPubkey(project.NostrPubKey))
+                {
+                    var metadata = SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
+
+                    <hr />
+                    <h3 class="card-title">@metadata?.Name</h3>
+                    <p class="card-subtitle">@metadata?.About</p>
+                    <hr />
+                }
+
                 <a href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
                 <p class="card-text">Founder Key: @project.FounderKey</p>
                 <p class="card-text">Start Date: @project.StartDate.ToString("dd/MM/yyyy")</p>

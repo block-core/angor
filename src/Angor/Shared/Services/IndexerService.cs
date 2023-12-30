@@ -9,7 +9,7 @@ namespace Angor.Client.Services
 {
     public interface IIndexerService
     {
-        Task<List<ProjectIndexerData>> GetProjectsAsync();
+        Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit);
         Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId);
         Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId);
         Task<string> PublishTransactionAsync(string trxHex);
@@ -58,11 +58,10 @@ namespace Angor.Client.Services
             _networkService = networkService;
         }
 
-        public async Task<List<ProjectIndexerData>> GetProjectsAsync()
+        public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
         {
             var indexer = _networkService.GetPrimaryIndexer();
-            // todo: dan - make this proper paging
-            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects?offset=0&limit=50");
+            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects?offset={offset}&limit={limit}");
             _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>();
@@ -70,6 +69,11 @@ namespace Angor.Client.Services
 
         public async Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId)
         {
+            if (string.IsNullOrEmpty(projectId))
+            {
+                return null;
+            }
+
             var indexer = _networkService.GetPrimaryIndexer();
             var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}");
             _networkService.CheckAndHandleError(response);

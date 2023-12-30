@@ -348,7 +348,12 @@
         foreach (var stage in project.Stages)
         {
             if ((stage.ReleaseDate - prev).Days < 0)
+            {
                 notificationComponent.ShowErrorMessage("Stages must be chronological");
+                return;
+            }
+
+            prev = stage.ReleaseDate;
         }
 
         var operationResult = await notificationComponent.LongOperation(async () =>

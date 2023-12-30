@@ -1,6 +1,6 @@
 using Nostr.Client.Messages.Metadata;
 
-namespace Angor.Client.Models;
+namespace Angor.Shared.Models;
 
 public class ProjectMetadata
 {
