@@ -36,12 +36,22 @@
                     <div class="card-body">
                         <h5 class="card-title">@findProject.ProjectIdentifier</h5>
                         <p class="card-text">Nostr ID: <a href="/" target="_blank">@(NostrPublicKey.FromHex(findProject.NostrPubKey).Bech32)</a></p>
-                        <button @onclick="() => ViewProjectDetails(findProject.ProjectIdentifier)" class="btn btn-primary">View</button>
+
+                        @if (SessionStorage.IsProjectInStorageById(findProject.ProjectIdentifier))
+                        {
+                            <button @onclick="() => ViewProjectDetails(findProject.ProjectIdentifier)" class="btn btn-primary">View</button>
+                        }
+                        else
+                        {
+                            <p class="text-warning">Project not found in any relay!</p>
+                        }
                     </div>
                 </div>
             }
             
-            <h5>Search Projects</h5>
+            <div class="d-flex justify-content-center">
+                <button class="btn btn-secondary my-3" @onclick="SearchProjects">Fetch The Last 20 Projects</button>
+            </div>
 
             <!-- List of projects -->
             @if (searchInProgress)
@@ -54,7 +64,9 @@
             {
                 @if (projects.Count == 0)
                 {
-                    <p>No projects found.</p>
+                    <div class="d-flex justify-content-center">
+                        <p>No projects found.</p>
+                    </div>
                 }
                 else
                 {
@@ -71,9 +83,7 @@
                 }
             }
             
-            <div class="d-flex justify-content-center">
-                <button class="btn btn-secondary my-3" @onclick="SearchProjects">Fetch More Projects</button>
-            </div>
+          
         </div>
     </div>
 </div>
@@ -108,18 +118,15 @@
 
         if (findProject != null)
         {
-            projects.Add(findProject);
-            SessionStorage.SetProjectIndexerData(projects);
-
             _RelayService.LookupProjectsInfoByPubKeys<ProjectInfo>(_ =>
             {
                 if (!SessionStorage.IsProjectInStorageById(_.ProjectIdentifier))
                     SessionStorage.StoreProjectInfo(_);
             },
-                OnEndOfStreamAction: () =>
-                {
-                },
-                nostrPubKey: new[] { findProject.NostrPubKey });
+            OnEndOfStreamAction: () =>
+            {
+            },
+            nostrPubKey: new[] { findProject.NostrPubKey });
         }
 
         findInProgress = false;
@@ -128,7 +135,7 @@
     {
         searchInProgress = true;
         
-        var blockchainProjects = await _IndexerService.GetProjectsAsync(projects.Count, 20);
+        var blockchainProjects = await _IndexerService.GetProjectsAsync(null, 20);
         
         var projectsNotInList = blockchainProjects
             .Where(blockchainProject => projects.All(_ => _.ProjectIdentifier != blockchainProject.ProjectIdentifier))
