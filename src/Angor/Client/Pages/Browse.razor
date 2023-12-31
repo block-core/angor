@@ -84,7 +84,7 @@
                 }
                 else
                 {
-                    foreach (var project in projects.OrderBy(project => project.CreatedOnBlock))
+                    foreach (var project in projects.OrderByDescending(project => project.CreatedOnBlock))
                     {
                         <div class="card mb-3">
                             <div class="card-body">
