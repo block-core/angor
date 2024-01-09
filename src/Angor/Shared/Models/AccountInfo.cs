@@ -29,7 +29,7 @@ public class AccountInfo
 
     public string? GetNextReceiveAddress()
     {
-        return AddressesInfo.Last()?.Address;
+        return AddressesInfo.LastOrDefault()?.Address;
     }
 
     public string? GetNextChangeReceiveAddress()

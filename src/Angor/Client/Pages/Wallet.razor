@@ -35,40 +35,48 @@
             <div class="col">
                 <div class="alert alert-info" role="alert">No Wallet Found</div>
                 <!-- Adding a button to create a wallet -->
-                @*<button class="btn btn-primary mt-2" @onclick="CreateWallet">Create Wallet</button>*@
-
-                <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" @onclick="() => walletWordsCreateModal = true">Create Wallet</button>
+                <button  class="btn btn-primary mt-2" @onclick="() => {walletWordsCreateModal = true; PreLoad(); }">Create Wallet</button>
 
             </div>
 
             @if (walletWordsCreateModal)
             {
                 <!-- Wallet Words Create Modal -->
-                <div class="modal fade show d-block" id="walletWordsCreateModal" tabindex="-1" aria-labelledby="walletWordsCreateModalLabel" aria-hidden="true">
+                <div class="modal fade show d-block" >
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="walletWordsCreateModalLabel">Create Wallet</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" aria-label="Close"></button>
+                                <h5 class="modal-title" >Create Wallet</h5>
+                                <button class="btn-close"  @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
-                                <div class="mb-3">
-                                    <label for="walletWordsTextArea">Paste your wallet words here or generate a new wallet:</label>
-                                    <textarea class="form-control" id="walletWordsTextArea" rows="3" @bind="newWalletWords"></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="additionalPassphraseInput">Additional Passphrase (optional):</label>
-                                    <input type="text" class="form-control" id="additionalPassphraseInput" @bind="newWalletWordsPassphrase"/>
-                                </div>
-                                <div class="mb-3">
-                                    <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
-                                </div>
-                                <div class="mb-3">
-                                    <button class="btn btn-success" @onclick="CreateWalletAsync" data-bs-dismiss="modal">Create Wallet</button>
-                                </div>
+                                
+                                @if (preload)
+                                {
+                                    <div class="d-flex justify-content-center">
+                                        <div class="loader"></div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="mb-3">
+                                        <label >Paste your wallet words here or generate a new wallet:</label>
+                                        <textarea class="form-control"  rows="3" @bind="newWalletWords"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label >Additional Passphrase (optional):</label>
+                                        <input type="text" class="form-control" @bind="newWalletWordsPassphrase"/>
+                                    </div>
+                                    <div class="mb-3">
+                                        <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
+                                    </div>
+                                    <div class="mb-3">
+                                        <button class="btn btn-success" @onclick="CreateWalletAsync" >Create Wallet</button>
+                                    </div>
+                                }
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" >Close</button>
                             </div>
                         </div>
                     </div>
@@ -96,7 +104,7 @@
                 }
 
                 <!-- Replace '#' in 'data-bs-target' with the id of your modal -->
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" @onclick="() => walletWordsModal = true">Show Wallet Words</button>
+                <button type="button" class="btn btn-primary"  @onclick="() => walletWordsModal = true">Show Wallet Words</button>
 
                 <button class="btn btn-primary ml-2" @onclick="RefreshBalance">Refresh Balance</button>
                 
@@ -110,12 +118,12 @@
             @if (walletWordsModal)
             {
                 <!-- Wallet Words Modal -->
-                <div class="modal fade show d-block" id="walletWordsModal" tabindex="-1" aria-labelledby="walletWordsModalLabel" aria-hidden="true">
+                <div class="modal fade show d-block" >
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="walletWordsModalLabel">Wallet Words</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" aria-label="Close"></button>
+                                <h5 class="modal-title" >Wallet Words</h5>
+                                <button type="button" class="btn-close" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" aria-label="Close"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
 
@@ -146,12 +154,12 @@
 
                                 <!-- Delete wallet button -->
                                 <div class="mb-3">
-                                    <button class="btn btn-danger" @onclick="DeleteWallet" data-bs-dismiss="modal">Delete Wallet</button>
+                                    <button class="btn btn-danger" @onclick="DeleteWallet" >Delete Wallet</button>
                                 </div>
 
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" >Close</button>
                             </div>
                         </div>
                     </div>
@@ -205,7 +213,7 @@
                         <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
                     </div>
 
-                    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" @onclick="() => coinControlModal = true">Coin Control</button>
+                    <button type="button" class="btn btn-primary mb-3"  @onclick="() => coinControlModal = true">Coin Control</button>
                     
                     <!-- New Send button that triggers a confirmation dialog -->
                     <button type="button" class="btn btn-primary mb-3" onclick="@BuildSend">Send</button>
@@ -216,12 +224,12 @@
             @if (coinControlModal)
             {
                 <!-- Coin Control Modal -->
-                <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
+                <div class="modal fade show d-block" >
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => coinControlModal = false" aria-label="Close"></button>
+                                <button type="button" class="btn-close" @onclick="() => coinControlModal = false" aria-label="Close"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
                                 <!-- The tick boxes and amounts will go here -->
@@ -244,7 +252,7 @@
                                 }
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => coinControlModal = false">Close</button>
+                                <button type="button" class="btn btn-secondary" @onclick="() => coinControlModal = false">Close</button>
                             </div>
                         </div>
                     </div>
@@ -254,12 +262,12 @@
             @if (sendConfirmModal)
             {
                 <!-- Send Confirmation Modal -->
-                <div class="modal fade show d-block" id="sendConfirmModal" tabindex="-1" aria-labelledby="sendConfirmModalLabel" aria-hidden="true">
+                <div class="modal fade show d-block" >
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="sendConfirmModalLabel">Confirmation</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="() => sendConfirmModal = false"></button>
+                                <h5 class="modal-title">Confirmation</h5>
+                                <button type="button" class="btn-close" aria-label="Close" @onclick="() => sendConfirmModal = false"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
                                 Are you sure you want to send <strong>@_sendInfo.SendAmount @network.CoinTicker</strong> to <strong> @_sendInfo.SendToAddress?</strong>
@@ -291,8 +299,8 @@
 
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => sendConfirmModal = false">Cancel</button>
-                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="@SendCoins">Confirm</button>
+                                <button type="button" class="btn btn-secondary" @onclick="() => sendConfirmModal = false">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="@SendCoins">Confirm</button>
                             </div>
                         </div>
                     </div>
@@ -446,6 +454,28 @@
         });
         
         //TODO notify user in the UI in case the refresh failed 
+    }
+
+    bool preload = false;
+    bool firstpreload = true;
+    private void PreLoad()
+    {
+         // this is a workaround attempt to preload all the lazy loading components
+
+        if (firstpreload)
+        {
+            firstpreload = false;
+            preload = true;
+            Task.Run(() =>
+            {
+                WalletWords data = new WalletWords { Words = _walletOperations.GenerateWalletWords(), Passphrase = null };
+                _walletOperations.BuildAccountInfoForWalletWords(data);
+
+                preload = false;
+
+                StateHasChanged();
+            });
+        }
     }
 
     private async Task CreateWalletAsync()

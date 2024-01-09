@@ -193,6 +193,17 @@ tr[style*="cursor: pointer;"]:hover {
     background-size: 90%; /* Adjust the size of the logo as needed */
 }
 
+.loader-small {
+    border: 6px solid #eaeaea; /* Light grey for the base circle, thinner border */
+    border-top: 6px solid #f7931a; /* Bitcoin orange for the rotating part, thinner border */
+    border-radius: 50%;
+    width: 50px; /* Reduced width */
+    height: 50px; /* Reduced height */
+    animation: spin 2s linear infinite;
+    background: url('../bitcoin-logo.png') no-repeat center;
+    background-size: 80%; /* Adjust the size of the logo as needed */
+}
+
 .loader-slow {
     border: 12px solid #eaeaea; /* Light grey for the base circle */
     border-top: 12px solid #f7931a; /* Bitcoin orange for the rotating part */
