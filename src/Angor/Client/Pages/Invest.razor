@@ -269,8 +269,24 @@
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
+    }
 
-
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender || javascriptNostrToolsModule == null)
+        {
+            try
+            {
+                //TODO import the nostr tool module directly to c# class
+                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
+            }
+            catch (JSException e)
+            {
+                Console.WriteLine(e);
+                notificationComponent.ShowErrorMessage(e.Message);
+            }
+        }
+        
         if (project != null && recoverySigs?.Signatures.Any() == false)
         {
             var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
@@ -283,23 +299,6 @@
                 NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
                 , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
-        }
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            try
-            {
-                //TODO import the nostr tool module directly to c# class
-                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
-            }
-            catch (JSException e)
-            {
-                Console.WriteLine(e);
-                notificationComponent.ShowErrorMessage(e.Message);
-            }
         }
     }
 
