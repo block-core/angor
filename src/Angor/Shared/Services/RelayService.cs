@@ -17,8 +17,6 @@ namespace Angor.Shared.Services
         private INostrCommunicationFactory _communicationFactory;
         private INetworkService networkService;
         
-
-        private readonly List<IDisposable> _serviceSubscriptions;
         
         public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService,ILogger<RelaySubscriptionsHanding> baseLogger) 
             : base(baseLogger,communicationFactory,networkService)
@@ -29,9 +27,8 @@ namespace Angor.Shared.Services
 
             var nostrClient = _communicationFactory.GetOrCreateClient(this.networkService);
             
-            _serviceSubscriptions = new();
-            _serviceSubscriptions.Add(nostrClient.Streams.OkStream.Subscribe(HandleOkMessages));
-            _serviceSubscriptions.Add(nostrClient.Streams.EoseStream.Subscribe(HandleEoseMessages));
+            nostrClient.Streams.OkStream.Subscribe(HandleOkMessages);
+            nostrClient.Streams.EoseStream.LastAsync(_ => _.Subscription == "").Subscribe(HandleEoseMessages);
         }
 
         public void RegisterOKMessageHandler(string eventId, Action<NostrOkResponse> action)
@@ -54,9 +51,7 @@ namespace Angor.Shared.Services
                 Kinds = new[] { NostrKind.ApplicationSpecificData }
             });
 
-            nostrClient.Send(request);
-
-            if (!userSubscriptions.ContainsKey(subscriptionName))
+            if (!relaySubscriptions.ContainsKey(subscriptionName))
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionName)
@@ -66,13 +61,15 @@ namespace Angor.Shared.Services
                         responseDataAction(JsonSerializer.Deserialize<T>(ev.Content,settings));
                     });
 
-                userSubscriptions.Add(subscriptionName, new SubscriptionCallCounter<IDisposable>(subscription));
+                relaySubscriptions.Add(subscriptionName, subscription);
             }
 
             if (OnEndOfStreamAction != null)
             {
-                userEoseActions.TryAdd(subscriptionName,new SubscriptionCallCounter<Action>(OnEndOfStreamAction));
+                TryAddEoseAction(subscriptionName, OnEndOfStreamAction);
             }
+            
+            nostrClient.Send(request);
         }
 
         public void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,params string[] nostrPubKeys)
@@ -87,7 +84,7 @@ namespace Angor.Shared.Services
                 Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata},
             }));
 
-            if (userSubscriptions.ContainsKey(subscriptionKey)) 
+            if (relaySubscriptions.ContainsKey(subscriptionKey)) 
                 return;
             
             var subscription = nostrClient.Streams.EventStream
@@ -96,9 +93,12 @@ namespace Angor.Shared.Services
                 .Select(_ => _.Event)
                 .Subscribe(onResponseAction!);
 
-            userSubscriptions.Add(subscriptionKey, new SubscriptionCallCounter<IDisposable>(subscription));
+            relaySubscriptions.Add(subscriptionKey, subscription);
 
-            userEoseActions.TryAdd(subscriptionKey, new SubscriptionCallCounter<Action>(onEoseAction));
+            if (onEoseAction != null)
+            {
+                TryAddEoseAction(subscriptionKey, onEoseAction);   
+            }
         }
 
         public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)
@@ -116,7 +116,7 @@ namespace Angor.Shared.Services
                 Limit = limit
             }));
 
-            if (!userSubscriptions.ContainsKey(subscriptionKey))
+            if (!relaySubscriptions.ContainsKey(subscriptionKey))
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
@@ -124,7 +124,7 @@ namespace Angor.Shared.Services
                     .Select(_ => _.Event)
                     .Subscribe(onResponseAction!);
 
-                userSubscriptions.Add(subscriptionKey, new SubscriptionCallCounter<IDisposable>(subscription));
+                relaySubscriptions.Add(subscriptionKey, subscription);
             }
 
             return Task.CompletedTask;
@@ -137,7 +137,6 @@ namespace Angor.Shared.Services
 
         public void CloseConnection()
         {
-            _serviceSubscriptions.ForEach(subscription => subscription.Dispose());
             Dispose();
         }
 

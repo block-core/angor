@@ -13,19 +13,12 @@ namespace Angor.Client.Services
     {
         private readonly INostrCommunicationFactory _communicationFactory;
         private readonly INetworkService _networkService;
-        
-        private readonly List<IDisposable> _serviceSubscriptions;
 
         public SignService(ILogger<NostrWebsocketClient> _logger, ILogger<RelaySubscriptionsHanding> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService)
         : base(logger,communicationFactory,networkService)
         {
             _communicationFactory = communicationFactory;
             _networkService = networkService;
-            
-            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-
-            _serviceSubscriptions = new();
-            _serviceSubscriptions.Add(nostrClient.Streams.EoseStream.Subscribe(HandleEoseMessages));
         }
 
         public DateTime RequestInvestmentSigs(SignRecoveryRequest signRecoveryRequest)
@@ -66,7 +59,7 @@ namespace Angor.Client.Services
                     action.Invoke(_.Event.Content);
                 });
             
-            userSubscriptions.TryAdd(projectNostrPubKey, new SubscriptionCallCounter<IDisposable>(subscription));
+            relaySubscriptions.TryAdd(projectNostrPubKey, subscription);
             
             nostrClient.Send(new NostrRequest(projectNostrPubKey, new NostrFilter
             {
@@ -92,9 +85,9 @@ namespace Angor.Client.Services
                     action.Invoke(_.Pubkey,_.Content, _.CreatedAt.Value);
                 });
 
-            userSubscriptions.TryAdd(subscriptionKey,  new SubscriptionCallCounter<IDisposable>(subscription));
-            userEoseActions.TryAdd(subscriptionKey,new SubscriptionCallCounter<Action>(onAllMessagesReceived));
-
+            relaySubscriptions.TryAdd(subscriptionKey, subscription);
+            TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
+            
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 P = new[] { nostrPubKey }, //To founder
@@ -119,8 +112,8 @@ namespace Angor.Client.Services
                     action.Invoke(_.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier), _.CreatedAt.Value);
                 });
             
-            userSubscriptions.TryAdd(subscriptionKey,  new SubscriptionCallCounter<IDisposable>(subscription));
-            userEoseActions.TryAdd(subscriptionKey,new SubscriptionCallCounter<Action>(onAllMessagesReceived));
+            relaySubscriptions.TryAdd(subscriptionKey,  subscription);
+            TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
             
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
@@ -156,7 +149,6 @@ namespace Angor.Client.Services
 
         public void CloseConnection()
         {
-            _serviceSubscriptions.ForEach(subscription => subscription.Dispose());
             Dispose();
         }
 

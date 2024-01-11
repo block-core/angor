@@ -1,3 +1,4 @@
+using System.Reactive.Linq;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Requests;
 using Nostr.Client.Responses;
@@ -7,8 +8,8 @@ namespace Angor.Shared.Services;
 public class RelaySubscriptionsHanding : IDisposable
 {
     private ILogger<RelaySubscriptionsHanding> _logger;
-    protected Dictionary<string, SubscriptionCallCounter<IDisposable>> userSubscriptions;
-    protected Dictionary<string, SubscriptionCallCounter<Action>> userEoseActions;
+    protected Dictionary<string, IDisposable> relaySubscriptions;
+    protected Dictionary<string, Action> userEoseActions;
     protected Dictionary<string, SubscriptionCallCounter<Action<NostrOkResponse>>> OkVerificationActions;
     
     private INostrCommunicationFactory _communicationFactory;
@@ -19,7 +20,7 @@ public class RelaySubscriptionsHanding : IDisposable
         _logger = logger;
         _communicationFactory = communicationFactory;
         _networkService = networkService;
-        userSubscriptions = new();
+        relaySubscriptions = new();
         userEoseActions = new();
         OkVerificationActions = new();
     }
@@ -40,7 +41,7 @@ public class RelaySubscriptionsHanding : IDisposable
     {
         _logger.LogInformation($"OkStream {_.Accepted} message - {_.Message}");
 
-        if (OkVerificationActions.TryGetValue(_?.EventId ?? string.Empty, out SubscriptionCallCounter<Action<NostrOkResponse>> value))
+        if (OkVerificationActions.TryGetValue(_?.EventId ?? string.Empty, out var value))
         {
             value.NumberOfInvocations++;
             value.Item(_);
@@ -50,50 +51,56 @@ public class RelaySubscriptionsHanding : IDisposable
             }
         }
     }
-    
-    public void HandleEoseMessages(NostrEoseResponse _)
+
+    protected bool TryAddEoseAction(string subscriptionName, Action action)
+    {
+        _communicationFactory
+            .GetOrCreateClient(_networkService)
+            .Streams
+            .EoseStream
+            .LastAsync(_ => _.Subscription == subscriptionName)
+            .Subscribe(HandleEoseMessages);
+        
+        return userEoseActions.TryAdd(subscriptionName,action);
+    }
+
+    protected void HandleEoseMessages(NostrEoseResponse _)
     {
         _logger.LogInformation($"EoseStream {_.Subscription} message - {_.AdditionalData}");
 
-        if (userEoseActions.TryGetValue(_.Subscription, out SubscriptionCallCounter<Action> value))
+        if (userEoseActions.TryGetValue(_.Subscription, out var action))
         {
-            value.NumberOfInvocations++;
-            if (userEoseActions[_.Subscription].NumberOfInvocations == _communicationFactory.GetNumberOfRelaysConnected())
+            _logger.LogInformation($"Invoking action on EOSE - {_.Subscription}");
+            try
             {
-                _logger.LogInformation($"Invoking action on EOSE - {_.Subscription}");
-                try
-                {
-                    value.Item.Invoke();
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError(e,"Failed to invoke end of events event action");
-                }
-                userEoseActions.Remove(_.Subscription);
-                _logger.LogInformation($"Removed action on EOSE for subscription - {_.Subscription}");   
+                action.Invoke();
             }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to invoke end of events event action");
+            }
+
+            userEoseActions.Remove(_.Subscription);
+            _logger.LogInformation($"Removed action on EOSE for subscription - {_.Subscription}");
         }
 
-        if (!userSubscriptions.ContainsKey(_.Subscription)) 
+        if (!relaySubscriptions.ContainsKey(_.Subscription)) 
             return;
-
-        userSubscriptions[_.Subscription].NumberOfInvocations++;
-                
-        if (userSubscriptions[_.Subscription].NumberOfInvocations != _communicationFactory.GetNumberOfRelaysConnected()) 
-            return;
-                
+        
         _logger.LogInformation($"Disposing of subscription - {_.Subscription}");
+        
         _communicationFactory
             .GetOrCreateClient(_networkService)
             .Send(new NostrCloseRequest(_.Subscription));
-        userSubscriptions[_.Subscription].Item.Dispose();
-        userSubscriptions.Remove(_.Subscription);
+        
+        relaySubscriptions[_.Subscription].Dispose();
+        relaySubscriptions.Remove(_.Subscription);
         _logger.LogInformation($"subscription disposed - {_.Subscription}");
     }
 
     public void Dispose()
     {
-        userSubscriptions.Values.ToList().ForEach(_ => _.Item.Dispose());
+        relaySubscriptions.Values.ToList().ForEach(_ => _.Dispose());
         _communicationFactory.CloseClientConnection();
     }
 }   
