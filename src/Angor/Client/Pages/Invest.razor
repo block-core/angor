@@ -282,7 +282,7 @@
             }
             catch (JSException e)
             {
-                Console.WriteLine(e);
+                _Logger.LogError(e,"Failed to load the nostr tools module");
                 notificationComponent.ShowErrorMessage(e.Message);
             }
         }
