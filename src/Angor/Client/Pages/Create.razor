@@ -127,9 +127,9 @@
             @foreach (var stage in project.Stages)
             {
                 <div class="mb-3">
-                    <label class="form-label">Stage @project.Stages.IndexOf(stage)</label>
+                    <label class="form-label">The amount in % to allocate for stage @(project.Stages.IndexOf(stage) + 1)</label>
                     <div class="input-group">
-                        <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1"/>
+                        <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1" />
                         <InputDate @bind-Value="stage.ReleaseDate" class="form-control"/>
                         <button type="button" class="btn btn-danger" @onclick="() => RemoveStage(stage)">Remove</button>
                     </div>
@@ -324,6 +324,36 @@
 
     private async Task CreatProject()
     {
+        if (project.TargetAmount < (decimal)0.1)
+        {
+            notificationComponent.ShowErrorMessage("Project target amount must be higher then 0.1 BTC");
+            return;
+        }
+
+        if (project.StartDate < DateTime.UtcNow)
+        {
+            notificationComponent.ShowErrorMessage("Project must start in the future");
+            return;
+        }
+
+        if (project.ExpiryDate < project.StartDate)
+        {
+            notificationComponent.ShowErrorMessage("Project must expire after start date");
+            return;
+        }
+
+        if (project.Stages.Any() && project.ExpiryDate < project.Stages.Last().ReleaseDate)
+        {
+            notificationComponent.ShowErrorMessage("Project expire date must be after the last stage date");
+            return;
+        }
+
+        if (project.PenaltyDays < 10)
+        {
+            notificationComponent.ShowErrorMessage("Project penalty must be higher then 10 days");
+            return;
+        }
+
         if (project.Stages.Count() < 3)
         {
             notificationComponent.ShowErrorMessage("There must be at least 3 stages");
