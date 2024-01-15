@@ -41,6 +41,8 @@ public class NetworkConfiguration : INetworkConfiguration
         return new List<SettingsUrl>
         {
             new SettingsUrl { Name = "", Url = "wss://relay.angor.io", IsPrimary = true },
+            new SettingsUrl { Name = "", Url = "wss://relay2.angor.io", IsPrimary = true },
+
         };
     }
 
