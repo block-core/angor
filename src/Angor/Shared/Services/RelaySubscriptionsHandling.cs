@@ -13,14 +13,12 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     
     private INostrCommunicationFactory _communicationFactory;
     private INetworkService _networkService;
-    private ICacheStorage _cacheStorage;
 
-    public RelaySubscriptionsHandling(ILogger<RelaySubscriptionsHandling> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService, ICacheStorage cacheStorage)
+    public RelaySubscriptionsHandling(ILogger<RelaySubscriptionsHandling> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService)
     {
         _logger = logger;
         _communicationFactory = communicationFactory;
         _networkService = networkService;
-        _cacheStorage = cacheStorage;
         relaySubscriptions = new();
         userEoseActions = new();
         OkVerificationActions = new();
@@ -55,7 +53,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
     public bool TryAddEoseAction(string subscriptionName, Action action)
     {
-        _cacheStorage.AddSubscriptionToEose(subscriptionName);
+        _communicationFactory.MonitoringEoseReceivedOnSubscription(subscriptionName);
         
         return userEoseActions.TryAdd(subscriptionName,action);
     }
@@ -83,6 +81,8 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
             _logger.LogInformation($"Removed action on EOSE for subscription - {_.Subscription}");
         }
 
+        _communicationFactory.ClearEoseReceivedOnSubscriptionMonitoring(_.Subscription);
+        
         if (!relaySubscriptions.ContainsKey(_.Subscription)) 
             return;
         

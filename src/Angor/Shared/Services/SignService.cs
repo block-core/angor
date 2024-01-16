@@ -1,8 +1,6 @@
 ﻿using System.Reactive.Linq;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using Microsoft.Extensions.Logging;
-using Nostr.Client.Client;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 using Nostr.Client.Requests;

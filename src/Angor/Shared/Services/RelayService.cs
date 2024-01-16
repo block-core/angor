@@ -35,7 +35,7 @@ namespace Angor.Shared.Services
         public void RegisterOKMessageHandler(string eventId, Action<NostrOkResponse> action)
         {
             //TODO add this for every call
-           // _subscriptionsHanding. OkVerificationActions.Add(eventId,new SubscriptionCallCounter<Action<NostrOkResponse>>(action));
+            //_subscriptionsHanding. OkVerificationActions.Add(eventId,new SubscriptionCallCounter<Action<NostrOkResponse>>(action));
         }
 
         public void LookupProjectsInfoByPubKeys<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,params string[] nostrPubKeys)

@@ -13,14 +13,14 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     private NostrMultiWebsocketClient? _nostrMultiWebsocketClient;
     private readonly List<IDisposable> _serviceSubscriptions;
 
-    private ICacheStorage _cacheStorage;
-    
-    public NostrCommunicationFactory(ILogger<NostrWebsocketClient> clientLogger, ILogger<NostrWebsocketCommunicator> communicatorLogger, ICacheStorage cacheStorage)
+    private Dictionary<string, List<string>> EoseCalledOnSubscriptionClients;
+
+    public NostrCommunicationFactory(ILogger<NostrWebsocketClient> clientLogger, ILogger<NostrWebsocketCommunicator> communicatorLogger)
     {
         _clientLogger = clientLogger;
         _communicatorLogger = communicatorLogger;
-        _cacheStorage = cacheStorage;
         _serviceSubscriptions = new();
+        EoseCalledOnSubscriptionClients = new();
     }
 
     public INostrClient GetOrCreateClient(INetworkService networkService)
@@ -60,9 +60,15 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         {
             var communicator = CreateCommunicator(url.Url, url.Name);
             var client = new NostrWebsocketClient(communicator, _clientLogger);
+            
             client.Streams.EoseStream.Subscribe(_ =>
-                _cacheStorage.AddEoseEventCalledOnClient(_.Subscription, _.CommunicatorName));
+            {
+                if (EoseCalledOnSubscriptionClients.ContainsKey(_.Subscription))
+                    EoseCalledOnSubscriptionClients[_.Subscription].Add(_.CommunicatorName); //TODO 
+            });
+            
             _nostrMultiWebsocketClient.RegisterClient(client);
+            
             communicator.StartOrFail();
         }
     }
@@ -72,11 +78,24 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         Dispose();
     }
 
-    public bool EventReceivedOnAllRelays( string subscription)
+    public bool EventReceivedOnAllRelays(string subscription)
     {
-        var eventRaisedOnCommunicatorList =  _cacheStorage.GetNamesOfCommunicatorsThatReceivedEose(subscription);
+        if (!EoseCalledOnSubscriptionClients.ContainsKey(subscription))
+            return true; //If not monitoring than no need to block
         
-        return _nostrMultiWebsocketClient?.Clients.All(x => eventRaisedOnCommunicatorList.Contains(x.Communicator.Name)) ?? false;
+        return _nostrMultiWebsocketClient?.Clients
+            .All(x => 
+                EoseCalledOnSubscriptionClients[subscription].Contains(x.Communicator.Name)) ?? false;
+    }
+    
+    public void MonitoringEoseReceivedOnSubscription(string subscription)
+    {
+        EoseCalledOnSubscriptionClients.Add(subscription, new List<string>());
+    }
+    
+    public void ClearEoseReceivedOnSubscriptionMonitoring(string subscription)
+    {
+        EoseCalledOnSubscriptionClients.Remove(subscription);
     }
     
     public int GetNumberOfRelaysConnected()
@@ -120,5 +139,6 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         _serviceSubscriptions.Clear();
         _nostrMultiWebsocketClient?.Dispose();
         _nostrMultiWebsocketClient = null;
+        EoseCalledOnSubscriptionClients = new();
     }
 }

@@ -47,8 +47,8 @@ builder.Services.AddTransient<IInvestmentTransactionBuilder, InvestmentTransacti
 builder.Services.AddTransient<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
 builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 
-builder.Services.AddScoped<INostrCommunicationFactory,NostrCommunicationFactory>();
-builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
+builder.Services.AddSingleton<INostrCommunicationFactory,NostrCommunicationFactory>();
+builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>(); //TODO should this be singleton?
 
 
 await builder.Build().RunAsync();

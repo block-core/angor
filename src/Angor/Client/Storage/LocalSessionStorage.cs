@@ -75,26 +75,7 @@ public class LocalSessionStorage : ICacheStorage
     {
         _sessionStorageService.SetItem("unconfirmed-outbound", unconfirmedInfo);
     }
-
-    public void AddSubscriptionToEose(string subscriptionName)
-    {
-        _sessionStorageService.SetItem("Eose" + subscriptionName,new List<string>());
-    }
-
-    public void AddEoseEventCalledOnClient(string subscriptionName, string communicatorName)
-    {
-        var list = _sessionStorageService.GetItem<List<string>>("Eose" + subscriptionName);
-
-        list ??= new List<string>();
-        
-        if (list.Contains(communicatorName))
-            return;
-        
-        list.Add(communicatorName);
-        
-        _sessionStorageService.SetItem("Eose" + subscriptionName,list);
-    }
-
+    
     public List<string> GetNamesOfCommunicatorsThatReceivedEose(string subscriptionName)
     {
         return _sessionStorageService.GetItem<List<string>>("Eose" + subscriptionName);
