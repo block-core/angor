@@ -213,10 +213,10 @@
     
     private ProjectInfo project = new ProjectInfo
     {
-        StartDate = DateTime.UtcNow,
-        PenaltyDays = 100,
-        ExpiryDate = DateTime.UtcNow.AddDays(50),
-        TargetAmount = 100,
+        StartDate = DateTime.UtcNow.AddHours(2),
+        PenaltyDays = 90,
+        ExpiryDate = DateTime.UtcNow.AddDays(120),
+        TargetAmount = 50,
         CreationTransactionId = "unknowen",
         Stages = new List<Stage>
         {
