@@ -53,17 +53,18 @@ namespace Angor.Client.Services
         public void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime sigRequestSentTime, Func<string, Task> action)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            
-            var subscription = nostrClient.Streams.EventStream
-                .Where(_ => _.Subscription == projectNostrPubKey)
-                .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
-                .Subscribe(_ =>
-                {
-                    action.Invoke(_.Event.Content);
-                });
-            
-            _subscriptionsHanding.TryAddRelaySubscription(projectNostrPubKey, subscription);
-            
+
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(projectNostrPubKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == projectNostrPubKey)
+                    .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
+                    .Subscribe(_ => { action.Invoke(_.Event.Content); });
+
+                _subscriptionsHanding.TryAddRelaySubscription(projectNostrPubKey, subscription);
+
+            }
+
             nostrClient.Send(new NostrRequest(projectNostrPubKey, new NostrFilter
             {
                 Authors = new[] { projectNostrPubKey }, //From founder
@@ -79,16 +80,17 @@ namespace Angor.Client.Services
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
             var subscriptionKey = nostrPubKey + "sig_req";
-            
-            var subscription = nostrClient.Streams.EventStream
-                .Where(_ => _.Subscription == subscriptionKey)
-                .Select(_ => _.Event)
-                .Subscribe(_ =>
-                {
-                    action.Invoke(_.Pubkey,_.Content, _.CreatedAt.Value);
-                });
 
-            _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Select(_ => _.Event)
+                    .Subscribe(_ => { action.Invoke(_.Pubkey, _.Content, _.CreatedAt.Value); });
+
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
             _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
             
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
@@ -106,16 +108,20 @@ namespace Angor.Client.Services
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
             var subscriptionKey = nostrPubKey + "sig_res";
-            
-            var subscription = nostrClient.Streams.EventStream
-                .Where(_ => _.Subscription == subscriptionKey)
-                .Select(_ => _.Event)
-                .Subscribe(_ =>
-                {
-                    action.Invoke(_.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier), _.CreatedAt.Value);
-                });
-            
-            _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Select(_ => _.Event)
+                    .Subscribe(_ =>
+                    {
+                        action.Invoke(_.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier), _.CreatedAt.Value);
+                    });
+
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
             _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
             
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter

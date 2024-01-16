@@ -35,6 +35,10 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         public T Item { get; }
     }
 
+    public bool TryAddOKAction(string eventId, Action<NostrOkResponse> action)
+    {
+        return OkVerificationActions.TryAdd(eventId,new SubscriptionCallCounter<Action<NostrOkResponse>>(action));
+    }
 
     public void HandleOkMessages(NostrOkResponse _)
     {
@@ -96,7 +100,12 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         relaySubscriptions.Remove(_.Subscription);
         _logger.LogInformation($"subscription disposed - {_.Subscription}");
     }
-    
+
+    public bool RelaySubscriptionAdded(string subscriptionKey)
+    {
+        return relaySubscriptions.ContainsKey(subscriptionKey);
+    }
+
     public bool TryAddRelaySubscription(string subscriptionKey, IDisposable subscription)
     {
         return relaySubscriptions.ContainsKey(subscriptionKey) || relaySubscriptions.TryAdd(subscriptionKey, subscription);

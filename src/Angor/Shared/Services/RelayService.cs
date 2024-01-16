@@ -35,7 +35,7 @@ namespace Angor.Shared.Services
         public void RegisterOKMessageHandler(string eventId, Action<NostrOkResponse> action)
         {
             //TODO add this for every call
-            //_subscriptionsHanding. OkVerificationActions.Add(eventId,new SubscriptionCallCounter<Action<NostrOkResponse>>(action));
+            _subscriptionsHanding.TryAddOKAction(eventId,action);
         }
 
         public void LookupProjectsInfoByPubKeys<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,params string[] nostrPubKeys)
@@ -53,18 +53,15 @@ namespace Angor.Shared.Services
                 Kinds = new[] { NostrKind.ApplicationSpecificData }
             });
 
-            // if (!relaySubscriptions.ContainsKey(subscriptionName))
-            // {
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionName))
+            {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionName)
                     .Select(_ => _.Event)
-                    .Subscribe(ev =>
-                    {
-                        responseDataAction(JsonSerializer.Deserialize<T>(ev.Content,settings));
-                    });
+                    .Subscribe(ev => { responseDataAction(JsonSerializer.Deserialize<T>(ev.Content, settings)); });
 
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionName, subscription);
-            //}
+            }
 
             if (OnEndOfStreamAction != null)
             {
@@ -86,13 +83,16 @@ namespace Angor.Shared.Services
                 Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata},
             }));
 
-            var subscription = nostrClient.Streams.EventStream
-                .Where(_ => _.Subscription == subscriptionKey)
-                .Where(_ => _.Event is not null)
-                .Select(_ => _.Event)
-                .Subscribe(onResponseAction!);
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event is not null)
+                    .Select(_ => _.Event)
+                    .Subscribe(onResponseAction!);
 
-            _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
 
             if (onEoseAction != null)
             {
@@ -106,16 +106,16 @@ namespace Angor.Shared.Services
 
             var subscriptionKey = nostrPubKey + "DM";
 
-            // if (!relaySubscriptions.ContainsKey(subscriptionKey))
-            // {
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event is not null)
                     .Select(_ => _.Event)
                     .Subscribe(onResponseAction!);
-                
+
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
-                // }
+            }
 
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
