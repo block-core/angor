@@ -9,16 +9,21 @@ using Nostr.Client.Requests;
 
 namespace Angor.Client.Services
 {
-    public class SignService : RelaySubscriptionsHanding, ISignService
+    public class SignService :  ISignService
     {
         private readonly INostrCommunicationFactory _communicationFactory;
         private readonly INetworkService _networkService;
+        private IRelaySubscriptionsHandling _subscriptionsHanding;
 
-        public SignService(ILogger<NostrWebsocketClient> _logger, ILogger<RelaySubscriptionsHanding> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService)
-        : base(logger,communicationFactory,networkService)
+        public SignService(INostrCommunicationFactory communicationFactory, INetworkService networkService, IRelaySubscriptionsHandling subscriptionsHanding)
         {
             _communicationFactory = communicationFactory;
             _networkService = networkService;
+            _subscriptionsHanding = subscriptionsHanding;
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            
+            nostrClient.Streams.OkStream.Subscribe(_subscriptionsHanding.HandleOkMessages);
+            nostrClient.Streams.EoseStream.Subscribe(_subscriptionsHanding.HandleEoseMessages);
         }
 
         public DateTime RequestInvestmentSigs(SignRecoveryRequest signRecoveryRequest)
@@ -59,7 +64,7 @@ namespace Angor.Client.Services
                     action.Invoke(_.Event.Content);
                 });
             
-            relaySubscriptions.TryAdd(projectNostrPubKey, subscription);
+            _subscriptionsHanding.TryAddRelaySubscription(projectNostrPubKey, subscription);
             
             nostrClient.Send(new NostrRequest(projectNostrPubKey, new NostrFilter
             {
@@ -85,8 +90,8 @@ namespace Angor.Client.Services
                     action.Invoke(_.Pubkey,_.Content, _.CreatedAt.Value);
                 });
 
-            relaySubscriptions.TryAdd(subscriptionKey, subscription);
-            TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
+            _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
             
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
@@ -112,8 +117,8 @@ namespace Angor.Client.Services
                     action.Invoke(_.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier), _.CreatedAt.Value);
                 });
             
-            relaySubscriptions.TryAdd(subscriptionKey,  subscription);
-            TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
+            _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
             
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
@@ -149,7 +154,7 @@ namespace Angor.Client.Services
 
         public void CloseConnection()
         {
-            Dispose();
+            _subscriptionsHanding.Dispose();
         }
 
         private string NostrCoordinatesIdentifierTag(string nostrPubKey)

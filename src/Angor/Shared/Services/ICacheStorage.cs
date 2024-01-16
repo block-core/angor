@@ -18,6 +18,10 @@ public interface ICacheStorage
     void SetUnconfirmedInboundFunds(List<UtxoData> unconfirmedInfo);
     void SetUnconfirmedOutboundFunds(List<Outpoint> unconfirmedInfo);
 
+    void AddSubscriptionToEose(string subscriptionName);
+    void AddEoseEventCalledOnClient(string subscriptionName, string communicatorName);
+    List<string> GetNamesOfCommunicatorsThatReceivedEose(string subscriptionName);
+
     void DeleteUnconfirmedInfo();
     void WipeSession();
 }

@@ -47,7 +47,8 @@ builder.Services.AddTransient<IInvestmentTransactionBuilder, InvestmentTransacti
 builder.Services.AddTransient<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
 builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 
-builder.Services.AddSingleton<INostrCommunicationFactory,NostrCommunicationFactory>();
+builder.Services.AddScoped<INostrCommunicationFactory,NostrCommunicationFactory>();
+builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
 
 
 await builder.Build().RunAsync();

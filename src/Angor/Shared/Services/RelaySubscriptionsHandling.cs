@@ -1,25 +1,26 @@
-using System.Reactive.Linq;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Requests;
 using Nostr.Client.Responses;
 
 namespace Angor.Shared.Services;
 
-public class RelaySubscriptionsHanding : IDisposable
+public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandling
 {
-    private ILogger<RelaySubscriptionsHanding> _logger;
+    private ILogger<RelaySubscriptionsHandling> _logger;
     protected Dictionary<string, IDisposable> relaySubscriptions;
     protected Dictionary<string, Action> userEoseActions;
     protected Dictionary<string, SubscriptionCallCounter<Action<NostrOkResponse>>> OkVerificationActions;
     
     private INostrCommunicationFactory _communicationFactory;
     private INetworkService _networkService;
+    private ICacheStorage _cacheStorage;
 
-    protected RelaySubscriptionsHanding(ILogger<RelaySubscriptionsHanding> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService)
+    public RelaySubscriptionsHandling(ILogger<RelaySubscriptionsHandling> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService, ICacheStorage cacheStorage)
     {
         _logger = logger;
         _communicationFactory = communicationFactory;
         _networkService = networkService;
+        _cacheStorage = cacheStorage;
         relaySubscriptions = new();
         userEoseActions = new();
         OkVerificationActions = new();
@@ -52,22 +53,20 @@ public class RelaySubscriptionsHanding : IDisposable
         }
     }
 
-    protected bool TryAddEoseAction(string subscriptionName, Action action)
+    public bool TryAddEoseAction(string subscriptionName, Action action)
     {
-        _communicationFactory
-            .GetOrCreateClient(_networkService)
-            .Streams
-            .EoseStream
-            .LastAsync(_ => _.Subscription == subscriptionName)
-            .Subscribe(HandleEoseMessages);
+        _cacheStorage.AddSubscriptionToEose(subscriptionName);
         
         return userEoseActions.TryAdd(subscriptionName,action);
     }
 
-    protected void HandleEoseMessages(NostrEoseResponse _)
+    public void HandleEoseMessages(NostrEoseResponse _)
     {
         _logger.LogInformation($"EoseStream {_.Subscription} message - {_.AdditionalData}");
 
+        if (!_communicationFactory.EventReceivedOnAllRelays(_.Subscription))
+            return;
+        
         if (userEoseActions.TryGetValue(_.Subscription, out var action))
         {
             _logger.LogInformation($"Invoking action on EOSE - {_.Subscription}");
@@ -96,6 +95,11 @@ public class RelaySubscriptionsHanding : IDisposable
         relaySubscriptions[_.Subscription].Dispose();
         relaySubscriptions.Remove(_.Subscription);
         _logger.LogInformation($"subscription disposed - {_.Subscription}");
+    }
+    
+    public bool TryAddRelaySubscription(string subscriptionKey, IDisposable subscription)
+    {
+        return relaySubscriptions.ContainsKey(subscriptionKey) || relaySubscriptions.TryAdd(subscriptionKey, subscription);
     }
 
     public void Dispose()
