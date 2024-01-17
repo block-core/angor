@@ -76,12 +76,6 @@ namespace Angor.Shared.Services
             var subscriptionKey = Guid.NewGuid().ToString().Replace("-","");
             
             var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
-            
-            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
-            {
-                Authors = nostrPubKeys,
-                Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata},
-            }));
 
             if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
             {
@@ -98,6 +92,12 @@ namespace Angor.Shared.Services
             {
                 _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onEoseAction);   
             }
+            
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                Authors = nostrPubKeys,
+                Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata},
+            }));
         }
 
         public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)
