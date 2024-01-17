@@ -1,10 +1,13 @@
 ﻿@page "/investor"
 @using Angor.Client.Storage
 @using Angor.Shared.Models
+@using Angor.Shared.Services
+@using Blockcore.NBitcoin
 
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
+@inject ICacheStorage SessionStorage;
 
 @inherits BaseComponent
 
@@ -22,12 +25,12 @@
     <NotificationComponent @ref="notificationComponent"/>
     
     <!-- Summary Statistics -->
-    <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+    <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
         <div class="col">
             <div class="card text-white bg-primary">
                 <div class="card-body">
-                    <h5 class="card-title">Total Projects</h5>
-                    <p class="card-text">@projects.Count</p>
+                    <h5 class="card-title">Funded Projects</h5>
+                    <p class="card-text">@TotalFundedProjects</p>
                 </div>
             </div>
         </div>
@@ -35,15 +38,23 @@
             <div class="card text-white bg-success">
                 <div class="card-body">
                     <h5 class="card-title">Total invested</h5>
-                    <p class="card-text"> @projects.Sum(s => s.TargetAmount) @network.CoinTicker</p>
+                    <p class="card-text"> @Money.Satoshis(TotalInvested).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                 </div>
             </div>
         </div>
         <div class="col">
             <div class="card text-white bg-info">
                 <div class="card-body">
-                    <h5 class="card-title">Total Stages</h5>
-                    <p class="card-text">@projects.Sum(s => s.Stages.Count)</p>
+                    <h5 class="card-title">Wallet</h5>
+                    <p class="card-text">@Money.Satoshis(TotalWallet).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card text-white bg-secondary">
+                <div class="card-body">
+                    <h5 class="card-title">In Recovery</h5>
+                    <p class="card-text">@Money.Satoshis(TotalInRecovery).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                 </div>
             </div>
         </div>
@@ -51,27 +62,72 @@
 
     <!-- List of Projects -->
     <h2 class="mb-4">Your Projects</h2>
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        @foreach(var project in projects)
-        {
-            <div class="col">
-                <div class="card">
-                    <img src="https://via.placeholder.com/150" class="card-img-top" alt="Project Image">
-                    <div class="card-body">
-                        <h5 class="card-title">Project Title</h5>
-                        <p class="card-text">@project.ProjectIdentifier</p>
-                        <p class="card-text">Short project description...</p>
-                        <NavLink href=@($"/view/{project.ProjectIdentifier}") class="btn btn-primary">View Project</NavLink>
-                    </div>
-                </div>
-            </div>
-        }
+    <div class="row">
+        <div class="col">
+            <table class="table table-bordered">
+                <thead>
+                    <tr >
+                        <th></th>
+                        <th></th>
+                        <th>Funding Target (@network.CoinTicker)</th>
+                        <th>Raised (@network.CoinTicker)</th>
+                        <th>Raised  (% Target)</th>
+                        <th>Project Status</th>
+                        <th>My Investment (@network.CoinTicker)</th>
+                        <th>Spent by Founder</th>
+                        <th>Available to Founder</th>
+                        <th>In Recovery</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach(var project in projects)
+                {
+                    <tr>
+                        <td>
+                            <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link"> @TrimString(@project.ProjectInfo.ProjectIdentifier)</a>
+                        </td>
+                        <td> @project.ProjectMetadata?.Name</td>
+                        <td>@project.ProjectInfo.TargetAmount @network.CoinTicker</td>
+                        <td>0</td>
+                        <td>0%</td>
+                        <td>
+                            @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+                            {
+                                <p class="text-info">Funding</p>
+                            }
+                            else
+                            {
+                                <p class="text-success">Live</p>
+                            }
+                        </td>
+                        <td>@Money.Satoshis(project.SignatureInfo?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker @(!project.SignatureInfo?.Signatures?.Any() ?? false ? "(pending)" : string.Empty)</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>@Money.Satoshis(project.SignatureInfo?.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     </div>
+
 </div>
 
 @code {
 
-    private List<ProjectInfo> projects;
+    private List<ProjectData> projects = new();
+
+    long TotalInvested = 0;
+    long TotalWallet = 0;
+    int TotalFundedProjects = 0;
+    long TotalInRecovery = 0;
+
+    public class ProjectData
+    {
+        public ProjectInfo ProjectInfo;
+        public ProjectMetadata? ProjectMetadata;
+        public SignatureInfo? SignatureInfo;
+    }
 
     protected override Task OnInitializedAsync()
     {
@@ -79,10 +135,41 @@
 
         if (hasWallet)
         {
-            projects = storage.GetInvestmentProjects();
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var unconfirmedInfo = SessionStorage.GetUnconfirmedInboundFunds();
+
+            var investedProjects = storage.GetInvestmentProjects();
+            var recoveries = storage.GetSignatures();
+
+            foreach (var projectInfo in investedProjects)
+            {
+                var data = new ProjectData { ProjectInfo = projectInfo };
+                projects.Add(data);
+                storage.GetInvestmentProjectsMetadata().TryGetValue(projectInfo.NostrPubKey, out data.ProjectMetadata);
+                data.SignatureInfo = recoveries.FirstOrDefault(s => s.ProjectIdentifier == projectInfo.ProjectIdentifier);
+            }
+
+            var abi = new AccountBalanceInfo();
+            abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
+
+            TotalFundedProjects = projects.Count;
+            TotalInvested =  projects.Sum(s => s.SignatureInfo?.AmountInvested ?? 0);
+            TotalWallet = abi.TotalBalance;
+            TotalInRecovery = projects.Sum(s => s.SignatureInfo?.AmountInRecovery ?? 0);
+
         }
 
         return Task.CompletedTask;
+    }
+
+    public string TrimString(string input)
+    {
+        if (input.Length > 20)
+        {
+            return input.Substring(0, 10) + "..." + input.Substring(input.Length - 10);
+        }
+
+        return input;
     }
 
     private void NavigateToPenalties()

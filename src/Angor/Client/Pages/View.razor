@@ -5,8 +5,9 @@
 @using Blockcore.NBitcoin
 @using Angor.Client.Services
 @using Angor.Shared.Services
+@using System.Text.Json
+@using Nostr.Client.Messages
 
-@inject HttpClient Http
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
@@ -14,6 +15,8 @@
 @inject NavigationManager NavigationManager
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IClipboardService _clipboardService
+@inject IIndexerService _IndexerService
+@inject IRelayService _RelayService
 
 @inherits BaseComponent
 
@@ -24,7 +27,16 @@
 
     @if (project == null)
     {
-        <p><em>project not found...</em></p>
+        @if (findInProgress)
+        {
+            <div class="d-flex justify-content-center">
+                <div class="loader"></div>
+            </div>
+        }
+        else
+        {
+            <p><em>project not found...</em></p>    
+        }
     }
     else
     {
@@ -35,10 +47,10 @@
             </div>
             <div class="card-body">
                 <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
-                
-                @if (SessionStorage.IsProjectMetadataStorageByPubkey(project.NostrPubKey))
+
+                @if (projectMetadata != null || SessionStorage.IsProjectMetadataStorageByPubkey(project.NostrPubKey))
                 {
-                    var metadata = SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
+                    var metadata = projectMetadata ?? SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
 
                     <hr />
                     <h3 class="card-title">@metadata?.Name</h3>
@@ -193,6 +205,7 @@
     public string ProjectId { get; set; }
 
     private ProjectInfo? project;
+    private ProjectMetadata? projectMetadata;
 
     private bool sendConfirmModal;
 
@@ -226,49 +239,84 @@
 
     bool founder = false;
     bool invested = false;
+    bool findInProgress = false;
 
     private List<string> NostrClients = new List<string> { "wss://relay.angor.io", "wss://relay.angor1.io" };
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-            var findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+        var findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+
+        if (findProject != null)
+        {
+            project = findProject;
+
+            var investedProject = storage.GetSignatures().First(s => s.ProjectIdentifier == ProjectId);
+
+            invested = investedProject.Signatures.Any();
+            myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investedProject.TransactionId}";
+
+            storage.GetInvestmentProjectsMetadata().TryGetValue(project.NostrPubKey, out projectMetadata);
+        }
+        else
+        {
+            findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
 
             if (findProject != null)
             {
+                founder = true;
+                invested = true;
                 project = findProject;
-
-                var investedProject = storage.GetSignatures().First(s => s.ProjectIdentifier == ProjectId);
-                
-                invested = investedProject.Signatures.Any();
-                myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investedProject.TransactionId}";
             }
             else
             {
-                findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
+                findProject = SessionStorage.GetProjectById(ProjectId);
 
                 if (findProject != null)
                 {
-                    founder = true;
-                    invested = true;
                     project = findProject;
                 }
                 else
                 {
-                    findProject = SessionStorage.GetProjectById(ProjectId);
+                    findInProgress = true;
 
-                    if (findProject != null)
+                    var projectIndexerData = await _IndexerService.GetProjectByIdAsync(ProjectId);
+
+                    if (projectIndexerData != null)
                     {
-                        project = findProject;
+                        _RelayService.RequestProjectCreateEventsByPubKey(e =>
+                        {
+                            switch (e)
+                            {
+                                case { Kind: NostrKind.Metadata }:
+                                    var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
+                                    projectMetadata = nostrMetadata;
+                                    if (!SessionStorage.IsProjectMetadataStorageByPubkey(e.Pubkey))
+                                        SessionStorage.StoreProjectMetadata(e.Pubkey, nostrMetadata);
+                                    break;
+                                case { Kind: NostrKind.ApplicationSpecificData }:
+                                    var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
+                                    project = projectInfo;
+                                    if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
+                                        SessionStorage.StoreProjectInfo(projectInfo);
+                                    findInProgress = false;
+                                    break;
+                            }
+                        }, () =>
+                        {
+                            findInProgress = false;
+                            StateHasChanged();
+                        }, 
+                            new[] { projectIndexerData.NostrPubKey });
                     }
                 }
             }
+        }
 
-            if (project != null)
-            {
-                projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
-            }
-        
-        return Task.CompletedTask;
+        if (project != null)
+        {
+            projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
+        }
     }
 
     private async Task RefreshBalance()

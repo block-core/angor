@@ -16,6 +16,8 @@ namespace Angor.Client.Storage
         void AddInvestmentProject(ProjectInfo project);
         void UpdateInvestmentProject(ProjectInfo project);
         List<ProjectInfo> GetInvestmentProjects();
+        void AddInvestmentProjectMetadata(string pubkey, ProjectMetadata projectMetadata);
+        Dictionary<string, ProjectMetadata> GetInvestmentProjectsMetadata();
         void DeleteInvestmentProjects();
         void AddFounderProject(params FounderProject[] projects);
         List<FounderProject> GetFounderProjects();

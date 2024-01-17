@@ -61,6 +61,11 @@ public class ClientStorage : IClientStorage, INetworkStorage
     {
         var ret = GetInvestmentProjects();
 
+        if (ret.Any(a => a.ProjectIdentifier == project.ProjectIdentifier))
+        {
+            return;
+        }
+
         ret.Add(project);
 
         _storage.SetItem("projects", ret);
@@ -90,6 +95,22 @@ public class ClientStorage : IClientStorage, INetworkStorage
         var ret =  _storage.GetItem<List<ProjectInfo>>("projects");
 
         return ret ?? new List<ProjectInfo>();
+    }
+
+    public void AddInvestmentProjectMetadata(string pubkey, ProjectMetadata projectMetadata)
+    {
+        var ret = GetInvestmentProjectsMetadata();
+
+        ret.TryAdd(pubkey, projectMetadata);
+
+        _storage.SetItem("projects-metadata", ret);
+
+    }
+    public Dictionary<string, ProjectMetadata> GetInvestmentProjectsMetadata()
+    {
+        var ret = _storage.GetItem<Dictionary<string,ProjectMetadata>>("projects-metadata");
+     
+        return ret ?? new Dictionary<string, ProjectMetadata>();
     }
 
     public void AddFounderProject(params FounderProject[] projects)

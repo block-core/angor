@@ -392,8 +392,6 @@
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project, investorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
-
-            storage.AddInvestmentProject(project); //TODO David need to verify that this is the correct place to change state in storage
             
             return new OperationResult { Success = true };
 
@@ -467,6 +465,7 @@
                 InvestorNostrPrivateKey = nostrPrivateKeyHex
             });
 
+            storage.AddInvestmentProject(project); //TODO David need to verify that this is the correct place to change state in storage
             storage.AddOrUpdateSignatures(recoverySigs);
 
             _SignService.LookupSignatureForInvestmentRequest(
@@ -479,6 +478,12 @@
 
         if (operationResult.Success)
         {
+            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
+            if (metadata != null)
+            {
+                storage.AddInvestmentProjectMetadata(project.NostrPubKey, metadata);
+            }
+
             notificationComponent.ShowNotificationMessage("Signature request sent", 5);
         }
         else
@@ -531,7 +536,8 @@
             // link the trx to the signatures
             recoverySigs.TransactionId = signedTransaction.GetHash().ToString();
             recoverySigs.SignedTransactionHex = null;
-            
+            recoverySigs.AmountInvested = signedTransaction.Outputs.Skip(2).Take(project.Stages.Count).Sum(s => s.Value);
+
             storage.AddOrUpdateSignatures(recoverySigs);
 
             var accountInfo = storage.GetAccountInfo(network.Name);
@@ -547,6 +553,12 @@
 
         if (operationResult.Success)
         {
+            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
+            if (metadata != null)
+            {
+                storage.AddInvestmentProjectMetadata(project.NostrPubKey, metadata);
+            }
+
             notificationComponent.ShowNotificationMessage("Invested in project", 5);
 
             NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");

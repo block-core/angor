@@ -486,6 +486,7 @@
             recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
             recoverySigs.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
+            recoverySigs.AmountInRecovery = unsignedRecoveryTransaction.TotalOut;
 
             Logger.LogInformation($"recoveryTransaction={recoverySigs.RecoveryTransactionId}");
 

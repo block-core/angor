@@ -171,20 +171,11 @@
                 StateHasChanged();
             }, 
             new[] { findProject.NostrPubKey });
-
-            //_RelayService.LookupProjectsInfoByPubKeys<ProjectInfo>(_ =>
-            //{
-            //    if (!SessionStorage.IsProjectInStorageById(_.ProjectIdentifier))
-            //        SessionStorage.StoreProjectInfo(_);
-            //},
-            //OnEndOfStreamAction: () =>
-            //{
-            //},
-            //nostrPubKey: new[] { findProject.NostrPubKey });
         }
 
         findInProgress = false;
     }
+
     private async Task SearchProjects()
     {
         searchInProgress = true;
