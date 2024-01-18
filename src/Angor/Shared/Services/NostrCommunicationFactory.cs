@@ -24,7 +24,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     }
 
     public INostrClient GetOrCreateClient(INetworkService networkService)
-    {
+      {
         if (_nostrMultiWebsocketClient is not null)
         {
             ConnectToAllRelaysInTheSettings(networkService);
@@ -36,19 +36,19 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
 
         ConnectToAllRelaysInTheSettings(networkService);
 
-        _nostrMultiWebsocketClient.Streams.UnknownMessageStream.Subscribe(_ =>
-            _clientLogger.LogError($"UnknownMessageStream {_.MessageType} {_.AdditionalData}"));
+        _serviceSubscriptions.Add(_nostrMultiWebsocketClient.Streams.UnknownMessageStream.Subscribe(_ =>
+            _clientLogger.LogError($"UnknownMessageStream {_.MessageType} {_.AdditionalData}")));
         
-        _nostrMultiWebsocketClient.Streams.EventStream
+        _serviceSubscriptions.Add(_nostrMultiWebsocketClient.Streams.EventStream
             .Where(_ => _.Event?.AdditionalData?.Any() ?? false).Subscribe(_ =>
                 _clientLogger.LogInformation(
-                    $"EventStream {_.Subscription} {_.Event?.Id} {_.Event?.AdditionalData}"));
+                    $"EventStream {_.Subscription} {_.Event?.Id} {_.Event?.AdditionalData}")));
         
-        _nostrMultiWebsocketClient.Streams.NoticeStream.Subscribe(_ =>
-                _clientLogger.LogError($"NoticeStream {_.Message}"));
+        _serviceSubscriptions.Add(_nostrMultiWebsocketClient.Streams.NoticeStream.Subscribe(_ =>
+                _clientLogger.LogError($"NoticeStream {_.Message}")));
         
-        _nostrMultiWebsocketClient.Streams.UnknownRawStream.Subscribe(_ =>
-                _clientLogger.LogError($"UnknownRawStream {_.Message}"));
+        _serviceSubscriptions.Add(_nostrMultiWebsocketClient.Streams.UnknownRawStream.Subscribe(_ =>
+                _clientLogger.LogError($"UnknownRawStream {_.Message}")));
 
         return _nostrMultiWebsocketClient;
     }
@@ -61,13 +61,13 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             var communicator = CreateCommunicator(url.Url, url.Name);
             var client = new NostrWebsocketClient(communicator, _clientLogger);
             
-            client.Streams.EoseStream.Subscribe(_ =>
+            _serviceSubscriptions.Add(client.Streams.EoseStream.Subscribe(_ =>
             {
                 if (EoseCalledOnSubscriptionClients.ContainsKey(_.Subscription))
                     EoseCalledOnSubscriptionClients[_.Subscription].Add(_.CommunicatorName); //TODO 
-            });
+            }));
             
-            _nostrMultiWebsocketClient.RegisterClient(client);
+            _nostrMultiWebsocketClient!.RegisterClient(client);
             
             communicator.StartOrFail();
         }
@@ -94,7 +94,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     }
     
     public void ClearEoseReceivedOnSubscriptionMonitoring(string subscription)
-    {
+        {
         EoseCalledOnSubscriptionClients.Remove(subscription);
     }
     
