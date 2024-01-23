@@ -295,26 +295,20 @@
         {
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
 
-            var resultId = await _RelayService.CreateNostrProfileAsync(NostrMetadata.ToNostrMetadata(),
-                NBitcoin.DataEncoders.Encoders.Hex.EncodeData((byte[])nostrKey.ToBytes()));
-
-            _RelayService.RegisterOKMessageHandler(resultId, _ =>
-            {
-                if (_.EventId != resultId)
-                    return;
-                if (!_.Accepted)
-                    notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
-                nostrProfileCreated = true;
-                StateHasChanged();
-            });
+            await _RelayService.CreateNostrProfileAsync(NostrMetadata.ToNostrMetadata(),
+                NBitcoin.DataEncoders.Encoders.Hex.EncodeData((byte[])nostrKey.ToBytes()),
+                _ =>
+                {   
+                    if (!_.Accepted)
+                        notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+                    nostrProfileCreated = true;
+                    StateHasChanged();
+                });
 
             return new SuccessOperationResult();
         });
 
-        if (operationResult.Success)
-        {
-        }
-        else
+        if (!operationResult.Success)
         {
             notificationComponent.ShowErrorMessage(operationResult.Message);
         }
@@ -447,7 +441,12 @@
 
             var nostrKeyHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
             
-            var resultId = await _RelayService.AddProjectAsync(project, nostrKeyHex);
+            var resultId = await _RelayService.AddProjectAsync(project, nostrKeyHex, 
+                _ =>
+                {
+                    if (!_.Accepted)
+                        notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+                });
             
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
@@ -458,14 +457,6 @@
             }
 
             storage.AddFounderProject(new FounderProject { ProjectInfo = project });
-            
-            _RelayService.RegisterOKMessageHandler(resultId, _ =>
-            {
-                if (_.EventId != resultId) 
-                    return;
-                if (!_.Accepted)
-                    notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
-            });
 
             return new OperationResult { Success = response.Success, Message = response.Message };
         });

@@ -32,12 +32,6 @@ namespace Angor.Shared.Services
             nostrClient.Streams.EoseStream.Subscribe(_subscriptionsHanding.HandleEoseMessages);
         }
 
-        public void RegisterOKMessageHandler(string eventId, Action<NostrOkResponse> action)
-        {
-            //TODO add this for every call
-            _subscriptionsHanding.TryAddOKAction(eventId,action);
-        }
-
         public void LookupProjectsInfoByPubKeys<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,params string[] nostrPubKeys)
         {
             const string subscriptionName = "ProjectInfoLookups";
@@ -139,7 +133,7 @@ namespace Angor.Shared.Services
             _subscriptionsHanding.Dispose();
         }
 
-        public Task<string> AddProjectAsync(ProjectInfo project, string hexPrivateKey)
+        public Task<string> AddProjectAsync(ProjectInfo project, string hexPrivateKey, Action<NostrOkResponse> action)
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
@@ -151,6 +145,8 @@ namespace Angor.Shared.Services
             var signed = GetNip78NostrEvent(content)
                 .Sign(key);
 
+            _subscriptionsHanding.TryAddOKAction(signed.Id,action);
+            
             var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
             
             nostrClient.Send(new NostrEventRequest(signed));
@@ -158,7 +154,7 @@ namespace Angor.Shared.Services
             return Task.FromResult(signed.Id);
         }
 
-        public Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string hexPrivateKey)
+        public Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string hexPrivateKey,Action<NostrOkResponse> action)
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
@@ -175,6 +171,8 @@ namespace Angor.Shared.Services
                         new NostrEventTag("l", "ProjectDeclaration", "#projectInfo"))
                 }.Sign(key);
 
+            _subscriptionsHanding.TryAddOKAction(signed.Id,action);
+            
             var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
             
             nostrClient.Send(new NostrEventRequest(signed));

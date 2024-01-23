@@ -9,7 +9,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     private ILogger<RelaySubscriptionsHandling> _logger;
     protected Dictionary<string, IDisposable> relaySubscriptions;
     protected Dictionary<string, Action> userEoseActions;
-    protected Dictionary<string, SubscriptionCallCounter<Action<NostrOkResponse>>> OkVerificationActions;
+    protected Dictionary<string, Action<NostrOkResponse>> OkVerificationActions;
     
     private INostrCommunicationFactory _communicationFactory;
     private INetworkService _networkService;
@@ -23,36 +23,27 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         userEoseActions = new();
         OkVerificationActions = new();
     }
-    
-    protected class SubscriptionCallCounter<T>
-    {
-        public SubscriptionCallCounter(T item)
-        {
-            Item = item;
-        }
-
-        public int NumberOfInvocations { get; set; }
-        public T Item { get; }
-    }
 
     public bool TryAddOKAction(string eventId, Action<NostrOkResponse> action)
     {
-        return OkVerificationActions.TryAdd(eventId,new SubscriptionCallCounter<Action<NostrOkResponse>>(action));
+        _communicationFactory.MonitoringOkReceivedOnSubscription(eventId);
+        return OkVerificationActions.TryAdd(eventId,action);
     }
 
-    public void HandleOkMessages(NostrOkResponse _)
+    public void HandleOkMessages(NostrOkResponse okResponse)
     {
-        _logger.LogInformation($"OkStream {_.Accepted} message - {_.Message}");
+        _logger.LogInformation($"OkStream {okResponse.Accepted} message - {okResponse.Message}");
 
-        if (OkVerificationActions.TryGetValue(_?.EventId ?? string.Empty, out var value))
-        {
-            value.NumberOfInvocations++;
-            value.Item(_);
-            if (value.NumberOfInvocations == _communicationFactory.GetNumberOfRelaysConnected())
-            {
-                OkVerificationActions.Remove(_.EventId ?? string.Empty);
-            }
-        }
+        if (!OkVerificationActions.TryGetValue(okResponse?.EventId ?? string.Empty, out var action)) 
+            return;
+        
+        action(okResponse);
+
+        if (!_communicationFactory.OkEventReceivedOnAllRelays(okResponse.EventId)) 
+            return;
+        
+        OkVerificationActions.Remove(okResponse.EventId ?? string.Empty);
+        _communicationFactory.ClearOkReceivedOnSubscriptionMonitoring(okResponse.EventId);
     }
 
     public bool TryAddEoseAction(string subscriptionName, Action action)
@@ -66,7 +57,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     {
         _logger.LogInformation($"EoseStream {_.Subscription} message - {_.AdditionalData}");
 
-        if (!_communicationFactory.EventReceivedOnAllRelays(_.Subscription))
+        if (!_communicationFactory.EoseEventReceivedOnAllRelays(_.Subscription))
             return;
         
         if (userEoseActions.TryGetValue(_.Subscription, out var action))
