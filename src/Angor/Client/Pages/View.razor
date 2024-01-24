@@ -251,16 +251,18 @@
         {
             project = findProject;
 
-            var investedProject = storage.GetSignatures().First(s => s.ProjectIdentifier == ProjectId);
+                var investedProject = storage.GetSignatures().FirstOrDefault(s => s.ProjectIdentifier == ProjectId);
+                if (investedProject != null)
+                {
+                    invested = investedProject.Signatures.Any(); // TODO need to scan for the invested projects when opening on a new browsers
+                    myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investedProject.TransactionId}";   
 
-            invested = investedProject.Signatures.Any();
-            myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investedProject.TransactionId}";
-
-            storage.GetInvestmentProjectsMetadata().TryGetValue(project.NostrPubKey, out projectMetadata);
+                    storage.GetInvestmentProjectsMetadata().TryGetValue(project.NostrPubKey, out projectMetadata);
+                }
         }
-        else
-        {
-            findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
+            else
+            {
+                findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
 
             if (findProject != null)
             {

@@ -7,6 +7,9 @@
 @using Angor.Client.Components
 @using Nostr.Client.Messages
 @using System.Text.Json
+
+@implements IDisposable
+
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
@@ -126,8 +129,8 @@
                         var founderProject = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
                         if (founderProject != null && founderProject.Metadata is null)
                             founderProject.Metadata = nostrMetadata;
-                        else
-                            notificationComponent.ShowNotificationMessage($"Couldn't find the project details for the project {nostrMetadata.Name} try adding the missing relay."); //TODO  
+                        // else
+                        //     notificationComponent.ShowNotificationMessage($"Couldn't find the project details for the project {nostrMetadata.Name} try adding the missing relay."); //TODO  
                         break;
                     case { Kind: NostrKind.ApplicationSpecificData }:
                         var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
@@ -151,4 +154,10 @@
     {
         NavigationManager.NavigateTo("/create");
     }
+
+   public void Dispose()
+   {
+       RelayService.CloseConnection();
+   }
+
 }

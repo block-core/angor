@@ -17,7 +17,6 @@ public interface ICacheStorage
     List<Outpoint> GetUnconfirmedOutboundFunds();
     void SetUnconfirmedInboundFunds(List<UtxoData> unconfirmedInfo);
     void SetUnconfirmedOutboundFunds(List<Outpoint> unconfirmedInfo);
-
     void DeleteUnconfirmedInfo();
     void WipeSession();
 }

@@ -9,15 +9,14 @@
 @using Blockcore.NBitcoin.DataEncoders
 @using System.Text.Json
 @using Angor.Shared.Services
-@using System.Globalization
 
 @inject IJSRuntime JS
 
-@inject ILogger<Signatures> _Logger
-@inject IDerivationOperations _derivationOperations
-@inject IWalletStorage _walletStorage;
-@inject IClientStorage storage;
-@inject NavigationManager NavigationManager
+@implements IDisposable
+
+@inject ILogger<Signatures> Logger
+@inject IDerivationOperations DerivationOperations
+@inject IClientStorage Storage;
 @inject ISignService SignService
 @inject IInvestorTransactionActions InvestorTransactionActions
 @inject IFounderTransactionActions FounderTransactionActions
@@ -96,26 +95,26 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _Logger.LogDebug("OnInitializedAsync");
+        Logger.LogDebug("OnInitializedAsync");
         if (hasWallet)
         {
-            FounderProject = storage.GetFounderProjects()
+            FounderProject = Storage.GetFounderProjects()
                 .FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier)
                              ?? throw new ArgumentException("The project was not found, try to scan in the founder page");
 
             await FetchPendingSignatures(FounderProject);
         }
-        _Logger.LogDebug("End of OnInitializedAsync");
+        Logger.LogDebug("End of OnInitializedAsync");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _Logger.LogDebug("OnAfterRenderAsync");
+        Logger.LogDebug("OnAfterRenderAsync");
         if (javascriptNostrToolsModule == null && signaturesRequests.Any())
         {
             try
             {
-                _Logger.LogDebug("load nostr tools");
+                Logger.LogDebug("load nostr tools");
                 //TODO import the nostr tool module directly to c# class
                 javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
             }
@@ -127,7 +126,7 @@
             }
         }
 
-        _Logger.LogDebug("handled = {Count}, total = {SignaturesRequestsCount}", signaturesRequests.Count(x => x.AmountToInvest.HasValue), signaturesRequests.Count);
+        Logger.LogDebug("handled = {Count}, total = {SignaturesRequestsCount}", signaturesRequests.Count(x => x.AmountToInvest.HasValue), signaturesRequests.Count);
 
         if (signaturesRequests.Any(x => x.AmountToInvest == null))
         {
@@ -137,7 +136,7 @@
                 return;
             }
 
-            var nostrPrivateKey = await _derivationOperations.DeriveProjectNostrPrivateKeyAsync(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
+            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -159,16 +158,16 @@
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    _Logger.LogDebug(pendingSignature.TransactionHex);
+                    Logger.LogDebug(pendingSignature.TransactionHex);
                     pendingSignature.TransactionHex = null;
                 }
             }
-            _Logger.LogDebug($"Calling StateHasChanged in OnAfterRenderAsync");
+            Logger.LogDebug($"Calling StateHasChanged in OnAfterRenderAsync");
             messagesReceived = false;
             StateHasChanged();
         }
 
-        _Logger.LogDebug("OnAfterRenderAsync Completed");
+        Logger.LogDebug("OnAfterRenderAsync Completed");
     }
 
 
@@ -178,12 +177,12 @@
         await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,// project.LastRequestForSignaturesTime , async 
             (investorPubKey,encryptedMessage, requestTime) =>
         {
-            _Logger.LogDebug($"Event received");
+            Logger.LogDebug($"Event received");
 
             if (signaturesRequests.Any(_ => _.investorPubKey == investorPubKey))
                 return; //multiple relays could mean the same massage multiple times
 
-            _Logger.LogDebug($"Event received is new");
+            Logger.LogDebug($"Event received is new");
 
             messagesReceived = true;
 
@@ -195,16 +194,16 @@
             };
 
             signaturesRequests.Add(signatureRequest);
-            _Logger.LogDebug($"Added to pendingSignatures");
+            Logger.LogDebug($"Added to pendingSignatures");
         }, 
             () =>
             {
-                _Logger.LogDebug($"End of messages");
+                Logger.LogDebug($"End of messages");
 
                 if (!messagesReceived) 
                     return;
 
-                _Logger.LogDebug($"Calling StateHasChanged in EOSE");
+                Logger.LogDebug($"Calling StateHasChanged in EOSE");
                 StateHasChanged();
             });
     }
@@ -214,18 +213,18 @@
         SignService.LookupInvestmentRequestApprovals(project.ProjectInfo.NostrPubKey,  
             (investorPubKey, requestTime) =>
             {
-                _Logger.LogDebug($"Event received");
+                Logger.LogDebug($"Event received");
 
                 var signatureRequest = signaturesRequests.FirstOrDefault(_ => _.investorPubKey == investorPubKey);
 
                 if (signatureRequest is null || signatureRequest.TimeApproved != null)
                     return; //multiple relays could mean the same massage multiple times
 
-                _Logger.LogDebug($"The event received is new");
+                Logger.LogDebug($"The event received is new");
 
                 signatureRequest.TimeApproved = requestTime;
 
-                _Logger.LogDebug($"Added to pendingSignatures");
+                Logger.LogDebug($"Added to pendingSignatures");
             }, 
             () =>
             {
@@ -240,13 +239,13 @@
                     if (FounderProject.LastRequestForSignaturesTime is null || FounderProject.LastRequestForSignaturesTime < latestApprovedTime)
                     {
                         FounderProject.LastRequestForSignaturesTime = latestApprovedTime;
-                        storage.UpdateFounderProject(FounderProject);   
+                        Storage.UpdateFounderProject(FounderProject);   
                     }
                 }
 
-                _Logger.LogDebug($"Calling StateHasChanged in EOSE");
+                Logger.LogDebug($"Calling StateHasChanged in EOSE");
                 StateHasChanged();
-                _Logger.LogDebug($"End of messages on EOSE");
+                Logger.LogDebug($"End of messages on EOSE");
             });
     }
 
@@ -254,13 +253,13 @@
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            var key = _derivationOperations.DeriveFounderRecoveryPrivateKey(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
+            var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
 
             var signatureInfo = signProject(signature.TransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
 
             var sigJson = JsonSerializer.Serialize(signatureInfo, RelayService.settings);
 
-            var nostrPrivateKey = await _derivationOperations.DeriveProjectNostrPrivateKeyAsync(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
+            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(_walletStorage.GetWallet(), FounderProject.ProjectInfo.ProjectIndex);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -272,7 +271,7 @@
 
             FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorPubKey);
 
-            storage.UpdateFounderProject(FounderProject);
+            Storage.UpdateFounderProject(FounderProject);
 
             signaturesRequests.Single(_ => _.investorPubKey == signature.investorPubKey && _.TimeApproved is null)
                 .TimeApproved = FounderProject.LastRequestForSignaturesTime;
@@ -315,4 +314,10 @@
 
         public string? TransactionHex { get; set; }
     }
+
+    public void Dispose()
+    {
+        SignService.CloseConnection();
+    }
+
 }

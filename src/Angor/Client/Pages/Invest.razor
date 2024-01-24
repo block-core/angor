@@ -17,13 +17,12 @@
 
 @inherits BaseComponent
 
+@implements IDisposable
+
 @inject ILogger<Invest> _Logger;
 @inject IDerivationOperations _derivationOperations
-@inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
-@inject ICacheStorage _cacheStorage;
 @inject ICacheStorage SessionStorage;
-@inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
 
 @inject ISignService _SignService
@@ -585,4 +584,10 @@
         public DateTime StageDateTime { get; set; }
         public int DaysFromStartDate { get; set; }
     }
+
+    public void Dispose()
+    {
+        _SignService.CloseConnection();
+    }
+
 }

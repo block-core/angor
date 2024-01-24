@@ -1,4 +1,3 @@
-using Angor.Client.Models;
 using Angor.Client.Services;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
@@ -75,6 +74,11 @@ public class LocalSessionStorage : ICacheStorage
     public void SetUnconfirmedOutboundFunds(List<Outpoint> unconfirmedInfo)
     {
         _sessionStorageService.SetItem("unconfirmed-outbound", unconfirmedInfo);
+    }
+    
+    public List<string> GetNamesOfCommunicatorsThatReceivedEose(string subscriptionName)
+    {
+        return _sessionStorageService.GetItem<List<string>>("Eose" + subscriptionName);
     }
 
     public void DeleteUnconfirmedInfo()

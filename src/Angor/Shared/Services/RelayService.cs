@@ -11,32 +11,25 @@ using Nostr.Client.Responses;
 
 namespace Angor.Shared.Services
 {
-    public class RelayService : RelaySubscriptionsHanding,IRelayService
+    public class RelayService : IRelayService
     {
         private ILogger<RelayService> _logger;
         private INostrCommunicationFactory _communicationFactory;
         private INetworkService networkService;
+        private IRelaySubscriptionsHandling _subscriptionsHanding;
         
-
-        private readonly List<IDisposable> _serviceSubscriptions;
         
-        public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService,ILogger<RelaySubscriptionsHanding> baseLogger) 
-            : base(baseLogger,communicationFactory,networkService)
+        public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService,ILogger<RelaySubscriptionsHandling> baseLogger, IRelaySubscriptionsHandling subscriptionsHanding)
         {
             _logger = logger;
             _communicationFactory = communicationFactory;
             this.networkService = networkService;
+            _subscriptionsHanding = subscriptionsHanding;
 
             var nostrClient = _communicationFactory.GetOrCreateClient(this.networkService);
             
-            _serviceSubscriptions = new();
-            _serviceSubscriptions.Add(nostrClient.Streams.OkStream.Subscribe(HandleOkMessages));
-            _serviceSubscriptions.Add(nostrClient.Streams.EoseStream.Subscribe(HandleEoseMessages));
-        }
-
-        public void RegisterOKMessageHandler(string eventId, Action<NostrOkResponse> action)
-        {
-            OkVerificationActions.Add(eventId,new SubscriptionCallCounter<Action<NostrOkResponse>>(action));
+            nostrClient.Streams.OkStream.Subscribe(_subscriptionsHanding.HandleOkMessages);
+            nostrClient.Streams.EoseStream.Subscribe(_subscriptionsHanding.HandleEoseMessages);
         }
 
         public void LookupProjectsInfoByPubKeys<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,params string[] nostrPubKeys)
@@ -54,25 +47,22 @@ namespace Angor.Shared.Services
                 Kinds = new[] { NostrKind.ApplicationSpecificData }
             });
 
-            nostrClient.Send(request);
-
-            if (!userSubscriptions.ContainsKey(subscriptionName))
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionName))
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionName)
                     .Select(_ => _.Event)
-                    .Subscribe(ev =>
-                    {
-                        responseDataAction(JsonSerializer.Deserialize<T>(ev.Content,settings));
-                    });
+                    .Subscribe(ev => { responseDataAction(JsonSerializer.Deserialize<T>(ev.Content, settings)); });
 
-                userSubscriptions.Add(subscriptionName, new SubscriptionCallCounter<IDisposable>(subscription));
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionName, subscription);
             }
 
             if (OnEndOfStreamAction != null)
             {
-                userEoseActions.TryAdd(subscriptionName,new SubscriptionCallCounter<Action>(OnEndOfStreamAction));
+                _subscriptionsHanding.TryAddEoseAction(subscriptionName, OnEndOfStreamAction);
             }
+            
+            nostrClient.Send(request);
         }
 
         public void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,params string[] nostrPubKeys)
@@ -80,25 +70,28 @@ namespace Angor.Shared.Services
             var subscriptionKey = Guid.NewGuid().ToString().Replace("-","");
             
             var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
+
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event is not null)
+                    .Select(_ => _.Event)
+                    .Subscribe(onResponseAction!);
+
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            if (onEoseAction != null)
+            {
+                _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onEoseAction);   
+            }
             
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 Authors = nostrPubKeys,
                 Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata},
             }));
-
-            if (userSubscriptions.ContainsKey(subscriptionKey)) 
-                return;
-            
-            var subscription = nostrClient.Streams.EventStream
-                .Where(_ => _.Subscription == subscriptionKey)
-                .Where(_ => _.Event is not null)
-                .Select(_ => _.Event)
-                .Subscribe(onResponseAction!);
-
-            userSubscriptions.Add(subscriptionKey, new SubscriptionCallCounter<IDisposable>(subscription));
-
-            userEoseActions.TryAdd(subscriptionKey, new SubscriptionCallCounter<Action>(onEoseAction));
         }
 
         public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)
@@ -106,7 +99,18 @@ namespace Angor.Shared.Services
             var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
 
             var subscriptionKey = nostrPubKey + "DM";
-            
+
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event is not null)
+                    .Select(_ => _.Event)
+                    .Subscribe(onResponseAction!);
+
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 P = new[] { nostrPubKey },
@@ -115,18 +119,7 @@ namespace Angor.Shared.Services
                 Since = since,
                 Limit = limit
             }));
-
-            if (!userSubscriptions.ContainsKey(subscriptionKey))
-            {
-                var subscription = nostrClient.Streams.EventStream
-                    .Where(_ => _.Subscription == subscriptionKey)
-                    .Where(_ => _.Event is not null)
-                    .Select(_ => _.Event)
-                    .Subscribe(onResponseAction!);
-
-                userSubscriptions.Add(subscriptionKey, new SubscriptionCallCounter<IDisposable>(subscription));
-            }
-
+            
             return Task.CompletedTask;
         }
         
@@ -137,11 +130,10 @@ namespace Angor.Shared.Services
 
         public void CloseConnection()
         {
-            _serviceSubscriptions.ForEach(subscription => subscription.Dispose());
-            Dispose();
+            _subscriptionsHanding.Dispose();
         }
 
-        public Task<string> AddProjectAsync(ProjectInfo project, string hexPrivateKey)
+        public Task<string> AddProjectAsync(ProjectInfo project, string hexPrivateKey, Action<NostrOkResponse> action)
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
@@ -153,6 +145,8 @@ namespace Angor.Shared.Services
             var signed = GetNip78NostrEvent(content)
                 .Sign(key);
 
+            _subscriptionsHanding.TryAddOKAction(signed.Id,action);
+            
             var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
             
             nostrClient.Send(new NostrEventRequest(signed));
@@ -160,7 +154,7 @@ namespace Angor.Shared.Services
             return Task.FromResult(signed.Id);
         }
 
-        public Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string hexPrivateKey)
+        public Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string hexPrivateKey,Action<NostrOkResponse> action)
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
@@ -177,6 +171,8 @@ namespace Angor.Shared.Services
                         new NostrEventTag("l", "ProjectDeclaration", "#projectInfo"))
                 }.Sign(key);
 
+            _subscriptionsHanding.TryAddOKAction(signed.Id,action);
+            
             var nostrClient = _communicationFactory.GetOrCreateClient(networkService);
             
             nostrClient.Send(new NostrEventRequest(signed));
