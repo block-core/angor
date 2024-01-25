@@ -15,6 +15,4 @@ public interface ISignService
 
     DateTime SendSignaturesToInvestor(string encryptedSignatureInfo, string nostrPrivateKey,
         string investorNostrPubKey);
-        
-    void CloseConnection(); //TODO call close connection from the pages
 }

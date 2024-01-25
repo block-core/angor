@@ -33,9 +33,10 @@ builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
 builder.Services.AddScoped<NavMenuState>();
 
 builder.Services.AddScoped<IIndexerService, IndexerService>();
-builder.Services.AddScoped<IRelayService, RelayService>();
-builder.Services.AddScoped<ISignService, SignService>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
+
+builder.Services.AddTransient<IRelayService, RelayService>();
+builder.Services.AddTransient<ISignService, SignService>();
 
 builder.Services.AddTransient<IFounderTransactionActions, FounderTransactionActions>();
 builder.Services.AddTransient<ISeederTransactionActions, SeederTransactionActions>();
@@ -48,7 +49,6 @@ builder.Services.AddTransient<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>
 builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 
 builder.Services.AddSingleton<INostrCommunicationFactory,NostrCommunicationFactory>();
-builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>(); //TODO should this be singleton?
-
+builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
 
 await builder.Build().RunAsync();

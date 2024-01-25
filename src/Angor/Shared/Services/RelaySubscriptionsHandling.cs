@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Requests;
 using Nostr.Client.Responses;
@@ -14,6 +15,9 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     private INostrCommunicationFactory _communicationFactory;
     private INetworkService _networkService;
 
+    private IDisposable _okHandlingSubscription;
+    private IDisposable _eoseHandlingSubscription;
+
     public RelaySubscriptionsHandling(ILogger<RelaySubscriptionsHandling> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService)
     {
         _logger = logger;
@@ -22,8 +26,21 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         relaySubscriptions = new();
         userEoseActions = new();
         OkVerificationActions = new();
+        
+        var client = _communicationFactory.GetOrCreateClient(networkService); 
+        
+        _okHandlingSubscription = client.Streams.OkStream.Subscribe(HandleOkMessages);
+        _eoseHandlingSubscription = client.Streams.EoseStream.Subscribe(HandleEoseMessages);
     }
 
+    // public void Init(INetworkService networkService)
+    // {
+    //     var client = _communicationFactory.GetOrCreateClient(networkService); 
+    //     
+    //     _okHandlingSubscription = client.Streams.OkStream.Subscribe(HandleOkMessages);
+    //     _eoseHandlingSubscription = client.Streams.EoseStream.Subscribe(HandleEoseMessages);
+    // }
+    
     public bool TryAddOKAction(string eventId, Action<NostrOkResponse> action)
     {
         _communicationFactory.MonitoringOkReceivedOnSubscription(eventId);
@@ -105,6 +122,8 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     public void Dispose()
     {
         relaySubscriptions.Values.ToList().ForEach(_ => _.Dispose());
+        _okHandlingSubscription.Dispose();
+        _eoseHandlingSubscription.Dispose();
         _communicationFactory.CloseClientConnection();
     }
 }   

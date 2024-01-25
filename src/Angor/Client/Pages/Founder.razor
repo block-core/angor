@@ -8,8 +8,6 @@
 @using Nostr.Client.Messages
 @using System.Text.Json
 
-@implements IDisposable
-
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
@@ -154,10 +152,4 @@
     {
         NavigationManager.NavigateTo("/create");
     }
-
-   public void Dispose()
-   {
-       RelayService.CloseConnection();
-   }
-
 }
