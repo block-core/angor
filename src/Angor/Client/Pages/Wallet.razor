@@ -180,9 +180,9 @@
                                 <div class="address-container-wrapper">
                                     <div class="address-container">
                                         <div class="d-flex align-items-center">
-                                            <p id="receive-address" class="card-text mb-0">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</p>
+                                            <p class="card-text mb-0">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</p>
                                             <button class="btn btn-outline-secondary btn-sm address-copy-button ml-2" @onclick="CopyNextReceiveAddress">
-                                                <i class="oi oi-file"></i> 
+                                                Copy <i class="oi oi-file"></i> 
                                             </button>
                                         </div>
                                     </div>
@@ -213,7 +213,12 @@
                         <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
                     </div>
 
-                    <button type="button" class="btn btn-primary mb-3"  @onclick="() => coinControlModal = true">Coin Control</button>
+                    <button type="button" class="btn btn-primary mb-3"  @onclick="() => coinControlModal = true">Coin Control
+                        @if (_sendInfo.SendUtxos.Any())
+                        {
+                            <span class="badge text-bg-warning">@_sendInfo.SendUtxos.Count</span>
+                        }
+                    </button>
                     
                     <!-- New Send button that triggers a confirmation dialog -->
                     <button type="button" class="btn btn-primary mb-3" onclick="@BuildSend">Send</button>
@@ -243,7 +248,7 @@
                                         bool isTicked = _sendInfo.SendUtxos.ContainsKey(addressUtxoItem.outpoint.ToString());
 
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" value="@isTicked" id="@addressUtxoItem" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
+                                            <input class="form-check-input" type="checkbox" @bind="@isTicked" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
                                             <label class="form-check-label" style="font-size: 0.7em;" for="@addressUtxoItem">
                                                 @($"{addressUtxoItem.outpoint} - {Money.Satoshis(@addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} {@network.CoinTicker}")
                                             </label>
@@ -293,7 +298,6 @@
                                 
                                 @foreach (var infoSendUtxo in _sendInfo.SendUtxos)
                                 {
-                                    <br />
                                     <p style="font-size: 0.7em;">@Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker - @infoSendUtxo.Key</p>
                                 }
 
@@ -606,6 +610,16 @@
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
+            if (string.IsNullOrEmpty(_sendInfo.SendToAddress))
+            {
+                return new OperationResult { Success = false, Message = "Specify a send to address" };
+            }
+
+            if (_sendInfo.SendAmount == 0)
+            {
+                return new OperationResult { Success = false, Message = "Specify an amount" };
+            }
+
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
