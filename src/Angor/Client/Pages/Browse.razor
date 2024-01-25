@@ -87,29 +87,38 @@
                     foreach (var project in projects.OrderByDescending(project => project.CreatedOnBlock))
                     {
                         <div class="card mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title">@project.ProjectIdentifier</h5>
-                                <p class="card-text">Nostr ID: @(NostrPublicKey.FromHex(project.NostrPubKey).Bech32)</p>
+                            @if (SessionStorage.IsProjectMetadataStorageByPubkey(project.NostrPubKey))
+                            {
+                                var metadata = SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
+                                if (metadata?.Banner != null)
+                                {
+                                    <div class="card-header overflow-hidden">
+                                        <img class="card-img-top" src="@metadata.Banner" alt=""/>
+                                    </div>
+                                }
+                            }
 
+                            <div class="card-body">
                                 @if (SessionStorage.IsProjectInStorageById(project.ProjectIdentifier))
                                 {
                                     @if (SessionStorage.IsProjectMetadataStorageByPubkey(project.NostrPubKey))
                                     {
                                         var metadata = SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
-                                        <hr />
                                         <h3 class="card-title">@metadata?.Name</h3>
                                         <p class="card-subtitle">@metadata?.About</p>
-                                        <hr />
+                                        <hr>
                                     }
-
-                                    //var info = SessionStorage.GetProjectById(project.ProjectIdentifier);
-
-                                    <button @onclick="() => ViewProjectDetails(project.ProjectIdentifier)" class="btn btn-primary">View</button>
                                 }
                                 else
                                 {
                                     <p class="text-warning-emphasis">Project not found in any relay!</p>
                                 }
+                                <p>
+                                    Project ID:@project.ProjectIdentifier
+                                    <br/>
+                                    Nostr ID :@(NostrPublicKey.FromHex(project.NostrPubKey).Bech32)
+                                </p>
+                                <button @onclick="() => ViewProjectDetails(project.ProjectIdentifier)" class="btn btn-primary card-">View</button>
                             </div>
                         </div>
                     }
@@ -246,7 +255,6 @@
     {
         if (SessionStorage.IsProjectInStorageById(projectIdentifier))
         {
-            _RelayService.CloseConnection();
             NavigationManager.NavigateTo($"/view/{projectIdentifier}");
         }
         else

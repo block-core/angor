@@ -18,10 +18,6 @@ namespace Angor.Client.Services
             _communicationFactory = communicationFactory;
             _networkService = networkService;
             _subscriptionsHanding = subscriptionsHanding;
-            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            
-            nostrClient.Streams.OkStream.Subscribe(_subscriptionsHanding.HandleOkMessages);
-            nostrClient.Streams.EoseStream.Subscribe(_subscriptionsHanding.HandleEoseMessages);
         }
 
         public DateTime RequestInvestmentSigs(SignRecoveryRequest signRecoveryRequest)

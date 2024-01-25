@@ -12,8 +12,6 @@
 
 @inject IJSRuntime JS
 
-@implements IDisposable
-
 @inject ILogger<Signatures> Logger
 @inject IDerivationOperations DerivationOperations
 @inject IClientStorage Storage;
@@ -314,10 +312,4 @@
 
         public string? TransactionHex { get; set; }
     }
-
-    public void Dispose()
-    {
-        SignService.CloseConnection();
-    }
-
 }

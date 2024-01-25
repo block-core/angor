@@ -15,5 +15,5 @@ public interface IRelayService
     void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,params string[] nostrPubKeys);
 
     Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction);
-    void CloseConnection();
+    // void CloseConnection();
 }

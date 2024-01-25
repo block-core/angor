@@ -3,16 +3,12 @@
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Blockcore.Consensus.TransactionInfo
-@using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin
-@using Blockcore.NBitcoin.DataEncoders
 @using Nostr.Client.Messages
-@using Nostr.Client.Messages.Metadata
 @using Angor.Client.Models
 
-@implements IDisposable
 @inherits BaseComponent
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
@@ -251,38 +247,25 @@
         {
             if (hasWallet)
             {
-                var operationResult = await notificationComponent.LongOperation(async () =>
+                _RelayService.RequestProjectCreateEventsByPubKey(_ => //TODO change the state to be storage driven and not event driven
                 {
-                    _RelayService.RequestProjectCreateEventsByPubKey(_ => //TODO change the state to be storage driven and not event driven
-                    {
-                        nostrProfileCreated = _.Kind == NostrKind.Metadata;
+                    nostrProfileCreated = _.Kind == NostrKind.Metadata;
 
-                        if (_.Kind != NostrKind.ApplicationSpecificData)
-                            return; //In case of a crashed application in the middle of the call
+                    if (_.Kind != NostrKind.ApplicationSpecificData)
+                        return; //In case of a crashed application in the middle of the call
 
-                        if (_.Content == null)
-                            return;
-                        var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
-                        var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == nostrProject!.ProjectIdentifier);
-                        if (findProject == null)
-                            storage.AddFounderProject(new FounderProject { ProjectInfo = nostrProject });
-                        NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");
-                    }, () => 
-                    {
-                        notificationComponent.StopLoading();
-                        StateHasChanged();
-                    },project.NostrPubKey);
-
-                    // let the request a few seconds to look for a project
-                    await Task.Delay(TimeSpan.FromSeconds(5));
-
-                    return new SuccessOperationResult();
-                });
-
-                if (operationResult.Success)
+                    if (_.Content == null)
+                        return;
+                    var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
+                    var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == nostrProject!.ProjectIdentifier);
+                    if (findProject == null)
+                        storage.AddFounderProject(new FounderProject { ProjectInfo = nostrProject });
+                    NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");
+                }, () =>
                 {
+                    notificationComponent.StopLoading();
                     StateHasChanged();
-                }
+                }, project.NostrPubKey);
             }
         }
     }
@@ -291,8 +274,6 @@
 
     private async Task CreatNostrProfile()
     {
-        var operationResult = await notificationComponent.LongOperation(async () =>
-        {
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
 
             await _RelayService.CreateNostrProfileAsync(NostrMetadata.ToNostrMetadata(),
@@ -304,14 +285,6 @@
                     nostrProfileCreated = true;
                     StateHasChanged();
                 });
-
-            return new SuccessOperationResult();
-        });
-
-        if (!operationResult.Success)
-        {
-            notificationComponent.ShowErrorMessage(operationResult.Message);
-        }
     }
 
     private async Task CreatProject()
@@ -378,34 +351,23 @@
             prev = stage.ReleaseDate;
         }
 
-        var operationResult = await notificationComponent.LongOperation(async () =>
-        {
-            var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
+        var accountInfo = storage.GetAccountInfo(network.Name);
+        var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
-            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
-            feeData.FeeEstimations.Fees.Clear();
-            feeData.FeeEstimations.Fees.AddRange(fetchFees);
-            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+        var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+        feeData.FeeEstimations.Fees.Clear();
+        feeData.FeeEstimations.Fees.AddRange(fetchFees);
+        feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000, project.NostrPubKey);
+        unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectIdentifier), 10000, project.NostrPubKey);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+        signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
-            project.CreationTransactionId = signedTransaction.GetHash().ToString();
+        project.CreationTransactionId = signedTransaction.GetHash().ToString();
 
-            return new OperationResult { Success = true };
+        showCreateModal = true;
 
-        });
-
-        if (operationResult.Success)
-        {
-            showCreateModal = true;
-        }
-        else
-        {
-            notificationComponent.ShowErrorMessage(operationResult.Message);
-        }
+        StateHasChanged();
     }
 
     private void FeeRangeChanged(ChangeEventArgs e)
@@ -433,44 +395,32 @@
 
     private async Task Send()
     {
-        var operationResult = await notificationComponent.LongOperation(async () =>
-        {
-            showCreateModal = false;
-            
-            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+        showCreateModal = false;
 
-            var nostrKeyHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
-            
-            var resultId = await _RelayService.AddProjectAsync(project, nostrKeyHex, 
-                _ =>
-                {
-                    if (!_.Accepted)
-                        notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
-                });
-            
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+        var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
 
-            if (!response.Success)
+        var nostrKeyHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
+
+        var resultId = await _RelayService.AddProjectAsync(project, nostrKeyHex,
+            _ =>
             {
-                await _RelayService.DeleteProjectAsync(resultId, nostrKeyHex);
-                return response;
-            }
+                if (!_.Accepted)
+                    notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+            });
 
-            storage.AddFounderProject(new FounderProject { ProjectInfo = project });
+        var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
-            return new OperationResult { Success = response.Success, Message = response.Message };
-        });
-
-        if (operationResult.Success)
+        if (!response.Success)
         {
-            notificationComponent.ShowNotificationMessage("Project created", 1);
+            await _RelayService.DeleteProjectAsync(resultId, nostrKeyHex);
+           notificationComponent.ShowErrorMessage(response.Message);
+            // notificationComponent.ShowErrorMessage("Failed to post the transaction to the blockchain.(try refreshing the wallet)");
+            return;
+        }
 
-            NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
-        }
-        else
-        {
-            notificationComponent.ShowErrorMessage(operationResult.Message);
-        }
+        storage.AddFounderProject(new FounderProject { ProjectInfo = project });
+
+        NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
     }
 
     private void AddStage()
@@ -482,10 +432,4 @@
     {
         project.Stages.Remove(stage);
     }
-
-    public void Dispose()
-    {
-        _RelayService.CloseConnection();
-    }
-
 }

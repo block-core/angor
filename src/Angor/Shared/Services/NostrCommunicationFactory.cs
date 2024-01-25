@@ -38,8 +38,8 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
 
         ConnectToAllRelaysInTheSettings(networkService);
 
-        if (_logger.IsEnabled(LogLevel.Debug))
-        {
+        // if (_logger.IsEnabled(LogLevel.Debug))
+        // {
             _serviceSubscriptions.Add(_nostrMultiWebsocketClient.Streams.UnknownMessageStream.Subscribe(_ =>
                 _logger.LogError($"UnknownMessageStream {_.MessageType} {_.AdditionalData}")));
 
@@ -53,7 +53,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
 
             _serviceSubscriptions.Add(_nostrMultiWebsocketClient.Streams.UnknownRawStream.Subscribe(_ =>
                 _logger.LogError($"UnknownRawStream {_.Message}")));
-        }
+        //}
 
         return _nostrMultiWebsocketClient;
     }
@@ -68,14 +68,23 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             
             _serviceSubscriptions.Add(client.Streams.EoseStream.Subscribe(x =>
             {
-                if (_eoseCalledOnSubscriptionClients.TryGetValue(x.Subscription ?? string.Empty, out var clientsReceivedList))
+                _logger.LogInformation($"{x.CommunicatorName} EOSE {x.Subscription}");
+                if (_eoseCalledOnSubscriptionClients.TryGetValue(x.Subscription ?? string.Empty,
+                        out var clientsReceivedList))
+                {
+                    _logger.LogInformation($"EOSE {x.Subscription} adding {x.CommunicatorName}");
                     clientsReceivedList.Add(x.CommunicatorName);
+                }
             }));
             
             _serviceSubscriptions.Add(client.Streams.OkStream.Subscribe(x =>
             {
+                _logger.LogInformation($"{x.CommunicatorName} OK {x.EventId} {x.Accepted}");
                 if (_okCalledOnSubscriptionClients.TryGetValue(x.EventId ?? string.Empty, out var clientsReceivedList))
-                    clientsReceivedList.Add(x.CommunicatorName); 
+                {
+                    _logger.LogInformation($"OK {x.EventId} adding {x.CommunicatorName}");
+                    clientsReceivedList.Add(x.CommunicatorName);
+                } 
             }));
             
             _nostrMultiWebsocketClient!.RegisterClient(client);
@@ -176,7 +185,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             {
                 _logger.LogInformation(
                     "message received on communicator {relayName} - {Text} Relay message received, type: {MessageType}",
-                    relayName, e.Text.Substring(0,30), e.MessageType);
+                    relayName, e.Text, e.MessageType);
             }));
         }
 

@@ -19,17 +19,12 @@ namespace Angor.Shared.Services
         private IRelaySubscriptionsHandling _subscriptionsHanding;
         
         
-        public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService,ILogger<RelaySubscriptionsHandling> baseLogger, IRelaySubscriptionsHandling subscriptionsHanding)
+        public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService, IRelaySubscriptionsHandling subscriptionsHanding)
         {
             _logger = logger;
             _communicationFactory = communicationFactory;
             this.networkService = networkService;
             _subscriptionsHanding = subscriptionsHanding;
-
-            var nostrClient = _communicationFactory.GetOrCreateClient(this.networkService);
-            
-            nostrClient.Streams.OkStream.Subscribe(_subscriptionsHanding.HandleOkMessages);
-            nostrClient.Streams.EoseStream.Subscribe(_subscriptionsHanding.HandleEoseMessages);
         }
 
         public void LookupProjectsInfoByPubKeys<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,params string[] nostrPubKeys)
