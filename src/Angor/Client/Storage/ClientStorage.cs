@@ -173,6 +173,20 @@ public class ClientStorage : IClientStorage, INetworkStorage
         return ret ?? new List<SignatureInfo>();
     }
 
+    public void RemoveSignatures(SignatureInfo signatureInfo)
+    {
+        var ret = GetSignatures();
+
+        var item = ret.FirstOrDefault(f => f.ProjectIdentifier == signatureInfo.ProjectIdentifier);
+
+        if (item != null)
+        {
+            ret.Remove(item);
+        }
+
+        _storage.SetItem("recovery-signatures", ret);
+    }
+
     public void DeleteSignatures()
     {
         // signatures are valuable to have so to avoid losing them forever 

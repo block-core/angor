@@ -172,8 +172,9 @@
         @if (recoverySigs?.Signatures.Any() == true)
         {
             <div class="card mt-3">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>Founder has signed</h4>
+                    <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
                 </div>
                 <div class="card-body">
                     
@@ -194,8 +195,9 @@
         else
         {
             <div class="card mt-3 text-center">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>Waiting for the founder to approve</h4>
+                    <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
                 </div>
                 <div class="card-body">
                     @*<p>Waiting for the founder to sign the investment request</p>*@
@@ -284,7 +286,7 @@
             }
         }
         
-        if (project != null && recoverySigs?.Signatures.Any() == false)
+        if (project != null && recoverySigs?.Signatures.Any() == false && recoverySigs?.TimeOfRequestForSigning != null)
         {
             var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
 
@@ -442,7 +444,7 @@
             var strippedInvestmentTransaction = network.CreateTransaction(recoverySigs.SignedTransactionHex);
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
 
-            var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
+            var accountInfo = storage.GetAccountInfo(network.Name);
 
             var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), accountInfo.InvestmentsCount + 1);
 
@@ -464,6 +466,11 @@
 
             storage.AddInvestmentProject(project); //TODO David need to verify that this is the correct place to change state in storage
             storage.AddOrUpdateSignatures(recoverySigs);
+
+            foreach (var input in strippedInvestmentTransaction.Inputs)
+                accountInfo.UtxoReservedForInvestment.Add(input.PrevOut.ToString());
+           
+            storage.SetAccountInfo(network.Name, accountInfo);
 
             _SignService.LookupSignatureForInvestmentRequest(
                 NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
@@ -508,6 +515,36 @@
         }
     }
 
+    public async Task CancelInvestment()
+    {
+        notificationComponent.ShowErrorMessage("Cancel is not supported yet");
+        return;
+
+        if (recoverySigs == null)
+        {
+            var signatures = storage.GetSignatures();
+            recoverySigs = signatures?.FirstOrDefault(_ => _.ProjectIdentifier == project.ProjectIdentifier);
+        }
+
+        if (recoverySigs != null)
+        {
+            if (!string.IsNullOrEmpty(recoverySigs.SignedTransactionHex))
+            {
+                signedTransaction ??= network.CreateTransaction(recoverySigs.SignedTransactionHex);
+                var accountInfo = storage.GetAccountInfo(network.Name);
+
+                foreach (var input in signedTransaction.Inputs)
+                    accountInfo.UtxoReservedForInvestment.Remove(input.PrevOut.ToString());
+
+                storage.SetAccountInfo(network.Name, accountInfo);
+            }
+            
+            storage.RemoveSignatures(recoverySigs);
+
+            recoverySigs = null;
+        }
+    }
+
     public async Task PublishSignedTransactionAsync()
     {
         validatingsignaturs = true;
@@ -542,6 +579,11 @@
             
             var spendUtxos = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction);
             
+            foreach (var input in signedTransaction.Inputs)
+                accountInfo.UtxoReservedForInvestment.Remove(input.PrevOut.ToString());
+            
+            storage.SetAccountInfo(network.Name, accountInfo);
+
             unspentInfo.AddRange(spendUtxos);
             SessionStorage.SetUnconfirmedInboundFunds(unspentInfo);
             

@@ -24,6 +24,7 @@ namespace Angor.Client.Storage
         void UpdateFounderProject(FounderProject project);
         void DeleteFounderProjects();
         void AddOrUpdateSignatures(SignatureInfo signatureInfo);
+        void RemoveSignatures(SignatureInfo signatureInfo);
         List<SignatureInfo> GetSignatures();
         void DeleteSignatures();
         SettingsInfo GetSettingsInfo();
