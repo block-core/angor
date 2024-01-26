@@ -14,6 +14,7 @@ namespace Angor.Client.Storage
         void SetAccountInfo(string network, AccountInfo items);
         void DeleteAccountInfo(string network);
         void AddInvestmentProject(ProjectInfo project);
+        void RemoveInvestmentProject(string projectId);
         void UpdateInvestmentProject(ProjectInfo project);
         List<ProjectInfo> GetInvestmentProjects();
         void AddInvestmentProjectMetadata(string pubkey, ProjectMetadata projectMetadata);

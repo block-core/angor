@@ -85,6 +85,18 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem("projects", ret);
     }
 
+    public void RemoveInvestmentProject(string projectId)
+    {
+        var ret = GetInvestmentProjects();
+
+        var item = ret.First(_ => _.ProjectIdentifier == projectId);
+
+        if (!ret.Remove(item))
+            throw new InvalidOperationException();
+
+        _storage.SetItem("projects", ret);
+    }
+
     public void DeleteInvestmentProjects()
     {
         _storage.RemoveItem("projects");

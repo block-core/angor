@@ -175,19 +175,36 @@
         await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,// project.LastRequestForSignaturesTime , async 
             (investorPubKey,encryptedMessage, requestTime) =>
         {
-            Logger.LogDebug($"Event received");
+            var timeArrived = requestTime;
 
-            if (signaturesRequests.Any(_ => _.investorPubKey == investorPubKey))
-                return; //multiple relays could mean the same massage multiple times
+            Logger.LogDebug($"Sig request event received investorPubKey: {investorPubKey} - timeArrived: {timeArrived}");
 
-            Logger.LogDebug($"Event received is new");
+            var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorPubKey == investorPubKey);
+
+            if (sigReq != null)
+            {
+                // todo: should we use some generated guid on the request side to filter for new sig requests?
+                if (sigReq.TimeArrived < timeArrived)
+                {
+                    Logger.LogDebug($"Sig request event received is replaced");
+
+                    // this is a newer sig request so replace it
+                    signaturesRequests.Remove(sigReq);
+                }
+                else
+                {
+                    return; //multiple relays could mean the same massage multiple times
+                }
+            }
+
+            Logger.LogDebug($"Sig request event received is new");
 
             messagesReceived = true;
 
             var signatureRequest = new SignatureRequest
             {
                 investorPubKey = investorPubKey,
-                TimeArrived = requestTime,
+                TimeArrived = timeArrived,
                 TransactionHex = encryptedMessage //To be encrypted after js interop is loaded
             };
 
@@ -211,16 +228,24 @@
         SignService.LookupInvestmentRequestApprovals(project.ProjectInfo.NostrPubKey,  
             (investorPubKey, requestTime) =>
             {
-                Logger.LogDebug($"Event received");
+                var timeApproved = requestTime;
+
+                Logger.LogDebug($"Sig response event received investorPubKey: {investorPubKey} - timeApproved: {timeApproved}");
 
                 var signatureRequest = signaturesRequests.FirstOrDefault(_ => _.investorPubKey == investorPubKey);
 
                 if (signatureRequest is null || signatureRequest.TimeApproved != null)
                     return; //multiple relays could mean the same massage multiple times
 
+                if (signatureRequest.TimeArrived > timeApproved)
+                {
+                    Logger.LogDebug($"The event received is replaced");
+                    return; // sig of an old request 
+                }
+
                 Logger.LogDebug($"The event received is new");
 
-                signatureRequest.TimeApproved = requestTime;
+                signatureRequest.TimeApproved = timeApproved;
 
                 Logger.LogDebug($"Added to pendingSignatures");
             }, 
