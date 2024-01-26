@@ -97,9 +97,17 @@
 
                 @if (accountBalanceInfo.TotalUnconfirmedBalance > 0)
                 {
-                    <div class="mb-3">
+                    <div class="mb-3 text-dark">
                         <span class="fs-6">Unconfirmed balance: </span>
                         <span class="fs-5"> @Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span> <!-- replace this with actual unconfirmed balance -->
+                    </div>
+                }
+                
+                @if (accountBalanceInfo.TotalBalanceReserved > 0)
+                {
+                    <div class="mb-3 text-primary">
+                        <span class="fs-6">Reserved balance: </span>
+                        <span class="fs-5"> @Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span> 
                     </div>
                 }
 

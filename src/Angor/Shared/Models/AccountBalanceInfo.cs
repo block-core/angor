@@ -4,6 +4,7 @@ public class AccountBalanceInfo
 {
     public long TotalBalance { get; set; }
     public long TotalUnconfirmedBalance { get; set; }
+    public long TotalBalanceReserved { get; set; }
 
     public AccountInfo AccountInfo { get; private set; } = new ();
     
@@ -17,9 +18,16 @@ public class AccountBalanceInfo
         long balanceConfirmed = 0;
         long balanceUnconfirmed = 0;
         long balanceSpent = 0;
+        long balanceReserved = 0;
 
         foreach (var utxoData in AccountInfo.AllUtxos())
         {
+            if (account.UtxoReservedForInvestment.Contains(utxoData.outpoint.ToString()))
+            {
+                balanceReserved += utxoData.value;
+                continue;
+            }
+
             if (utxoData.PendingSpent)
             {
                 balanceSpent += utxoData.value;
@@ -38,5 +46,6 @@ public class AccountBalanceInfo
 
         TotalBalance = balanceConfirmed;
         TotalUnconfirmedBalance = balanceUnconfirmed;
+        TotalBalanceReserved = balanceReserved;
     }
 }

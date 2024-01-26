@@ -192,6 +192,9 @@ public class WalletOperations : IWalletOperations
                      .OrderBy(o => o.utxo.blockIndex)
                      .ThenByDescending(o => o.utxo.value))
         {
+            if (accountInfo.UtxoReservedForInvestment.Contains(utxoData.utxo.outpoint.ToString()))
+                continue;
+
             utxosToSpend.Add(new UtxoDataWithPath { HdPath = utxoData.path, UtxoData = utxoData.utxo });
 
             total += utxoData.utxo.value;

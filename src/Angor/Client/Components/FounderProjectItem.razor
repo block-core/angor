@@ -23,6 +23,10 @@
             Nostr ID:   <a href="/" target="_blank">@FounderProject.ProjectInfo.NostrPubKey</a>
         </p>
         <NavLink href=@($"/view/{FounderProject.ProjectInfo.ProjectIdentifier}") class="btn btn-primary">View Project</NavLink>
+        @if (InvestmentRequests)
+        {
+            <NavLink href=@($"/signatures/{FounderProject.ProjectInfo.ProjectIdentifier}") class="btn btn-success">Approve signatures</NavLink>
+        }
     </div>
 </div>
 
