@@ -239,6 +239,11 @@
 
                 if (signatureRequest.TimeArrived > timeApproved)
                 {
+                    // todo: use event id
+                    // in the future we must save the req event id and link it as a tag on the res,
+                    // so we can identify the exact request that was signed instead of using the `TimeArrived > timeApproved`
+                    // example: signatureResponse.tags.contains(signatureRequest.eventid)
+
                     Logger.LogDebug($"The event received is replaced");
                     return; // sig of an old request 
                 }
