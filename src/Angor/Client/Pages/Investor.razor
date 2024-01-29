@@ -100,7 +100,12 @@
                                 <p class="text-success">Live</p>
                             }
                         </td>
-                        <td>@Money.Satoshis(project.SignatureInfo?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker @(!project.SignatureInfo?.Signatures?.Any() ?? false ? "(pending)" : string.Empty)</td>
+                        <td>@Money.Satoshis(project.SignatureInfo?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker 
+                            @if (!project.SignatureInfo?.Signatures?.Any() ?? false)
+                            {
+                                    <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link" data-toggle="tooltip" title="Pending"> <i class="oi oi-clock"></i></a>
+                            }
+                         </td>
                         <td>-</td>
                         <td>-</td>
                         <td>@Money.Satoshis(project.SignatureInfo?.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
