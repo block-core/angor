@@ -82,7 +82,10 @@ namespace Angor.Client.Services
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Select(_ => _.Event)
-                    .Subscribe(_ => { action.Invoke(_.Pubkey, _.Content, _.CreatedAt.Value); });
+                    .Subscribe(_ =>
+                    {
+                        action.Invoke(_.Pubkey, _.Content, _.CreatedAt.Value);
+                    });
 
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
             }

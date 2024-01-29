@@ -262,6 +262,12 @@
             else
             {
                 project = SessionStorage.GetProjectById(ProjectId);
+
+                if (project == null)
+                {
+                    NavigationManager.NavigateTo($"/view/{ProjectId}");
+                    return;
+                }
             }
         }
 
@@ -517,9 +523,6 @@
 
     public async Task CancelInvestment()
     {
-        notificationComponent.ShowErrorMessage("Cancel is not supported yet");
-        return;
-
         if (recoverySigs == null)
         {
             var signatures = storage.GetSignatures();
