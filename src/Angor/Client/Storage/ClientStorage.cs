@@ -91,8 +91,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         var item = ret.First(_ => _.ProjectIdentifier == projectId);
 
-        if (!ret.Remove(item))
-            throw new InvalidOperationException();
+        ret.Remove(item);
 
         _storage.SetItem("projects", ret);
     }

@@ -173,17 +173,14 @@
     private async Task FetchPendingSignatures(FounderProject project)
     {
         await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,// project.LastRequestForSignaturesTime , async 
-            (investorPubKey,encryptedMessage, requestTime) =>
+            (eventId, investorPubKey, encryptedMessage, timeArrived) =>
         {
-            var timeArrived = requestTime;
-
             Logger.LogDebug($"Sig request event received investorPubKey: {investorPubKey} - timeArrived: {timeArrived}");
 
             var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorPubKey == investorPubKey);
 
             if (sigReq != null)
             {
-                // todo: should we use some generated guid on the request side to filter for new sig requests?
                 if (sigReq.TimeArrived < timeArrived)
                 {
                     Logger.LogDebug($"Sig request event received is replaced");
@@ -205,7 +202,8 @@
             {
                 investorPubKey = investorPubKey,
                 TimeArrived = timeArrived,
-                TransactionHex = encryptedMessage //To be encrypted after js interop is loaded
+                TransactionHex = encryptedMessage, //To be encrypted after js interop is loaded
+                EventId = eventId
             };
 
             signaturesRequests.Add(signatureRequest);
@@ -226,26 +224,25 @@
     private void FetchFounderApprovalsSignatures(FounderProject project)
     {
         SignService.LookupInvestmentRequestApprovals(project.ProjectInfo.NostrPubKey,  
-            (investorPubKey, requestTime) =>
+            (investorPubKey, timeApproved, reqEventId) =>
             {
-                var timeApproved = requestTime;
-
-                Logger.LogDebug($"Sig response event received investorPubKey: {investorPubKey} - timeApproved: {timeApproved}");
+                Logger.LogDebug($"Sig response event received investorPubKey: {investorPubKey} - timeApproved: {timeApproved} - reqEventId: {reqEventId}");
 
                 var signatureRequest = signaturesRequests.FirstOrDefault(_ => _.investorPubKey == investorPubKey);
 
                 if (signatureRequest is null || signatureRequest.TimeApproved != null)
                     return; //multiple relays could mean the same massage multiple times
-
+                
                 if (signatureRequest.TimeArrived > timeApproved)
                 {
-                    // todo: use event id
-                    // in the future we must save the req event id and link it as a tag on the res,
-                    // so we can identify the exact request that was signed instead of using the `TimeArrived > timeApproved`
-                    // example: signatureResponse.tags.contains(signatureRequest.eventid)
-
-                    Logger.LogDebug($"The event received is replaced");
+                    Logger.LogDebug($"The event received is replaced by time");
                     return; // sig of an old request 
+                }
+
+                if (reqEventId != null && signatureRequest.EventId != reqEventId)
+                {
+                    Logger.LogDebug($"The event received is replaced by eventid");
+                    return; // sig of an old request
                 }
 
                 Logger.LogDebug($"The event received is new");
@@ -297,7 +294,7 @@
                 signature.investorPubKey,
                 sigJson);
 
-            FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorPubKey);
+            FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorPubKey, signature.EventId);
 
             Storage.UpdateFounderProject(FounderProject);
 
@@ -341,5 +338,7 @@
         public DateTime? TimeApproved { get; set; }
 
         public string? TransactionHex { get; set; }
+
+        public string EventId { get; set; }
     }
 }

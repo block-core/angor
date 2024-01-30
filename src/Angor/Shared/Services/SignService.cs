@@ -20,7 +20,7 @@ namespace Angor.Client.Services
             _subscriptionsHanding = subscriptionsHanding;
         }
 
-        public DateTime RequestInvestmentSigs(SignRecoveryRequest signRecoveryRequest)
+        public (DateTime,string) RequestInvestmentSigs(SignRecoveryRequest signRecoveryRequest)
         {
             var sender = NostrPrivateKey.FromHex(signRecoveryRequest.InvestorNostrPrivateKey);
 
@@ -43,10 +43,10 @@ namespace Angor.Client.Services
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
             nostrClient.Send(new NostrEventRequest(signed));
 
-            return signed.CreatedAt!.Value;
+            return (signed.CreatedAt!.Value, signed.Id);
         }
 
-        public void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime sigRequestSentTime, Func<string, Task> action)
+        public void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime sigRequestSentTime, string sigRequestEventId, Func<string, Task> action)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
@@ -67,12 +67,13 @@ namespace Angor.Client.Services
                 P = new[] { investorNostrPubKey }, // To investor
                 Kinds = new[] { NostrKind.EncryptedDm },
                 Since = sigRequestSentTime,
-                A = new[] { NostrCoordinatesIdentifierTag(projectNostrPubKey) }, //Only signature requests
-                Limit = 1
+                E = new [] { sigRequestEventId },
+                //A = new[] { NostrCoordinatesIdentifierTag(projectNostrPubKey) }, //Only signature requests
+                Limit = 1,
             }));
         }
 
-        public Task LookupInvestmentRequestsAsync(string nostrPubKey, DateTime? since, Action<string,string,DateTime> action, Action onAllMessagesReceived)
+        public Task LookupInvestmentRequestsAsync(string nostrPubKey, DateTime? since, Action<string, string, string,DateTime> action, Action onAllMessagesReceived)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
             var subscriptionKey = nostrPubKey + "sig_req";
@@ -82,9 +83,9 @@ namespace Angor.Client.Services
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Select(_ => _.Event)
-                    .Subscribe(_ =>
+                    .Subscribe(nostrEvent =>
                     {
-                        action.Invoke(_.Pubkey, _.Content, _.CreatedAt.Value);
+                        action.Invoke(nostrEvent.Id, nostrEvent.Pubkey, nostrEvent.Content, nostrEvent.CreatedAt.Value);
                     });
 
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
@@ -103,7 +104,7 @@ namespace Angor.Client.Services
             return Task.CompletedTask;
         }
 
-        public void LookupInvestmentRequestApprovals(string nostrPubKey, Action<string, DateTime> action, Action onAllMessagesReceived)
+        public void LookupInvestmentRequestApprovals(string nostrPubKey, Action<string, DateTime, string> action, Action onAllMessagesReceived)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
             var subscriptionKey = nostrPubKey + "sig_res";
@@ -113,9 +114,9 @@ namespace Angor.Client.Services
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Select(_ => _.Event)
-                    .Subscribe(_ =>
+                    .Subscribe(nostrEvent =>
                     {
-                        action.Invoke(_.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier), _.CreatedAt.Value);
+                        action.Invoke(nostrEvent.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier), nostrEvent.CreatedAt.Value, nostrEvent.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier));
                     });
 
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
@@ -127,11 +128,11 @@ namespace Angor.Client.Services
             {
                 Authors = new[] { nostrPubKey }, //From founder
                 Kinds = new[] { NostrKind.EncryptedDm },
-                A = new[] { NostrCoordinatesIdentifierTag(nostrPubKey) }, //Only signature requests
+                A = new[] { NostrCoordinatesIdentifierTag(nostrPubKey) } //Only signature requests
             }));
         }
 
-        public DateTime SendSignaturesToInvestor(string encryptedSignatureInfo, string nostrPrivateKeyHex, string investorNostrPubKey)
+        public DateTime SendSignaturesToInvestor(string encryptedSignatureInfo, string nostrPrivateKeyHex, string investorNostrPubKey, string eventId)
         {
             var nostrPrivateKey = NostrPrivateKey.FromHex(nostrPrivateKeyHex);
 
@@ -143,7 +144,8 @@ namespace Angor.Client.Services
                 Tags = new NostrEventTags(new []
                 {
                     NostrEventTag.Profile(investorNostrPubKey),
-                    new NostrEventTag(NostrEventTag.CoordinatesIdentifier,NostrCoordinatesIdentifierTag(nostrPrivateKey.DerivePublicKey().Hex))
+                    new NostrEventTag(NostrEventTag.CoordinatesIdentifier,NostrCoordinatesIdentifierTag(nostrPrivateKey.DerivePublicKey().Hex)),
+                    NostrEventTag.Event(eventId)
                 })
             };
 
