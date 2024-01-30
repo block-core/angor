@@ -262,6 +262,12 @@
             else
             {
                 project = SessionStorage.GetProjectById(ProjectId);
+
+                if (project == null)
+                {
+                    NavigationManager.NavigateTo($"/view/{ProjectId}");
+                    return;
+                }
             }
         }
 
@@ -296,7 +302,7 @@
 
             _SignService.LookupSignatureForInvestmentRequest(
                 NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
-                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value,
+                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value, recoverySigs.SignatureRequestEventId,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
         }
     }
@@ -456,13 +462,16 @@
                 project.NostrPubKey,
                 strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory));
 
-            recoverySigs.TimeOfRequestForSigning = _SignService.RequestInvestmentSigs(new SignRecoveryRequest
+            var investmentSigsRequest = _SignService.RequestInvestmentSigs(new SignRecoveryRequest
             {
                 ProjectIdentifier = project.ProjectIdentifier,
                 EncryptedContent = encryptedContent,
                 NostrPubKey = project.NostrPubKey,
                 InvestorNostrPrivateKey = nostrPrivateKeyHex
             });
+
+            recoverySigs.TimeOfRequestForSigning = investmentSigsRequest.eventTime;
+            recoverySigs.SignatureRequestEventId = investmentSigsRequest.eventId;
 
             storage.AddInvestmentProject(project); //TODO David need to verify that this is the correct place to change state in storage
             storage.AddOrUpdateSignatures(recoverySigs);
@@ -474,7 +483,7 @@
 
             _SignService.LookupSignatureForInvestmentRequest(
                 NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
-                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value,
+                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value, recoverySigs.SignatureRequestEventId,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
             
             return new OperationResult { Success = true, };
@@ -517,9 +526,6 @@
 
     public async Task CancelInvestment()
     {
-        notificationComponent.ShowErrorMessage("Cancel is not supported yet");
-        return;
-
         if (recoverySigs == null)
         {
             var signatures = storage.GetSignatures();
@@ -540,6 +546,7 @@
             }
             
             storage.RemoveSignatures(recoverySigs);
+            storage.RemoveInvestmentProject(project.ProjectIdentifier);
 
             recoverySigs = null;
         }

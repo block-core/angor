@@ -173,22 +173,37 @@
     private async Task FetchPendingSignatures(FounderProject project)
     {
         await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,// project.LastRequestForSignaturesTime , async 
-            (investorPubKey,encryptedMessage, requestTime) =>
+            (eventId, investorPubKey, encryptedMessage, timeArrived) =>
         {
-            Logger.LogDebug($"Event received");
+            Logger.LogDebug($"Sig request event received investorPubKey: {investorPubKey} - timeArrived: {timeArrived}");
 
-            if (signaturesRequests.Any(_ => _.investorPubKey == investorPubKey))
-                return; //multiple relays could mean the same massage multiple times
+            var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorPubKey == investorPubKey);
 
-            Logger.LogDebug($"Event received is new");
+            if (sigReq != null)
+            {
+                if (sigReq.TimeArrived < timeArrived)
+                {
+                    Logger.LogDebug($"Sig request event received is replaced");
+
+                    // this is a newer sig request so replace it
+                    signaturesRequests.Remove(sigReq);
+                }
+                else
+                {
+                    return; //multiple relays could mean the same massage multiple times
+                }
+            }
+
+            Logger.LogDebug($"Sig request event received is new");
 
             messagesReceived = true;
 
             var signatureRequest = new SignatureRequest
             {
                 investorPubKey = investorPubKey,
-                TimeArrived = requestTime,
-                TransactionHex = encryptedMessage //To be encrypted after js interop is loaded
+                TimeArrived = timeArrived,
+                TransactionHex = encryptedMessage, //To be encrypted after js interop is loaded
+                EventId = eventId
             };
 
             signaturesRequests.Add(signatureRequest);
@@ -209,18 +224,30 @@
     private void FetchFounderApprovalsSignatures(FounderProject project)
     {
         SignService.LookupInvestmentRequestApprovals(project.ProjectInfo.NostrPubKey,  
-            (investorPubKey, requestTime) =>
+            (investorPubKey, timeApproved, reqEventId) =>
             {
-                Logger.LogDebug($"Event received");
+                Logger.LogDebug($"Sig response event received investorPubKey: {investorPubKey} - timeApproved: {timeApproved} - reqEventId: {reqEventId}");
 
                 var signatureRequest = signaturesRequests.FirstOrDefault(_ => _.investorPubKey == investorPubKey);
 
                 if (signatureRequest is null || signatureRequest.TimeApproved != null)
                     return; //multiple relays could mean the same massage multiple times
+                
+                if (signatureRequest.TimeArrived > timeApproved)
+                {
+                    Logger.LogDebug($"The event received is replaced by time");
+                    return; // sig of an old request 
+                }
+
+                if (reqEventId != null && signatureRequest.EventId != reqEventId)
+                {
+                    Logger.LogDebug($"The event received is replaced by eventid");
+                    return; // sig of an old request
+                }
 
                 Logger.LogDebug($"The event received is new");
 
-                signatureRequest.TimeApproved = requestTime;
+                signatureRequest.TimeApproved = timeApproved;
 
                 Logger.LogDebug($"Added to pendingSignatures");
             }, 
@@ -267,7 +294,7 @@
                 signature.investorPubKey,
                 sigJson);
 
-            FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorPubKey);
+            FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorPubKey, signature.EventId);
 
             Storage.UpdateFounderProject(FounderProject);
 
@@ -311,5 +338,7 @@
         public DateTime? TimeApproved { get; set; }
 
         public string? TransactionHex { get; set; }
+
+        public string EventId { get; set; }
     }
 }
