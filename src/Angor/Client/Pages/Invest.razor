@@ -302,7 +302,7 @@
 
             _SignService.LookupSignatureForInvestmentRequest(
                 NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
-                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value, recoverySigs.RequestForSigningEventId,
+                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value, recoverySigs.SignatureRequestEventId,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
         }
     }
@@ -462,7 +462,7 @@
                 project.NostrPubKey,
                 strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory));
 
-            var sigRecReq = _SignService.RequestInvestmentSigs(new SignRecoveryRequest
+            var investmentSigsRequest = _SignService.RequestInvestmentSigs(new SignRecoveryRequest
             {
                 ProjectIdentifier = project.ProjectIdentifier,
                 EncryptedContent = encryptedContent,
@@ -470,8 +470,8 @@
                 InvestorNostrPrivateKey = nostrPrivateKeyHex
             });
 
-            recoverySigs.TimeOfRequestForSigning = sigRecReq.eveTime;
-            recoverySigs.RequestForSigningEventId = sigRecReq.eventId;
+            recoverySigs.TimeOfRequestForSigning = investmentSigsRequest.eventTime;
+            recoverySigs.SignatureRequestEventId = investmentSigsRequest.eventId;
 
             storage.AddInvestmentProject(project); //TODO David need to verify that this is the correct place to change state in storage
             storage.AddOrUpdateSignatures(recoverySigs);
@@ -483,7 +483,7 @@
 
             _SignService.LookupSignatureForInvestmentRequest(
                 NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
-                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value, recoverySigs.RequestForSigningEventId,
+                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value, recoverySigs.SignatureRequestEventId,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
             
             return new OperationResult { Success = true, };

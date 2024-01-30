@@ -4,7 +4,7 @@ namespace Angor.Client.Services;
 
 public interface ISignService
 {
-    (DateTime eveTime, string eventId) RequestInvestmentSigs(SignRecoveryRequest signRecoveryRequest);
+    (DateTime eventTime, string eventId) RequestInvestmentSigs(SignRecoveryRequest signRecoveryRequest);
     void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime sigRequestSentTime, string sigRequestEventId, Func<string, Task> action);
 
     Task LookupInvestmentRequestsAsync(string nostrPubKey, DateTime? since, Action<string, string, string, DateTime> action,

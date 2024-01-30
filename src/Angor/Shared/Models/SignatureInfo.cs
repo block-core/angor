@@ -9,7 +9,7 @@ public class SignatureInfo
     public string EndOfProjectTransactionId { get; set; }
     public List<SignatureInfoItem> Signatures { get; set; } = new();
     public DateTime? TimeOfRequestForSigning { get; set; }
-    public string? RequestForSigningEventId { get; set; }
+    public string? SignatureRequestEventId { get; set; }
 
     public string? SignedTransactionHex { get; set; }
     public long AmountInvested { get; set; }
