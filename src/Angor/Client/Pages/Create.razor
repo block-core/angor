@@ -229,7 +229,7 @@
         if (hasWallet)
         {
             var projects = storage.GetFounderProjects();
-            var keys = storage.GetFounderKeys();
+            var keys = _walletStorage.GetFounderKeys();
             var latestProject = projects.MaxBy(p => p.ProjectInfo.ProjectIndex);
             var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectInfo.ProjectIndex + 1 ?? 1);
 

@@ -8,4 +8,11 @@ public interface IWalletStorage
     void SaveWalletWords(WalletWords walletWords);
     void DeleteWallet();
     WalletWords GetWallet();
+    
+    
+    void SetFounderKeys(FounderKeyCollection founderPubKeys);
+    FounderKeyCollection GetFounderKeys();
+    void DeleteFounderKeys();
+    string? GetWalletPubkey();
+    void DeleteWalletPubkey();
 }

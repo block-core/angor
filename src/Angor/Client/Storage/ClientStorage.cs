@@ -9,39 +9,13 @@ namespace Angor.Client.Storage;
 public class ClientStorage : IClientStorage, INetworkStorage
 {
     private readonly ISyncLocalStorageService _storage;
-
-    private const string PubKey = "pubkey";
+    
     private const string utxoKey = "utxo:{0}";
     public ClientStorage(ISyncLocalStorageService storage)
     {
         _storage = storage;
     }
-
-    public void SetFounderKeys(FounderKeyCollection founderPubKeys)
-    {
-        _storage.SetItem("projectsKeys", founderPubKeys);
-    }
-
-    public FounderKeyCollection GetFounderKeys()
-    {
-        return _storage.GetItem<FounderKeyCollection>("projectsKeys");
-    }
-
-    public void DeleteFounderKeys()
-    {
-        _storage.RemoveItem("projectsKeys");
-    }
-
-    public string? GetWalletPubkey()
-    {
-        return _storage.GetItemAsString(PubKey);
-    }
-
-    public void DeleteWalletPubkey()
-    {
-        _storage.RemoveItem(PubKey);
-    }
-
+    
     public AccountInfo GetAccountInfo(string network)
     {
         return _storage.GetItem<AccountInfo>(string.Format(utxoKey,network));
