@@ -50,7 +50,7 @@ public class NetworkConfiguration : INetworkConfiguration
     {
         return new List<SettingsUrl>
         {
-            new SettingsUrl { Name = "", Url = "https://explorer.angor.io/btc/explorer", IsPrimary = true },
+            new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer", IsPrimary = true },
         };
     }
 
