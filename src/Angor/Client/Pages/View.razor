@@ -91,7 +91,7 @@
                         var completePercent = (currentDays * 100) / totalDays;
 
                         <div class="progress mb-2">
-                            <div class="progress-bar bg-secondary" role="progressbar" style="width: @completePercent%;" aria-valuenow="@completePercent" aria-valuemin="0" aria-valuemax="100">@currentDays/@totalDays days</div>
+                            <div class="progress-bar bg-info" role="progressbar" style="width: @completePercent%;" aria-valuenow="@completePercent" aria-valuemin="0" aria-valuemax="100">@currentDays/@totalDays days</div>
                         </div>
                     }
 
@@ -107,16 +107,25 @@
             <div class="card-body">
                 <!-- Progress bar section -->
                 <div class="progress mb-2">
-                    <div class="progress-bar" role="progressbar" style="width: @projectStats.FundingProgressPercent%;" aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress-bar" role="progressbar" style="width: @projectStats.FundingProgressPercent%;" aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100">@projectStats.FundingProgressPercent%</div>
                 </div>
 
                 <!-- Additional details section -->
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <p class="card-text mb-0">Total Raised: @projectStats.TotalRaised @network.CoinTicker</p>
-                        <p class="card-text mb-0">Total Investors: @projectStats.TotalInvestors</p>
-                        <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>
-                        <p class="card-text mb-0">Time Left for Investing: @projectStats.TimeLeft days</p>
+                        
+                        @if (projectStats.Loading)
+                        {
+                            <div class="loader"></div>
+                        }
+                        else
+                        {
+                            <p class="card-text mb-0">Total Raised: @Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                            <p class="card-text mb-0">Total Investors: @projectStats.TotalInvestors</p>
+                           @* <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>*@
+                            <p class="card-text mb-0">Time Left for Investing: @projectStats.TimeLeft days</p>    
+                        }
+                        
                     </div>
                 </div>
             </div>
@@ -251,16 +260,18 @@
 
     public class ProjectStats
     {
-        public int TotalRaised { get; set; }
+        public bool Loading { get; set; }
+        public long TotalRaised { get; set; }
         public int TotalInvestors { get; set; }
         public int TotalSeeders { get; set; }
         public int TimeLeft { get; set; }
         public int FundingProgressPercent { get; set; }
-        
+
     };
 
     ProjectStats projectStats = new ProjectStats
     {
+        Loading = true,
         TimeLeft = 7,
         TotalInvestors = 150,
         TotalRaised = 240,
@@ -284,18 +295,18 @@
         {
             project = findProject;
 
-                var investedProject = storage.GetSignatures().FirstOrDefault(s => s.ProjectIdentifier == ProjectId);
-                if (investedProject != null)
-                {
-                    invested = investedProject.Signatures.Any(); // TODO need to scan for the invested projects when opening on a new browsers
-                    myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investedProject.TransactionId}";   
-
-                    storage.GetInvestmentProjectsMetadata().TryGetValue(project.NostrPubKey, out projectMetadata);
-                }
-        }
-            else
+            var investedProject = storage.GetSignatures().FirstOrDefault(s => s.ProjectIdentifier == ProjectId);
+            if (investedProject != null)
             {
-                findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
+                invested = investedProject.Signatures.Any(); // TODO need to scan for the invested projects when opening on a new browsers
+                myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investedProject.TransactionId}";   
+
+                storage.GetInvestmentProjectsMetadata().TryGetValue(project.NostrPubKey, out projectMetadata);
+            }
+        }
+        else
+        {
+            findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
 
             if (findProject != null)
             {
@@ -351,18 +362,46 @@
         if (project != null)
         {
             projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
+
+            await RefreshBalance();
         }
     }
 
     private async Task RefreshBalance()
     {
-        var operationResult = await notificationComponent.LongOperation(async () =>
+        try
         {
-            await Task.Delay(1000);
+            projectStats.Loading = true;
 
-            return new OperationResult { Success = true };
-        });
+            if (project != null)
+            {
+                var data = await _IndexerService.GetProjectStatsAsync(project.ProjectIdentifier);
+
+                if (data != null)
+                {
+                    projectStats.TotalInvestors = (int)data.InvestorCount;
+                    projectStats.TotalRaised = data.AmountInvested;
+
+                    projectStats.TimeLeft = (project.StartDate - DateTime.UtcNow).Days;
+                    if (projectStats.TimeLeft < 0) 
+                        projectStats.TimeLeft = 0;
+
+                    var targetSat = Money.Coins(project.TargetAmount).Satoshi;
+                    projectStats.FundingProgressPercent = (int)((projectStats.TotalRaised * 100) / targetSat);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage(ex.Message);
+        }
+        finally
+        {
+            projectStats.Loading = false;
+        }
+      
     }
+
     private async Task RecoverFunds()
     {
         NavigationManager.NavigateTo($"/recover/{ProjectId}");

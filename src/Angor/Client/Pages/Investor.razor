@@ -3,11 +3,13 @@
 @using Angor.Shared.Models
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin
+@using Angor.Client.Services
 
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
 @inject ICacheStorage SessionStorage;
+@inject IIndexerService _IndexerService
 
 @inherits BaseComponent
 
@@ -88,8 +90,8 @@
                         </td>
                         <td> @project.ProjectMetadata?.Name</td>
                         <td>@project.ProjectInfo.TargetAmount @network.CoinTicker</td>
-                        <td>0</td>
-                        <td>0%</td>
+                        <td>@Money.Satoshis(project.Stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
+                        <td>@((project.Stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</td>
                         <td>
                             @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
                             {
@@ -132,9 +134,11 @@
         public ProjectInfo ProjectInfo;
         public ProjectMetadata? ProjectMetadata;
         public SignatureInfo? SignatureInfo;
+
+        public ProjectStats? Stats;
     }
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         hasWallet = _walletStorage.HasWallet();
 
@@ -162,9 +166,23 @@
             TotalWallet = abi.TotalBalance;
             TotalInRecovery = projects.Sum(s => s.SignatureInfo?.AmountInRecovery ?? 0);
 
+            await RefreshBalance();
         }
+    }
 
-        return Task.CompletedTask;
+    private async Task RefreshBalance()
+    {
+        try
+        {
+            foreach (var projectInfo in projects)
+            {
+                projectInfo.Stats = await _IndexerService.GetProjectStatsAsync(projectInfo.ProjectInfo.ProjectIdentifier);
+            }
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage(ex.Message);
+        }
     }
 
     public string TrimString(string input)

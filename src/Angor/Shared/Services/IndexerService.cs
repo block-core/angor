@@ -11,6 +11,8 @@ namespace Angor.Client.Services
     {
         Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit);
         Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId);
+        Task<ProjectStats?> GetProjectStatsAsync(string projectId);
+
         Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId);
         Task<string> PublishTransactionAsync(string trxHex);
         Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false);
@@ -43,6 +45,14 @@ namespace Angor.Client.Services
         public string HashOfSecret { get; set; }
 
         public bool IsSeeder { get; set; }
+    }
+
+    public class ProjectStats
+    {
+        public long InvestorCount { get; set; }
+        public long AmountInvested { get; set; }
+        public long AmountInPenalties { get; set; }
+        public long CountInPenalties { get; set; }
     }
 
     public class IndexerService : IIndexerService
@@ -84,6 +94,25 @@ namespace Angor.Client.Services
             }
             
             return await response.Content.ReadFromJsonAsync<ProjectIndexerData>();
+        }
+
+        public async Task<ProjectStats?> GetProjectStatsAsync(string projectId)
+        {
+            if (string.IsNullOrEmpty(projectId))
+            {
+                return null;
+            }
+
+            var indexer = _networkService.GetPrimaryIndexer();
+            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/stats");
+            _networkService.CheckAndHandleError(response);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<ProjectStats>();
         }
 
         public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)
