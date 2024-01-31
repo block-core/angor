@@ -43,27 +43,82 @@
         <!-- Project Details Section -->
         <div class="card mb-3">
             <div class="card-header">
-                <h4>Project Details</h4>
+                <h4>@project.ProjectIdentifier</h4>
             </div>
             <div class="card-body">
-                <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
 
                 @if (projectMetadata != null || SessionStorage.IsProjectMetadataStorageByPubkey(project.NostrPubKey))
                 {
                     var metadata = projectMetadata ?? SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
 
-                    <hr />
+                    if (metadata?.Banner != null)
+                    {
+                        <div class="card-header overflow-hidden">
+                            <img class="card-img-top" src="@metadata.Banner" alt=""/>
+                        </div>
+                    }
+
+                    <br/>
                     <h3 class="card-title">@metadata?.Name</h3>
                     <p class="card-subtitle">@metadata?.About</p>
                     <hr />
                 }
 
                 <a href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
+                <p class="card-text">Project Identifier: @project.ProjectIdentifier</p>
                 <p class="card-text">Founder Key: @project.FounderKey</p>
-                <p class="card-text">Start Date: @project.StartDate.ToString("dd/MM/yyyy")</p>
-                <p class="card-text">Penalty Days: @project.PenaltyDays</p>
-                <p class="card-text">Expiry Date: @project.ExpiryDate.ToString("dd/MM/yyyy")</p>
-                <p class="card-text">Target Amount: @project.TargetAmount</p>
+                <p class="card-text">Target Amount: @project.TargetAmount @network.CoinTicker</p>
+                <p class="card-text">Penalty duration: @project.PenaltyDays days</p>
+
+                <p class="card-text">
+                    Project dates: @project.StartDate.ToString("dd/MM/yyyy") - @project.ExpiryDate.ToString("dd/MM/yyyy")
+                </p>
+
+                @{
+                    int startsInDays = (project.StartDate - DateTime.Now).Days;
+
+                    if (startsInDays > 0)
+                    {
+                        <p class="card-text">Starts in @startsInDays days</p>
+                    }
+                    else
+                    {
+                        int totalDays = (project.ExpiryDate - project.StartDate).Days;
+                        int currentDays = (DateTime.Now - project.StartDate).Days;
+                        currentDays = currentDays < 0 ? 0 : currentDays;
+                        currentDays = currentDays > totalDays ? totalDays : currentDays;
+
+                        var completePercent = (currentDays * 100) / totalDays;
+
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-secondary" role="progressbar" style="width: @completePercent%;" aria-valuenow="@completePercent" aria-valuemin="0" aria-valuemax="100">@currentDays/@totalDays days</div>
+                        </div>
+                    }
+
+                 }
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h4>Stats</h4>
+            </div>
+            <div class="card-body">
+                <!-- Progress bar section -->
+                <div class="progress mb-2">
+                    <div class="progress-bar" role="progressbar" style="width: @projectStats.FundingProgressPercent%;" aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+
+                <!-- Additional details section -->
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <p class="card-text mb-0">Total Raised: @projectStats.TotalRaised @network.CoinTicker</p>
+                        <p class="card-text mb-0">Total Investors: @projectStats.TotalInvestors</p>
+                        <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>
+                        <p class="card-text mb-0">Time Left for Investing: @projectStats.TimeLeft days</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -98,7 +153,7 @@
         </div>
 
         <!-- Seeders Section -->
-        <div class="card mb-3">
+@*        <div class="card mb-3">
             <div class="card-header">
                 <h4>Selected Seeders</h4>
             </div>
@@ -112,31 +167,7 @@
                     <p><i class="bi bi-exclamation-triangle-fill"></i> No seeders yet.</p>
                 }
             </div>
-        </div>
-
-        <!-- Stats Section -->
-        <div class="card mb-3">
-            <div class="card-header">
-                <h4>Stats</h4>
-            </div>
-            <div class="card-body">
-                <!-- Progress bar section -->
-                <div class="progress mb-2">
-                    <div class="progress-bar" role="progressbar" style="width: @projectStats.FundingProgressPercent%;" aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-
-                <!-- Additional details section -->
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <p class="card-text mb-0">Total Raised: @projectStats.TotalRaised @network.CoinTicker</p>
-                        <p class="card-text mb-0">Total Investors: @projectStats.TotalInvestors</p>
-                        <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>
-                        <p class="card-text mb-0">Time Left for Investing: @projectStats.TimeLeft days</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        </div>*@
 
         <!-- Actions Section -->
         <div class="card mb-3">
@@ -241,10 +272,12 @@
     bool invested = false;
     bool findInProgress = false;
 
-    private List<string> NostrClients = new List<string> { "wss://relay.angor.io", "wss://relay.angor1.io" };
+    private List<string> NostrClients = new ();
 
     protected override async Task OnInitializedAsync()
     {
+        NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
+
         var findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
 
         if (findProject != null)

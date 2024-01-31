@@ -16,16 +16,13 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public SettingsUrl GetIndexerUrl()
     {
-        // return new IndexerUrl{Symbol = "", Url = "http://10.22.156.65:9910/api"};
-        //return new IndexerUrl { Symbol = "", Url = "http://207.180.254.78:9910/api" };
         return new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io/api" };
     }
 
     public SettingsUrl GetExplorerUrl()
     {
-        //return new IndexerUrl { Symbol = "", Url = "http://10.22.156.65:9911/btc/explorer" };
-        //return new IndexerUrl { Symbol = "", Url = "http://207.180.254.78:9911/btc/explorer" };
-        return new SettingsUrl { Name = "", Url = "https://explorer.angor.io/btc/explorer" };
+
+        return new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer" };
     }
 
     public List<SettingsUrl> GetDefaultIndexerUrls()
