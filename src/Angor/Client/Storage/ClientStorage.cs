@@ -31,11 +31,11 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.RemoveItem(string.Format(utxoKey,network));
     }
 
-    public void AddInvestmentProject(ProjectInfo project)
+    public void AddInvestmentProject(InvestorProject project)
     {
         var ret = GetInvestmentProjects();
 
-        if (ret.Any(a => a.ProjectIdentifier == project.ProjectIdentifier))
+        if (ret.Any(a => a.ProjectInfo?.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier))
         {
             return;
         }
@@ -45,11 +45,11 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem("projects", ret);
     }
 
-    public void UpdateInvestmentProject(ProjectInfo project)
+    public void UpdateInvestmentProject(InvestorProject project)
     {
         var ret = GetInvestmentProjects();
 
-        var item = ret.First(_ => _.ProjectIdentifier == project.ProjectIdentifier);
+        var item = ret.First(_ => _.ProjectInfo?.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
 
         if(!ret.Remove(item)) 
             throw new InvalidOperationException();
@@ -63,7 +63,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
     {
         var ret = GetInvestmentProjects();
 
-        var item = ret.First(_ => _.ProjectIdentifier == projectId);
+        var item = ret.First(_ => _.ProjectInfo?.ProjectIdentifier == projectId);
 
         ret.Remove(item);
 
@@ -75,11 +75,11 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.RemoveItem("projects");
     }
 
-    public List<ProjectInfo> GetInvestmentProjects()
+    public List<InvestorProject> GetInvestmentProjects()
     {
-        var ret =  _storage.GetItem<List<ProjectInfo>>("projects");
+        var ret =  _storage.GetItem<List<InvestorProject>>("projects");
 
-        return ret ?? new List<ProjectInfo>();
+        return ret ?? new List<InvestorProject>();
     }
 
     public void AddInvestmentProjectMetadata(string pubkey, ProjectMetadata projectMetadata)
@@ -104,7 +104,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         ret.AddRange(projects);
 
-        _storage.SetItem("founder-projects", ret.OrderBy(_ => _.ProjectInfo.ProjectIndex));
+        _storage.SetItem("founder-projects", ret.OrderBy(_ => _.ProjectIndex));
     }
 
     public List<FounderProject> GetFounderProjects()
@@ -127,7 +127,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
         
         projects.Add(project);
         
-        _storage.SetItem("founder-projects", projects.OrderBy(_ => _.ProjectInfo.ProjectIndex));
+        _storage.SetItem("founder-projects", projects.OrderBy(_ => _.ProjectIndex));
     }
 
     public void DeleteFounderProjects()

@@ -1,6 +1,6 @@
+using Angor.Client.Models;
 using Angor.Client.Services;
 using Angor.Shared.Models;
-using Angor.Shared.Services;
 using Blazored.SessionStorage;
 
 namespace Angor.Client.Storage;
@@ -10,15 +10,16 @@ public class LocalSessionStorage : ICacheStorage
     private ISyncSessionStorageService _sessionStorageService;
     
     private const string BrowseIndexerData = "subscriptions";
+    private const string NostrPubKeyMapping = "NostrPubKeyMapping";
 
     public LocalSessionStorage(ISyncSessionStorageService sessionStorageService)
     {
         _sessionStorageService = sessionStorageService;
     }
 
-    public void StoreProjectInfo(ProjectInfo project)
+    public void StoreProject(Project project)
     {
-        _sessionStorageService.SetItem(project.ProjectIdentifier,project);
+        _sessionStorageService.SetItem(project.ProjectInfo.ProjectIdentifier,project);
     }
 
     public ProjectMetadata? GetProjectMetadataByPubkey(string pubkey)
@@ -36,9 +37,29 @@ public class LocalSessionStorage : ICacheStorage
         return _sessionStorageService.ContainKey(pubkey);
     }
 
-    public ProjectInfo? GetProjectById(string projectId)
+    public Project? GetProjectById(string projectId)
     {
-        return _sessionStorageService.GetItem<ProjectInfo>(projectId);
+        return _sessionStorageService.GetItem<Project>(projectId);
+    }
+
+    public void AddProjectIdToNostrPubKeyMapping(string npub, string projectId)
+    {
+        var dictionary = _sessionStorageService.GetItem<Dictionary<string, string>>(NostrPubKeyMapping);
+        
+        dictionary ??= new ();
+
+        dictionary.TryAdd(npub, projectId);
+        
+        _sessionStorageService.SetItem(NostrPubKeyMapping,dictionary);
+    }
+
+    public string? GetProjectIdByNostrPubKey(string npub)
+    {
+        var dictionary = _sessionStorageService.GetItem<Dictionary<string, string>>(NostrPubKeyMapping);
+        
+        if (dictionary is null) return null;
+
+        return dictionary.TryGetValue(npub, out var value) ? value : null;
     }
 
     public bool IsProjectInStorageById(string projectId)

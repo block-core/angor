@@ -8,21 +8,31 @@ namespace Angor.Client.Storage
         AccountInfo GetAccountInfo(string network);
         void SetAccountInfo(string network, AccountInfo items);
         void DeleteAccountInfo(string network);
-        void AddInvestmentProject(ProjectInfo project);
+        
+        
+        void AddInvestmentProject(InvestorProject project);
         void RemoveInvestmentProject(string projectId);
-        void UpdateInvestmentProject(ProjectInfo project);
-        List<ProjectInfo> GetInvestmentProjects();
+        void UpdateInvestmentProject(InvestorProject project);
+        List<InvestorProject> GetInvestmentProjects();
+        
+        
         void AddInvestmentProjectMetadata(string pubkey, ProjectMetadata projectMetadata);
         Dictionary<string, ProjectMetadata> GetInvestmentProjectsMetadata();
         void DeleteInvestmentProjects();
+        
+        
         void AddFounderProject(params FounderProject[] projects);
         List<FounderProject> GetFounderProjects();
         void UpdateFounderProject(FounderProject project);
         void DeleteFounderProjects();
-        void AddOrUpdateSignatures(SignatureInfo signatureInfo);
-        void RemoveSignatures(SignatureInfo signatureInfo);
-        List<SignatureInfo> GetSignatures();
-        void DeleteSignatures();
+        
+        
+        // void AddOrUpdateSignatures(SignatureInfo signatureInfo);
+        // void RemoveSignatures(SignatureInfo signatureInfo);
+        // List<SignatureInfo> GetSignatures();
+        // void DeleteSignatures();
+        
+        
         SettingsInfo GetSettingsInfo();
         void SetSettingsInfo(SettingsInfo settingsInfo);
         void WipeStorage();

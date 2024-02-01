@@ -1,9 +1,9 @@
 ﻿@page "/investor"
 @using Angor.Client.Storage
 @using Angor.Shared.Models
-@using Angor.Shared.Services
 @using Blockcore.NBitcoin
 @using Angor.Client.Services
+@using Angor.Client.Models
 
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
@@ -88,10 +88,10 @@
                         <td>
                             <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link"> @TrimString(@project.ProjectInfo.ProjectIdentifier)</a>
                         </td>
-                        <td> @project.ProjectMetadata?.Name</td>
+                        <td> @project.Metadata?.Name</td>
                         <td>@project.ProjectInfo.TargetAmount @network.CoinTicker</td>
-                        <td>@Money.Satoshis(project.Stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
-                        <td>@((project.Stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</td>
+                        <td>@Money.Satoshis(Stats[project.ProjectInfo.ProjectIdentifier].AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
+                        <td>@((Stats[project.ProjectInfo.ProjectIdentifier].AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</td>
                         <td>
                             @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
                             {
@@ -102,15 +102,15 @@
                                 <p class="text-success">Live</p>
                             }
                         </td>
-                        <td>@Money.Satoshis(project.SignatureInfo?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker 
-                            @if (!project.SignatureInfo?.Signatures?.Any() ?? false)
+                        <td>@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker 
+                            @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
                             {
                                     <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link" data-toggle="tooltip" title="Pending"> <i class="oi oi-clock"></i></a>
                             }
                          </td>
                         <td>-</td>
                         <td>-</td>
-                        <td>@Money.Satoshis(project.SignatureInfo?.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                        <td>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
                     </tr>
                 }
                 </tbody>
@@ -122,22 +122,15 @@
 
 @code {
 
-    private List<ProjectData> projects = new();
+    private List<InvestorProject> projects = new();
 
     long TotalInvested = 0;
     long TotalWallet = 0;
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
 
-    public class ProjectData
-    {
-        public ProjectInfo ProjectInfo;
-        public ProjectMetadata? ProjectMetadata;
-        public SignatureInfo? SignatureInfo;
-
-        public ProjectStats? Stats;
-    }
-
+    public Dictionary<string,View.ProjectStats> Stats = new();
+    
     protected override async Task OnInitializedAsync()
     {
         hasWallet = _walletStorage.HasWallet();
@@ -147,24 +140,15 @@
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = SessionStorage.GetUnconfirmedInboundFunds();
 
-            var investedProjects = storage.GetInvestmentProjects();
-            var recoveries = storage.GetSignatures();
-
-            foreach (var projectInfo in investedProjects)
-            {
-                var data = new ProjectData { ProjectInfo = projectInfo };
-                projects.Add(data);
-                storage.GetInvestmentProjectsMetadata().TryGetValue(projectInfo.NostrPubKey, out data.ProjectMetadata);
-                data.SignatureInfo = recoveries.FirstOrDefault(s => s.ProjectIdentifier == projectInfo.ProjectIdentifier);
-            }
+            var projects = storage.GetInvestmentProjects();
 
             var abi = new AccountBalanceInfo();
             abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
 
             TotalFundedProjects = projects.Count;
-            TotalInvested =  projects.Sum(s => s.SignatureInfo?.AmountInvested ?? 0);
+            TotalInvested =  projects.Sum(s => s.AmountInvested ?? 0);
             TotalWallet = abi.TotalBalance;
-            TotalInRecovery = projects.Sum(s => s.SignatureInfo?.AmountInRecovery ?? 0);
+            TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
 
             await RefreshBalance();
         }
@@ -174,9 +158,12 @@
     {
         try
         {
-            foreach (var projectInfo in projects)
+            Stats.Clear();
+            
+            foreach (var project in projects)
             {
-                projectInfo.Stats = await _IndexerService.GetProjectStatsAsync(projectInfo.ProjectInfo.ProjectIdentifier);
+                var projectStats = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
+                Stats.Add(project.ProjectInfo.ProjectIdentifier, projectStats);
             }
         }
         catch (Exception ex)

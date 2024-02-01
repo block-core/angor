@@ -12,6 +12,7 @@
 @using Angor.Shared.Services
 @using Nostr.Client.Keys
 @using System.Diagnostics
+@using Angor.Client.Models
 
 @inject IJSRuntime JS
 
@@ -56,11 +57,11 @@
     <p>Here is a small explanation of the project. You can <a href="view/@ProjectId">view more details about the project here</a>.</p>
     
     <p>ProjectId: @ProjectId</p>
-    <p>Target amount: @project.TargetAmount BTC</p>
-    <p>Starting in: @project.StartDate.ToString("dd/MM/yyyy")</p>
+    <p>Target amount: @project.ProjectInfo.TargetAmount BTC</p>
+    <p>Starting in: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy")</p>
 
     <NotificationComponent @ref="notificationComponent" />
-    @if(recoverySigs == null)
+    @if(project is not InvestorProject investorProject)
     {
         <div class="card">
             <div class="card-body">
@@ -103,14 +104,14 @@
                             <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
                         </div>
                         <div class="modal-body modal-body-scroll">
-                            <p class ="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
-                            <p class="mb-1"><strong>Founder Key:</strong> @project.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
+                            <p class ="mb-1"><strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier</p>
+                            <p class="mb-1"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
 
-                            <p class="mb-1"><strong>Target amount:</strong> @project.TargetAmount @network.CoinTicker</p>
+                            <p class="mb-1"><strong>Target amount:</strong> @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
 
-                            <p class="mb-1"><strong>Start date:</strong> @project.StartDate.ToString("dd/MM/yyyy") in @((project.StartDate - DateTime.Now).Days) days</p>
-                            <p class="mb-1"><strong>Expiry date:</strong> @project.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ExpiryDate - DateTime.Now).Days) days</p>
-                            <p class="mb-1"><strong>Penalty days:</strong> @project.PenaltyDays days</p>
+                            <p class="mb-1"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
+                            <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
+                            <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
 
                             <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
                             <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
@@ -127,11 +128,11 @@
                             <h6 class="mt-3 mb-2">Stages</h6>
                             @{
                                 int index = 0;
-                                @foreach (var stage in project.Stages)
+                                @foreach (var stage in project.ProjectInfo.Stages)
                                 {
                                     <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
                                         <p class="mb-1"><strong>Stage amount:</strong> @StagesBreakdown[index++].Amount BTC - @stage.AmountToRelease % </p>
-                                        <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.StartDate).Days) days after project starts </p>
+                                        <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts </p>
                                     </div>
                                 }
                             }
@@ -166,10 +167,9 @@
             </div>
         }
     }
-    
-    @if (recoverySigs != null)
+    else
     {
-        @if (recoverySigs?.Signatures.Any() == true)
+        @if (!investorProject.InvestedInProject())
         {
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -178,15 +178,15 @@
                 </div>
                 <div class="card-body">
                     
-                    @if (!validatingsignaturs)
+                    @if (validatingsignaturs) //TODO David need to verify that this flow is still valid
+                    {
+                        <div class="loader"></div>
+                    }
+                    else
                     {
                         <p class="modal-title">The founder has signed the recovery transaction, you may now invest.</p>
                         <br/>
                         <button type="button" class="btn btn-success" @onclick="PublishSignedTransactionAsync">Invest</button>
-                    }
-                    else
-                    {
-                        <div class="loader"></div>
                     }
 
                 </div>
@@ -220,12 +220,12 @@
     private List<StageBreakdown> StagesBreakdown { get; set; } = new();
     bool founder = false;
     bool invested = false;
-    private ProjectInfo? project;
+    private Project? project;
     private bool showCreateModal;
     Transaction? signedTransaction;
     Transaction unSignedTransaction;
 
-    SignatureInfo? recoverySigs;
+    //SignatureInfo? recoverySigs;
     bool validatingsignaturs;
 
     private FeeData feeData = new();
@@ -239,20 +239,18 @@
             NavigationManager.NavigateTo($"/wallet");
         }
 
-        var signatures = storage.GetSignatures();
-
-        var findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
+        Project? findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
         if (findProject != null)
         {
-            project = findProject;
-
-            recoverySigs = signatures?.FirstOrDefault(_ => _.ProjectIdentifier == project.ProjectIdentifier);
-            invested = recoverySigs?.Signatures.Any() ?? false;
+            var investmentProject = findProject as InvestorProject;
+            project = investmentProject;
+            
+            invested = investmentProject?.SignaturesInfo?.Signatures.Any() ?? false;
         }
         else
         {
-            findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
+            findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
             if (findProject != null)
             {
@@ -263,7 +261,7 @@
             {
                 project = SessionStorage.GetProjectById(ProjectId);
 
-                if (project == null)
+                if (project.ProjectInfo == null)
                 {
                     NavigationManager.NavigateTo($"/view/{ProjectId}");
                     return;
@@ -291,8 +289,8 @@
                 notificationComponent.ShowErrorMessage(e.Message);
             }
         }
-        
-        if (project != null && recoverySigs?.Signatures.Any() == false && recoverySigs?.TimeOfRequestForSigning != null)
+
+        if (project is InvestorProject investmentProject && investmentProject.IsWaitingForFounderResponse())
         {
             var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
 
@@ -302,7 +300,7 @@
 
             _SignService.LookupSignatureForInvestmentRequest(
                 NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
-                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value, recoverySigs.SignatureRequestEventId,
+                , project.ProjectInfo.NostrPubKey, investmentProject.SignaturesInfo!.TimeOfSignatureRequest!.Value, investmentProject.SignaturesInfo!.SignatureRequestEventId!,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
         }
     }
@@ -327,14 +325,14 @@
             StagesBreakdown.Clear();
             int index = 1;
 
-            foreach (var stage in project!.Stages)
+            foreach (var stage in project!.ProjectInfo.Stages)
             {
                 var insert = new StageBreakdown
                 {
                     StageNumber = index++,
                     Amount = Investment.InvestmentAmount * (stage.AmountToRelease / 100),
                     StageDateTime = stage.ReleaseDate,
-                    DaysFromStartDate = (stage.ReleaseDate - project.StartDate).Days
+                    DaysFromStartDate = (stage.ReleaseDate - project.ProjectInfo.StartDate).Days
                 };
 
                 StagesBreakdown.Add(insert);
@@ -362,17 +360,13 @@
             }
         }
 
-        if (project.Stages.Sum(s => s.AmountToRelease) != 100)
+        if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
         {
             notificationComponent.ShowErrorMessage("The stages must sum to 100%");
             return;
         }
 
-        var signatures = storage.GetSignatures();
-
-        recoverySigs = signatures?.FirstOrDefault(_ => _.ProjectIdentifier == project.ProjectIdentifier);
-
-        if (recoverySigs?.Signatures.Any() ?? false)
+        if (project is InvestorProject investmentProject && investmentProject.InvestedInProject())
         {
             notificationComponent.ShowErrorMessage("You already invested");
             return;
@@ -387,14 +381,14 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            var investorKey = _derivationOperations.DeriveInvestorKey(_walletStorage.GetWallet(), project.FounderKey);
+            var investorKey = _derivationOperations.DeriveInvestorKey(_walletStorage.GetWallet(), project.ProjectInfo.FounderKey);
             
             if (Investment.IsSeeder)
             {
-                var seederHash = _derivationOperations.DeriveSeederSecretHash(_walletStorage.GetWallet(), project.FounderKey);
+                var seederHash = _derivationOperations.DeriveSeederSecretHash(_walletStorage.GetWallet(), project.ProjectInfo.FounderKey);
             }
 
-            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project, investorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
+            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, investorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
             
@@ -440,14 +434,19 @@
         {
             showCreateModal = false;
             
-            // remove signatures when requesting founder to sign 
-            recoverySigs = new()
-            {
-                ProjectIdentifier = project!.ProjectIdentifier,
-                SignedTransactionHex = signedTransaction!.ToHex()
-            };
+            Debug.Assert(project != null, nameof(project) + " != null");
+            
+            project = new InvestorProject { ProjectInfo = project.ProjectInfo, Metadata = project.Metadata, SignedTransactionHex = signedTransaction!.ToHex() };
 
-            var strippedInvestmentTransaction = network.CreateTransaction(recoverySigs.SignedTransactionHex);
+            var investorProject = (InvestorProject)project;
+            
+            // remove signatures when requesting founder to sign 
+            investorProject.SignaturesInfo = new()
+            {
+                ProjectIdentifier = investorProject!.ProjectInfo.ProjectIdentifier,
+            };
+            
+            var strippedInvestmentTransaction = network.CreateTransaction(investorProject.SignedTransactionHex);
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
 
             var accountInfo = storage.GetAccountInfo(network.Name);
@@ -459,22 +458,21 @@
             var encryptedContent = await javascriptNostrToolsModule.InvokeAsync<string>(
                 "encryptNostr",
                 nostrPrivateKeyHex,
-                project.NostrPubKey,
+                investorProject.ProjectInfo.NostrPubKey,
                 strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory));
 
             var investmentSigsRequest = _SignService.RequestInvestmentSigs(new SignRecoveryRequest
             {
-                ProjectIdentifier = project.ProjectIdentifier,
+                ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
                 EncryptedContent = encryptedContent,
-                NostrPubKey = project.NostrPubKey,
+                NostrPubKey = investorProject.ProjectInfo.NostrPubKey,
                 InvestorNostrPrivateKey = nostrPrivateKeyHex
             });
 
-            recoverySigs.TimeOfRequestForSigning = investmentSigsRequest.eventTime;
-            recoverySigs.SignatureRequestEventId = investmentSigsRequest.eventId;
+            investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
+            investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
 
-            storage.AddInvestmentProject(project); //TODO David need to verify that this is the correct place to change state in storage
-            storage.AddOrUpdateSignatures(recoverySigs);
+            storage.UpdateInvestmentProject(investorProject);
 
             foreach (var input in strippedInvestmentTransaction.Inputs)
                 accountInfo.UtxoReservedForInvestment.Add(input.PrevOut.ToString());
@@ -482,8 +480,10 @@
             storage.SetAccountInfo(network.Name, accountInfo);
 
             _SignService.LookupSignatureForInvestmentRequest(
-                NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
-                , project.NostrPubKey, recoverySigs.TimeOfRequestForSigning.Value, recoverySigs.SignatureRequestEventId,
+                NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex, 
+                investorProject.ProjectInfo.NostrPubKey, 
+                investorProject.SignaturesInfo.TimeOfSignatureRequest.Value, 
+                investorProject.SignaturesInfo.SignatureRequestEventId,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
             
             return new OperationResult { Success = true, };
@@ -491,10 +491,10 @@
 
         if (operationResult.Success)
         {
-            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
+            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.ProjectInfo.NostrPubKey);
             if (metadata != null)
             {
-                storage.AddInvestmentProjectMetadata(project.NostrPubKey, metadata);
+                storage.AddInvestmentProjectMetadata(project.ProjectInfo.NostrPubKey, metadata);
             }
 
             notificationComponent.ShowNotificationMessage("Signature request sent", 5);
@@ -507,49 +507,45 @@
 
     private async Task HandleSignatureReceivedAsync(string? nostrPrivateKeyHex, string _)
     {
-        if (recoverySigs?.Signatures.Any() ?? false) //multiple relays for the same message
+        if (project is not InvestorProject investorProject || investorProject.InvestedInProject()) //multiple relays for the same message
             return;
         
         var signatureJson = await javascriptNostrToolsModule.InvokeAsync<string>(
-            "decryptNostr", nostrPrivateKeyHex, project.NostrPubKey, _);
+            "decryptNostr", nostrPrivateKeyHex, project.ProjectInfo.NostrPubKey, _);
         
         _Logger.LogInformation("signature : " + signatureJson);
 
         var res = System.Text.Json.JsonSerializer.Deserialize<SignatureInfo>(signatureJson, RelayService.settings);
 
-        if (res.ProjectIdentifier == recoverySigs?.ProjectIdentifier)
+        if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
         {
-            recoverySigs.Signatures = res.Signatures;
+            investorProject.SignaturesInfo.Signatures = res.Signatures;
             StateHasChanged();
         }
     }
 
     public async Task CancelInvestment()
     {
-        if (recoverySigs == null)
+        if (project is not InvestorProject investorProject || investorProject?.SignaturesInfo is null)
         {
-            var signatures = storage.GetSignatures();
-            recoverySigs = signatures?.FirstOrDefault(_ => _.ProjectIdentifier == project.ProjectIdentifier);
+            notificationComponent.ShowErrorMessage("Missing project details, unable to cancel the investment");
+            return;
         }
 
-        if (recoverySigs != null)
+        if (!string.IsNullOrEmpty(investorProject.SignedTransactionHex))
         {
-            if (!string.IsNullOrEmpty(recoverySigs.SignedTransactionHex))
-            {
-                signedTransaction ??= network.CreateTransaction(recoverySigs.SignedTransactionHex);
-                var accountInfo = storage.GetAccountInfo(network.Name);
+            signedTransaction ??= network.CreateTransaction(investorProject.SignedTransactionHex);
+            var accountInfo = storage.GetAccountInfo(network.Name);
 
-                foreach (var input in signedTransaction.Inputs)
-                    accountInfo.UtxoReservedForInvestment.Remove(input.PrevOut.ToString());
+            foreach (var input in signedTransaction.Inputs)
+                accountInfo.UtxoReservedForInvestment.Remove(input.PrevOut.ToString());
 
-                storage.SetAccountInfo(network.Name, accountInfo);
-            }
-            
-            storage.RemoveSignatures(recoverySigs);
-            storage.RemoveInvestmentProject(project.ProjectIdentifier);
-
-            recoverySigs = null;
+            storage.SetAccountInfo(network.Name, accountInfo);
         }
+
+        storage.RemoveInvestmentProject(project.ProjectInfo.ProjectIdentifier);
+
+        investorProject.SignaturesInfo = null;
     }
 
     public async Task PublishSignedTransactionAsync()
@@ -557,12 +553,15 @@
         validatingsignaturs = true;
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            Debug.Assert(recoverySigs != null, nameof(recoverySigs) + " != null");
-            Debug.Assert(recoverySigs.SignedTransactionHex != null, nameof(recoverySigs.SignedTransactionHex) + " != null");
+            Debug.Assert(project != null, nameof(project) + " != null");
+            var investorProject = project as InvestorProject;
+            Debug.Assert(investorProject is not null,  "The project must be an investor project", nameof(project) + " != null");
+            Debug.Assert(investorProject.SignaturesInfo != null, nameof(investorProject.SignaturesInfo) + " != null");
+            Debug.Assert(investorProject.SignedTransactionHex != null, nameof(investorProject.SignedTransactionHex) + " != null");
 
-            signedTransaction ??= _networkConfiguration.GetNetwork().CreateTransaction(recoverySigs.SignedTransactionHex);
+            signedTransaction ??= _networkConfiguration.GetNetwork().CreateTransaction(investorProject.SignedTransactionHex);
             
-            var validSignatures = _InvestorTransactionActions.CheckInvestorRecoverySignatures(project, signedTransaction, recoverySigs);
+            var validSignatures = _InvestorTransactionActions.CheckInvestorRecoverySignatures(investorProject.ProjectInfo, signedTransaction, investorProject.SignaturesInfo);
 
             if (!validSignatures)
             {
@@ -575,11 +574,9 @@
                 return response;
 
             // link the trx to the signatures
-            recoverySigs.TransactionId = signedTransaction.GetHash().ToString();
-            recoverySigs.SignedTransactionHex = null;
-            recoverySigs.AmountInvested = signedTransaction.Outputs.Skip(2).Take(project.Stages.Count).Sum(s => s.Value);
-
-            storage.AddOrUpdateSignatures(recoverySigs);
+            investorProject.CompleteProjectInvestment(signedTransaction);
+       
+            storage.UpdateInvestmentProject(investorProject);
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
@@ -599,15 +596,15 @@
 
         if (operationResult.Success)
         {
-            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
+            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.ProjectInfo.NostrPubKey);
             if (metadata != null)
             {
-                storage.AddInvestmentProjectMetadata(project.NostrPubKey, metadata);
+                storage.AddInvestmentProjectMetadata(project.ProjectInfo.NostrPubKey, metadata);
             }
 
             notificationComponent.ShowNotificationMessage("Invested in project", 5);
 
-            NavigationManager.NavigateTo($"/view/{project.ProjectIdentifier}");
+            NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
         }
         else
         {

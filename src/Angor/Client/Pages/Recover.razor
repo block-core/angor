@@ -10,6 +10,7 @@
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
+@using Angor.Client.Models
 
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
@@ -114,7 +115,7 @@
 
                         <p class="mb-1">The amount to be recovered in to a penalty = @StageInfo.Items.Where(s=> !s.IsSpent).Sum(s=> s.Amount) @network.CoinTicker</p>
 
-                        <p class="mb-1">The penalty duration is @project.PenaltyDays days </p>
+                        <p class="mb-1">The penalty duration is @project.ProjectInfo.PenaltyDays days </p>
                         
                         <hr>
 
@@ -211,7 +212,7 @@
 @code {
     [Parameter]
     public string ProjectId { get; set; }
-    private ProjectInfo project;
+    private InvestorProject project;
 
     private bool showRecoveryModal = false;
     private bool showRecoveryReleaseModal = false;
@@ -225,8 +226,7 @@
 
     StageData StageInfo = new();
     string explorerLink;
-    SignatureInfo recoverySigs;
-
+    
     private FeeData feeData = new();
 
     private bool trxNotFound = false;
@@ -259,8 +259,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        project = storage.GetInvestmentProjects().First(p => p.ProjectIdentifier == ProjectId);
-        recoverySigs = storage.GetSignatures().First(s => s.ProjectIdentifier == ProjectId);
+        project = storage.GetInvestmentProjects().First(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -289,13 +288,13 @@
 
     private async Task FindInvestments()
     {
-        var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
+        var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectInfo.ProjectIdentifier);
 
-        var trx = trxs.FirstOrDefault(f => f.TransactionId == recoverySigs.TransactionId);
+        var trx = trxs.FirstOrDefault(f => f.TransactionId == project.TransactionId);
 
         if (trx == null)
         {
-            explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{recoverySigs.TransactionId}";
+            explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.TransactionId}";
             trxNotFound = true;
             return;
         }
@@ -304,7 +303,7 @@
 
         if (investmentTransaction == null)
         {
-            var trxHex = await _IndexerService.GetTransactionHexByIdAsync(recoverySigs.TransactionId);
+            var trxHex = await _IndexerService.GetTransactionHexByIdAsync(project.TransactionId);
             investmentTransaction = network.CreateTransaction(trxHex);
         }
 
@@ -318,7 +317,7 @@
         StageInfo.Items.Clear();
 
         int stageIndex = 0;
-        foreach (var stageInfo in project.Stages)
+        foreach (var stageInfo in project.ProjectInfo.Stages)
         {
             var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
 
@@ -361,7 +360,7 @@
             _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
         }
 
-        var penaltyExpieryDate = Utils.UnixTimeToDateTime(StageInfo.TransactionInfo.Timestamp).AddDays(project.PenaltyDays);
+        var penaltyExpieryDate = Utils.UnixTimeToDateTime(StageInfo.TransactionInfo.Timestamp).AddDays(project.ProjectInfo.PenaltyDays);
         
         foreach (var item in StageInfo.Items)
         {
@@ -380,9 +379,9 @@
             {
                 item.IsSpent = true;
 
-                if (output.SpentInTransaction == recoverySigs.RecoveryTransactionId)
+                if (output.SpentInTransaction == project.RecoveryTransactionId)
                 {
-                    if (!string.IsNullOrEmpty(recoverySigs.RecoveryReleaseTransactionId))
+                    if (!string.IsNullOrEmpty(project.RecoveryReleaseTransactionId))
                     {
                         item.SpentTo = "Recovered after penalty";
                         item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Unknown };
@@ -403,7 +402,7 @@
 
                     if (input != null && investmentTransaction != null)
                     {
-                        item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project, investmentTransaction, item.StageIndex, input.WitScript);
+                        item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project.ProjectInfo, investmentTransaction, item.StageIndex, input.WitScript);
 
                         switch (item.ProjectScriptType.ScriptType)
                         {
@@ -434,7 +433,7 @@
         StageInfo.TotalSpendable = StageInfo.Items.Where(a => !a.IsSpent).Sum(a => a.Amount);
         StageInfo.CanRelease = (StageInfo.Items.Any(a => a.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && DateTime.UtcNow > penaltyExpieryDate);
         StageInfo.TotalInPenalty = StageInfo.Items.Where(t => t.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty).Sum(t => t.Amount);
-        StageInfo.EndOfProject = project.ExpiryDate < DateTime.Now;
+        StageInfo.EndOfProject = project.ProjectInfo.ExpiryDate < DateTime.Now;
     }
     
     private void AddTransactionToPending(Transaction transaction)
@@ -459,13 +458,12 @@
             feeData.FeeEstimations.Fees.Clear();
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
-
-            recoverySigs = storage.GetSignatures().First(p => p.ProjectIdentifier == ProjectId);
+            
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.ProjectInfo.FounderKey);
 
-            unsignedRecoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project, investmentTransaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+            unsignedRecoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.ProjectInfo, investmentTransaction, project.SignaturesInfo, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
             // remove outputs that have been spent
             List<TxOut> removeTxout = new();
@@ -485,10 +483,10 @@
             // add fee to the recovery trx
             recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
-            recoverySigs.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
-            recoverySigs.AmountInRecovery = unsignedRecoveryTransaction.TotalOut;
+            project.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
+            project.AmountInRecovery = unsignedRecoveryTransaction.TotalOut;
 
-            Logger.LogInformation($"recoveryTransaction={recoverySigs.RecoveryTransactionId}");
+            Logger.LogInformation($"recoveryTransaction={project.RecoveryTransactionId}");
 
             return new OperationResult { Success = true };
         });
@@ -519,7 +517,7 @@
 
                     recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
-                    recoverySigs.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
+                    project.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
 
                     StateHasChanged();
                 }
@@ -533,7 +531,7 @@
         {
             showRecoveryModal = false;
 
-            storage.AddOrUpdateSignatures(recoverySigs);
+            storage.UpdateInvestmentProject(project);
 
             var response = await _WalletOperations.PublishTransactionAsync(network, recoveryTransaction);
 
@@ -566,20 +564,20 @@
 
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.ProjectInfo.FounderKey);
 
             if (recoveryTransaction == null)
             {
-                var trxHex = await _IndexerService.GetTransactionHexByIdAsync(recoverySigs.RecoveryTransactionId);
+                var trxHex = await _IndexerService.GetTransactionHexByIdAsync(project.RecoveryTransactionId);
                 recoveryTransaction = network.CreateTransaction(trxHex);
             }
 
-            releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project, investmentTransaction, recoveryTransaction,
+            releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project.ProjectInfo, investmentTransaction, recoveryTransaction,
                 accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
-            recoverySigs.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
+            project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
 
-            Logger.LogInformation($"recoveryReleaseTransactionId={recoverySigs.RecoveryTransactionId}");
+            Logger.LogInformation($"recoveryReleaseTransactionId={project.RecoveryTransactionId}");
 
             return new OperationResult { Success = true };
         });
@@ -608,12 +606,12 @@
                    
                     var accountInfo = storage.GetAccountInfo(network.Name);
 
-                    var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+                    var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.ProjectInfo.FounderKey);
 
-                    releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project, investmentTransaction, recoveryTransaction,
+                    releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project.ProjectInfo, investmentTransaction, recoveryTransaction,
                         accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
-                    recoverySigs.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
+                    project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
 
                     StateHasChanged();
                 }
@@ -627,7 +625,7 @@
         {
             showRecoveryReleaseModal = false;
 
-            storage.AddOrUpdateSignatures(recoverySigs);
+            storage.UpdateInvestmentProject(project);
 
             var response = await _WalletOperations.PublishTransactionAsync(network, releaseRecoveryTransaction);
 
@@ -661,16 +659,16 @@
 
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.ProjectInfo.FounderKey);
 
             var fromStage = StageInfo.Items.First(f => f.IsSpent == false);
 
-            endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project, fromStage.StageIndex,
+            endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project.ProjectInfo, fromStage.StageIndex,
                 accountInfo.GetNextChangeReceiveAddress(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), feeData.SelectedFeeEstimation);
 
-            recoverySigs.EndOfProjectTransactionId = endOfProjectTransaction.GetHash().ToString();
+            project.EndOfProjectTransactionId = endOfProjectTransaction.GetHash().ToString();
 
-            Logger.LogInformation($"EndOfProjectTransactionId={recoverySigs.EndOfProjectTransactionId}");
+            Logger.LogInformation($"EndOfProjectTransactionId={project.EndOfProjectTransactionId}");
 
             return new OperationResult { Success = true };
         });
@@ -699,14 +697,14 @@
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
 
-                    var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.FounderKey);
+                    var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.ProjectInfo.FounderKey);
 
                     var fromStage = StageInfo.Items.First(f => f.IsSpent == false);
 
-                    endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project, fromStage.StageIndex,
+                    endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project.ProjectInfo, fromStage.StageIndex,
                         accountInfo.GetNextChangeReceiveAddress(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), feeData.SelectedFeeEstimation);
 
-                    recoverySigs.EndOfProjectTransactionId = endOfProjectTransaction.GetHash().ToString();
+                    project.EndOfProjectTransactionId = endOfProjectTransaction.GetHash().ToString();
 
                     StateHasChanged();
                 }
@@ -720,7 +718,7 @@
         {
             showEndOfProjectModal = false;
 
-            storage.AddOrUpdateSignatures(recoverySigs);
+            storage.UpdateInvestmentProject(project);
 
             var response = await _WalletOperations.PublishTransactionAsync(network, endOfProjectTransaction);
 
