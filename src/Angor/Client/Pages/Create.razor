@@ -372,8 +372,6 @@
 
         signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
-        project.ProjectInfo.CreationTransactionId = signedTransaction.GetHash().ToString();
-
         showCreateModal = true;
 
         StateHasChanged();
@@ -426,6 +424,8 @@
             // notificationComponent.ShowErrorMessage("Failed to post the transaction to the blockchain.(try refreshing the wallet)");
             return;
         }
+
+        project.ProjectInfo.CreationTransactionId = signedTransaction.GetHash().ToString();
 
         storage.AddFounderProject(project);
 
