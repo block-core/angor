@@ -483,10 +483,7 @@
             // add fee to the recovery trx
             recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
-            project.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
-            project.AmountInRecovery = unsignedRecoveryTransaction.TotalOut;
-
-            Logger.LogInformation($"recoveryTransaction={project.RecoveryTransactionId}");
+            Logger.LogInformation($"recoveryTransaction={recoveryTransaction.GetHash().ToString()}");
 
             return new OperationResult { Success = true };
         });
@@ -517,8 +514,6 @@
 
                     recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
 
-                    project.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
-
                     StateHasChanged();
                 }
             }
@@ -537,6 +532,11 @@
 
             if (!response.Success)
                 return response;
+
+            project.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
+            project.AmountInRecovery = recoveryTransaction.TotalOut;
+
+            storage.UpdateInvestmentProject(project);
 
             AddTransactionToPending(recoveryTransaction);
 
@@ -575,9 +575,7 @@
             releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project.ProjectInfo, investmentTransaction, recoveryTransaction,
                 accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
-            project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
-
-            Logger.LogInformation($"recoveryReleaseTransactionId={project.RecoveryTransactionId}");
+            Logger.LogInformation($"recoveryReleaseTransactionId={releaseRecoveryTransaction.GetHash().ToString()}");
 
             return new OperationResult { Success = true };
         });
@@ -611,8 +609,6 @@
                     releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project.ProjectInfo, investmentTransaction, recoveryTransaction,
                         accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
-                    project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
-
                     StateHasChanged();
                 }
             }
@@ -631,6 +627,9 @@
 
             if (!response.Success)
                 return response;
+
+            project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
+            storage.UpdateInvestmentProject(project);
 
             AddTransactionToPending(releaseRecoveryTransaction);
 
@@ -656,7 +655,6 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet(), project.ProjectInfo.FounderKey);
@@ -666,9 +664,7 @@
             endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project.ProjectInfo, fromStage.StageIndex,
                 accountInfo.GetNextChangeReceiveAddress(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), feeData.SelectedFeeEstimation);
 
-            project.EndOfProjectTransactionId = endOfProjectTransaction.GetHash().ToString();
-
-            Logger.LogInformation($"EndOfProjectTransactionId={project.EndOfProjectTransactionId}");
+            Logger.LogInformation($"EndOfProjectTransactionId={endOfProjectTransaction.GetHash().ToString()}");
 
             return new OperationResult { Success = true };
         });
@@ -704,8 +700,6 @@
                     endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project.ProjectInfo, fromStage.StageIndex,
                         accountInfo.GetNextChangeReceiveAddress(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), feeData.SelectedFeeEstimation);
 
-                    project.EndOfProjectTransactionId = endOfProjectTransaction.GetHash().ToString();
-
                     StateHasChanged();
                 }
             }
@@ -724,6 +718,9 @@
 
             if (!response.Success)
                 return response;
+
+            project.EndOfProjectTransactionId = endOfProjectTransaction.GetHash().ToString();
+            storage.UpdateInvestmentProject(project);
 
             AddTransactionToPending(endOfProjectTransaction);
 
