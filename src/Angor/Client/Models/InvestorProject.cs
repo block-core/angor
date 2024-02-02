@@ -5,7 +5,7 @@ namespace Angor.Client.Models;
 
 public class InvestorProject : Project
 {
-    public string TransactionId { get; private set; }
+    public string TransactionId { get; set; }
     public string RecoveryTransactionId { get; set; }
     public string RecoveryReleaseTransactionId { get; set; }
     public string EndOfProjectTransactionId { get; set; }

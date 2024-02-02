@@ -100,8 +100,8 @@
         try
         {
             isLoading = true;
-            await Task.Delay(10);
             StateHasChanged();
+            await Task.Delay(10);
 
             res = await action();
         }
