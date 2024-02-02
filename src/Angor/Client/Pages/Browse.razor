@@ -6,6 +6,7 @@
 @using Nostr.Client.Messages
 @using System.Text.Json
 @using Angor.Client.Models
+@using Angor.Client.Storage
 @inject ICacheStorage SessionStorage;
 @inject NavigationManager NavigationManager
 @inject IRelayService _RelayService
@@ -84,41 +85,48 @@
                 }
                 else
                 {
-                    foreach (var project in projects.OrderByDescending(project => project.CreatedOnBlock))
+                    foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
                     {
                         <div class="card mb-3">
-                            @if (SessionStorage.IsProjectMetadataStorageByPubkey(project.NostrPubKey))
+                            @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                             {
-                                var metadata = SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
-                                if (metadata?.Banner != null)
+                                var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                if (project?.Metadata?.Banner != null)
                                 {
                                     <div class="card-header overflow-hidden">
-                                        <img class="card-img-top" src="@metadata.Banner" alt=""/>
+                                        <img class="card-img-top" src="@project.Metadata.Banner" alt=""/>
                                     </div>
                                 }
                             }
 
                             <div class="card-body">
-                                @if (SessionStorage.IsProjectInStorageById(project.ProjectIdentifier))
+                                @if (nostrSearchInProgress)
                                 {
-                                    @if (SessionStorage.IsProjectMetadataStorageByPubkey(project.NostrPubKey))
-                                    {
-                                        var metadata = SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
-                                        <h3 class="card-title">@metadata?.Name</h3>
-                                        <p class="card-subtitle">@metadata?.About</p>
-                                        <hr>
-                                    }
+                                    <div class="loader"></div>
                                 }
                                 else
                                 {
-                                    <p class="text-warning-emphasis">Project not found in any relay!</p>
+                                    @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                                    {
+                                        var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                        if (project?.Metadata != null)
+                                        {
+                                            <h3 class="card-title">@project.Metadata.Name</h3>
+                                            <p class="card-subtitle">@project.Metadata.About</p>
+                                            <hr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <p class="text-warning-emphasis">Project not found in any relay!</p>
+                                    }
                                 }
                                 <p>
-                                    Project ID:@project.ProjectIdentifier
+                                    Project ID:@indexerData.ProjectIdentifier
                                     <br/>
-                                    Nostr ID :@(NostrPublicKey.FromHex(project.NostrPubKey).Bech32)
+                                    Nostr ID  :@(NostrPublicKey.FromHex(indexerData.NostrPubKey).Bech32)
                                 </p>
-                                <button @onclick="() => ViewProjectDetails(project.ProjectIdentifier)" class="btn btn-primary card-">View</button>
+                                <button @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)" class="btn btn-primary card-">View</button>
                             </div>
                         </div>
                     }
@@ -134,6 +142,7 @@
     NotificationComponent notificationComponent;
     private string searchQuery;
     bool searchInProgress = false;
+    bool nostrSearchInProgress;
     bool findInProgress = false;
 
     ProjectIndexerData? findProject = null;
@@ -160,25 +169,8 @@
 
         if (findProject != null)
         {
-            _RelayService.RequestProjectCreateEventsByPubKey(e =>
-            {
-                switch (e)
-                {
-                    case { Kind: NostrKind.Metadata }:
-                        var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
-                        if (!SessionStorage.IsProjectMetadataStorageByPubkey(e.Pubkey))
-                            SessionStorage.StoreProjectMetadata(e.Pubkey, nostrMetadata);
-                        break;
-                    case { Kind: NostrKind.ApplicationSpecificData }:
-                        var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
-                        if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
-                            SessionStorage.StoreProjectInfo(projectInfo);
-                        break;
-                }
-            }, () =>
-            {
-                StateHasChanged();
-            }, 
+            _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectCreateEvents(),
+                StateHasChanged, 
             new[] { findProject.NostrPubKey });
         }
 
@@ -188,6 +180,7 @@
     private async Task SearchProjects()
     {
         searchInProgress = true;
+        nostrSearchInProgress = true;
         
         var blockchainProjects = await _IndexerService.GetProjectsAsync(null, 20);
         
@@ -206,49 +199,48 @@
                 .ToArray();
 
             if (projectsForLookup.Any())
-                _RelayService.RequestProjectCreateEventsByPubKey(e =>
+                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectCreateEvents(),
+                    () =>
                 {
-                    switch (e)
-                    {
-                        case { Kind: NostrKind.Metadata }:
-                            var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
-                            SessionStorage.StoreProjectMetadata(e.Pubkey, nostrMetadata);
-                            break;
-                        case { Kind: NostrKind.ApplicationSpecificData }:
-                            var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
-                            if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
-                                SessionStorage.StoreProjectInfo(projectInfo);
-                            break;
-                    }
-                }, () =>
-                {
-                    searchInProgress = false;
+                    nostrSearchInProgress = false;
                     StateHasChanged();
                 },
                 projectsForLookup);
-
-            //if (projectsForLookup.Any())
-            //    _RelayService.LookupProjectsInfoByPubKeys<ProjectInfo>(_ =>
-            //    {
-            //        if (!SessionStorage.IsProjectInStorageById(_.ProjectIdentifier))
-            //            SessionStorage.StoreProjectInfo(_);
-            //    },
-            //        OnEndOfStreamAction: () =>
-            //        {
-            //            projects = projects //Remove projects that were not found on the relays
-            //                .Where(_ => SessionStorage.IsProjectInStorageById(_.ProjectIdentifier))
-            //                .ToList();
-
-            //            SessionStorage.SetProjectIndexerData(projects);
-
-            //            StateHasChanged();
-            //        },
-            //        nostrPubKey: projectsForLookup);
 
             StateHasChanged();
         }
 
         searchInProgress = false;
+    }
+
+    private Action<NostrEvent> HandleProjectCreateEvents()
+    {
+        return e =>
+        {
+            switch (e)
+            {
+                case { Kind: NostrKind.Metadata }:
+                    var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
+                    var projectIndexerData = projects.FirstOrDefault(x => x.NostrPubKey == e.Pubkey);
+                    if (projectIndexerData != null)
+                    {
+                        var project = SessionStorage.GetProjectById(projectIndexerData.ProjectIdentifier);
+                        if (project != null)
+                        {
+                            project.Metadata = nostrMetadata;
+                            SessionStorage.StoreProject(project);   
+                        }
+                    }
+                    break;
+                case { Kind: NostrKind.ApplicationSpecificData }:
+                    var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
+                    if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
+                    {
+                        SessionStorage.StoreProject(new Project(){ProjectInfo = projectInfo});
+                    }
+                    break;
+            }
+        };
     }
 
     private void ViewProjectDetails(string projectIdentifier)

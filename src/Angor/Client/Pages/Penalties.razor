@@ -1,7 +1,7 @@
 ﻿@page "/penalties"
 @using Angor.Client.Storage
 @using Angor.Shared.Models
-@using Angor.Client.Services
+@using Angor.Shared.Services
 @using Blockcore.Consensus.ScriptInfo
 @using Blockcore.NBitcoin
 
@@ -91,21 +91,17 @@
     {
         if (hasWallet)
         {
-            var recoveries = storage.GetSignatures();
             var projects = storage.GetInvestmentProjects();
 
-            foreach (var signatureInfo in recoveries)
+            foreach (var project in projects)
             {
-                if (!string.IsNullOrEmpty(signatureInfo.RecoveryTransactionId))
+                if (!string.IsNullOrEmpty(project.RecoveryTransactionId))
                 {
-                    var project = projects.First(p => p.ProjectIdentifier == signatureInfo.ProjectIdentifier);
-
-
                     penaltyProjects.Add(new PenaltiesData
                     {
-                        ProjectIdentifier = signatureInfo.ProjectIdentifier,
-                        RecoveryTransactionId = signatureInfo.RecoveryTransactionId,
-                        IsReleased = !string.IsNullOrEmpty(signatureInfo.RecoveryReleaseTransactionId),
+                        ProjectIdentifier = project.ProjectInfo.ProjectIdentifier,
+                        RecoveryTransactionId = project.RecoveryTransactionId,
+                        IsReleased = !string.IsNullOrEmpty(project.RecoveryReleaseTransactionId),
                     });
                 }
             }
@@ -129,9 +125,9 @@
                         var totalsats = recoveryTansaction.Outputs.Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);
                         penaltyProject.Amount = Money.Satoshis(totalsats).ToUnit(MoneyUnit.BTC);
 
-                        var project = projects.First(p => p.ProjectIdentifier == penaltyProject.ProjectIdentifier);
+                        var project = projects.First(p => p.ProjectInfo.ProjectIdentifier == penaltyProject.ProjectIdentifier);
 
-                        var expieryDate = Utils.UnixTimeToDateTime(recoveryTansaction.Timestamp).AddDays(project.PenaltyDays);
+                        var expieryDate = Utils.UnixTimeToDateTime(recoveryTansaction.Timestamp).AddDays(project.ProjectInfo.PenaltyDays);
                         penaltyProject.DaysLeftForPenalty = (expieryDate - DateTimeOffset.UtcNow).Days;
                         penaltyProject.IsExpired = (expieryDate - DateTimeOffset.UtcNow).Days <= 0;
                     }

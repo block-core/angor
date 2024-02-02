@@ -8,6 +8,7 @@ public class WalletStorage : IWalletStorage
     private readonly ISyncLocalStorageService _storage;
 
     private const string WalletWordsKey = "mnemonic";
+    private const string PubKey = "pubkey";
 
     public WalletStorage(ISyncLocalStorageService storage)
     {
@@ -45,5 +46,32 @@ public class WalletStorage : IWalletStorage
         }
 
         return words;
+    }
+    
+    
+    
+    public void SetFounderKeys(FounderKeyCollection founderPubKeys)
+    {
+        _storage.SetItem("projectsKeys", founderPubKeys);
+    }
+
+    public FounderKeyCollection GetFounderKeys()
+    {
+        return _storage.GetItem<FounderKeyCollection>("projectsKeys");
+    }
+
+    public void DeleteFounderKeys()
+    {
+        _storage.RemoveItem("projectsKeys");
+    }
+
+    public string? GetWalletPubkey()
+    {
+        return _storage.GetItemAsString(PubKey);
+    }
+
+    public void DeleteWalletPubkey()
+    {
+        _storage.RemoveItem(PubKey);
     }
 }

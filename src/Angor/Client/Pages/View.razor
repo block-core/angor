@@ -6,6 +6,7 @@
 @using Angor.Client.Services
 @using Angor.Shared.Services
 @using System.Text.Json
+@using Angor.Client.Models
 @using Nostr.Client.Messages
 
 @inject IDerivationOperations _derivationOperations
@@ -43,13 +44,13 @@
         <!-- Project Details Section -->
         <div class="card mb-3">
             <div class="card-header">
-                <h4>@project.ProjectIdentifier</h4>
+                <h4>@project.ProjectInfo.ProjectIdentifier</h4>
             </div>
             <div class="card-body">
 
-                @if (projectMetadata != null || SessionStorage.IsProjectMetadataStorageByPubkey(project.NostrPubKey))
+                @if (project.ProjectInfo.NostrPubKey != null)
                 {
-                    var metadata = projectMetadata ?? SessionStorage.GetProjectMetadataByPubkey(project.NostrPubKey);
+                    var metadata = project.Metadata;
 
                     if (metadata?.Banner != null)
                     {
@@ -65,17 +66,17 @@
                 }
 
                 <a href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
-                <p class="card-text">Project Identifier: @project.ProjectIdentifier</p>
-                <p class="card-text">Founder Key: @project.FounderKey</p>
-                <p class="card-text">Target Amount: @project.TargetAmount @network.CoinTicker</p>
-                <p class="card-text">Penalty duration: @project.PenaltyDays days</p>
+                <p class="card-text">Project Identifier: @project.ProjectInfo.ProjectIdentifier</p>
+                <p class="card-text">Founder Key: @project.ProjectInfo.FounderKey</p>
+                <p class="card-text">Target Amount: @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
+                <p class="card-text">Penalty duration: @project.ProjectInfo.PenaltyDays days</p>
 
                 <p class="card-text">
-                    Project dates: @project.StartDate.ToString("dd/MM/yyyy") - @project.ExpiryDate.ToString("dd/MM/yyyy")
+                    Project dates: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") - @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")
                 </p>
 
                 @{
-                    int startsInDays = (project.StartDate - DateTime.Now).Days;
+                    int startsInDays = (project.ProjectInfo.StartDate - DateTime.Now).Days;
 
                     if (startsInDays > 0)
                     {
@@ -83,8 +84,8 @@
                     }
                     else
                     {
-                        int totalDays = (project.ExpiryDate - project.StartDate).Days;
-                        int currentDays = (DateTime.Now - project.StartDate).Days;
+                        int totalDays = (project.ProjectInfo.ExpiryDate - project.ProjectInfo.StartDate).Days;
+                        int currentDays = (DateTime.Now - project.ProjectInfo.StartDate).Days;
                         currentDays = currentDays < 0 ? 0 : currentDays;
                         currentDays = currentDays > totalDays ? totalDays : currentDays;
 
@@ -147,12 +148,12 @@
                     </tr>
                     </thead>
                     <tbody>
-                        @for (int index = 0; index < project.Stages.Count; index++)
+                        @for (int index = 0; index < project.ProjectInfo.Stages.Count; index++)
                         {
                             <tr>
                                 <td>@(index + 1)</td>
-                                <td>@project.Stages[index].AmountToRelease %</td>
-                                <td>@project.Stages[index].ReleaseDate.ToString("dd/MM/yyyy")</td>
+                                <td>@project.ProjectInfo.Stages[index].AmountToRelease %</td>
+                                <td>@project.ProjectInfo.Stages[index].ReleaseDate.ToString("dd/MM/yyyy")</td>
                                 <!-- Other stage details -->
                             </tr>
                         }
@@ -190,16 +191,16 @@
 
                     <div class="mb-3">
                         <!-- Buttons Spend Funds and Approve Signature next to each other -->
-                        <NavLink href=@($"/spend/{project.ProjectIdentifier}") class="btn btn-primary me-2">Spend Funds</NavLink>
-                        <NavLink href=@($"/signatures/{project.ProjectIdentifier}") class="btn btn-primary">Approve signature</NavLink>
+                        <NavLink href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-primary me-2">Spend Funds</NavLink>
+                        <NavLink href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-primary">Approve signature</NavLink>
                     </div>
 
-                    @if (project.NostrPubKey != null)
+                    @if (project.ProjectInfo.NostrPubKey != null)
                     {
                         <div class="mb-3">
                             <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                             <div class="input-group">
-                                <InputText id="NostrPublicKey" @bind-Value="project.NostrPubKey" class="form-control" placeholder="@project.NostrPubKey" readonly/>
+                                <InputText id="NostrPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly/>
                                 <button @onclick="CopyWordsToClipboardAsync" class="btn btn-success">Copy NSec to clipboard</button>
                             </div>
                         </div>
@@ -244,8 +245,7 @@
     [Parameter]
     public string ProjectId { get; set; }
 
-    private ProjectInfo? project;
-    private ProjectMetadata? projectMetadata;
+    private Project? project;
 
     private bool sendConfirmModal;
 
@@ -288,41 +288,27 @@
     protected override async Task OnInitializedAsync()
     {
         NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
+        
+        project = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
-        var findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectIdentifier == ProjectId);
-
-        if (findProject != null)
+        if (project is InvestorProject findProject)
         {
-            project = findProject;
-
-            var investedProject = storage.GetSignatures().FirstOrDefault(s => s.ProjectIdentifier == ProjectId);
-            if (investedProject != null)
-            {
-                invested = investedProject.Signatures.Any(); // TODO need to scan for the invested projects when opening on a new browsers
-                myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investedProject.TransactionId}";   
-
-                storage.GetInvestmentProjectsMetadata().TryGetValue(project.NostrPubKey, out projectMetadata);
-            }
+            invested = findProject.InvestedInProject(); // TODO need to scan for the invested projects when opening on a new browsers
+            myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{findProject.TransactionId}";
         }
         else
         {
-            findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
+            project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
-            if (findProject != null)
+            if (project != null)
             {
                 founder = true;
-                invested = true;
-                project = findProject;
             }
             else
             {
-                findProject = SessionStorage.GetProjectById(ProjectId);
+                project = SessionStorage.GetProjectById(ProjectId);
 
-                if (findProject != null)
-                {
-                    project = findProject;
-                }
-                else
+                if (project == null)
                 {
                     findInProgress = true;
 
@@ -330,39 +316,38 @@
 
                     if (projectIndexerData != null)
                     {
+                        project = new Project();
                         _RelayService.RequestProjectCreateEventsByPubKey(e =>
                         {
+                            project ??= new Project();
                             switch (e)
                             {
                                 case { Kind: NostrKind.Metadata }:
                                     var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
-                                    projectMetadata = nostrMetadata;
-                                    if (!SessionStorage.IsProjectMetadataStorageByPubkey(e.Pubkey))
-                                        SessionStorage.StoreProjectMetadata(e.Pubkey, nostrMetadata);
+                                    project.Metadata ??= nostrMetadata;
                                     break;
                                 case { Kind: NostrKind.ApplicationSpecificData }:
                                     var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
-                                    project = projectInfo;
-                                    if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
-                                        SessionStorage.StoreProjectInfo(projectInfo);
-                                    findInProgress = false;
+                                    project.ProjectInfo ??= projectInfo;
                                     break;
                             }
                         }, () =>
                         {
                             findInProgress = false;
+                            if (project.ProjectInfo != null)
+                                SessionStorage.StoreProject(project);
                             StateHasChanged();
-                        }, 
+                        },
                             new[] { projectIndexerData.NostrPubKey });
                     }
                 }
             }
         }
 
-        if (project != null)
+        if (project?.ProjectInfo != null)
         {
-            projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
-
+            projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.ProjectInfo.CreationTransactionId}";
+            
             await RefreshBalance();
         }
     }
@@ -375,18 +360,18 @@
 
             if (project != null)
             {
-                var data = await _IndexerService.GetProjectStatsAsync(project.ProjectIdentifier);
+                var data = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
 
                 if (data != null)
                 {
                     projectStats.TotalInvestors = (int)data.InvestorCount;
                     projectStats.TotalRaised = data.AmountInvested;
 
-                    projectStats.TimeLeft = (project.StartDate - DateTime.UtcNow).Days;
+                    projectStats.TimeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
                     if (projectStats.TimeLeft < 0) 
                         projectStats.TimeLeft = 0;
 
-                    var targetSat = Money.Coins(project.TargetAmount).Satoshi;
+                    var targetSat = Money.Coins(project.ProjectInfo.TargetAmount).Satoshi;
                     projectStats.FundingProgressPercent = (int)((projectStats.TotalRaised * 100) / targetSat);
                 }
             }
@@ -418,9 +403,12 @@
     
     private async Task CopyWordsToClipboardAsync()
     {
-        var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
-        var nsec = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
-        await _clipboardService.WriteTextAsync(nsec);
-        StateHasChanged();
+        if (project is FounderProject founderProject)
+        {
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), founderProject.ProjectIndex);
+            var nsec = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
+            await _clipboardService.WriteTextAsync(nsec);
+            StateHasChanged();   
+        }
     }
 }

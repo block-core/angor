@@ -1,15 +1,15 @@
-using Angor.Client.Services;
+using Angor.Client.Models;
 using Angor.Shared.Models;
+using Angor.Shared.Services;
 
-namespace Angor.Shared.Services;
+namespace Angor.Client.Storage;
 
 public interface ICacheStorage
 {
-    void StoreProjectInfo(ProjectInfo project);
-    ProjectInfo? GetProjectById(string projectId);
+    void StoreProject(Project project);
+    Project? GetProjectById(string projectId);
     bool IsProjectInStorageById(string projectId);
     ProjectMetadata? GetProjectMetadataByPubkey(string pubkey);
-    void StoreProjectMetadata(string pubkey, ProjectMetadata projectMetadata);
     bool IsProjectMetadataStorageByPubkey(string pubkey);
     List<ProjectIndexerData>? GetProjectIndexerData();
     void SetProjectIndexerData(List<ProjectIndexerData> list);

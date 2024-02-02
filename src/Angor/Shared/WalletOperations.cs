@@ -1,8 +1,5 @@
-using System.Collections.Generic;
-using System.Net.Http.Json;
-using System.Text;
-using Angor.Client.Services;
 using Angor.Shared.Models;
+using Angor.Shared.Services;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;

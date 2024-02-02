@@ -508,7 +508,7 @@
 
             // pre-derive the angor wallet keys 
             FounderKeyCollection founderKeyCollection = _derivationOperations.DeriveProjectKeys(data, NetworkConfiguration.AngorTestKey);
-            storage.SetFounderKeys(founderKeyCollection);
+            _walletStorage.SetFounderKeys(founderKeyCollection);
 
             return new OperationResult { Success = true };
         });
@@ -561,9 +561,9 @@
         walletWordsModal = false;
         storage.DeleteAccountInfo(network.Name);
         _cacheStorage.DeleteUnconfirmedInfo();
-        storage.DeleteWalletPubkey();
+        _walletStorage.DeleteWalletPubkey();
         _walletStorage.DeleteWallet();
-        storage.DeleteFounderKeys();
+        _walletStorage.DeleteFounderKeys();
         hasWallet = _walletStorage.HasWallet();
         ClearWalletWords();
         StateHasChanged();

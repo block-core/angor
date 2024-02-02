@@ -2,9 +2,8 @@ using Angor.Shared.Models;
 
 namespace Angor.Client.Models;
 
-public class FounderProject
+public class FounderProject : Project
 {
-    public ProjectMetadata? Metadata { get; set; }
-    public ProjectInfo ProjectInfo { get; set; }
+    public int ProjectIndex { get; set; }
     public DateTime? LastRequestForSignaturesTime { get; set; }
 }
