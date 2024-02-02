@@ -471,7 +471,7 @@
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
 
-            storage.UpdateInvestmentProject(investorProject);
+            storage.AddInvestmentProject(investorProject);
 
             foreach (var input in strippedInvestmentTransaction.Inputs)
                 accountInfo.UtxoReservedForInvestment.Add(input.PrevOut.ToString());
