@@ -88,7 +88,7 @@
                         int currentDays = (DateTime.Now - project.ProjectInfo.StartDate).Days;
                         currentDays = currentDays < 0 ? 0 : currentDays;
                         currentDays = currentDays > totalDays ? totalDays : currentDays;
-
+                        totalDays = totalDays > 0 ? totalDays : 1;
                         var completePercent = (currentDays * 100) / totalDays;
 
                         <div class="progress mb-2">
