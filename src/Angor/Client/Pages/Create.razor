@@ -283,7 +283,7 @@
             return;
         }
         
-        var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+        var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, project.ProjectIndex);
 
         await _RelayService.CreateNostrProfileAsync(project.Metadata.ToNostrMetadata(),
             NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()),
@@ -370,7 +370,7 @@
 
         unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), 10000, project.ProjectInfo.NostrPubKey);
 
-        signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+        signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet().WalletWords, accountInfo, feeData.SelectedFeeEstimation);
 
         project.ProjectInfo.CreationTransactionId = signedTransaction.GetHash().ToString();
 
@@ -394,7 +394,7 @@
                     var accountInfo = storage.GetAccountInfo(network.Name);
                     var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);
+                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet().WalletWords, accountInfo, feeData.SelectedFeeEstimation);
 
                     StateHasChanged();
                 }
@@ -406,7 +406,7 @@
     {
         showCreateModal = false;
 
-        var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
+        var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, project.ProjectIndex);
 
         var nostrKeyHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
 

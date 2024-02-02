@@ -5,14 +5,11 @@ namespace Angor.Client.Storage;
 public interface IWalletStorage
 {
     bool HasWallet();
-    void SaveWalletWords(WalletWords walletWords);
+    void SaveWalletWords(Wallet wallet);
     void DeleteWallet();
-    WalletWords GetWallet();
+    Wallet GetWallet();
     
     
     void SetFounderKeys(FounderKeyCollection founderPubKeys);
     FounderKeyCollection GetFounderKeys();
-    void DeleteFounderKeys();
-    string? GetWalletPubkey();
-    void DeleteWalletPubkey();
 }

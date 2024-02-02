@@ -105,7 +105,7 @@
                 
                 @if (accountBalanceInfo.TotalBalanceReserved > 0)
                 {
-                    <div class="mb-3 text-primary">
+                    <div class="mb-3 text-success">
                         <span class="fs-6">Reserved balance: </span>
                         <span class="fs-5"> @Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span> 
                     </div>
@@ -501,8 +501,8 @@
             WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
-            
-            _walletStorage.SaveWalletWords(data);
+
+            _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { WalletWords = data });
             storage.SetAccountInfo(network.Name,accountInfo);
             accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
 
@@ -525,7 +525,7 @@
 
     private void ShowWords()
     {
-        var data  = _walletStorage.GetWallet();
+        var data  = _walletStorage.GetWallet().WalletWords;
         walletWords = data.Words;
         walletWordsPassphrase = data.Passphrase;
         StateHasChanged();
@@ -561,9 +561,7 @@
         walletWordsModal = false;
         storage.DeleteAccountInfo(network.Name);
         _cacheStorage.DeleteUnconfirmedInfo();
-        _walletStorage.DeleteWalletPubkey();
         _walletStorage.DeleteWallet();
-        _walletStorage.DeleteFounderKeys();
         hasWallet = _walletStorage.HasWallet();
         ClearWalletWords();
         StateHasChanged();
@@ -676,7 +674,7 @@
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
-            var res = await _walletOperations.SendAmountToAddress(wallet, _sendInfo);
+            var res = await _walletOperations.SendAmountToAddress(wallet.WalletWords, _sendInfo);
 
             if (res.Success)
             {
