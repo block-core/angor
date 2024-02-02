@@ -169,30 +169,7 @@
     }
     else
     {
-        @if (!investorProject.InvestedInProject())
-        {
-            <div class="card mt-3">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4>Founder has signed</h4>
-                    <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
-                </div>
-                <div class="card-body">
-                    
-                    @if (validatingsignaturs) //TODO David need to verify that this flow is still valid
-                    {
-                        <div class="loader"></div>
-                    }
-                    else
-                    {
-                        <p class="modal-title">The founder has signed the recovery transaction, you may now invest.</p>
-                        <br/>
-                        <button type="button" class="btn btn-success" @onclick="PublishSignedTransactionAsync">Invest</button>
-                    }
-
-                </div>
-            </div>
-        }
-        else
+        if (investorProject.WaitingForFounderResponse())
         {
             <div class="card mt-3 text-center">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -205,6 +182,32 @@
                     <div class="loader-slow"></div>
                 </div>
             </div>
+        }
+        else
+        {
+            if (investorProject.ReceivedFounderSignatures() && !investorProject.InvestedInProject())
+            {
+                <div class="card mt-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4>Founder has signed</h4>
+                        <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
+                    </div>
+                    <div class="card-body">
+                    
+                        @if (validatingsignaturs) //TODO David need to verify that this flow is still valid
+                        {
+                            <div class="loader"></div>
+                        }
+                        else
+                        {
+                            <p class="modal-title">The founder has signed the recovery transaction, you may now invest.</p>
+                            <br/>
+                            <button type="button" class="btn btn-success" @onclick="PublishSignedTransactionAsync">Invest</button>
+                        }
+
+                    </div>
+                </div>
+            }   
         }
     }
 </div>
@@ -245,7 +248,7 @@
             var investmentProject = findProject as InvestorProject;
             project = investmentProject;
             
-            invested = investmentProject?.SignaturesInfo?.Signatures.Any() ?? false;
+            invested = investmentProject?.InvestedInProject() ?? false;
         }
         else
         {
@@ -289,7 +292,7 @@
             }
         }
 
-        if (project is InvestorProject investmentProject && investmentProject.IsWaitingForFounderResponse())
+        if (project is InvestorProject investmentProject && investmentProject.WaitingForFounderResponse())
         {
             var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
 
@@ -504,13 +507,13 @@
         }
     }
 
-    private async Task HandleSignatureReceivedAsync(string? nostrPrivateKeyHex, string _)
+    private async Task HandleSignatureReceivedAsync(string? nostrPrivateKeyHex, string encryptedSignatures)
     {
-        if (project is not InvestorProject investorProject || investorProject.InvestedInProject()) //multiple relays for the same message
+        if (project is not InvestorProject investorProject || investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
             return;
         
         var signatureJson = await javascriptNostrToolsModule.InvokeAsync<string>(
-            "decryptNostr", nostrPrivateKeyHex, project.ProjectInfo.NostrPubKey, _);
+            "decryptNostr", nostrPrivateKeyHex, project.ProjectInfo.NostrPubKey, encryptedSignatures);
         
         _Logger.LogInformation("signature : " + signatureJson);
 

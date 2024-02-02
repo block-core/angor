@@ -142,7 +142,7 @@
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = SessionStorage.GetUnconfirmedInboundFunds();
 
-            var projects = storage.GetInvestmentProjects();
+            projects = storage.GetInvestmentProjects();
 
             var abi = new AccountBalanceInfo();
             abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);

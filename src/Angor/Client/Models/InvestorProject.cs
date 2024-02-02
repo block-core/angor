@@ -5,7 +5,7 @@ namespace Angor.Client.Models;
 
 public class InvestorProject : Project
 {
-    public string TransactionId { get; set; }
+    public string TransactionId { get; private set; }
     public string RecoveryTransactionId { get; set; }
     public string RecoveryReleaseTransactionId { get; set; }
     public string EndOfProjectTransactionId { get; set; }
@@ -15,12 +15,17 @@ public class InvestorProject : Project
     public long? AmountInvested { get; set; }
     public long? AmountInRecovery { get; set; }
 
-    public bool IsWaitingForFounderResponse()
+    public bool WaitingForFounderResponse()
     {
-        return SignaturesInfo?.Signatures.Any() == false && SignaturesInfo?.TimeOfSignatureRequest != null;
+        return ReceivedFounderSignatures() == false && SignaturesInfo?.TimeOfSignatureRequest != null;
     }
 
     public bool InvestedInProject()
+    {
+        return !string.IsNullOrEmpty(TransactionId);
+    }
+
+    public bool ReceivedFounderSignatures()
     {
         return SignaturesInfo?.Signatures.Any() ?? false;
     }
