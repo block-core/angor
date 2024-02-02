@@ -5,7 +5,7 @@
 @using Blockcore.Consensus.ScriptInfo
 @using Blockcore.NBitcoin
 
-@inject IClientStorage storage;
+@inject IInvestmentStorage investmentStorage;
 @inject NavigationManager NavigationManager
 @inject IIndexerService _IndexerService
 
@@ -91,7 +91,7 @@
     {
         if (hasWallet)
         {
-            var projects = storage.GetInvestmentProjects();
+            var projects = investmentStorage.GetInvestmentProjects();
 
             foreach (var project in projects)
             {
@@ -116,7 +116,7 @@
             {
                 var operationResult = await notificationComponent.LongOperation(async () =>
                 {
-                    var projects = storage.GetInvestmentProjects();
+                    var projects = investmentStorage.GetInvestmentProjects();
 
                     foreach (var penaltyProject in penaltyProjects)
                     {

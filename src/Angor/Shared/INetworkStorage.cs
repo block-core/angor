@@ -4,6 +4,7 @@ namespace Angor.Shared;
 
 public interface INetworkStorage
 {
-    SettingsInfo GetSettings();
-    void SetSettings(SettingsInfo settingsInfo);
+    SettingsInfo GetSettingsInfo();
+    void SetSettingsInfo(SettingsInfo settingsInfo);
+    void WipeStorage();
 }

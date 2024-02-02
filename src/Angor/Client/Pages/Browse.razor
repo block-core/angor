@@ -43,16 +43,14 @@
 
                         @if (SessionStorage.IsProjectInStorageById(findProject.ProjectIdentifier))
                         {
-                            @if (SessionStorage.IsProjectMetadataStorageByPubkey(findProject.NostrPubKey))
+                            var project = SessionStorage.GetProjectById(findProject.ProjectIdentifier);
+                            @if (project?.Metadata != null)
                             {
-                                var metadata = SessionStorage.GetProjectMetadataByPubkey(findProject.NostrPubKey);
                                 <hr />
-                                <h3 class="card-title">@metadata?.Name</h3>
-                                <p class="card-subtitle">@metadata?.About</p>
+                                <h3 class="card-title">@project.Metadata.Name</h3>
+                                <p class="card-subtitle">@project.Metadata.About</p>
                                 <hr />
                             }
-
-                            //var info = SessionStorage.GetProjectById(findProject.ProjectIdentifier);
 
                             <button @onclick="() => ViewProjectDetails(findProject.ProjectIdentifier)" class="btn btn-primary">View</button>
                         }

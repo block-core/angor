@@ -42,26 +42,6 @@ public class LocalSessionStorage : ICacheStorage
         return _sessionStorageService.GetItem<Project>(projectId);
     }
 
-    public void AddProjectIdToNostrPubKeyMapping(string npub, string projectId)
-    {
-        var dictionary = _sessionStorageService.GetItem<Dictionary<string, string>>(NostrPubKeyMapping);
-        
-        dictionary ??= new ();
-
-        dictionary.TryAdd(npub, projectId);
-        
-        _sessionStorageService.SetItem(NostrPubKeyMapping,dictionary);
-    }
-
-    public string? GetProjectIdByNostrPubKey(string npub)
-    {
-        var dictionary = _sessionStorageService.GetItem<Dictionary<string, string>>(NostrPubKeyMapping);
-        
-        if (dictionary is null) return null;
-
-        return dictionary.TryGetValue(npub, out var value) ? value : null;
-    }
-
     public bool IsProjectInStorageById(string projectId)
     {
         return _sessionStorageService.ContainKey(projectId);

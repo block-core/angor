@@ -5,7 +5,8 @@
 @using Angor.Client.Models
 @using Angor.Shared.Services
 
-@inject IClientStorage storage;
+@inject IAccountStorage storage;
+@inject IInvestmentStorage investmentStorage;
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
 @inject ICacheStorage SessionStorage;
@@ -142,7 +143,7 @@
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = SessionStorage.GetUnconfirmedInboundFunds();
 
-            projects = storage.GetInvestmentProjects();
+            projects = investmentStorage.GetInvestmentProjects();
 
             var abi = new AccountBalanceInfo();
             abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);

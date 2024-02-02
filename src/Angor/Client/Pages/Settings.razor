@@ -7,9 +7,9 @@
 
 @inject INetworkConfiguration _networkConfiguration
 @inject INetworkService _networkService
-@inject IClientStorage _clientStorage
 @inject ICacheStorage _cacheStorage;
 @inject IWalletStorage _walletStorage;
+@inject INetworkStorage _networkStorage;
 @inject NavMenuState NavMenuState
 
 @inherits BaseComponent
@@ -185,7 +185,7 @@
     {
         _networkService.AddSettingsIfNotExist();
 
-        settingsInfo = _clientStorage.GetSettingsInfo();
+        settingsInfo = _networkStorage.GetSettingsInfo();
 
         networkType = _networkConfiguration.GetNetwork().Name;
 
@@ -225,7 +225,7 @@
             }
 
             settingsInfo.Indexers.Add(new SettingsUrl { Url = newIndexerLink, IsPrimary = !settingsInfo.Indexers.Any() });
-            _clientStorage.SetSettingsInfo(settingsInfo);
+            _networkStorage.SetSettingsInfo(settingsInfo);
             newIndexerLink = string.Empty;
         }
 
@@ -257,7 +257,7 @@
             }
 
             settingsInfo.Relays.Add(new SettingsUrl { Url = newRelayLink, IsPrimary = !settingsInfo.Relays.Any() });
-            _clientStorage.SetSettingsInfo(settingsInfo);
+            _networkStorage.SetSettingsInfo(settingsInfo);
             newRelayLink = string.Empty;
         }
 
@@ -277,7 +277,7 @@
                 next.IsPrimary = true;
             }
             
-            _clientStorage.SetSettingsInfo(settingsInfo);
+            _networkStorage.SetSettingsInfo(settingsInfo);
 
         }
     }
@@ -295,7 +295,7 @@
                 next.IsPrimary = true;
             }
 
-            _clientStorage.SetSettingsInfo(settingsInfo);
+            _networkStorage.SetSettingsInfo(settingsInfo);
         }
     }
 
@@ -313,7 +313,7 @@
             }
         }
 
-        _clientStorage.SetSettingsInfo(settingsInfo);
+        _networkStorage.SetSettingsInfo(settingsInfo);
 
         StateHasChanged();
     }
@@ -332,7 +332,7 @@
             }
         }
 
-        _clientStorage.SetSettingsInfo(settingsInfo);
+        _networkStorage.SetSettingsInfo(settingsInfo);
 
         StateHasChanged();
     }
@@ -354,7 +354,7 @@
 
         if (operationResult.Success)
         {
-            settingsInfo = _clientStorage.GetSettingsInfo();
+            settingsInfo = _networkStorage.GetSettingsInfo();
             StateHasChanged();
         }        
     }
@@ -367,7 +367,7 @@
             return;
         }
 
-        _clientStorage.WipeStorage();
+        _networkStorage.WipeStorage();
         _cacheStorage.WipeSession();
 
         showWipeallModal = false;

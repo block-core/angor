@@ -12,7 +12,8 @@
 @inherits BaseComponent
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
-@inject IClientStorage storage;
+@inject IFounderStorage storage;
+@inject IAccountStorage accountStorage;
 @inject ICacheStorage _cacheStorage;
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
@@ -360,7 +361,7 @@
             prev = stage.ReleaseDate;
         }
 
-        var accountInfo = storage.GetAccountInfo(network.Name);
+        var accountInfo = accountStorage.GetAccountInfo(network.Name);
         var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
         var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
@@ -391,7 +392,7 @@
                 {
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
-                    var accountInfo = storage.GetAccountInfo(network.Name);
+                    var accountInfo = accountStorage.GetAccountInfo(network.Name);
                     var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
                     signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet(), accountInfo, feeData.SelectedFeeEstimation);

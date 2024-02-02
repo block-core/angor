@@ -23,24 +23,24 @@ namespace Angor.Shared.Services
 
         public void AddSettingsIfNotExist()
         {
-            var settings = _networkStorage.GetSettings();
+            var settings = _networkStorage.GetSettingsInfo();
 
             if (!settings.Indexers.Any())
             {
                 settings.Indexers.AddRange(_networkConfiguration.GetDefaultIndexerUrls());
-                _networkStorage.SetSettings(settings);
+                _networkStorage.SetSettingsInfo(settings);
             }
 
             if (!settings.Relays.Any())
             {
                 settings.Relays.AddRange(_networkConfiguration.GetDefaultRelayUrls());
-                _networkStorage.SetSettings(settings);
+                _networkStorage.SetSettingsInfo(settings);
             }
         }
 
         public async Task CheckServices(bool force = false)
         {
-            var settings = _networkStorage.GetSettings();
+            var settings = _networkStorage.GetSettingsInfo();
 
             foreach (var indexerUrl  in settings.Indexers)
             {
@@ -105,12 +105,12 @@ namespace Angor.Shared.Services
             }
 
             _httpClient.DefaultRequestHeaders.Accept.Remove(nostrHeaderMediaType);
-            _networkStorage.SetSettings(settings);
+            _networkStorage.SetSettingsInfo(settings);
         }
 
         public SettingsUrl GetPrimaryIndexer()
         {
-            var settings = _networkStorage.GetSettings();
+            var settings = _networkStorage.GetSettingsInfo();
 
             var ret = settings.Indexers.FirstOrDefault(p => p.IsPrimary);
 
@@ -124,7 +124,7 @@ namespace Angor.Shared.Services
 
         public SettingsUrl GetPrimaryRelay()
         {
-            var settings = _networkStorage.GetSettings();
+            var settings = _networkStorage.GetSettingsInfo();
 
             var ret = settings.Relays.FirstOrDefault(p => p.IsPrimary);
 
@@ -139,7 +139,7 @@ namespace Angor.Shared.Services
 
         public List<SettingsUrl> GetRelays()
         {
-            var settings = _networkStorage.GetSettings();
+            var settings = _networkStorage.GetSettingsInfo();
 
             return settings.Relays;
         }
@@ -150,14 +150,14 @@ namespace Angor.Shared.Services
             {
                 if (httpResponseMessage.StatusCode == HttpStatusCode.NotFound)
                 {
-                    var settings = _networkStorage.GetSettings();
+                    var settings = _networkStorage.GetSettingsInfo();
 
                     var host = settings.Indexers.FirstOrDefault(a => new Uri(a.Url).Host == httpResponseMessage.RequestMessage?.RequestUri?.Host);
 
                     if (host != null)
                     {
                         host.Status = UrlStatus.Offline;
-                        _networkStorage.SetSettings(settings);
+                        _networkStorage.SetSettingsInfo(settings);
                     }
                 }
             }

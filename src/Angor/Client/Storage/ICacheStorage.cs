@@ -9,8 +9,6 @@ public interface ICacheStorage
     void StoreProject(Project project);
     Project? GetProjectById(string projectId);
     bool IsProjectInStorageById(string projectId);
-    ProjectMetadata? GetProjectMetadataByPubkey(string pubkey);
-    bool IsProjectMetadataStorageByPubkey(string pubkey);
     List<ProjectIndexerData>? GetProjectIndexerData();
     void SetProjectIndexerData(List<ProjectIndexerData> list);
     List<UtxoData> GetUnconfirmedInboundFunds();

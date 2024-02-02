@@ -1,7 +1,6 @@
 ﻿@page "/spend/{ProjectId}"
 @using Angor.Shared
 @using Angor.Client.Storage
-@using Angor.Client.Services
 @using Angor.Shared.Models
 @using Angor.Shared.ProtocolNew
 @using Angor.Shared.Services
@@ -9,12 +8,11 @@
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 @using Angor.Shared.Utilities
-@using ITransactionSignature = NBitcoin.ITransactionSignature
 
-@inject IClientStorage storage;
+@inject IAccountStorage storage;
+@inject IFounderStorage founderStorage;
 @inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
-@inject INetworkConfiguration _NetworkConfiguration
 @inject IDerivationOperations _derivationOperations
 @inject IWalletOperations _WalletOperations
 @inject IFounderTransactionActions _founderTransactionActions
@@ -29,7 +27,7 @@
 
 <div class="container my-4">
     <h1>Founder Stage Claim</h1>
-    <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
+    <h5 class="card-title">Project Identifier: @projectInfo.ProjectIdentifier</h5>
 
     <NotificationComponent @ref="notificationComponent" />
 
@@ -106,7 +104,7 @@
                     </div>
                     <div class="modal-body modal-body-scroll">
                         
-                        <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
+                        <p class="mb-1"><strong>Project Identifier:</strong> @projectInfo.ProjectIdentifier</p>
 
                         <p class="mb-1">The transactions to be spent @signedTransaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
 
@@ -150,7 +148,7 @@
     private int? expandedStageId;
     private bool showCreateModal;
 
-    private ProjectInfo project;
+    private ProjectInfo projectInfo;
 
     private FeeData feeData = new();
 
@@ -182,7 +180,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
+        projectInfo = founderStorage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -211,7 +209,7 @@
 
     private async Task FindInvestments()
     {
-        var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
+        var trxs = await _IndexerService.GetInvestmentsAsync(projectInfo.ProjectIdentifier);
 
         var tasks = trxs.Select(async _ =>
         {
@@ -227,7 +225,7 @@
         }
 
         int stageIndex = 0;
-        foreach (var stage in project.Stages)
+        foreach (var stage in projectInfo.Stages)
         {
             var stageItem = new StageData
             {
@@ -307,7 +305,7 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            founderContext = new FounderContext { ProjectInfo = project, ProjectSeeders = new ProjectSeeders() };
+            founderContext = new FounderContext { ProjectInfo = projectInfo, ProjectSeeders = new ProjectSeeders() };
 
             foreach (var item in selected)
             {
@@ -320,7 +318,7 @@
             var address = accountInfo.GetNextReceiveAddress();
             var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
 
-            var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
+            var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == projectInfo.ProjectIdentifier);
 
             var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet(), keys.Index);
 
@@ -355,7 +353,7 @@
                     var address = accountInfo.GetNextReceiveAddress();
                     var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
 
-                    var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
+                    var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == projectInfo.ProjectIdentifier);
                     var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet(), keys.Index);
 
                     signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);

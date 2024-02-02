@@ -12,7 +12,8 @@
 @using Blockcore.NBitcoin.DataEncoders
 @using Angor.Client.Models
 
-@inject IClientStorage storage;
+@inject IAccountStorage storage;
+@inject IInvestmentStorage investmentStorage;
 @inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
 @inject INetworkConfiguration _NetworkConfiguration
@@ -259,7 +260,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        project = storage.GetInvestmentProjects().First(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+        project = investmentStorage.GetInvestmentProjects().First(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -531,7 +532,7 @@
         {
             showRecoveryModal = false;
 
-            storage.UpdateInvestmentProject(project);
+            investmentStorage.UpdateInvestmentProject(project);
 
             var response = await _WalletOperations.PublishTransactionAsync(network, recoveryTransaction);
 
@@ -625,7 +626,7 @@
         {
             showRecoveryReleaseModal = false;
 
-            storage.UpdateInvestmentProject(project);
+            investmentStorage.UpdateInvestmentProject(project);
 
             var response = await _WalletOperations.PublishTransactionAsync(network, releaseRecoveryTransaction);
 
@@ -718,7 +719,7 @@
         {
             showEndOfProjectModal = false;
 
-            storage.UpdateInvestmentProject(project);
+            investmentStorage.UpdateInvestmentProject(project);
 
             var response = await _WalletOperations.PublishTransactionAsync(network, endOfProjectTransaction);
 

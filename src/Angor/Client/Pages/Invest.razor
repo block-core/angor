@@ -20,7 +20,9 @@
 
 @inject ILogger<Invest> _Logger;
 @inject IDerivationOperations _derivationOperations
-@inject IClientStorage storage;
+@inject IAccountStorage storage;
+@inject IInvestmentStorage investmentStorage;
+@inject IFounderStorage founderStorage;
 @inject ICacheStorage SessionStorage;
 @inject IWalletOperations _WalletOperations
 
@@ -241,7 +243,7 @@
             NavigationManager.NavigateTo($"/wallet");
         }
 
-        Project? findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+        Project? findProject = investmentStorage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
         if (findProject != null)
         {
@@ -252,7 +254,7 @@
         }
         else
         {
-            findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+            findProject = founderStorage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
             if (findProject != null)
             {
@@ -474,7 +476,7 @@
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
 
-            storage.AddInvestmentProject(investorProject);
+            investmentStorage.AddInvestmentProject(investorProject);
 
             foreach (var input in strippedInvestmentTransaction.Inputs)
                 accountInfo.UtxoReservedForInvestment.Add(input.PrevOut.ToString());
@@ -493,12 +495,6 @@
 
         if (operationResult.Success)
         {
-            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.ProjectInfo.NostrPubKey);
-            if (metadata != null)
-            {
-                storage.AddInvestmentProjectMetadata(project.ProjectInfo.NostrPubKey, metadata);
-            }
-
             notificationComponent.ShowNotificationMessage("Signature request sent", 5);
         }
         else
@@ -545,7 +541,7 @@
             storage.SetAccountInfo(network.Name, accountInfo);
         }
 
-        storage.RemoveInvestmentProject(project.ProjectInfo.ProjectIdentifier);
+        investmentStorage.RemoveInvestmentProject(project.ProjectInfo.ProjectIdentifier);
 
         investorProject.SignaturesInfo = null;
     }
@@ -578,7 +574,7 @@
             // link the trx to the signatures
             investorProject.CompleteProjectInvestment(signedTransaction);
        
-            storage.UpdateInvestmentProject(investorProject);
+            investmentStorage.UpdateInvestmentProject(investorProject);
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
@@ -598,12 +594,6 @@
 
         if (operationResult.Success)
         {
-            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.ProjectInfo.NostrPubKey);
-            if (metadata != null)
-            {
-                storage.AddInvestmentProjectMetadata(project.ProjectInfo.NostrPubKey, metadata);
-            }
-
             notificationComponent.ShowNotificationMessage("Invested in project", 5);
 
             NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");

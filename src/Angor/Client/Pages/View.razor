@@ -11,7 +11,8 @@
 
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
-@inject IClientStorage storage;
+@inject IInvestmentStorage investmentStorage;
+@inject IFounderStorage founderStorage;
 @inject ICacheStorage SessionStorage;
 @inject NavigationManager NavigationManager
 @inject INetworkConfiguration _NetworkConfiguration
@@ -289,7 +290,7 @@
     {
         NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
         
-        project = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+        project = investmentStorage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
         if (project is InvestorProject findProject)
         {
@@ -298,7 +299,7 @@
         }
         else
         {
-            project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+            project = founderStorage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
             if (project != null)
             {
