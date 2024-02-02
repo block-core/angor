@@ -1,29 +1,16 @@
 using Angor.Shared;
 using Angor.Shared.Models;
-using Angor.Shared.Networks;
 using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Angor.Test.ProtocolNew;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
-using Blockcore.Networks;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using NBitcoin;
-using System.Collections.Generic;
-using Angor.Client.Services;
-using ISecret = Blockcore.NBitcoin.ISecret;
+using Angor.Shared.Services;
 using Money = Blockcore.NBitcoin.Money;
 using uint256 = Blockcore.NBitcoin.uint256;
-using Polly;
-using NBitcoin.RPC;
-using Network = NBitcoin.Network;
-using Transaction = NBitcoin.Transaction;
-using WitScript = NBitcoin.WitScript;
 
 namespace Angor.Test;
 

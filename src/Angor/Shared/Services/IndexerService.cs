@@ -1,11 +1,8 @@
 ﻿using System.Net;
-using Angor.Shared.Models;
-using Angor.Shared;
 using System.Net.Http.Json;
-using Angor.Shared.Services;
-using static System.Net.WebRequestMethods;
+using Angor.Shared.Models;
 
-namespace Angor.Client.Services
+namespace Angor.Shared.Services
 {
     public interface IIndexerService
     {

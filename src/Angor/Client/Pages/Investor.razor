@@ -2,8 +2,8 @@
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Blockcore.NBitcoin
-@using Angor.Client.Services
 @using Angor.Client.Models
+@using Angor.Shared.Services
 
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
@@ -84,14 +84,16 @@
                 <tbody>
                 @foreach(var project in projects)
                 {
+                    Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
+                    
                     <tr>
                         <td>
                             <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link"> @TrimString(@project.ProjectInfo.ProjectIdentifier)</a>
                         </td>
                         <td> @project.Metadata?.Name</td>
                         <td>@project.ProjectInfo.TargetAmount @network.CoinTicker</td>
-                        <td>@Money.Satoshis(Stats[project.ProjectInfo.ProjectIdentifier].AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
-                        <td>@((Stats[project.ProjectInfo.ProjectIdentifier].AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</td>
+                        <td>@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
+                        <td>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</td>
                         <td>
                             @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
                             {
@@ -129,7 +131,7 @@
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
 
-    public Dictionary<string,View.ProjectStats> Stats = new();
+    public Dictionary<string,ProjectStats> Stats = new();
     
     protected override async Task OnInitializedAsync()
     {
