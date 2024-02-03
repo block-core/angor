@@ -259,11 +259,16 @@
 
                     if (_.Content == null)
                         return;
+                  
                     var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
                     var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == nostrProject!.ProjectIdentifier);
+                    
                     if (findProject == null)
                         storage.AddFounderProject(new FounderProject { ProjectInfo = nostrProject });
-                    NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");
+                    
+                    if (!string.IsNullOrEmpty(nostrProject!.CreationTransactionId))
+                        NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");
+
                 }, () =>
                 {
                     notificationComponent.StopLoading();
