@@ -460,8 +460,9 @@
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
             
             var accountInfo = storage.GetAccountInfo(network.Name);
+            var walletWords = _walletStorage.GetWallet().WalletWords;
 
-            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet().WalletWords, project.ProjectInfo.FounderKey);
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(walletWords, project.ProjectInfo.FounderKey);
 
             unsignedRecoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.ProjectInfo, investmentTransaction, project.SignaturesInfo, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
@@ -481,7 +482,7 @@
             foreach (var txIn in removeTxin) unsignedRecoveryTransaction.Inputs.Remove(txIn);
 
             // add fee to the recovery trx
-            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet().WalletWords, accountInfo, feeData.SelectedFeeEstimation);
+            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, walletWords, accountInfo, feeData.SelectedFeeEstimation);
 
             Logger.LogInformation($"recoveryTransaction={recoveryTransaction.GetHash().ToString()}");
 

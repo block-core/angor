@@ -383,16 +383,18 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            var investorKey = _derivationOperations.DeriveInvestorKey(_walletStorage.GetWallet().WalletWords, project.ProjectInfo.FounderKey);
+            var walletWords = _walletStorage.GetWallet().WalletWords;
+
+            var investorKey = _derivationOperations.DeriveInvestorKey(walletWords, project.ProjectInfo.FounderKey);
             
             if (Investment.IsSeeder)
             {
-                var seederHash = _derivationOperations.DeriveSeederSecretHash(_walletStorage.GetWallet().WalletWords, project.ProjectInfo.FounderKey);
+                var seederHash = _derivationOperations.DeriveSeederSecretHash(walletWords, project.ProjectInfo.FounderKey);
             }
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, investorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, _walletStorage.GetWallet().WalletWords, accountInfo, feeData.SelectedFeeEstimation);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, walletWords, accountInfo, feeData.SelectedFeeEstimation);
             
             return new OperationResult { Success = true };
 

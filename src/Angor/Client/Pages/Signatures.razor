@@ -278,13 +278,15 @@
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(_walletStorage.GetWallet().WalletWords, FounderProject.ProjectIndex);
+            var walletWords = _walletStorage.GetWallet().WalletWords;
+
+            var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(walletWords, FounderProject.ProjectIndex);
 
             var signatureInfo = signProject(signature.TransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
 
             var sigJson = JsonSerializer.Serialize(signatureInfo, RelayService.settings);
 
-            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(_walletStorage.GetWallet().WalletWords, FounderProject.ProjectIndex);
+            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(walletWords, FounderProject.ProjectIndex);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
