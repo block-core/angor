@@ -15,12 +15,14 @@ public class Project
             ProjectIdentifier = indexerData.ProjectIdentifier,
             FounderKey = indexerData.FounderKey,
             NostrPubKey = indexerData.NostrPubKey,
-            CreationTransactionId = indexerData.TrxId
         };
+
+        CreationTransactionId = indexerData.TrxId;
     }
     
     public ProjectMetadata? Metadata { get; set; }
     public ProjectInfo ProjectInfo { get; set; }
-    
-    
+
+    public string CreationTransactionId { get; set; }
+
 }

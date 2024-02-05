@@ -213,7 +213,6 @@
             PenaltyDays = 90,
             ExpiryDate = DateTime.UtcNow.AddDays(120),
             TargetAmount = 50,
-            CreationTransactionId = "unknowen",
             Stages = new List<Stage>
             {
                 new() { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
@@ -221,7 +220,8 @@
                 new() { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) },
             }
         },
-        Metadata = new()
+        Metadata = new(),
+        CreationTransactionId = "unknowen",
     };
     
     bool nostrProfileCreated;
@@ -262,13 +262,16 @@
                   
                     var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
                     var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == nostrProject!.ProjectIdentifier);
-                    
-                    if (findProject == null)
-                        storage.AddFounderProject(new FounderProject { ProjectInfo = nostrProject });
-                    
-                    if (!string.IsNullOrEmpty(nostrProject!.CreationTransactionId))
-                        NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");
 
+                    if (findProject != null)
+                    {
+                        if (string.IsNullOrEmpty(findProject.CreationTransactionId))
+                        {
+                            throw new ApplicationException("Invalid state");
+                        }
+
+                        NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");
+                    }
                 }, () =>
                 {
                     notificationComponent.StopLoading();
@@ -430,7 +433,7 @@
             return;
         }
 
-        project.ProjectInfo.CreationTransactionId = signedTransaction.GetHash().ToString();
+        project.CreationTransactionId = signedTransaction.GetHash().ToString();
 
         storage.AddFounderProject(project);
 
