@@ -255,9 +255,10 @@
                 {
                     if (_.Kind == NostrKind.Metadata)
                     {
-                        nostrProfileCreated = true;
+                        if (nostrProfileCreated)
+                            return; // second call from the relay
 
-                        if (project.Metadata == null)
+                        if (string.IsNullOrEmpty(project.Metadata?.Name))
                         {
                             if (_.Content == null)
                                 return; // is this correct? should we throw if no content?
@@ -267,12 +268,17 @@
                             if (metadata != null)
                             {
                                 project.Metadata = ProjectMetadata.Parse(metadata);
+
+                                nostrProfileCreated = true;
                             }
                         }
                     }
 
                     if (_.Kind == NostrKind.ApplicationSpecificData)
                     {
+                        if (applicationDataOnNostr)
+                            return; // second call from the relay
+
                         if (_.Content == null)
                             return; // is this correct? should we throw if no content?
 
@@ -280,20 +286,6 @@
 
                         if (nostrProject == null)
                             return;
-
-                        var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == nostrProject!.ProjectIdentifier);
-                        if (findProject != null)
-                        {
-                            if (string.IsNullOrEmpty(findProject.CreationTransactionId))
-                            {
-                                // todo: check that the project is actually published to the blockchain, 
-                                // this is a rare situation that can happen if the application crashed just when publishing to the blockchain
-
-                                throw new ApplicationException("Invalid state");
-                            }
-
-                            NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");
-                        }
 
                         if (nostrProject!.ProjectIdentifier != project.ProjectInfo.ProjectIdentifier)
                             throw new ApplicationException("Invalid state");
@@ -305,8 +297,27 @@
                             throw new ApplicationException("Invalid state");
 
                         applicationDataOnNostr = true;
+
                         project.ProjectInfo = nostrProject;
                     }
+
+                    if (applicationDataOnNostr && nostrProfileCreated)
+                    {
+                        var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
+                        if (findProject != null)
+                        {
+                            if (string.IsNullOrEmpty(findProject.CreationTransactionId))
+                            {
+                                // todo: check that the project is actually published to the blockchain, 
+                                // this is a rare situation that can happen if the application crashed just when publishing to the blockchain
+
+                                throw new ApplicationException("Invalid state");
+                            }
+
+                            NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
+                        }
+                    }
+
                 }, () =>
                 {
                     notificationComponent.StopLoading();
@@ -448,17 +459,13 @@
         var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), project.ProjectIndex);
 
         var nostrKeyHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
-        string? resultId = string.Empty;
 
-        if (!applicationDataOnNostr)
-        {
-            resultId = await _RelayService.AddProjectAsync(project.ProjectInfo, nostrKeyHex,
-                _ =>
-                {
-                    if (!_.Accepted)
-                        notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
-                });
-        }
+        var resultId = await _RelayService.AddProjectAsync(project.ProjectInfo, nostrKeyHex,
+            _ =>
+            {
+                if (!_.Accepted)
+                    notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+            });
 
         var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
