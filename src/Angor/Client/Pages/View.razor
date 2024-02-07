@@ -347,9 +347,9 @@
             }
         }
 
-        if (project?.ProjectInfo != null)
+        if (project?.CreationTransactionId != null)
         {
-            projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.ProjectInfo.CreationTransactionId}";
+            projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
             
             await RefreshBalance();
         }

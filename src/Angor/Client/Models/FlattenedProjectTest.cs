@@ -60,7 +60,7 @@ public class FlattenedProjectTest
             ExpiryDate = ExpiryDate,
             TargetAmount = TargetAmount,
             Stages = new List<Stage>(Stages),
-            CreationTransactionId = CreationTransactionId,
+            //CreationTransactionId = CreationTransactionId,
             ProjectSeeders = ProjectSeeders
         };
     }
@@ -82,7 +82,7 @@ public class FlattenedProjectTest
         ExpiryDate = info.ExpiryDate;
         TargetAmount = info.TargetAmount;
         Stages = new List<Stage>(info.Stages);
-        CreationTransactionId = info.CreationTransactionId;
+        //CreationTransactionId = info.CreationTransactionId;
         ProjectSeeders = info.ProjectSeeders;
     }
 }

@@ -8,6 +8,7 @@
 @using Blockcore.NBitcoin
 @using Nostr.Client.Messages
 @using Angor.Client.Models
+@using Nostr.Client.Messages.Metadata
 
 @inherits BaseComponent
 @inject IDerivationOperations _derivationOperations
@@ -213,7 +214,6 @@
             PenaltyDays = 90,
             ExpiryDate = DateTime.UtcNow.AddDays(120),
             TargetAmount = 50,
-            CreationTransactionId = "unknowen",
             Stages = new List<Stage>
             {
                 new() { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
@@ -221,7 +221,8 @@
                 new() { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) },
             }
         },
-        Metadata = new()
+        Metadata = new(),
+        CreationTransactionId = "unknowen",
     };
     
     bool nostrProfileCreated;
@@ -252,18 +253,71 @@
             {
                 _RelayService.RequestProjectCreateEventsByPubKey(_ => //TODO change the state to be storage driven and not event driven
                 {
-                    nostrProfileCreated = _.Kind == NostrKind.Metadata;
+                    if (_.Kind == NostrKind.Metadata)
+                    {
+                        if (nostrProfileCreated)
+                            return; // second call from the relay
 
-                    if (_.Kind != NostrKind.ApplicationSpecificData)
-                        return; //In case of a crashed application in the middle of the call
+                        if (string.IsNullOrEmpty(project.Metadata?.Name))
+                        {
+                            if (_.Content == null)
+                                return; // is this correct? should we throw if no content?
 
-                    if (_.Content == null)
-                        return;
-                    var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
-                    var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == nostrProject!.ProjectIdentifier);
-                    if (findProject == null)
-                        storage.AddFounderProject(new FounderProject { ProjectInfo = nostrProject });
-                    NavigationManager.NavigateTo($"/view/{nostrProject.ProjectIdentifier}");
+                            var metadata = System.Text.Json.JsonSerializer.Deserialize<NostrMetadata>(_.Content, RelayService.settings);
+
+                            if (metadata != null)
+                            {
+                                project.Metadata = ProjectMetadata.Parse(metadata);
+
+                                nostrProfileCreated = true;
+                            }
+                        }
+                    }
+
+                    if (_.Kind == NostrKind.ApplicationSpecificData)
+                    {
+                        if (applicationDataOnNostr)
+                            return; // second call from the relay
+
+                        if (_.Content == null)
+                            return; // is this correct? should we throw if no content?
+
+                        var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
+
+                        if (nostrProject == null)
+                            return;
+
+                        if (nostrProject!.ProjectIdentifier != project.ProjectInfo.ProjectIdentifier)
+                            throw new ApplicationException("Invalid state");
+
+                        if(nostrProject!.FounderKey != project.ProjectInfo.FounderKey)
+                            throw new ApplicationException("Invalid state");
+
+                        if (nostrProject!.FounderRecoveryKey != project.ProjectInfo.FounderRecoveryKey)
+                            throw new ApplicationException("Invalid state");
+
+                        applicationDataOnNostr = true;
+
+                        project.ProjectInfo = nostrProject;
+                    }
+
+                    if (applicationDataOnNostr && nostrProfileCreated)
+                    {
+                        var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
+                        if (findProject != null)
+                        {
+                            if (string.IsNullOrEmpty(findProject.CreationTransactionId))
+                            {
+                                // todo: check that the project is actually published to the blockchain, 
+                                // this is a rare situation that can happen if the application crashed just when publishing to the blockchain
+
+                                throw new ApplicationException("Invalid state");
+                            }
+
+                            NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
+                        }
+                    }
+
                 }, () =>
                 {
                     notificationComponent.StopLoading();
@@ -272,8 +326,6 @@
             }
         }
     }
-
-
 
     private async Task CreatNostrProfile()
     {
@@ -372,8 +424,6 @@
 
         signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet().WalletWords, accountInfo, feeData.SelectedFeeEstimation);
 
-        project.ProjectInfo.CreationTransactionId = signedTransaction.GetHash().ToString();
-
         showCreateModal = true;
 
         StateHasChanged();
@@ -421,11 +471,17 @@
 
         if (!response.Success)
         {
-            await _RelayService.DeleteProjectAsync(resultId, nostrKeyHex);
-           notificationComponent.ShowErrorMessage(response.Message);
+            if (!string.IsNullOrEmpty(resultId))
+            {
+                await _RelayService.DeleteProjectAsync(resultId, nostrKeyHex);
+            }
+
+            notificationComponent.ShowErrorMessage(response.Message);
             // notificationComponent.ShowErrorMessage("Failed to post the transaction to the blockchain.(try refreshing the wallet)");
             return;
         }
+
+        project.CreationTransactionId = signedTransaction.GetHash().ToString();
 
         storage.AddFounderProject(project);
 
