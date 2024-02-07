@@ -38,28 +38,27 @@
             {
                 <div class="card mb-3">
                     <div class="card-body">
-                        <h5 class="card-title">@findProject.ProjectIdentifier</h5>
-                        <p class="card-text">Nostr ID: @(NostrPublicKey.FromHex(findProject.NostrPubKey).Bech32)</p>
-
                         @if (SessionStorage.IsProjectInStorageById(findProject.ProjectIdentifier))
                         {
-                            @if (SessionStorage.IsProjectMetadataStorageByPubkey(findProject.NostrPubKey))
+                            var project = SessionStorage.GetProjectById(findProject.ProjectIdentifier);
+                            if (project?.Metadata != null)
                             {
-                                var metadata = SessionStorage.GetProjectMetadataByPubkey(findProject.NostrPubKey);
-                                <hr />
-                                <h3 class="card-title">@metadata?.Name</h3>
-                                <p class="card-subtitle">@metadata?.About</p>
-                                <hr />
+                                <h3 class="card-title">@project.Metadata.Name</h3>
+                                <p class="card-subtitle">@project.Metadata.About</p>
+                                <hr>
                             }
-
-                            //var info = SessionStorage.GetProjectById(findProject.ProjectIdentifier);
-
-                            <button @onclick="() => ViewProjectDetails(findProject.ProjectIdentifier)" class="btn btn-primary">View</button>
                         }
                         else
                         {
                             <p class="text-warning-emphasis">Project not found in any relay!</p>
                         }
+                        <p>
+                            Project ID:@findProject.ProjectIdentifier
+                            <br/>
+                            Nostr ID  :@(NostrPublicKey.FromHex(findProject.NostrPubKey).Bech32)
+                        </p>
+                        <button @onclick="() => ViewProjectDetails(findProject.ProjectIdentifier)" class="btn btn-primary card-">View</button>
+
                     </div>
                 </div>
             }
@@ -102,7 +101,7 @@
                             <div class="card-body">
                                 @if (nostrSearchInProgress)
                                 {
-                                    <div class="loader"></div>
+                                    <div class="loader-small"></div>
                                 }
                                 else
                                 {

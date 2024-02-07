@@ -322,7 +322,7 @@
 
             var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
 
-            var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet(), keys.Index);
+            var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet().WalletWords, keys.Index);
 
             signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
 
@@ -356,7 +356,7 @@
                     var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
 
                     var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
-                    var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet(), keys.Index);
+                    var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet().WalletWords, keys.Index);
 
                     signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
 

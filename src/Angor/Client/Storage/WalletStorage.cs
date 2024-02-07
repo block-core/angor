@@ -7,8 +7,7 @@ public class WalletStorage : IWalletStorage
 {
     private readonly ISyncLocalStorageService _storage;
 
-    private const string WalletWordsKey = "mnemonic";
-    private const string PubKey = "pubkey";
+    private const string WalletKey = "wallet";
 
     public WalletStorage(ISyncLocalStorageService storage)
     {
@@ -17,61 +16,46 @@ public class WalletStorage : IWalletStorage
 
     public bool HasWallet()
     {
-        return _storage.ContainKey(WalletWordsKey);
+        return _storage.ContainKey(WalletKey);
     }
 
-    public void SaveWalletWords(WalletWords walletWords)
+    public void SaveWalletWords(Wallet wallet)
     {
-        if (_storage.GetItem<WalletWords>(WalletWordsKey) != null)
+        if (_storage.GetItem<Wallet>(WalletKey) != null)
         {
             throw new ArgumentNullException("Wallet already exists!");
         }
 
-        _storage.SetItem(WalletWordsKey,walletWords);
+        _storage.SetItem(WalletKey, wallet);
     }
 
     public void DeleteWallet()
     {
-        _storage.RemoveItem(WalletWordsKey);
+        _storage.RemoveItem(WalletKey);
     }
 
-    public WalletWords GetWallet()
+    public Wallet GetWallet()
     {
-        var words = _storage.GetItem<WalletWords>(WalletWordsKey);
+        var wallet = _storage.GetItem<Wallet>(WalletKey);
 
-        if (words == null)
+        if (wallet == null)
         {
             throw new ArgumentNullException("Wallet not found!");
-
         }
 
-        return words;
+        return wallet;
     }
-    
-    
     
     public void SetFounderKeys(FounderKeyCollection founderPubKeys)
     {
-        _storage.SetItem("projectsKeys", founderPubKeys);
+        var wallet = GetWallet();
+        wallet.FounderKeys = founderPubKeys;
+
+        _storage.SetItem(WalletKey, wallet);
     }
 
     public FounderKeyCollection GetFounderKeys()
     {
-        return _storage.GetItem<FounderKeyCollection>("projectsKeys");
-    }
-
-    public void DeleteFounderKeys()
-    {
-        _storage.RemoveItem("projectsKeys");
-    }
-
-    public string? GetWalletPubkey()
-    {
-        return _storage.GetItemAsString(PubKey);
-    }
-
-    public void DeleteWalletPubkey()
-    {
-        _storage.RemoveItem(PubKey);
+        return GetWallet().FounderKeys;
     }
 }

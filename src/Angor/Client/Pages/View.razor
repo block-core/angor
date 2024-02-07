@@ -408,7 +408,7 @@
     {
         if (project is FounderProject founderProject)
         {
-            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), founderProject.ProjectIndex);
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, founderProject.ProjectIndex);
             var nsec = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
             await _clipboardService.WriteTextAsync(nsec);
             StateHasChanged();   

@@ -130,7 +130,7 @@ else
         localAccountInfo = GetAccountInfoFromStorage();
 
         ExtPubKey accountExtPubKey = ExtPubKey.Parse(localAccountInfo.ExtPubKey, network);
-        var walletWords = _walletStorage.GetWallet();
+        var walletWords = _walletStorage.GetWallet().WalletWords;
         var extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
 
         var privateFounderKey = extendedKey.Derive(new KeyPath("m/84'/1'/0'/0/3")); //derive a different path for the founder keys testing
