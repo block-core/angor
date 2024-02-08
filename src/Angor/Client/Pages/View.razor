@@ -319,20 +319,22 @@
 
                     if (projectIndexerData != null)
                     {
-                        project = new Project();
+                        project = new Project { CreationTransactionId = projectIndexerData.TrxId };
                         _RelayService.RequestProjectCreateEventsByPubKey(e =>
                         {
-                            project ??= new Project();
-                            switch (e)
+                            if (project != null)
                             {
-                                case { Kind: NostrKind.Metadata }:
-                                    var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
-                                    project.Metadata ??= nostrMetadata;
-                                    break;
-                                case { Kind: NostrKind.ApplicationSpecificData }:
-                                    var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
-                                    project.ProjectInfo ??= projectInfo;
-                                    break;
+                                switch (e)
+                                {
+                                    case { Kind: NostrKind.Metadata }:
+                                        var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
+                                        project.Metadata ??= nostrMetadata;
+                                        break;
+                                    case { Kind: NostrKind.ApplicationSpecificData }:
+                                        var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
+                                        project.ProjectInfo ??= projectInfo;
+                                        break;
+                                }
                             }
                         }, () =>
                         {

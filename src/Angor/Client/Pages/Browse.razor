@@ -168,7 +168,7 @@
 
         if (findProject != null)
         {
-            _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectCreateEvents(),
+            _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(),
                 StateHasChanged, 
             new[] { findProject.NostrPubKey });
         }
@@ -198,7 +198,7 @@
                 .ToArray();
 
             if (projectsForLookup.Any())
-                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectCreateEvents(),
+                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(),
                     () =>
                 {
                     nostrSearchInProgress = false;
@@ -212,15 +212,22 @@
         searchInProgress = false;
     }
 
-    private Action<NostrEvent> HandleProjectCreateEvents()
+    private Action<NostrEvent> HandleProjectEvents()
     {
         return e =>
         {
+            var projectIndexerData = projects.FirstOrDefault(x => x.NostrPubKey == e.Pubkey);
+
+            if (projectIndexerData == null && findProject?.NostrPubKey == e.Pubkey)
+            {
+                projectIndexerData = findProject;
+            }
+
             switch (e)
             {
                 case { Kind: NostrKind.Metadata }:
+                  
                     var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
-                    var projectIndexerData = projects.FirstOrDefault(x => x.NostrPubKey == e.Pubkey);
                     if (projectIndexerData != null)
                     {
                         var project = SessionStorage.GetProjectById(projectIndexerData.ProjectIdentifier);
@@ -230,13 +237,20 @@
                             SessionStorage.StoreProject(project);   
                         }
                     }
+                    
                     break;
+
                 case { Kind: NostrKind.ApplicationSpecificData }:
+                    
                     var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
-                    if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
+                    if (projectInfo != null && projectIndexerData != null)
                     {
-                        SessionStorage.StoreProject(new Project(){ProjectInfo = projectInfo});
+                        if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
+                        {
+                            SessionStorage.StoreProject(new Project { ProjectInfo = projectInfo, CreationTransactionId = projectIndexerData.TrxId });
+                        }
                     }
+
                     break;
             }
         };
