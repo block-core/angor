@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PROJECT_PATH: "src/Angor/Server/Angor.Server"
+      PROJECT_PATH: "src/Angor/Server/Angor.Server.csproj"
       OUTPUT_PATH: "Output"
       BUILD_CONFIGURATION: "Release"
 
