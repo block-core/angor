@@ -467,7 +467,13 @@
         {
             Debug.Assert(project != null, nameof(project) + " != null");
 
-            project = new InvestorProject { ProjectInfo = project.ProjectInfo, Metadata = project.Metadata, SignedTransactionHex = signedTransaction!.ToHex() };
+            project = new InvestorProject
+            {
+                ProjectInfo = project.ProjectInfo, 
+                Metadata = project.Metadata, 
+                SignedTransactionHex = signedTransaction!.ToHex(), 
+                CreationTransactionId = project.CreationTransactionId
+            };
 
             var investorProject = (InvestorProject)project;
 
