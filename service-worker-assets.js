@@ -33,15 +33,15 @@
       "url": "_framework\/icudt.dat"
     },
     {
-      "hash": "sha256-DrjX5bfp8QWprfh2ib+wrUnF2JYd98kevbMKFmPKxTk=",
+      "hash": "sha256-1G1g9r\/npo\/7haYz+RVV\/sy2R\/hKHgpp\/BQkScbvj9U=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-3erMDJf5kTu6bgFHp0XHsNONfiO8HH89eI+A3BlN23M=",
+      "hash": "sha256-2cKcgt3mhmbpI+1W+de+lVm5cQwvku\/TeOrtJCUyiVI=",
       "url": "_framework\/Angor.Client.dll"
     },
     {
-      "hash": "sha256-PHyAoKZNzU0AsFSESzDi1W+wjbWswk88Xyw0cpk4HI0=",
+      "hash": "sha256-gOb1jiZmPlMJ\/qMXHUDDyFat61whkrZA9GIKTIqfyTQ=",
       "url": "_framework\/Angor.Shared.dll"
     },
     {
@@ -517,6 +517,14 @@
       "url": "Angor.Client.styles.css"
     },
     {
+      "hash": "sha256-9gLXfFoNz\/\/AdhmdzCLoskgMixwFf5aOGauQ0bZKPlU=",
+      "url": "angor-icon.svg"
+    },
+    {
+      "hash": "sha256-RyVR5Ide7+YOaaljRlrx2cxpJRi2vKl85sRjjaEsNiE=",
+      "url": "angor-logo.svg"
+    },
+    {
       "hash": "sha256-C8YEmM\/uKkO3c9pdrg1eX5maRuuax5E+bA97z5bgxVQ=",
       "url": "bitcoin-logo.png"
     },
@@ -577,27 +585,23 @@
       "url": "css\/open-iconic\/README.md"
     },
     {
-      "hash": "sha256-\/ZVAOdkesZp41XdlsPUe8vZpRBqrs3dIOc7qoOIxS70=",
+      "hash": "sha256-klUQU2HXSLhtxSpQhgCGYRpm6LyfeKiiHeQVDCATXPM=",
       "url": "favicon.png"
     },
     {
-      "hash": "sha256-\/B2rw+6ieg7AEi9FVjgw3ifPk0qCEAtqULNpKaGqXIA=",
+      "hash": "sha256-gir54tC6bNNjzHgm3eFL+nifYnZx1AnLKRF4tjOEPfE=",
       "url": "icon-192.png"
     },
     {
-      "hash": "sha256-cUcvK49cnKXOn3AE10i0oK2q531\/ZeUicmiiWwRyyLc=",
+      "hash": "sha256-kI7bxAcLoQUr+VJpv4bfxBKShU\/xNOqwdJLk4Mzh46Y=",
       "url": "icon-512.png"
     },
     {
-      "hash": "sha256-KPGehz5BI\/HNP+Mlp4KUDVBbQCDjhIDk9pGa2+TZDho=",
-      "url": "icon.png"
-    },
-    {
-      "hash": "sha256-5SznXHUG+yDhIibEgXZ0T4hK2NdnFpVY25GgjxPPgTM=",
+      "hash": "sha256-qKTN\/knJXD+piA4o1G8Wls0OaPhjLFs2HVbqzMN4S24=",
       "url": "index.html"
     },
     {
-      "hash": "sha256-1lMDHmZGqEpi4Td7O0bMvlTaXfspM5qGkDTo3Svxp8E=",
+      "hash": "sha256-lcrv6fz7HLR2Q4GF7piUBZemzMayJz1obJ7A9M9lqk4=",
       "url": "manifest.json"
     },
     {
@@ -605,5 +609,5 @@
       "url": "NostrToolsMethods.js"
     }
   ],
-  "version": "e2XwjRJC"
+  "version": "Z8cC2aKk"
 };
