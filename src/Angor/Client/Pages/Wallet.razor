@@ -533,29 +533,21 @@
 
         try
         {
-            // this is a hack, for some reason the UI
-            // doesn't respond immediately otherwise
 
-            var task = Task.Run(async () =>
-            {
-                WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
-                var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
-                await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
+            var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
+            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
-                _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { WalletWords = data });
-                storage.SetAccountInfo(network.Name, accountInfo);
-                accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
+            _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { WalletWords = data });
+            storage.SetAccountInfo(network.Name, accountInfo);
+            accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
 
-                // pre-derive the angor wallet keys 
-                FounderKeyCollection founderKeyCollection = _derivationOperations.DeriveProjectKeys(data, NetworkConfiguration.AngorTestKey);
-                _walletStorage.SetFounderKeys(founderKeyCollection);
+            // pre-derive the angor wallet keys 
+            FounderKeyCollection founderKeyCollection = _derivationOperations.DeriveProjectKeys(data, NetworkConfiguration.AngorTestKey);
+            _walletStorage.SetFounderKeys(founderKeyCollection);
 
-                hasWallet = _walletStorage.HasWallet();
-                ClearWalletWords();
-
-            });
-
-            await Task.WhenAll(task);
+            hasWallet = _walletStorage.HasWallet();
+            ClearWalletWords();
 
             walletWordsCreateModal = false;
 

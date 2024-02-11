@@ -43,7 +43,7 @@
     else
     {
         <div class="d-flex justify-content-end">
-            <button class="btn btn-primary mb-2" @onclick="Scan" disabled="@refreshSpinner">
+            <button class="btn btn-primary mb-2" @onclick="RefreshBalance" disabled="@refreshSpinner">
                 @if (refreshSpinner)
                 {
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -242,12 +242,12 @@
         {
             if (hasWallet)
             {
-                await Scan();
+                await RefreshBalance();
             }
         }
     }
 
-    private async Task Scan()
+    private async Task RefreshBalance()
     {
         refreshSpinner = true;
         StateHasChanged();
