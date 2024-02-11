@@ -33,15 +33,15 @@
       "url": "_framework\/icudt.dat"
     },
     {
-      "hash": "sha256-RCySXROGjrohYUF9MywEYJVneinHAri76YmTaMrD2b4=",
+      "hash": "sha256-DrjX5bfp8QWprfh2ib+wrUnF2JYd98kevbMKFmPKxTk=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-9YEVd2\/7jj\/s0c0L3k8WoclVk8lVkxWST\/9ZKhhs8mM=",
+      "hash": "sha256-3erMDJf5kTu6bgFHp0XHsNONfiO8HH89eI+A3BlN23M=",
       "url": "_framework\/Angor.Client.dll"
     },
     {
-      "hash": "sha256-EMNJSuJpL6VnZ9OrGdYVEYt6tX5CzEdY+rUry7URYYs=",
+      "hash": "sha256-PHyAoKZNzU0AsFSESzDi1W+wjbWswk88Xyw0cpk4HI0=",
       "url": "_framework\/Angor.Shared.dll"
     },
     {
@@ -605,5 +605,5 @@
       "url": "NostrToolsMethods.js"
     }
   ],
-  "version": "N5hPkpxZ"
+  "version": "e2XwjRJC"
 };
