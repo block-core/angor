@@ -11,6 +11,7 @@
 @inject ICacheStorage _cacheStorage;
 @inject IWalletStorage _walletStorage;
 @inject NavMenuState NavMenuState
+@inject ILogger<Settings> Logger;
 
 @inherits BaseComponent
 
@@ -73,7 +74,17 @@
             <br/>
             
             <div class="d-flex justify-content-end">
-                <button class="btn btn-info" @onclick="Refresh">Refresh</button>
+                <button class="btn btn-info" @onclick="Refresh" disabled="@refreshSpinner">
+                    @if (refreshSpinner)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span>Refresh...</span>
+                    }
+                    else
+                    {
+                        <span>Refresh</span>
+                    }
+                </button>
             </div>   
 
             <!-- Indexers Section -->
@@ -174,6 +185,7 @@
     private string newRelayLink;
 
     private string networkType;
+    private bool refreshSpinner = false;
 
     private bool showWipeallModal = false;
     private bool confirmWipe = false;
@@ -344,19 +356,23 @@
 
     private async Task Refresh(bool force)
     {
-        var operationResult = await notificationComponent.LongOperation(async () =>
+        refreshSpinner = true;
+
+        try
         {
             await _networkService.CheckServices(force);
 
-            return new OperationResult { Success = true };
-
-        });
-
-        if (operationResult.Success)
-        {
             settingsInfo = _clientStorage.GetSettingsInfo();
-            StateHasChanged();
-        }        
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, e.Message);
+            notificationComponent.ShowErrorMessage(e.Message);
+        }
+        finally
+        {
+            refreshSpinner = false;
+        }
     }
 
     private void WipteAllData()

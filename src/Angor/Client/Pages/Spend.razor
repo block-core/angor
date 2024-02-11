@@ -18,6 +18,7 @@
 @inject IDerivationOperations _derivationOperations
 @inject IWalletOperations _WalletOperations
 @inject IFounderTransactionActions _founderTransactionActions
+@inject ILogger<Recover> Logger;
 
 @inherits BaseComponent
 
@@ -32,6 +33,29 @@
     <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
 
     <NotificationComponent @ref="notificationComponent" />
+    
+    @if (firstTimeRefreshSpinner && refreshSpinner)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="loader"></div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-primary mb-2" @onclick="RefreshBalance" disabled="@refreshSpinner">
+                @if (refreshSpinner)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Refresh...</span>
+                }
+                else
+                {
+                    <span>Refresh</span>
+                }
+            </button>
+        </div>
+    }
 
     @foreach (var stage in stageDatas)
     {
@@ -45,7 +69,17 @@
                     <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
                     @if (stageisActive)
                     {
-                        <button class="btn btn-success" disabled="@(investedCount == 0)" @onclick="() => ClaimCoins(stage.StageIndex)">Claim Coins</button>
+                        <button class="btn btn-success" disabled="@(investedCount == 0 || stage.StagePinner == true)" @onclick="() => ClaimCoins(stage.StageIndex)">
+                            @if (stage.StagePinner)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Building trx...</span>
+                            }
+                            else
+                            {
+                                <span>Claim Coins</span>
+                            }
+                        </button>
                     }
                     else
                     {
@@ -102,7 +136,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Confirmation</h5>
-                        <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
+                        <button type="button" class="btn-close" @onclick="() => showCreateModal = false" disabled="@spendSpinner"></button>
                     </div>
                     <div class="modal-body modal-body-scroll">
                         
@@ -131,8 +165,18 @@
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="Send">Confirm</button>
+                        <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false" disabled="@spendSpinner">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="Send" disabled="@spendSpinner">
+                            @if (spendSpinner)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Confirm...</span>
+                            }
+                            else
+                            {
+                                <span>Confirm</span>
+                            }
+                        </button>
                     </div>
                 </div>
             </div>
@@ -150,6 +194,10 @@
     private int? expandedStageId;
     private bool showCreateModal;
 
+    private bool refreshSpinner = false;
+    private bool firstTimeRefreshSpinner = false;
+    private bool spendSpinner = false;
+
     private ProjectInfo project;
 
     private FeeData feeData = new();
@@ -163,6 +211,7 @@
         public int StageIndex;
         public Stage Stage;
         public List<StageDataTrx> Items = new ();
+        public bool StagePinner = false;
     }
 
     public class StageDataTrx
@@ -183,6 +232,8 @@
     protected override async Task OnInitializedAsync()
     {
         project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
+
+        firstTimeRefreshSpinner = true;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -191,29 +242,47 @@
         {
             if (hasWallet)
             {
-                var operationResult = await notificationComponent.LongOperation(async () =>
-                {
-                    await FindInvestments();
-
-                    await CheckSpentFund();
-
-                    return new OperationResult { Success = true };
-
-                });
-
-                if (operationResult.Success)
-                {
-                    StateHasChanged();
-                }
+                await RefreshBalance();
             }
         }
+    }
+
+    private async Task RefreshBalance()
+    {
+        refreshSpinner = true;
+        StateHasChanged();
+        await Task.Delay(10);
+
+        try
+        {
+            await FindInvestments();
+
+            await CheckSpentFund();
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, e.Message);
+            notificationComponent.ShowErrorMessage(e.Message);
+        }
+        finally
+        {
+            refreshSpinner = false;
+            firstTimeRefreshSpinner = false;
+        }
+
+        StateHasChanged();
+        await Task.Delay(10);
     }
 
     private async Task FindInvestments()
     {
         var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
 
-        var tasks = trxs.Select(async _ =>
+        var trxList = transactions.ToList();
+
+        var tasks = trxs
+            .Where(a => trxList.All(b => b.TrxId != a.TransactionId))
+        .Select(async _ =>
         {
             var hex = await _IndexerService.GetTransactionHexByIdAsync(_.TransactionId);
             return new { hex, _.TransactionId };
@@ -221,35 +290,46 @@
 
         var trxHexList = await Task.WhenAll(tasks);
 
+        // lets reuse this list
+        trxList.Clear();
+
         foreach (var trx in trxHexList)
         {
-            transactions.Add((network.CreateTransaction(trx.hex), trx.TransactionId));
+            trxList.Add((network.CreateTransaction(trx.hex), trx.TransactionId));
         }
 
-        int stageIndex = 0;
-        foreach (var stage in project.Stages)
+        if(!stageDatas.Any())
         {
-            var stageItem = new StageData
+            int stageIndex = 0;
+            foreach (var stage in project.Stages)
             {
-                Stage = stage,
-                StageIndex = stageIndex + 1,
-            };
 
-            foreach (var item in transactions)
+                var stageItem = new StageData
+                {
+                    Stage = stage,
+                    StageIndex = stageIndex + 1,
+                };
+
+                stageIndex++;
+                stageDatas.Add(stageItem);
+            }
+        }
+
+        foreach (var stageItem in stageDatas)
+        {
+            foreach (var item in trxList)
             {
                 var insert = new StageDataTrx
                 {
                     Trxid = item.TrxId,
-                    OutputAddress = item.Transaction.Outputs[stageIndex + 2].ScriptPubKey.WitHash.GetAddress(network).ToString(),
-                    Outputindex = stageIndex + 2,
-                    Amount = item.Transaction.Outputs[stageIndex + 2].Value.ToUnit(MoneyUnit.BTC),
+                    OutputAddress = item.Transaction.Outputs[stageItem.StageIndex + 1].ScriptPubKey.WitHash.GetAddress(network).ToString(),
+                    Outputindex = stageItem.StageIndex + 1,
+                    Amount = item.Transaction.Outputs[stageItem.StageIndex + 1].Value.ToUnit(MoneyUnit.BTC),
                 };
 
                 stageItem.Items.Add(insert);
+                transactions.Add(item);
             }
-
-            stageIndex++;
-            stageDatas.Add(stageItem);
         }
     }
 
@@ -282,7 +362,7 @@
                     item.IsSpent = true;
 
                     updateUnconfirmedOutbound |= LinqExtension.Remove(unconfirmedOutbound, new Outpoint(item.Trxid, item.Outputindex));
-                    
+
                     continue;
                 }
 
@@ -298,7 +378,14 @@
 
     private async Task ClaimCoins(int stageId)
     {
-        var operationResult = await notificationComponent.LongOperation(async () =>
+        var stage = stageDatas.First(s => s.StageIndex == stageId);
+
+        stage.StagePinner = true;
+
+        StateHasChanged();
+        await Task.Delay(10);
+
+        try
         {
             selectedStageId = stageId;
 
@@ -326,16 +413,16 @@
 
             signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
 
-            return new OperationResult { Success = true };
-        });
-
-        if (operationResult.Success)
-        {
             showCreateModal = true;
         }
-        else
+        catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(operationResult.Message);
+            Logger.LogError(e, e.Message);
+            notificationComponent.ShowErrorMessage(e.Message);
+        }
+        finally
+        {
+            stage.StagePinner = false;
         }
     }
 
@@ -368,14 +455,22 @@
 
     private async Task Send()
     {
-        var operationResult = await notificationComponent.LongOperation(async () =>
+        spendSpinner = true;
+
+        StateHasChanged();
+        await Task.Delay(10);
+
+        try
         {
             showCreateModal = false;
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
 
             if (!response.Success)
-                return response;
+            {
+                notificationComponent.ShowErrorMessage(response.Message);
+                return;
+            }
 
             // add all outptus to the pending list
             var accountInfo = storage.GetAccountInfo(network.Name);
@@ -395,16 +490,16 @@
                     _.IsSpent = true;
             });
 
-            return new OperationResult { Success = response.Success, Message = response.Message };
-        });
-
-        if (operationResult.Success)
-        {
             notificationComponent.ShowNotificationMessage("Done", 1);
         }
-        else
+        catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(operationResult.Message);
+            Logger.LogError(e, e.Message);
+            notificationComponent.ShowErrorMessage(e.Message);
+        }
+        finally
+        {
+            spendSpinner = false;
         }
     }
 

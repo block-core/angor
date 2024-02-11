@@ -35,7 +35,7 @@
             <div class="col">
                 <div class="alert alert-info" role="alert">No Wallet Found</div>
                 <!-- Adding a button to create a wallet -->
-                <button  class="btn btn-primary mt-2" @onclick="() => {walletWordsCreateModal = true; PreLoad(); }">Create Wallet</button>
+                <button class="btn btn-primary mt-2" @onclick="ShowCreateWalletModal">Create Wallet</button>
 
             </div>
 
@@ -47,11 +47,11 @@
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" >Create Wallet</h5>
-                                <button class="btn-close"  @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }"></button>
+                                <button class="btn-close" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" disabled="@createWalletSpinner"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
-                                
-                                @if (preload)
+
+                                @if (createWalletSpinner)
                                 {
                                     <div class="d-flex justify-content-center">
                                         <div class="loader"></div>
@@ -71,12 +71,12 @@
                                         <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
                                     </div>
                                     <div class="mb-3">
-                                        <button class="btn btn-success" @onclick="CreateWalletAsync" >Create Wallet</button>
+                                        <button class="btn btn-success" @onclick="CreateWalletAsync">Create Wallet</button>
                                     </div>
                                 }
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" >Close</button>
+                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" disabled="@createWalletSpinner">Close</button>
                             </div>
                         </div>
                     </div>
@@ -114,11 +114,31 @@
                 <!-- Replace '#' in 'data-bs-target' with the id of your modal -->
                 <button type="button" class="btn btn-primary"  @onclick="() => walletWordsModal = true">Show Wallet Words</button>
 
-                <button class="btn btn-primary ml-2" @onclick="RefreshBalance">Refresh Balance</button>
+                <button class="btn btn-primary ml-2" @onclick="RefreshBalance" disabled="@balanceSpinner">
+                    @if (balanceSpinner)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span>Refreshing Balance...</span>
+                    }
+                    else
+                    {
+                        <span>Refresh Balance</span>
+                    }
+                </button>
                 
                 @if (network.NetworkType == NetworkType.Testnet && accountBalanceInfo.TotalBalance < Money.Coins(10).Satoshi)
                 {
-                    <button class="btn btn-secondary ml-2" @onclick="GetTestCoins">Get some test coins</button>
+                    <button class="btn btn-secondary ml-2" @onclick="GetTestCoins" disabled="@testCoinsSpinner">
+                        @if (testCoinsSpinner)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span>Get some test coins...</span>
+                        }
+                        else
+                        {
+                            <span>Get some test coins</span>
+                        }
+                    </button>
                 }
                 
             </div>
@@ -229,7 +249,17 @@
                     </button>
                     
                     <!-- New Send button that triggers a confirmation dialog -->
-                    <button type="button" class="btn btn-primary mb-3" onclick="@BuildSend">Send</button>
+                    <button type="button" class="btn btn-primary mb-3" @onclick="BuildSend" disabled="@sendLoadSpinner">
+                        @if (sendLoadSpinner)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span>Sending...</span>
+                        }
+                        else
+                        {
+                            <span>Send</span>
+                        }
+                    </button>
 
                 </form>
             </div>
@@ -280,30 +310,30 @@
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title">Confirmation</h5>
-                                <button type="button" class="btn-close" aria-label="Close" @onclick="() => sendConfirmModal = false"></button>
+                                <button type="button" class="btn-close" aria-label="Close" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
                                 Are you sure you want to send <strong>@_sendInfo.SendAmount @network.CoinTicker</strong> to <strong> @_sendInfo.SendToAddress?</strong>
-                                
+
                                 <br/>
 
-                                The fee for this transaction will be <strong>@_sendInfo.SendFee</strong>
-                               
+                               The fee for this transaction will be <strong>@_sendInfo.SendFee</strong>
+
                                 <hr>
 
                                 <div class="mb-3">
                                     <label for="feeRange" class="form-label">Feerate for @_sendInfo.FeeBlockCount blocks is @_sendInfo.FeeRate sats</label>
                                     <input type="range" class="form-range" id="feeRange" @bind="FeePosition" @oninput="FeeRangeChanged" min="@FeeMin" max="@_feeMax">
                                 </div>
-                                
+
                                 <hr>
-                                
+
                                 The change address is <strong>@_sendInfo.ChangeAddress</strong>
-                                
+
                                 <br/>
 
                                 The selected inputs:
-                                
+
                                 @foreach (var infoSendUtxo in _sendInfo.SendUtxos)
                                 {
                                     <p style="font-size: 0.7em;">@Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker - @infoSendUtxo.Key</p>
@@ -311,8 +341,18 @@
 
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" @onclick="() => sendConfirmModal = false">Cancel</button>
-                                <button type="button" class="btn btn-primary" onclick="@SendCoins">Confirm</button>
+                                <button type="button" class="btn btn-secondary" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner">Cancel</button>
+                                <button type="button" class="btn btn-primary" @onclick="SendCoins" disabled="@sendConfirmSpinner">
+                                    @if (sendConfirmSpinner)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>Sending...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Confirm</span>
+                                    }
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -392,9 +432,11 @@
 
 @code {
     
-    private bool hasWallet;
-
-    private bool busy = false;
+    private bool balanceSpinner = false;
+    private bool createWalletSpinner = false;
+    private bool testCoinsSpinner = false;
+    private bool sendLoadSpinner = false;
+    private bool sendConfirmSpinner = false;
 
     private string? walletWords;
     private string? walletWordsPassphrase;
@@ -423,8 +465,6 @@
 
     protected override Task OnInitializedAsync()
     {
-        hasWallet = _walletStorage.HasWallet();
-
         if (hasWallet)
         {
             var accountInfo = storage.GetAccountInfo(network.Name);
@@ -438,88 +478,89 @@
     
     private async Task RefreshBalance()
     {
-        var operationResult = await notificationComponent.LongOperation(async () =>
+        balanceSpinner = true;
+
+        try
         {
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInboundFunds = _cacheStorage.GetUnconfirmedInboundFunds();
 
             await _walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
-            
+
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
             storage.SetAccountInfo(network.Name, accountInfo);
-            
+
             var utxos = accountInfo.AllUtxos()
                 .Select(x => x.outpoint.ToString()).ToList();
 
             var spentToUpdate = unconfirmedInboundFunds
                 .RemoveAll(x => utxos.Contains(x.outpoint.ToString()));
-            
+
             if (spentToUpdate > 0)
                 _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInboundFunds);
 
             accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInboundFunds);
 
-            showQrCode.GenerateQRCode(accountBalanceInfo.AccountInfo.GetNextReceiveAddress());
+            showQrCode.SetQRCode(accountBalanceInfo.AccountInfo.GetNextReceiveAddress());
 
-            return new OperationResult { Success = true };
-        });
-        
-        //TODO notify user in the UI in case the refresh failed 
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, e.Message);
+            notificationComponent.ShowErrorMessage(e.Message);
+        }
+        finally
+        {
+            balanceSpinner = false;
+        }
     }
 
-    bool preload = false;
-    bool firstpreload = true;
-    private void PreLoad()
+    private async Task ShowCreateWalletModal()
     {
-         // this is a workaround attempt to preload all the lazy loading components
-
-        if (firstpreload)
-        {
-            firstpreload = false;
-            preload = true;
-            Task.Run(() =>
-            {
-                WalletWords data = new WalletWords { Words = _walletOperations.GenerateWalletWords(), Passphrase = null };
-                _walletOperations.BuildAccountInfoForWalletWords(data);
-
-                preload = false;
-
-                StateHasChanged();
-            });
-        }
+        walletWordsCreateModal = true;
+        StateHasChanged();
+        await Task.Delay(10);
     }
 
     private async Task CreateWalletAsync()
     {
         if (string.IsNullOrEmpty(newWalletWords)) throw new ArgumentNullException();
 
-        var operationResult = await notificationComponent.LongOperation(async () =>
+        createWalletSpinner = true;
+        StateHasChanged();
+        await Task.Delay(10);
+
+        try
         {
-            walletWordsCreateModal = false;
 
             WalletWords data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
             _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { WalletWords = data });
-            storage.SetAccountInfo(network.Name,accountInfo);
+            storage.SetAccountInfo(network.Name, accountInfo);
             accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
 
             // pre-derive the angor wallet keys 
             FounderKeyCollection founderKeyCollection = _derivationOperations.DeriveProjectKeys(data, NetworkConfiguration.AngorTestKey);
             _walletStorage.SetFounderKeys(founderKeyCollection);
 
-            return new OperationResult { Success = true };
-        });
-
-        if (operationResult?.Success ?? false)
-        {
             hasWallet = _walletStorage.HasWallet();
             ClearWalletWords();
-            var accountInfo = storage.GetAccountInfo(network.Name);
+
+            walletWordsCreateModal = false;
 
             NavMenuState.NotifyStateChanged();
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, e.Message);
+            notificationComponent.ShowErrorMessage(e.Message);
+        }
+        finally
+        {
+            createWalletSpinner = false;
         }
     }
 
@@ -614,18 +655,24 @@
     
     private async Task BuildSend()
     {
-        var operationResult = await notificationComponent.LongOperation(async () =>
+        if (string.IsNullOrEmpty(_sendInfo.SendToAddress))
         {
-            if (string.IsNullOrEmpty(_sendInfo.SendToAddress))
-            {
-                return new OperationResult { Success = false, Message = "Specify a send to address" };
-            }
+            notificationComponent.ShowErrorMessage("Specify a send to address");
+            return;
+        }
 
-            if (_sendInfo.SendAmount == 0)
-            {
-                return new OperationResult { Success = false, Message = "Specify an amount" };
-            }
+        if (_sendInfo.SendAmount == 0)
+        {
+            notificationComponent.ShowErrorMessage("Specify an amount");
+            return;
+        }
 
+        sendLoadSpinner = true;
+        StateHasChanged();
+        await Task.Delay(10);
+
+        try
+        {
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
@@ -636,7 +683,8 @@
 
             if (FeeEstimations.Fees.Count == 0)
             {
-                return new OperationResult { Success = false, Message = "Unable top calculate fee" };
+                notificationComponent.ShowErrorMessage("Unable top calculate fee");
+                return;
             }
 
             // by default select the highest fee
@@ -654,22 +702,27 @@
             
             _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);
 
-            return new OperationResult { Success = true };
-        });
-
-        if (operationResult is {Success:true})
-        {
             sendConfirmModal = true;
         }
-
+        catch (Exception e)
+        {
+            Logger.LogError(e, e.Message);
+            notificationComponent.ShowErrorMessage(e.Message);
+        }
+        finally
+        {
+            sendLoadSpinner = false;
+        }
     }
 
     private async Task SendCoins()
     {
-        var operationResult = await notificationComponent.LongOperation(async () =>
-        {
-            sendConfirmModal = false;
+        sendConfirmSpinner = true;
+        StateHasChanged();
+        await Task.Delay(10);
 
+        try
+        {
             var wallet = _walletStorage.GetWallet();
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
@@ -685,14 +738,19 @@
                 _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
             }
 
-            return res;
-        });
-
-        if (operationResult is { Success: true })
-        {
             _sendInfo = new SendInfo();
             
             notificationComponent.ShowNotificationMessage("Sent complete!");
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, e.Message);
+            notificationComponent.ShowErrorMessage(e.Message);
+        }
+        finally
+        {
+            sendConfirmSpinner = false;
+            sendConfirmModal = false;
         }
     }
 
@@ -752,7 +810,9 @@
             return;
         }
 
-        var operationResult = await notificationComponent.LongOperation(async () =>
+        testCoinsSpinner = true;
+
+        try
         {
             var receiveAddress = accountBalanceInfo.AccountInfo.GetNextReceiveAddress();
 
@@ -766,16 +826,16 @@
                 unconfirmedInboundFunds.Add(new UtxoData { PendingSpent = true, address = receiveAddress, value = trx.Outputs.FirstOrDefault()?.Value.Satoshi ?? Money.Coins(50).Satoshi, outpoint = new Outpoint(trx.GetHash().ToString(), 0) });
                 _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInboundFunds);
                 accountBalanceInfo.UpdateAccountBalanceInfo(accountBalanceInfo.AccountInfo, unconfirmedInboundFunds);
-
-                return new OperationResult { Success = true };
             }
-
-            return new OperationResult { Success = false, Message  = await res.Content.ReadAsStringAsync()};
-        });
-
-        if (operationResult is { Success: true })
+        }
+        catch (Exception e)
         {
-            notificationComponent.ShowNotificationMessage("Success!");
+            Logger.LogError(e, e.Message);
+            notificationComponent.ShowErrorMessage(e.Message);
+        }
+        finally
+        {
+            testCoinsSpinner = false;
         }
     }
 }
