@@ -92,7 +92,7 @@
 
         if (hasWallet)
         {
-            founderProjects = storage.GetFounderProjects();
+            founderProjects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
         }
     }
 
