@@ -35,13 +35,19 @@
     
     <ul class="nav nav-tabs">
         <li class="nav-item">
-            <button class="nav-link @GetActiveClass(1)" @onclick="() => activeTab = 1">Project Metadata</button>
+            <button class="nav-link @GetActiveClass(1)" @onclick="() => activeTab = 1">
+                <span class="oi oi-browser" aria-hidden="true"></span>  Project Metadata
+            </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link @GetActiveClass(2)" @onclick="() => activeTab = 2" disabled="@(!project.NostrMetadataCreated)">Project Info</button>
+            <button class="nav-link @GetActiveClass(2)" @onclick="() => activeTab = 2" disabled="@(!nostrMetadataCreated)">
+                <span class="oi oi-list" aria-hidden="true"></span>  Project Info
+            </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link @GetActiveClass(3)" @onclick="() => activeTab = 3" disabled="@(!project.NostrApplicationSpecificDataCreated)">On Chain</button>
+            <button class="nav-link @GetActiveClass(3)" @onclick="() => activeTab = 3" disabled="@(!nostrApplicationSpecificDataCreated)">
+                <span class="oi oi-globe" aria-hidden="true"></span>  On Chain
+            </button>
         </li>
     </ul>
     
@@ -87,7 +93,7 @@
 
             <!-- Save & Publish Buttons -->
             <div class="mb-3">
-                <button type="submit" class="btn btn-success" disabled="@(createProfileSpinner || project.NostrMetadataCreated)">
+                <button type="submit" class="btn btn-success" disabled="@(createProfileSpinner || nostrMetadataCreated)">
                     @if (createProfileSpinner)
                     {
                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -156,11 +162,11 @@
                 </div>
             }
 
-            <button type="button" class="btn btn-primary mb-3" @onclick="AddStage">Add Stage</button>
+            <button type="button" class="btn btn-primary mb-3" @onclick="AddStage" disabled="@nostrApplicationSpecificDataCreated">Add Stage</button>
 
             <!-- Save & Publish Buttons -->
             <div class="mb-3">
-                <button type="submit" class="btn btn-success" disabled="@(createProfileSpinner || project.NostrApplicationSpecificDataCreated)">
+                <button type="submit" class="btn btn-success" disabled="@(createProfileSpinner || nostrApplicationSpecificDataCreated)">
                     @if (createApplicationDataSpinner)
                     {
                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -178,6 +184,9 @@
 
     @if (activeTab == 3)
     {
+        <p class="mb-1"><strong>Project Name:</strong> @project.Metadata.Name</p>
+        <p class="mb-1"><strong>Project About:</strong> @project.Metadata.About</p>
+
         <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier</p>
         <p class="mb-1"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
 
@@ -300,9 +309,9 @@
             TargetAmount = 50,
             Stages = new List<Stage>
             {
-                new() { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
-                new() { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
-                new() { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) },
+                //new() { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
+                //new() { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
+                //new() { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) },
             }
         },
         Metadata = new(),
@@ -316,6 +325,9 @@
     bool creatProjectSpinner = false;
     bool publishProjectSpinner = false;
 
+    bool nostrMetadataCreated = false;
+    bool nostrApplicationSpecificDataCreated = false;
+
     protected override async Task OnInitializedAsync()
     {
         if (hasWallet)
@@ -325,7 +337,8 @@
 
             if (projects.Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList().Count == keys.Keys.Count)
             {
-                throw new ApplicationException("all founder keys have been used for this wallet");
+                notificationComponent.ShowErrorMessage("All founder keys have been used for this wallet!");
+                return;
             }
 
             var latestProject = projects.Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).MaxBy(p => p.ProjectIndex);
@@ -336,6 +349,9 @@
             if (fromStorage != null)
             {
                 project = fromStorage;
+
+                nostrMetadataCreated = fromStorage.NostrMetadataCreated();
+                nostrApplicationSpecificDataCreated = fromStorage.NostrApplicationSpecificDataCreated();
             }
             else
             {
@@ -348,96 +364,31 @@
         }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            if (hasWallet)
-            {
-                //_RelayService.RequestProjectCreateEventsByPubKey(_ => //TODO change the state to be storage driven and not event driven
-                //{
-                //    if (_.Kind == NostrKind.Metadata)
-                //    {
-                //        if (nostrProfileCreated)
-                //            return; // second call from the relay
-
-                //        if (string.IsNullOrEmpty(project.Metadata?.Name))
-                //        {
-                //            if (_.Content == null)
-                //                return; // is this correct? should we throw if no content?
-
-                //            var metadata = System.Text.Json.JsonSerializer.Deserialize<NostrMetadata>(_.Content, RelayService.settings);
-
-                //            if (metadata != null)
-                //            {
-                //                project.Metadata = ProjectMetadata.Parse(metadata);
-
-                //                nostrProfileCreated = true;
-                //            }
-                //        }
-                //    }
-
-                //    if (_.Kind == NostrKind.ApplicationSpecificData)
-                //    {
-                //        if (applicationDataOnNostr)
-                //            return; // second call from the relay
-
-                //        if (_.Content == null)
-                //            return; // is this correct? should we throw if no content?
-
-                //        var nostrProject = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Content, RelayService.settings);
-
-                //        if (nostrProject == null)
-                //            return;
-
-                //        if (nostrProject!.ProjectIdentifier != project.ProjectInfo.ProjectIdentifier)
-                //            throw new ApplicationException("Invalid state");
-
-                //        if(nostrProject!.FounderKey != project.ProjectInfo.FounderKey)
-                //            throw new ApplicationException("Invalid state");
-
-                //        if (nostrProject!.FounderRecoveryKey != project.ProjectInfo.FounderRecoveryKey)
-                //            throw new ApplicationException("Invalid state");
-
-                //        applicationDataOnNostr = true;
-
-                //        project.ProjectInfo = nostrProject;
-                //    }
-
-                //    if (applicationDataOnNostr && nostrProfileCreated)
-                //    {
-                //        var findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
-                //        if (findProject != null)
-                //        {
-                //            if (string.IsNullOrEmpty(findProject.CreationTransactionId))
-                //            {
-                //                // todo: check that the project is actually published to the blockchain, 
-                //                // this is a rare situation that can happen if the application crashed just when publishing to the blockchain
-
-                //                throw new ApplicationException("Invalid state");
-                //            }
-
-                //            NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
-                //        }
-                //    }
-
-                //}, () =>
-                //{
-                //    notificationComponent.StopLoading();
-                //    StateHasChanged();
-                //}, project.ProjectInfo.NostrPubKey);
-            }
-        }
-    }
-
     private string GetActiveClass(int tabNumber)
     {
+        if (tabNumber == 2)
+        {
+            if (nostrMetadataCreated && !nostrApplicationSpecificDataCreated)
+            {
+                if (!project.ProjectInfo.Stages.Any())
+                {
+                    // to make it easier for testing we pre add some stages
+                    project.ProjectInfo.Stages = new List<Stage>
+                    {
+                        new() { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
+                        new() { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
+                        new() { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) },
+                    };
+                }
+            }
+        }
+
         return activeTab == tabNumber ? "active" : "";
     }
 
     private async Task CreatNostrProfile()
     {
-        if (project.NostrMetadataCreated)
+        if (nostrMetadataCreated)
         {
             notificationComponent.ShowErrorMessage("Nostr profile already created");
             return;
@@ -472,9 +423,9 @@
                     if (!_.Accepted)
                         notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
 
-                    if (project.NostrMetadataCreated == false)
+                    if (nostrMetadataCreated == false)
                     {
-                        project.NostrMetadataCreated = true;
+                        nostrMetadataCreated = true;
                         storage.AddFounderProject(project);
                     }
 
@@ -503,7 +454,7 @@
 
     private async Task CreatProjectInfoOnNostr()
     {
-        if (project.NostrApplicationSpecificDataCreated)
+        if (nostrApplicationSpecificDataCreated)
         {
             notificationComponent.ShowErrorMessage("Nostr project already created");
             return;
@@ -589,9 +540,9 @@
                     if (!_.Accepted)
                         notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
 
-                    if (project.NostrApplicationSpecificDataCreated == false)
+                    if (nostrApplicationSpecificDataCreated == false)
                     {
-                        project.NostrApplicationSpecificDataCreated = true; 
+                        nostrApplicationSpecificDataCreated = true;
                         storage.UpdateFounderProject(project);
                     }
                     
