@@ -23,6 +23,7 @@ namespace Angor.Client.Storage
         
         void AddFounderProject(params FounderProject[] projects);
         List<FounderProject> GetFounderProjects();
+        FounderProject? GetFounderProjects(string projectIdentifier);
         void UpdateFounderProject(FounderProject project);
         void DeleteFounderProjects();
         

@@ -114,6 +114,13 @@ public class ClientStorage : IClientStorage, INetworkStorage
         return ret ?? new List<FounderProject>();
     }
 
+    public FounderProject? GetFounderProjects(string projectIdentifier)
+    {
+        var ret = _storage.GetItem<List<FounderProject>>("founder-projects");
+
+        return ret?.FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == projectIdentifier);
+    }
+
     public void UpdateFounderProject(FounderProject project)
     {
         var projects = _storage.GetItem<List<FounderProject>>("founder-projects");
