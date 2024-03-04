@@ -307,12 +307,6 @@
             PenaltyDays = 90,
             ExpiryDate = DateTime.UtcNow.AddDays(120),
             TargetAmount = 50,
-            Stages = new List<Stage>
-            {
-                //new() { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
-                //new() { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
-                //new() { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) },
-            }
         },
         Metadata = new(),
         CreationTransactionId = null,
