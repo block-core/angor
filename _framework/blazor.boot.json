@@ -7,8 +7,8 @@
   "linkerEnabled": true,
   "resources": {
     "assembly": {
-      "Angor.Client.dll": "sha256-t6SUJ0SvbFUTbHws628Aj\/l+pjBSWGX1blUQuUCg7o8=",
-      "Angor.Shared.dll": "sha256-arc5SPEM+qB9VGPLwSr10vMV\/bZ98dwfHQHb1Cr4Irs=",
+      "Angor.Client.dll": "sha256-FY6LSNe3FfGMSXuJi854jW4\/nbXopeDmhQu2icXG810=",
+      "Angor.Shared.dll": "sha256-AXyDnZDYzFTCuOpSVsnoCRdVMBhcW0NUKhw9eRrPfFU=",
       "Blazored.LocalStorage.dll": "sha256-eXVgTw72kEn74FZgDQbLtvAmXbiZDSj5gzUnxVmwowQ=",
       "Blazored.SessionStorage.dll": "sha256-zB1Pp8w\/ys0ZXs5YTb\/t+cNAnJQcBDXxTtF3gtgpXT8=",
       "Blockcore.dll": "sha256-uCwkkqmfXiIoMQhXkNDWFebAsWZauhm9A7tu5SGo7bM=",
