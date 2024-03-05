@@ -17,6 +17,8 @@
 @inject IClipboardService _clipboardService
 @inject IDerivationOperations _derivationOperations
 @inject NavMenuState NavMenuState
+@inject IEncryptionService _encryptionService
+
 
 @inherits BaseComponent
 
@@ -478,6 +480,14 @@
     
     private async Task RefreshBalance()
     {
+        var a = await _encryptionService.EncryptData("some text", "123");
+        var b = await _encryptionService.DecryptData(a, "123");
+
+        if (a == b)
+        {
+
+        }
+
         balanceSpinner = true;
 
         try
