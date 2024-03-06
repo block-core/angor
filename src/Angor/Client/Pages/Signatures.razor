@@ -10,7 +10,7 @@
 @using System.Text.Json
 @using Angor.Shared.Services
 
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
 @inject ILogger<Signatures> Logger
 @inject IDerivationOperations DerivationOperations
@@ -21,7 +21,7 @@
 
 @inherits BaseComponent
 
-@if (!hasWallet)
+@if (!HasWallet)
 {
     NavigationManager.NavigateTo($"/wallet");
     return;
@@ -31,9 +31,9 @@
     <h1>Pending Signatures</h1>
     Project ID: <span id="transactionID">@ProjectIdentifier</span>
 
-    <NotificationComponent @ref="notificationComponent" />
+    <NotificationComponent @ref="NotificationComponent" />
         
-    @if (!signaturesRequests.Any())
+    @if (!_signaturesRequests.Any())
     {
         <p><em>No pending signatures yet...</em></p>
     }
@@ -42,7 +42,7 @@
         <!-- Signatures Details Section -->
         <div class="row mt-4">
             <div class="col">
-                @if (messagesReceived)
+                @if (_messagesReceived)
                 {
                     <div class="loader"></div>
                 }
@@ -57,10 +57,10 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach (var signature in signaturesRequests.Where(_ => _ is { TransactionHex: not null, AmountToInvest: not null }))
+                        @foreach (var signature in _signaturesRequests.Where(_ => _ is { TransactionHex: not null, AmountToInvest: not null }))
                         {
                             <tr>
-                                <td>@Money.Coins(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                <td>@Money.Coins(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @Network.CoinTicker</td>
                                 <td>@signature.TimeArrived.ToString("g")</td>
                                 @if (signature.TimeApproved is null)
                                 {
@@ -85,16 +85,16 @@
     public string ProjectIdentifier { get; set; }
 
     public FounderProject FounderProject { get; set; }
-    private List<SignatureRequest> signaturesRequests = new();
-    private IJSInProcessObjectReference? javascriptNostrToolsModule;
+    private List<SignatureRequest> _signaturesRequests = new();
+    private IJSInProcessObjectReference? _javascriptNostrToolsModule;
 
-    bool messagesReceived;
-    bool scanedForApprovals;
+    bool _messagesReceived;
+    bool _scanedForApprovals;
 
     protected override async Task OnInitializedAsync()
     {
         Logger.LogDebug("OnInitializedAsync");
-        if (hasWallet)
+        if (HasWallet)
         {
             FounderProject = Storage.GetFounderProjects()
                 .FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier)
@@ -108,47 +108,47 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         Logger.LogDebug("OnAfterRenderAsync");
-        if (javascriptNostrToolsModule == null && signaturesRequests.Any())
+        if (_javascriptNostrToolsModule == null && _signaturesRequests.Any())
         {
             try
             {
                 Logger.LogDebug("load nostr tools");
                 //TODO import the nostr tool module directly to c# class
-                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
+                _javascriptNostrToolsModule = await Js.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
             }
             catch (JSException e)
             {
                 Console.WriteLine(e);
-                notificationComponent.ShowErrorMessage(e.Message);
+                NotificationComponent.ShowErrorMessage(e.Message);
                 return;
             }
         }
 
-        Logger.LogDebug("handled = {Count}, total = {SignaturesRequestsCount}", signaturesRequests.Count(x => x.AmountToInvest.HasValue), signaturesRequests.Count);
+        Logger.LogDebug("handled = {Count}, total = {SignaturesRequestsCount}", _signaturesRequests.Count(x => x.AmountToInvest.HasValue), _signaturesRequests.Count);
 
-        if (signaturesRequests.Any(x => x.AmountToInvest == null))
+        if (_signaturesRequests.Any(x => x.AmountToInvest == null))
         {
-            if (!scanedForApprovals)
+            if (!_scanedForApprovals)
             {
                 FetchFounderApprovalsSignatures(FounderProject);
                 return;
             }
 
-            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(_walletStorage.GetWallet().WalletWords, FounderProject.ProjectIndex);
+            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(WalletStorage.GetWallet().WalletWords, FounderProject.ProjectIndex);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            foreach (var pendingSignature in signaturesRequests.Where(_ => _.AmountToInvest == null))
+            foreach (var pendingSignature in _signaturesRequests.Where(_ => _.AmountToInvest == null))
             {
-                pendingSignature.TransactionHex = await javascriptNostrToolsModule.InvokeAsync<string>(
+                pendingSignature.TransactionHex = await _javascriptNostrToolsModule.InvokeAsync<string>(
                     "decryptNostr",
                     nostrPrivateKeyHex,
-                    pendingSignature.investorPubKey,
+                    pendingSignature.InvestorPubKey,
                     pendingSignature.TransactionHex);
 
                 try
                 {
-                    var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.TransactionHex);
+                    var investorTrx = NetworkConfiguration.GetNetwork().CreateTransaction(pendingSignature.TransactionHex);
 
                     pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3) //Todo get the actual outputs with taproot type
                         .Sum(_ => _.TxOut.Value.ToUnit(MoneyUnit.BTC));
@@ -161,7 +161,7 @@
                 }
             }
             Logger.LogDebug($"Calling StateHasChanged in OnAfterRenderAsync");
-            messagesReceived = false;
+            _messagesReceived = false;
             StateHasChanged();
         }
 
@@ -177,7 +177,7 @@
         {
             Logger.LogDebug($"Sig request event received investorPubKey: {investorPubKey} - timeArrived: {timeArrived}");
 
-            var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorPubKey == investorPubKey);
+            var sigReq = _signaturesRequests.FirstOrDefault(_ => _.InvestorPubKey == investorPubKey);
 
             if (sigReq != null)
             {
@@ -186,7 +186,7 @@
                     Logger.LogDebug($"Sig request event received is replaced");
 
                     // this is a newer sig request so replace it
-                    signaturesRequests.Remove(sigReq);
+                    _signaturesRequests.Remove(sigReq);
                 }
                 else
                 {
@@ -196,24 +196,24 @@
 
             Logger.LogDebug($"Sig request event received is new");
 
-            messagesReceived = true;
+            _messagesReceived = true;
 
             var signatureRequest = new SignatureRequest
             {
-                investorPubKey = investorPubKey,
+                InvestorPubKey = investorPubKey,
                 TimeArrived = timeArrived,
                 TransactionHex = encryptedMessage, //To be encrypted after js interop is loaded
                 EventId = eventId
             };
 
-            signaturesRequests.Add(signatureRequest);
+            _signaturesRequests.Add(signatureRequest);
             Logger.LogDebug($"Added to pendingSignatures");
         }, 
             () =>
             {
                 Logger.LogDebug($"End of messages");
 
-                if (!messagesReceived) 
+                if (!_messagesReceived) 
                     return;
 
                 Logger.LogDebug($"Calling StateHasChanged in EOSE");
@@ -228,7 +228,7 @@
             {
                 Logger.LogDebug($"Sig response event received investorPubKey: {investorPubKey} - timeApproved: {timeApproved} - reqEventId: {reqEventId}");
 
-                var signatureRequest = signaturesRequests.FirstOrDefault(_ => _.investorPubKey == investorPubKey);
+                var signatureRequest = _signaturesRequests.FirstOrDefault(_ => _.InvestorPubKey == investorPubKey);
 
                 if (signatureRequest is null || signatureRequest.TimeApproved != null)
                     return; //multiple relays could mean the same massage multiple times
@@ -253,11 +253,11 @@
             }, 
             () =>
             {
-                scanedForApprovals = true;
+                _scanedForApprovals = true;
 
-                if (signaturesRequests.Any(_ => _.TimeApproved != null))
+                if (_signaturesRequests.Any(_ => _.TimeApproved != null))
                 {
-                    var latestApprovedTime = signaturesRequests
+                    var latestApprovedTime = _signaturesRequests
                         .Where(x => x.TimeApproved != null)
                         .Max(x => x.TimeArrived);
 
@@ -276,31 +276,31 @@
 
     private async Task ApproveSignature(SignatureRequest signature)
     {
-        var operationResult = await notificationComponent.LongOperation(async () =>
+        var operationResult = await NotificationComponent.LongOperation(async () =>
         {
-            var walletWords = _walletStorage.GetWallet().WalletWords;
+            var walletWords = WalletStorage.GetWallet().WalletWords;
 
             var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(walletWords, FounderProject.ProjectIndex);
 
-            var signatureInfo = signProject(signature.TransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
+            var signatureInfo = SignProject(signature.TransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
 
-            var sigJson = JsonSerializer.Serialize(signatureInfo, RelayService.settings);
+            var sigJson = JsonSerializer.Serialize(signatureInfo, RelayService.Settings);
 
             var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(walletWords, FounderProject.ProjectIndex);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            var encryptedContent = await javascriptNostrToolsModule.InvokeAsync<string>(
+            var encryptedContent = await _javascriptNostrToolsModule.InvokeAsync<string>(
                 "encryptNostr",
                 nostrPrivateKeyHex,
-                signature.investorPubKey,
+                signature.InvestorPubKey,
                 sigJson);
 
-            FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorPubKey, signature.EventId);
+            FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.InvestorPubKey, signature.EventId);
 
             Storage.UpdateFounderProject(FounderProject);
 
-            signaturesRequests.Single(_ => _.investorPubKey == signature.investorPubKey && _.TimeApproved is null)
+            _signaturesRequests.Single(_ => _.InvestorPubKey == signature.InvestorPubKey && _.TimeApproved is null)
                 .TimeApproved = FounderProject.LastRequestForSignaturesTime;
 
             return new OperationResult { Success = true };
@@ -312,13 +312,13 @@
         }
         else
         {
-            notificationComponent.ShowErrorMessage(operationResult.Message);
+            NotificationComponent.ShowErrorMessage(operationResult.Message);
         }
     }
     
-    private SignatureInfo signProject(string transactionHex,ProjectInfo info, string founderSigningPrivateKey)
+    private SignatureInfo SignProject(string transactionHex,ProjectInfo info, string founderSigningPrivateKey)
     {
-        var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
+        var investorTrx = NetworkConfiguration.GetNetwork().CreateTransaction(transactionHex);
 
         // build sigs
         var recoveryTrx = InvestorTransactionActions.BuildRecoverInvestorFundsTransaction(info, investorTrx);
@@ -332,7 +332,7 @@
 
     public class SignatureRequest
     {
-        public string investorPubKey { get; set; }
+        public string InvestorPubKey { get; set; }
 
         public decimal? AmountToInvest { get; set; }
 

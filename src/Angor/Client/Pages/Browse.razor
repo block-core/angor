@@ -8,24 +8,24 @@
 @using Angor.Client.Storage
 @inject ICacheStorage SessionStorage;
 @inject NavigationManager NavigationManager
-@inject IRelayService _RelayService
-@inject IIndexerService _IndexerService
+@inject IRelayService RelayService
+@inject IIndexerService IndexerService
 
 <div class="container my-4">
     <h1>Browse Projects</h1>
     
-    <NotificationComponent @ref="notificationComponent"/>
+    <NotificationComponent @ref="_notificationComponent"/>
 
     <div class="row">
         <div class="col">
 			
             <!-- Search Section -->
             <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="Enter search query" id="searchQuery" @bind="searchQuery">
-                <button class="btn btn-primary" type="button" @onclick="FindProject" disabled="@findInProgress">Find</button>
+                <input type="text" class="form-control" placeholder="Enter search query" id="searchQuery" @bind="_searchQuery">
+                <button class="btn btn-primary" type="button" @onclick="FindProject" disabled="@_findInProgress">Find</button>
             </div>
             
-            @if (findInProgress)
+            @if (_findInProgress)
             {
                 <div class="d-flex justify-content-center">
                     <div class="loader"></div>
@@ -33,13 +33,13 @@
             }
 
             <!-- Search Result -->
-            @if (findProject != null)
+            @if (_findProject != null)
             {
                 <div class="card mb-3">
                     <div class="card-body">
-                        @if (SessionStorage.IsProjectInStorageById(findProject.ProjectIdentifier))
+                        @if (SessionStorage.IsProjectInStorageById(_findProject.ProjectIdentifier))
                         {
-                            var project = SessionStorage.GetProjectById(findProject.ProjectIdentifier);
+                            var project = SessionStorage.GetProjectById(_findProject.ProjectIdentifier);
                             if (project?.Metadata != null)
                             {
                                 <h3 class="card-title">@project.Metadata.Name</h3>
@@ -52,11 +52,11 @@
                             <p class="text-warning-emphasis">Project not found in any relay!</p>
                         }
                         <p>
-                            Project ID:@findProject.ProjectIdentifier
+                            Project ID:@_findProject.ProjectIdentifier
                             <br/>
-                            Nostr ID  :@(NostrPublicKey.FromHex(findProject.NostrPubKey).Bech32)
+                            Nostr ID  :@(NostrPublicKey.FromHex(_findProject.NostrPubKey).Bech32)
                         </p>
-                        <button @onclick="() => ViewProjectDetails(findProject.ProjectIdentifier)" class="btn btn-primary card-">View</button>
+                        <button @onclick="() => ViewProjectDetails(_findProject.ProjectIdentifier)" class="btn btn-primary card-">View</button>
 
                     </div>
                 </div>
@@ -67,7 +67,7 @@
             </div>
 
             <!-- List of projects -->
-            @if (searchInProgress)
+            @if (_searchInProgress)
             {
                 <div class="d-flex justify-content-center">
                     <div class="loader"></div>
@@ -75,7 +75,7 @@
             }
             else
             {
-                @if (projects.Count == 0)
+                @if (_projects.Count == 0)
                 {
                     <div class="d-flex justify-content-center">
                         <p>No projects found.</p>
@@ -83,10 +83,10 @@
                 }
                 else
                 {
-                    foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
+                    foreach (var indexerData in _projects.OrderByDescending(project => project.CreatedOnBlock))
                     {
                         <div class="card mb-3">
-                            @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                            @if (!_nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                             {
                                 var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                 if (project?.Metadata?.Banner != null)
@@ -98,7 +98,7 @@
                             }
 
                             <div class="card-body">
-                                @if (nostrSearchInProgress)
+                                @if (_nostrSearchInProgress)
                                 {
                                     <div class="loader-small"></div>
                                 }
@@ -137,59 +137,59 @@
 </div>
 
 @code {
-    NotificationComponent notificationComponent;
-    private string searchQuery;
-    bool searchInProgress = false;
-    bool nostrSearchInProgress;
-    bool findInProgress = false;
+    NotificationComponent _notificationComponent;
+    private string _searchQuery;
+    bool _searchInProgress = false;
+    bool _nostrSearchInProgress;
+    bool _findInProgress = false;
 
-    ProjectIndexerData? findProject = null;
+    ProjectIndexerData? _findProject = null;
 
-    private List<ProjectIndexerData> projects = new();
+    private List<ProjectIndexerData> _projects = new();
 
     protected override async Task OnInitializedAsync()
     {
-        projects = SessionStorage.GetProjectIndexerData() ?? new();
+        _projects = SessionStorage.GetProjectIndexerData() ?? new();
     }
 
     private async Task FindProject()
     {
-        findProject = projects.FirstOrDefault(_ => _.ProjectIdentifier == searchQuery);
+        _findProject = _projects.FirstOrDefault(_ => _.ProjectIdentifier == _searchQuery);
 
-        if (findProject != null)
+        if (_findProject != null)
         {
             return;
         }
 
-        findInProgress = true;
+        _findInProgress = true;
 
-        findProject = await _IndexerService.GetProjectByIdAsync(searchQuery);
+        _findProject = await IndexerService.GetProjectByIdAsync(_searchQuery);
 
-        if (findProject != null)
+        if (_findProject != null)
         {
-            _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(),
+            RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(),
                 StateHasChanged, 
-            new[] { findProject.NostrPubKey });
+            new[] { _findProject.NostrPubKey });
         }
 
-        findInProgress = false;
+        _findInProgress = false;
     }
 
     private async Task SearchProjects()
     {
-        searchInProgress = true;
-        nostrSearchInProgress = true;
+        _searchInProgress = true;
+        _nostrSearchInProgress = true;
         
-        var blockchainProjects = await _IndexerService.GetProjectsAsync(null, 20);
+        var blockchainProjects = await IndexerService.GetProjectsAsync(null, 20);
         
         var projectsNotInList = blockchainProjects
-            .Where(blockchainProject => projects.All(_ => _.ProjectIdentifier != blockchainProject.ProjectIdentifier))
+            .Where(blockchainProject => _projects.All(_ => _.ProjectIdentifier != blockchainProject.ProjectIdentifier))
             .ToList();
 
         if (projectsNotInList.Any())
         {
-            projects.AddRange(projectsNotInList.ToArray());
-            SessionStorage.SetProjectIndexerData(projects);
+            _projects.AddRange(projectsNotInList.ToArray());
+            SessionStorage.SetProjectIndexerData(_projects);
 
             var projectsForLookup = projectsNotInList
                 .Where(_ => _.NostrPubKey != null) //For old projects in the indexer
@@ -197,10 +197,10 @@
                 .ToArray();
 
             if (projectsForLookup.Any())
-                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(),
+                RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(),
                     () =>
                 {
-                    nostrSearchInProgress = false;
+                    _nostrSearchInProgress = false;
                     StateHasChanged();
                 },
                 projectsForLookup);
@@ -208,25 +208,25 @@
             StateHasChanged();
         }
 
-        searchInProgress = false;
+        _searchInProgress = false;
     }
 
     private Action<NostrEvent> HandleProjectEvents()
     {
         return e =>
         {
-            var projectIndexerData = projects.FirstOrDefault(x => x.NostrPubKey == e.Pubkey);
+            var projectIndexerData = _projects.FirstOrDefault(x => x.NostrPubKey == e.Pubkey);
 
-            if (projectIndexerData == null && findProject?.NostrPubKey == e.Pubkey)
+            if (projectIndexerData == null && _findProject?.NostrPubKey == e.Pubkey)
             {
-                projectIndexerData = findProject;
+                projectIndexerData = _findProject;
             }
 
             switch (e)
             {
                 case { Kind: NostrKind.Metadata }:
                   
-                    var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
+                    var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.Settings);
                     if (projectIndexerData != null)
                     {
                         var project = SessionStorage.GetProjectById(projectIndexerData.ProjectIdentifier);
@@ -241,7 +241,7 @@
 
                 case { Kind: NostrKind.ApplicationSpecificData }:
                     
-                    var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
+                    var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.Settings);
                     if (projectInfo != null && projectIndexerData != null)
                     {
                         if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
@@ -263,7 +263,7 @@
         }
         else
         {
-            notificationComponent.ShowNotificationMessage("The project was not loaded from the relay yet");   
+            _notificationComponent.ShowNotificationMessage("The project was not loaded from the relay yet");   
         }
     }
 }

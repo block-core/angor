@@ -4,7 +4,7 @@ namespace Angor.Client.Models;
 
 public class FlattenedProjectTest
 {
-    private const string displayName = "display_name";
+    private const string DisplayName = "display_name";
     
     public string Name { get; set; }
     public string Website { get; set; }

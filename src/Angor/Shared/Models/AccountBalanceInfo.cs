@@ -22,27 +22,27 @@ public class AccountBalanceInfo
 
         foreach (var utxoData in AccountInfo.AllUtxos())
         {
-            if (account.UtxoReservedForInvestment.Contains(utxoData.outpoint.ToString()))
+            if (account.UtxoReservedForInvestment.Contains(utxoData.Outpoint.ToString()))
             {
-                balanceReserved += utxoData.value;
+                balanceReserved += utxoData.Value;
                 continue;
             }
 
             if (utxoData.PendingSpent)
             {
-                balanceSpent += utxoData.value;
+                balanceSpent += utxoData.Value;
             }
-            else if(utxoData.blockIndex > 0)
+            else if(utxoData.BlockIndex > 0)
             {
-                balanceConfirmed += utxoData.value;
+                balanceConfirmed += utxoData.Value;
             }
             else
             {
-                balanceUnconfirmed += utxoData.value;
+                balanceUnconfirmed += utxoData.Value;
             }
         }
 
-        balanceUnconfirmed += AccountPendingReceive.Sum(s => s.value);
+        balanceUnconfirmed += AccountPendingReceive.Sum(s => s.Value);
 
         TotalBalance = balanceConfirmed;
         TotalUnconfirmedBalance = balanceUnconfirmed;

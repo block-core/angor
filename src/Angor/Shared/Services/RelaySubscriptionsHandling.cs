@@ -7,8 +7,8 @@ namespace Angor.Shared.Services;
 public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandling
 {
     private ILogger<RelaySubscriptionsHandling> _logger;
-    protected Dictionary<string, IDisposable> relaySubscriptions;
-    protected Dictionary<string, Action> userEoseActions;
+    protected Dictionary<string, IDisposable> RelaySubscriptions;
+    protected Dictionary<string, Action> UserEoseActions;
     protected Dictionary<string, Action<NostrOkResponse>> OkVerificationActions;
     
     private INostrCommunicationFactory _communicationFactory;
@@ -22,8 +22,8 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         _logger = logger;
         _communicationFactory = communicationFactory;
         _networkService = networkService;
-        relaySubscriptions = new();
-        userEoseActions = new();
+        RelaySubscriptions = new();
+        UserEoseActions = new();
         OkVerificationActions = new();
         
         var client = _communicationFactory.GetOrCreateClient(networkService); 
@@ -40,7 +40,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     //     _eoseHandlingSubscription = client.Streams.EoseStream.Subscribe(HandleEoseMessages);
     // }
     
-    public bool TryAddOKAction(string eventId, Action<NostrOkResponse> action)
+    public bool TryAddOkAction(string eventId, Action<NostrOkResponse> action)
     {
         _communicationFactory.MonitoringOkReceivedOnSubscription(eventId);
         return OkVerificationActions.TryAdd(eventId,action);
@@ -66,7 +66,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     {
         _communicationFactory.MonitoringEoseReceivedOnSubscription(subscriptionName);
         
-        return userEoseActions.TryAdd(subscriptionName,action);
+        return UserEoseActions.TryAdd(subscriptionName,action);
     }
 
     public void HandleEoseMessages(NostrEoseResponse _)
@@ -76,7 +76,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         if (!_communicationFactory.EoseEventReceivedOnAllRelays(_.Subscription))
             return;
         
-        if (userEoseActions.TryGetValue(_.Subscription, out var action))
+        if (UserEoseActions.TryGetValue(_.Subscription, out var action))
         {
             _logger.LogInformation($"Invoking action on EOSE - {_.Subscription}");
             try
@@ -88,13 +88,13 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
                 _logger.LogError(e, "Failed to invoke end of events event action");
             }
 
-            userEoseActions.Remove(_.Subscription);
+            UserEoseActions.Remove(_.Subscription);
             _logger.LogInformation($"Removed action on EOSE for subscription - {_.Subscription}");
         }
 
         _communicationFactory.ClearEoseReceivedOnSubscriptionMonitoring(_.Subscription);
         
-        if (!relaySubscriptions.ContainsKey(_.Subscription)) 
+        if (!RelaySubscriptions.ContainsKey(_.Subscription)) 
             return;
         
         _logger.LogInformation($"Disposing of subscription - {_.Subscription}");
@@ -103,24 +103,24 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
             .GetOrCreateClient(_networkService)
             .Send(new NostrCloseRequest(_.Subscription));
         
-        relaySubscriptions[_.Subscription].Dispose();
-        relaySubscriptions.Remove(_.Subscription);
+        RelaySubscriptions[_.Subscription].Dispose();
+        RelaySubscriptions.Remove(_.Subscription);
         _logger.LogInformation($"subscription disposed - {_.Subscription}");
     }
 
     public bool RelaySubscriptionAdded(string subscriptionKey)
     {
-        return relaySubscriptions.ContainsKey(subscriptionKey);
+        return RelaySubscriptions.ContainsKey(subscriptionKey);
     }
 
     public bool TryAddRelaySubscription(string subscriptionKey, IDisposable subscription)
     {
-        return relaySubscriptions.ContainsKey(subscriptionKey) || relaySubscriptions.TryAdd(subscriptionKey, subscription);
+        return RelaySubscriptions.ContainsKey(subscriptionKey) || RelaySubscriptions.TryAdd(subscriptionKey, subscription);
     }
 
     public void Dispose()
     {
-        relaySubscriptions.Values.ToList().ForEach(_ => _.Dispose());
+        RelaySubscriptions.Values.ToList().ForEach(_ => _.Dispose());
         _okHandlingSubscription.Dispose();
         _eoseHandlingSubscription.Dispose();
         _communicationFactory.CloseClientConnection();

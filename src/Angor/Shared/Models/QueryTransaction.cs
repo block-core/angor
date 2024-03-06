@@ -40,7 +40,7 @@ namespace Angor.Shared.Models
 
       public string LockTime { get; set; }
 
-      public bool RBF { get; set; }
+      public bool Rbf { get; set; }
 
       public uint Version { get; set; }
 

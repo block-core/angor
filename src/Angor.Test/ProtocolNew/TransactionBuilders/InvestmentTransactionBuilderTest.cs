@@ -23,7 +23,7 @@ public class InvestmentTransactionBuilderTest : AngorTestData
 
         _investmentScriptBuilder = new Mock<IInvestmentScriptBuilder>();
         
-        _sut = new InvestmentTransactionBuilder(_networkConfiguration.Object,
+        _sut = new InvestmentTransactionBuilder(NetworkConfiguration.Object,
             _projectScriptsBuilder.Object,
             _investmentScriptBuilder.Object,
             new TaprootScriptBuilder());

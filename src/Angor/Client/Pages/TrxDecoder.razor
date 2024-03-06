@@ -4,7 +4,7 @@
 
 <div>
     <label for="network">Select Network:</label>
-    <select id="network" @bind="selectedNetwork">
+    <select id="network" @bind="_selectedNetwork">
         @foreach (var network in NBitcoin.Network.GetNetworks())
         {
             <option value="@network.Name">@network.Name</option>
@@ -15,21 +15,21 @@
 <div>
     <br/>
     <label for="trxHex">Paste TRX Hex:</label>
-    <textarea style="width: 700px; height: 100px;" id="trxHex" @bind="trxHex"></textarea>
+    <textarea style="width: 700px; height: 100px;" id="trxHex" @bind="_trxHex"></textarea>
 </div>
 
 <button @onclick="DecodeTrx">Decode</button>
 
-@if (!string.IsNullOrEmpty(decodedResult))
+@if (!string.IsNullOrEmpty(_decodedResult))
 {
     <h4>Decoded Result:</h4>
-    <pre>@decodedResult</pre>
+    <pre>@_decodedResult</pre>
 }
 
 @code {
-    private string trxHex = string.Empty;
-    private string decodedResult = string.Empty;
-    private string selectedNetwork = "Mainnet";  // Default selected network
+    private string _trxHex = string.Empty;
+    private string _decodedResult = string.Empty;
+    private string _selectedNetwork = "Mainnet";  // Default selected network
 
     private void DecodeTrx()
     {
@@ -37,8 +37,8 @@
         // Here, the decoding might be influenced by the selected network.
         // For demonstration, we'll just include the network in the mock decoded result.
 
-        var network = NBitcoin.Network.GetNetwork(selectedNetwork);
+        var network = NBitcoin.Network.GetNetwork(_selectedNetwork);
         
-        decodedResult = $"{NBitcoin.Transaction.Parse(trxHex, network).ToString()} ";
+        _decodedResult = $"{NBitcoin.Transaction.Parse(_trxHex, network).ToString()} ";
     }
 }

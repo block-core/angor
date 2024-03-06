@@ -26,24 +26,24 @@ public class WalletOperationsTest : AngorTestData
     {
         _indexerService = new Mock<IIndexerService>();
 
-        _sut = new WalletOperations(_indexerService.Object, new HdOperations(), new NullLogger<WalletOperations>(), _networkConfiguration.Object);
+        _sut = new WalletOperations(_indexerService.Object, new HdOperations(), new NullLogger<WalletOperations>(), NetworkConfiguration.Object);
 
         _investorTransactionActions = new InvestorTransactionActions(new NullLogger<InvestorTransactionActions>(),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
-            new ProjectScriptsBuilder(_derivationOperations),
-            new SpendingTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
-            new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder()),
+            new ProjectScriptsBuilder(DerivationOperations),
+            new SpendingTransactionBuilder(NetworkConfiguration.Object, new ProjectScriptsBuilder(DerivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+            new InvestmentTransactionBuilder(NetworkConfiguration.Object, new ProjectScriptsBuilder(DerivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder()),
             new TaprootScriptBuilder(),
-            _networkConfiguration.Object);
+            NetworkConfiguration.Object);
 
-        _founderTransactionActions = new FounderTransactionActions(new NullLogger<FounderTransactionActions>(), _networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations),
+        _founderTransactionActions = new FounderTransactionActions(new NullLogger<FounderTransactionActions>(), NetworkConfiguration.Object, new ProjectScriptsBuilder(DerivationOperations),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder());
     }
 
 
     private void AddCoins(AccountInfo accountInfo, int utxos, long amount)
     {
-        var network = _networkConfiguration.Object.GetNetwork();
+        var network = NetworkConfiguration.Object.GetNetwork();
 
         int callCount = 0;
         _indexerService.Setup(_ => _.GetAdressBalancesAsync(It.IsAny<List<AddressInfo>>(), It.IsAny<bool>())).Returns((List<AddressInfo> info, bool conf) =>
@@ -51,7 +51,7 @@ public class WalletOperationsTest : AngorTestData
             if (callCount == 1)
                 return Task.FromResult(Enumerable.Empty<AddressBalance>().ToArray());
 
-            var res = info.Select(s => new AddressBalance { address = s.Address, balance = Money.Satoshis(amount).Satoshi }).ToArray();
+            var res = info.Select(s => new AddressBalance { Address = s.Address, Balance = Money.Satoshis(amount).Satoshi }).ToArray();
 
             callCount++;
             return Task.FromResult(res);
@@ -64,10 +64,10 @@ public class WalletOperationsTest : AngorTestData
             {
                 new ()
                 {
-                    address =address, 
-                    value = Money.Satoshis(amount).Satoshi, 
-                    outpoint = new Outpoint( uint256.Zero.ToString(),outputIndex++ ), 
-                    scriptHex = new Blockcore.NBitcoin.BitcoinWitPubKeyAddress(address,network).ScriptPubKey.ToHex()
+                    Address =address, 
+                    Value = Money.Satoshis(amount).Satoshi, 
+                    Outpoint = new Outpoint( uint256.Zero.ToString(),outputIndex++ ), 
+                    ScriptHex = new Blockcore.NBitcoin.BitcoinWitPubKeyAddress(address,network).ScriptPubKey.ToHex()
                 }
             };
 
@@ -88,7 +88,7 @@ public class WalletOperationsTest : AngorTestData
 
         AddCoins(accountInfo, 2, 500);
 
-        var network = _networkConfiguration.Object.GetNetwork();
+        var network = NetworkConfiguration.Object.GetNetwork();
 
         var changeAddress = new Blockcore.NBitcoin.Key().PubKey.GetSegwitAddress(network).ToString();
 
@@ -115,8 +115,8 @@ public class WalletOperationsTest : AngorTestData
         //add all utxos as coins (easier)
         foreach (var utxo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo).SelectMany(s => s.UtxoData))
         {
-            coins.Add(new Blockcore.NBitcoin.Coin(Blockcore.NBitcoin.uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
-                new Money(utxo.value), Blockcore.Consensus.ScriptInfo.Script.FromHex(utxo.scriptHex))); //Adding fee inputs
+            coins.Add(new Blockcore.NBitcoin.Coin(Blockcore.NBitcoin.uint256.Parse(utxo.Outpoint.TransactionId), (uint)utxo.Outpoint.OutputIndex,
+                new Money(utxo.Value), Blockcore.Consensus.ScriptInfo.Script.FromHex(utxo.ScriptHex))); //Adding fee inputs
         }
 
         TransactionValidation.ThanTheTransactionHasNoErrors(recoveryTransactions, coins);
@@ -131,7 +131,7 @@ public class WalletOperationsTest : AngorTestData
 
         AddCoins(accountInfo, 6, 50000000);
 
-        var network = _networkConfiguration.Object.GetNetwork();
+        var network = NetworkConfiguration.Object.GetNetwork();
 
         var projectInfo = new ProjectInfo();
         projectInfo.TargetAmount = 3;
@@ -144,15 +144,15 @@ public class WalletOperationsTest : AngorTestData
             new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
             new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
         };
-        projectInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
-        projectInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
-        projectInfo.ProjectIdentifier = _derivationOperations.DeriveAngorKey(projectInfo.FounderKey, angorRootKey);
+        projectInfo.FounderKey = DerivationOperations.DeriveFounderKey(words, 1);
+        projectInfo.FounderRecoveryKey = DerivationOperations.DeriveFounderRecoveryKey(words, 1);
+        projectInfo.ProjectIdentifier = DerivationOperations.DeriveAngorKey(projectInfo.FounderKey, AngorRootKey);
 
-        var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
+        var founderRecoveryPrivateKey = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
 
         var investmentAmount = 10;
-        var investorKey = _derivationOperations.DeriveInvestorKey(words, projectInfo.FounderKey);
-        var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, projectInfo.FounderKey);
+        var investorKey = DerivationOperations.DeriveInvestorKey(words, projectInfo.FounderKey);
+        var investorPrivateKey = DerivationOperations.DeriveInvestorPrivateKey(words, projectInfo.FounderKey);
 
         var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investorKey, Money.Coins(investmentAmount).Satoshi);
         var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
@@ -183,8 +183,8 @@ public class WalletOperationsTest : AngorTestData
         //add all utxos as coins (easier)
         foreach (var utxo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo).SelectMany(s => s.UtxoData))
         {
-                coins.Add(new Blockcore.NBitcoin.Coin(Blockcore.NBitcoin.uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
-                    new Money(utxo.value), Blockcore.Consensus.ScriptInfo.Script.FromHex(utxo.scriptHex))); //Adding fee inputs
+                coins.Add(new Blockcore.NBitcoin.Coin(Blockcore.NBitcoin.uint256.Parse(utxo.Outpoint.TransactionId), (uint)utxo.Outpoint.OutputIndex,
+                    new Money(utxo.Value), Blockcore.Consensus.ScriptInfo.Script.FromHex(utxo.ScriptHex))); //Adding fee inputs
         }
 
         TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction, coins);

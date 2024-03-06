@@ -2,9 +2,9 @@
 @using System.Reflection
 @using Angor.Client.Services
 @using Angor.Shared.Services
-@inject IWalletStorage _walletStorage;
+@inject IWalletStorage WalletStorage;
 @inject NavMenuState NavMenuState;
-@inject INetworkService _networkService;
+@inject INetworkService NetworkService;
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -35,7 +35,7 @@
             </NavLink>
         </div>
         
-        @if (hasWallet)
+        @if (_hasWallet)
         {
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="investor">
@@ -64,7 +64,7 @@
     </nav>
     
     <div class="nav-footer">
-        <div class="text-muted small">Version: @softwareVersion</div>
+        <div class="text-muted small">Version: @_softwareVersion</div>
     </div>
 
 </div>
@@ -72,24 +72,24 @@
 
 
 @code {
-    private bool collapseNavMenu = true;
-    private bool hasWallet;
+    private bool _collapseNavMenu = true;
+    private bool _hasWallet;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string? NavMenuCssClass => _collapseNavMenu ? "collapse" : null;
 
-    private string softwareVersion = "0.0.0";
+    private string _softwareVersion = "0.0.0";
 
     private Timer _timer;
     private int _elapsedCount = 0;
 
     private void ToggleNavMenu()
     {
-        collapseNavMenu = !collapseNavMenu;
+        _collapseNavMenu = !_collapseNavMenu;
     }
 
     protected override void OnInitialized()
     {
-        hasWallet = _walletStorage.HasWallet();
+        _hasWallet = WalletStorage.HasWallet();
 
         NavMenuState.OnChange += NavMenuStateOnOnChange;
 
@@ -100,23 +100,23 @@
         Version version = assembly.GetName().Version;
 
         // Convert the version to a string
-        softwareVersion = version.ToString();
+        _softwareVersion = version.ToString();
 
         //_timer = new Timer(TimerElapsed, null, TimeSpan.Zero, TimeSpan.FromMinutes(5)); // Tick every 5 min
     }
 
     protected override async Task OnInitializedAsync()
     {
-        _networkService.AddSettingsIfNotExist();
+        NetworkService.AddSettingsIfNotExist();
 
-        await _networkService.CheckServices();
+        await NetworkService.CheckServices();
 
         await base.OnInitializedAsync();
     }
 
     private void NavMenuStateOnOnChange()
     {
-        hasWallet = _walletStorage.HasWallet();
+        _hasWallet = WalletStorage.HasWallet();
         StateHasChanged();
     }
 

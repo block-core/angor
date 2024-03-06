@@ -49,14 +49,14 @@ public class FounderTransactionActionTest : AngorTestData
             });
 
 
-        _sut = new FounderTransactionActions(new NullLogger<FounderTransactionActions>(), _networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations),
+        _sut = new FounderTransactionActions(new NullLogger<FounderTransactionActions>(), NetworkConfiguration.Object, new ProjectScriptsBuilder(DerivationOperations),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder());
 
     }
 
     private Transaction GivenASeederTransaction(ProjectInfo projectInvestmentInfo)
     {
-        InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _derivationOperations);
+        InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, DerivationOperations);
         var network = Networks.Bitcoin.Testnet();
         var seederKey = new Key();
         var seederSecret = new Key();
@@ -76,7 +76,7 @@ public class FounderTransactionActionTest : AngorTestData
 
     private Transaction GivenAnInvestorTransaction(ProjectInfo projectInvestmentInfo)
     {
-        InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _derivationOperations);
+        InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, DerivationOperations);
 
         var network = Networks.Bitcoin.Testnet();
         var seederKey = new Key();
@@ -101,7 +101,7 @@ public class FounderTransactionActionTest : AngorTestData
             { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
         var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
 
-        var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
+        var founderRecoveryPrivateKey = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
 
         var investmentTrxHex =
             "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000236a21038a7eedf38d874799c0d7579d5f08d605ca039da7f6dc7c57e6abd82f0f380334e0930400000000002251207aade2c416ca565c1b66041eac56d707a26aa8bab7d217190ecf3aa57899c9a360e316000000000022512048dc0a52f43379c6515962a40eec91d183582c8e2c861d612e4e564617d08a67804f120000000000225120f57ad9ed9e0fb880cda0847cfea668a4c3ccb1b9a08bdbcc3f029e8ad0380c9d00000000";
@@ -135,7 +135,7 @@ public class FounderTransactionActionTest : AngorTestData
         var words = new WalletWords
             { Words = "saddle hawk note mind travel prison tragic three degree tongue duty tone" };
     
-        var funderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
+        var funderPrivateKey = DerivationOperations.DeriveFounderPrivateKey(words, 1);
         var funderReceiveCoinsKey = new Key();
 
         var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words, new DateTime(638295190967868801));
@@ -178,7 +178,7 @@ public class FounderTransactionActionTest : AngorTestData
     {
         var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
-        var funderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
+        var funderPrivateKey = DerivationOperations.DeriveFounderPrivateKey(words, 1);
         var funderReceiveCoinsKey = new Key();
 
         var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);

@@ -9,18 +9,18 @@
 @using Angor.Client.Models
 
 @inherits BaseComponent
-@inject IDerivationOperations _derivationOperations
-@inject IWalletStorage _walletStorage;
-@inject IClientStorage storage;
-@inject ICacheStorage _cacheStorage;
+@inject IDerivationOperations DerivationOperations
+@inject IWalletStorage WalletStorage;
+@inject IClientStorage Storage;
+@inject ICacheStorage CacheStorage;
 @inject NavigationManager NavigationManager
-@inject IWalletOperations _WalletOperations
-@inject IRelayService _RelayService
-@inject ILogger<Create> _Logger;
+@inject IWalletOperations WalletOperations
+@inject IRelayService RelayService
+@inject ILogger<Create> Logger;
 
-@inject IFounderTransactionActions _founderTransactionActions
+@inject IFounderTransactionActions FounderTransactionActions
 
-@if (!hasWallet)
+@if (!HasWallet)
 {
     NavigationManager.NavigateTo($"/wallet");
     return;
@@ -29,21 +29,21 @@
 <div class="container mt-4">
     <h1 class="mb-4">Create New Project</h1>
 
-    <NotificationComponent @ref="notificationComponent"/>
+    <NotificationComponent @ref="NotificationComponent"/>
     
     <ul class="nav nav-tabs">
         <li class="nav-item">
-            <button class="nav-link @GetActiveClass(1)" @onclick="() => activeTab = 1">
+            <button class="nav-link @GetActiveClass(1)" @onclick="() => _activeTab = 1">
                 <span class="oi oi-browser" aria-hidden="true"></span>  Project Metadata
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link @GetActiveClass(2)" @onclick="() => activeTab = 2" disabled="@(!nostrMetadataCreated)">
+            <button class="nav-link @GetActiveClass(2)" @onclick="() => _activeTab = 2" disabled="@(!_nostrMetadataCreated)">
                 <span class="oi oi-list" aria-hidden="true"></span>  Project Info
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link @GetActiveClass(3)" @onclick="() => activeTab = 3" disabled="@(!nostrApplicationSpecificDataCreated)">
+            <button class="nav-link @GetActiveClass(3)" @onclick="() => _activeTab = 3" disabled="@(!_nostrApplicationSpecificDataCreated)">
                 <span class="oi oi-globe" aria-hidden="true"></span>  On Chain
             </button>
         </li>
@@ -51,48 +51,48 @@
     
     <br/>
 
-    @if (activeTab == 1)
+    @if (_activeTab == 1)
     {
-        <EditForm Model="project.Metadata" OnValidSubmit="CreatNostrProfile">
+        <EditForm Model="_project.Metadata" OnValidSubmit="CreatNostrProfile">
             <div class="mb-3">
                 <label for="NostrMetadataName" class="form-label">Project name</label>
-                <InputText id="NostrMetadataName" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the project name" />
+                <InputText id="NostrMetadataName" @bind-Value="_project.Metadata.Name" class="form-control" placeholder="Enter the project name" />
             </div>
 
             <div class="mb-3">
                 <label for="NostrMetadataAbout" class="form-label">About</label>
-                <InputTextArea id="NostrMetadataAbout" @bind-Value="project.Metadata.About" class="form-control" placeholder="Enter details about the project" />
+                <InputTextArea id="NostrMetadataAbout" @bind-Value="_project.Metadata.About" class="form-control" placeholder="Enter details about the project" />
             </div>
 
             <div class="mb-3">
                 <label for="NostrMetadataName" class="form-label">Project website</label>
-                <InputText id="NostrMetadataName" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the project name" />
+                <InputText id="NostrMetadataName" @bind-Value="_project.Metadata.Website" class="form-control" placeholder="Enter the project name" />
             </div>
 
             <div class="mb-3">
                 <label for="NostrMetadataBanner" class="form-label">Banner</label>
-                <InputText id="NostrMetadataBanner" @bind-Value="project.Metadata.Banner" class="form-control" />
+                <InputText id="NostrMetadataBanner" @bind-Value="_project.Metadata.Banner" class="form-control" />
             </div>
 
             <div class="mb-3">
                 <label for="NostrMetadataNip05" class="form-label">Nip 05</label>
-                <InputText id="NostrMetadataNip05" @bind-Value="project.Metadata.Nip05" class="form-control" />
+                <InputText id="NostrMetadataNip05" @bind-Value="_project.Metadata.Nip05" class="form-control" />
             </div>
 
             <div class="mb-3">
                 <label for="NostrMetadataNip57" class="form-label">Nip 57 (zaps)</label>
-                <InputText id="NostrMetadataNip57" @bind-Value="project.Metadata.Nip57" class="form-control" />
+                <InputText id="NostrMetadataNip57" @bind-Value="_project.Metadata.Nip57" class="form-control" />
             </div>
 
             <div class="mb-3">
                 <label for="NostrMetadataPicture" class="form-label">Image</label>
-                <InputText id="NostrMetadataPicture" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Select a project picture" />
+                <InputText id="NostrMetadataPicture" @bind-Value="_project.Metadata.Picture" class="form-control" placeholder="Select a project picture" />
             </div>
 
             <!-- Save & Publish Buttons -->
             <div class="mb-3">
-                <button type="submit" class="btn btn-success" disabled="@(createProfileSpinner || nostrMetadataCreated)">
-                    @if (createProfileSpinner)
+                <button type="submit" class="btn btn-success" disabled="@(_createProfileSpinner || _nostrMetadataCreated)">
+                    @if (_createProfileSpinner)
                     {
                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                         <span>Next...</span>
@@ -106,52 +106,52 @@
         </EditForm>
     }
 
-    @if (activeTab == 2)
+    @if (_activeTab == 2)
     {
-        <EditForm Model="project" OnValidSubmit="CreatProjectInfoOnNostr">
+        <EditForm Model="_project" OnValidSubmit="CreatProjectInfoOnNostr">
 
             <!-- Angor Fee Key -->
             <div class="mb-3">
                 <label for="angorFeeKey" class="form-label">Project identifier</label>
-                <InputText id="angorFeeKey" @bind-Value="project.ProjectInfo.ProjectIdentifier" class="form-control" placeholder="Enter angor fee key" readonly />
+                <InputText id="angorFeeKey" @bind-Value="_project.ProjectInfo.ProjectIdentifier" class="form-control" placeholder="Enter angor fee key" readonly />
             </div>
 
             <!-- Founder Key -->
             <div class="mb-3">
                 <label for="founderKey" class="form-label">Founder Key</label>
-                <InputText id="founderKey" @bind-Value="project.ProjectInfo.FounderKey" class="form-control" placeholder="Enter founder key" readonly />
+                <InputText id="founderKey" @bind-Value="_project.ProjectInfo.FounderKey" class="form-control" placeholder="Enter founder key" readonly />
             </div>
 
             <!-- Start Date -->
             <div class="mb-3">
                 <label for="startDate" class="form-label">Start Date</label>
-                <InputDate id="startDate" @bind-Value="project.ProjectInfo.StartDate" class="form-control" />
+                <InputDate id="startDate" @bind-Value="_project.ProjectInfo.StartDate" class="form-control" />
             </div>
 
             <!-- Penalty Date -->
             <div class="mb-3">
                 <label for="penaltyDays" class="form-label">Penalty Days</label>
-                <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" class="form-control" />
+                <InputNumber id="penaltyDays" @bind-Value="_project.ProjectInfo.PenaltyDays" class="form-control" />
             </div>
 
             <!-- Expiry Date -->
             <div class="mb-3">
                 <label for="expiryDate" class="form-label">Expiry Date</label>
-                <InputDate id="expiryDate" @bind-Value="project.ProjectInfo.ExpiryDate" class="form-control" />
+                <InputDate id="expiryDate" @bind-Value="_project.ProjectInfo.ExpiryDate" class="form-control" />
             </div>
 
             <!-- Target Amount -->
             <div class="mb-3">
                 <label for="targetAmount" class="form-label">Target Amount</label>
-                <InputNumber id="targetAmount" @bind-Value="project.ProjectInfo.TargetAmount" class="form-control" placeholder="Enter target amount" />
+                <InputNumber id="targetAmount" @bind-Value="_project.ProjectInfo.TargetAmount" class="form-control" placeholder="Enter target amount" />
             </div>
 
             <!-- Stages -->
             <h3 class="mb-3">Stages</h3>
-            @foreach (var stage in project.ProjectInfo.Stages)
+            @foreach (var stage in _project.ProjectInfo.Stages)
             {
                 <div class="mb-3">
-                    <label class="form-label">The amount in % to allocate for stage @(project.ProjectInfo.Stages.IndexOf(stage) + 1)</label>
+                    <label class="form-label">The amount in % to allocate for stage @(_project.ProjectInfo.Stages.IndexOf(stage) + 1)</label>
                     <div class="input-group">
                         <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1" />
                         <InputDate @bind-Value="stage.ReleaseDate" class="form-control" />
@@ -160,12 +160,12 @@
                 </div>
             }
 
-            <button type="button" class="btn btn-primary mb-3" @onclick="AddStage" disabled="@nostrApplicationSpecificDataCreated">Add Stage</button>
+            <button type="button" class="btn btn-primary mb-3" @onclick="AddStage" disabled="@_nostrApplicationSpecificDataCreated">Add Stage</button>
 
             <!-- Save & Publish Buttons -->
             <div class="mb-3">
-                <button type="submit" class="btn btn-success" disabled="@(createProfileSpinner || nostrApplicationSpecificDataCreated)">
-                    @if (createApplicationDataSpinner)
+                <button type="submit" class="btn btn-success" disabled="@(_createProfileSpinner || _nostrApplicationSpecificDataCreated)">
+                    @if (_createApplicationDataSpinner)
                     {
                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                         <span>Next...</span>
@@ -180,34 +180,34 @@
         </EditForm>
     }
 
-    @if (activeTab == 3)
+    @if (_activeTab == 3)
     {
-        <p class="mb-1"><strong>Project Name:</strong> @project.Metadata.Name</p>
-        <p class="mb-1"><strong>Project About:</strong> @project.Metadata.About</p>
+        <p class="mb-1"><strong>Project Name:</strong> @_project.Metadata.Name</p>
+        <p class="mb-1"><strong>Project About:</strong> @_project.Metadata.About</p>
 
-        <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier</p>
-        <p class="mb-1"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
+        <p class="mb-1"><strong>Project Identifier:</strong> @_project.ProjectInfo.ProjectIdentifier</p>
+        <p class="mb-1"><strong>Founder Key:</strong> @_project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
 
-        <p class="mb-1"><strong>Target amount:</strong> @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
+        <p class="mb-1"><strong>Target amount:</strong> @_project.ProjectInfo.TargetAmount @Network.CoinTicker</p>
 
-        <p class="mb-1"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
-        <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
-        <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
+        <p class="mb-1"><strong>Start date:</strong> @_project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((_project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
+        <p class="mb-1"><strong>Expiry date:</strong> @_project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((_project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
+        <p class="mb-1"><strong>Penalty days:</strong> @_project.ProjectInfo.PenaltyDays days</p>
 
         <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
         <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
 
         <h6 class="mt-3 mb-2">Stages</h6>
-        @foreach (var stage in project.ProjectInfo.Stages)
+        @foreach (var stage in _project.ProjectInfo.Stages)
         {
             <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
                 <p class="mb-1"><strong>Stage percent:</strong> @stage.AmountToRelease % </p>
-                <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts </p>
+                <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - _project.ProjectInfo.StartDate).Days) days after project starts </p>
             </div>
         }
 
-        <button type="button" class="btn btn-success mb-3" @onclick="CreatProjectTransaction" disabled="@creatProjectSpinner">
-            @if (creatProjectSpinner)
+        <button type="button" class="btn btn-success mb-3" @onclick="CreatProjectTransaction" disabled="@_creatProjectSpinner">
+            @if (_creatProjectSpinner)
             {
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 <span>Next...</span>
@@ -220,7 +220,7 @@
     }
 
 
-    @if (showCreateModal)
+    @if (_showCreateModal)
     {
         <!-- Confirmation Modal -->
         <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
@@ -228,17 +228,17 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Confirmation</h5>
-                        <button type="button" class="btn-close" @onclick="() => showCreateModal = false" disabled="@publishProjectSpinner"></button>
+                        <button type="button" class="btn-close" @onclick="() => _showCreateModal = false" disabled="@_publishProjectSpinner"></button>
                     </div>
                     <div class="modal-body modal-body-scroll">
-                        <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier</p>
-                        <p class="mb-1"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
+                        <p class="mb-1"><strong>Project Identifier:</strong> @_project.ProjectInfo.ProjectIdentifier</p>
+                        <p class="mb-1"><strong>Founder Key:</strong> @_project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
 
-                        <p class="mb-1"><strong>Target amount:</strong> @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
+                        <p class="mb-1"><strong>Target amount:</strong> @_project.ProjectInfo.TargetAmount @Network.CoinTicker</p>
 
-                        <p class="mb-1"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
-                        <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
-                        <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
+                        <p class="mb-1"><strong>Start date:</strong> @_project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((_project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
+                        <p class="mb-1"><strong>Expiry date:</strong> @_project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((_project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
+                        <p class="mb-1"><strong>Penalty days:</strong> @_project.ProjectInfo.PenaltyDays days</p>
 
                         <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
                         <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
@@ -246,18 +246,18 @@
                         <hr>
 
                         <div class="mb-3">
-                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                            <label for="feeRange" class="form-label">Feerate for @_feeData.SelectedFeeEstimation.Confirmations blocks is @_feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="_feeData.FeePosition" @oninput="FeeRangeChanged" min="@_feeData.FeeMin" max="@_feeData.FeeMax">
                         </div>
 
                         <hr>
 
                         <h6 class="mt-3 mb-2">Stages</h6>
-                        @foreach (var stage in project.ProjectInfo.Stages)
+                        @foreach (var stage in _project.ProjectInfo.Stages)
                         {
                             <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
                                 <p class="mb-1"><strong>Stage percent:</strong> @stage.AmountToRelease % </p>
-                                <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts </p>
+                                <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - _project.ProjectInfo.StartDate).Days) days after project starts </p>
                             </div>
                         }
 
@@ -267,9 +267,9 @@
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false" disabled="@publishProjectSpinner">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="Send" disabled="@publishProjectSpinner">
-                            @if (publishProjectSpinner)
+                        <button type="button" class="btn btn-secondary" @onclick="() => _showCreateModal = false" disabled="@_publishProjectSpinner">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="Send" disabled="@_publishProjectSpinner">
+                            @if (_publishProjectSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 <span>Confirm...</span>
@@ -289,15 +289,15 @@
 
 @code {
 
-    private bool sendConfirmModal;
-    private bool showCreateModal;
+    private bool _sendConfirmModal;
+    private bool _showCreateModal;
 
-    Transaction unsignedTransaction;
-    Transaction signedTransaction;
+    Transaction _unsignedTransaction;
+    Transaction _signedTransaction;
 
-    private FeeData feeData = new();
+    private FeeData _feeData = new();
 
-    private FounderProject project = new()
+    private FounderProject _project = new()
     {
         ProjectInfo = new ProjectInfo
         {
@@ -310,48 +310,48 @@
         CreationTransactionId = null,
     };
 
-    private int activeTab = 1;
+    private int _activeTab = 1;
 
-    bool createProfileSpinner = false;
-    bool createApplicationDataSpinner = false;
-    bool creatProjectSpinner = false;
-    bool publishProjectSpinner = false;
+    bool _createProfileSpinner = false;
+    bool _createApplicationDataSpinner = false;
+    bool _creatProjectSpinner = false;
+    bool _publishProjectSpinner = false;
 
-    bool nostrMetadataCreated = false;
-    bool nostrApplicationSpecificDataCreated = false;
+    bool _nostrMetadataCreated = false;
+    bool _nostrApplicationSpecificDataCreated = false;
 
     protected override async Task OnInitializedAsync()
     {
-        if (hasWallet)
+        if (HasWallet)
         {
-            var projects = storage.GetFounderProjects();
-            var keys = _walletStorage.GetFounderKeys();
+            var projects = Storage.GetFounderProjects();
+            var keys = WalletStorage.GetFounderKeys();
 
             if (projects.Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList().Count == keys.Keys.Count)
             {
-                notificationComponent.ShowErrorMessage("All founder keys have been used for this wallet!");
+                NotificationComponent.ShowErrorMessage("All founder keys have been used for this wallet!");
                 return;
             }
 
             var latestProject = projects.Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).MaxBy(p => p.ProjectIndex);
-            var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectIndex + 1 ?? 1);
+            var projectsKeys = DerivationOperations.GetProjectKey(keys, latestProject?.ProjectIndex + 1 ?? 1);
 
             var fromStorage = projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier);
 
             if (fromStorage != null)
             {
-                project = fromStorage;
+                _project = fromStorage;
 
-                nostrMetadataCreated = fromStorage.NostrMetadataCreated();
-                nostrApplicationSpecificDataCreated = fromStorage.NostrApplicationSpecificDataCreated();
+                _nostrMetadataCreated = fromStorage.NostrMetadataCreated();
+                _nostrApplicationSpecificDataCreated = fromStorage.NostrApplicationSpecificDataCreated();
             }
             else
             {
-                project.ProjectIndex = projectsKeys.Index;
-                project.ProjectInfo.FounderKey = projectsKeys.FounderKey;
-                project.ProjectInfo.FounderRecoveryKey = projectsKeys.FounderRecoveryKey;
-                project.ProjectInfo.ProjectIdentifier = projectsKeys.ProjectIdentifier;
-                project.ProjectInfo.NostrPubKey = projectsKeys.NostrPubKey;
+                _project.ProjectIndex = projectsKeys.Index;
+                _project.ProjectInfo.FounderKey = projectsKeys.FounderKey;
+                _project.ProjectInfo.FounderRecoveryKey = projectsKeys.FounderRecoveryKey;
+                _project.ProjectInfo.ProjectIdentifier = projectsKeys.ProjectIdentifier;
+                _project.ProjectInfo.NostrPubKey = projectsKeys.NostrPubKey;
             }
         }
     }
@@ -360,12 +360,12 @@
     {
         if (tabNumber == 2)
         {
-            if (nostrMetadataCreated && !nostrApplicationSpecificDataCreated)
+            if (_nostrMetadataCreated && !_nostrApplicationSpecificDataCreated)
             {
-                if (!project.ProjectInfo.Stages.Any())
+                if (!_project.ProjectInfo.Stages.Any())
                 {
                     // to make it easier for testing we pre add some stages
-                    project.ProjectInfo.Stages = new List<Stage>
+                    _project.ProjectInfo.Stages = new List<Stage>
                     {
                         new() { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
                         new() { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
@@ -375,53 +375,53 @@
             }
         }
 
-        return activeTab == tabNumber ? "active" : "";
+        return _activeTab == tabNumber ? "active" : "";
     }
 
     private async Task CreatNostrProfile()
     {
-        if (nostrMetadataCreated)
+        if (_nostrMetadataCreated)
         {
-            notificationComponent.ShowErrorMessage("Nostr profile already created");
+            NotificationComponent.ShowErrorMessage("Nostr profile already created");
             return;
         }
 
-        if (project.Metadata is null)
+        if (_project.Metadata is null)
         {
-            notificationComponent.ShowErrorMessage("Nostr profile must be filled");
+            NotificationComponent.ShowErrorMessage("Nostr profile must be filled");
             return;
         }
 
-        if (string.IsNullOrEmpty(project.Metadata.Name))
+        if (string.IsNullOrEmpty(_project.Metadata.Name))
         {
-            notificationComponent.ShowErrorMessage("Nostr profile name be filled");
+            NotificationComponent.ShowErrorMessage("Nostr profile name be filled");
             return;
         }
 
-        createProfileSpinner = true;
+        _createProfileSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
 
         try
         {
-            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, project.ProjectIndex);
+            var nostrKey = DerivationOperations.DeriveProjectNostrPrivateKey(WalletStorage.GetWallet().WalletWords, _project.ProjectIndex);
 
-            var resultId = await _RelayService.CreateNostrProfileAsync(project.Metadata.ToNostrMetadata(),
+            var resultId = await RelayService.CreateNostrProfileAsync(_project.Metadata.ToNostrMetadata(),
                 NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()),
                 _ =>
                 {
-                    createProfileSpinner = false;
+                    _createProfileSpinner = false;
 
                     if (!_.Accepted)
-                        notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+                        NotificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
 
-                    if (nostrMetadataCreated == false)
+                    if (_nostrMetadataCreated == false)
                     {
-                        nostrMetadataCreated = true;
-                        storage.AddFounderProject(project);
+                        _nostrMetadataCreated = true;
+                        Storage.AddFounderProject(_project);
                     }
 
-                    activeTab = 2;
+                    _activeTab = 2;
                     
                     StateHasChanged();
                 });
@@ -429,14 +429,14 @@
             // todo: do we actually need this? does it actualy work to delete?
             if (string.IsNullOrEmpty(resultId))
             {
-                createApplicationDataSpinner = false;
-                notificationComponent.ShowErrorMessage("Failed to create nostr profile");
+                _createApplicationDataSpinner = false;
+                NotificationComponent.ShowErrorMessage("Failed to create nostr profile");
             }
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            Logger.LogError(e, e.Message);
+            NotificationComponent.ShowErrorMessage(e.Message);
         }
         finally
         {
@@ -446,99 +446,99 @@
 
     private async Task CreatProjectInfoOnNostr()
     {
-        if (nostrApplicationSpecificDataCreated)
+        if (_nostrApplicationSpecificDataCreated)
         {
-            notificationComponent.ShowErrorMessage("Nostr project already created");
+            NotificationComponent.ShowErrorMessage("Nostr project already created");
             return;
         }
 
-        if (project.ProjectInfo.TargetAmount < (decimal)0.1)
+        if (_project.ProjectInfo.TargetAmount < (decimal)0.1)
         {
-            notificationComponent.ShowErrorMessage("Project target amount must be higher then 0.1 BTC");
+            NotificationComponent.ShowErrorMessage("Project target amount must be higher then 0.1 BTC");
             return;
         }
 
-        if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+        if (_project.ProjectInfo.StartDate < DateTime.UtcNow)
         {
-            notificationComponent.ShowErrorMessage("Project must start in the future");
+            NotificationComponent.ShowErrorMessage("Project must start in the future");
             return;
         }
 
-        if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.StartDate)
+        if (_project.ProjectInfo.ExpiryDate < _project.ProjectInfo.StartDate)
         {
-            notificationComponent.ShowErrorMessage("Project must expire after start date");
+            NotificationComponent.ShowErrorMessage("Project must expire after start date");
             return;
         }
 
-        if (project.ProjectInfo.Stages.Any() && project.ProjectInfo.ExpiryDate < project.ProjectInfo.Stages.Last().ReleaseDate)
+        if (_project.ProjectInfo.Stages.Any() && _project.ProjectInfo.ExpiryDate < _project.ProjectInfo.Stages.Last().ReleaseDate)
         {
-            notificationComponent.ShowErrorMessage("Project expire date must be after the last stage date");
+            NotificationComponent.ShowErrorMessage("Project expire date must be after the last stage date");
             return;
         }
 
-        if (project.ProjectInfo.PenaltyDays < 10)
+        if (_project.ProjectInfo.PenaltyDays < 10)
         {
-            notificationComponent.ShowErrorMessage("Project penalty must be higher then 10 days");
+            NotificationComponent.ShowErrorMessage("Project penalty must be higher then 10 days");
             return;
         }
 
-        if (project.ProjectInfo.Stages.Count() < 3)
+        if (_project.ProjectInfo.Stages.Count() < 3)
         {
-            notificationComponent.ShowErrorMessage("There must be at least 3 stages");
+            NotificationComponent.ShowErrorMessage("There must be at least 3 stages");
             return;
         }
 
-        if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
+        if (_project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
         {
-            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
+            NotificationComponent.ShowErrorMessage("The stages must sum to 100%");
             return;
         }
 
-        var projects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
+        var projects = Storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
 
-        if (projects.Any(a => project.ProjectInfo.ProjectIdentifier == a.ProjectInfo.ProjectIdentifier))
+        if (projects.Any(a => _project.ProjectInfo.ProjectIdentifier == a.ProjectInfo.ProjectIdentifier))
         {
-            notificationComponent.ShowErrorMessage("This wallet already has a project with this index");
+            NotificationComponent.ShowErrorMessage("This wallet already has a project with this index");
             return;
         }
 
         DateTime prev = DateTime.UtcNow;
-        foreach (var stage in project.ProjectInfo.Stages)
+        foreach (var stage in _project.ProjectInfo.Stages)
         {
             if ((stage.ReleaseDate - prev).Days < 0)
             {
-                notificationComponent.ShowErrorMessage("Stages must be chronological");
+                NotificationComponent.ShowErrorMessage("Stages must be chronological");
                 return;
             }
 
             prev = stage.ReleaseDate;
         }
 
-        createApplicationDataSpinner = true;
+        _createApplicationDataSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
 
         try
         {
-            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, project.ProjectIndex);
+            var nostrKey = DerivationOperations.DeriveProjectNostrPrivateKey(WalletStorage.GetWallet().WalletWords, _project.ProjectIndex);
 
             var nostrKeyHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
 
-            var resultId = await _RelayService.AddProjectAsync(project.ProjectInfo, nostrKeyHex,
+            var resultId = await RelayService.AddProjectAsync(_project.ProjectInfo, nostrKeyHex,
                 _ =>
                 {
-                    createApplicationDataSpinner = false;
+                    _createApplicationDataSpinner = false;
 
                     if (!_.Accepted)
-                        notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+                        NotificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
 
-                    if (nostrApplicationSpecificDataCreated == false)
+                    if (_nostrApplicationSpecificDataCreated == false)
                     {
-                        nostrApplicationSpecificDataCreated = true;
-                        storage.UpdateFounderProject(project);
+                        _nostrApplicationSpecificDataCreated = true;
+                        Storage.UpdateFounderProject(_project);
                     }
                     
-                    activeTab = 3;
+                    _activeTab = 3;
                     
                     StateHasChanged();
 
@@ -547,15 +547,15 @@
             // todo: do we actually need this? does it actualy work to delete?
             if (string.IsNullOrEmpty(resultId))
             {
-                createApplicationDataSpinner = false;
-                await _RelayService.DeleteProjectAsync(resultId, nostrKeyHex);
-                notificationComponent.ShowErrorMessage("Failed to create application data");
+                _createApplicationDataSpinner = false;
+                await RelayService.DeleteProjectAsync(resultId, nostrKeyHex);
+                NotificationComponent.ShowErrorMessage("Failed to create application data");
             }
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            Logger.LogError(e, e.Message);
+            NotificationComponent.ShowErrorMessage(e.Message);
         }
         finally
         {
@@ -565,33 +565,33 @@
 
     private async Task CreatProjectTransaction()
     {
-        creatProjectSpinner = true;
+        _creatProjectSpinner = true;
         StateHasChanged();
 
         try
         {
-            var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
+            var accountInfo = Storage.GetAccountInfo(Network.Name);
+            var unconfirmedInfo = CacheStorage.GetUnconfirmedInboundFunds();
 
-            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
-            feeData.FeeEstimations.Fees.Clear();
-            feeData.FeeEstimations.Fees.AddRange(fetchFees);
-            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+            var fetchFees = await WalletOperations.GetFeeEstimationAsync();
+            _feeData.FeeEstimations.Fees.Clear();
+            _feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            _feeData.SelectedFeeEstimation = _feeData.FeeEstimations.Fees.First();
 
-            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), 10000, project.ProjectInfo.NostrPubKey);
+            _unsignedTransaction = FounderTransactionActions.CreateNewProjectTransaction(_project.ProjectInfo.FounderKey, DerivationOperations.AngorKeyToScript(_project.ProjectInfo.ProjectIdentifier), 10000, _project.ProjectInfo.NostrPubKey);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet().WalletWords, accountInfo, feeData.SelectedFeeEstimation);
+            _signedTransaction = WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), _unsignedTransaction, WalletStorage.GetWallet().WalletWords, accountInfo, _feeData.SelectedFeeEstimation);
 
-            showCreateModal = true;
+            _showCreateModal = true;
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            Logger.LogError(e, e.Message);
+            NotificationComponent.ShowErrorMessage(e.Message);
         }
         finally
         {
-            creatProjectSpinner = false;
+            _creatProjectSpinner = false;
         }      
 
         StateHasChanged();
@@ -605,14 +605,14 @@
         {
             if (int.TryParse(selected, out int res))
             {
-                if (res <= feeData.FeeEstimations.Fees.Count)
+                if (res <= _feeData.FeeEstimations.Fees.Count)
                 {
-                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+                    _feeData.SelectedFeeEstimation = _feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
-                    var accountInfo = storage.GetAccountInfo(network.Name);
-                    var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
+                    var accountInfo = Storage.GetAccountInfo(Network.Name);
+                    var unconfirmedInfo = CacheStorage.GetUnconfirmedInboundFunds();
 
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet().WalletWords, accountInfo, feeData.SelectedFeeEstimation);
+                    _signedTransaction = WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), _unsignedTransaction, WalletStorage.GetWallet().WalletWords, accountInfo, _feeData.SelectedFeeEstimation);
 
                     StateHasChanged();
                 }
@@ -622,45 +622,45 @@
 
     private async Task Send()
     {
-        publishProjectSpinner = true;
+        _publishProjectSpinner = true;
         StateHasChanged();
 
         try
         {
-            showCreateModal = false;
+            _showCreateModal = false;
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+            var response = await WalletOperations.PublishTransactionAsync(Network, _signedTransaction);
 
             if (!response.Success)
             {
-                notificationComponent.ShowErrorMessage(response.Message);
+                NotificationComponent.ShowErrorMessage(response.Message);
                 return;
             }
 
-            project.CreationTransactionId = signedTransaction.GetHash().ToString();
+            _project.CreationTransactionId = _signedTransaction.GetHash().ToString();
 
-            storage.UpdateFounderProject(project);
+            Storage.UpdateFounderProject(_project);
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            Logger.LogError(e, e.Message);
+            NotificationComponent.ShowErrorMessage(e.Message);
         }
         finally
         {
-            publishProjectSpinner = false;
+            _publishProjectSpinner = false;
         }
 
-        NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
+        NavigationManager.NavigateTo($"/view/{_project.ProjectInfo.ProjectIdentifier}");
     }
 
     private void AddStage()
     {
-        project.ProjectInfo.Stages.Add(new Stage { ReleaseDate = DateTime.UtcNow });
+        _project.ProjectInfo.Stages.Add(new Stage { ReleaseDate = DateTime.UtcNow });
     }
 
     private void RemoveStage(Stage stage)
     {
-        project.ProjectInfo.Stages.Remove(stage);
+        _project.ProjectInfo.Stages.Remove(stage);
     }
 }

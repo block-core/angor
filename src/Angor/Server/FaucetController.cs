@@ -22,7 +22,7 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
         private readonly IHdOperations _hdOperations;
         private readonly INetworkConfiguration _networkConfiguration;
 
-        private List<UtxoData> PendingUtxo = new ();
+        private List<UtxoData> _pendingUtxo = new ();
 
         public FaucetController(IWalletOperations walletOperations, IIndexerService indexerService, IHdOperations hdOperations, INetworkConfiguration networkConfiguration)
         {
@@ -48,31 +48,31 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 
             List<UtxoDataWithPath> list = new();
 
-            if (!PendingUtxo.Any())
+            if (!_pendingUtxo.Any())
             {
                 // we assume a miner wallet so for now just ignore amounts and send a utxo to the request address  
                 var utxos = await _indexerService.FetchUtxoAsync(addressInfo.Address, 0, 20);
 
-                lock (PendingUtxo)
+                lock (_pendingUtxo)
                 {
-                    if (!PendingUtxo.Any())
+                    if (!_pendingUtxo.Any())
                     {
-                        PendingUtxo.AddRange(utxos);
+                        _pendingUtxo.AddRange(utxos);
                     }
                 }
             }
 
-            lock (PendingUtxo)
+            lock (_pendingUtxo)
             {
-                list = new() { new UtxoDataWithPath { HdPath = addressInfo.HdPath, UtxoData = PendingUtxo.First() } };
-                PendingUtxo.Remove(PendingUtxo.First());
+                list = new() { new UtxoDataWithPath { HdPath = addressInfo.HdPath, UtxoData = _pendingUtxo.First() } };
+                _pendingUtxo.Remove(_pendingUtxo.First());
             }
 
             var (coins, keys) = _walletOperations.GetUnspentOutputsForTransaction(words, list);
 
             Transaction trx = network.CreateTransaction();
-            trx.AddOutput(Money.Satoshis(list.First().UtxoData.value) - Money.Satoshis(10000), BitcoinWitPubKeyAddress.Create(address, network));
-            trx.AddInput(new TxIn { PrevOut = OutPoint.Parse(list.First().UtxoData.outpoint.ToString()) });
+            trx.AddOutput(Money.Satoshis(list.First().UtxoData.Value) - Money.Satoshis(10000), BitcoinWitPubKeyAddress.Create(address, network));
+            trx.AddInput(new TxIn { PrevOut = OutPoint.Parse(list.First().UtxoData.Outpoint.ToString()) });
 
             var signedTransaction = new TransactionBuilder(network)
                 .AddCoins(coins)

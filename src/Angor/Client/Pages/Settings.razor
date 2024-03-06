@@ -4,11 +4,11 @@
 @using Angor.Shared.Models;
 @using Angor.Shared.Services
 
-@inject INetworkConfiguration _networkConfiguration
-@inject INetworkService _networkService
-@inject IClientStorage _clientStorage
-@inject ICacheStorage _cacheStorage;
-@inject IWalletStorage _walletStorage;
+@inject INetworkConfiguration NetworkConfiguration
+@inject INetworkService NetworkService
+@inject IClientStorage ClientStorage
+@inject ICacheStorage CacheStorage;
+@inject IWalletStorage WalletStorage;
 @inject NavMenuState NavMenuState
 @inject ILogger<Settings> Logger;
 
@@ -17,26 +17,26 @@
 <div class="container my-4">
     <h1>Settings</h1><br/>
 
-    <NotificationComponent @ref="notificationComponent" />
+    <NotificationComponent @ref="NotificationComponent" />
 
     <div class="row">
         <div class="col">
 
-            <p>Network Type: <strong>@networkType</strong></p>
-            <p>Explorer url: <a href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">@_networkConfiguration.GetDefaultExplorerUrl().First().Url</a> </p>
+            <p>Network Type: <strong>@_networkType</strong></p>
+            <p>Explorer url: <a href="@NetworkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">@NetworkConfiguration.GetDefaultExplorerUrl().First().Url</a> </p>
             
             <div class="d-flex justify-content-end">
-                <button class="btn btn-danger" @onclick="() => showWipeallModal = true">Wipe All Storage</button>
+                <button class="btn btn-danger" @onclick="() => _showWipeallModal = true">Wipe All Storage</button>
             </div>
 
-            @if (showWipeallModal)
+            @if (_showWipeallModal)
             {
                 <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="coinControlModalLabel">Wipe Storage</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false" aria-label="Close"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => _showWipeallModal = false" aria-label="Close"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
                                 <div class="alert alert-danger" role="alert">
@@ -47,13 +47,13 @@
 
                                 <!-- Checkbox for confirmation -->
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                    <input class="form-check-input" type="checkbox" id="confirmWipeCheckbox" @bind="_confirmWipe">
                                     <label class="form-check-label" for="confirmWipeCheckbox">
                                         I confirm I have a backup of my wallet words, yes wipe all data from this device.
                                     </label>
                                 </div>
                                 <br/>
-                                @if (showConfirmWipeMessage)
+                                @if (_showConfirmWipeMessage)
                                 {
                                     <p class="text-danger-emphasis">Please tick the box to wipe all storage!</p>
                                 }
@@ -61,7 +61,7 @@
                                 <button class="btn btn-danger" @onclick="WipteAllData">Wipe Storage</button>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false">Close</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => _showWipeallModal = false">Close</button>
                             </div>
                         </div>
                     </div>
@@ -73,8 +73,8 @@
             <br/>
             
             <div class="d-flex justify-content-end">
-                <button class="btn btn-info" @onclick="Refresh" disabled="@refreshSpinner">
-                    @if (refreshSpinner)
+                <button class="btn btn-info" @onclick="Refresh" disabled="@_refreshSpinner">
+                    @if (_refreshSpinner)
                     {
                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                         <span>Refresh...</span>
@@ -90,7 +90,7 @@
             <h4>Indexers</h4>
             <form @onsubmit="AddIndexer">
                 <div class="input-group mb-3">
-                    <input type="text" @bind-value="newIndexerLink" class="form-control" placeholder="Enter new indexer link" aria-label="Enter new indexer link" aria-describedby="button-addon">
+                    <input type="text" @bind-value="_newIndexerLink" class="form-control" placeholder="Enter new indexer link" aria-label="Enter new indexer link" aria-describedby="button-addon">
                     <button class="btn btn-outline-secondary" type="submit" id="button-addon">Add indexer Link</button>
                 </div>
             </form>
@@ -105,7 +105,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach (var indexer in settingsInfo.Indexers)
+                @foreach (var indexer in _settingsInfo.Indexers)
                 {
                     <tr>
                         <td><a href="@indexer.Url" target="_blank">@indexer.Url</a></td>
@@ -135,7 +135,7 @@
             <h4>Nostr Relays</h4>
             <form @onsubmit="AddRelay">
                 <div class="input-group mb-3">
-                    <input type="text" @bind-value="newRelayLink" class="form-control" placeholder="Enter new relay link" aria-label="Enter new relay link" aria-describedby="button-addon2">
+                    <input type="text" @bind-value="_newRelayLink" class="form-control" placeholder="Enter new relay link" aria-label="Enter new relay link" aria-describedby="button-addon2">
                     <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Add relay Link</button>
                 </div>
             </form>
@@ -151,7 +151,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach (var relay in settingsInfo.Relays)
+                @foreach (var relay in _settingsInfo.Relays)
                 {
                     <tr>
                         <td><a href="@relay.Url" target="_blank">@relay.Url</a></td>
@@ -180,25 +180,25 @@
 </div>
 
 @code {
-    private string newIndexerLink;
-    private string newRelayLink;
+    private string _newIndexerLink;
+    private string _newRelayLink;
 
-    private string networkType;
-    private bool refreshSpinner = false;
+    private string _networkType;
+    private bool _refreshSpinner = false;
 
-    private bool showWipeallModal = false;
-    private bool confirmWipe = false;
-    private bool showConfirmWipeMessage = false;
+    private bool _showWipeallModal = false;
+    private bool _confirmWipe = false;
+    private bool _showConfirmWipeMessage = false;
 
-    private SettingsInfo settingsInfo;
+    private SettingsInfo _settingsInfo;
 
     protected override Task OnInitializedAsync()
     {
-        _networkService.AddSettingsIfNotExist();
+        NetworkService.AddSettingsIfNotExist();
 
-        settingsInfo = _clientStorage.GetSettingsInfo();
+        _settingsInfo = ClientStorage.GetSettingsInfo();
 
-        networkType = _networkConfiguration.GetNetwork().Name;
+        _networkType = NetworkConfiguration.GetNetwork().Name;
 
         return base.OnInitializedAsync();
     }
@@ -213,31 +213,31 @@
 
     private async Task AddIndexer()
     {
-        if (!string.IsNullOrWhiteSpace(newIndexerLink))
+        if (!string.IsNullOrWhiteSpace(_newIndexerLink))
         {
-            if (!Uri.TryCreate(newIndexerLink, UriKind.Absolute, out Uri? uri))
+            if (!Uri.TryCreate(_newIndexerLink, UriKind.Absolute, out Uri? uri))
             {
-                notificationComponent.ShowErrorMessage($"invalid url {newIndexerLink}");
+                NotificationComponent.ShowErrorMessage($"invalid url {_newIndexerLink}");
                 return;
             }
 
             if (uri.Scheme is not ("http" or "https"))
             {
-                notificationComponent.ShowErrorMessage($"invalid url {newIndexerLink} schema must be http or https");
+                NotificationComponent.ShowErrorMessage($"invalid url {_newIndexerLink} schema must be http or https");
                 return;
             }
 
-            newIndexerLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
+            _newIndexerLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
 
-            if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
+            if (_settingsInfo.Indexers.Any(a => a.Url == _newIndexerLink))
             {
-                notificationComponent.ShowErrorMessage($"url exists {newIndexerLink}");
+                NotificationComponent.ShowErrorMessage($"url exists {_newIndexerLink}");
                 return;
             }
 
-            settingsInfo.Indexers.Add(new SettingsUrl { Url = newIndexerLink, IsPrimary = !settingsInfo.Indexers.Any() });
-            _clientStorage.SetSettingsInfo(settingsInfo);
-            newIndexerLink = string.Empty;
+            _settingsInfo.Indexers.Add(new SettingsUrl { Url = _newIndexerLink, IsPrimary = !_settingsInfo.Indexers.Any() });
+            ClientStorage.SetSettingsInfo(_settingsInfo);
+            _newIndexerLink = string.Empty;
         }
 
         await Refresh(false);
@@ -245,31 +245,31 @@
 
     private async Task AddRelay()
     {
-        if (!string.IsNullOrWhiteSpace(newRelayLink))
+        if (!string.IsNullOrWhiteSpace(_newRelayLink))
         {
-            if (!Uri.TryCreate(newRelayLink, UriKind.Absolute, out Uri? uri))
+            if (!Uri.TryCreate(_newRelayLink, UriKind.Absolute, out Uri? uri))
             {
-                notificationComponent.ShowErrorMessage($"invalid url {newRelayLink}");
+                NotificationComponent.ShowErrorMessage($"invalid url {_newRelayLink}");
                 return;
             }
 
             if (uri.Scheme is not ("ws" or "wss"))
             {
-                notificationComponent.ShowErrorMessage($"invalid url {newRelayLink} schema must be ws or wss");
+                NotificationComponent.ShowErrorMessage($"invalid url {_newRelayLink} schema must be ws or wss");
                 return;
             }
 
-            newRelayLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
+            _newRelayLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
 
-            if (settingsInfo.Relays.Any(a => a.Url == newRelayLink))
+            if (_settingsInfo.Relays.Any(a => a.Url == _newRelayLink))
             {
-                notificationComponent.ShowErrorMessage($"url exists {newRelayLink}");
+                NotificationComponent.ShowErrorMessage($"url exists {_newRelayLink}");
                 return;
             }
 
-            settingsInfo.Relays.Add(new SettingsUrl { Url = newRelayLink, IsPrimary = !settingsInfo.Relays.Any() });
-            _clientStorage.SetSettingsInfo(settingsInfo);
-            newRelayLink = string.Empty;
+            _settingsInfo.Relays.Add(new SettingsUrl { Url = _newRelayLink, IsPrimary = !_settingsInfo.Relays.Any() });
+            ClientStorage.SetSettingsInfo(_settingsInfo);
+            _newRelayLink = string.Empty;
         }
 
         await Refresh(false);
@@ -277,42 +277,42 @@
 
     private void RemoveIndexer(string url)
     {
-        var res = settingsInfo.Indexers.FirstOrDefault(f => f.Url == url);
+        var res = _settingsInfo.Indexers.FirstOrDefault(f => f.Url == url);
         if (res != null)
         {
-            settingsInfo.Indexers.Remove(res);
+            _settingsInfo.Indexers.Remove(res);
             
-            if (res.IsPrimary && settingsInfo.Indexers.Any())
+            if (res.IsPrimary && _settingsInfo.Indexers.Any())
             {
-                var next = settingsInfo.Indexers.OrderBy(a => a.Status).First();
+                var next = _settingsInfo.Indexers.OrderBy(a => a.Status).First();
                 next.IsPrimary = true;
             }
             
-            _clientStorage.SetSettingsInfo(settingsInfo);
+            ClientStorage.SetSettingsInfo(_settingsInfo);
 
         }
     }
 
     private void RemoveRelay(string url)
     {
-        var res = settingsInfo.Relays.FirstOrDefault(f => f.Url == url);
+        var res = _settingsInfo.Relays.FirstOrDefault(f => f.Url == url);
         if (res != null)
         {
-            settingsInfo.Relays.Remove(res);
+            _settingsInfo.Relays.Remove(res);
             
-            if (res.IsPrimary && settingsInfo.Relays.Any())
+            if (res.IsPrimary && _settingsInfo.Relays.Any())
             {
-                var next = settingsInfo.Relays.OrderBy(a => a.Status).First();
+                var next = _settingsInfo.Relays.OrderBy(a => a.Status).First();
                 next.IsPrimary = true;
             }
 
-            _clientStorage.SetSettingsInfo(settingsInfo);
+            ClientStorage.SetSettingsInfo(_settingsInfo);
         }
     }
 
     private void SetPrimaryIndexer(SettingsUrl indexer)
     {
-        foreach (var idx in settingsInfo.Indexers)
+        foreach (var idx in _settingsInfo.Indexers)
         {
             if (idx.Url == indexer.Url)
             {
@@ -324,14 +324,14 @@
             }
         }
 
-        _clientStorage.SetSettingsInfo(settingsInfo);
+        ClientStorage.SetSettingsInfo(_settingsInfo);
 
         StateHasChanged();
     }
 
     private void SetPrimaryRelay(SettingsUrl indexer)
     {
-        foreach (var idx in settingsInfo.Relays)
+        foreach (var idx in _settingsInfo.Relays)
         {
             if (idx.Url == indexer.Url)
             {
@@ -343,7 +343,7 @@
             }
         }
 
-        _clientStorage.SetSettingsInfo(settingsInfo);
+        ClientStorage.SetSettingsInfo(_settingsInfo);
 
         StateHasChanged();
     }
@@ -355,42 +355,42 @@
 
     private async Task Refresh(bool force)
     {
-        refreshSpinner = true;
+        _refreshSpinner = true;
 
         try
         {
-            await _networkService.CheckServices(force);
+            await NetworkService.CheckServices(force);
 
-            settingsInfo = _clientStorage.GetSettingsInfo();
+            _settingsInfo = ClientStorage.GetSettingsInfo();
         }
         catch (Exception e)
         {
             Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            NotificationComponent.ShowErrorMessage(e.Message);
         }
         finally
         {
-            refreshSpinner = false;
+            _refreshSpinner = false;
         }
     }
 
     private void WipteAllData()
     {
-        if (!confirmWipe)
+        if (!_confirmWipe)
         {
-            showConfirmWipeMessage = true;
+            _showConfirmWipeMessage = true;
             return;
         }
 
-        _clientStorage.WipeStorage();
-        _cacheStorage.WipeSession();
+        ClientStorage.WipeStorage();
+        CacheStorage.WipeSession();
 
-        showWipeallModal = false;
-        showConfirmWipeMessage = false;
+        _showWipeallModal = false;
+        _showConfirmWipeMessage = false;
 
-        _networkService.AddSettingsIfNotExist();
+        NetworkService.AddSettingsIfNotExist();
 
-        hasWallet = _walletStorage.HasWallet();
+        HasWallet = WalletStorage.HasWallet();
         StateHasChanged();
 
         NavMenuState.NotifyStateChanged();

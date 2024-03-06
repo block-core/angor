@@ -5,13 +5,13 @@
 @using Nostr.Client.Messages.Metadata
 @using QRCoder
 
-@inject IClipboardService _clipboardService
+@inject IClipboardService ClipboardService
 
 <!-- Trigger Button -->
 <button class="btn btn-secondary qr-button" @onclick="ShowModal">Show QR Code</button>
 
 <!-- Modal -->
-@if (showModal)
+@if (_showModal)
 {
     <div class="modal fade show d-block" id="qrcodeModal" tabindex="-1" aria-labelledby="qrcodeModalLabel" aria-hidden="true">
         <div class="modal-dialog custom-modal-size">
@@ -22,7 +22,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="HideModal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <img src="data:image/png;base64,@base64qrcode" class="qrcode-image" alt="QR Code" />
+                    <img src="data:image/png;base64,@_base64Qrcode" class="qrcode-image" alt="QR Code" />
                     <div class="address-container">
                         <div class="d-flex align-items-center">
                             <p id="receive-address" class="card-text mb-0">@Data</p>
@@ -43,46 +43,46 @@
     [Parameter]
     public string Data { get; set; }
 
-    private string base64qrcode;
+    private string _base64Qrcode;
 
-    private bool showModal = false;
+    private bool _showModal = false;
 
     private void ShowModal()
     {
-        GenerateQRCode(Data);
-        showModal = true;
+        GenerateQrCode(Data);
+        _showModal = true;
     }
 
     private void HideModal()
     {
-        showModal = false;
+        _showModal = false;
     }
 
-    public void SetQRCode(string newData)
+    public void SetQrCode(string newData)
     {
         Data = newData;
     }
 
-    public void GenerateQRCode(string newData)
+    public void GenerateQrCode(string newData)
     {
         Data = newData;
 
-        base64qrcode = GenerateQRCodeInternal(Data);
+        _base64Qrcode = GenerateQrCodeInternal(Data);
 
         StateHasChanged();
     }
 
-    public static string GenerateQRCodeInternal(string content)
+    public static string GenerateQrCodeInternal(string content)
     {
         using QRCodeGenerator qrGenerator = new QRCodeGenerator();
         using QRCodeData qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.Q);
-        using PngByteQRCode pngByteQRCode = new PngByteQRCode(qrCodeData);
-        return Convert.ToBase64String(pngByteQRCode.GetGraphic(10));
+        using PngByteQRCode pngByteQrCode = new PngByteQRCode(qrCodeData);
+        return Convert.ToBase64String(pngByteQrCode.GetGraphic(10));
     }
 
     private async Task CopyToClipboard()
     {
-        await _clipboardService.WriteTextAsync(Data);
+        await ClipboardService.WriteTextAsync(Data);
 
     }
 }

@@ -19,9 +19,9 @@ namespace Angor.Server
         [Key]
         public string Key { get; set; }
 
-        public string nostrPrivateKey { get; set; }
+        public string NostrPrivateKey { get; set; }
         
-        public string founderSigningPrivateKey { get; set; }
+        public string FounderSigningPrivateKey { get; set; }
     }
     
     public class ProjectIndexerData
@@ -43,22 +43,22 @@ namespace Angor.Server
 
     public class TestStorageService 
     {
-        private readonly string dbPath;
-        private readonly string dbConnection;
+        private readonly string _dbPath;
+        private readonly string _dbConnection;
 
         //private SwapContext swapContext;
 
         public TestStorageService(IOptions<DataConfigOptions> options)
         {
-            dbPath = Path.Combine(options.Value.DirectoryPath, $"testdata.db");
+            _dbPath = Path.Combine(options.Value.DirectoryPath, $"testdata.db");
 
-            using var context = new ProjectContext(dbPath);
+            using var context = new ProjectContext(_dbPath);
             context.Database.EnsureCreated();
         }
 
         public async Task<IEnumerable<ProjectInfo>> Get()
         {
-            await using var context = new ProjectContext(dbPath);
+            await using var context = new ProjectContext(_dbPath);
 
             var projects = context.Projects;
 
@@ -79,7 +79,7 @@ namespace Angor.Server
 
         public async Task Add(ProjectInfo project)
         {
-            await using var context = new ProjectContext(dbPath);
+            await using var context = new ProjectContext(_dbPath);
 
             context.Projects.Add(new SerializeData { Key = project.ProjectIdentifier, Data = System.Text.Json.JsonSerializer.Serialize(project) });
 
@@ -88,7 +88,7 @@ namespace Angor.Server
 
         public async Task AddKey(string projectid, string founderKey)
         {
-            await using var context = new ProjectContext(dbPath);
+            await using var context = new ProjectContext(_dbPath);
 
             context.Projects.Add(new SerializeData { Key = "key:" + projectid, Data =  founderKey });
 
@@ -97,30 +97,30 @@ namespace Angor.Server
         
         public async Task AddKey(string projectid, SignData signData)
         {
-            await using var context = new ProjectContext(dbPath);
+            await using var context = new ProjectContext(_dbPath);
 
-            context.ProjectKeys.Add(new ProjectKeys { Key = projectid, founderSigningPrivateKey =  signData.FounderRecoveryPrivateKey, nostrPrivateKey = signData.NostrPrivateKey });
+            context.ProjectKeys.Add(new ProjectKeys { Key = projectid, FounderSigningPrivateKey =  signData.FounderRecoveryPrivateKey, NostrPrivateKey = signData.NostrPrivateKey });
 
             await context.SaveChangesAsync();
         }
 
         public async Task<ProjectKeys> GetKeys(string projectid)
         {
-            await using var context = new ProjectContext(dbPath);
+            await using var context = new ProjectContext(_dbPath);
 
             return context.ProjectKeys.First(_ => _.Key == projectid);
         }
 
         public async Task<IEnumerable<ProjectKeys>> GetAllKeys()
         {
-            await using var context = new ProjectContext(dbPath);
+            await using var context = new ProjectContext(_dbPath);
 
             return context.ProjectKeys.ToList();
         }
 
         public async Task<string> GetKey(string projectid)
         {
-            await using var context = new ProjectContext(dbPath);
+            await using var context = new ProjectContext(_dbPath);
 
             var projects = context.Projects;
 
@@ -165,21 +165,21 @@ namespace Angor.Server
 
     public class TestStorageServiceIndexer
     {
-        private readonly string dbPath;
-        private readonly string dbConnection;
+        private readonly string _dbPath;
+        private readonly string _dbConnection;
 
 
         public TestStorageServiceIndexer(IOptions<DataConfigOptions> options)
         {
-            dbPath = Path.Combine(options.Value.DirectoryPath, $"testdataindexer.db");
+            _dbPath = Path.Combine(options.Value.DirectoryPath, $"testdataindexer.db");
 
-            using var context = new ProjectContextIndexer(dbPath);
+            using var context = new ProjectContextIndexer(_dbPath);
             context.Database.EnsureCreated();
         }
 
         public async Task<IEnumerable<ProjectIndexerData>> Get()
         {
-            await using var context = new ProjectContextIndexer(dbPath);
+            await using var context = new ProjectContextIndexer(_dbPath);
 
             var projects = context.Projects;
 
@@ -188,7 +188,7 @@ namespace Angor.Server
 
         public async Task Add(ProjectIndexerData project)
         {
-            await using var context = new ProjectContextIndexer(dbPath);
+            await using var context = new ProjectContextIndexer(_dbPath);
 
             context.Projects.Add(project);
             await context.SaveChangesAsync();
@@ -196,7 +196,7 @@ namespace Angor.Server
 
         public async Task<IEnumerable<ProjectInvestment>> GetInv()
         {
-            await using var context = new ProjectContextIndexer(dbPath);
+            await using var context = new ProjectContextIndexer(_dbPath);
 
             var investments = context.Investments;
 
@@ -205,7 +205,7 @@ namespace Angor.Server
 
         public async Task Add(ProjectInvestment project)
         {
-            await using var context = new ProjectContextIndexer(dbPath);
+            await using var context = new ProjectContextIndexer(_dbPath);
 
             context.Investments.Add(project);
             await context.SaveChangesAsync();

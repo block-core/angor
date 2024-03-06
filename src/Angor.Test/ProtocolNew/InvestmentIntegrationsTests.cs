@@ -28,7 +28,7 @@ namespace Angor.Test
         private InvestorTransactionActions _investorTransactionActions;
         private FounderTransactionActions _founderTransactionActions;
 
-        private string angorRootKey =
+        private string _angorRootKey =
             "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
 
         private FeeEstimation _expectedFeeEstimation = new FeeEstimation()
@@ -116,40 +116,40 @@ namespace Angor.Test
             projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
-                _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+                _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, _angorRootKey);
 
             // Create the seeder 1 params
             var seeder1Key = new Key();
-            var seeder1secret = new Key();
+            var seeder1Secret = new Key();
             var seeder1ChangeKey = new Key();
 
             InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder1Key.PubKey.ToBytes());
             seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
-            seeder1Context.InvestorSecretHash = Hashes.Hash256(seeder1secret.ToBytes()).ToString();
+            seeder1Context.InvestorSecretHash = Hashes.Hash256(seeder1Secret.ToBytes()).ToString();
 
             // Create the seeder 2 params
             var seeder2Key = new Key();
-            var seeder2secret = new Key();
+            var seeder2Secret = new Key();
             var seeder2ChangeKey = new Key();
 
             InvestorContext seeder2Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder2Context.InvestorKey = Encoders.Hex.EncodeData(seeder2Key.PubKey.ToBytes());
             seeder2Context.ChangeAddress = seeder2ChangeKey.PubKey.GetSegwitAddress(network).ToString();
-            seeder2Context.InvestorSecretHash = Hashes.Hash256(seeder2secret.ToBytes()).ToString();
+            seeder2Context.InvestorSecretHash = Hashes.Hash256(seeder2Secret.ToBytes()).ToString();
 
             // Create the seeder 3 params
             var seeder3Key = new Key();
-            var seeder3secret = new Key();
+            var seeder3Secret = new Key();
             var seeder3ChangeKey = new Key();
 
             InvestorContext seeder3Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder3Context.InvestorKey = Encoders.Hex.EncodeData(seeder3Key.PubKey.ToBytes());
             seeder3Context.ChangeAddress = seeder3ChangeKey.PubKey.GetSegwitAddress(network).ToString();
-            seeder3Context.InvestorSecretHash = Hashes.Hash256(seeder3secret.ToBytes()).ToString();
+            seeder3Context.InvestorSecretHash = Hashes.Hash256(seeder3Secret.ToBytes()).ToString();
 
             // Build seeders hashes
 
@@ -250,13 +250,13 @@ namespace Angor.Test
             projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
-                _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+                _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, _angorRootKey);
 
             projectInvestmentInfo.PenaltyDays = 180;
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
-            var seeder1secret = new Key();
+            var seeder1Secret = new Key();
             var seeder1ChangeKey = new Key();
             var seeder1ReceiveCoinsKey = new Key();
 
@@ -264,7 +264,7 @@ namespace Angor.Test
 
             seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder11Key.PubKey.ToBytes());
             seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
-            seeder1Context.InvestorSecretHash = Hashes.Hash256(seeder1secret.ToBytes()).ToString();
+            seeder1Context.InvestorSecretHash = Hashes.Hash256(seeder1Secret.ToBytes()).ToString();
 
             // create the investment transaction
 
@@ -305,7 +305,7 @@ namespace Angor.Test
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
-                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, _angorRootKey);
             projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
 
             // Create the seeder 1 params
@@ -358,7 +358,7 @@ namespace Angor.Test
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
             projectInvestmentInfo.ProjectIdentifier =
-                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, _angorRootKey);
             projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
 
             // Create the seeder 1 params
@@ -406,7 +406,7 @@ namespace Angor.Test
 
             var funderKey = _derivationOperations.DeriveFounderKey(words, 1);
             var founderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
-            var angorKey = _derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
+            var angorKey = _derivationOperations.DeriveAngorKey(funderKey, _angorRootKey);
             var funderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
             var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
 
@@ -474,7 +474,7 @@ namespace Angor.Test
             var investorChangeKey = new Key();
 
             var funderKey = _derivationOperations.DeriveFounderKey(words, 1);
-            var angorKey = _derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
+            var angorKey = _derivationOperations.DeriveAngorKey(funderKey, _angorRootKey);
             var founderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
             var funderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
             var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
@@ -594,7 +594,7 @@ namespace Angor.Test
             };
             
             projectInvestmentInfo.ProjectIdentifier =
-                _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+                _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, _angorRootKey);
 
             // create the investment transaction
 

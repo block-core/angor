@@ -4,7 +4,7 @@ namespace Angor.Shared.Models;
 
 public class ProjectMetadata
 {
-    private const string displayName = "display_name";
+    private const string DisplayName = "display_name";
     
     public string Name { get; set; }
     public string Website { get; set; }
@@ -28,8 +28,8 @@ public class ProjectMetadata
         };
         if (nostrMetadata.AdditionalData.ContainsKey(nameof(project.Website)))
             project.Website = nostrMetadata.AdditionalData[nameof(project.Website)].ToString();
-        if (nostrMetadata.AdditionalData.ContainsKey(displayName))
-            project.Name = nostrMetadata.AdditionalData[displayName].ToString();
+        if (nostrMetadata.AdditionalData.ContainsKey(DisplayName))
+            project.Name = nostrMetadata.AdditionalData[DisplayName].ToString();
         return project;
     }
 
@@ -44,7 +44,7 @@ public class ProjectMetadata
             Nip05 = Nip05,
             Nip57 = Nip57,
             Picture = Picture,
-            AdditionalData = new (){{displayName,Name}}
+            AdditionalData = new (){{DisplayName,Name}}
         };
 
         if (Website != null) 

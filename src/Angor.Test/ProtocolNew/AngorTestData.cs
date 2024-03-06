@@ -9,20 +9,20 @@ namespace Angor.Test.ProtocolNew;
 
 public class AngorTestData
 {
-    protected string angorRootKey =
+    protected string AngorRootKey =
         "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
     
-    protected Mock<INetworkConfiguration> _networkConfiguration;
-    protected DerivationOperations _derivationOperations;
+    protected Mock<INetworkConfiguration> NetworkConfiguration;
+    protected DerivationOperations DerivationOperations;
 
     protected AngorTestData()
     {
-        _networkConfiguration = new Mock<INetworkConfiguration>();
-        _networkConfiguration.Setup(_ => _.GetNetwork())
+        NetworkConfiguration = new Mock<INetworkConfiguration>();
+        NetworkConfiguration.Setup(_ => _.GetNetwork())
             .Returns(Networks.Bitcoin.Testnet());
         
-        _derivationOperations = new DerivationOperations(new HdOperations(),
-            new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+        DerivationOperations = new DerivationOperations(new HdOperations(),
+            new NullLogger<DerivationOperations>(), NetworkConfiguration.Object);
     }
     
     protected ProjectInfo GivenValidProjectInvestmentInfo( WalletWords? words = null, DateTime? startDate = null)
@@ -42,10 +42,10 @@ public class AngorTestData
             new() { AmountToRelease = (decimal)0.5, ReleaseDate = startDate.Value.AddDays(2) },
             new() { AmountToRelease = (decimal)0.4, ReleaseDate = startDate.Value.AddDays(3) }
         };
-        projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
-        projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
+        projectInvestmentInfo.FounderKey = DerivationOperations.DeriveFounderKey(words, 1);
+        projectInvestmentInfo.FounderRecoveryKey = DerivationOperations.DeriveFounderRecoveryKey(words, 1);
         projectInvestmentInfo.ProjectIdentifier =
-            _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+            DerivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, AngorRootKey);
         
         projectInvestmentInfo.ProjectSeeders = new ProjectSeeders { Threshold = 2 };
         return projectInvestmentInfo;

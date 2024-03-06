@@ -4,7 +4,7 @@ namespace Angor.Shared.Services;
 
 public interface IRelaySubscriptionsHandling
 {
-    bool TryAddOKAction(string eventId, Action<NostrOkResponse> action);
+    bool TryAddOkAction(string eventId, Action<NostrOkResponse> action);
     void HandleOkMessages(NostrOkResponse _);
     bool TryAddEoseAction(string subscriptionName, Action action);
     void HandleEoseMessages(NostrEoseResponse _);

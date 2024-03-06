@@ -8,18 +8,18 @@ namespace Angor.Client.Shared
     public class BaseComponent : ComponentBase
     {
         [Inject]
-        protected INetworkConfiguration _networkConfiguration { get; set; }
+        protected INetworkConfiguration NetworkConfiguration { get; set; }
 
         [Inject]
-        protected IWalletStorage _walletStorage { get; set; }
+        protected IWalletStorage WalletStorage { get; set; }
 
         [Inject]
         protected NavigationManager NavigationManager { get; set; }
 
-        public NotificationComponent notificationComponent;
-        protected bool hasWallet { get; set; }
+        public NotificationComponent NotificationComponent;
+        protected bool HasWallet { get; set; }
 
-        protected Network network { get; set; }
+        protected Network Network { get; set; }
 
         protected void SharedMethod()
         {
@@ -28,8 +28,8 @@ namespace Angor.Client.Shared
 
         protected override void OnInitialized()
         {
-            hasWallet = _walletStorage.HasWallet();
-            network = _networkConfiguration.GetNetwork();
+            HasWallet = WalletStorage.HasWallet();
+            Network = NetworkConfiguration.GetNetwork();
         }
     }
 }

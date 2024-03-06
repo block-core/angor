@@ -14,39 +14,39 @@
 @using System.Diagnostics
 @using Angor.Client.Models
 
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
 @inherits BaseComponent
 
-@inject ILogger<Invest> _Logger;
-@inject IDerivationOperations _derivationOperations
-@inject IClientStorage storage;
+@inject ILogger<Invest> Logger;
+@inject IDerivationOperations DerivationOperations
+@inject IClientStorage Storage;
 @inject ICacheStorage SessionStorage;
-@inject IWalletOperations _WalletOperations
+@inject IWalletOperations WalletOperations
 
-@inject ISignService _SignService
+@inject ISignService SignService
 
-@inject IInvestorTransactionActions _InvestorTransactionActions
+@inject IInvestorTransactionActions InvestorTransactionActions
 
-@if (!hasWallet)
+@if (!HasWallet)
 {
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
 
-@if (invested)
+@if (_invested)
 {
     <p>You already invested.</p>
     return;
 }
 
-@if (founder)
+@if (_founder)
 {
     <p>You are the founder.</p>
     return;
 }
 
-@if(project == null)
+@if(_project == null)
 {
     <p>The project was not found.</p>
     return;
@@ -57,11 +57,11 @@
     <p>Here is a small explanation of the project. You can <a href="view/@ProjectId">view more details about the project here</a>.</p>
     
     <p>ProjectId: @ProjectId</p>
-    <p>Target amount: @project.ProjectInfo.TargetAmount BTC</p>
-    <p>Starting in: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy")</p>
+    <p>Target amount: @_project.ProjectInfo.TargetAmount BTC</p>
+    <p>Starting in: @_project.ProjectInfo.StartDate.ToString("dd/MM/yyyy")</p>
 
-    <NotificationComponent @ref="notificationComponent" />
-    @if(project is not InvestorProject investorProject)
+    <NotificationComponent @ref="NotificationComponent" />
+    @if(_project is not InvestorProject investorProject)
     {
         <div class="card">
             <div class="card-body">
@@ -88,8 +88,8 @@
                         </div>
                     }
 
-                    <button type="submit" class="btn btn-primary mt-3" disabled="@buildSpinner">
-                        @if (buildSpinner)
+                    <button type="submit" class="btn btn-primary mt-3" disabled="@_buildSpinner">
+                        @if (_buildSpinner)
                         {
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                             <span>Building trx...</span>
@@ -103,7 +103,7 @@
             </div>
         </div>
 
-        @if (showCreateModal)
+        @if (_showCreateModal)
         {
             <!-- Confirmation Modal -->
             <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
@@ -111,17 +111,17 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Confirmation</h5>
-                            <button type="button" class="btn-close" @onclick="() => showCreateModal = false" disabled="@investSpinner"></button>
+                            <button type="button" class="btn-close" @onclick="() => _showCreateModal = false" disabled="@_investSpinner"></button>
                         </div>
                         <div class="modal-body modal-body-scroll">
-                            <p class ="mb-1"><strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier</p>
-                            <p class="mb-1"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
+                            <p class ="mb-1"><strong>Project Identifier:</strong> @_project.ProjectInfo.ProjectIdentifier</p>
+                            <p class="mb-1"><strong>Founder Key:</strong> @_project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
 
-                            <p class="mb-1"><strong>Target amount:</strong> @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
+                            <p class="mb-1"><strong>Target amount:</strong> @_project.ProjectInfo.TargetAmount @Network.CoinTicker</p>
 
-                            <p class="mb-1"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
-                            <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
-                            <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
+                            <p class="mb-1"><strong>Start date:</strong> @_project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((_project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
+                            <p class="mb-1"><strong>Expiry date:</strong> @_project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((_project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
+                            <p class="mb-1"><strong>Penalty days:</strong> @_project.ProjectInfo.PenaltyDays days</p>
 
                             <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
                             <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
@@ -129,8 +129,8 @@
                             <hr>
 
                             <div class="mb-3">
-                                <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                                <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                                <label for="feeRange" class="form-label">Feerate for @_feeData.SelectedFeeEstimation.Confirmations blocks is @_feeData.SelectedFeeEstimation.FeeRate sats</label>
+                                <input type="range" class="form-range" id="feeRange" @bind="_feeData.FeePosition" @oninput="FeeRangeChanged" min="@_feeData.FeeMin" max="@_feeData.FeeMax">
                             </div>
 
                             <hr>
@@ -138,11 +138,11 @@
                             <h6 class="mt-3 mb-2">Stages</h6>
                             @{
                                 int index = 0;
-                                @foreach (var stage in project.ProjectInfo.Stages)
+                                @foreach (var stage in _project.ProjectInfo.Stages)
                                 {
                                     <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
                                         <p class="mb-1"><strong>Stage amount:</strong> @StagesBreakdown[index++].Amount BTC - @stage.AmountToRelease % </p>
-                                        <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts </p>
+                                        <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - _project.ProjectInfo.StartDate).Days) days after project starts </p>
                                     </div>
                                 }
                             }
@@ -152,9 +152,9 @@
 
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false" disabled="@investSpinner">Cancel</button>
-                            <button type="button" class="btn btn-primary" @onclick="Send" disabled="@investSpinner">
-                                @if (investSpinner)
+                            <button type="button" class="btn btn-secondary" @onclick="() => _showCreateModal = false" disabled="@_investSpinner">Cancel</button>
+                            <button type="button" class="btn btn-primary" @onclick="Send" disabled="@_investSpinner">
+                                @if (_investSpinner)
                                 {
                                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                     <span>Confirm...</span>
@@ -215,8 +215,8 @@
                     <div class="card-body">
                         <p class="modal-title">The founder has signed the recovery transaction, you may now invest.</p>
                         <br/>
-                        <button type="button" class="btn btn-success" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
-                            @if (publishSpinner)
+                        <button type="button" class="btn btn-success" @onclick="PublishSignedTransactionAsync" disabled="@_publishSpinner">
+                            @if (_publishSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 <span>Confirm...</span>
@@ -239,55 +239,55 @@
     [Parameter]
     public string ProjectId { get; set; }
 
-    private bool buildSpinner = false;
-    private bool investSpinner = false;
-    private bool publishSpinner = false;
+    private bool _buildSpinner = false;
+    private bool _investSpinner = false;
+    private bool _publishSpinner = false;
 
 
     public InvestmentModel Investment { get; set; } = new InvestmentModel { InvestmentAmount = 10 };
     private bool IsSeederTimePassed { get; set; }
     private List<StageBreakdown> StagesBreakdown { get; set; } = new();
-    bool founder = false;
-    bool invested = false;
-    private Project? project;
-    private bool showCreateModal;
-    Transaction? signedTransaction;
-    Transaction unSignedTransaction;
+    bool _founder = false;
+    bool _invested = false;
+    private Project? _project;
+    private bool _showCreateModal;
+    Transaction? _signedTransaction;
+    Transaction _unSignedTransaction;
 
-    private FeeData feeData = new();
+    private FeeData _feeData = new();
 
-    private IJSInProcessObjectReference? javascriptNostrToolsModule;
+    private IJSInProcessObjectReference? _javascriptNostrToolsModule;
 
     protected override async Task OnInitializedAsync()
     {
-        if (!hasWallet)
+        if (!HasWallet)
         {
             NavigationManager.NavigateTo($"/wallet");
         }
 
-        Project? findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+        Project? findProject = Storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
         if (findProject != null)
         {
             var investmentProject = findProject as InvestorProject;
-            project = investmentProject;
+            _project = investmentProject;
             
-            invested = investmentProject?.InvestedInProject() ?? false;
+            _invested = investmentProject?.InvestedInProject() ?? false;
         }
         else
         {
-            findProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+            findProject = Storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
             if (findProject != null)
             {
-                founder = true;
-                project = findProject;
+                _founder = true;
+                _project = findProject;
             }
             else
             {
-                project = SessionStorage.GetProjectById(ProjectId);
+                _project = SessionStorage.GetProjectById(ProjectId);
 
-                if (project?.ProjectInfo == null)
+                if (_project?.ProjectInfo == null)
                 {
                     NavigationManager.NavigateTo($"/view/{ProjectId}");
                     return;
@@ -302,31 +302,31 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (javascriptNostrToolsModule == null)
+        if (_javascriptNostrToolsModule == null)
         {
             try
             {
                 //TODO import the nostr tool module directly to c# class
-                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
+                _javascriptNostrToolsModule = await Js.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
             }
             catch (JSException e)
             {
-                _Logger.LogError(e,"Failed to load the nostr tools module");
-                notificationComponent.ShowErrorMessage(e.Message);
+                Logger.LogError(e,"Failed to load the nostr tools module");
+                NotificationComponent.ShowErrorMessage(e.Message);
             }
         }
 
-        if (project is InvestorProject investmentProject && investmentProject.WaitingForFounderResponse())
+        if (_project is InvestorProject investmentProject && investmentProject.WaitingForFounderResponse())
         {
-            var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
+            var accountInfo = Storage.GetAccountInfo(NetworkConfiguration.GetNetwork().Name);
 
-            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, accountInfo.InvestmentsCount + 1);
+            var nostrPrivateKey = DerivationOperations.DeriveProjectNostrPrivateKey(WalletStorage.GetWallet().WalletWords, accountInfo.InvestmentsCount + 1);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            _SignService.LookupSignatureForInvestmentRequest(
+            SignService.LookupSignatureForInvestmentRequest(
                 NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
-                , project.ProjectInfo.NostrPubKey, investmentProject.SignaturesInfo!.TimeOfSignatureRequest!.Value, investmentProject.SignaturesInfo!.SignatureRequestEventId!,
+                , _project.ProjectInfo.NostrPubKey, investmentProject.SignaturesInfo!.TimeOfSignatureRequest!.Value, investmentProject.SignaturesInfo!.SignatureRequestEventId!,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
         }
     }
@@ -351,14 +351,14 @@
             StagesBreakdown.Clear();
             int index = 1;
 
-            foreach (var stage in project!.ProjectInfo.Stages)
+            foreach (var stage in _project!.ProjectInfo.Stages)
             {
                 var insert = new StageBreakdown
                 {
                     StageNumber = index++,
                     Amount = Investment.InvestmentAmount * (stage.AmountToRelease / 100),
                     StageDateTime = stage.ReleaseDate,
-                    DaysFromStartDate = (stage.ReleaseDate - project.ProjectInfo.StartDate).Days
+                    DaysFromStartDate = (stage.ReleaseDate - _project.ProjectInfo.StartDate).Days
                 };
 
                 StagesBreakdown.Add(insert);
@@ -373,7 +373,7 @@
             var minSeederAmount = 2;
             if (Investment.InvestmentAmount < minSeederAmount)
             {
-                notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minSeederAmount} BTC was not reached");
+                NotificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minSeederAmount} BTC was not reached");
                 return;
             }
         }
@@ -381,57 +381,57 @@
         {
             if  (Investment.InvestmentAmount < (decimal)0.001)
             {
-                notificationComponent.ShowErrorMessage($"Investor minimum investment amount is {0.001} BTC");
+                NotificationComponent.ShowErrorMessage($"Investor minimum investment amount is {0.001} BTC");
                 return;
             }
         }
 
-        if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
+        if (_project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
         {
-            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
+            NotificationComponent.ShowErrorMessage("The stages must sum to 100%");
             return;
         }
 
-        if (project is InvestorProject investmentProject && investmentProject.InvestedInProject())
+        if (_project is InvestorProject investmentProject && investmentProject.InvestedInProject())
         {
-            notificationComponent.ShowErrorMessage("You already invested");
+            NotificationComponent.ShowErrorMessage("You already invested");
             return;
         }
 
-        buildSpinner = true;
+        _buildSpinner = true;
 
         try
         {
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountInfo = Storage.GetAccountInfo(Network.Name);
 
-            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
-            feeData.FeeEstimations.Fees.Clear();
-            feeData.FeeEstimations.Fees.AddRange(fetchFees);
-            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+            var fetchFees = await WalletOperations.GetFeeEstimationAsync();
+            _feeData.FeeEstimations.Fees.Clear();
+            _feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            _feeData.SelectedFeeEstimation = _feeData.FeeEstimations.Fees.First();
 
-            var walletWords = _walletStorage.GetWallet().WalletWords;
+            var walletWords = WalletStorage.GetWallet().WalletWords;
 
-            var investorKey = _derivationOperations.DeriveInvestorKey(walletWords, project.ProjectInfo.FounderKey);
+            var investorKey = DerivationOperations.DeriveInvestorKey(walletWords, _project.ProjectInfo.FounderKey);
             
             if (Investment.IsSeeder)
             {
-                var seederHash = _derivationOperations.DeriveSeederSecretHash(walletWords, project.ProjectInfo.FounderKey);
+                var seederHash = DerivationOperations.DeriveSeederSecretHash(walletWords, _project.ProjectInfo.FounderKey);
             }
 
-            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, investorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
+            _unSignedTransaction = InvestorTransactionActions.CreateInvestmentTransaction(_project.ProjectInfo, investorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, walletWords, accountInfo, feeData.SelectedFeeEstimation);
+            _signedTransaction = WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), _unSignedTransaction, walletWords, accountInfo, _feeData.SelectedFeeEstimation);
 
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            Logger.LogError(e, e.Message);
+            NotificationComponent.ShowErrorMessage(e.Message);
         }
         finally
         {
-            showCreateModal = true;
-            buildSpinner = false;
+            _showCreateModal = true;
+            _buildSpinner = false;
         }
     }
 
@@ -443,13 +443,13 @@
         {
             if (int.TryParse(selected, out int res))
             {
-                if (res <= feeData.FeeEstimations.Fees.Count)
+                if (res <= _feeData.FeeEstimations.Fees.Count)
                 {
-                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+                    _feeData.SelectedFeeEstimation = _feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
                    
-                    var accountInfo = storage.GetAccountInfo(network.Name);
+                    var accountInfo = Storage.GetAccountInfo(Network.Name);
                     
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, _walletStorage.GetWallet().WalletWords, accountInfo, feeData.SelectedFeeEstimation);
+                    _signedTransaction = WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), _unSignedTransaction, WalletStorage.GetWallet().WalletWords, accountInfo, _feeData.SelectedFeeEstimation);
 
                     StateHasChanged();
                 }
@@ -459,23 +459,23 @@
 
     private async Task Send()
     {
-        investSpinner = true;
+        _investSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
 
         try
         {
-            Debug.Assert(project != null, nameof(project) + " != null");
+            Debug.Assert(_project != null, nameof(_project) + " != null");
 
-            project = new InvestorProject
+            _project = new InvestorProject
             {
-                ProjectInfo = project.ProjectInfo, 
-                Metadata = project.Metadata, 
-                SignedTransactionHex = signedTransaction!.ToHex(), 
-                CreationTransactionId = project.CreationTransactionId
+                ProjectInfo = _project.ProjectInfo, 
+                Metadata = _project.Metadata, 
+                SignedTransactionHex = _signedTransaction!.ToHex(), 
+                CreationTransactionId = _project.CreationTransactionId
             };
 
-            var investorProject = (InvestorProject)project;
+            var investorProject = (InvestorProject)_project;
 
             // remove signatures when requesting founder to sign
             investorProject.SignaturesInfo = new()
@@ -483,22 +483,22 @@
                     ProjectIdentifier = investorProject!.ProjectInfo.ProjectIdentifier,
                 };
 
-            var strippedInvestmentTransaction = network.CreateTransaction(investorProject.SignedTransactionHex);
+            var strippedInvestmentTransaction = Network.CreateTransaction(investorProject.SignedTransactionHex);
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
 
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountInfo = Storage.GetAccountInfo(Network.Name);
 
-            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, accountInfo.InvestmentsCount + 1);
+            var nostrPrivateKey = DerivationOperations.DeriveProjectNostrPrivateKey(WalletStorage.GetWallet().WalletWords, accountInfo.InvestmentsCount + 1);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            var encryptedContent = await javascriptNostrToolsModule.InvokeAsync<string>(
+            var encryptedContent = await _javascriptNostrToolsModule.InvokeAsync<string>(
                 "encryptNostr",
                 nostrPrivateKeyHex,
                 investorProject.ProjectInfo.NostrPubKey,
-                strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory));
+                strippedInvestmentTransaction.ToHex(Network.Consensus.ConsensusFactory));
 
-            var investmentSigsRequest = _SignService.RequestInvestmentSigs(new SignRecoveryRequest
+            var investmentSigsRequest = SignService.RequestInvestmentSigs(new SignRecoveryRequest
                 {
                     ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
                     EncryptedContent = encryptedContent,
@@ -509,51 +509,51 @@
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
 
-            storage.AddInvestmentProject(investorProject);
+            Storage.AddInvestmentProject(investorProject);
 
             foreach (var input in strippedInvestmentTransaction.Inputs)
                 accountInfo.UtxoReservedForInvestment.Add(input.PrevOut.ToString());
 
-            storage.SetAccountInfo(network.Name, accountInfo);
+            Storage.SetAccountInfo(Network.Name, accountInfo);
 
-            _SignService.LookupSignatureForInvestmentRequest(
+            SignService.LookupSignatureForInvestmentRequest(
                 NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex,
                 investorProject.ProjectInfo.NostrPubKey,
                 investorProject.SignaturesInfo.TimeOfSignatureRequest.Value,
                 investorProject.SignaturesInfo.SignatureRequestEventId,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
 
-            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.ProjectInfo.NostrPubKey);
+            var metadata = SessionStorage.GetProjectMetadataByPubkey(_project.ProjectInfo.NostrPubKey);
             if (metadata != null)
             {
-                storage.AddInvestmentProjectMetadata(project.ProjectInfo.NostrPubKey, metadata);
+                Storage.AddInvestmentProjectMetadata(_project.ProjectInfo.NostrPubKey, metadata);
             }
 
-            notificationComponent.ShowNotificationMessage("Signature request sent", 5);
+            NotificationComponent.ShowNotificationMessage("Signature request sent", 5);
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            Logger.LogError(e, e.Message);
+            NotificationComponent.ShowErrorMessage(e.Message);
         }
         finally
         {
-            showCreateModal = false;
-            investSpinner = false;
+            _showCreateModal = false;
+            _investSpinner = false;
         }
     }
 
     private async Task HandleSignatureReceivedAsync(string? nostrPrivateKeyHex, string encryptedSignatures)
     {
-        if (project is not InvestorProject investorProject || investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
+        if (_project is not InvestorProject investorProject || investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
             return;
         
-        var signatureJson = await javascriptNostrToolsModule.InvokeAsync<string>(
-            "decryptNostr", nostrPrivateKeyHex, project.ProjectInfo.NostrPubKey, encryptedSignatures);
+        var signatureJson = await _javascriptNostrToolsModule.InvokeAsync<string>(
+            "decryptNostr", nostrPrivateKeyHex, _project.ProjectInfo.NostrPubKey, encryptedSignatures);
         
-        _Logger.LogInformation("signature : " + signatureJson);
+        Logger.LogInformation("signature : " + signatureJson);
 
-        var res = System.Text.Json.JsonSerializer.Deserialize<SignatureInfo>(signatureJson, RelayService.settings);
+        var res = System.Text.Json.JsonSerializer.Deserialize<SignatureInfo>(signatureJson, RelayService.Settings);
 
         if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
         {
@@ -564,97 +564,97 @@
 
     public async Task CancelInvestment()
     {
-        if (project is not InvestorProject investorProject || investorProject?.SignaturesInfo is null)
+        if (_project is not InvestorProject investorProject || investorProject?.SignaturesInfo is null)
         {
-            notificationComponent.ShowErrorMessage("Missing project details, unable to cancel the investment");
+            NotificationComponent.ShowErrorMessage("Missing project details, unable to cancel the investment");
             return;
         }
 
         if (!string.IsNullOrEmpty(investorProject.SignedTransactionHex))
         {
-            signedTransaction ??= network.CreateTransaction(investorProject.SignedTransactionHex);
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            _signedTransaction ??= Network.CreateTransaction(investorProject.SignedTransactionHex);
+            var accountInfo = Storage.GetAccountInfo(Network.Name);
 
-            foreach (var input in signedTransaction.Inputs)
+            foreach (var input in _signedTransaction.Inputs)
                 accountInfo.UtxoReservedForInvestment.Remove(input.PrevOut.ToString());
 
-            storage.SetAccountInfo(network.Name, accountInfo);
+            Storage.SetAccountInfo(Network.Name, accountInfo);
         }
 
-        storage.RemoveInvestmentProject(project.ProjectInfo.ProjectIdentifier);
+        Storage.RemoveInvestmentProject(_project.ProjectInfo.ProjectIdentifier);
 
         investorProject.SignaturesInfo = null;
-        project = SessionStorage.GetProjectById(ProjectId);
+        _project = SessionStorage.GetProjectById(ProjectId);
     }
 
     public async Task PublishSignedTransactionAsync()
     {
-        publishSpinner = true;
+        _publishSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
 
         try
         {
-            Debug.Assert(project != null, nameof(project) + " != null");
-            var investorProject = project as InvestorProject;
-            Debug.Assert(investorProject is not null, "The project must be an investor project", nameof(project) + " != null");
+            Debug.Assert(_project != null, nameof(_project) + " != null");
+            var investorProject = _project as InvestorProject;
+            Debug.Assert(investorProject is not null, "The project must be an investor project", nameof(_project) + " != null");
             Debug.Assert(investorProject.SignaturesInfo != null, nameof(investorProject.SignaturesInfo) + " != null");
             Debug.Assert(investorProject.SignedTransactionHex != null, nameof(investorProject.SignedTransactionHex) + " != null");
 
-            signedTransaction ??= _networkConfiguration.GetNetwork().CreateTransaction(investorProject.SignedTransactionHex);
+            _signedTransaction ??= NetworkConfiguration.GetNetwork().CreateTransaction(investorProject.SignedTransactionHex);
 
-            var validSignatures = _InvestorTransactionActions.CheckInvestorRecoverySignatures(investorProject.ProjectInfo, signedTransaction, investorProject.SignaturesInfo);
+            var validSignatures = InvestorTransactionActions.CheckInvestorRecoverySignatures(investorProject.ProjectInfo, _signedTransaction, investorProject.SignaturesInfo);
 
             if (!validSignatures)
             {
-                notificationComponent.ShowErrorMessage("The signatures returned from the founder failed validation");
+                NotificationComponent.ShowErrorMessage("The signatures returned from the founder failed validation");
                 return;
             }
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+            var response = await WalletOperations.PublishTransactionAsync(Network, _signedTransaction);
 
             if (!response.Success)
             {
-                notificationComponent.ShowErrorMessage(response.Message);
+                NotificationComponent.ShowErrorMessage(response.Message);
                 return;
             }
 
             // link the trx to the signatures
-            investorProject.CompleteProjectInvestment(signedTransaction);
+            investorProject.CompleteProjectInvestment(_signedTransaction);
 
-            storage.UpdateInvestmentProject(investorProject);
+            Storage.UpdateInvestmentProject(investorProject);
 
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountInfo = Storage.GetAccountInfo(Network.Name);
             var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
 
-            var spendUtxos = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction);
+            var spendUtxos = WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, _signedTransaction);
 
-            foreach (var input in signedTransaction.Inputs)
+            foreach (var input in _signedTransaction.Inputs)
                 accountInfo.UtxoReservedForInvestment.Remove(input.PrevOut.ToString());
 
-            storage.SetAccountInfo(network.Name, accountInfo);
+            Storage.SetAccountInfo(Network.Name, accountInfo);
 
             unspentInfo.AddRange(spendUtxos);
             SessionStorage.SetUnconfirmedInboundFunds(unspentInfo);
 
-            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.ProjectInfo.NostrPubKey);
+            var metadata = SessionStorage.GetProjectMetadataByPubkey(_project.ProjectInfo.NostrPubKey);
             if (metadata != null)
             {
-                storage.AddInvestmentProjectMetadata(project.ProjectInfo.NostrPubKey, metadata);
+                Storage.AddInvestmentProjectMetadata(_project.ProjectInfo.NostrPubKey, metadata);
             }
 
-            notificationComponent.ShowNotificationMessage("Invested in project", 5);
+            NotificationComponent.ShowNotificationMessage("Invested in project", 5);
 
-            NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
+            NavigationManager.NavigateTo($"/view/{_project.ProjectInfo.ProjectIdentifier}");
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            Logger.LogError(e, e.Message);
+            NotificationComponent.ShowErrorMessage(e.Message);
         }
         finally
         {
-            publishSpinner = false;
+            _publishSpinner = false;
         }
     }
 

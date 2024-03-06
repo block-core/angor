@@ -102,7 +102,7 @@ public class WalletOperations : IWalletOperations
     {
         Network network = _networkConfiguration.GetNetwork();
 
-        if (sendInfo.SendAmountSat > sendInfo.SendUtxos.Values.Sum(s => s.UtxoData.value))
+        if (sendInfo.SendAmountSat > sendInfo.SendUtxos.Values.Sum(s => s.UtxoData.Value))
         {
             throw new ApplicationException("not enough funds");
         }
@@ -140,7 +140,7 @@ public class WalletOperations : IWalletOperations
         foreach (var utxoData in accountInfo.AllUtxos())
         {
             // find all spent inputs to mark them as spent
-            if (inputs.Contains(utxoData.outpoint.ToString()))
+            if (inputs.Contains(utxoData.Outpoint.ToString()))
                 utxoData.PendingSpent = true;
         }
 
@@ -154,11 +154,11 @@ public class WalletOperations : IWalletOperations
             {
                 list.Add(new UtxoData
                 {
-                    address = output.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString(),
-                    scriptHex = output.TxOut.ScriptPubKey.ToHex(),
-                    outpoint = new Outpoint(transactionHash, (int)output.N),
-                    blockIndex = 0,
-                    value = output.TxOut.Value
+                    Address = output.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString(),
+                    ScriptHex = output.TxOut.ScriptPubKey.ToHex(),
+                    Outpoint = new Outpoint(transactionHash, (int)output.N),
+                    BlockIndex = 0,
+                    Value = output.TxOut.Value
                 });
             }
         }
@@ -186,15 +186,15 @@ public class WalletOperations : IWalletOperations
         foreach (var utxoData in accountInfo.AllAddresses().SelectMany(_ => _.UtxoData
                          .Where(utxow => utxow.PendingSpent == false)
                          .Select(u => new { path = _.HdPath, utxo = u }))
-                     .OrderBy(o => o.utxo.blockIndex)
-                     .ThenByDescending(o => o.utxo.value))
+                     .OrderBy(o => o.utxo.BlockIndex)
+                     .ThenByDescending(o => o.utxo.Value))
         {
-            if (accountInfo.UtxoReservedForInvestment.Contains(utxoData.utxo.outpoint.ToString()))
+            if (accountInfo.UtxoReservedForInvestment.Contains(utxoData.utxo.Outpoint.ToString()))
                 continue;
 
             utxosToSpend.Add(new UtxoDataWithPath { HdPath = utxoData.path, UtxoData = utxoData.utxo });
 
-            total += utxoData.utxo.value;
+            total += utxoData.utxo.Value;
 
             if (total > sendAmountat)
             {
@@ -234,8 +234,8 @@ public class WalletOperations : IWalletOperations
         {
             var utxo = utxoDataWithPath.UtxoData;
 
-            coins.Add(new Coin(uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
-                Money.Satoshis(utxo.value), Script.FromHex(utxo.scriptHex)));
+            coins.Add(new Coin(uint256.Parse(utxo.Outpoint.TransactionId), (uint)utxo.Outpoint.OutputIndex,
+                Money.Satoshis(utxo.Value), Script.FromHex(utxo.ScriptHex)));
 
             // derive the private key
             var extKey = extendedKey.Derive(new KeyPath(utxoDataWithPath.HdPath));
@@ -302,8 +302,8 @@ public class WalletOperations : IWalletOperations
         var (address, utxoList) = await FetchUtxoForAddressAsync(addressInfo.Address);
         
         if (utxoList.Count != addressInfo.UtxoData.Count 
-            || addressInfo.UtxoData.Any(_ => _.blockIndex == 0) 
-            || utxoList.Where((_, i) => _.outpoint.transactionId != addressInfo.UtxoData[i].outpoint.transactionId).Any())
+            || addressInfo.UtxoData.Any(_ => _.BlockIndex == 0) 
+            || utxoList.Where((_, i) => _.Outpoint.TransactionId != addressInfo.UtxoData[i].Outpoint.TransactionId).Any())
         {
             CopyPendingSpentUtxos(addressInfo.UtxoData, utxoList);
             addressInfo.UtxoData.Clear();
@@ -315,7 +315,7 @@ public class WalletOperations : IWalletOperations
     {
         foreach (var utxoFrom in from.Where(x => x.PendingSpent))
         {
-            var newUtxo = to.FirstOrDefault(x => x.outpoint.ToString() == utxoFrom.outpoint.ToString());
+            var newUtxo = to.FirstOrDefault(x => x.Outpoint.ToString() == utxoFrom.Outpoint.ToString());
             if (newUtxo != null)
             {
                 newUtxo.PendingSpent = true;
@@ -365,9 +365,9 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
+    private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string extendedPubKey, Network network, bool isChange)
     {
-        ExtPubKey accountExtPubKey = ExtPubKey.Parse(ExtendedPubKey, network);
+        ExtPubKey accountExtPubKey = ExtPubKey.Parse(extendedPubKey, network);
         
         var addressesInfo = new List<AddressInfo>();
 
@@ -392,9 +392,9 @@ public class WalletOperations : IWalletOperations
             //Add the addresses with balance or a history to the returned list
             addressesInfo.AddRange(newAddressesToCheck
                 .Where(addressInfo => addressesNotEmpty
-                    .Any(_ => _.address == addressInfo.Address)));
+                    .Any(_ => _.Address == addressInfo.Address)));
 
-            var tasks = addressesNotEmpty.Select(_ => FetchUtxoForAddressAsync(_.address));
+            var tasks = addressesNotEmpty.Select(_ => FetchUtxoForAddressAsync(_.Address));
 
             var lookupResults = await Task.WhenAll(tasks);
 
@@ -457,7 +457,7 @@ public class WalletOperations : IWalletOperations
         } while (true);
 
         // todo: dan - this is a hack until the endpoint offset is fixed
-        allItems = allItems.DistinctBy(d => d.outpoint.ToString()).ToList();
+        allItems = allItems.DistinctBy(d => d.Outpoint.ToString()).ToList();
 
         return (address, allItems);
     }
@@ -494,14 +494,14 @@ public class WalletOperations : IWalletOperations
 
             foreach (var data in utxosToSpend) //TODO move this out of the fee calculation
             {
-                sendInfo.SendUtxos.Add(data.UtxoData.outpoint.ToString(), data);
+                sendInfo.SendUtxos.Add(data.UtxoData.Outpoint.ToString(), data);
             }
         }
 
         var coins = sendInfo.SendUtxos
             .Select(_ => _.Value.UtxoData)
-            .Select(_ => new Coin(uint256.Parse(_.outpoint.transactionId), (uint)_.outpoint.outputIndex,
-                Money.Satoshis(_.value), Script.FromHex(_.scriptHex)));
+            .Select(_ => new Coin(uint256.Parse(_.Outpoint.TransactionId), (uint)_.Outpoint.OutputIndex,
+                Money.Satoshis(_.Value), Script.FromHex(_.ScriptHex)));
 
         var builder = new TransactionBuilder(network)
             .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), sendInfo.SendAmountSat)

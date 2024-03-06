@@ -25,7 +25,7 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
     private readonly INetworkConfiguration _networkConfiguration;
     private ILogger<TestNostrSigningFromRelay> _logger;
 
-    string angorRootKey =
+    string _angorRootKey =
         "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
 
     public TestNostrSigningFromRelay(ILogger<NostrWebsocketClient> clientLogger, ILogger<NostrWebsocketCommunicator> communicatorLogger, TestStorageService storage, IFounderTransactionActions founderTransactionActions, IInvestorTransactionActions investorTransactionActions, INetworkConfiguration networkConfiguration, ILogger<TestNostrSigningFromRelay> logger)
@@ -94,7 +94,7 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
         SetupNostrClient();
         await _nostrCommunicator.StartOrFail();
 
-        var nostrPrivateKey = NostrPrivateKey.FromHex(projectKeys.nostrPrivateKey);
+        var nostrPrivateKey = NostrPrivateKey.FromHex(projectKeys.NostrPrivateKey);
         var nostrPubKey = nostrPrivateKey.DerivePublicKey().Hex;
         
         _nostrClient.Streams.EventStream.Where(_ => _.Subscription == nostrPubKey + "1")
@@ -102,7 +102,7 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
             .Subscribe(_ =>
             {
                 _clientLogger.LogInformation("application specific data" + _.Event.Content);
-                var data = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Event.Content, settings);
+                var data = System.Text.Json.JsonSerializer.Deserialize<ProjectInfo>(_.Event.Content, Settings);
                 _storage.Add(data);
             });
 
@@ -138,9 +138,9 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
 
         _clientLogger.LogInformation(transactionHex);
 
-        var sig = signProject(transactionHex, project, projectKeys.founderSigningPrivateKey);
+        var sig = SignProject(transactionHex, project, projectKeys.FounderSigningPrivateKey);
 
-        var sigJson = System.Text.Json.JsonSerializer.Serialize(sig, settings);
+        var sigJson = System.Text.Json.JsonSerializer.Serialize(sig, Settings);
         _logger.LogInformation($"Signature to send for stage {sig.ProjectIdentifier} : {sigJson}");
         var ev = new NostrEvent
         {
@@ -156,7 +156,7 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
         _nostrClient.Send(new NostrEventRequest(signed));
     }
 
-    private SignatureInfo signProject(string transactionHex,ProjectInfo info, string founderSigningPrivateKey)
+    private SignatureInfo SignProject(string transactionHex,ProjectInfo info, string founderSigningPrivateKey)
     {
         var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
 
@@ -170,7 +170,7 @@ public class TestNostrSigningFromRelay : ITestNostrSigningFromRelay
         return sig;
     }
 
-    private JsonSerializerOptions settings => new()
+    private JsonSerializerOptions Settings => new()
     {
         // Equivalent to Formatting = Formatting.None
         WriteIndented = false,

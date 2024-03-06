@@ -9,7 +9,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 {
     private readonly ISyncLocalStorageService _storage;
     
-    private const string utxoKey = "utxo:{0}";
+    private const string UtxoKey = "utxo:{0}";
     public ClientStorage(ISyncLocalStorageService storage)
     {
         _storage = storage;
@@ -17,17 +17,17 @@ public class ClientStorage : IClientStorage, INetworkStorage
     
     public AccountInfo GetAccountInfo(string network)
     {
-        return _storage.GetItem<AccountInfo>(string.Format(utxoKey,network));
+        return _storage.GetItem<AccountInfo>(string.Format(UtxoKey,network));
     }
         
     public void SetAccountInfo(string network, AccountInfo items)
     {
-        _storage.SetItem(string.Format(utxoKey,network), items);
+        _storage.SetItem(string.Format(UtxoKey,network), items);
     }
 
     public void DeleteAccountInfo(string network)
     {
-        _storage.RemoveItem(string.Format(utxoKey,network));
+        _storage.RemoveItem(string.Format(UtxoKey,network));
     }
 
     public void AddInvestmentProject(InvestorProject project)

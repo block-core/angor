@@ -107,7 +107,7 @@ namespace Angor.Shared.Networks
         public const int MaxOpReturnRelay = 83;
 
         // Need a network-specific version of the template list
-        private readonly List<ScriptTemplate> standardTemplates = new List<ScriptTemplate>
+        private readonly List<ScriptTemplate> _standardTemplates = new List<ScriptTemplate>
         {
             PayToPubkeyHashTemplate.Instance,
             PayToPubkeyTemplate.Instance,
@@ -117,13 +117,13 @@ namespace Angor.Shared.Networks
             PayToWitTemplate.Instance
         };
 
-        public override List<ScriptTemplate> GetScriptTemplates => this.standardTemplates;
+        public override List<ScriptTemplate> GetScriptTemplates => this._standardTemplates;
 
         public override void RegisterStandardScriptTemplate(ScriptTemplate scriptTemplate)
         {
-            if (!this.standardTemplates.Any(template => (template.Type == scriptTemplate.Type)))
+            if (!this._standardTemplates.Any(template => (template.Type == scriptTemplate.Type)))
             {
-                this.standardTemplates.Add(scriptTemplate);
+                this._standardTemplates.Add(scriptTemplate);
             }
         }
 
@@ -139,7 +139,7 @@ namespace Angor.Shared.Networks
 
         public override ScriptTemplate GetTemplateFromScriptPubKey(Script script)
         {
-            return this.standardTemplates.FirstOrDefault(t => t.CheckScriptPubKey(script));
+            return this._standardTemplates.FirstOrDefault(t => t.CheckScriptPubKey(script));
         }
 
         public override bool IsStandardScriptPubKey(Network network, Script scriptPubKey)

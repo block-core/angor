@@ -19,8 +19,8 @@ public class ProjectOperations
 
         // create the output and script of the investor pubkey script opreturn
         var angorFeeOutputScript = ScriptBuilder.GetProjectStartScript(founderKey);
-        var founderOPReturnOutput = new TxOut(new Money(0), angorFeeOutputScript);
-        projectStartTransaction.AddOutput(founderOPReturnOutput);
+        var founderOpReturnOutput = new TxOut(new Money(0), angorFeeOutputScript);
+        projectStartTransaction.AddOutput(founderOpReturnOutput);
 
         return projectStartTransaction;
     }

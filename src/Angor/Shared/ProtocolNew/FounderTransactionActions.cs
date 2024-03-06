@@ -148,9 +148,9 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         // create the output and script of the investor pubkey script opreturn
         var angorFeeOutputScript = _projectScriptsBuilder.BuildFounderInfoScript(founderKey, nostrPubKey);
-        var founderOPReturnOutput = new Blockcore.Consensus.TransactionInfo.TxOut(
+        var founderOpReturnOutput = new Blockcore.Consensus.TransactionInfo.TxOut(
             new Blockcore.NBitcoin.Money(0), angorFeeOutputScript);
-        projectStartTransaction.AddOutput(founderOPReturnOutput);
+        projectStartTransaction.AddOutput(founderOpReturnOutput);
 
         return projectStartTransaction;
     }

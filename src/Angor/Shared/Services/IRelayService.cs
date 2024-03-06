@@ -10,7 +10,7 @@ public interface IRelayService
     Task<string> AddProjectAsync(ProjectInfo project, string nsec,Action<NostrOkResponse> action);
     Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string nsec,Action<NostrOkResponse> action);
     Task<string> DeleteProjectAsync(string eventId, string hexPrivateKey);
-    void LookupProjectsInfoByPubKeys<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,
+    void LookupProjectsInfoByPubKeys<T>(Action<T> responseDataAction, Action? onEndOfStreamAction,
         params string[] nostrPubKey);
     void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,params string[] nostrPubKeys);
 

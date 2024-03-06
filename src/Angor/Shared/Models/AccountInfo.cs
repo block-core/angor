@@ -43,14 +43,14 @@ public class AccountInfo
     {
         return AllAddresses()
             .SelectMany(x => x.UtxoData)
-            .Any(x => x.outpoint.ToString() == outpoint.ToString());
+            .Any(x => x.Outpoint.ToString() == outpoint.ToString());
     }
 
     public bool RemoveInputFromPending(Outpoint outpoint)
     {
         foreach (var addressInfo in AddressesInfo)
         {
-            var utxo = addressInfo.UtxoData.FirstOrDefault(x => x.outpoint.ToString() == outpoint.ToString());
+            var utxo = addressInfo.UtxoData.FirstOrDefault(x => x.Outpoint.ToString() == outpoint.ToString());
 
             if (utxo is null) continue;
             addressInfo.UtxoData.Remove(utxo);
@@ -59,7 +59,7 @@ public class AccountInfo
         
         foreach (var addressInfo in ChangeAddressesInfo)
         {
-            var utxo = addressInfo.UtxoData.FirstOrDefault(x => x.outpoint.ToString() == outpoint.ToString());
+            var utxo = addressInfo.UtxoData.FirstOrDefault(x => x.Outpoint.ToString() == outpoint.ToString());
 
             if (utxo is null) continue;
             addressInfo.UtxoData.Remove(utxo);

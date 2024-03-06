@@ -9,18 +9,18 @@
 @using Blockcore.NBitcoin.DataEncoders
 @using Angor.Shared.Utilities
 
-@inject IClientStorage storage;
-@inject ICacheStorage _cacheStorage;
-@inject IIndexerService _IndexerService
-@inject INetworkConfiguration _NetworkConfiguration
-@inject IDerivationOperations _derivationOperations
-@inject IWalletOperations _WalletOperations
-@inject IFounderTransactionActions _founderTransactionActions
+@inject IClientStorage Storage;
+@inject ICacheStorage CacheStorage;
+@inject IIndexerService IndexerService
+@inject INetworkConfiguration NetworkConfiguration
+@inject IDerivationOperations DerivationOperations
+@inject IWalletOperations WalletOperations
+@inject IFounderTransactionActions FounderTransactionActions
 @inject ILogger<Recover> Logger;
 
 @inherits BaseComponent
 
-@if (!hasWallet)
+@if (!HasWallet)
 {
     NavigationManager.NavigateTo($"/wallet");
     return;
@@ -28,11 +28,11 @@
 
 <div class="container my-4">
     <h1>Founder Stage Claim</h1>
-    <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
+    <h5 class="card-title">Project Identifier: @_project.ProjectIdentifier</h5>
 
-    <NotificationComponent @ref="notificationComponent" />
+    <NotificationComponent @ref="NotificationComponent" />
     
-    @if (firstTimeRefreshSpinner && refreshSpinner)
+    @if (_firstTimeRefreshSpinner && _refreshSpinner)
     {
         <div class="d-flex justify-content-center">
             <div class="loader"></div>
@@ -41,8 +41,8 @@
     else
     {
         <div class="d-flex justify-content-end">
-            <button class="btn btn-primary mb-2" @onclick="RefreshBalance" disabled="@refreshSpinner">
-                @if (refreshSpinner)
+            <button class="btn btn-primary mb-2" @onclick="RefreshBalance" disabled="@_refreshSpinner">
+                @if (_refreshSpinner)
                 {
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     <span>Refresh...</span>
@@ -55,7 +55,7 @@
         </div>
     }
 
-    @foreach (var stage in stageDatas)
+    @foreach (var stage in _stageDatas)
     {
         bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
         var investedCount = stage.Items.Count(c => c.IsSpent == false);
@@ -64,7 +64,7 @@
         <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
+                    <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @Network.CoinTicker (@investedCount trx) </h5>
                     @if (stageisActive)
                     {
                         <button class="btn btn-success" disabled="@(investedCount == 0 || stage.StagePinner == true)" @onclick="() => ClaimCoins(stage.StageIndex)">
@@ -92,12 +92,12 @@
                 </button>
 
 
-                @if (stage.StageIndex == expandedStageId)
+                @if (stage.StageIndex == _expandedStageId)
                 {
                     <div class="mt-3">
                         @foreach (var transaction in stage.Items)
                         {
-                            bool isTicked = selected.ContainsKey(transaction.Trxid);
+                            bool isTicked = _selected.ContainsKey(transaction.Trxid);
 
                             <div class="d-flex mb-2">
                                 <div class="form-check">
@@ -105,7 +105,7 @@
                                 </div>
                                 <div class="flex-grow-1 ms-3">
                                     <p class="mb-0">
-                                        @transaction.Amount @network.CoinTicker - utxo : @transaction.Trxid-@transaction.Outputindex
+                                        @transaction.Amount @Network.CoinTicker - utxo : @transaction.Trxid-@transaction.Outputindex
 
                                         @if (transaction.IsSpent)
                                         {
@@ -126,7 +126,7 @@
         </div>
     }
     
-    @if (showCreateModal)
+    @if (_showCreateModal)
     {
         <!-- Confirmation Modal -->
         <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
@@ -134,25 +134,25 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Confirmation</h5>
-                        <button type="button" class="btn-close" @onclick="() => showCreateModal = false" disabled="@spendSpinner"></button>
+                        <button type="button" class="btn-close" @onclick="() => _showCreateModal = false" disabled="@_spendSpinner"></button>
                     </div>
                     <div class="modal-body modal-body-scroll">
                         
-                        <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
+                        <p class="mb-1"><strong>Project Identifier:</strong> @_project.ProjectIdentifier</p>
 
-                        <p class="mb-1">The transactions to be spent @signedTransaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
+                        <p class="mb-1">The transactions to be spent @_signedTransaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) @Network.CoinTicker</p>
 
                         <hr>
 
                         <div class="mb-3">
-                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                            <label for="feeRange" class="form-label">Feerate for @_feeData.SelectedFeeEstimation.Confirmations blocks is @_feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="_feeData.FeePosition" @oninput="FeeRangeChanged" min="@_feeData.FeeMin" max="@_feeData.FeeMax">
                         </div>
 
                         <hr>
 
                         <h6 class="mt-3 mb-2">Stages</h6>
-                        @foreach (var item in selected)
+                        @foreach (var item in _selected)
                         {
                             <p style="font-size: 0.7em;" class="mb-1">@item.Key</p>
                         }
@@ -163,9 +163,9 @@
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false" disabled="@spendSpinner">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="Send" disabled="@spendSpinner">
-                            @if (spendSpinner)
+                        <button type="button" class="btn btn-secondary" @onclick="() => _showCreateModal = false" disabled="@_spendSpinner">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="Send" disabled="@_spendSpinner">
+                            @if (_spendSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 <span>Confirm...</span>
@@ -189,20 +189,20 @@
     [Parameter]
     public string ProjectId { get; set; }
 
-    private int? expandedStageId;
-    private bool showCreateModal;
+    private int? _expandedStageId;
+    private bool _showCreateModal;
 
-    private bool refreshSpinner = false;
-    private bool firstTimeRefreshSpinner = false;
-    private bool spendSpinner = false;
+    private bool _refreshSpinner = false;
+    private bool _firstTimeRefreshSpinner = false;
+    private bool _spendSpinner = false;
 
-    private ProjectInfo project;
+    private ProjectInfo _project;
 
-    private FeeData feeData = new();
+    private FeeData _feeData = new();
 
-    List<(Transaction Transaction, string TrxId)> transactions = new();
+    List<(Transaction Transaction, string TrxId)> _transactions = new();
 
-    Dictionary<string, string> selected = new();
+    Dictionary<string, string> _selected = new();
 
     public class StageData
     {
@@ -221,24 +221,24 @@
         public bool IsSpent;
     } 
 
-    List<StageData> stageDatas = new();
+    List<StageData> _stageDatas = new();
 
-    Transaction signedTransaction;
-    FounderContext founderContext;
-    int selectedStageId;
+    Transaction _signedTransaction;
+    FounderContext _founderContext;
+    int _selectedStageId;
 
     protected override async Task OnInitializedAsync()
     {
-        project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
+        _project = Storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
 
-        firstTimeRefreshSpinner = true;
+        _firstTimeRefreshSpinner = true;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            if (hasWallet)
+            if (HasWallet)
             {
                 await RefreshBalance();
             }
@@ -247,7 +247,7 @@
 
     private async Task RefreshBalance()
     {
-        refreshSpinner = true;
+        _refreshSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
 
@@ -260,12 +260,12 @@
         catch (Exception e)
         {
             Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            NotificationComponent.ShowErrorMessage(e.Message);
         }
         finally
         {
-            refreshSpinner = false;
-            firstTimeRefreshSpinner = false;
+            _refreshSpinner = false;
+            _firstTimeRefreshSpinner = false;
         }
 
         StateHasChanged();
@@ -274,15 +274,15 @@
 
     private async Task FindInvestments()
     {
-        var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
+        var trxs = await IndexerService.GetInvestmentsAsync(_project.ProjectIdentifier);
 
-        var trxList = transactions.ToList();
+        var trxList = _transactions.ToList();
 
         var tasks = trxs
             .Where(a => trxList.All(b => b.TrxId != a.TransactionId))
         .Select(async _ =>
         {
-            var hex = await _IndexerService.GetTransactionHexByIdAsync(_.TransactionId);
+            var hex = await IndexerService.GetTransactionHexByIdAsync(_.TransactionId);
             return new { hex, _.TransactionId };
         });
 
@@ -293,13 +293,13 @@
 
         foreach (var trx in trxHexList)
         {
-            trxList.Add((network.CreateTransaction(trx.hex), trx.TransactionId));
+            trxList.Add((Network.CreateTransaction(trx.hex), trx.TransactionId));
         }
 
-        if(!stageDatas.Any())
+        if(!_stageDatas.Any())
         {
             int stageIndex = 0;
-            foreach (var stage in project.Stages)
+            foreach (var stage in _project.Stages)
             {
 
                 var stageItem = new StageData
@@ -309,24 +309,24 @@
                 };
 
                 stageIndex++;
-                stageDatas.Add(stageItem);
+                _stageDatas.Add(stageItem);
             }
         }
 
-        foreach (var stageItem in stageDatas)
+        foreach (var stageItem in _stageDatas)
         {
             foreach (var item in trxList)
             {
                 var insert = new StageDataTrx
                 {
                     Trxid = item.TrxId,
-                    OutputAddress = item.Transaction.Outputs[stageItem.StageIndex + 1].ScriptPubKey.WitHash.GetAddress(network).ToString(),
+                    OutputAddress = item.Transaction.Outputs[stageItem.StageIndex + 1].ScriptPubKey.WitHash.GetAddress(Network).ToString(),
                     Outputindex = stageItem.StageIndex + 1,
                     Amount = item.Transaction.Outputs[stageItem.StageIndex + 1].Value.ToUnit(MoneyUnit.BTC),
                 };
 
                 stageItem.Items.Add(insert);
-                transactions.Add(item);
+                _transactions.Add(item);
             }
         }
     }
@@ -334,10 +334,10 @@
     private async Task CheckSpentFund()
     {
         List<QueryTransaction> trxs = new();
-        var unconfirmedOutbound = _cacheStorage.GetUnconfirmedOutboundFunds();
+        var unconfirmedOutbound = CacheStorage.GetUnconfirmedOutboundFunds();
         bool updateUnconfirmedOutbound = false;
 
-        foreach (StageData stageData in stageDatas)
+        foreach (StageData stageData in _stageDatas)
         {
             foreach (var item in stageData.Items)
             {
@@ -348,7 +348,7 @@
 
                 if (trx == null)
                 {
-                    trx = await _IndexerService.GetTransactionInfoByIdAsync(item.Trxid);
+                    trx = await IndexerService.GetTransactionInfoByIdAsync(item.Trxid);
 
                     trxs.Add(trx);
                 }
@@ -370,13 +370,13 @@
 
         if (updateUnconfirmedOutbound)
         {
-            _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
+            CacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
         }
     }
 
     private async Task ClaimCoins(int stageId)
     {
-        var stage = stageDatas.First(s => s.StageIndex == stageId);
+        var stage = _stageDatas.First(s => s.StageIndex == stageId);
 
         stage.StagePinner = true;
 
@@ -385,38 +385,38 @@
 
         try
         {
-            selectedStageId = stageId;
+            _selectedStageId = stageId;
 
-            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
-            feeData.FeeEstimations.Fees.Clear();
-            feeData.FeeEstimations.Fees.AddRange(fetchFees);
-            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+            var fetchFees = await WalletOperations.GetFeeEstimationAsync();
+            _feeData.FeeEstimations.Fees.Clear();
+            _feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            _feeData.SelectedFeeEstimation = _feeData.FeeEstimations.Fees.First();
 
-            founderContext = new FounderContext { ProjectInfo = project, ProjectSeeders = new ProjectSeeders() };
+            _founderContext = new FounderContext { ProjectInfo = _project, ProjectSeeders = new ProjectSeeders() };
 
-            foreach (var item in selected)
+            foreach (var item in _selected)
             {
-                var trx = transactions.First(f => f.TrxId == item.Key);
+                var trx = _transactions.First(f => f.TrxId == item.Key);
 
-                founderContext.InvestmentTrasnactionsHex.Add(trx.Transaction.ToHex(network.Consensus.ConsensusFactory));
+                _founderContext.InvestmentTrasnactionsHex.Add(trx.Transaction.ToHex(Network.Consensus.ConsensusFactory));
             }
 
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountInfo = Storage.GetAccountInfo(Network.Name);
             var address = accountInfo.GetNextReceiveAddress();
-            var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
+            var addressScript = BitcoinWitPubKeyAddress.Create(address, Network).ScriptPubKey;
 
-            var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
+            var keys = WalletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == _project.ProjectIdentifier);
 
-            var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet().WalletWords, keys.Index);
+            var key = DerivationOperations.DeriveFounderPrivateKey(WalletStorage.GetWallet().WalletWords, keys.Index);
 
-            signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
+            _signedTransaction = FounderTransactionActions.SpendFounderStage(_founderContext.ProjectInfo, _founderContext.InvestmentTrasnactionsHex, _selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), _feeData.SelectedFeeEstimation);
 
-            showCreateModal = true;
+            _showCreateModal = true;
         }
         catch (Exception e)
         {
             Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            NotificationComponent.ShowErrorMessage(e.Message);
         }
         finally
         {
@@ -432,18 +432,18 @@
         {
             if (int.TryParse(selectedItem, out int res))
             {
-                if (res <= feeData.FeeEstimations.Fees.Count)
+                if (res <= _feeData.FeeEstimations.Fees.Count)
                 {
-                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+                    _feeData.SelectedFeeEstimation = _feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
-                    var accountInfo = storage.GetAccountInfo(network.Name);
+                    var accountInfo = Storage.GetAccountInfo(Network.Name);
                     var address = accountInfo.GetNextReceiveAddress();
-                    var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
+                    var addressScript = BitcoinWitPubKeyAddress.Create(address, Network).ScriptPubKey;
 
-                    var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
-                    var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet().WalletWords, keys.Index);
+                    var keys = WalletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == _project.ProjectIdentifier);
+                    var key = DerivationOperations.DeriveFounderPrivateKey(WalletStorage.GetWallet().WalletWords, keys.Index);
 
-                    signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
+                    _signedTransaction = FounderTransactionActions.SpendFounderStage(_founderContext.ProjectInfo, _founderContext.InvestmentTrasnactionsHex, _selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), _feeData.SelectedFeeEstimation);
 
                     StateHasChanged();
                 }
@@ -453,69 +453,69 @@
 
     private async Task Send()
     {
-        spendSpinner = true;
+        _spendSpinner = true;
 
         StateHasChanged();
         await Task.Delay(10);
 
         try
         {
-            showCreateModal = false;
+            _showCreateModal = false;
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+            var response = await WalletOperations.PublishTransactionAsync(Network, _signedTransaction);
 
             if (!response.Success)
             {
-                notificationComponent.ShowErrorMessage(response.Message);
+                NotificationComponent.ShowErrorMessage(response.Message);
                 return;
             }
 
             // add all outptus to the pending list
-            var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInbound = _cacheStorage.GetUnconfirmedInboundFunds();
-            var pendingInbound = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction);
+            var accountInfo = Storage.GetAccountInfo(Network.Name);
+            var unconfirmedInbound = CacheStorage.GetUnconfirmedInboundFunds();
+            var pendingInbound = WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, _signedTransaction);
             unconfirmedInbound.AddRange(pendingInbound);
-            _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInbound);
+            CacheStorage.SetUnconfirmedInboundFunds(unconfirmedInbound);
 
-            var unconfirmedOutbound = _cacheStorage.GetUnconfirmedOutboundFunds();
-            unconfirmedOutbound.AddRange(signedTransaction.Inputs.Select(_ => new Outpoint(_.PrevOut.Hash.ToString(), (int)_.PrevOut.N)));
-            _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
+            var unconfirmedOutbound = CacheStorage.GetUnconfirmedOutboundFunds();
+            unconfirmedOutbound.AddRange(_signedTransaction.Inputs.Select(_ => new Outpoint(_.PrevOut.Hash.ToString(), (int)_.PrevOut.N)));
+            CacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
 
             // mark stage as spent
-            stageDatas.FirstOrDefault(_ => _.StageIndex == selectedStageId)?.Items.ForEach(_ =>
+            _stageDatas.FirstOrDefault(_ => _.StageIndex == _selectedStageId)?.Items.ForEach(_ =>
             {
-                if (signedTransaction.Inputs.Any(a => _.Trxid == a.PrevOut.Hash.ToString() && _.Outputindex == a.PrevOut.N))
+                if (_signedTransaction.Inputs.Any(a => _.Trxid == a.PrevOut.Hash.ToString() && _.Outputindex == a.PrevOut.N))
                     _.IsSpent = true;
             });
 
-            notificationComponent.ShowNotificationMessage("Done", 1);
+            NotificationComponent.ShowNotificationMessage("Done", 1);
         }
         catch (Exception e)
         {
             Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            NotificationComponent.ShowErrorMessage(e.Message);
         }
         finally
         {
-            spendSpinner = false;
+            _spendSpinner = false;
         }
     }
 
     private void Expand(int stageId)
     {
-        expandedStageId = expandedStageId == stageId ? null : stageId;
+        _expandedStageId = _expandedStageId == stageId ? null : stageId;
     }
 
     private void HandleCheckboxChange(string trxId)
     {
         
-        if (selected.ContainsKey(trxId))
+        if (_selected.ContainsKey(trxId))
         {
-            selected.Remove(trxId);
+            _selected.Remove(trxId);
         }
         else
         {
-            selected.Add(trxId, null);
+            _selected.Add(trxId, null);
         }
     }
 }

@@ -5,13 +5,13 @@
 @using Blockcore.Consensus.ScriptInfo
 @using Blockcore.NBitcoin
 
-@inject IClientStorage storage;
+@inject IClientStorage Storage;
 @inject NavigationManager NavigationManager
-@inject IIndexerService _IndexerService
+@inject IIndexerService IndexerService
 
 @inherits BaseComponent
 
-@if (!hasWallet)
+@if (!_hasWallet)
 {
     NavigationManager.NavigateTo($"/wallet");
     return;
@@ -20,9 +20,9 @@
 <div class="container mt-4">
     <h1>View Penalties</h1>
 
-    <NotificationComponent @ref="notificationComponent" />
+    <NotificationComponent @ref="NotificationComponent" />
 
-    @if (!penaltyProjects.Any())
+    @if (!_penaltyProjects.Any())
     {
         <p><em>No penalties found...</em></p>
     }
@@ -41,11 +41,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var penalty in penaltyProjects)
+                        @foreach (var penalty in _penaltyProjects)
                         {
                             <tr>
                                 <td>@penalty.ProjectIdentifier</td>
-                                <td>@penalty.Amount @network.CoinTicker</td>
+                                <td>@penalty.Amount @Network.CoinTicker</td>
                                 <td>
                                     @if (penalty.IsExpired)
                                     {
@@ -73,8 +73,8 @@
 </div>
 
 @code {
-    private List<PenaltiesData> penaltyProjects = new(); // Assuming this is the model name
-    private bool hasWallet = true; // Placeholder, actual value should come from your backend
+    private List<PenaltiesData> _penaltyProjects = new(); // Assuming this is the model name
+    private bool _hasWallet = true; // Placeholder, actual value should come from your backend
                                    // Add any required variables and methods here
     public class PenaltiesData
     {
@@ -89,15 +89,15 @@
    
     protected override async Task OnInitializedAsync()
     {
-        if (hasWallet)
+        if (_hasWallet)
         {
-            var projects = storage.GetInvestmentProjects();
+            var projects = Storage.GetInvestmentProjects();
 
             foreach (var project in projects)
             {
                 if (!string.IsNullOrEmpty(project.RecoveryTransactionId))
                 {
-                    penaltyProjects.Add(new PenaltiesData
+                    _penaltyProjects.Add(new PenaltiesData
                     {
                         ProjectIdentifier = project.ProjectInfo.ProjectIdentifier,
                         RecoveryTransactionId = project.RecoveryTransactionId,
@@ -112,15 +112,15 @@
     {
         if (firstRender)
         {
-            if (hasWallet)
+            if (_hasWallet)
             {
-                var operationResult = await notificationComponent.LongOperation(async () =>
+                var operationResult = await NotificationComponent.LongOperation(async () =>
                 {
-                    var projects = storage.GetInvestmentProjects();
+                    var projects = Storage.GetInvestmentProjects();
 
-                    foreach (var penaltyProject in penaltyProjects)
+                    foreach (var penaltyProject in _penaltyProjects)
                     {
-                        var recoveryTansaction = await _IndexerService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
+                        var recoveryTansaction = await IndexerService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
                         
                         var totalsats = recoveryTansaction.Outputs.Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);
                         penaltyProject.Amount = Money.Satoshis(totalsats).ToUnit(MoneyUnit.BTC);

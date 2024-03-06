@@ -33,12 +33,12 @@ public class SeederTransactionActionsTest : AngorTestData
             _investmentScriptBuilder.Object, 
             _projectScriptsBuilder.Object,
             new SpendingTransactionBuilder(
-                _networkConfiguration.Object,
+                NetworkConfiguration.Object,
                 _projectScriptsBuilder.Object,
                 new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
             _investmentTransactionBuilder.Object,
             new TaprootScriptBuilder(),
-            _networkConfiguration.Object);
+            NetworkConfiguration.Object);
     }
 
     [Fact]

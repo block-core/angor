@@ -17,8 +17,8 @@ public class SpendingTransactionBuilderTest : AngorTestData
 
     public SpendingTransactionBuilderTest()
     {
-        _sut = new SpendingTransactionBuilder(_networkConfiguration.Object,
-            new ProjectScriptsBuilder(_derivationOperations),
+        _sut = new SpendingTransactionBuilder(NetworkConfiguration.Object,
+            new ProjectScriptsBuilder(DerivationOperations),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()));
     }
 
@@ -108,8 +108,8 @@ public class SpendingTransactionBuilderTest : AngorTestData
         
         var expectedFinalWitSig = GetRandomDataWitScript(3);
 
-        _sut = new SpendingTransactionBuilder(_networkConfiguration.Object,
-            new ProjectScriptsBuilder(_derivationOperations),
+        _sut = new SpendingTransactionBuilder(NetworkConfiguration.Object,
+            new ProjectScriptsBuilder(DerivationOperations),
             mock.Object);
 
         var recoveryTransaction = _sut.BuildRecoverInvestorRemainingFundsInProject(investmentTrxHex,

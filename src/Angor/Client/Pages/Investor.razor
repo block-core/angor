@@ -5,15 +5,15 @@
 @using Angor.Client.Models
 @using Angor.Shared.Services
 
-@inject IClientStorage storage;
+@inject IClientStorage Storage;
 @inject NavigationManager NavigationManager
-@inject IWalletStorage _walletStorage;
+@inject IWalletStorage WalletStorage;
 @inject ICacheStorage SessionStorage;
-@inject IIndexerService _IndexerService
+@inject IIndexerService IndexerService
 
 @inherits BaseComponent
 
-@if (!hasWallet)
+@if (!HasWallet)
 {
     NavigationManager.NavigateTo($"/wallet");
     return;
@@ -24,7 +24,7 @@
         <h1 class="mb-4">Invested Portfolio</h1>
         <button class="btn btn-secondary" @onclick="NavigateToPenalties">View Penalties</button>
     </div>    
-    <NotificationComponent @ref="notificationComponent"/>
+    <NotificationComponent @ref="NotificationComponent"/>
     
     <!-- Summary Statistics -->
     <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
@@ -32,7 +32,7 @@
             <div class="card text-white bg-primary">
                 <div class="card-body">
                     <h5 class="card-title">Funded Projects</h5>
-                    <p class="card-text">@TotalFundedProjects</p>
+                    <p class="card-text">@_totalFundedProjects</p>
                 </div>
             </div>
         </div>
@@ -40,7 +40,7 @@
             <div class="card text-white bg-success">
                 <div class="card-body">
                     <h5 class="card-title">Total invested</h5>
-                    <p class="card-text"> @Money.Satoshis(TotalInvested).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                    <p class="card-text"> @Money.Satoshis(_totalInvested).ToUnit(MoneyUnit.BTC) @Network.CoinTicker</p>
                 </div>
             </div>
         </div>
@@ -48,7 +48,7 @@
             <div class="card text-white bg-info">
                 <div class="card-body">
                     <h5 class="card-title">Wallet</h5>
-                    <p class="card-text">@Money.Satoshis(TotalWallet).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                    <p class="card-text">@Money.Satoshis(_totalWallet).ToUnit(MoneyUnit.BTC) @Network.CoinTicker</p>
                 </div>
             </div>
         </div>
@@ -56,7 +56,7 @@
             <div class="card text-white bg-secondary">
                 <div class="card-body">
                     <h5 class="card-title">In Recovery</h5>
-                    <p class="card-text">@Money.Satoshis(TotalInRecovery).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                    <p class="card-text">@Money.Satoshis(_totalInRecovery).ToUnit(MoneyUnit.BTC) @Network.CoinTicker</p>
                 </div>
             </div>
         </div>
@@ -71,18 +71,18 @@
                     <tr >
                         <th></th>
                         <th></th>
-                        <th>Funding Target (@network.CoinTicker)</th>
-                        <th>Raised (@network.CoinTicker)</th>
+                        <th>Funding Target (@Network.CoinTicker)</th>
+                        <th>Raised (@Network.CoinTicker)</th>
                         <th>Raised  (% Target)</th>
                         <th>Project Status</th>
-                        <th>My Investment (@network.CoinTicker)</th>
+                        <th>My Investment (@Network.CoinTicker)</th>
                         <th>Spent by Founder</th>
                         <th>Available to Founder</th>
                         <th>In Recovery</th>
                     </tr>
                 </thead>
                 <tbody>
-                @foreach(var project in projects)
+                @foreach(var project in _projects)
                 {
                     Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
                     
@@ -91,8 +91,8 @@
                             <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link"> @TrimString(@project.ProjectInfo.ProjectIdentifier)</a>
                         </td>
                         <td> @project.Metadata?.Name</td>
-                        <td>@project.ProjectInfo.TargetAmount @network.CoinTicker</td>
-                        <td>@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
+                        <td>@project.ProjectInfo.TargetAmount @Network.CoinTicker</td>
+                        <td>@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @Network.CoinTicker </td>
                         <td>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</td>
                         <td>
                             @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
@@ -104,7 +104,7 @@
                                 <p class="text-success">Live</p>
                             }
                         </td>
-                        <td>@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker 
+                        <td>@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @Network.CoinTicker 
                             @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
                             {
                                     <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link" data-toggle="tooltip" title="Pending"> <i class="oi oi-clock"></i></a>
@@ -112,7 +112,7 @@
                          </td>
                         <td>-</td>
                         <td>-</td>
-                        <td>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                        <td>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @Network.CoinTicker</td>
                     </tr>
                 }
                 </tbody>
@@ -124,33 +124,33 @@
 
 @code {
 
-    private List<InvestorProject> projects = new();
+    private List<InvestorProject> _projects = new();
 
-    long TotalInvested = 0;
-    long TotalWallet = 0;
-    int TotalFundedProjects = 0;
-    long TotalInRecovery = 0;
+    long _totalInvested = 0;
+    long _totalWallet = 0;
+    int _totalFundedProjects = 0;
+    long _totalInRecovery = 0;
 
     public Dictionary<string,ProjectStats> Stats = new();
     
     protected override async Task OnInitializedAsync()
     {
-        hasWallet = _walletStorage.HasWallet();
+        HasWallet = WalletStorage.HasWallet();
 
-        if (hasWallet)
+        if (HasWallet)
         {
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountInfo = Storage.GetAccountInfo(Network.Name);
             var unconfirmedInfo = SessionStorage.GetUnconfirmedInboundFunds();
 
-            projects = storage.GetInvestmentProjects();
+            _projects = Storage.GetInvestmentProjects();
 
             var abi = new AccountBalanceInfo();
             abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
 
-            TotalFundedProjects = projects.Count;
-            TotalInvested =  projects.Sum(s => s.AmountInvested ?? 0);
-            TotalWallet = abi.TotalBalance;
-            TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
+            _totalFundedProjects = _projects.Count;
+            _totalInvested =  _projects.Sum(s => s.AmountInvested ?? 0);
+            _totalWallet = abi.TotalBalance;
+            _totalInRecovery = _projects.Sum(s => s.AmountInRecovery ?? 0);
 
             await RefreshBalance();
         }
@@ -162,15 +162,15 @@
         {
             Stats.Clear();
             
-            foreach (var project in projects)
+            foreach (var project in _projects)
             {
-                var projectStats = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
+                var projectStats = await IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
                 Stats.Add(project.ProjectInfo.ProjectIdentifier, projectStats);
             }
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage(ex.Message);
+            NotificationComponent.ShowErrorMessage(ex.Message);
         }
     }
 
