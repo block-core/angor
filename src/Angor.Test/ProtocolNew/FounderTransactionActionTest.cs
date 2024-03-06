@@ -3,7 +3,6 @@ using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
-using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Angor.Test.DataBuilders;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;

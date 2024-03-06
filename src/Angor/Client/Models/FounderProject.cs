@@ -1,5 +1,3 @@
-using Angor.Shared.Models;
-
 namespace Angor.Client.Models;
 
 public class FounderProject : Project

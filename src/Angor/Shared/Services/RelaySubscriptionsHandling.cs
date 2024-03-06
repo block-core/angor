@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Requests;
 using Nostr.Client.Responses;

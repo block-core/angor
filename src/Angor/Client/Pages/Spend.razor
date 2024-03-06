@@ -1,7 +1,6 @@
 ﻿@page "/spend/{ProjectId}"
 @using Angor.Shared
 @using Angor.Client.Storage
-@using Angor.Client.Services
 @using Angor.Shared.Models
 @using Angor.Shared.ProtocolNew
 @using Angor.Shared.Services
@@ -9,7 +8,6 @@
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 @using Angor.Shared.Utilities
-@using ITransactionSignature = NBitcoin.ITransactionSignature
 
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;

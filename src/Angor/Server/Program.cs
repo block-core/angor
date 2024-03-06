@@ -6,7 +6,6 @@ using DataConfigOptions = Angor.Server.DataConfigOptions;
 using Angor.Client;
 using Angor.Shared;
 using Blockcore.AtomicSwaps.Server.Controllers;
-using Angor.Client.Services;
 using Angor.Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -2,11 +2,8 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Blockcore.Consensus.ScriptInfo;
-using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.BIP39;
-using Blockcore.NBitcoin.Crypto;
-using Blockcore.Networks;
 using Moq;
 
 namespace Angor.Test

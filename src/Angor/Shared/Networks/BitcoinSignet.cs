@@ -1,5 +1,4 @@
-﻿using Blockcore.Base.Deployments;
-using Blockcore.Consensus;
+﻿using Blockcore.Consensus;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
@@ -7,7 +6,6 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BitcoinCore;
 using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.NBitcoin.Protocol;
-using Blockcore.Consensus.Checkpoints;
 using Blockcore.NBitcoin.Crypto;
 
 namespace Angor.Shared.Networks

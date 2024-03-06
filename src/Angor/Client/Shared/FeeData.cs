@@ -1,6 +1,4 @@
-﻿using Angor.Client.Storage;
-using Angor.Shared.Models;
-using Microsoft.AspNetCore.Components;
+﻿using Angor.Shared.Models;
 
 namespace Angor.Client.Shared
 {

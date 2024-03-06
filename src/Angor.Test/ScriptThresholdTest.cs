@@ -1,4 +1,3 @@
-using Angor.Shared;
 using Angor.Test.DataBuilders;
 
 namespace Angor.Test

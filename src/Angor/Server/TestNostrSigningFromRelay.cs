@@ -1,14 +1,11 @@
 using System.Reactive.Linq;
-using System.Text;
 using System.Text.Json;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.ProtocolNew;
 using Angor.Shared.Utilities;
-using Newtonsoft.Json;
 using Nostr.Client.Client;
 using Nostr.Client.Communicator;
-using Nostr.Client.Json;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 using Nostr.Client.Messages.Direct;

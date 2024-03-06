@@ -4,20 +4,12 @@ using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;
-using System;
 using Microsoft.Extensions.Logging;
 using Key = Blockcore.NBitcoin.Key;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
-using System.Reflection;
-using Blockcore.Consensus.TransactionInfo;
 using WitScript = NBitcoin.WitScript;
-using Blockcore.Networks;
-using NBitcoin.RPC;
-using Blockcore.NBitcoin;
-using DBreeze.Utils;
 using Money = Blockcore.NBitcoin.Money;
 using SigHash = Blockcore.Consensus.ScriptInfo.SigHash;
-using Utils = Blockcore.NBitcoin.Utils;
 
 namespace Angor.Shared.ProtocolNew;
 
