@@ -404,7 +404,7 @@
 
         try
         {
-            var nostrKey = DerivationOperations.DeriveProjectNostrPrivateKey(WalletStorage.GetWallet().WalletWords, _project.ProjectIndex);
+            var nostrKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(WalletStorage.GetWallet().WalletWords, _project.ProjectIndex);
 
             var resultId = await RelayService.CreateNostrProfileAsync(_project.Metadata.ToNostrMetadata(),
                 NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()),
@@ -520,7 +520,7 @@
 
         try
         {
-            var nostrKey = DerivationOperations.DeriveProjectNostrPrivateKey(WalletStorage.GetWallet().WalletWords, _project.ProjectIndex);
+            var nostrKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(WalletStorage.GetWallet().WalletWords, _project.ProjectIndex);
 
             var nostrKeyHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
 

@@ -320,7 +320,7 @@
         {
             var accountInfo = Storage.GetAccountInfo(NetworkConfiguration.GetNetwork().Name);
 
-            var nostrPrivateKey = DerivationOperations.DeriveProjectNostrPrivateKey(WalletStorage.GetWallet().WalletWords, accountInfo.InvestmentsCount + 1);
+            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(WalletStorage.GetWallet().WalletWords, accountInfo.InvestmentsCount + 1);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -488,7 +488,7 @@
 
             var accountInfo = Storage.GetAccountInfo(Network.Name);
 
-            var nostrPrivateKey = DerivationOperations.DeriveProjectNostrPrivateKey(WalletStorage.GetWallet().WalletWords, accountInfo.InvestmentsCount + 1);
+            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(WalletStorage.GetWallet().WalletWords, accountInfo.InvestmentsCount + 1);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 

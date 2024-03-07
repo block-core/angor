@@ -22,5 +22,18 @@
       "type": "image/png",
       "sizes": "192x192"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "desktop-installation-screenshot.png",
+      "type": "image/png",
+      "sizes": "1920x933",
+      "form_factor": "wide"
+    },
+    {
+      "src": "mobile-installation-screenshot.png",
+      "type": "image/png",
+      "sizes": "640x1136"
+    }
   ]
 }

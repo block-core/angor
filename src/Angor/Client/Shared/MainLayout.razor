@@ -1,5 +1,5 @@
 ﻿@inherits LayoutComponentBase
-
+@inject IJSRuntime Js;
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -10,7 +10,11 @@
             <div class="alert alert-warning mb-2 mt-2 py-2" role="alert">
                 Alpha app - only use test wallets.
             </div>
-            <a href="https://github.com/block-core/angor" target="_blank">About</a>
+            <div>
+                <span @onclick="InstallApp" role="button" class="d-none" id="installButton">Install</span>
+                <a href="https://github.com/block-core/angor" target="_blank">GitHub</a>
+            </div>
+
         </div>
 
         <article class="content px-4">
@@ -18,3 +22,20 @@
         </article>
     </main>
 </div>
+
+@code {
+ 
+    private async Task InstallApp()
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("angor.installApp");
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error calling installApp: {ex.Message}");
+        }
+    }
+
+
+}
