@@ -1,3 +1,9 @@
+<img src="src/Angor/Client/wwwroot/angor-logo.svg" width="100" height="100">
+
+# Welcome to Angor
+
+---
+<br>
 
 ## What is Angor?
 
