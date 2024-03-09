@@ -3,11 +3,8 @@
     <img src="https://github.com/miwahn/angor/raw/patch-1/src/Angor/Client/wwwroot/angor-logo.svg" height="100" alt="Angor" />
   </p>
   <h3 align="center">
-    About Angor
+    Bitcoin Crowfunding Platform
   </h3>
-  <p align="center">
-    Angor is a Bitcoin crowfunding platform
-  </p>
 </p>
 
 <br>
