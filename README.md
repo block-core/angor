@@ -1,8 +1,15 @@
-<img src="src/Angor/Client/wwwroot/angor-logo.svg" width="100" height="100">
+<p align="center">
+  <p align="center">
+    <img src="https://github.com/miwahn/angor/raw/patch-1/src/Angor/Client/wwwroot/angor-logo.svg" height="100" alt="Angor" />
+  </p>
+  <h3 align="center">
+    About Angor
+  </h3>
+  <p align="center">
+    Angor is a Bitcoin crowfunding platform
+  </p>
+</p>
 
-# Welcome to Angor
-
----
 <br>
 
 ## What is Angor?
