@@ -6,47 +6,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Angor</title>
     <base href="/" />
-    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
-    <link href="css/bootstrap/bootstrap.theme.min.css" rel="stylesheet" />
-    <link href="css/app.css" rel="stylesheet" />
-    <link rel="icon" type="image/svg+xml" href="angor-icon.svg" />
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <link href="Angor.Client.styles.css" rel="stylesheet" />
+    <link rel="icon" type="image/svg+xml" href="/assets/img/angor-icon.svg" />
+    <link rel="icon" type="image/png" href="/assets/img/favicon.png" />
+
     <link href="manifest.json" rel="manifest" />
-    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
-    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
-
-
+    <link rel="apple-touch-icon" sizes="512x512" href="/assets/img/icon-512.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/assets/img/icon-192.png" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900|Roboto+Slab:400,700" />
+    <link href="/assets/css/nucleo-icons.css" rel="stylesheet" />
+    <link href="/assets/css/nucleo-svg.css" rel="stylesheet" />
+    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+    <link href="Angor.Client.styles.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <link href="/assets/css/app.css" rel="stylesheet" />
 
 </head>
 
-<body>
+<body class="g-sidenav-show bg-gray-100">
     <div id="app">
-
         <div class="loader-wrapper">
-            <!--<div class="loading-text">Loading Angor...</div>--> <!-- Text above the loader -->
             <div class="loader"></div>
         </div>
-
-        <!--<svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>-->
     </div>
-
     <div id="blazor-error-ui">
         An unhandled error has occurred.
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
-
-    <script src="css/bootstrap/bootstrap.bundle.min.js"></script>
-
     <script src="_framework/blazor.webassembly.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
-    <script src="/js/appUpdate.js"></script>
-    <script src="/js/custom.js"></script>
+    <script src="/assets/js/appUpdate.js"></script>
+    <script src="/assets/js/core/popper.min.js"></script>
+    <script src="/assets/js/core/bootstrap.min.js"></script>
+    <script src="/assets/js/plugins/perfect-scrollbar.min.js"></script>
+    <script src="/assets/js/plugins/smooth-scrollbar.min.js"></script>
+    <script>
+        var win = navigator.platform.indexOf("Win") > -1;
+        if (win && document.querySelector("#sidenav-scrollbar")) {
+            var options = {
+                damping: "0.5",
+            };
+            Scrollbar.init(document.querySelector("#sidenav-scrollbar"), options);
+        }
+    </script>
+    <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/custom.js"></script>
     <script src="/ServiceWorkerRegister.js"></script>
 </body>
 

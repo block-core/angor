@@ -37,7 +37,7 @@
       "url": "/",
       "icons": [
         {
-          "src": "icon-192.png",
+          "src": "assets/img/icon-192.png",
           "sizes": "192x192"
         }
       ]
@@ -45,30 +45,30 @@
   ],
   "icons": [
     {
-      "src": "angor-icon.svg",
+      "src": "assets/img/angor-icon.svg",
       "type": "image/svg+xml",
       "sizes": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "assets/img/icon-512.png",
       "type": "image/png",
       "sizes": "512x512"
     },
     {
-      "src": "icon-192.png",
+      "src": "assets/img/icon-192.png",
       "type": "image/png",
       "sizes": "192x192"
     }
   ],
   "screenshots": [
     {
-      "src": "desktop-installation-screenshot.png",
+      "src": "assets/img/desktop-installation-screenshot.png",
       "type": "image/png",
       "sizes": "1920x933",
       "form_factor": "wide"
     },
     {
-      "src": "mobile-installation-screenshot.png",
+      "src": "assets/img/mobile-installation-screenshot.png",
       "type": "image/png",
       "sizes": "640x1136"
     }
