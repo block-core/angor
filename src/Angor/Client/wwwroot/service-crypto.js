@@ -1,21 +1,17 @@
+
 // Importing necessary modules
-import { BehaviorSubject, delay, Observable, of } from "rxjs";
-import { Base64 } from 'js-base64';
-import * as bip39 from '@scure/bip39';
+import { Base64 } from './lib/js-base64/base64.mjs';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-export class CryptoService {
-    constructor() {
-       
-    }
+
    
-    getPasswordKey(password) {
+    function getPasswordKey(password) {
         return window.crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
     }
 
-    deriveKey(passwordKey, salt, keyUsage) {
+    function deriveKey(passwordKey, salt, keyUsage) {
         return window.crypto.subtle.deriveKey(
             {
                 name: "PBKDF2",
@@ -30,12 +26,12 @@ export class CryptoService {
         );
     }
 
-    async encryptData(secretData, password) {
+    async function encryptData(secretData, password) {
         try {
             const salt = window.crypto.getRandomValues(new Uint8Array(16));
             const iv = window.crypto.getRandomValues(new Uint8Array(12));
-            const passwordKey = await this.getPasswordKey(password);
-            const aesKey = await this.deriveKey(passwordKey, salt, ["encrypt"]);
+            const passwordKey = await getPasswordKey(password);
+            const aesKey = await deriveKey(passwordKey, salt, ["encrypt"]);
             const encryptedContent = await window.crypto.subtle.encrypt(
                 {
                     name: "AES-GCM",
@@ -58,14 +54,14 @@ export class CryptoService {
         }
     }
 
-    async decryptData(encryptedData, password) {
+    async function  decryptData(encryptedData, password) {
         try {
             const encryptedDataBuff = Base64.toUint8Array(encryptedData);
             const salt = encryptedDataBuff.slice(0, 16);
             const iv = encryptedDataBuff.slice(16, 16 + 12);
             const data = encryptedDataBuff.slice(16 + 12);
-            const passwordKey = await this.getPasswordKey(password);
-            const aesKey = await this.deriveKey(passwordKey, salt, ["decrypt"]);
+            const passwordKey = await getPasswordKey(password);
+            const aesKey = await deriveKey(passwordKey, salt, ["decrypt"]);
             const decryptedContent = await window.crypto.subtle.decrypt(
                 {
                     name: "AES-GCM",
@@ -80,4 +76,8 @@ export class CryptoService {
             return "";
         }
     }
-}
+
+
+
+window.encryptData = encryptData;
+window.decryptData = decryptData;

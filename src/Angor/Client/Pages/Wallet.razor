@@ -70,6 +70,10 @@
                                         <input type="text" class="form-control" @bind="newWalletWordsPassphrase"/>
                                     </div>
                                     <div class="mb-3">
+                                        <label>Wallet Password:</label>
+                                        <input type="password" class="form-control" @bind="password"/>
+                                    </div>
+                                    <div class="mb-3">
                                         <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
                                     </div>
                                     <div class="mb-3">
@@ -251,7 +255,7 @@
                     </button>
                     
                     <!-- New Send button that triggers a confirmation dialog -->
-                    <button type="button" class="btn btn-primary mb-3" @onclick="BuildSend" disabled="@sendLoadSpinner">
+                    <button type="button" class="btn btn-primary mb-3" @onclick="AskPassword" disabled="@sendLoadSpinner">
                         @if (sendLoadSpinner)
                         {
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -360,9 +364,29 @@
                     </div>
                 </div>
             }
+            
+            @if (passwordConfirmModal)
+            {
+                <div class="modal fade show d-block" >
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
+                                <button type="button" class="btn-close" @onclick="() => passwordConfirmModal = false" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body modal-body-scroll">
+                                <p>Please enter your password to sign the transaction</p>
+                                <input type="password" id="passwordInput" class="password-input"/>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" @onclick="() => passwordConfirmModal = false">Close</button>
+                                <button @onclick="BuildSend">Submit</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
-
-       
 
 
         <!-- Section 4 -->
@@ -444,11 +468,15 @@
     private string? walletWordsPassphrase;
     private string? newWalletWords;
     private string? newWalletWordsPassphrase;
-   
+    private string? password;
+
     private bool sendConfirmModal;
     private bool coinControlModal;
     private bool walletWordsModal;
     private bool walletWordsCreateModal;
+
+
+    private bool passwordConfirmModal;
 
     private int feeRange = 0;
     private int FeePosition = 1;
@@ -480,14 +508,6 @@
     
     private async Task RefreshBalance()
     {
-        var a = await _encryptionService.EncryptData("some text", "123");
-        var b = await _encryptionService.DecryptData(a, "123");
-
-        if (a == b)
-        {
-
-        }
-
         balanceSpinner = true;
 
         try
@@ -536,6 +556,7 @@
     private async Task CreateWalletAsync()
     {
         if (string.IsNullOrEmpty(newWalletWords)) throw new ArgumentNullException();
+        if (string.IsNullOrEmpty(password)) throw new ArgumentNullException();
 
         createWalletSpinner = true;
         StateHasChanged();
@@ -548,7 +569,9 @@
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
-            _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { WalletWords = data });
+            var encrypted = await _encryptionService.EncryptData(data.ConvertToString(), password);
+
+            _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { EncryptedData = encrypted });
             storage.SetAccountInfo(network.Name, accountInfo);
             accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
 
@@ -600,6 +623,7 @@
         walletWordsPassphrase = null;
         newWalletWords = null;
         newWalletWordsPassphrase = null;
+        password = null;
     }
 
     private void WalletWordsClose()
@@ -662,7 +686,13 @@
             _lastFeeRefresh = DateTime.UtcNow;
         }
     }
-    
+
+    private async Task AskPassword()
+    {
+        passwordConfirmModal = true;
+        StateHasChanged();
+    }
+
     private async Task BuildSend()
     {
         if (string.IsNullOrEmpty(_sendInfo.SendToAddress))
