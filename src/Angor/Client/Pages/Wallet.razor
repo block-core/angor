@@ -70,11 +70,26 @@
                                         <input type="text" class="form-control" @bind="newWalletWordsPassphrase"/>
                                     </div>
                                     <div class="mb-3">
-                                        <label>Wallet Password:</label>
-                                        <input type="password" class="form-control" @bind="password"/>
+                                        <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
                                     </div>
                                     <div class="mb-3">
-                                        <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
+                                        <p>Please enter a password for your new wallet:</p>
+                                        <div class="input-group mb-3">
+                                            <input type="@passwordInputType" class="form-control" placeholder="Password" @bind="walletPassword" />
+                                            <button class="btn btn-outline-secondary" type="button" @onclick="TogglePasswordVisibility">@passwordToggleText</button>
+                                        </div>
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="backupConfirmationCheckbox" @bind="backupConfirmation">
+                                            <div class="alert alert-warning" role="alert">
+                                                <label class="form-check-label" for="backupConfirmationCheckbox">
+                                                    <strong>ATTENTION!!!</strong> I confirm I have backed up my wallet words and keep it private and secure. I understand that if I lose these words, I will lose access to my wallet.
+                                                </label>
+                                            </div>
+                                        </div>
+                                        @if (showBackupConfirmationError)
+                                        {
+                                            <div class="text-danger-emphasis">You must confirm that you have backed up your wallet words.</div>
+                                        }
                                     </div>
                                     <div class="mb-3">
                                         <button class="btn btn-success" @onclick="CreateWalletAsync">Create Wallet</button>
@@ -160,13 +175,23 @@
                                 <button type="button" class="btn-close" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" aria-label="Close"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
+                                
+                                <!-- Show words button with warning -->
+                                <div class="mb-3">
+                                    <div class="alert alert-danger" role="alert">
+                                        <p class="fs-6">Warning: These words can be used to recover your wallet. Keep them safe.</p>
+                                    </div>
+                                </div>
 
                                 @if (string.IsNullOrEmpty(walletWords))
                                 {
                                     <!-- Show words button with warning -->
+                                    <div class="modal-body modal-body-scroll">
+                                        <p>Please enter your wallet password</p>
+                                        <input type="password" id="passwordInput" class="password-input"/>
+                                    </div>
                                     <div class="mb-3">
                                         <button class="btn btn-warning" @onclick="ShowWords">Show Words</button>
-                                        <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
                                     </div>
                                 }
                                 else
@@ -185,10 +210,11 @@
                                         <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
                                     </div>
                                 }
-
+                                
+                                <hr>
                                 <!-- Delete wallet button -->
                                 <div class="mb-3">
-                                    <button class="btn btn-danger" @onclick="DeleteWallet" >Delete Wallet</button>
+                                    <button class="btn btn-danger" @onclick="DeleteWallet" >Danger!!! Delete Wallet</button>
                                 </div>
 
                             </div>
@@ -365,21 +391,21 @@
                 </div>
             }
             
-            @if (passwordConfirmModal)
+            @if (walletPasswordConfirmModal)
             {
                 <div class="modal fade show d-block" >
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
-                                <button type="button" class="btn-close" @onclick="() => passwordConfirmModal = false" aria-label="Close"></button>
+                                <button type="button" class="btn-close" @onclick="() => walletPasswordConfirmModal = false" aria-label="Close"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
                                 <p>Please enter your password to sign the transaction</p>
                                 <input type="password" id="passwordInput" class="password-input"/>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" @onclick="() => passwordConfirmModal = false">Close</button>
+                                <button type="button" class="btn btn-secondary" @onclick="() => walletPasswordConfirmModal = false">Close</button>
                                 <button @onclick="BuildSend">Submit</button>
                             </div>
                         </div>
@@ -468,7 +494,7 @@
     private string? walletWordsPassphrase;
     private string? newWalletWords;
     private string? newWalletWordsPassphrase;
-    private string? password;
+    private string? walletPassword;
 
     private bool sendConfirmModal;
     private bool coinControlModal;
@@ -476,7 +502,11 @@
     private bool walletWordsCreateModal;
 
 
-    private bool passwordConfirmModal;
+    private bool walletPasswordConfirmModal;
+    private string passwordInputType = "password";
+    private string passwordToggleText = "Show";
+    private bool backupConfirmation = false;
+    private bool showBackupConfirmationError = false;
 
     private int feeRange = 0;
     private int FeePosition = 1;
@@ -546,6 +576,20 @@
         }
     }
 
+    private void TogglePasswordVisibility()
+    {
+        if (passwordInputType == "password")
+        {
+            passwordInputType = "text";
+            passwordToggleText = "Hide";
+        }
+        else
+        {
+            passwordInputType = "password";
+            passwordToggleText = "Show";
+        }
+    }
+
     private async Task ShowCreateWalletModal()
     {
         walletWordsCreateModal = true;
@@ -556,7 +600,13 @@
     private async Task CreateWalletAsync()
     {
         if (string.IsNullOrEmpty(newWalletWords)) throw new ArgumentNullException();
-        if (string.IsNullOrEmpty(password)) throw new ArgumentNullException();
+        if (string.IsNullOrEmpty(walletPassword)) throw new ArgumentNullException();
+
+        if (!backupConfirmation)
+        {
+            showBackupConfirmationError = true;
+            return;
+        }
 
         createWalletSpinner = true;
         StateHasChanged();
@@ -569,7 +619,7 @@
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
-            var encrypted = await _encryptionService.EncryptData(data.ConvertToString(), password);
+            var encrypted = await _encryptionService.EncryptData(data.ConvertToString(), walletPassword);
 
             _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { EncryptedData = encrypted });
             storage.SetAccountInfo(network.Name, accountInfo);
@@ -623,7 +673,9 @@
         walletWordsPassphrase = null;
         newWalletWords = null;
         newWalletWordsPassphrase = null;
-        password = null;
+        walletPassword = null;
+        backupConfirmation = false;
+        showBackupConfirmationError = false;
     }
 
     private void WalletWordsClose()
@@ -689,7 +741,7 @@
 
     private async Task AskPassword()
     {
-        passwordConfirmModal = true;
+        walletPasswordConfirmModal = true;
         StateHasChanged();
     }
 
