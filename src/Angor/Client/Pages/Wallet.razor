@@ -400,13 +400,13 @@
                                 <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
                                 <button type="button" class="btn-close" @onclick="() => walletPasswordConfirmModal = false" aria-label="Close"></button>
                             </div>
-                            <div class="modal-body modal-body-scroll">
-                                <p>Please enter your password to sign the transaction</p>
-                                <input type="password" id="passwordInput" class="password-input"/>
+                            <div class="input-group mb-3 modal-body modal-body-scroll">
+                                <input type="@passwordInputType" class="form-control" placeholder="Password" @bind="walletPassword" />
+                                <button class="btn btn-outline-secondary" type="button" @onclick="TogglePasswordVisibility">@passwordToggleText</button>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" @onclick="() => walletPasswordConfirmModal = false">Close</button>
-                                <button @onclick="BuildSend">Submit</button>
+                                <button class="btn btn-primary" @onclick="BuildSend">Submit</button>
                             </div>
                         </div>
                     </div>
