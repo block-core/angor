@@ -94,17 +94,17 @@
 
 
 @code {
-    private bool _collapseNavMenu = true;
+    private bool collapseNavMenu = true;
     private bool hasWallet;
 
-    private string? NavMenuCssClass => _collapseNavMenu ? "collapse" : null;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private Timer? _timer;
     private int _elapsedCount = 0;
 
     private void ToggleNavMenu()
     {
-        _collapseNavMenu = !_collapseNavMenu;
+        collapseNavMenu = !collapseNavMenu;
     }
 
     /// <inheritdoc />
