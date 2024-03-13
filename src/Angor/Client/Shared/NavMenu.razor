@@ -4,7 +4,7 @@
 @using Angor.Shared.Services
 @inject IWalletStorage _walletStorage;
 @inject NavMenuState NavMenuState;
-@inject INetworkService NetworkService;
+@inject INetworkService _networkService;
 
 
 
@@ -45,7 +45,7 @@
  
        
  
-            @if (_hasWallet)
+            @if (hasWallet)
             {          
                 <li class="nav-item">
                     <NavLink class="nav-link text-white" href="investor">
@@ -95,7 +95,7 @@
 
 @code {
     private bool _collapseNavMenu = true;
-    private bool _hasWallet;
+    private bool hasWallet;
 
     private string? NavMenuCssClass => _collapseNavMenu ? "collapse" : null;
 
@@ -110,7 +110,7 @@
     /// <inheritdoc />
     protected override void OnInitialized()
     {
-        _hasWallet = _walletStorage.HasWallet();
+        hasWallet = _walletStorage.HasWallet();
 
         NavMenuState.OnChange += NavMenuStateOnOnChange;
 
@@ -119,16 +119,16 @@
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        NetworkService.AddSettingsIfNotExist();
+        _networkService.AddSettingsIfNotExist();
 
-        await NetworkService.CheckServices();
+        await _networkService.CheckServices();
 
         await base.OnInitializedAsync();
     }
 
     private void NavMenuStateOnOnChange()
     {
-        _hasWallet = _walletStorage.HasWallet();
+        hasWallet = _walletStorage.HasWallet();
         StateHasChanged();
     }
 
