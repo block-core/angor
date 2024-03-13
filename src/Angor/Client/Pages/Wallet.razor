@@ -111,9 +111,11 @@
                 }
 
                 <!-- Replace '#' in 'data-bs-target' with the id of your modal -->
-                <button type="button" class="btn btn-primary"  @onclick="() => _walletWordsModal = true">Show Wallet Words</button>
+                <button type="button" class="btn btn-primary" @onclick="() => _walletWordsModal = true">
+                    <span>Show Wallet Words</span>
+                </button>
 
-                <button class="btn btn-primary ml-2" @onclick="RefreshBalance" disabled="@_balanceSpinner">
+                <button type="button" class="btn btn-primary me-1" @onclick="RefreshBalance" disabled="@_balanceSpinner">
                     @if (_balanceSpinner)
                     {
                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -127,7 +129,7 @@
                 
                 @if (Network.NetworkType == NetworkType.Testnet && _accountBalanceInfo.TotalBalance < Money.Coins(10).Satoshi)
                 {
-                    <button class="btn btn-secondary ml-2" @onclick="GetTestCoins" disabled="@_testCoinsSpinner">
+                    <button type="button" class="btn btn-secondary me-1" @onclick="GetTestCoins" disabled="@_testCoinsSpinner">
                         @if (_testCoinsSpinner)
                         {
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
