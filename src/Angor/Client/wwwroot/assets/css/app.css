@@ -145,6 +145,10 @@ h6,
     color: #344767;
 }
 
+    h1:focus-visible {
+        outline: none;
+    }
+
 h1,
 .h1 {
     font-size: calc(1.425rem + 2.1vw);
@@ -24388,11 +24392,13 @@ hr {
     }
 
     .sidenav.fixed-start + .main-content {
-        margin-left: 17.125rem;
+        padding-left: 17.125rem;
+        height: 100vh;
     }
 
     .sidenav.fixed-end + .main-content {
-        margin-right: 17.125rem;
+        padding-left: 17.125rem;
+        height: 100vh;
     }
 }
 
