@@ -26,7 +26,7 @@
 
     <NotificationComponent @ref="notificationComponent" />
 
-    @if (project == null)
+    @if (project?.ProjectInfo == null)
     {
         @if (findInProgress)
         {
@@ -363,7 +363,7 @@
         {
             projectStats.Loading = true;
 
-            if (project != null)
+            if (project?.ProjectInfo != null)
             {
                 var data = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
 
