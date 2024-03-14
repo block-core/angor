@@ -17,9 +17,9 @@
          data-scroll="true">
         <div class="container-fluid py-1 px-3">
             <nav class="d-none d-xl-block">
-                <div class=" bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+                <div class="mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                     <div class="text-sm">
-                        <span class="opacity-5 text-dark">Alpha app - only use test wallets.</span>
+                        <span>Alpha app - only use test wallets.</span>
                     </div>
 
                 </div>
@@ -32,16 +32,16 @@
                         <input type="text" class="form-control" />
                     </div>
                 </div>
-                <ul class="navbar-nav justify-content-end">
+                <ul class="navbar-nav justify-content-end user-select-none">
 
                     <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
-                        <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="iconNavbarSidenav">
+                        <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="iconNavbarSidenav" onclick="toggleSidenav()">
                             menu
                         </span>
                     </li>
-                    <li class="nav-item ps-3 d-flex align-items-center">
-                        <span role="button" class="material-icons opacity-10 btn-angor fs-3">
-                            settings
+                    <li class="nav-item ps-3 d-flex align-items-center" id="dark-version" onclick="toggleDarkMode()">
+                        <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="theme-icon">
+                            dark_mode
                         </span>
                     </li>
                     <li class="nav-item ps-3 d-flex align-items-center d-none" id="installButton">
@@ -58,7 +58,7 @@
     @Body
 
 </main>
-
+ 
 
 @code {
     private string _softwareVersion = "0.0.0";
@@ -85,5 +85,19 @@
         var version = assembly?.GetName().Version;
 
         if (version != null) _softwareVersion = version.ToString();
+        
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="firstRender"></param>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Js.InvokeVoidAsync("angor.setTheme");
+        }
+    }
+
 }

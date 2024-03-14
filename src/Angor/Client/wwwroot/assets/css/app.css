@@ -21501,11 +21501,11 @@ fieldset:disabled .btn {
 }
 
 .dark-version {
-    background-color: #1a2035 !important;
+    background-color: #101926 !important;
 }
 
     .dark-version .main-content {
-        background-color: #1a2035 !important;
+        background-color: #101926 !important;
     }
 
     .dark-version.virtual-reality > div {
@@ -21566,7 +21566,7 @@ fieldset:disabled .btn {
     }
 
     .dark-version .bg-gradient-dark {
-        background-image: linear-gradient(195deg, #323a54, #1a2035) !important;
+        background-image: linear-gradient(195deg, #04060a, #08111f) !important;
     }
 
     .dark-version .dropdown .dropdown-menu:before {
@@ -21575,7 +21575,7 @@ fieldset:disabled .btn {
 
     .dark-version .dropdown .dropdown-menu .dropdown-item:hover,
     .dark-version .dropdown .dropdown-menu .dropdown-item:focus {
-        background-color: #1a2035 !important;
+        background-color: #101926 !important;
     }
 
     .dark-version .dropdown .dropdown-menu .dropdown-item i,
