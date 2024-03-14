@@ -397,13 +397,19 @@
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
+                                <h5 class="modal-title" id="coinControlModalLabel">Confirm Password</h5>
                                 <button type="button" class="btn-close" @onclick="() => walletPasswordConfirmModal = false" aria-label="Close"></button>
                             </div>
                             <div class="input-group mb-3 modal-body modal-body-scroll">
                                 <input type="@passwordInputType" class="form-control" placeholder="Password" @bind="walletPassword" />
                                 <button class="btn btn-outline-secondary" type="button" @onclick="TogglePasswordVisibility">@passwordToggleText</button>
                             </div>
+
+                            @if (!string.IsNullOrEmpty(walletPasswordError))
+                            {
+                                <div class="text-danger-emphasis">@walletPasswordError</div>
+                            }
+
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" @onclick="() => walletPasswordConfirmModal = false">Close</button>
                                 <button class="btn btn-primary" @onclick="BuildSend">Submit</button>
@@ -507,6 +513,8 @@
     private string passwordToggleText = "Show";
     private bool backupConfirmation = false;
     private bool showBackupConfirmationError = false;
+
+    private string walletPasswordError = string.Empty;
 
     private int feeRange = 0;
     private int FeePosition = 1;
@@ -749,6 +757,20 @@
 
     private async Task BuildSend()
     {
+        walletPasswordConfirmModal = false;
+
+        if (string.IsNullOrEmpty(walletPassword))
+        {
+            notificationComponent.ShowErrorMessage("Specify the password");
+            return;
+        }
+
+        var wallet = _walletStorage.GetWallet();
+
+        // check that the password is correct
+        var words = await _encryptionService.DecryptData(wallet.EncryptedData, walletPassword);
+       // var wallet = WalletWords.ConvertFromString(words);
+
         if (string.IsNullOrEmpty(_sendInfo.SendToAddress))
         {
             notificationComponent.ShowErrorMessage("Specify a send to address");
