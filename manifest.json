@@ -1,26 +1,77 @@
 {
   "name": "Angor",
   "short_name": "Angor",
+  "description": "Stay in control of your investments with Angor",
+  "lang": "en",
   "start_url": "./",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay"
+  ],
+  "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#03173d",
   "prefer_related_applications": false,
+  "protocol_handlers": [
+    {
+      "protocol": "web+angor",
+      "url": "/view?ProjectId=%s"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "windows",
+      "url": "https://app.angor.io",
+      "id": "io.AngorApp"
+    },
+    {
+      "platform": "play",
+      "url": "https://app.angor.io"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Angor",
+      "short_name": "Angor",
+      "description": "Stay in control of your investments with Angor",
+      "url": "/",
+      "icons": [
+        {
+          "src": "assets/img/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
   "icons": [
     {
-      "src": "angor-icon.svg",
+      "src": "assets/img/angor-icon.svg",
       "type": "image/svg+xml",
       "sizes": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "assets/img/icon-512.png",
       "type": "image/png",
       "sizes": "512x512"
     },
     {
-      "src": "icon-192.png",
+      "src": "assets/img/icon-192.png",
       "type": "image/png",
       "sizes": "192x192"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "assets/img/desktop-installation-screenshot.png",
+      "type": "image/png",
+      "sizes": "1920x933",
+      "form_factor": "wide"
+    },
+    {
+      "src": "assets/img/mobile-installation-screenshot.png",
+      "type": "image/png",
+      "sizes": "640x1136"
+    }
+  ],
+  "iarc_rating_id": "00e84743-b140-58a0-8cc2-f12b79ebe173"
 }
