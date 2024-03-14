@@ -1,20 +1,103 @@
-﻿@inherits LayoutComponentBase
+﻿@using Angor.Client.Storage
+@using System.Reflection
+@inherits LayoutComponentBase
+@inject IJSRuntime Js;
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
 
-    <main>
-        <div class="top-row px-4 d-flex justify-content-between">
-            <div class="alert alert-warning mb-2 mt-2 py-2" role="alert">
-                Alpha app - only use test wallets.
+<aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 bg-gradient-dark"
+       id="sidenav-main">
+    <NavMenu />
+</aside>
+
+
+<main class="main-content">
+    <!-- Navbar -->
+
+    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl" id="navbarBlur"
+         data-scroll="true">
+        <div class="container-fluid py-1 px-3">
+            <nav class="d-none d-xl-block">
+                <div class="mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+                    <div class="text-sm">
+                        <span>Alpha app - only use test wallets.</span>
+                    </div>
+
+                </div>
+                <h6 class="font-weight-bolder mb-0"> Version: @_softwareVersion</h6>
+            </nav>
+            <div class="collapse navbar-collapse mt-2" id="navbar">
+                <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+                    <div class="input-group input-group-outline">
+                        <label class="form-label">search ...</label>
+                        <input type="text" class="form-control" />
+                    </div>
+                </div>
+                <ul class="navbar-nav justify-content-end user-select-none">
+
+                    <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
+                        <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="iconNavbarSidenav" onclick="toggleSidenav()">
+                            menu
+                        </span>
+                    </li>
+                    <li class="nav-item ps-3 d-flex align-items-center" id="dark-version" onclick="toggleDarkMode()">
+                        <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="theme-icon">
+                            dark_mode
+                        </span>
+                    </li>
+                    <li class="nav-item ps-3 d-flex align-items-center d-none" id="installButton">
+                        <span @onclick="InstallApp" role="button" class="material-icons opacity-10 btn-angor fs-3">
+                            install_desktop
+                        </span>
+                    </li>
+                </ul>
             </div>
-            <a href="https://github.com/block-core/angor" target="_blank">About</a>
         </div>
+    </nav>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+    <!-- End Navbar -->
+    @Body
+
+</main>
+ 
+
+@code {
+    private string _softwareVersion = "0.0.0";
+
+    private async Task InstallApp()
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("angor.installApp");
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error calling installApp: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Initializes the component.
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        var assembly = Assembly.GetEntryAssembly();
+
+        var version = assembly?.GetName().Version;
+
+        if (version != null) _softwareVersion = version.ToString();
+        
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="firstRender"></param>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Js.InvokeVoidAsync("angor.setTheme");
+        }
+    }
+
+}
