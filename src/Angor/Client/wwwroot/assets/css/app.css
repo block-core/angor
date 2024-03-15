@@ -22678,22 +22678,22 @@ label,
     bottom: 0;
 }
 
-.footer .nav-link {
-    color: #344767;
-    font-weight: 400;
-    font-size: 0.875rem;
-    padding-top: 0;
-    padding-bottom: 0.25rem;
-}
-
-    .footer .nav-link:hover {
-        opacity: 1 !important;
-        transition: opacity 0.3 ease;
+    .footer .nav-link {
+        color: #344767;
+        font-weight: 400;
+        font-size: 0.875rem;
+        padding-top: 0;
+        padding-bottom: 0.25rem;
     }
 
-.footer .footer-logo {
-    max-width: 2rem;
-}
+        .footer .nav-link:hover {
+            opacity: 1 !important;
+            transition: opacity 0.3 ease;
+        }
+
+    .footer .footer-logo {
+        max-width: 2rem;
+    }
 
 .bg-gradient-primary {
     background-image: linear-gradient(195deg, #1f5d6a 0%, #1f5d6a 100%);
@@ -24393,7 +24393,7 @@ hr {
 
     .sidenav.fixed-start + .main-content {
         padding-left: 17.125rem;
-        height: 100vh;
+        height: 100%;
     }
 
     .sidenav.fixed-end + .main-content {
@@ -28078,3 +28078,8 @@ Adding a bit of styling to the <p > elements
         -webkit-transition: all 0.3s ease;
         color: #e08604;
     }
+
+.dark-version .bg-gradient-dark-topmenu {
+    background-image: linear-gradient(195deg, #04060a, #08111f) !important;
+    box-shadow: none !important;
+}

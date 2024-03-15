@@ -13,24 +13,19 @@
 <main class="main-content">
     <!-- Navbar -->
 
-    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl" id="navbarBlur"
+    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 border-radius-xl position-sticky mt-2 top-2 z-index-sticky blur left-auto bg-gradient-dark-topmenu" id="navbarBlur"
          data-scroll="true">
         <div class="container-fluid py-1 px-3">
-            <nav class="d-none d-xl-block">
+            <nav>
                 <div class="mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                     <div class="text-sm">
-                        <span>Alpha app - only use test wallets.</span>
+                        <h6 class="font-weight-bolder">Alpha app - only use test wallets.</h6>
                     </div>
-
                 </div>
-                <h6 class="font-weight-bolder mb-0"> Version: @_softwareVersion</h6>
             </nav>
-            <div class="collapse navbar-collapse mt-2" id="navbar">
+            <div class="collapse navbar-collapse" id="navbar">
                 <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-                    <div class="input-group input-group-outline">
-                        <label class="form-label">search ...</label>
-                        <input type="text" class="form-control" />
-                    </div>
+ 
                 </div>
                 <ul class="navbar-nav justify-content-end user-select-none">
 
@@ -55,13 +50,31 @@
     </nav>
 
     <!-- End Navbar -->
-    @Body
+    <div class="container my-4">
+        @Body
+    </div>
+
+    <footer class="footer">
+        <div class="container my-4">
+            <div class="row align-items-center justify-content-lg-between">
+
+                    <div class="nav nav-footer justify-content-center justify-content-lg-end">
+                        <div>
+                            <span class="w-100">Version: @_softwareVersion</span>
+                        </div>
+                    </div>
+
+            </div>
+        </div>
+    </footer>
 
 </main>
  
 
 @code {
     private string _softwareVersion = "0.0.0";
+    ElementReference contentRef;
+    ElementReference footerRef;
 
     private async Task InstallApp()
     {
