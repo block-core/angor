@@ -27817,16 +27817,10 @@ pre[class*="language-"] {
     background-color: #FFFDFA;
 }
 
-.card {
-    background-color: #FFFBF5;
-}
-
 .modal-body-scroll {
     max-height: 500px;
     overflow-y: auto;
 }
-
-
 
 .content {
     padding-top: 1.1rem;
