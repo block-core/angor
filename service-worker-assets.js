@@ -33,15 +33,15 @@
       "url": "_framework\/icudt.dat"
     },
     {
-      "hash": "sha256-pLzNeSBXDZ2qAx2\/Kb8jCezJy2N4BG\/1L4SaFhJK8Z0=",
+      "hash": "sha256-7cYBJkqznJIXrLxPhtbs3H2DFUe8ZhvD9KcUTQKNgZI=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-zha6odwuZzq21MJl34+Z+Mq4mOAk71g43JAP7X\/eLeY=",
+      "hash": "sha256-6yTXn\/D63qVzmHF5ZaX9MJYcwwbeG2yQvqjQsydsN6w=",
       "url": "_framework\/Angor.Client.dll"
     },
     {
-      "hash": "sha256-6FrnG6REvbYOpQNyvnJayYHv05\/P600zhWmb6yMSVxs=",
+      "hash": "sha256-uagDNPi92t5s1Y5W7WA7wchSbuwBp+7RXvez1ykhKEM=",
       "url": "_framework\/Angor.Shared.dll"
     },
     {
@@ -633,5 +633,5 @@
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "UKrFF45M"
+  "version": "y3XPUDbM"
 };
