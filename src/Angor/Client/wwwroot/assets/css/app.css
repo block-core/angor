@@ -9,6 +9,9 @@
     --bs-link-hover-color: #e91e63;
 }
 
+.form-control {
+    border: dotted;
+}
 
 @font-face {
     font-family: 'Material Icons Round';
