@@ -22,7 +22,7 @@
 			
             <!-- Search Section -->
             <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="Enter search query" id="searchQuery" @bind="searchQuery">
+                <input type="text" class="form-control" placeholder="Enter Angor project identifier" id="searchQuery" @bind="searchQuery">
                 <button class="btn btn-primary" type="button" @onclick="FindProject" disabled="@findInProgress">Find</button>
             </div>
             
@@ -179,7 +179,6 @@
     private async Task SearchProjects()
     {
         searchInProgress = true;
-        nostrSearchInProgress = true;
         
         var blockchainProjects = await _IndexerService.GetProjectsAsync(null, 20);
         
@@ -196,6 +195,8 @@
                 .Where(_ => _.NostrPubKey != null) //For old projects in the indexer
                 .Select(_ => _.NostrPubKey)
                 .ToArray();
+
+            nostrSearchInProgress = true;
 
             if (projectsForLookup.Any())
                 _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(),
