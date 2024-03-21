@@ -33,15 +33,15 @@
       "url": "_framework\/icudt.dat"
     },
     {
-      "hash": "sha256-Mwd2hht59jbNW8VRnOJ386jq+\/tQ2t0ZmIb\/CkbpXaQ=",
+      "hash": "sha256-u4Fd8n17xPTIIcqo3KnTT01+eIaBnFez70WMuetk1Tw=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-EJ\/F7FJ\/nlDmdRpufmDR02VnLhj9bF017KGbEk6yC\/E=",
+      "hash": "sha256-D410WPRvixPIT\/QVfbqjr+w8q7upjDe91jR2XUrI2Rs=",
       "url": "_framework\/Angor.Client.dll"
     },
     {
-      "hash": "sha256-QvrHeRmfx9IiCKLBVCFMzjApCM\/rPgniM+SaTwKUal4=",
+      "hash": "sha256-wsvG3GyrPWoRATiHYffB4YY4u0hgegwS+UKna17wDJE=",
       "url": "_framework\/Angor.Shared.dll"
     },
     {
@@ -517,15 +517,27 @@
       "url": "Angor.Client.styles.css"
     },
     {
-      "hash": "sha256-AWN7l1DQL4eABWV9uXAjVOou70HtTEfkrzHkHPON8kc=",
+      "hash": "sha256-do+TvpllyKtPqtJiq3MMiJgOA7faWE9rBZlgUkpy4zI=",
       "url": "assets\/css\/app.css"
     },
     {
-      "hash": "sha256-0BsOqWtO5dHvUE+MJQ8fU1wu2wx2XrxOS5te1oL5Lho=",
+      "hash": "sha256-cXVvLBB680TR\/LrRU4DtytwdWo6+pGlBv0VE+61LAuY=",
+      "url": "assets\/css\/material-dashboard.css"
+    },
+    {
+      "hash": "sha256-fh+nHT+Ec7LEYtxdKBR47Z20ge35kBiBqhSkGq1rkKk=",
+      "url": "assets\/css\/material-dashboard.css.map"
+    },
+    {
+      "hash": "sha256-j1m9RjB\/D9jgK32ou4F5\/F6ozL\/ohdYiQl6AZMKTdJE=",
+      "url": "assets\/css\/material-dashboard.min.css"
+    },
+    {
+      "hash": "sha256-sBwqd0TOT7ph4P5OE6+b5q2HCKuy3VrQTSuENCMauRQ=",
       "url": "assets\/css\/nucleo-icons.css"
     },
     {
-      "hash": "sha256-KQfPKbzvebh+vMvj0HD8TByJ6lJys6HtNulOzquOw0A=",
+      "hash": "sha256-E8NYtl7LPC3pMBVl\/VEF0XurQalAQV6yRYUVKxIto9s=",
       "url": "assets\/css\/nucleo-svg.css"
     },
     {
@@ -605,7 +617,7 @@
       "url": "assets\/img\/mobile-installation-screenshot.png"
     },
     {
-      "hash": "sha256-1w+sJWvm27eLc4kodeze8wJUBZoP5zYMKSQfkx7+7rM=",
+      "hash": "sha256-6Ow+Lt5eeHquqroJgxT3kfkbSbPIFl3iokrf89wX6B0=",
       "url": "assets\/js\/app.js"
     },
     {
@@ -613,11 +625,59 @@
       "url": "assets\/js\/appUpdate.js"
     },
     {
-      "hash": "sha256-5Ugubl4PE8otqUz5D3mT\/dLmQgm10R03bWhY2fq8Epk=",
-      "url": "assets\/js\/custom.js"
+      "hash": "sha256-D\/PK21CUgsyyO7YAxcAetyGHelzXGH2WyLCvITXCnKc=",
+      "url": "assets\/js\/core\/bootstrap.bundle.min.js"
     },
     {
-      "hash": "sha256-5MOqpGQmsX4LEDokY\/q47eUgcQ6Wi3P+C\/Gr9v2RA0Y=",
+      "hash": "sha256-AxaKwiBI7lQut4\/Y+72aYn\/7bnaExKYjGwfM4C6EAcY=",
+      "url": "assets\/js\/core\/bootstrap.min.js"
+    },
+    {
+      "hash": "sha256-XYaShu4oxc1FslYiPmEd3HZ7JToOKHD+FqVxkQ+LcaQ=",
+      "url": "assets\/js\/core\/popper.min.js"
+    },
+    {
+      "hash": "sha256-3sEWCB1\/crPrthh+EGOfEuQYAUyI56CYLrv9QX1rhXI=",
+      "url": "assets\/js\/material-dashboard.js"
+    },
+    {
+      "hash": "sha256-P32KwO6A1DG98UobVJAfAv4dJrf+L0ONH4cnwEqtY7Y=",
+      "url": "assets\/js\/material-dashboard.js.map"
+    },
+    {
+      "hash": "sha256-jyZ7DFq2\/4pRpNy8bviOMcxRpP1sdqVzM4ouEVgCgv4=",
+      "url": "assets\/js\/material-dashboard.min.js"
+    },
+    {
+      "hash": "sha256-LNRoyW7yb7HG5imnN327CIOlOwgEugTx9RK4hIC78b0=",
+      "url": "assets\/js\/plugins\/bootstrap-notify.js"
+    },
+    {
+      "hash": "sha256-EZk4kRFUgKxKf8gImXr2xAAvYkK\/scdTy+LvBO4MCDo=",
+      "url": "assets\/js\/plugins\/Chart.extension.js"
+    },
+    {
+      "hash": "sha256-9CKDuBNIQo\/dQgrK9nyK+XcD2MBjb0JgnPMANrQw6Cs=",
+      "url": "assets\/js\/plugins\/chartjs.min.js"
+    },
+    {
+      "hash": "sha256-cAIkDrcpdxTj1BvuvrVMIWcKrgfcQ\/yJZAMrAJhEkHs=",
+      "url": "assets\/js\/plugins\/countup.min.js"
+    },
+    {
+      "hash": "sha256-gy\/qm2c+fE93XEldMgcq\/R9Nqitoqn5DhM15xe2DW9o=",
+      "url": "assets\/js\/plugins\/perfect-scrollbar.min.js"
+    },
+    {
+      "hash": "sha256-nxR2O8Iw1\/h4qM7mXIdKEFEP6yULZaYoY7adJt7iIbU=",
+      "url": "assets\/js\/plugins\/smooth-scrollbar.min.js"
+    },
+    {
+      "hash": "sha256-5wRkH5Y8QRj7vWJc74koDCcuSBtNdtyRhwEhzDhw56g=",
+      "url": "assets\/js\/plugins\/world.js"
+    },
+    {
+      "hash": "sha256-01ZkUkWX3fijGZCjWqiMEYvIWJ4UcostF+N9\/ql3cgs=",
       "url": "index.html"
     },
     {
@@ -633,5 +693,5 @@
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "U1r0aVpT"
+  "version": "wb+G\/lQF"
 };
