@@ -1,17 +1,33 @@
+/* Generated using nucleoapp.com */
+/* --------------------------------
+
+Icon colors
+
+-------------------------------- */
+
 .icon {
   display: inline-block;
+  /* icon primary color */
   color: #111111;
   height: 1em;
   width: 1em;
 }
 
 .icon use {
+  /* icon secondary color - fill */
   fill: #7ea6f6;
 }
 
 .icon.icon-outline use {
+  /* icon secondary color - stroke */
   stroke: #7ea6f6;
 }
+
+/* --------------------------------
+
+Change icon size
+
+-------------------------------- */
 
 .icon-xs {
   height: 0.5em;
@@ -33,7 +49,14 @@
   width: 2em;
 }
 
+/* -------------------------------- 
+
+Align icon and text 
+
+-------------------------------- */
+
 .icon-text-aligner {
+  /* add this class to parent element that contains icon + text */
   display: flex;
   align-items: center;
 }
@@ -52,6 +75,12 @@
   stroke: currentColor;
 }
 
+/* -------------------------------- 
+
+Icon reset values - used to enable color customizations
+
+-------------------------------- */
+
 .icon {
   fill: currentColor;
   stroke: none;
@@ -69,6 +98,16 @@
 .icon.icon-outline use {
   fill: none;
 }
+
+/* -------------------------------- 
+
+Stroke effects - Nucleo outline icons
+
+- 16px icons -> up to 1px stroke (16px outline icons do not support stroke changes)
+- 24px, 32px icons -> up to 2px stroke
+- 48px, 64px icons -> up to 4px stroke
+
+-------------------------------- */
 
 .icon-outline.icon-stroke-1 {
   stroke-width: 1px;
