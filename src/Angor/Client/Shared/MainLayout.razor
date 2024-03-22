@@ -63,6 +63,7 @@
                 </div>
             </div>
         </footer>
+
     </main>
 
  
@@ -103,10 +104,9 @@
     /// <param name="firstRender"></param>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
+      
             await Js.InvokeVoidAsync("angor.setTheme");
-        }
+         
     }
 
 }

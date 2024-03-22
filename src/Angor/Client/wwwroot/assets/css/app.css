@@ -9,10 +9,6 @@
     --bs-link-hover-color: #e91e63;
 }
 
-.form-control {
-    border: dotted;
-}
-
 @font-face {
     font-family: 'Material Icons Round';
     font-style: normal;
@@ -367,7 +363,7 @@
     padding: 0.6rem 1.25rem 0.7rem 1.25rem;
     position: fixed;
     width: 100%;
-    z-index: 1000;
+    z-index: 100000;
 }
 
     #blazor-error-ui .dismiss {
@@ -595,3 +591,57 @@ tr[style*="cursor: pointer;"] {
     background-image: linear-gradient(195deg, #04060a, #08111f) !important;
     box-shadow: none !important;
 }
+
+.address-image {
+    width: 35px;
+    height: 35px;
+}
+
+@media (max-width: 768px) {
+    .address-text {
+        font-size: 0.8rem;
+        break-before: auto;
+    }
+
+    .btc-image-address {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.form-label {
+    font-weight: bold;
+    color: #333;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+    .form-control:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 5px #007bff;
+    }
+
+.dark-version .form-label {
+    color: #eee;
+}
+
+.dark-version .form-control {
+    border: 1px solid #555;
+    background-color: #2a324a;
+    color: #eee;
+}
+
+    .dark-version .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px #007bff;
+    }
+
+

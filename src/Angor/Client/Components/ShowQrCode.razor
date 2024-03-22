@@ -8,8 +8,9 @@
 @inject IClipboardService _clipboardService
 
 <!-- Trigger Button -->
-<button class="btn btn-secondary qr-button" @onclick="ShowModal">Show QR Code</button>
-
+<div class="col-6 text-end">
+    <i @onclick="ShowModal" class="material-icons opacity-10 btn-angor fs-3 cursor-pointer">qr_code_2</i>
+</div>
 <!-- Modal -->
 @if (showModal)
 {
