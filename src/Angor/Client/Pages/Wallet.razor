@@ -632,6 +632,7 @@
         }
 
         await _clipboardService.WriteTextAsync(address);
+        await notificationComponent.ShowSnackbar("Copied!", 3);
     }
 
     private async Task RefreshFee()

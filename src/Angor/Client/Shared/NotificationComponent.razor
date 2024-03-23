@@ -1,6 +1,7 @@
 ﻿@using Angor.Shared.Models
 @using Angor.Shared.Services
 
+@inject IJSRuntime Js;
 @inject ILogger<NotificationComponent> Logger;
 @inject INetworkService networkService;
 
@@ -51,7 +52,7 @@
 
     </div>
 </div>
-
+<div id="snackbar"></div>
 @code {
     private string notificationMessage;
     private string errorMessage;
@@ -90,6 +91,18 @@
     {
         isLoading = false;
         StateHasChanged();
+    }
+
+    public async Task ShowSnackbar(string message, int delaySeconds = 3)
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("angor.showSnackbar", message, delaySeconds);
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, e.Message);
+        }
     }
 
     public async Task<OperationResult> LongOperation(Func<Task<OperationResult>> action)

@@ -40,10 +40,6 @@
     --bs-table-hover-color: #ff9900;
 }
 
-.form-label {
-    color: #ff9900;
-}
-
 .col-form-label {
     color: #ff9900;
 }
@@ -326,10 +322,6 @@
     }
 
 .modal-content {
-    background-color: #FFFDFA;
-}
-
-.form-control {
     background-color: #FFFDFA;
 }
 
@@ -644,4 +636,83 @@ tr[style*="cursor: pointer;"] {
         box-shadow: 0 0 5px #007bff;
     }
 
+/* Snackbar Styles */
+#snackbar {
+    visibility: hidden;
+    min-width: 250px;
+    margin-left: -125px;
+    background-color: #fdfefe;
+    color: #08111f;
+    text-align: center;
+    border-radius: 10px;
+    padding: 16px;
+    position: fixed;
+    z-index: 1;
+    left: 50%;
+    bottom: 30px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.16);
+}
 
+    /* Show Snackbar Animation */
+    #snackbar.show {
+        visibility: visible;
+        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+
+/* Dark Version Styles */
+.dark-version #snackbar {
+    background-color: #060b14;
+    color: #fff;
+}
+
+/* Fade In Animation */
+@-webkit-keyframes fadein {
+    from {
+        bottom: 0;
+        opacity: 0;
+    }
+
+    to {
+        bottom: 30px;
+        opacity: 1;
+    }
+}
+
+@keyframes fadein {
+    from {
+        bottom: 0;
+        opacity: 0;
+    }
+
+    to {
+        bottom: 30px;
+        opacity: 1;
+    }
+}
+
+/* Fade Out Animation */
+@-webkit-keyframes fadeout {
+    from {
+        bottom: 30px;
+        opacity: 1;
+    }
+
+    to {
+        bottom: 0;
+        opacity: 0;
+    }
+}
+
+@keyframes fadeout {
+    from {
+        bottom: 30px;
+        opacity: 1;
+    }
+
+    to {
+        bottom: 0;
+        opacity: 0;
+    }
+}
+}

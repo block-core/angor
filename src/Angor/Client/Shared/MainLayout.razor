@@ -3,68 +3,68 @@
 @inherits LayoutComponentBase
 @inject IJSRuntime Js;
 
-     <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 bg-gradient-dark"
-           id="sidenav-main">
-        <NavMenu />
-    </aside>
-    <main class="main-content d-flex flex-column min-vh-100">
-        <!-- Navbar -->
+<aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 bg-gradient-dark"
+       id="sidenav-main">
+    <NavMenu />
+</aside>
+<main class="main-content d-flex flex-column min-vh-100">
+    <!-- Navbar -->
 
-        <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 border-radius-xl position-sticky mt-2 top-2 z-index-sticky blur left-auto bg-gradient-dark-topmenu" id="navbarBlur"
-             data-scroll="true">
-            <div class="container-fluid py-1 px-3">
-                <nav>
-                    <div class="mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-                        <div class="text-sm">
-                            <h6 class="font-weight-bolder">Alpha app - only use test wallets.</h6>
-                        </div>
+    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 border-radius-xl position-sticky mt-2 top-2 z-index-sticky blur left-auto bg-gradient-dark-topmenu" id="navbarBlur"
+         data-scroll="true">
+        <div class="container-fluid py-1 px-3">
+            <nav>
+                <div class="mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+                    <div class="text-sm">
+                        <h6 class="font-weight-bolder">Alpha app - only use test wallets.</h6>
                     </div>
-                </nav>
-                <div class="collapse navbar-collapse" id="navbar">
-                    <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-                    </div>
-                    <ul class="navbar-nav justify-content-end user-select-none">
-
-                        <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
-                            <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="iconNavbarSidenav" onclick="toggleSidenav()">
-                                menu
-                            </span>
-                        </li>
-                        <li class="nav-item ps-3 d-flex align-items-center" id="dark-version" onclick="toggleDarkMode()">
-                            <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="theme-icon">
-                                dark_mode
-                            </span>
-                        </li>
-                        <li class="nav-item ps-3 d-flex align-items-center d-none" id="installButton">
-                            <span @onclick="InstallApp" role="button" class="material-icons opacity-10 btn-angor fs-3">
-                                install_desktop
-                            </span>
-                        </li>
-                    </ul>
                 </div>
-            </div>
-        </nav>
+            </nav>
+            <div class="collapse navbar-collapse" id="navbar">
+                <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+                </div>
+                <ul class="navbar-nav justify-content-end user-select-none">
 
-        <!-- End Navbar -->
-        <div class="container-fluid mt-5 mb-2 flex-shrink-0">
-            @Body
+                    <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
+                        <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="iconNavbarSidenav" onclick="toggleSidenav()">
+                            menu
+                        </span>
+                    </li>
+                    <li class="nav-item ps-3 d-flex align-items-center" id="dark-version" onclick="toggleDarkMode()">
+                        <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="theme-icon">
+                            dark_mode
+                        </span>
+                    </li>
+                    <li class="nav-item ps-3 d-flex align-items-center d-none" id="installButton">
+                        <span @onclick="InstallApp" role="button" class="material-icons opacity-10 btn-angor fs-3">
+                            install_desktop
+                        </span>
+                    </li>
+                </ul>
+            </div>
         </div>
+    </nav>
 
-        <footer class="footer mt-auto py-3 px-0 mx-3 left-auto">
-            <div class="container">
-                <div class="row align-items-center justify-content-lg-between">
+    <!-- End Navbar -->
+    <div class="container-fluid mt-5 mb-2 flex-shrink-0">
+        @Body
+    </div>
 
-                    <div class="nav nav-footer justify-content-center justify-content-lg-end">
-                        <div>
-                            <span class="w-100">Version: @_softwareVersion</span>
-                        </div>
+    <footer class="footer mt-auto py-3 px-0 mx-3 left-auto">
+        <div class="container">
+            <div class="row align-items-center justify-content-lg-between">
+
+                <div class="nav nav-footer justify-content-center justify-content-lg-end">
+                    <div>
+                        <span class="w-100">Version: @_softwareVersion</span>
                     </div>
-
                 </div>
-            </div>
-        </footer>
 
-    </main>
+            </div>
+        </div>
+    </footer>
+</main>
+
 
  
 
@@ -104,9 +104,9 @@
     /// <param name="firstRender"></param>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-      
-            await Js.InvokeVoidAsync("angor.setTheme");
-         
+
+        await Js.InvokeVoidAsync("angor.setTheme");
+
     }
 
 }
