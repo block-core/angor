@@ -216,7 +216,7 @@
                                 <div class="card card-body border card-plain border-radius-lg d-flex align-items-center flex-row">
                                     <img class="address-image me-3 mb-0" src="/assets/img/bitcoin.svg" alt="Bitcoin">
                                     <h6 class="address-text mb-0 overflow-x-auto">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</h6>
-                                    <i @onclick="CopyNextReceiveAddress" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer">copy</i>
+                                    <i @onclick="CopyNextReceiveAddress" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer user-select-none">copy</i>
                                 </div>
                             </div>
 
@@ -632,7 +632,7 @@
         }
 
         await _clipboardService.WriteTextAsync(address);
-        await notificationComponent.ShowSnackbar("Copied!", 3);
+        await notificationComponent.ShowSnackbar("Copied to clipboard!", 3);
     }
 
     private async Task RefreshFee()

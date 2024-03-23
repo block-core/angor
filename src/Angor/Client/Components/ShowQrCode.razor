@@ -7,9 +7,10 @@
 
 @inject IClipboardService _clipboardService
 
+
 <!-- Trigger Button -->
 <div class="col-6 text-end">
-    <i @onclick="ShowModal" class="material-icons opacity-10 btn-angor fs-3 cursor-pointer">qr_code_2</i>
+    <i @onclick="ShowModal" class="material-icons opacity-10 btn-angor fs-3 cursor-pointer user-select-none">qr_code_2</i>
 </div>
 <!-- Modal -->
 @if (showModal)
@@ -26,10 +27,8 @@
                     <img src="data:image/png;base64,@base64qrcode" class="qrcode-image" alt="QR Code" />
                     <div class="address-container">
                         <div class="d-flex align-items-center">
-                            <p id="receive-address" class="card-text mb-0">@Data</p>
-                            <button class="btn btn-outline-secondary btn-sm address-copy-button" @onclick="CopyToClipboard">
-                                <i class="oi oi-file"></i>
-                            </button>
+                            <p id="receive-address" class="address-text mb-0 overflow-x-auto">@Data</p>
+                            <i @onclick="CopyToClipboard" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer user-select-none">copy</i>
                         </div>
                     </div>
                 </div>
@@ -38,6 +37,7 @@
         </div>
     </div>
 }
+<NotificationComponent @ref="notificationComponent" />
 
 @code {
 
@@ -47,6 +47,8 @@
     private string base64qrcode;
 
     private bool showModal = false;
+
+    public NotificationComponent notificationComponent;
 
     private void ShowModal()
     {
@@ -84,26 +86,8 @@
     private async Task CopyToClipboard()
     {
         await _clipboardService.WriteTextAsync(Data);
+        await notificationComponent.ShowSnackbar("Copied to clipboard!", 3);
 
     }
 }
-
-<style>
-    .custom-modal-size {
-        max-width: 450px; /* Adjust this value as needed */
-    }
-
-    .modal-content {
-        padding: 10px; /* Reduced padding */
-    }
-
-    .modal-body {
-        padding: 10px; /* Reduced padding */
-    }
-
-    .qrcode-image {
-        width: 100%; /* Image takes full width of the modal body */
-        height: auto; /* Maintain aspect ratio */
-    }
-
-</style>
+ 

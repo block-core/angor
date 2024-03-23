@@ -6474,37 +6474,38 @@ fieldset:disabled .btn {
 }
 
 .modal {
-  --bs-modal-zindex: 1050;
-  --bs-modal-width: 500px;
-  --bs-modal-padding: 1rem;
-  --bs-modal-margin: 0.5rem;
-  --bs-modal-color: ;
-  --bs-modal-bg: #fff;
-  --bs-modal-border-color: rgba(0, 0, 0, 0.2);
-  --bs-modal-border-width: 1px;
-  --bs-modal-border-radius: 0.5rem;
-  --bs-modal-box-shadow: 0 0.3125rem 0.625rem 0 rgba(0, 0, 0, 0.12);
-  --bs-modal-inner-border-radius: calc(0.5rem - 1px);
-  --bs-modal-header-padding-x: 1rem;
-  --bs-modal-header-padding-y: 1rem;
-  --bs-modal-header-padding: 1rem 1rem;
-  --bs-modal-header-border-color: #dee2e6;
-  --bs-modal-header-border-width: 1px;
-  --bs-modal-title-line-height: 1.5;
-  --bs-modal-footer-gap: 0.5rem;
-  --bs-modal-footer-bg: ;
-  --bs-modal-footer-border-color: #dee2e6;
-  --bs-modal-footer-border-width: 1px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: var(--bs-modal-zindex);
-  display: none;
-  width: 100%;
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  outline: 0;
+    --bs-modal-zindex: 1050;
+    --bs-modal-width: 500px;
+    --bs-modal-padding: 1rem;
+    --bs-modal-margin: 0.5rem;
+    --bs-modal-color:;
+    --bs-modal-bg: #fff;
+    --bs-modal-border-color: rgba(0, 0, 0, 0.2);
+    --bs-modal-border-width: 1px;
+    --bs-modal-border-radius: 0.5rem;
+    --bs-modal-box-shadow: 0 0.3125rem 0.625rem 0 rgba(0, 0, 0, 0.12);
+    --bs-modal-inner-border-radius: calc(0.5rem - 1px);
+    --bs-modal-header-padding-x: 1rem;
+    --bs-modal-header-padding-y: 1rem;
+    --bs-modal-header-padding: 1rem 1rem;
+    --bs-modal-header-border-color: #dee2e6;
+    --bs-modal-header-border-color-dark: #344767;
+    --bs-modal-header-border-width: 1px;
+    --bs-modal-title-line-height: 1.5;
+    --bs-modal-footer-gap: 0.5rem;
+    --bs-modal-footer-bg:;
+    --bs-modal-footer-border-color: #dee2e6;
+    --bs-modal-footer-border-width: 1px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: var(--bs-modal-zindex);
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    outline: 0;
 }
 
 .modal-dialog {

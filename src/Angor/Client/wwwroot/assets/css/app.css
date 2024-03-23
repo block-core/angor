@@ -154,6 +154,11 @@
 
 .btn-close:focus {
     box-shadow: 0 0 0 0.2rem rgba(31, 93, 106, 0.25);
+    background-color: #333;
+}
+
+.btn-close {
+    background-color: #1f5d6a;
 }
 
 
@@ -323,6 +328,15 @@
 
 .modal-content {
     background-color: #FFFDFA;
+}
+
+
+.dark-version .modal-header {
+    border-bottom: var(--bs-modal-header-border-width) solid var(--bs-modal-header-border-color-dark);
+}
+
+.dark-version .modal-content {
+    background-color: #262d45;
 }
 
 .modal-body-scroll {
@@ -553,9 +567,18 @@ tr[style*="cursor: pointer;"] {
     margin-top: 10px;
 }
 
-    .address-container:hover {
-        background-color: #e9ecef;
+.dark-version .address-container {
+    background-color: #2a324a;
+    border: 1px solid #344767;
+}
+
+    .dark-version .address-container:hover {
+        background-color: #1a2035;
     }
+
+.address-container:hover {
+    background-color: #e9ecef;
+}
 
 .address-container-wrapper {
     max-width: 450px;
@@ -715,4 +738,21 @@ tr[style*="cursor: pointer;"] {
         opacity: 0;
     }
 }
+
+.custom-modal-size {
+    max-width: 450px; /* Adjust this value as needed */
+}
+
+.modal-content {
+    padding: 10px; /* Reduced padding */
+}
+
+.modal-body {
+    padding: 10px; /* Reduced padding */
+}
+
+.qrcode-image {
+    width: 100%; /* Image takes full width of the modal body */
+    height: auto; /* Maintain aspect ratio */
+    border-radius: 10px;
 }
