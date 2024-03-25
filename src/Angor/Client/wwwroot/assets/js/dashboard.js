@@ -1,23 +1,8 @@
-// =========================================================
-// Material Dashboard 2 - v3.1.0
-// =========================================================
-
-// Product Page: https://www.creative-tim.com/product/material-dashboard
-// Copyright 2023 Creative Tim (https://www.creative-tim.com)
-// Licensed under MIT (https://github.com/creativetimofficial/material-dashboard/blob/master/LICENSE.md)
-
-// Coded by www.creative-tim.com
-
-// =========================================================
-
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
 "use strict";
 (function() {
   var isWindows = navigator.platform.indexOf('Win') > -1 ? true : false;
 
   if (isWindows) {
-    // if we are on windows OS we activate the perfectScrollbar function
     if (document.getElementsByClassName('main-content')[0]) {
       var mainpanel = document.querySelector('.main-content');
       var ps = new PerfectScrollbar(mainpanel);
@@ -40,39 +25,33 @@
   };
 })();
 
-// Verify navbar blur on scroll
 if (document.getElementById('navbarBlur')) {
   navbarBlurOnScroll('navbarBlur');
 }
 
-// initialization of Tooltips
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
 var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
   return new bootstrap.Tooltip(tooltipTriggerEl)
 })
 
-// when input is focused add focused class for style
 function focused(el) {
   if (el.parentElement.classList.contains('input-group')) {
     el.parentElement.classList.add('focused');
   }
 }
 
-// when input is focused remove focused class for style
 function defocused(el) {
   if (el.parentElement.classList.contains('input-group')) {
     el.parentElement.classList.remove('focused');
   }
 }
 
-// helper for adding on all elements multiple attributes
 function setAttributes(el, options) {
   Object.keys(options).forEach(function(attr) {
     el.setAttribute(attr, options[attr]);
   })
 }
 
-// adding on inputs attributes for calling the focused and defocused functions
 if (document.querySelectorAll('.input-group').length != 0) {
   var allInputs = document.querySelectorAll('input.form-control');
   allInputs.forEach(el => setAttributes(el, {
@@ -81,8 +60,6 @@ if (document.querySelectorAll('.input-group').length != 0) {
   }));
 }
 
-
-// Fixed Plugin
 
 if (document.querySelector('.fixed-plugin')) {
   var fixedPlugin = document.querySelector('.fixed-plugin');
@@ -134,7 +111,6 @@ if (document.querySelector('.fixed-plugin')) {
 
 }
 
-//Set Sidebar Color
 function sidebarColor(a) {
   var parent = document.querySelector(".nav-link.active");
   var color = a.getAttribute("data-color");
@@ -160,7 +136,6 @@ function sidebarColor(a) {
   parent.classList.add('bg-gradient-' + color);
 }
 
-// Set Sidebar Type
 function sidebarType(a) {
   var parent = a.parentElement.children;
   var color = a.getAttribute("data-class");
@@ -190,7 +165,6 @@ function sidebarType(a) {
   sidebar.classList.add(color);
 
 
-  // Remove text-white/text-dark classes
   if (color == 'bg-transparent' || color == 'bg-white') {
     var textWhites = document.querySelectorAll('.sidenav .text-white');
     for (let i = 0; i < textWhites.length; i++) {
@@ -212,8 +186,6 @@ function sidebarType(a) {
       textDarks[i].classList.remove('text-dark');
     }
   }
-
-  // Remove logo-white/logo-dark
 
   if ((color == 'bg-transparent' || color == 'bg-white') && bodyWhite) {
     var navbarBrand = document.querySelector('.navbar-brand-img');
@@ -243,7 +215,6 @@ function sidebarType(a) {
   }
 }
 
-// Set Navbar Fixed
 function navbarFixed(el) {
   let classes = ['position-sticky', 'blur', 'shadow-blur', 'mt-4', 'left-auto', 'top-1', 'z-index-sticky'];
   const navbar = document.getElementById('navbarBlur');
@@ -262,7 +233,6 @@ function navbarFixed(el) {
 };
 
 
-// Set Navbar Minimized
 function navbarMinimize(el) {
   var sidenavShow = document.getElementsByClassName('g-sidenav-show')[0];
 
@@ -277,7 +247,6 @@ function navbarMinimize(el) {
   }
 }
 
-// Navbar blur on scroll
 function navbarBlurOnScroll(id) {
   const navbar = document.getElementById(id);
   let navbarScrollActive = navbar ? navbar.getAttribute("data-scroll") : false;
@@ -356,11 +325,6 @@ function navbarBlurOnScroll(id) {
   }
 }
 
-// Debounce Function
-// Returns a function, that, as long as it continues to be invoked, will not
-// be triggered. The function will be called after it stops being called for
-// N milliseconds. If `immediate` is passed, trigger the function on the
-// leading edge, instead of the trailing.
 function debounce(func, wait, immediate) {
   var timeout;
   return function() {
@@ -377,7 +341,6 @@ function debounce(func, wait, immediate) {
   };
 };
 
-// initialization of Toasts
 document.addEventListener("DOMContentLoaded", function() {
   var toastElList = [].slice.call(document.querySelectorAll(".toast"));
 
@@ -398,8 +361,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   });
 });
-
-// Tabs navigation
 
 var total = document.querySelectorAll('.nav-pills');
 
@@ -423,9 +384,9 @@ function initNavs() {
 
     item.onmouseover = function(event) {
       let target = getEventTarget(event);
-      let li = target.closest('li'); // get reference
+      let li = target.closest('li');       
       if (li) {
-        let nodes = Array.from(li.closest('ul').children); // get array
+        let nodes = Array.from(li.closest('ul').children);       
         let index = nodes.indexOf(li) + 1;
         item.querySelector('li:nth-child(' + index + ') .nav-link').onclick = function() {
           moving_div = item.querySelector('.moving-tab');
@@ -453,8 +414,6 @@ setTimeout(function() {
   initNavs();
 }, 100);
 
-// Tabs navigation resize
-
 window.addEventListener('resize', function(event) {
   total.forEach(function(item, i) {
     item.querySelector('.moving-tab').remove();
@@ -473,7 +432,7 @@ window.addEventListener('resize', function(event) {
     let li = item.querySelector(".nav-link.active").parentElement;
 
     if (li) {
-      let nodes = Array.from(li.closest('ul').children); // get array
+      let nodes = Array.from(li.closest('ul').children);       
       let index = nodes.indexOf(li) + 1;
 
       let sum = 0;
@@ -501,7 +460,7 @@ window.addEventListener('resize', function(event) {
         item.classList.remove('flex-row');
         item.classList.add('flex-column', 'on-resize');
         let li = item.querySelector(".nav-link.active").parentElement;
-        let nodes = Array.from(li.closest('ul').children); // get array
+        let nodes = Array.from(li.closest('ul').children);       
         let index = nodes.indexOf(li) + 1;
         let sum = 0;
         for (var j = 1; j <= nodes.indexOf(li); j++) {
@@ -519,7 +478,7 @@ window.addEventListener('resize', function(event) {
         item.classList.remove('flex-column', 'on-resize');
         item.classList.add('flex-row');
         let li = item.querySelector(".nav-link.active").parentElement;
-        let nodes = Array.from(li.closest('ul').children); // get array
+        let nodes = Array.from(li.closest('ul').children);       
         let index = nodes.indexOf(li) + 1;
         let sum = 0;
         for (var j = 1; j <= nodes.indexOf(li); j++) {
@@ -533,7 +492,6 @@ window.addEventListener('resize', function(event) {
   }
 });
 
-// Function to remove flex row on mobile devices
 if (window.innerWidth < 991) {
   total.forEach(function(item, i) {
     if (item.classList.contains('flex-row')) {
@@ -548,10 +506,7 @@ function getEventTarget(e) {
   return e.target || e.srcElement;
 }
 
-// End tabs navigation
-
 window.onload = function() {
-  // Material Design Input function
   var inputs = document.querySelectorAll('input');
 
   for (var i = 0; i < inputs.length; i++) {
@@ -575,7 +530,6 @@ window.onload = function() {
     }, false);
   }
 
-  // Ripple Effect
   var ripples = document.querySelectorAll('.btn');
 
   for (var i = 0; i < ripples.length; i++) {
@@ -598,7 +552,6 @@ window.onload = function() {
   }
 };
 
-// Toggle Sidenav
 const iconNavbarSidenav = document.getElementById('iconNavbarSidenav');
 const iconSidenav = document.getElementById('iconSidenav');
 const sidenav = document.getElementById('sidenav-main');
@@ -629,8 +582,6 @@ function toggleSidenav() {
   }
 }
 
-// Resize navbar color depends on configurator active type of sidenav
-
 let referenceButtons = document.querySelector('[data-class]');
 
 if (sidenav) {
@@ -650,7 +601,6 @@ if (sidenav) {
   }
 }
 
-// Deactivate sidenav type buttons on resize and small screens
 window.addEventListener("resize", sidenavTypeOnResize);
 window.addEventListener("load", sidenavTypeOnResize);
 
@@ -669,163 +619,167 @@ function sidenavTypeOnResize() {
 
 
 // Light Mode / Dark Mode
-function darkMode(el) {
-  const body = document.getElementsByTagName('body')[0];
-  const hr = document.querySelectorAll('div:not(.sidenav) > hr');
-  const hr_card = document.querySelectorAll('div:not(.bg-gradient-dark) hr');
-  const text_btn = document.querySelectorAll('button:not(.btn) > .text-dark');
-  const text_span = document.querySelectorAll('span.text-dark, .breadcrumb .text-dark');
-  const text_span_white = document.querySelectorAll('span.text-white, .breadcrumb .text-white');
-  const text_strong = document.querySelectorAll('strong.text-dark');
-  const text_strong_white = document.querySelectorAll('strong.text-white');
-  const text_nav_link = document.querySelectorAll('a.nav-link.text-dark');
-  const text_nav_link_white = document.querySelectorAll('a.nav-link.text-white');
-  const secondary = document.querySelectorAll('.text-secondary');
-  const bg_gray_100 = document.querySelectorAll('.bg-gray-100');
-  const bg_gray_600 = document.querySelectorAll('.bg-gray-600');
-  const btn_text_dark = document.querySelectorAll('.btn.btn-link.text-dark, .material-icons.text-dark');
-  const btn_text_white = document.querySelectorAll('.btn.btn-link.text-white, .material-icons.text-white');
-  const card_border = document.querySelectorAll('.card.border');
-  const card_border_dark = document.querySelectorAll('.card.border.border-dark');
+function toggleDarkMode() {
+    const body = document.getElementsByTagName('body')[0];
+    const hr = document.querySelectorAll('div:not(.sidenav) > hr');
+    const hr_card = document.querySelectorAll('div:not(.bg-gradient-dark) hr');
+    const text_btn = document.querySelectorAll('button:not(.btn) > .text-dark');
+    const text_span = document.querySelectorAll('span.text-dark, .breadcrumb .text-dark');
+    const text_span_white = document.querySelectorAll('span.text-white, .breadcrumb .text-white');
+    const text_strong = document.querySelectorAll('strong.text-dark');
+    const text_strong_white = document.querySelectorAll('strong.text-white');
+    const text_nav_link = document.querySelectorAll('a.nav-link.text-dark');
+    const text_nav_link_white = document.querySelectorAll('a.nav-link.text-white');
+    const secondary = document.querySelectorAll('.text-secondary');
+    const bg_gray_100 = document.querySelectorAll('.bg-gray-100');
+    const bg_gray_600 = document.querySelectorAll('.bg-gray-600');
+    const btn_text_dark = document.querySelectorAll('.btn.btn-link.text-dark, .material-icons.text-dark');
+    const btn_text_white = document.querySelectorAll('.btn.btn-link.text-white, .material-icons.text-white');
+    const card_border = document.querySelectorAll('.card.border');
+    const card_border_dark = document.querySelectorAll('.card.border.border-dark');
 
-  const svg = document.querySelectorAll('g');
+    const svg = document.querySelectorAll('g');
+    const themeIcon = document.getElementById('theme-icon');
 
-  if (!el.getAttribute("checked")) {
-    body.classList.add('dark-version');
-    for (var i = 0; i < hr.length; i++) {
-      if (hr[i].classList.contains('dark')) {
-        hr[i].classList.remove('dark');
-        hr[i].classList.add('light');
-      }
-    }
+    if (!body.classList.contains('dark-version')) {
+        body.classList.add('dark-version');
+        themeIcon.textContent = 'light_mode'; // Change icon to light mode
+        localStorage.setItem('theme', 'dark');
 
-    for (var i = 0; i < hr_card.length; i++) {
-      if (hr_card[i].classList.contains('dark')) {
-        hr_card[i].classList.remove('dark');
-        hr_card[i].classList.add('light');
-      }
-    }
-    for (var i = 0; i < text_btn.length; i++) {
-      if (text_btn[i].classList.contains('text-dark')) {
-        text_btn[i].classList.remove('text-dark');
-        text_btn[i].classList.add('text-white');
-      }
-    }
-    for (var i = 0; i < text_span.length; i++) {
-      if (text_span[i].classList.contains('text-dark')) {
-        text_span[i].classList.remove('text-dark');
-        text_span[i].classList.add('text-white');
-      }
-    }
-    for (var i = 0; i < text_strong.length; i++) {
-      if (text_strong[i].classList.contains('text-dark')) {
-        text_strong[i].classList.remove('text-dark');
-        text_strong[i].classList.add('text-white');
-      }
-    }
-    for (var i = 0; i < text_nav_link.length; i++) {
-      if (text_nav_link[i].classList.contains('text-dark')) {
-        text_nav_link[i].classList.remove('text-dark');
-        text_nav_link[i].classList.add('text-white');
-      }
-    }
-    for (var i = 0; i < secondary.length; i++) {
-      if (secondary[i].classList.contains('text-secondary')) {
-        secondary[i].classList.remove('text-secondary');
-        secondary[i].classList.add('text-white');
-        secondary[i].classList.add('opacity-8');
-      }
-    }
-    for (var i = 0; i < bg_gray_100.length; i++) {
-      if (bg_gray_100[i].classList.contains('bg-gray-100')) {
-        bg_gray_100[i].classList.remove('bg-gray-100');
-        bg_gray_100[i].classList.add('bg-gray-600');
-      }
-    }
-    for (var i = 0; i < btn_text_dark.length; i++) {
-      btn_text_dark[i].classList.remove('text-dark');
-      btn_text_dark[i].classList.add('text-white');
-    }
-    for (var i = 0; i < svg.length; i++) {
-      if (svg[i].hasAttribute('fill')) {
-        svg[i].setAttribute('fill', '#fff');
-      }
-    }
-    for (var i = 0; i < card_border.length; i++) {
-      card_border[i].classList.add('border-dark');
-    }
-    el.setAttribute("checked", "true");
-  } else {
-    body.classList.remove('dark-version');
-    for (var i = 0; i < hr.length; i++) {
-      if (hr[i].classList.contains('light')) {
-        hr[i].classList.add('dark');
-        hr[i].classList.remove('light');
-      }
-    }
-    for (var i = 0; i < hr_card.length; i++) {
-      if (hr_card[i].classList.contains('light')) {
-        hr_card[i].classList.add('dark');
-        hr_card[i].classList.remove('light');
-      }
-    }
-    for (var i = 0; i < text_btn.length; i++) {
-      if (text_btn[i].classList.contains('text-white')) {
-        text_btn[i].classList.remove('text-white');
-        text_btn[i].classList.add('text-dark');
-      }
-    }
-    for (var i = 0; i < text_span_white.length; i++) {
-      if (text_span_white[i].classList.contains('text-white') && !text_span_white[i].closest('.sidenav') && !text_span_white[i].closest('.card.bg-gradient-dark')) {
-        text_span_white[i].classList.remove('text-white');
-        text_span_white[i].classList.add('text-dark');
-      }
-    }
-    for (var i = 0; i < text_strong_white.length; i++) {
-      if (text_strong_white[i].classList.contains('text-white')) {
-        text_strong_white[i].classList.remove('text-white');
-        text_strong_white[i].classList.add('text-dark');
-      }
-    }
-    for (var i = 0; i < text_nav_link_white.length; i++) {
-      if (text_nav_link_white[i].classList.contains('text-white') && !text_nav_link_white[i].closest('.sidenav')) {
-        text_nav_link_white[i].classList.remove('text-white');
-        text_nav_link_white[i].classList.add('text-dark');
-      }
-    }
-    for (var i = 0; i < secondary.length; i++) {
-      if (secondary[i].classList.contains('text-white')) {
-        secondary[i].classList.remove('text-white');
-        secondary[i].classList.remove('opacity-8');
-        secondary[i].classList.add('text-dark');
-      }
-    }
-    for (var i = 0; i < bg_gray_600.length; i++) {
-      if (bg_gray_600[i].classList.contains('bg-gray-600')) {
-        bg_gray_600[i].classList.remove('bg-gray-600');
-        bg_gray_600[i].classList.add('bg-gray-100');
-      }
-    }
-    for (var i = 0; i < svg.length; i++) {
-      if (svg[i].hasAttribute('fill')) {
-        svg[i].setAttribute('fill', '#252f40');
-      }
-    }
-    for (var i = 0; i < btn_text_white.length; i++) {
-      if (!btn_text_white[i].closest('.card.bg-gradient-dark')) {
-        btn_text_white[i].classList.remove('text-white');
-        btn_text_white[i].classList.add('text-dark');
-      }
-    }
-    for (var i = 0; i < card_border_dark.length; i++) {
-      card_border_dark[i].classList.remove('border-dark');
-    }
-    el.removeAttribute("checked");
-  }
-};
+        for (var i = 0; i < hr.length; i++) {
+            if (hr[i].classList.contains('dark')) {
+                hr[i].classList.remove('dark');
+                hr[i].classList.add('light');
+            }
+        }
 
+        for (var i = 0; i < hr_card.length; i++) {
+            if (hr_card[i].classList.contains('dark')) {
+                hr_card[i].classList.remove('dark');
+                hr_card[i].classList.add('light');
+            }
+        }
+        for (var i = 0; i < text_btn.length; i++) {
+            if (text_btn[i].classList.contains('text-dark')) {
+                text_btn[i].classList.remove('text-dark');
+                text_btn[i].classList.add('text-white');
+            }
+        }
+        for (var i = 0; i < text_span.length; i++) {
+            if (text_span[i].classList.contains('text-dark')) {
+                text_span[i].classList.remove('text-dark');
+                text_span[i].classList.add('text-white');
+            }
+        }
+        for (var i = 0; i < text_strong.length; i++) {
+            if (text_strong[i].classList.contains('text-dark')) {
+                text_strong[i].classList.remove('text-dark');
+                text_strong[i].classList.add('text-white');
+            }
+        }
+        for (var i = 0; i < text_nav_link.length; i++) {
+            if (text_nav_link[i].classList.contains('text-dark')) {
+                text_nav_link[i].classList.remove('text-dark');
+                text_nav_link[i].classList.add('text-white');
+            }
+        }
+        for (var i = 0; i < secondary.length; i++) {
+            if (secondary[i].classList.contains('text-secondary')) {
+                secondary[i].classList.remove('text-secondary');
+                secondary[i].classList.add('text-white');
+                secondary[i].classList.add('opacity-8');
+            }
+        }
+        for (var i = 0; i < bg_gray_100.length; i++) {
+            if (bg_gray_100[i].classList.contains('bg-gray-100')) {
+                bg_gray_100[i].classList.remove('bg-gray-100');
+                bg_gray_100[i].classList.add('bg-gray-600');
+            }
+        }
+        for (var i = 0; i < btn_text_dark.length; i++) {
+            btn_text_dark[i].classList.remove('text-dark');
+            btn_text_dark[i].classList.add('text-white');
+        }
+        for (var i = 0; i < svg.length; i++) {
+            if (svg[i].hasAttribute('fill')) {
+                svg[i].setAttribute('fill', '#fff');
+            }
+        }
+        for (var i = 0; i < card_border.length; i++) {
+            card_border[i].classList.add('border-dark');
+        }
+        
+    } else {
+        body.classList.remove('dark-version');
+        for (var i = 0; i < hr.length; i++) {
+            if (hr[i].classList.contains('light')) {
+                hr[i].classList.add('dark');
+                hr[i].classList.remove('light');
+            }
+        }
+        for (var i = 0; i < hr_card.length; i++) {
+            if (hr_card[i].classList.contains('light')) {
+                hr_card[i].classList.add('dark');
+                hr_card[i].classList.remove('light');
+            }
+        }
+        for (var i = 0; i < text_btn.length; i++) {
+            if (text_btn[i].classList.contains('text-white')) {
+                text_btn[i].classList.remove('text-white');
+                text_btn[i].classList.add('text-dark');
+            }
+        }
+        for (var i = 0; i < text_span_white.length; i++) {
+            if (text_span_white[i].classList.contains('text-white') && !text_span_white[i].closest('.sidenav') && !text_span_white[i].closest('.card.bg-gradient-dark')) {
+                text_span_white[i].classList.remove('text-white');
+                text_span_white[i].classList.add('text-dark');
+            }
+        }
+        for (var i = 0; i < text_strong_white.length; i++) {
+            if (text_strong_white[i].classList.contains('text-white')) {
+                text_strong_white[i].classList.remove('text-white');
+                text_strong_white[i].classList.add('text-dark');
+            }
+        }
+        for (var i = 0; i < text_nav_link_white.length; i++) {
+            if (text_nav_link_white[i].classList.contains('text-white') && !text_nav_link_white[i].closest('.sidenav')) {
+                text_nav_link_white[i].classList.remove('text-white');
+                text_nav_link_white[i].classList.add('text-dark');
+            }
+        }
+        for (var i = 0; i < secondary.length; i++) {
+            if (secondary[i].classList.contains('text-white')) {
+                secondary[i].classList.remove('text-white');
+                secondary[i].classList.remove('opacity-8');
+                secondary[i].classList.add('text-dark');
+            }
+        }
+        for (var i = 0; i < bg_gray_600.length; i++) {
+            if (bg_gray_600[i].classList.contains('bg-gray-600')) {
+                bg_gray_600[i].classList.remove('bg-gray-600');
+                bg_gray_600[i].classList.add('bg-gray-100');
+            }
+        }
+        for (var i = 0; i < svg.length; i++) {
+            if (svg[i].hasAttribute('fill')) {
+                svg[i].setAttribute('fill', '#252f40');
+            }
+        }
+        for (var i = 0; i < btn_text_white.length; i++) {
+            if (!btn_text_white[i].closest('.card.bg-gradient-dark')) {
+                btn_text_white[i].classList.remove('text-white');
+                btn_text_white[i].classList.add('text-dark');
+            }
+        }
+        for (var i = 0; i < card_border_dark.length; i++) {
+            card_border_dark[i].classList.remove('border-dark');
+        }
 
-// side bullets
+        themeIcon.textContent = 'dark_mode'; // Change icon to dark mode
+        localStorage.setItem('theme', 'light');
+    }
+}
+
 
 const indicators = document.querySelectorAll(".indicator");
 const sections = document.querySelectorAll("section");

@@ -1,76 +1,21 @@
 ﻿@page "/"
 
 <PageTitle>Angor</PageTitle>
-
-<div class="row">
-    <div class="col-lg-7 col-md-6 mb-md-0 mb-4">
-        <div class="card h-100">
-            <div class="card-header pb-0">
-                <div class="row">
-                    <h6>What is Angor?</h6>
-                    <div class="col-lg-6 col-5 my-auto text-end">
-                        <div class="dropdown float-lg-end pe-4">
-                            <a class="cursor-pointer" id="dropdownTable" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa fa-ellipsis-v text-secondary" aria-hidden="true"></i>
-                            </a>
-                            <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable" style="">
-                                <li><a class="dropdown-item border-radius-md" href="javascript:;">Action</a></li>
-                                <li><a class="dropdown-item border-radius-md" href="javascript:;">Another action</a></li>
-                                <li><a class="dropdown-item border-radius-md" href="javascript:;">Something else here</a></li>
-                            </ul>
-                        </div>
-                    </div>
+<div class="container my-4">
+    <div class="card">
+        <div class="row g-0">
+            <div class="col-md-6">
+                <div class="embed-responsive embed-responsive-16by9">
+                    <!-- Replace 'VIDEO_ID' with the actual ID of your YouTube video -->
+                    <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe>
                 </div>
             </div>
-            <div class="card-body px-0 pb-2">
-                <div class="ratio ratio-16x9">
-                    <iframe width="1022" height="575" src="https://www.youtube.com/embed/hZFFJR5CZUQ" title="Blockcore Vault - Intro to prototype" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                </div>
-            </div>
-            <div class="card-footer">
-                <p>
-                    A decentralized crowdfunding platform built on Bitcoin
-                </p>
-            </div>
-
-        </div>
-    </div>
-    <div class="col-lg-5 col-md-6 mb-md-0 mb-4">
-        <div class="card h-100">
-            <div class="card-header p-3 pb-0">
-                <div class="d-flex align-items-center">
-                    <h6 class="mb-0">
-                        How to use Angor?
-                    </h6>
-                    <a href="https://github.com/block-core/angor" class="btn btn-sm bg-gradient-dark ms-auto mb-0">
-                        GitHub
-                    </a>
-                </div>
-            </div>
-            <div class="card-body p-3">
-
-                <div class="container d-flex align-items-center justify-content-center mb-4 mt-sm-5 mt-3">
-                    <img src="/assets/img/angor-icon.svg" class="m-auto w-40" alt="Angor" />
-                </div> 
-                <p class="text-muted text-sm mb-4">
-                    Angor is a browser-based platform that can be installed as a PWA.
-                    It can be downloaded directly from this GitHub.
-                </p>
-                <div class="card">
-                    <div class="card-body border-radius-lg bg-gradient-dark p-3">
-                        <h6 class="mb-0 text-white">
-                            Questions about Angor?
-                        </h6>
-                        <p class="text-white text-sm mb-4">
-                            Have a question, concern, or comment
-                            about Angor? Please contact us.
-                        </p>
-                        <a href="https://www.blockcore.net/discord" target="_blank" class="btn btn-white mb-0">Discord</a>
-                    </div>
+            <div class="col-md-6 d-flex align-items-center justify-content-center">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Welcome to Angor</h5>
+                    <p class="card-text text-center">Stay in control of your investments with Angor</p>
                 </div>
             </div>
         </div>
-
     </div>
 </div>
-
