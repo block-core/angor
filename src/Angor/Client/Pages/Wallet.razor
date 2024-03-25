@@ -26,11 +26,11 @@
 
 <div class="container my-4">
     <h1>Wallet and balances</h1>
-    
+
     <NotificationComponent @ref="notificationComponent" />
     <PasswordComponent @ref="passwordComponent" />
 
-<!-- This part of the page is visible only if the wallet is found -->
+    <!-- This part of the page is visible only if the wallet is found -->
     @if (!hasWallet)
     {
         <!-- No Wallet found -->
@@ -45,11 +45,11 @@
             @if (walletWordsCreateModal)
             {
                 <!-- Wallet Words Create Modal -->
-                <div class="modal fade show d-block" >
+                <div class="modal fade show d-block">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" >Create Wallet</h5>
+                                <h5 class="modal-title">Create Wallet</h5>
                                 <button class="btn-close" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" disabled="@createWalletSpinner"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
@@ -63,12 +63,12 @@
                                 else
                                 {
                                     <div class="mb-3">
-                                        <label >Paste your wallet words here or generate a new wallet:</label>
-                                        <textarea class="form-control"  rows="3" @bind="newWalletWords"></textarea>
+                                        <label>Paste your wallet words here or generate a new wallet:</label>
+                                        <textarea class="form-control" rows="3" @bind="newWalletWords"></textarea>
                                     </div>
                                     <div class="mb-3">
-                                        <label >Additional Passphrase (optional):</label>
-                                        <input type="text" class="form-control" @bind="newWalletWordsPassphrase"/>
+                                        <label>Additional Passphrase (optional):</label>
+                                        <input type="text" class="form-control" @bind="newWalletWordsPassphrase" />
                                     </div>
                                     <div class="mb-3">
                                         <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
@@ -124,17 +124,17 @@
                         <span class="fs-5"> @Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span> <!-- replace this with actual unconfirmed balance -->
                     </div>
                 }
-                
+
                 @if (accountBalanceInfo.TotalBalanceReserved > 0)
                 {
                     <div class="mb-3 text-success">
                         <span class="fs-6">Reserved balance: </span>
-                        <span class="fs-5"> @Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span> 
+                        <span class="fs-5"> @Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
                     </div>
                 }
 
                 <!-- Replace '#' in 'data-bs-target' with the id of your modal -->
-                <button type="button" class="btn btn-primary"  @onclick="() => walletWordsModal = true">Show Wallet Words</button>
+                <button type="button" class="btn btn-primary" @onclick="() => walletWordsModal = true">Show Wallet Words</button>
 
                 <button class="btn btn-primary ml-2" @onclick="RefreshBalance" disabled="@balanceSpinner">
                     @if (balanceSpinner)
@@ -147,7 +147,7 @@
                         <span>Refresh Balance</span>
                     }
                 </button>
-                
+
                 @if (network.NetworkType == NetworkType.Testnet && accountBalanceInfo.TotalBalance < Money.Coins(10).Satoshi)
                 {
                     <button class="btn btn-secondary ml-2" @onclick="GetTestCoins" disabled="@testCoinsSpinner">
@@ -162,17 +162,17 @@
                         }
                     </button>
                 }
-                
+
             </div>
-            
+
             @if (walletWordsModal)
             {
                 <!-- Wallet Words Modal -->
-                <div class="modal fade show d-block" >
+                <div class="modal fade show d-block">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" >Wallet Words</h5>
+                                <h5 class="modal-title">Wallet Words</h5>
                                 <button type="button" class="btn-close" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" aria-label="Close"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
@@ -221,12 +221,12 @@
                                 <hr>
                                 <!-- Delete wallet button -->
                                 <div class="mb-3">
-                                    <button class="btn btn-danger" @onclick="DeleteWallet" >Danger!!! Delete Wallet</button>
+                                    <button class="btn btn-danger" @onclick="DeleteWallet">Delete Wallet</button>
                                 </div>
 
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" >Close</button>
+                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }">Close</button>
                             </div>
                         </div>
                     </div>
@@ -237,31 +237,35 @@
 
         <!-- Section 2 -->
         <div class="row mt-4">
-            <div class="col-lg-12">
-                <h2>Receive</h2>
 
-                <div class="card">
-                    <div class="card-body">
+            <div class="col-md-12 mb-lg-0 mb-4">
+                <div class="card mt-4">
+                    <div class="card-header pb-0 p-3">
                         <div class="row">
-                            <div class="col-lg-12 d-flex align-items-center justify-content-between">
-                                <div class="address-container-wrapper">
-                                    <div class="address-container">
-                                        <div class="d-flex align-items-center">
-                                            <p class="card-text mb-0">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</p>
-                                            <button class="btn btn-outline-secondary btn-sm address-copy-button ml-2" @onclick="CopyNextReceiveAddress">
-                                                Copy <i class="oi oi-file"></i> 
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <ShowQrCode @ref="showQrCode" Data="@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()" />
+                            <div class="col-6 d-flex align-items-center">
+                                <h6 class="mb-0">Receive</h6>
                             </div>
+                            <ShowQrCode @ref="showQrCode" Data="@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()" />
+
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="row">
+                            <div class="col-md-12 mb-md-0 mb-4">
+                                <div class="card card-body border card-plain border-radius-lg d-flex align-items-center flex-row">
+                                    <img class="address-image me-3 mb-0" src="/assets/img/bitcoin.svg" alt="Bitcoin">
+                                    <h6 class="address-text mb-0 overflow-x-auto">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</h6>
+                                    <i @onclick="CopyNextReceiveAddress" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer user-select-none">copy</i>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
+
 
 
         <!-- Section 3 -->
@@ -280,13 +284,14 @@
                         <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
                     </div>
 
-                    <button type="button" class="btn btn-primary mb-3"  @onclick="() => coinControlModal = true">Coin Control
+                    <button type="button" class="btn btn-primary mb-3" @onclick="() => coinControlModal = true">
+                        Coin Control
                         @if (_sendInfo.SendUtxos.Any())
                         {
                             <span class="badge text-bg-warning">@_sendInfo.SendUtxos.Count</span>
                         }
                     </button>
-                    
+
                     <!-- New Send button that triggers a confirmation dialog -->
                     <button type="button" class="btn btn-primary mb-3" @onclick="AskPassword" disabled="@sendLoadSpinner">
                         @if (sendLoadSpinner)
@@ -306,7 +311,7 @@
             @if (coinControlModal)
             {
                 <!-- Coin Control Modal -->
-                <div class="modal fade show d-block" >
+                <div class="modal fade show d-block">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
@@ -344,7 +349,7 @@
             @if (sendConfirmModal)
             {
                 <!-- Send Confirmation Modal -->
-                <div class="modal fade show d-block" >
+                <div class="modal fade show d-block">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
@@ -354,9 +359,9 @@
                             <div class="modal-body modal-body-scroll">
                                 Are you sure you want to send <strong>@_sendInfo.SendAmount @network.CoinTicker</strong> to <strong> @_sendInfo.SendToAddress?</strong>
 
-                                <br/>
+                                <br />
 
-                               The fee for this transaction will be <strong>@_sendInfo.SendFee</strong>
+                                The fee for this transaction will be <strong>@_sendInfo.SendFee</strong>
 
                                 <hr>
 
@@ -369,7 +374,7 @@
 
                                 The change address is <strong>@_sendInfo.ChangeAddress</strong>
 
-                                <br/>
+                                <br />
 
                                 The selected inputs:
 
@@ -398,6 +403,8 @@
                 </div>
             }
           </div>
+
+
 
 
         <!-- Section 4 -->
@@ -431,7 +438,7 @@
                                 </tr>
                                 <tr>
                                     <td colspan="4" style="padding: 0px;">
-                                            <div class="collapse" id="@addressInfo.Address">
+                                        <div class="collapse" id="@addressInfo.Address">
                                             <div class="card card-body">
                                                 <!-- Inner table goes here -->
                                                 <table class="table table-sm">
@@ -442,13 +449,13 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                    @foreach (var addressUtxoItem in addressInfo.UtxoData)
-                                                    {
-                                                        <tr>
-                                                            <td>@($"{addressUtxoItem.outpoint}")</td>
+                                                        @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                                        {
+                                                            <tr>
+                                                                <td>@($"{addressUtxoItem.outpoint}")</td>
                                                                 <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
-                                                        </tr>
-                                                    }
+                                                            </tr>
+                                                        }
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -457,7 +464,7 @@
                                 </tr>
                             }
                         }
-                    <!-- More rows go here -->
+                        <!-- More rows go here -->
                     </tbody>
                 </table>
             </div>
@@ -468,7 +475,7 @@
 
 
 @code {
-    
+
     private bool balanceSpinner = false;
     private bool createWalletSpinner = false;
     private bool testCoinsSpinner = false;
@@ -498,11 +505,11 @@
 
     private int feeRange = 0;
     private int FeePosition = 1;
-    private SendInfo _sendInfo = new ();
+    private SendInfo _sendInfo = new();
 
     private AccountBalanceInfo accountBalanceInfo = new AccountBalanceInfo();
 
-    private FeeEstimations FeeEstimations = new ();
+    private FeeEstimations FeeEstimations = new();
 
     // Max index for the range input
     private int FeeMin = 1;
@@ -523,7 +530,7 @@
 
         return Task.CompletedTask;
     }
-    
+
     private async Task RefreshBalance()
     {
         balanceSpinner = true;
@@ -613,7 +620,7 @@
             storage.SetAccountInfo(network.Name, accountInfo);
             accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
 
-            // pre-derive the angor wallet keys 
+            // pre-derive the angor wallet keys
             FounderKeyCollection founderKeyCollection = _derivationOperations.DeriveProjectKeys(data, NetworkConfiguration.AngorTestKey);
             _walletStorage.SetFounderKeys(founderKeyCollection);
 
@@ -708,7 +715,7 @@
         newWalletWords = _walletOperations.GenerateWalletWords();
     }
 
-    public  async Task CopyNextReceiveAddress()
+    public async Task CopyNextReceiveAddress()
     {
         var accountInfo = storage.GetAccountInfo(network.Name);
         var address = accountInfo.GetNextReceiveAddress();
@@ -720,6 +727,7 @@
         }
 
         await _clipboardService.WriteTextAsync(address);
+        await notificationComponent.ShowSnackbar("Copied to clipboard!", 3);
     }
 
     private async Task RefreshFee()
@@ -779,7 +787,7 @@
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
             storage.SetAccountInfo(network.Name, accountInfo);
-            
+
             await RefreshFee();
 
             if (FeeEstimations.Fees.Count == 0)
@@ -800,7 +808,7 @@
             {
                 _sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.HasHistory == false).Address;
             }
-            
+
             _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);
 
             sendConfirmModal = true;
@@ -851,7 +859,7 @@
             }
 
             _sendInfo = new SendInfo();
-            
+
             notificationComponent.ShowNotificationMessage("Sent complete!");
         }
         catch (Exception e)
@@ -871,7 +879,7 @@
     {
         // Here you can handle the change
         // Note: replace AddressUtxoItem with the actual type of addressUtxoItem
-        
+
         if (_sendInfo.SendUtxos.ContainsKey(addressUtxoItem.outpoint.ToString()))
         {
             _sendInfo.SendUtxos.Remove(addressUtxoItem.outpoint.ToString());
@@ -896,13 +904,13 @@
                 if (res <= FeeEstimations.Fees.Count)
                 {
                     var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-                   
+
                     _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
                     _sendInfo.FeeRateSat = estimationsFee.FeeRate;
                     var accountInfo = storage.GetAccountInfo(network.Name);
 
                     _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);
-                    
+
                     StateHasChanged();
                 }
             }
@@ -933,7 +941,7 @@
 
             if (res.IsSuccessStatusCode)
             {
-                var trxhex =  await res.Content.ReadAsStringAsync();
+                var trxhex = await res.Content.ReadAsStringAsync();
                 var trx = network.CreateTransaction(trxhex);
                 var unconfirmedInboundFunds = _cacheStorage.GetUnconfirmedInboundFunds();
                 unconfirmedInboundFunds.Add(new UtxoData { PendingSpent = true, address = receiveAddress, value = trx.Outputs.FirstOrDefault()?.Value.Satoshi ?? Money.Coins(50).Satoshi, outpoint = new Outpoint(trx.GetHash().ToString(), 0) });

@@ -11,8 +11,11 @@
  
 
     <div class="sidenav-header">
-        <i class="fas fa-times p-3 cursor-pointer text-white opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
-           aria-hidden="true" id="iconSidenav"></i>
+
+    <span class="material-icons p-3 cursor-pointer opacity-5 position-absolute end-0 top-0 d-xl-none" aria-hidden="true" id="iconSidenav" onclick="toggleSidenav()">
+            close
+        </span>
+
         <a class="navbar-brand m-0" href="">
         <img src="/assets/img/angor-logo.svg" class="navbar-brand-img h-100" alt="Angor" />
             <span class="ms-1 font-weight-bold text-white">Angor App</span>
@@ -77,7 +80,7 @@
 
     <div class="sidenav-footer position-absolute w-100 bottom-0">
         <div class="mx-3">
-            <a class="btn bg-gradient-primary w-100"
+            <a class="btn btn-primary w-100 mb-3"
                href="https://browse.angor.io" type="button">
             Project Explorer
             </a>
