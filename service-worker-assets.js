@@ -33,15 +33,15 @@
       "url": "_framework\/icudt.dat"
     },
     {
-      "hash": "sha256-u4Fd8n17xPTIIcqo3KnTT01+eIaBnFez70WMuetk1Tw=",
+      "hash": "sha256-jjnXQjGN956Apz0fGbc8vwBhPQdpdqXmZBCO09cSuNs=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-D410WPRvixPIT\/QVfbqjr+w8q7upjDe91jR2XUrI2Rs=",
+      "hash": "sha256-L215k+\/GRXVGNJNIWUOIrQk+t3ZHR0yzkq53s2fgzrc=",
       "url": "_framework\/Angor.Client.dll"
     },
     {
-      "hash": "sha256-wsvG3GyrPWoRATiHYffB4YY4u0hgegwS+UKna17wDJE=",
+      "hash": "sha256-XSS7e96nBOFr77+0k3m754kfMzGeWkQ5nhWJ2iWO81U=",
       "url": "_framework\/Angor.Shared.dll"
     },
     {
@@ -517,20 +517,12 @@
       "url": "Angor.Client.styles.css"
     },
     {
-      "hash": "sha256-do+TvpllyKtPqtJiq3MMiJgOA7faWE9rBZlgUkpy4zI=",
+      "hash": "sha256-cAIY08KvgyR0YgpcZfnoF94B9waLCz59smTmn7wAjig=",
       "url": "assets\/css\/app.css"
     },
     {
-      "hash": "sha256-cXVvLBB680TR\/LrRU4DtytwdWo6+pGlBv0VE+61LAuY=",
-      "url": "assets\/css\/material-dashboard.css"
-    },
-    {
-      "hash": "sha256-fh+nHT+Ec7LEYtxdKBR47Z20ge35kBiBqhSkGq1rkKk=",
-      "url": "assets\/css\/material-dashboard.css.map"
-    },
-    {
-      "hash": "sha256-j1m9RjB\/D9jgK32ou4F5\/F6ozL\/ohdYiQl6AZMKTdJE=",
-      "url": "assets\/css\/material-dashboard.min.css"
+      "hash": "sha256-2JpZ9v19JRBBKqe3ypjp2knZ2tpU4aVFTRrbBquPS80=",
+      "url": "assets\/css\/dashboard.css"
     },
     {
       "hash": "sha256-sBwqd0TOT7ph4P5OE6+b5q2HCKuy3VrQTSuENCMauRQ=",
@@ -543,42 +535,6 @@
     {
       "hash": "sha256-yUjxJjNBaZs8HpxV2NDz5EZmnQ8rnVVJTGFpIiwCQ6Y=",
       "url": "assets\/fonts\/material.woff2"
-    },
-    {
-      "hash": "sha256-+Jn4dS5tZcmsZoNF0RJZs4q11eRkLGzTQi8m6\/JGXcY=",
-      "url": "assets\/fonts\/nucleo-icons.eot"
-    },
-    {
-      "hash": "sha256-vpd1c\/GF+rNwISMF799uN0gRvoDc3WK06DIoN6MI1ec=",
-      "url": "assets\/fonts\/nucleo-icons.svg"
-    },
-    {
-      "hash": "sha256-ZVlWzXOCj2QRi75Lt2gVrRUWFeAoGL3Rtn\/SnGnllrQ=",
-      "url": "assets\/fonts\/nucleo-icons.ttf"
-    },
-    {
-      "hash": "sha256-2qgHsiS24zSYgl+ADp+rYpw\/y\/0OkhSwK4x0FKxa4sU=",
-      "url": "assets\/fonts\/nucleo-icons.woff"
-    },
-    {
-      "hash": "sha256-MYCJbNu25FA3AvI\/gaRmOhK757nHe48goHQhHZl7w18=",
-      "url": "assets\/fonts\/nucleo-icons.woff2"
-    },
-    {
-      "hash": "sha256-5f3AEY1TYNKOcXDlAET2L3e1laMffnS8PM11j4QL5GQ=",
-      "url": "assets\/fonts\/nucleo.eot"
-    },
-    {
-      "hash": "sha256-pc9fuN4wG2A7+jBX0Lpmd\/UpenhMaKc1eeBbG4Kxtxg=",
-      "url": "assets\/fonts\/nucleo.ttf"
-    },
-    {
-      "hash": "sha256-UruyFuBfJams7JLXF0OsMcBXTjtmzgC1n+wD7zOFlK4=",
-      "url": "assets\/fonts\/nucleo.woff"
-    },
-    {
-      "hash": "sha256-txfgOABwE7LiUAWC7pTYkq6AoX3qlcdgZzpciEQC2vY=",
-      "url": "assets\/fonts\/nucleo.woff2"
     },
     {
       "hash": "sha256-9gLXfFoNz\/\/AdhmdzCLoskgMixwFf5aOGauQ0bZKPlU=",
@@ -617,7 +573,7 @@
       "url": "assets\/img\/mobile-installation-screenshot.png"
     },
     {
-      "hash": "sha256-6Ow+Lt5eeHquqroJgxT3kfkbSbPIFl3iokrf89wX6B0=",
+      "hash": "sha256-B3DTwSgPnMdvFDVFlU1LOGuG58We++n2pdRoUYJPr10=",
       "url": "assets\/js\/app.js"
     },
     {
@@ -625,59 +581,11 @@
       "url": "assets\/js\/appUpdate.js"
     },
     {
-      "hash": "sha256-D\/PK21CUgsyyO7YAxcAetyGHelzXGH2WyLCvITXCnKc=",
-      "url": "assets\/js\/core\/bootstrap.bundle.min.js"
+      "hash": "sha256-lO9oRbTNin3J\/98qBUw5igbVMbmQmYjd1Yo6jJh4cbQ=",
+      "url": "assets\/js\/dashboard.js"
     },
     {
-      "hash": "sha256-AxaKwiBI7lQut4\/Y+72aYn\/7bnaExKYjGwfM4C6EAcY=",
-      "url": "assets\/js\/core\/bootstrap.min.js"
-    },
-    {
-      "hash": "sha256-XYaShu4oxc1FslYiPmEd3HZ7JToOKHD+FqVxkQ+LcaQ=",
-      "url": "assets\/js\/core\/popper.min.js"
-    },
-    {
-      "hash": "sha256-3sEWCB1\/crPrthh+EGOfEuQYAUyI56CYLrv9QX1rhXI=",
-      "url": "assets\/js\/material-dashboard.js"
-    },
-    {
-      "hash": "sha256-P32KwO6A1DG98UobVJAfAv4dJrf+L0ONH4cnwEqtY7Y=",
-      "url": "assets\/js\/material-dashboard.js.map"
-    },
-    {
-      "hash": "sha256-jyZ7DFq2\/4pRpNy8bviOMcxRpP1sdqVzM4ouEVgCgv4=",
-      "url": "assets\/js\/material-dashboard.min.js"
-    },
-    {
-      "hash": "sha256-LNRoyW7yb7HG5imnN327CIOlOwgEugTx9RK4hIC78b0=",
-      "url": "assets\/js\/plugins\/bootstrap-notify.js"
-    },
-    {
-      "hash": "sha256-EZk4kRFUgKxKf8gImXr2xAAvYkK\/scdTy+LvBO4MCDo=",
-      "url": "assets\/js\/plugins\/Chart.extension.js"
-    },
-    {
-      "hash": "sha256-9CKDuBNIQo\/dQgrK9nyK+XcD2MBjb0JgnPMANrQw6Cs=",
-      "url": "assets\/js\/plugins\/chartjs.min.js"
-    },
-    {
-      "hash": "sha256-cAIkDrcpdxTj1BvuvrVMIWcKrgfcQ\/yJZAMrAJhEkHs=",
-      "url": "assets\/js\/plugins\/countup.min.js"
-    },
-    {
-      "hash": "sha256-gy\/qm2c+fE93XEldMgcq\/R9Nqitoqn5DhM15xe2DW9o=",
-      "url": "assets\/js\/plugins\/perfect-scrollbar.min.js"
-    },
-    {
-      "hash": "sha256-nxR2O8Iw1\/h4qM7mXIdKEFEP6yULZaYoY7adJt7iIbU=",
-      "url": "assets\/js\/plugins\/smooth-scrollbar.min.js"
-    },
-    {
-      "hash": "sha256-5wRkH5Y8QRj7vWJc74koDCcuSBtNdtyRhwEhzDhw56g=",
-      "url": "assets\/js\/plugins\/world.js"
-    },
-    {
-      "hash": "sha256-01ZkUkWX3fijGZCjWqiMEYvIWJ4UcostF+N9\/ql3cgs=",
+      "hash": "sha256-5o7klmBHLiJNO+YQc6QmtDfumlniB6qn2BflLpDqEWw=",
       "url": "index.html"
     },
     {
@@ -693,5 +601,5 @@
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "wb+G\/lQF"
+  "version": "gRfKmcke"
 };

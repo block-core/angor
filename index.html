@@ -11,12 +11,9 @@
     <link href="manifest.json" rel="manifest" />
     <link rel="apple-touch-icon" sizes="512x512" href="/assets/img/icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/assets/img/icon-192.png" />
-    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900|Roboto+Slab:400,700" />
     <link href="/assets/css/nucleo-icons.css" rel="stylesheet" />
     <link href="/assets/css/nucleo-svg.css" rel="stylesheet" />
-    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link id="pagestyle" href="/assets/css/material-dashboard.css?v=3.0.0" rel="stylesheet" />
+    <link id="pagestyle" href="/assets/css/dashboard.css" rel="stylesheet" />
     <link href="/assets/css/app.css" rel="stylesheet" />
     <link href="Angor.Client.styles.css" rel="stylesheet" />
 </head>
@@ -36,24 +33,8 @@
     <script>navigator.serviceWorker.register('service-worker.js');</script>
     <script src="/assets/js/appUpdate.js"></script>
     <script src="/ServiceWorkerRegister.js"></script>
+    <script src="/assets/js/dashboard.js"></script>
     <script src="/assets/js/app.js"></script>
-
-    <script src="/assets/js/core/popper.min.js"></script>
-    <script src="/assets/js/core/bootstrap.min.js"></script>
-    <script src="/assets/js/plugins/perfect-scrollbar.min.js"></script>
-    <script src="/assets/js/plugins/smooth-scrollbar.min.js"></script>
-
-    <script>
-        var win = navigator.platform.indexOf('Win') > -1;
-        if (win && document.querySelector('#sidenav-scrollbar')) {
-            var options = {
-                damping: '0.5'
-            }
-            Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
-        }
-    </script>
-
-    <script src="/assets/js/material-dashboard.min.js"></script>
 
 </body>
 

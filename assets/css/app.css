@@ -9,10 +9,6 @@
     --bs-link-hover-color: #e91e63;
 }
 
-.form-control {
-    border: dotted;
-}
-
 @font-face {
     font-family: 'Material Icons Round';
     font-style: normal;
@@ -42,10 +38,6 @@
     --bs-table-striped-color: #ff9900;
     --bs-table-active-color: #ff9900;
     --bs-table-hover-color: #ff9900;
-}
-
-.form-label {
-    color: #ff9900;
 }
 
 .col-form-label {
@@ -162,6 +154,11 @@
 
 .btn-close:focus {
     box-shadow: 0 0 0 0.2rem rgba(31, 93, 106, 0.25);
+    background-color: #333;
+}
+
+.btn-close {
+    background-color: #1f5d6a;
 }
 
 
@@ -333,8 +330,13 @@
     background-color: #FFFDFA;
 }
 
-.form-control {
-    background-color: #FFFDFA;
+
+.dark-version .modal-header {
+    border-bottom: var(--bs-modal-header-border-width) solid var(--bs-modal-header-border-color-dark);
+}
+
+.dark-version .modal-content {
+    background-color: #262d45;
 }
 
 .modal-body-scroll {
@@ -367,7 +369,7 @@
     padding: 0.6rem 1.25rem 0.7rem 1.25rem;
     position: fixed;
     width: 100%;
-    z-index: 1000;
+    z-index: 100000;
 }
 
     #blazor-error-ui .dismiss {
@@ -565,9 +567,18 @@ tr[style*="cursor: pointer;"] {
     margin-top: 10px;
 }
 
-    .address-container:hover {
-        background-color: #e9ecef;
+.dark-version .address-container {
+    background-color: #2a324a;
+    border: 1px solid #344767;
+}
+
+    .dark-version .address-container:hover {
+        background-color: #1a2035;
     }
+
+.address-container:hover {
+    background-color: #e9ecef;
+}
 
 .address-container-wrapper {
     max-width: 450px;
@@ -595,3 +606,193 @@ tr[style*="cursor: pointer;"] {
     background-image: linear-gradient(195deg, #04060a, #08111f) !important;
     box-shadow: none !important;
 }
+
+.address-image {
+    width: 35px;
+    height: 35px;
+}
+
+@media (max-width: 768px) {
+    .address-text {
+        font-size: 0.8rem;
+        break-before: auto;
+    }
+
+    .btc-image-address {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.form-label {
+    font-weight: bold;
+    color: #333;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+    .form-control:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 5px #007bff;
+    }
+
+.dark-version .form-label {
+    color: #eee;
+}
+
+.dark-version .form-control {
+    border: 1px solid #555;
+    background-color: #2a324a;
+    color: #eee;
+}
+
+    .dark-version .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px #007bff;
+    }
+
+/* Snackbar Styles */
+#snackbar {
+    visibility: hidden;
+    min-width: 250px;
+    margin-left: -125px;
+    background-color: #fdfefe;
+    color: #08111f;
+    text-align: center;
+    border-radius: 10px;
+    padding: 16px;
+    position: fixed;
+    z-index: 1;
+    left: 50%;
+    bottom: 30px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.16);
+}
+
+    /* Show Snackbar Animation */
+    #snackbar.show {
+        visibility: visible;
+        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+
+/* Dark Version Styles */
+.dark-version #snackbar {
+    background-color: #060b14;
+    color: #fff;
+}
+
+/* Fade In Animation */
+@-webkit-keyframes fadein {
+    from {
+        bottom: 0;
+        opacity: 0;
+    }
+
+    to {
+        bottom: 30px;
+        opacity: 1;
+    }
+}
+
+@keyframes fadein {
+    from {
+        bottom: 0;
+        opacity: 0;
+    }
+
+    to {
+        bottom: 30px;
+        opacity: 1;
+    }
+}
+
+/* Fade Out Animation */
+@-webkit-keyframes fadeout {
+    from {
+        bottom: 30px;
+        opacity: 1;
+    }
+
+    to {
+        bottom: 0;
+        opacity: 0;
+    }
+}
+
+@keyframes fadeout {
+    from {
+        bottom: 30px;
+        opacity: 1;
+    }
+
+    to {
+        bottom: 0;
+        opacity: 0;
+    }
+}
+
+.custom-modal-size {
+    max-width: 450px; /* Adjust this value as needed */
+}
+
+.modal-content {
+    padding: 10px; /* Reduced padding */
+}
+
+.modal-body {
+    padding: 10px; /* Reduced padding */
+}
+
+.qrcode-image {
+    width: 100%; /* Image takes full width of the modal body */
+    height: auto; /* Maintain aspect ratio */
+    border-radius: 10px;
+}
+.embed-responsive {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 10px 0 0 10px;  
+}
+@media (max-width: 768px) {
+
+    .embed-responsive {
+
+        border-radius: 10px 10px 0 0 ;
+    }
+}
+
+    .embed-responsive::before {
+        display: block;
+        content: "";
+    }
+
+    .embed-responsive .embed-responsive-item,
+    .embed-responsive iframe,
+    .embed-responsive embed,
+    .embed-responsive object,
+    .embed-responsive video {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+
+.embed-responsive-16by9::before {
+    padding-top: 50%;  
+}
+
+ 
