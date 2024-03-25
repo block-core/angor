@@ -214,7 +214,6 @@
                                     <!-- Copy words to clipboard -->
                                     <div class="mb-3">
                                         <button class="btn btn-danger" @onclick="CopyWordsToClibboard">Copy To clipboard</button>
-                                        <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
                                     </div>
                                 }
                                 
@@ -824,6 +823,8 @@
         {
             sendLoadSpinner = false;
         }
+
+        StateHasChanged();
     }
 
     private async Task SendCoins()

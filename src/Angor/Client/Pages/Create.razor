@@ -32,7 +32,8 @@
     <h1 class="mb-4">Create New Project</h1>
 
     <NotificationComponent @ref="notificationComponent"/>
-    
+    <PasswordComponent @ref="passwordComponent" />
+
     <ul class="nav nav-tabs">
         <li class="nav-item">
             <button class="nav-link @GetActiveClass(1)" @onclick="() => activeTab = 1">
@@ -55,7 +56,7 @@
 
     @if (activeTab == 1)
     {
-        <EditForm Model="project.Metadata" OnValidSubmit="CreatNostrProfile">
+        <EditForm Model="project.Metadata" OnValidSubmit="CreatNostrProfileAnCheckPassword">
             <div class="mb-3">
                 <label for="NostrMetadataName" class="form-label">Project name</label>
                 <InputText id="NostrMetadataName" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the project name" />
@@ -110,7 +111,7 @@
 
     @if (activeTab == 2)
     {
-        <EditForm Model="project" OnValidSubmit="CreatProjectInfoOnNostr">
+        <EditForm Model="project" OnValidSubmit="CreatProjectInfoOnNostrAnCheckPassword">
 
             <!-- Angor Fee Key -->
             <div class="mb-3">
@@ -208,7 +209,7 @@
             </div>
         }
 
-        <button type="button" class="btn btn-success mb-3" @onclick="CreatProjectTransaction" disabled="@creatProjectSpinner">
+        <button type="button" class="btn btn-success mb-3" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@creatProjectSpinner">
             @if (creatProjectSpinner)
             {
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -380,6 +381,18 @@
         return activeTab == tabNumber ? "active" : "";
     }
 
+    private async Task CreatNostrProfileAnCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(CreatNostrProfile);
+        }
+        else
+        {
+            await CreatNostrProfile();
+        }
+    }
+
     private async Task CreatNostrProfile()
     {
         if (nostrMetadataCreated)
@@ -406,7 +419,8 @@
 
         try
         {
-            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, project.ProjectIndex);
+            var words = await passwordComponent.GetWallet();
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectIndex);
 
             var resultId = await _RelayService.CreateNostrProfileAsync(project.Metadata.ToNostrMetadata(),
                 NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()),
@@ -443,6 +457,20 @@
         finally
         {
             // nothing to do the spinner will be disabled in the call back
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task CreatProjectInfoOnNostrAnCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(CreatProjectInfoOnNostr);
+        }
+        else
+        {
+            await CreatProjectInfoOnNostr();
         }
     }
 
@@ -522,7 +550,8 @@
 
         try
         {
-            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, project.ProjectIndex);
+            var words = await passwordComponent.GetWallet();
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectIndex);
 
             var nostrKeyHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
 
@@ -565,6 +594,18 @@
         }      
     }
 
+    private async Task CreatProjectTransactionAnCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(CreatProjectTransaction);
+        }
+        else
+        {
+            await CreatProjectTransaction();
+        }
+    }
+
     private async Task CreatProjectTransaction()
     {
         creatProjectSpinner = true;
@@ -572,6 +613,8 @@
 
         try
         {
+
+            var words = await passwordComponent.GetWallet();
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
@@ -582,7 +625,7 @@
 
             unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), 10000, project.ProjectInfo.NostrPubKey);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet().WalletWords, accountInfo, feeData.SelectedFeeEstimation);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
             showCreateModal = true;
         }
@@ -609,12 +652,13 @@
             {
                 if (res <= feeData.FeeEstimations.Fees.Count)
                 {
+                    var words = passwordComponent.GetWallet().Result;
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
                     var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, _walletStorage.GetWallet().WalletWords, accountInfo, feeData.SelectedFeeEstimation);
+                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
                     StateHasChanged();
                 }
