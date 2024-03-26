@@ -419,7 +419,7 @@
 
         try
         {
-            var words = await passwordComponent.GetWallet();
+            var words = await passwordComponent.GetWalletAsync();
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectIndex);
 
             var resultId = await _RelayService.CreateNostrProfileAsync(project.Metadata.ToNostrMetadata(),
@@ -550,7 +550,7 @@
 
         try
         {
-            var words = await passwordComponent.GetWallet();
+            var words = await passwordComponent.GetWalletAsync();
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectIndex);
 
             var nostrKeyHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
@@ -614,7 +614,7 @@
         try
         {
 
-            var words = await passwordComponent.GetWallet();
+            var words = await passwordComponent.GetWalletAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
@@ -642,7 +642,7 @@
         StateHasChanged();
     }
 
-    private void FeeRangeChanged(ChangeEventArgs e)
+    private async Task FeeRangeChanged(ChangeEventArgs e)
     {
         var selected = e.Value?.ToString();
 
@@ -652,7 +652,7 @@
             {
                 if (res <= feeData.FeeEstimations.Fees.Count)
                 {
-                    var words = passwordComponent.GetWallet().Result;
+                    var words = await passwordComponent.GetWalletAsync();
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
@@ -695,6 +695,7 @@
         finally
         {
             publishProjectSpinner = false;
+            passwordComponent.ClearPassword();
         }
 
         NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");

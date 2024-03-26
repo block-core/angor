@@ -32,6 +32,7 @@
 <div class="container my-4">
     <h1>Recover funds</h1>
     <NotificationComponent @ref="notificationComponent" />
+    <PasswordComponent @ref="passwordComponent" />
 
     <p style="margin-bottom: 20px;">
         Project ID: <span id="transactionID">@ProjectId</span>
@@ -68,7 +69,7 @@
 
                     @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
                     {
-                        <button class="btn btn-primary me-2" @onclick="PrepareToRecoverCoins" disabled="@PrepareToRecoverCoinsModalSpinner">
+                        <button class="btn btn-primary me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
                             @if (PrepareToRecoverCoinsModalSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -83,7 +84,7 @@
 
                     @if (StageInfo.CanRelease)
                     {
-                        <button class="btn btn-secondary me-2" @onclick="PrepareToReleaseCoins" disabled="@PrepareToReleaseCoinsModalSpinner">
+                        <button class="btn btn-secondary me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
                             @if (PrepareToReleaseCoinsModalSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -98,7 +99,7 @@
 
                     @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
                     {
-                        <button class="btn btn-primary" @onclick="PrepareEndOfProjectCoins" disabled="@PrepareEndOfProjectCoinsModalSpinner">
+                        <button class="btn btn-primary" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
                             @if (PrepareEndOfProjectCoinsModalSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -588,6 +589,18 @@
         _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
     }
 
+    private async Task PrepareToRecoverCoinsCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(PrepareToRecoverCoins);
+        }
+        else
+        {
+            await PrepareToRecoverCoins();
+        }
+    }
+
     private async Task PrepareToRecoverCoins()
     {
         PrepareToRecoverCoinsModalSpinner = true;
@@ -602,9 +615,9 @@
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
             var accountInfo = storage.GetAccountInfo(network.Name);
-            var walletWords = _walletStorage.GetWallet().WalletWords;
+            var words = await passwordComponent.GetWalletAsync();
 
-            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(walletWords, project.ProjectInfo.FounderKey);
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
 
             unsignedRecoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.ProjectInfo, investmentTransaction, project.SignaturesInfo, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
@@ -624,7 +637,7 @@
             foreach (var txIn in removeTxin) unsignedRecoveryTransaction.Inputs.Remove(txIn);
 
             // add fee to the recovery trx
-            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, walletWords, accountInfo, feeData.SelectedFeeEstimation);
+            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
             Logger.LogInformation($"recoveryTransaction={recoveryTransaction.GetHash().ToString()}");
 
@@ -639,9 +652,11 @@
         {
             PrepareToRecoverCoinsModalSpinner = false;
         }
+
+        StateHasChanged();
     }
 
-    private void RecoveryFeeRangeChanged(ChangeEventArgs e)
+    private async Task RecoveryFeeRangeChanged(ChangeEventArgs e)
     {
         var selected = e.Value?.ToString();
 
@@ -651,11 +666,13 @@
             {
                 if (res <= feeData.FeeEstimations.Fees.Count)
                 {
+                    var words =  await passwordComponent.GetWalletAsync();
+
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
 
-                    recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, _walletStorage.GetWallet().WalletWords, accountInfo, feeData.SelectedFeeEstimation);
+                    recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
                     StateHasChanged();
                 }
@@ -701,6 +718,19 @@
         finally
         {
             PrepareToRecoverCoinsConfirmSpinner = false;
+            passwordComponent.ClearPassword();
+        }
+    }
+
+    private async Task PrepareToReleaseCoinsCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(PrepareToReleaseCoins);
+        }
+        else
+        {
+            await PrepareToReleaseCoins();
         }
     }
 
@@ -718,8 +748,9 @@
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
             var accountInfo = storage.GetAccountInfo(network.Name);
+            var words = await passwordComponent.GetWalletAsync();
 
-            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet().WalletWords, project.ProjectInfo.FounderKey);
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
 
             if (recoveryTransaction == null)
             {
@@ -743,9 +774,11 @@
         {
             PrepareToReleaseCoinsModalSpinner = false;
         }
+
+        StateHasChanged();
     }
 
-    private void ReleaseFeeRangeChanged(ChangeEventArgs e)
+    private async Task ReleaseFeeRangeChanged(ChangeEventArgs e)
     {
         var selected = e.Value?.ToString();
 
@@ -758,8 +791,9 @@
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
+                    var words =  await passwordComponent.GetWalletAsync();
 
-                    var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet().WalletWords, project.ProjectInfo.FounderKey);
+                    var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
 
                     releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project.ProjectInfo, investmentTransaction, recoveryTransaction,
                         accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
@@ -806,6 +840,19 @@
         finally
         {
             PrepareToReleaseCoinsConfirmSpinner = false;
+            passwordComponent.ClearPassword();
+        }
+    }
+
+    private async Task PrepareEndOfProjectCoinsCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(PrepareEndOfProjectCoins);
+        }
+        else
+        {
+            await PrepareEndOfProjectCoins();
         }
     }
 
@@ -823,8 +870,9 @@
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
             var accountInfo = storage.GetAccountInfo(network.Name);
+            var words = await passwordComponent.GetWalletAsync();
 
-            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet().WalletWords, project.ProjectInfo.FounderKey);
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
 
             var fromStage = StageInfo.Items.First(f => f.IsSpent == false);
 
@@ -844,9 +892,11 @@
         {
             PrepareEndOfProjectCoinsModalSpinner = false;
         }
+
+        StateHasChanged();
     }
 
-    private void EndOfProjectFeeRangeChanged(ChangeEventArgs e)
+    private async Task EndOfProjectFeeRangeChanged(ChangeEventArgs e)
     {
         var selected = e.Value?.ToString();
 
@@ -859,8 +909,9 @@
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
+                    var words =  await passwordComponent.GetWalletAsync();
 
-                    var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(_walletStorage.GetWallet().WalletWords, project.ProjectInfo.FounderKey);
+                    var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
 
                     var fromStage = StageInfo.Items.First(f => f.IsSpent == false);
 
@@ -908,6 +959,7 @@
         finally
         {
             PrepareEndOfProjectCoinsConfirmSpinner = false;
+            passwordComponent.ClearPassword();
         }
     }
 }
