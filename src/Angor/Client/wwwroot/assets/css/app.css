@@ -795,4 +795,29 @@ tr[style*="cursor: pointer;"] {
     padding-top: 50%;  
 }
 
- 
+
+/* Video Loader Styles */
+.video-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Card Loader Styles */
+.card-loader {
+    position: relative;
+}
+
+.card-loader-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
