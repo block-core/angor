@@ -3,13 +3,21 @@
 @using Angor.Shared.Models
 @using Blockcore.NBitcoin
 @using Angor.Client.Models
+@using Angor.Client.Services
+@using Angor.Shared
 @using Angor.Shared.Services
+@using Nostr.Client.Messages
+@using System.Text.Json
 
-@inject IClientStorage storage;
+@inject Logger<Investor> Logger
+@inject IClientStorage storage
 @inject NavigationManager NavigationManager
-@inject IWalletStorage _walletStorage;
-@inject ICacheStorage SessionStorage;
+@inject IWalletStorage _walletStorage
+@inject ICacheStorage SessionStorage
 @inject IIndexerService _IndexerService
+@inject ISignService SignService
+@inject IRelayService RelayService
+@inject IDerivationOperations DerivationOperations
 
 @inherits BaseComponent
 
@@ -22,10 +30,11 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="mb-4">Invested Portfolio</h1>
+        <button class="btn btn-primary" @onclick="ScanForInvestedProjectsAsync">Scan for my projects</button>
         <button class="btn btn-secondary" @onclick="NavigateToPenalties">View Penalties</button>
-    </div>
-    <NotificationComponent @ref="notificationComponent" />
-
+    </div>    
+    <NotificationComponent @ref="notificationComponent"/>
+    
     <!-- Summary Statistics -->
     <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
         <div class="col">
@@ -200,5 +209,90 @@
     private void NavigateToPenalties()
     {
         NavigationManager.NavigateTo("/penalties");
+    }
+
+    private async Task ScanForInvestedProjectsAsync()
+    {
+        var scannedProject = new Dictionary<string, ScannedProjectData>();
+
+        InvestmentRequestLookup(scannedProject);
+        
+        RelayService.RequestProjectCreateEventsByPubKey(x =>
+        {
+            if (!scannedProject.ContainsKey(x.Pubkey))
+            {
+                Logger.LogError(x.Pubkey + "was not found in the scanned project list");
+                return;
+            }
+
+            scannedProject[x.Pubkey].Project ??= new InvestorProject();
+
+            var investorProject = scannedProject[x.Pubkey].Project;
+            
+            switch (x.Kind)
+            {
+                case NostrKind.Metadata:
+                    investorProject!.Metadata = JsonSerializer.Deserialize<ProjectMetadata>(x.Content!);
+                    break;
+                case NostrKind.ApplicationSpecificData:
+                    investorProject!.ProjectInfo = JsonSerializer.Deserialize<ProjectInfo>(x.Content!) ?? throw new Exception("The project info must be in the application specific data event");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException($"{x.Kind}");
+            }
+        },
+            () => { },
+            scannedProject.Keys.ToArray());
+        
+        foreach (var (nostrPubKey, scannedProjectData) in scannedProject)
+        {
+            
+            var investorKey = DerivationOperations.DeriveInvestorKey(_walletStorage.GetWallet(), scannedProjectData.Project!.ProjectInfo.FounderKey ?? throw new Exception("Did not get the application specific data"));
+
+            var result = await _IndexerService.GetProjectInvestmentsAsync(scannedProjectData.Project!.ProjectInfo.ProjectIdentifier, investorKey);
+
+            scannedProjectData.Project.TransactionId = result.TransactionId;
+            scannedProjectData.Project.AmountInvested = result.TotalAmount;
+            //TODO set the seeder when we implement the seeder logic in the UI
+
+            SignService.LookupSignatureForInvestmentRequest(nostrPubKey, scannedProjectData.Project.ProjectInfo.NostrPubKey,
+                scannedProjectData.RequestEventCreateAt,scannedProjectData.RequestEventId, s => { });
+        }
+        
+    }
+
+    private void InvestmentRequestLookup(Dictionary<string, ScannedProjectData> scannedProject)
+    {
+        var countPreLookup = scannedProject.Count;
+
+    // foreach (var i in Enumerable.Range(1, 5))
+    // {
+        var key = DerivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), countPreLookup + 1);
+
+        scannedProject.Add(key.PubKey.ToHex(), new ScannedProjectData { Index = countPreLookup + 1 });
+    //}
+
+        SignService.LookupInvestmentRequestsSentByInvestorKey(scannedProject.Keys.Last(),
+            (investorNostrPubKey, founderNostrPubKey, createdAt,eventId) =>
+            {
+                scannedProject[investorNostrPubKey].FounderNostrKey = founderNostrPubKey;
+                scannedProject[investorNostrPubKey].RequestEventCreateAt = createdAt;
+                scannedProject[investorNostrPubKey].RequestEventId = eventId;
+            }, () =>
+            {
+                if (scannedProject.Count == countPreLookup)
+                    return;
+
+                InvestmentRequestLookup(scannedProject);
+            });
+    }
+
+    private class ScannedProjectData
+    {
+        public int Index { get; set; }
+        public string FounderNostrKey { get; set; }
+        public string RequestEventId { get; set; }
+        public DateTime RequestEventCreateAt { get; set; }
+        public InvestorProject? Project { get; set; }
     }
 }

@@ -11,6 +11,7 @@ namespace Angor.Shared.Services
         Task<ProjectStats?> GetProjectStatsAsync(string projectId);
 
         Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId);
+        Task<ProjectInvestment?> GetProjectInvestmentsAsync(string projectId,string investorPubKey);
         Task<string> PublishTransactionAsync(string trxHex);
         Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false);
         Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset);
@@ -123,7 +124,16 @@ namespace Angor.Shared.Services
             var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/investments");
             _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
+            return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>() ?? new List<ProjectInvestment>();
+        }
+
+        public async Task<ProjectInvestment?> GetProjectInvestmentsAsync(string projectId, string investorPubKey)
+        {
+            var indexer = _networkService.GetPrimaryIndexer();
+            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/investments/{investorPubKey}");
+            _networkService.CheckAndHandleError(response);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<ProjectInvestment?>();
         }
 
         public async Task<string> PublishTransactionAsync(string trxHex)
