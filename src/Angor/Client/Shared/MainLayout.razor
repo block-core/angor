@@ -10,13 +10,13 @@
 <main class="main-content d-flex flex-column min-vh-100">
     <!-- Navbar -->
 
-    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 border-radius-xl position-sticky mt-2 top-2 z-index-sticky blur left-auto bg-gradient-dark-topmenu" id="navbarBlur"
+    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 border-radius-xl position-sticky mt-2 top-2 z-index-sticky left-auto bg-gradient-dark-topmenu" id="navbarBlur"
          data-scroll="true">
         <div class="container-fluid py-1 px-3">
             <nav>
                 <div class="mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                     <div class="text-sm">
-                        <h6 class="font-weight-bolder">Alpha app - only use test wallets.</h6>
+                        <h6 class="font-weight-bolder" title="Alpha app - only use test wallets.">Only use test wallets.</h6>
                     </div>
                 </div>
             </nav>
@@ -51,22 +51,23 @@
     </div>
 
     <footer class="footer mt-auto py-3 px-0 mx-3 left-auto">
-        <div class="container">
-            <div class="row align-items-center justify-content-lg-between">
-
-                <div class="nav nav-footer justify-content-center justify-content-lg-end">
-                    <div>
-                        <span class="w-100">Version: @_softwareVersion</span>
-                    </div>
+ 
+            <div class="row">
+                <div class="nav nav-footer justify-content-center">
+                        <div class="card card-body border-radius-lg d-flex align-items-center flex-row">
+                            <h6 class="mb-0">
+                                Version: @_softwareVersion
+                            </h6>
+                            <i class="material-icons ms-auto text-dark cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Edit Card">code</i>
+                        </div>
                 </div>
-
             </div>
-        </div>
+ 
     </footer>
 </main>
 
 
- 
+
 
 @code {
     private string _softwareVersion = "0.0.0";

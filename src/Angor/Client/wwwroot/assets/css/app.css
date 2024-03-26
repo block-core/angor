@@ -481,7 +481,7 @@ tr[style*="cursor: pointer;"] {
     position: fixed;
     top: 0;
     left: 0;
-    background-color: rgba(255,255,255,0.9);
+    background-color: #083b46;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -593,7 +593,9 @@ tr[style*="cursor: pointer;"] {
 .btn-angor {
     color: #1f5d6a;
 }
-
+.dark-version .btn-angor {
+    color: #E7FBFF;
+}
     .btn-angor:hover {
         transition: all 0.3s ease;
         -moz-transition: all 0.3s ease;
@@ -603,7 +605,7 @@ tr[style*="cursor: pointer;"] {
     }
 
 .dark-version .bg-gradient-dark-topmenu {
-    background-image: linear-gradient(195deg, #04060a, #08111f) !important;
+    background: #083b46 !important;
     box-shadow: none !important;
 }
 
