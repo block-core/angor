@@ -51,5 +51,6 @@ builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 
 builder.Services.AddSingleton<INostrCommunicationFactory,NostrCommunicationFactory>();
 builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
+builder.Services.AddSingleton<IPasswordCashService, PasswordCashService>();
 
 await builder.Build().RunAsync();

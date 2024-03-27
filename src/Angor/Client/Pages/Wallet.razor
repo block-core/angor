@@ -766,8 +766,15 @@
             notificationComponent.ShowErrorMessage("Specify an amount");
             return;
         }
-
-        passwordComponent.ShowPassword(BuildSend);
+         
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(BuildSend);
+        }
+        else
+        {
+            await BuildSend();
+        }
     }
 
     private async Task BuildSend()
