@@ -2,14 +2,14 @@
 
 namespace Angor.Client.Services
 {
-    public interface IPasswordCashService
+    public interface IPasswordCacheService
     {
         string? Data { get; set; }
         void TryClear();
         void SetTimer(TimeSpan timeSpan);
     }
 
-    public class PasswordCashService : IPasswordCashService
+    public class PasswordCacheService : IPasswordCacheService
     {
         private Timer timer;
 
@@ -18,7 +18,7 @@ namespace Angor.Client.Services
 
         private TimeSpan oneMin = TimeSpan.FromMinutes(1);
 
-        public PasswordCashService()
+        public PasswordCacheService()
         {
             this.timer = new Timer(Callback, null, oneMin, oneMin);
         }
