@@ -247,7 +247,8 @@
         foreach (var (nostrPubKey, scannedProjectData) in scannedProject)
         {
             
-            var investorKey = DerivationOperations.DeriveInvestorKey(_walletStorage.GetWallet(), scannedProjectData.Project!.ProjectInfo.FounderKey ?? throw new Exception("Did not get the application specific data"));
+            var investorKey = DerivationOperations.DeriveInvestorKey(_walletStorage.GetWallet().WalletWords, scannedProjectData.Project!.ProjectInfo.FounderKey 
+                                                                                                             ?? throw new Exception("Did not get the application specific data"));
 
             var result = await _IndexerService.GetProjectInvestmentsAsync(scannedProjectData.Project!.ProjectInfo.ProjectIdentifier, investorKey);
 
@@ -256,7 +257,12 @@
             //TODO set the seeder when we implement the seeder logic in the UI
 
             SignService.LookupSignatureForInvestmentRequest(nostrPubKey, scannedProjectData.Project.ProjectInfo.NostrPubKey,
-                scannedProjectData.RequestEventCreateAt,scannedProjectData.RequestEventId, s => { });
+                scannedProjectData.RequestEventCreateAt,scannedProjectData.RequestEventId,
+                s =>
+                {
+                    Logger.LogInformation("Received encrypted founder signatures" + s);
+                    return Task.CompletedTask;
+                });
         }
         
     }
@@ -267,7 +273,7 @@
 
     // foreach (var i in Enumerable.Range(1, 5))
     // {
-        var key = DerivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet(), countPreLookup + 1);
+        var key = DerivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, countPreLookup + 1);
 
         scannedProject.Add(key.PubKey.ToHex(), new ScannedProjectData { Index = countPreLookup + 1 });
     //}

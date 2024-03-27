@@ -1,6 +1,6 @@
 using Angor.Shared.Models;
 
-namespace Angor.Client.Services;
+namespace Angor.Shared.Services;
 
 public interface ISignService
 {
