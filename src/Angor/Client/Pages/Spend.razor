@@ -33,6 +33,7 @@
     <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
 
     <NotificationComponent @ref="notificationComponent" />
+    <PasswordComponent @ref="passwordComponent" />
     
     @if (firstTimeRefreshSpinner && refreshSpinner)
     {
@@ -69,7 +70,7 @@
                     <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
                     @if (stageisActive)
                     {
-                        <button class="btn btn-success" disabled="@(investedCount == 0 || stage.StagePinner == true)" @onclick="() => ClaimCoins(stage.StageIndex)">
+                        <button class="btn btn-success" disabled="@(investedCount == 0 || stage.StagePinner == true)" @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
                             @if (stage.StagePinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -376,6 +377,21 @@
         }
     }
 
+    protected async Task ClaimCoinsCheckPassword(int stageId)
+    {
+        if (passwordComponent.HasPassword())
+        {
+            await ClaimCoins(stageId);
+        }
+        else
+        {
+            passwordComponent.ShowPassword(async () =>
+            {
+                await ClaimCoins(stageId); ;
+            });
+        }
+    }
+
     private async Task ClaimCoins(int stageId)
     {
         var stage = stageDatas.First(s => s.StageIndex == stageId);
@@ -387,6 +403,8 @@
 
         try
         {
+            var words = await passwordComponent.GetWalletAsync();
+
             selectedStageId = stageId;
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
@@ -409,7 +427,7 @@
 
             var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
 
-            var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet().WalletWords, keys.Index);
+            var key = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
 
             signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
 
@@ -424,9 +442,11 @@
         {
             stage.StagePinner = false;
         }
+
+        StateHasChanged();
     }
 
-    private void FeeRangeChanged(ChangeEventArgs e)
+    private async Task FeeRangeChanged(ChangeEventArgs e)
     {
         var selectedItem = e.Value?.ToString();
 
@@ -436,6 +456,7 @@
             {
                 if (res <= feeData.FeeEstimations.Fees.Count)
                 {
+                    var words = await passwordComponent.GetWalletAsync();
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
@@ -443,7 +464,7 @@
                     var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
 
                     var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
-                    var key = _derivationOperations.DeriveFounderPrivateKey(_walletStorage.GetWallet().WalletWords, keys.Index);
+                    var key = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
 
                     signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
 
@@ -496,6 +517,7 @@
         {
             Logger.LogError(e, e.Message);
             notificationComponent.ShowErrorMessage(e.Message);
+            passwordComponent.ClearPassword();
         }
         finally
         {

@@ -3,10 +3,11 @@
     "version": "0.0.23",
     "license": "MIT",
     "scripts": {
-      "version": "node -p \"require('./package.json').version\"",
-      "changelog": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md"
+        "version": "node -p \"require('./package.json').version\"",
+        "changelog": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md"
     },
     "private": true,
-    "dependencies": {},
-    "devDependencies": {}
-  }
+    "dependencies": {
+        "js-base64": "^3.7.7"
+    }
+}
