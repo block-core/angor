@@ -1,13 +1,12 @@
 ﻿using System.Reactive.Linq;
 using System.Text.Json;
 using Angor.Shared.Models;
-using Angor.Shared.Services;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 using Nostr.Client.Requests;
 
-namespace Angor.Client.Services
+namespace Angor.Shared.Services
 {
     public class SignService : ISignService
     {
