@@ -33,15 +33,15 @@
       "url": "_framework\/icudt.dat"
     },
     {
-      "hash": "sha256-jjnXQjGN956Apz0fGbc8vwBhPQdpdqXmZBCO09cSuNs=",
+      "hash": "sha256-RWRT1HatSMivdOMfgMnSl52nSaQg4PbULwrtvwKfWMA=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-L215k+\/GRXVGNJNIWUOIrQk+t3ZHR0yzkq53s2fgzrc=",
+      "hash": "sha256-W3fnAI6srUcZUQFgR3FB+HmIK1\/m1wRNipW2nTAy12U=",
       "url": "_framework\/Angor.Client.dll"
     },
     {
-      "hash": "sha256-XSS7e96nBOFr77+0k3m754kfMzGeWkQ5nhWJ2iWO81U=",
+      "hash": "sha256-mHckTCTXb5XHmhyIAxCasOq7k01tHvavjE4Au8\/\/hjA=",
       "url": "_framework\/Angor.Shared.dll"
     },
     {
@@ -77,7 +77,7 @@
       "url": "_framework\/LiteDB.dll"
     },
     {
-      "hash": "sha256-jziVJMaA80ZRPkgC8jmlJjaiclHScdQJB\/jYi8v55jA=",
+      "hash": "sha256-CCDOK+VZqgTYR2YcedYBasgV4FvfziaLavhm\/Zi1578=",
       "url": "_framework\/Microsoft.AspNetCore.Components.dll"
     },
     {
@@ -357,7 +357,7 @@
       "url": "_framework\/System.ObjectModel.dll"
     },
     {
-      "hash": "sha256-8fYVCI1B5DsLRgl5JcfBrb1ircIa0hV\/WIjngGbZeDc=",
+      "hash": "sha256-Nad4Hwajg7MpHRE0sXEqRMzsh5fUzBjT0T\/Bd0ixlkM=",
       "url": "_framework\/System.Private.CoreLib.dll"
     },
     {
@@ -585,8 +585,16 @@
       "url": "assets\/js\/dashboard.js"
     },
     {
-      "hash": "sha256-5o7klmBHLiJNO+YQc6QmtDfumlniB6qn2BflLpDqEWw=",
+      "hash": "sha256-SKQaaTimbydCCOB7rizAaMT0WFdovWEEJoU52eCMVno=",
       "url": "index.html"
+    },
+    {
+      "hash": "sha256-hlLXwurl\/dTAiKyXeYgSAAEm9WLtDo3+bE2VJvslQ6w=",
+      "url": "lib\/js-base64\/base64.mjs"
+    },
+    {
+      "hash": "sha256-\/PBqrLNu4pI3EQ1rOp+9YpboWtQyQmOr9filz7VwbIE=",
+      "url": "lib\/js-base64\/LICENSE.md"
     },
     {
       "hash": "sha256-uI5EnXUjm46bp0nMNp4LRPcrWDg7yZB5i8usLQLAPpY=",
@@ -597,9 +605,13 @@
       "url": "NostrToolsMethods.js"
     },
     {
+      "hash": "sha256-noWk5RFri18kEjAe1w2pQAVTfL9Hbbx477FV03+k87k=",
+      "url": "service-crypto.js"
+    },
+    {
       "hash": "sha256-678xIKQBmeHW7amzpoqS967KgPh\/B5bzZQexfudHufA=",
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "gRfKmcke"
+  "version": "vL5PUw1h"
 };
