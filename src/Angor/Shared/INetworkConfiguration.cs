@@ -6,6 +6,7 @@ namespace Angor.Shared;
 public interface INetworkConfiguration
 {
     Network GetNetwork();
+    void SetNetwork(Network network);
     SettingsUrl GetIndexerUrl();
     SettingsUrl GetExplorerUrl();
     List<SettingsUrl> GetDefaultIndexerUrls();

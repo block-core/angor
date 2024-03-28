@@ -12,6 +12,7 @@
 @inject IWalletStorage _walletStorage;
 @inject NavMenuState NavMenuState
 @inject ILogger<Settings> Logger;
+@inject NavigationManager _navManager
 
 @inherits BaseComponent
 
@@ -58,6 +59,17 @@
                                 {
                                     <p class="text-danger-emphasis">Please tick the box to wipe all storage!</p>
                                 }
+                                
+                                <hr />
+
+                                <!-- Dropdown for network selection -->
+                                <div class="mb-3">
+                                    <label for="networkSelection">Select Network:</label>
+                                    <select class="form-control" id="networkSelection" @bind="selectedNetwork">
+                                        <option value="testnet" selected>Testnet</option>
+                                        <option value="mainnet">Mainnet</option>
+                                    </select>
+                                </div>
 
                                 <button class="btn btn-danger" @onclick="WipteAllData">Wipe Storage</button>
                             </div>
@@ -190,6 +202,7 @@
     private bool showWipeallModal = false;
     private bool confirmWipe = false;
     private bool showConfirmWipeMessage = false;
+    private string selectedNetwork = "testnet"; // Default to "testnet"
 
     private SettingsInfo settingsInfo;
 
@@ -200,6 +213,9 @@
         settingsInfo = _clientStorage.GetSettingsInfo();
 
         networkType = _networkConfiguration.GetNetwork().Name;
+
+        if (!networkType.ToLower().Contains("test"))
+            selectedNetwork = "mainnet";
 
         return base.OnInitializedAsync();
     }
@@ -389,7 +405,11 @@
         showWipeallModal = false;
         showConfirmWipeMessage = false;
 
+        _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
         _networkService.AddSettingsIfNotExist();
+
+        networkType = _networkConfiguration.GetNetwork().Name;
+        settingsInfo = _clientStorage.GetSettingsInfo();
 
         hasWallet = _walletStorage.HasWallet();
         StateHasChanged();
