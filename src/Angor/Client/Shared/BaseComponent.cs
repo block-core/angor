@@ -17,6 +17,8 @@ namespace Angor.Client.Shared
         protected NavigationManager NavigationManager { get; set; }
 
         public NotificationComponent notificationComponent;
+        public PasswordComponent passwordComponent;
+
         protected bool hasWallet { get; set; }
 
         protected Network network { get; set; }

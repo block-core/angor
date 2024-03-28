@@ -204,7 +204,7 @@
                             <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                             <div class="input-group">
                                 <InputText id="NostrPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly/>
-                                <button @onclick="CopyWordsToClipboardAsync" class="btn btn-success">Copy NSec to clipboard</button>
+                                <button @onclick="CopyNsecToClipboardAsyncCheckPassword" class="btn btn-success">Copy NSec to clipboard</button>
                             </div>
                         </div>
                     }
@@ -405,12 +405,24 @@
             notificationComponent.ShowNotificationMessage("You must create a wallet if you want to invest");
     }
     
-    
-    private async Task CopyWordsToClipboardAsync()
+    private async Task CopyNsecToClipboardAsyncCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(CopyNsecToClipboardAsync);
+        }
+        else
+        {
+            await CopyNsecToClipboardAsync();
+        }
+    }
+
+    private async Task CopyNsecToClipboardAsync()
     {
         if (project is FounderProject founderProject)
         {
-            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, founderProject.ProjectIndex);
+            var words = await passwordComponent.GetWalletAsync();
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, founderProject.ProjectIndex);
             var nsec = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
             await _clipboardService.WriteTextAsync(nsec);
             StateHasChanged();   

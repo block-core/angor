@@ -17,6 +17,8 @@
 @inject IClipboardService _clipboardService
 @inject IDerivationOperations _derivationOperations
 @inject NavMenuState NavMenuState
+@inject IEncryptionService _encryptionService
+
 
 @inherits BaseComponent
 
@@ -26,6 +28,7 @@
     <h1>Wallet and balances</h1>
 
     <NotificationComponent @ref="notificationComponent" />
+    <PasswordComponent @ref="passwordComponent" />
 
     <!-- This part of the page is visible only if the wallet is found -->
     @if (!hasWallet)
@@ -69,6 +72,25 @@
                                     </div>
                                     <div class="mb-3">
                                         <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
+                                    </div>
+                                    <div class="mb-3">
+                                        <p>Please enter a password for your new wallet:</p>
+                                        <div class="input-group mb-3">
+                                            <input type="@passwordInputType" class="form-control" placeholder="Password" @bind="newWalletPassword" />
+                                            <button class="btn btn-outline-secondary" type="button" @onclick="TogglePasswordVisibility">@passwordToggleText</button>
+                                        </div>
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="backupConfirmationCheckbox" @bind="backupConfirmation">
+                                            <div class="alert alert-warning" role="alert">
+                                                <label class="form-check-label" for="backupConfirmationCheckbox">
+                                                    <strong>ATTENTION!!!</strong> I confirm I have backed up my wallet words and keep it private and secure. I understand that if I lose these words, I will lose access to my wallet.
+                                                </label>
+                                            </div>
+                                        </div>
+                                        @if (showBackupConfirmationError)
+                                        {
+                                            <div class="text-danger-emphasis">You must confirm that you have backed up your wallet words.</div>
+                                        }
                                     </div>
                                     <div class="mb-3">
                                         <button class="btn btn-success" @onclick="CreateWalletAsync">Create Wallet</button>
@@ -154,21 +176,37 @@
                                 <button type="button" class="btn-close" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" aria-label="Close"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
+                                
+                                <!-- Show words button with warning -->
+                                <div class="mb-3">
+                                    <div class="alert alert-danger" role="alert">
+                                        <p class="fs-6">Warning: These words can be used to recover your wallet. Keep them safe.</p>
+                                    </div>
+                                </div>
 
-                                @if (string.IsNullOrEmpty(walletWords))
+                                @if (string.IsNullOrEmpty(showWalletWords))
                                 {
                                     <!-- Show words button with warning -->
+                                    <div class="modal-body modal-body-scroll">
+                                        <p>Please enter your wallet password</p>
+                                        <input type="password" @bind="showWalletPassword" class="password-input"/>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(showWalletPasswordError))
+                                    {
+                                        <div class="text-danger-emphasis">@showWalletPasswordError</div>
+                                    }
+
                                     <div class="mb-3">
                                         <button class="btn btn-warning" @onclick="ShowWords">Show Words</button>
-                                        <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
                                     </div>
                                 }
                                 else
                                 {
                                     <!-- Wallet words will be shown here -->
-                                    <p>@walletWords</p>
+                                    <p>@showWalletWords</p>
 
-                                    if (!string.IsNullOrEmpty(walletWordsPassphrase))
+                                    if (!string.IsNullOrEmpty(showWalletWordsPassphrase))
                                     {
                                         <p>This wallet has a pass phrase!</p>
                                     }
@@ -176,10 +214,10 @@
                                     <!-- Copy words to clipboard -->
                                     <div class="mb-3">
                                         <button class="btn btn-danger" @onclick="CopyWordsToClibboard">Copy To clipboard</button>
-                                        <p class="fs-6 text-danger">Warning: These words can be used to recover your wallet. Keep them safe.</p>
                                     </div>
                                 }
-
+                                
+                                <hr>
                                 <!-- Delete wallet button -->
                                 <div class="mb-3">
                                     <button class="btn btn-danger" @onclick="DeleteWallet">Delete Wallet</button>
@@ -254,7 +292,7 @@
                     </button>
 
                     <!-- New Send button that triggers a confirmation dialog -->
-                    <button type="button" class="btn btn-primary mb-3" @onclick="BuildSend" disabled="@sendLoadSpinner">
+                    <button type="button" class="btn btn-primary mb-3" @onclick="AskPassword" disabled="@sendLoadSpinner">
                         @if (sendLoadSpinner)
                         {
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -363,7 +401,7 @@
                     </div>
                 </div>
             }
-        </div>
+          </div>
 
 
 
@@ -443,15 +481,26 @@
     private bool sendLoadSpinner = false;
     private bool sendConfirmSpinner = false;
 
-    private string? walletWords;
-    private string? walletWordsPassphrase;
+    private string? showWalletWords;
+    private string? showWalletWordsPassphrase;
+    private string? showWalletPassword;
+    private string? showWalletPasswordError;
+
     private string? newWalletWords;
     private string? newWalletWordsPassphrase;
+    private string? newWalletPassword;
+    private string passwordInputType = "password";
+    private string passwordToggleText = "Show";
 
     private bool sendConfirmModal;
     private bool coinControlModal;
     private bool walletWordsModal;
     private bool walletWordsCreateModal;
+
+
+    private bool backupConfirmation = false;
+    private bool showBackupConfirmationError = false;
+
 
     private int feeRange = 0;
     private int FeePosition = 1;
@@ -528,9 +577,30 @@
         await Task.Delay(10);
     }
 
+    private void TogglePasswordVisibility()
+    {
+        if (passwordInputType == "password")
+        {
+            passwordInputType = "text";
+            passwordToggleText = "Hide";
+        }
+        else
+        {
+            passwordInputType = "password";
+            passwordToggleText = "Show";
+        }
+    }
+
     private async Task CreateWalletAsync()
     {
         if (string.IsNullOrEmpty(newWalletWords)) throw new ArgumentNullException();
+        if (string.IsNullOrEmpty(newWalletPassword)) throw new ArgumentNullException();
+
+        if (!backupConfirmation)
+        {
+            showBackupConfirmationError = true;
+            return;
+        }
 
         createWalletSpinner = true;
         StateHasChanged();
@@ -543,7 +613,9 @@
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
-            _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { WalletWords = data });
+            var encrypted = await _encryptionService.EncryptData(data.ConvertToString(), newWalletPassword);
+
+            _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { EncryptedData = encrypted });
             storage.SetAccountInfo(network.Name, accountInfo);
             accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
 
@@ -569,37 +641,59 @@
         }
     }
 
-    private void ShowWords()
+    private async Task ShowWords()
     {
-        var data = _walletStorage.GetWallet().WalletWords;
-        walletWords = data.Words;
-        walletWordsPassphrase = data.Passphrase;
+        if (string.IsNullOrEmpty(showWalletPassword)) throw new ArgumentNullException();
+
+        var wallet = _walletStorage.GetWallet();
+        var walletData = await _encryptionService.DecryptData(wallet.EncryptedData, showWalletPassword);
+        
+        if (string.IsNullOrEmpty(walletData))
+        {
+            // invalid password
+            showWalletPasswordError = "Invaid password";
+            return;
+        }
+
+        var data = WalletWords.ConvertFromString(walletData);
+        showWalletWords = data.Words;
+        showWalletWordsPassphrase = data.Passphrase;
+        data = null;
         StateHasChanged();
     }
 
     private async Task CopyWordsToClibboard()
     {
-        if (string.IsNullOrEmpty(walletWords))
+        if (string.IsNullOrEmpty(showWalletWords))
         {
             throw new InvalidOperationException();
         }
 
-        await _clipboardService.WriteTextAsync(walletWords);
+        await _clipboardService.WriteTextAsync(showWalletWords);
         ClearWalletWords();
         StateHasChanged();
     }
 
     private void ClearWalletWords()
     {
-        walletWords = null;
-        walletWordsPassphrase = null;
+        showWalletWords = null;
+        showWalletWordsPassphrase = null;
         newWalletWords = null;
         newWalletWordsPassphrase = null;
+        newWalletPassword = null;
+        showWalletPassword = null;
+        backupConfirmation = false;
+        showBackupConfirmationError = false;
     }
 
     private void WalletWordsClose()
     {
-        walletWords = null;
+        showWalletWords = null;
+        backupConfirmation = false;
+        showBackupConfirmationError = false;
+        showWalletPasswordError = null;
+        showWalletPassword = null;
+        newWalletPassword = null;
     }
 
     private void DeleteWallet()
@@ -659,7 +753,7 @@
         }
     }
 
-    private async Task BuildSend()
+    private async Task AskPassword()
     {
         if (string.IsNullOrEmpty(_sendInfo.SendToAddress))
         {
@@ -672,6 +766,21 @@
             notificationComponent.ShowErrorMessage("Specify an amount");
             return;
         }
+         
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(BuildSend);
+        }
+        else
+        {
+            await BuildSend();
+        }
+    }
+
+    private async Task BuildSend()
+    {
+        if (string.IsNullOrEmpty(_sendInfo.SendToAddress)) throw new ArgumentNullException();
+        if (_sendInfo.SendAmount == 0) throw new ArgumentNullException();
 
         sendLoadSpinner = true;
         StateHasChanged();
@@ -713,27 +822,40 @@
         catch (Exception e)
         {
             Logger.LogError(e, e.Message);
+            passwordComponent.ClearPassword();
+            sendLoadSpinner = false;
             notificationComponent.ShowErrorMessage(e.Message);
         }
         finally
         {
             sendLoadSpinner = false;
         }
+
+        StateHasChanged();
     }
 
     private async Task SendCoins()
     {
+        if (!passwordComponent.HasPassword())
+        {
+            sendConfirmSpinner = false;
+            sendConfirmModal = false;
+            notificationComponent.ShowErrorMessage("Wallet password not found");
+            return;
+        }
+
         sendConfirmSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
 
         try
         {
-            var wallet = _walletStorage.GetWallet();
+            var words = await passwordComponent.GetWalletAsync();
+
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
-            var res = await _walletOperations.SendAmountToAddress(wallet.WalletWords, _sendInfo);
+            var res = await _walletOperations.SendAmountToAddress(words, _sendInfo);
 
             if (res.Success)
             {
@@ -757,6 +879,7 @@
         {
             sendConfirmSpinner = false;
             sendConfirmModal = false;
+            passwordComponent.ClearPassword();
         }
     }
 
@@ -775,7 +898,7 @@
         }
     }
 
-    private void FeeRangeChanged(ChangeEventArgs e)
+    private async Task FeeRangeChanged(ChangeEventArgs e)
     {
         // Here you can handle the fee range change
         // The new value is in e.Value

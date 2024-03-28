@@ -29,6 +29,7 @@ builder.Services.AddTransient <IWalletStorage, WalletStorage>();
 builder.Services.AddScoped<ICacheStorage, LocalSessionStorage>();
 builder.Services.AddTransient<IWalletOperations, WalletOperations>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
+builder.Services.AddScoped<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
 builder.Services.AddScoped<NavMenuState>();
 
@@ -50,5 +51,6 @@ builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 
 builder.Services.AddSingleton<INostrCommunicationFactory,NostrCommunicationFactory>();
 builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
+builder.Services.AddSingleton<IPasswordCacheService, PasswordCacheService>();
 
 await builder.Build().RunAsync();
