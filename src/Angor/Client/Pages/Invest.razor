@@ -61,11 +61,13 @@
     <p>Starting in: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy")</p>
 
     <NotificationComponent @ref="notificationComponent" />
+    <PasswordComponent @ref="passwordComponent" />
+
     @if(project is not InvestorProject investorProject)
     {
         <div class="card">
             <div class="card-body">
-                <EditForm Model="Investment" OnValidSubmit="InvestFunds">
+                <EditForm Model="Investment" OnValidSubmit="InvestFundsAndCheckPassword">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
 
@@ -318,9 +320,32 @@
 
         if (project is InvestorProject investmentProject && investmentProject.WaitingForFounderResponse())
         {
+            if (passwordComponent.HasPassword())
+            {
+                await ScanForPendingSignatures();
+            }
+            else
+            {
+                passwordComponent.ShowPassword(ScanForPendingSignatures);
+            }
+        }
+    }
+
+    private async Task ScanForPendingSignatures()
+    {
+        if (project is InvestorProject investmentProject && investmentProject.WaitingForFounderResponse())
+        {
+            if (!passwordComponent.HasPassword())
+            {
+                notificationComponent.ShowErrorMessage("no wallet password");
+                return;
+            }
+
+            var words = await passwordComponent.GetWalletAsync();
+
             var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
 
-            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, accountInfo.InvestmentsCount + 1);
+            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, accountInfo.InvestmentsCount + 1);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -366,6 +391,18 @@
         }
     }
 
+    private async Task InvestFundsAndCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(InvestFunds);
+        }
+        else
+        {
+            await InvestFunds();
+        }
+    }
+
     private async Task InvestFunds()
     {
         if (Investment.IsSeeder) 
@@ -399,6 +436,8 @@
         }
 
         buildSpinner = true;
+        StateHasChanged();
+        await Task.Delay(10);
 
         try
         {
@@ -409,18 +448,18 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            var walletWords = _walletStorage.GetWallet().WalletWords;
+            var words = await passwordComponent.GetWalletAsync();
 
-            var investorKey = _derivationOperations.DeriveInvestorKey(walletWords, project.ProjectInfo.FounderKey);
+            var investorKey = _derivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
             
             if (Investment.IsSeeder)
             {
-                var seederHash = _derivationOperations.DeriveSeederSecretHash(walletWords, project.ProjectInfo.FounderKey);
+                var seederHash = _derivationOperations.DeriveSeederSecretHash(words, project.ProjectInfo.FounderKey);
             }
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, investorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, walletWords, accountInfo, feeData.SelectedFeeEstimation);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
         }
         catch (Exception e)
@@ -433,9 +472,11 @@
             showCreateModal = true;
             buildSpinner = false;
         }
+
+        StateHasChanged();
     }
 
-    private void FeeRangeChanged(ChangeEventArgs e)
+    private async Task FeeRangeChanged(ChangeEventArgs e)
     {
         var selected = e.Value?.ToString();
 
@@ -445,11 +486,12 @@
             {
                 if (res <= feeData.FeeEstimations.Fees.Count)
                 {
+                    var words = await passwordComponent.GetWalletAsync();
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
                    
                     var accountInfo = storage.GetAccountInfo(network.Name);
                     
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, _walletStorage.GetWallet().WalletWords, accountInfo, feeData.SelectedFeeEstimation);
+                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
                     StateHasChanged();
                 }
@@ -488,7 +530,8 @@
 
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, accountInfo.InvestmentsCount + 1);
+            var words = await passwordComponent.GetWalletAsync();
+            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, accountInfo.InvestmentsCount + 1);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -540,6 +583,7 @@
         {
             showCreateModal = false;
             investSpinner = false;
+            passwordComponent.ClearPassword();
         }
     }
 

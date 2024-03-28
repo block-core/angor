@@ -32,7 +32,8 @@
     Project ID: <span id="transactionID">@ProjectIdentifier</span>
 
     <NotificationComponent @ref="notificationComponent" />
-        
+    <PasswordComponent @ref="passwordComponent" />
+
     @if (!signaturesRequests.Any())
     {
         <p><em>No pending signatures yet...</em></p>
@@ -124,6 +125,26 @@
             }
         }
 
+        await FetchSignaturesCheckPassword();
+    }
+
+    protected async Task FetchSignaturesCheckPassword()
+    {
+        if (signaturesRequests.Any(x => x.AmountToInvest == null))
+        {
+            if (passwordComponent.HasPassword())
+            {
+                await FetchSignatures();
+            }
+            else
+            {
+                passwordComponent.ShowPassword(FetchSignatures);
+            }
+        }
+    }
+
+    protected async Task FetchSignatures()
+    {
         Logger.LogDebug("handled = {Count}, total = {SignaturesRequestsCount}", signaturesRequests.Count(x => x.AmountToInvest.HasValue), signaturesRequests.Count);
 
         if (signaturesRequests.Any(x => x.AmountToInvest == null))
@@ -134,7 +155,15 @@
                 return;
             }
 
-            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(_walletStorage.GetWallet().WalletWords, FounderProject.ProjectIndex);
+            if (!passwordComponent.HasPassword())
+            {
+                notificationComponent.ShowErrorMessage("no wallet password");
+                return;
+            }
+
+            var words = await passwordComponent.GetWalletAsync();
+
+            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -167,8 +196,6 @@
 
         Logger.LogDebug("OnAfterRenderAsync Completed");
     }
-
-
 
     private async Task FetchPendingSignatures(FounderProject project)
     {
@@ -274,19 +301,34 @@
             });
     }
 
+    protected async Task ApproveSignatureCheckPassword(SignatureRequest signature)
+    {
+        if (passwordComponent.HasPassword())
+        {
+            await ApproveSignature(signature);
+        }
+        else
+        {
+            passwordComponent.ShowPassword( async () =>
+            {
+                await ApproveSignature(signature); ;
+            });
+        }
+    }
+
     private async Task ApproveSignature(SignatureRequest signature)
     {
         var operationResult = await notificationComponent.LongOperation(async () =>
         {
-            var walletWords = _walletStorage.GetWallet().WalletWords;
+            var words = await passwordComponent.GetWalletAsync();
 
-            var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(walletWords, FounderProject.ProjectIndex);
+            var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex);
 
             var signatureInfo = signProject(signature.TransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
 
             var sigJson = JsonSerializer.Serialize(signatureInfo, RelayService.settings);
 
-            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(walletWords, FounderProject.ProjectIndex);
+            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -308,6 +350,7 @@
 
         if (operationResult.Success)
         {
+            passwordComponent.ClearPassword();
             StateHasChanged();
         }
         else
