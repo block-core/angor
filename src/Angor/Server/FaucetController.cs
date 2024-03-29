@@ -143,5 +143,10 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
         {
             throw exception;
         }
+
+        public void CheckAndSetNetwork(string url, string? setNetwork = null)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

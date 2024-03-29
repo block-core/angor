@@ -947,15 +947,15 @@
 
             var res = await _httpClient.GetAsync($"/api/faucet/send/{receiveAddress}");
 
-            if (res.IsSuccessStatusCode)
-            {
-                var trxhex = await res.Content.ReadAsStringAsync();
-                var trx = network.CreateTransaction(trxhex);
-                var unconfirmedInboundFunds = _cacheStorage.GetUnconfirmedInboundFunds();
-                unconfirmedInboundFunds.Add(new UtxoData { PendingSpent = true, address = receiveAddress, value = trx.Outputs.FirstOrDefault()?.Value.Satoshi ?? Money.Coins(50).Satoshi, outpoint = new Outpoint(trx.GetHash().ToString(), 0) });
-                _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInboundFunds);
-                accountBalanceInfo.UpdateAccountBalanceInfo(accountBalanceInfo.AccountInfo, unconfirmedInboundFunds);
-            }
+            res.EnsureSuccessStatusCode();
+
+            var trxhex = await res.Content.ReadAsStringAsync();
+            var trx = network.CreateTransaction(trxhex);
+            var unconfirmedInboundFunds = _cacheStorage.GetUnconfirmedInboundFunds();
+            unconfirmedInboundFunds.Add(new UtxoData { PendingSpent = true, address = receiveAddress, value = trx.Outputs.FirstOrDefault()?.Value.Satoshi ?? Money.Coins(50).Satoshi, outpoint = new Outpoint(trx.GetHash().ToString(), 0) });
+            _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInboundFunds);
+            accountBalanceInfo.UpdateAccountBalanceInfo(accountBalanceInfo.AccountInfo, unconfirmedInboundFunds);
+
         }
         catch (Exception e)
         {

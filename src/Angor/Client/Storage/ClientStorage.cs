@@ -216,4 +216,15 @@ public class ClientStorage : IClientStorage, INetworkStorage
     {
         _storage.Clear();
     }
+
+    public void SetNetwork(string network)
+    {
+        _storage.SetItem("network", network);
+
+    }
+
+    public string GetNetwork()
+    {
+        return _storage.GetItem<string>("network");
+    }
 }
