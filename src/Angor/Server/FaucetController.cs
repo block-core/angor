@@ -7,6 +7,7 @@ using Blockcore.NBitcoin.BIP39;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using Angor.Client.Services;
+using Angor.Shared.Networks;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP32;
@@ -38,6 +39,8 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
             _indexerService = indexerService;
             _hdOperations = hdOperations;
             _networkConfiguration = networkConfiguration;
+
+            _networkConfiguration.SetNetwork(new BitcoinTest());
         }
 
         [HttpGet]
