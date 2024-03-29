@@ -2,6 +2,8 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Angor.Shared.Models;
+using Angor.Shared.Networks;
+using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.Services
@@ -19,6 +21,47 @@ namespace Angor.Shared.Services
             _httpClient = httpClient;
             _logger = logger;
             _networkConfiguration = networkConfiguration;
+        }
+
+        public void CheckAndSetNetwork(string url, string? setNetwork = null)
+        {
+            string networkName = _networkStorage.GetNetwork();
+            if (string.IsNullOrEmpty(networkName))
+            {
+                Network network = null;
+
+                if (setNetwork != null)
+                {
+                    network = setNetwork.Contains("test") ? new BitcoinTest() : new BitcoinMain();
+
+                } else if (url.Contains("test"))
+                {
+                    network = new BitcoinTest();
+                }
+                else if (url.Contains("localhost"))
+                {
+                    network = new BitcoinTest();
+                }
+                else
+                {
+                    network = new BitcoinMain();
+                }
+
+                _networkStorage.SetNetwork(network.NetworkType.ToString());
+                _networkConfiguration.SetNetwork(network);
+            }
+            else
+            {
+                if (networkName == NetworkType.Mainnet.ToString())
+                {
+                    _networkConfiguration.SetNetwork(new BitcoinMain());
+                }
+
+                if (networkName == NetworkType.Testnet.ToString())
+                {
+                    _networkConfiguration.SetNetwork(new BitcoinTest());
+                }
+            }
         }
 
         public void AddSettingsIfNotExist()

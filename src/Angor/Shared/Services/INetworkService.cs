@@ -11,4 +11,5 @@ public interface INetworkService
     List<SettingsUrl> GetRelays();
     void CheckAndHandleError(HttpResponseMessage httpResponseMessage);
     void HandleException(Exception exception);
+    void CheckAndSetNetwork(string url, string? setNetwork = null);
 }

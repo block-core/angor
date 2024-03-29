@@ -1,7 +1,14 @@
 ﻿@using Angor.Client.Storage
 @using System.Reflection
+@using Angor.Shared
+@using Angor.Shared.Networks
+@using Angor.Shared.Services
+@using Blockcore.Networks
 @inherits LayoutComponentBase
 @inject IJSRuntime Js;
+@inject INetworkConfiguration _networkConfiguration
+@inject INetworkService _networkService
+@inject NavigationManager _navManager
 
 <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 b-shadow bg-gradient-dark"
        id="sidenav-main">
@@ -16,7 +23,7 @@
             <nav>
                 <div class="mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                     <div class="text-sm">
-                        <h6 class="font-weight-bolder" title="Alpha app - only use test wallets.">Only use test wallets.</h6>
+                        <h6 class="font-weight-bolder" title="Alpha app - only use test wallets.">Only use test wallets.  @networkText</h6>
                     </div>
                 </div>
             </nav>
@@ -77,6 +84,8 @@
     ElementReference contentRef;
     ElementReference footerRef;
 
+    string networkText = string.Empty;
+
     private async Task InstallApp()
     {
         try
@@ -100,6 +109,13 @@
 
         if (version != null) _softwareVersion = version.ToString();
 
+        _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower());
+
+        networkText = "(mainnet)";
+        if (_networkConfiguration.GetNetwork().NetworkType != NetworkType.Mainnet)
+        {
+            networkText = "(testnet)";
+        }
     }
 
     /// <summary>
@@ -108,9 +124,7 @@
     /// <param name="firstRender"></param>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-
         await Js.InvokeVoidAsync("angor.setTheme");
-
     }
 
 }

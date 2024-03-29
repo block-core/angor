@@ -8,29 +8,75 @@ namespace Angor.Client;
 public class NetworkConfiguration : INetworkConfiguration
 {
     public static string AngorTestKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
+    public static string AngorMainKey = "todo: add an Angor key here";
+
+    private Network currentNetwork;
+
+    public void SetNetwork(Network network)
+    {
+        currentNetwork = network;
+    }
 
     public Network GetNetwork()
     {
-        return new BitcoinSignet();
+        if (currentNetwork == null)
+        {
+            throw new ApplicationException("Network not set");
+        }
+
+        return currentNetwork;
     }
 
     public SettingsUrl GetIndexerUrl()
     {
-        return new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io/api" };
+        if (currentNetwork.NetworkType == NetworkType.Testnet)
+        {
+            return new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io/api" };
+        }
+
+        if (currentNetwork.NetworkType == NetworkType.Mainnet)
+        {
+            return new SettingsUrl { Name = "", Url = "https://btc.indexer.angor.io/api" };
+        }
+
+        throw new ApplicationException("Network not set");
     }
 
     public SettingsUrl GetExplorerUrl()
     {
+        if (currentNetwork.NetworkType == NetworkType.Testnet)
+        {
+            return new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer" };
+        }
 
-        return new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer" };
+        if (currentNetwork.NetworkType == NetworkType.Mainnet)
+        {
+            return new SettingsUrl { Name = "", Url = "https://explorer.angor.io/btc/explorer" };
+        }
+
+        throw new ApplicationException("Network not set");
     }
 
     public List<SettingsUrl> GetDefaultIndexerUrls()
     {
-        return new List<SettingsUrl>
+        if (currentNetwork.NetworkType == NetworkType.Testnet)
         {
-            new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io", IsPrimary = true },
-        };
+            return new List<SettingsUrl>
+            {
+                new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io", IsPrimary = true },
+            };
+        }
+
+        if (currentNetwork.NetworkType == NetworkType.Mainnet)
+        {
+            return new List<SettingsUrl>
+            {
+                new SettingsUrl { Name = "", Url = "https://btc.indexer.angor.io", IsPrimary = true },
+            };
+        }
+
+        throw new ApplicationException("Network not set");
+
     }
 
     public List<SettingsUrl> GetDefaultRelayUrls()
@@ -45,58 +91,23 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public List<SettingsUrl> GetDefaultExplorerUrl()
     {
-        return new List<SettingsUrl>
+        if (currentNetwork.NetworkType == NetworkType.Testnet)
         {
-            new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer", IsPrimary = true },
-        };
+            return new List<SettingsUrl>
+            {
+                new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer", IsPrimary = true },
+            };
+        }
+
+        if (currentNetwork.NetworkType == NetworkType.Mainnet)
+        {
+            return new List<SettingsUrl>
+            {
+                new SettingsUrl { Name = "", Url = "https://explorer.angor.io/btc/explorer", IsPrimary = true },
+            };
+        }
+
+        throw new ApplicationException("Network not set");
     }
 
-    public static List<ProjectInfo> CreateFakeProjects()
-    {
-        return new List<ProjectInfo>
-            {
-                new ProjectInfo
-                {
-                    StartDate = DateTime.UtcNow,
-                    PenaltyDays = 100,
-                    ExpiryDate = DateTime.UtcNow,
-                    TargetAmount = 300,
-                    ProjectIdentifier = "angor" + Guid.NewGuid().ToString("N"),
-                    Stages = new List<Stage>
-                    {
-                        new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(1) },
-                        new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(2) },
-                        new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(3) },
-                    }
-                },
-                new ProjectInfo
-                {
-                    StartDate = DateTime.UtcNow,
-                    PenaltyDays = 100,
-                    ExpiryDate = DateTime.UtcNow,
-                    TargetAmount = 200,
-                    ProjectIdentifier = "angor" + Guid.NewGuid().ToString("N"),
-                    Stages = new List<Stage>
-                    {
-                        new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(1) },
-                        new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(2) },
-                        new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(3) },
-                    }
-                },
-                new ProjectInfo
-                {
-                    StartDate = DateTime.UtcNow,
-                    PenaltyDays = 100,
-                    ExpiryDate = DateTime.UtcNow,
-                    TargetAmount = 100,
-                    ProjectIdentifier = "angor" + Guid.NewGuid().ToString("N"),
-                    Stages = new List<Stage>
-                    {
-                        new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(1) },
-                        new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(2) },
-                        new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(3) },
-                    }
-                },
-            };
-    }
 }
