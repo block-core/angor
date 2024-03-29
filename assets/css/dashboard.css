@@ -730,7 +730,6 @@ progress {
     display: flex;
     flex-wrap: wrap;
     margin-top: calc(-1 * var(--bs-gutter-y));
-    margin-right: calc(-.5 * var(--bs-gutter-x));
 }
 
     .row > * {
@@ -4583,6 +4582,7 @@ fieldset:disabled .btn {
     display: flex;
     flex-wrap: wrap;
     padding-left: 0;
+    padding-right: 0;
     margin-bottom: 0;
     list-style: none;
 }
@@ -5774,7 +5774,7 @@ fieldset:disabled .btn {
     }
 
 .alert-success {
-    --bs-alert-color: #2e6930;
+    --bs-alert-color: #073c47;
     --bs-alert-bg: #dbefdc;
     --bs-alert-border-color: #c9e7cb;
 }
@@ -5789,6 +5789,11 @@ fieldset:disabled .btn {
     --bs-alert-border-color: #bad5f8;
 }
 
+.dark-version .alert-info {
+    --bs-alert-color: #fff;
+    --bs-alert-bg: #d1e3fa;
+    --bs-alert-border-color: #bad5f8;
+}
     .alert-info .alert-link {
         color: #0d376f;
     }
@@ -5860,7 +5865,7 @@ fieldset:disabled .btn {
 }
 
 .progress {
-    --bs-progress-height: 6px;
+    --bs-progress-height: 16px;
     --bs-progress-font-size: 0.75rem;
     --bs-progress-bg: #f0f2f5;
     --bs-progress-border-radius: 0.125rem;
@@ -20272,11 +20277,16 @@ fieldset:disabled .btn {
 }
 
 .alert-success {
-    background-image: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+    background-image: linear-gradient(195deg, #135a69 0%, #085c6e 100%);
 }
 
 .alert-info {
-    background-image: linear-gradient(195deg, #49a3f1 0%, #1A73E8 100%);
+    background-image: linear-gradient(195deg, #fefefd 0%, #fefefd 100%);
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12) !important;
+}
+
+.dark-version .alert-info {
+    background-image: linear-gradient(195deg, #083b46 0%, #083b46 100%) !important;
 }
 
 .alert-warning {
@@ -21721,7 +21731,7 @@ fieldset:disabled .btn {
     }
 
 body.dark-version {
-    color: rgba(5, 69, 82, 0.8) !important;
+    color: rgba(196, 212, 215, 0.8) !important;
 }
 
 @media (min-width: 992px) {
@@ -24976,8 +24986,7 @@ body:not(.dark-version) .sidenav.bg-transparent .collapse .nav-item .nav-link.ac
     }
 
 .progress-bar {
-    height: 6px;
-    border-radius: 0.125rem;
+    height: 16px;
 }
 
 .progress {
