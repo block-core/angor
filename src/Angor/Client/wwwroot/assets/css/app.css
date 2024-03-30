@@ -459,9 +459,6 @@ tr[style*="cursor: pointer;"] {
     cursor: pointer;
 }
 
-    .clickable-row:hover {
-        background-color: #f5f5f5;
-    }
 
 .inner-table-inner-div p {
     margin-bottom: 5px;
@@ -896,4 +893,19 @@ tr[style*="cursor: pointer;"] {
         fill: #fff !important; /* Fill color for SVG elements */
     }
 
- 
+
+.btn-content {
+    font-size: 16px !important;
+}
+
+.dark-version .activeTB {
+    background-color: #1f5d6a !important;
+}
+
+.activeTB {
+    background-color: #1f5d6a25 !important;
+}
+
+.dark-version .card-body {
+    color: #e3f8fc !important
+}
