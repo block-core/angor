@@ -45,11 +45,11 @@
 }
 
 .form-check-input:checked[type="checkbox"] {
-    background-image: linear-gradient(195deg, #1f5d6a 0%, #1f5d6a 100%);
+    background-image: linear-gradient(195deg, #4caf50 0%, #4caf50 100%);
 }
 
 .form-check-input:checked[type="radio"] {
-    background-image: linear-gradient(195deg, #1f5d6a 0%, #1f5d6a 100%);
+    background-image: linear-gradient(195deg, #4caf50 0%, #4caf50 100%);
 }
 
 .form-check-input[type="checkbox"]:indeterminate {

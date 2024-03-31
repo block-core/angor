@@ -58,11 +58,13 @@
 
         <!-- No Wallet found -->
         <div class="row mt-4">
-            <div class="alert alert-info d-flex align-items-center" role="alert">
-                <span class="material-icons opacity-10 fs-1 me-3 btn-angor user-select-none">
-                    info
-                </span>
-                <span>No Wallet Found</span>
+            <div class="card card-body">
+                <div class="d-flex align-items-center">
+                    <span class="material-icons opacity-10 fs-1 me-3 btn-angor user-select-none">
+                        info
+                    </span>
+                    <span class="text-warning">No Wallet Found</span>
+                </div>
             </div>
         </div>
         <div class="row mt-4 d-flex justify-content-center text-center align-items-center">
@@ -87,71 +89,110 @@
                     </div>
                 </div>
             </div>
+        </div>
 
+        @if (walletWordsCreateModal)
+        {
+            <!-- Wallet Words Create Modal -->
+            <div class="modal fade show d-block">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">@createWalletTitle</h5>
+                            <button class="btn-close" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" disabled="@createWalletSpinner"></button>
+                        </div>
+                        <div class="modal-body modal-body-scroll">
 
-            @if (walletWordsCreateModal)
-            {
-                <!-- Wallet Words Create Modal -->
-                <div class="modal fade show d-block">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">@createWalletTitle</h5>
-                                <button class="btn-close" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" disabled="@createWalletSpinner"></button>
-                            </div>
-                            <div class="modal-body modal-body-scroll">
+                            @if (createWalletSpinner)
+                            {
+                                <div class="d-flex justify-content-center">
+                                    <div class="loader"></div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div>
+                                    <label>@createWalletDescription:</label>
+                                </div>
+                                <div class="mb-3">
+                                    @if (isNewWallet)
+                                    {
+                                        <button class="btn btn-primary w-100" @onclick="GenerateNewWalletWords">
+                                            <div class="d-flex align-items-center justify-content-center">
+                                                <span class="material-icons opacity-10 me-1">
+                                                    add
+                                                </span>
+                                                <span> Generate New Wallet Words</span>
+                                            </div>
+                                        </button>
+                                    }
+                                </div>
 
-                                @if (createWalletSpinner)
-                                {
-                                    <div class="d-flex justify-content-center">
-                                        <div class="loader"></div>
+                                <div class="mb-3">
+                                    <textarea class="form-control" readonly="@isNewWallet" rows="2" @bind="newWalletWords"></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>Additional Passphrase (optional):</label>
+                                    <input type="text" class="form-control" @bind="newWalletWordsPassphrase" />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>Please enter a password for your wallet:</label>
+                                    <div class="input-group mb-3">
+                                        <input type="@passwordInputType" class="form-control" @bind="newWalletPassword" />
+                                        <button class="btn btn-primary" type="button" @onclick="TogglePasswordVisibility">
+                                            @if (passwordToggleText == "Show")
+                                            {
+                                                <span class="material-icons opacity-10">
+                                                    visibility
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="material-icons opacity-10">
+                                                    visibility_off
+                                                </span>
+                                            }
+                                        </button>
                                     </div>
-                                }
-                                else
-                                {
                                     <div class="mb-3">
-                                        <label>Paste your wallet words here or generate a new wallet:</label>
-                                        <textarea class="form-control" rows="3" @bind="newWalletWords"></textarea>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label>Additional Passphrase (optional):</label>
-                                        <input type="text" class="form-control" @bind="newWalletWordsPassphrase" />
-                                    </div>
-                                    <div class="mb-3">
-                                        <button class="btn btn-primary" @onclick="GenerateNewWalletWords">Generate New Wallet Words</button>
-                                    </div>
-                                    <div class="mb-3">
-                                        <p>Please enter a password for your new wallet:</p>
-                                        <div class="input-group mb-3">
-                                            <input type="@passwordInputType" class="form-control" placeholder="Password" @bind="newWalletPassword" />
-                                            <button class="btn btn-primary" type="button" @onclick="TogglePasswordVisibility">@passwordToggleText</button>
-                                        </div>
-                                        <div class="form-check mb-3">
-                                            <input class="form-check-input" type="checkbox" id="backupConfirmationCheckbox" @bind="backupConfirmation">
-                                            <div class="alert alert-warning" role="alert">
-                                                <label class="form-check-label" for="backupConfirmationCheckbox">
-                                                    <strong>ATTENTION!!!</strong> I confirm I have backed up my wallet words and keep it private and secure. I understand that if I lose these words, I will lose access to my wallet.
-                                                </label>
+                                        <div class="card">
+                                            <div class="card-header text-warning">
+                                                <span>By continuing, you confirm understanding that:</span>
+                                            </div>
+                                            <div class="card-body pb-0 pt-0">
+                                                <p>You've backed up your wallet words securely, as losing them means losing access to your wallet.</p>
+                                                <p class="mb-0">The password unlocks your wallet only on this device and cannot be recovered by Angor.</p>
+                                            </div>
+                                            <div class="card-footer">
+                                                <div class="d-flex align-items-center">
+                                                    <input class="form-check-input border mt-0" type="checkbox" id="backupConfirmationCheckbox" @bind="backupConfirmation">
+                                                    <label class="form-check-label mb-0" for="backupConfirmationCheckbox">
+                                                        Confirm?
+                                                    </label>
+                                                </div>
                                             </div>
                                         </div>
-                                        @if (showBackupConfirmationError)
-                                        {
-                                            <div class="text-danger-emphasis">You must confirm that you have backed up your wallet words.</div>
-                                        }
+
                                     </div>
-                                    <div class="mb-3">
-                                        <button class="btn btn-success" @onclick="CreateWalletAsync">Create Wallet</button>
-                                    </div>
-                                }
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" disabled="@createWalletSpinner">Close</button>
-                            </div>
+
+                                    @if (showBackupConfirmationError)
+                                    {
+                                        <div class="text-danger-emphasis">You must confirm that you have backed up your wallet words.</div>
+                                    }
+                                </div>
+
+                            }
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-success" @onclick="CreateWalletAsync">Create Wallet</button>
+                            <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" disabled="@createWalletSpinner">Close</button>
                         </div>
                     </div>
                 </div>
-            }
-        </div>
+            </div>
+        }
     }
     else
     {
@@ -625,7 +666,9 @@
     private string passwordInputType = "password";
     private string passwordToggleText = "Show";
 
+    private bool isNewWallet = false;
     private string createWalletTitle = "Create Wallet";
+    private string createWalletDescription = "Generate a new wallet";
 
     private bool sendConfirmModal;
     private bool coinControlModal;
@@ -711,7 +754,9 @@
 
     private async Task ShowCreateWalletModal(string type)
     {
+        isNewWallet = type == "new" ? true : false;
         createWalletTitle = type == "new" ? "Create Wallet" : "Recover Wallet";
+        createWalletDescription = type == "new" ? "Generate a new wallet" : "Paste your wallet words";
 
         walletWordsCreateModal = true;
         StateHasChanged();

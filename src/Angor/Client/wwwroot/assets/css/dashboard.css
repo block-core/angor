@@ -6491,12 +6491,13 @@ fieldset:disabled .btn {
     --bs-modal-header-padding-y: 1rem;
     --bs-modal-header-padding: 1rem 1rem;
     --bs-modal-header-border-color: #dee2e6;
-    --bs-modal-header-border-color-dark: #344767;
+    --bs-modal-header-border-color-dark: #046479;
     --bs-modal-header-border-width: 1px;
     --bs-modal-title-line-height: 1.5;
     --bs-modal-footer-gap: 0.5rem;
     --bs-modal-footer-bg:;
     --bs-modal-footer-border-color: #dee2e6;
+    --bs-modal-footer-border-color-dark: #046479;
     --bs-modal-footer-border-width: 1px;
     position: fixed;
     top: 0;
@@ -6629,10 +6630,15 @@ fieldset:disabled .btn {
     border-bottom-right-radius: var(--bs-modal-inner-border-radius);
     border-bottom-left-radius: var(--bs-modal-inner-border-radius);
 }
+.dark-version .modal-footer {
 
-    .modal-footer > * {
-        margin: calc(var(--bs-modal-footer-gap) * .5);
-    }
+    border-top: var(--bs-modal-footer-border-width) solid var(--bs-modal-footer-border-color-dark);
+ 
+}
+
+.modal-footer > * {
+    margin: calc(var(--bs-modal-footer-gap) * .5);
+}
 
 @media (min-width: 576px) {
     .modal {
@@ -8752,7 +8758,7 @@ fieldset:disabled .btn {
 }
 
 .border {
-    border: 1px solid #dee2e6 !important;
+    border: 1px solid #1f5d6a !important
 }
 
 .border-0 {
@@ -21618,7 +21624,7 @@ fieldset:disabled .btn {
     .dark-version a:not(.dropdown-item):not(.choices__item):not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out):not(.btn):not(.nav-link):not(.fixed-plugin-button),
     .dark-version .table thead tr th,
     .dark-version .kanban-title-board {
-        color: #fff !important;
+        color: #e7fbff !important;
     }
 
     .dark-version .input-group.input-group-dynamic .form-control,
