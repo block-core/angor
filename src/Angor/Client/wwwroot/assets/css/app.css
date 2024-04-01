@@ -677,7 +677,7 @@ tr[style*="cursor: pointer;"] {
     border-radius: 10px;
     padding: 16px;
     position: fixed;
-    z-index: 1;
+    z-index: 100000;
     left: 50%;
     bottom: 30px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.16);

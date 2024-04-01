@@ -105,7 +105,7 @@
 
                             @if (createWalletSpinner)
                             {
-                                <div class="d-flex justify-content-center">
+                                <div class="d-flex justify-content-center m-3">
                                     <div class="loader"></div>
                                 </div>
                             }
@@ -114,9 +114,10 @@
                                 <div>
                                     <label>@createWalletDescription:</label>
                                 </div>
-                                <div class="mb-3">
-                                    @if (isNewWallet)
-                                    {
+
+                                @if (isNewWallet)
+                                {
+                                    <div class="mb-3">
                                         <button class="btn btn-primary w-100" @onclick="GenerateNewWalletWords">
                                             <div class="d-flex align-items-center justify-content-center">
                                                 <span class="material-icons opacity-10 me-1">
@@ -125,8 +126,8 @@
                                                 <span> Generate New Wallet Words</span>
                                             </div>
                                         </button>
-                                    }
-                                </div>
+                                    </div>
+                                }
 
                                 <div class="mb-3">
                                     <textarea class="form-control" readonly="@isNewWallet" rows="2" @bind="newWalletWords"></textarea>
@@ -158,8 +159,13 @@
                                     </div>
                                     <div class="mb-3">
                                         <div class="card">
-                                            <div class="card-header text-warning">
-                                                <span>By continuing, you confirm understanding that:</span>
+                                            <div class="card-header">
+                                                <div class="d-flex align-items-center text-warning">
+                                                    <span class="material-icons opacity-10 me-1 fs-3">
+                                                        warning
+                                                    </span>
+                                                    <span>By continuing, you confirm understanding that:</span>
+                                                </div>
                                             </div>
                                             <div class="card-body pb-0 pt-0">
                                                 <p>You've backed up your wallet words securely, as losing them means losing access to your wallet.</p>
@@ -172,21 +178,28 @@
                                                         Confirm?
                                                     </label>
                                                 </div>
+                                                @if (showBackupConfirmationError)
+                                                {
+                                                    <div class="alert alert-danger text-white mt-3" role="alert">
+                                                        Please confirm that you have backed up your wallet words and password.
+                                                    </div>
+                                                }
                                             </div>
                                         </div>
 
                                     </div>
 
-                                    @if (showBackupConfirmationError)
-                                    {
-                                        <div class="text-danger-emphasis">You must confirm that you have backed up your wallet words.</div>
-                                    }
+
                                 </div>
 
                             }
                         </div>
                         <div class="modal-footer">
-                            <button class="btn btn-success" @onclick="CreateWalletAsync">Create Wallet</button>
+                            @if (!createWalletSpinner)
+                            {
+                                <button class="btn btn-success" @onclick="CreateWalletAsync">Create Wallet</button>
+
+                            }
                             <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" disabled="@createWalletSpinner">Close</button>
                         </div>
                     </div>
@@ -287,22 +300,42 @@
 
                                 <!-- Show words button with warning -->
                                 <div class="mb-3">
-                                    <div class="alert alert-danger" role="alert">
+                                    <div class="alert alert-warning text-white" role="alert">
                                         <p class="fs-6">Warning: These words can be used to recover your wallet. Keep them safe.</p>
                                     </div>
                                 </div>
 
                                 @if (string.IsNullOrEmpty(showWalletWords))
                                 {
+
+
                                     <!-- Show words button with warning -->
-                                    <div class="modal-body modal-body-scroll">
-                                        <p>Please enter your wallet password</p>
-                                        <input type="password" @bind="showWalletPassword" class="password-input" />
+                                    <div class="mb-3">
+                                        <label>Please enter your wallet password:</label>
+                                        <div class="input-group">
+                                            <input type="@passwordInputType" class="form-control" @bind="showWalletPassword" />
+                                            <button class="btn btn-primary" type="button" @onclick="TogglePasswordVisibility">
+                                                @if (passwordToggleText == "Show")
+                                                {
+                                                    <span class="material-icons opacity-10">
+                                                        visibility
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="material-icons opacity-10">
+                                                        visibility_off
+                                                    </span>
+                                                }
+                                            </button>
+                                        </div>
                                     </div>
+
+
 
                                     @if (!string.IsNullOrEmpty(showWalletPasswordError))
                                     {
-                                        <div class="text-danger-emphasis">@showWalletPasswordError</div>
+                                        <div class="text-danger">@showWalletPasswordError</div>
                                     }
 
                                     <div class="mb-3">
@@ -312,27 +345,32 @@
                                 else
                                 {
                                     <!-- Wallet words will be shown here -->
-                                    <p>@showWalletWords</p>
+                                    <div class="alert alert-success text-white" role="alert">
+                                        <p>@showWalletWords</p>
+                                        <div class="mt-3 d-flex justify-content-end">
+
+                                            <i @onclick="CopyWordsToClibboard" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer user-select-none">copy</i>
+
+                                        </div>
+                                    </div>
 
                                     if (!string.IsNullOrEmpty(showWalletWordsPassphrase))
                                     {
-                                        <p>This wallet has a pass phrase!</p>
+                                        <p>This wallet has a passphrase!</p>
                                     }
 
                                     <!-- Copy words to clipboard -->
-                                    <div class="mb-3">
-                                        <button class="btn btn-danger" @onclick="CopyWordsToClibboard">Copy To clipboard</button>
-                                    </div>
                                 }
 
                                 <hr>
                                 <!-- Delete wallet button -->
-                                <div class="mb-3">
-                                    <button class="btn btn-danger" @onclick="DeleteWallet">Delete Wallet</button>
-                                </div>
+
 
                             </div>
                             <div class="modal-footer">
+
+                               @*<button class="btn btn-danger" @onclick="DeleteWallet">Delete Wallet</button> *@
+
                                 <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }">Close</button>
                             </div>
                         </div>
@@ -779,8 +817,18 @@
 
     private async Task CreateWalletAsync()
     {
-        if (string.IsNullOrEmpty(newWalletWords)) throw new ArgumentNullException();
-        if (string.IsNullOrEmpty(newWalletPassword)) throw new ArgumentNullException();
+        if (string.IsNullOrEmpty(newWalletWords))
+        {
+            await notificationComponent.ShowSnackbar("New wallet words are null or empty");
+            //throw new ArgumentNullException(nameof(newWalletWords));
+            return;
+        }
+        if (string.IsNullOrEmpty(newWalletPassword))
+        {
+            notificationComponent.ShowSnackbar("New wallet password is null or empty");
+            //throw new ArgumentNullException(nameof(newWalletPassword));
+            return;
+        }
 
         if (!backupConfirmation)
         {
@@ -829,7 +877,13 @@
 
     private async Task ShowWords()
     {
-        if (string.IsNullOrEmpty(showWalletPassword)) throw new ArgumentNullException();
+        if (string.IsNullOrEmpty(showWalletPassword))
+        {
+            notificationComponent.ShowSnackbar("Wallet password is null or empty");
+            //throw new ArgumentNullException(nameof(showWalletPassword));
+            return;
+        }
+
 
         var wallet = _walletStorage.GetWallet();
         var walletData = await _encryptionService.DecryptData(wallet.EncryptedData, showWalletPassword);
