@@ -11,7 +11,7 @@
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
-@inject IRelayService  RelayService;
+@inject IRelayService RelayService;
 @inject IIndexerService _IndexerService
 
 @if (!hasWallet)
@@ -22,8 +22,8 @@
 
 <div class="container my-4">
     <h1>Founder Page</h1>
-    
-    <NotificationComponent @ref="notificationComponent"/>
+
+    <NotificationComponent @ref="notificationComponent" />
 
     <div class="row">
         <div class="col">
@@ -48,7 +48,7 @@
                 else
                 {
                     <button class="btn btn-primary mb-4" @onclick="LookupProjectKeysOnIndexerAsync">Scan for founder projects</button>
-                    <br/>
+                    <br />
                 }
             </div>
         </div>
@@ -74,7 +74,7 @@
 </div>
 
 
-           @code {
+@code {
     private string founderKey;
     private string projectId;
     private List<FounderProject> founderProjects = new();
@@ -84,7 +84,7 @@
     private NotificationComponent notificationComponent;
 
 
-    
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -99,7 +99,7 @@
     private async Task LookupProjectKeysOnIndexerAsync()
     {
         scanningForProjects = true;
-        
+
         var keys = _walletStorage.GetFounderKeys();
 
         var founderProjectsToLookup = new List<string>();
@@ -128,11 +128,11 @@
                         if (founderProject != null && founderProject.Metadata is null)
                             founderProject.Metadata = nostrMetadata;
                         // else
-                        //     notificationComponent.ShowNotificationMessage($"Couldn't find the project details for the project {nostrMetadata.Name} try adding the missing relay."); //TODO  
+                        //     notificationComponent.ShowNotificationMessage($"Couldn't find the project details for the project {nostrMetadata.Name} try adding the missing relay."); //TODO
                         break;
                     case { Kind: NostrKind.ApplicationSpecificData }:
                         var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
-                        if(founderProjects.All(_ => _.ProjectInfo.NostrPubKey != e.Pubkey)) //Getting events from multiple relays
+                        if (founderProjects.All(_ => _.ProjectInfo.NostrPubKey != e.Pubkey)) //Getting events from multiple relays
                             founderProjects.Add(new FounderProject { ProjectInfo = projectInfo });
                         break;
                 }
@@ -147,7 +147,7 @@
         else
             scanningForProjects = false;
     }
-    
+
     private void NavigateToCreateProject()
     {
         NavigationManager.NavigateTo("/create");

@@ -49,35 +49,52 @@
                 }
                 else
                 {
-                    <table class="table table-bordered table-hover">
-                        <thead>
-                        <tr>
-                            <th>Investment amount</th>
-                            <th>Received at</th>
-                            <th>Status</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var signature in signaturesRequests.Where(_ => _ is { TransactionHex: not null, AmountToInvest: not null }))
-                        {
-                            <tr>
-                                <td>@Money.Coins(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                <td>@signature.TimeArrived.ToString("g")</td>
-                                @if (signature.TimeApproved is null)
-                                {
-                                    <td><button class="btn btn-success" @onclick="() => ApproveSignature(signature)">Approve</button></td>
-                                }
-                                else
-                                {
-                                    <td>Approved on - @signature.TimeApproved.ToString()</td>
-                                }
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header pb-0 p-3">
+                                <div class="row">
+                                    <div class="col-6 d-flex align-items-center">
+                                        <h6 class="mb-0">Signatures</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table align-items-center mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investment amount</th>
+                                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received at</th>
+                                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var signature in signaturesRequests.Where(_ => _ is { TransactionHex: not null, AmountToInvest: not null }))
+                                            {
+                                                <tr>
+                                                    <td>@Money.Coins(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                                    <td>@signature.TimeArrived.ToString("g")</td>
+                                                    @if (signature.TimeApproved is null)
+                                                    {
+                                                        <td><button class="btn btn-success" @onclick="() => ApproveSignature(signature)">Approve</button></td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td>Approved on - @signature.TimeApproved.ToString()</td>
+                                                    }
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 }
             </div>
         </div>
+
     }
 </div>
 
@@ -199,7 +216,7 @@
 
     private async Task FetchPendingSignatures(FounderProject project)
     {
-        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,// project.LastRequestForSignaturesTime , async 
+        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,// project.LastRequestForSignaturesTime , async
             (eventId, investorPubKey, encryptedMessage, timeArrived) =>
         {
             Logger.LogDebug($"Sig request event received investorPubKey: {investorPubKey} - timeArrived: {timeArrived}");
@@ -226,21 +243,21 @@
             messagesReceived = true;
 
             var signatureRequest = new SignatureRequest
-            {
-                investorPubKey = investorPubKey,
-                TimeArrived = timeArrived,
-                TransactionHex = encryptedMessage, //To be encrypted after js interop is loaded
-                EventId = eventId
-            };
+                {
+                    investorPubKey = investorPubKey,
+                    TimeArrived = timeArrived,
+                    TransactionHex = encryptedMessage, //To be encrypted after js interop is loaded
+                    EventId = eventId
+                };
 
             signaturesRequests.Add(signatureRequest);
             Logger.LogDebug($"Added to pendingSignatures");
-        }, 
+        },
             () =>
             {
                 Logger.LogDebug($"End of messages");
 
-                if (!messagesReceived) 
+                if (!messagesReceived)
                     return;
 
                 Logger.LogDebug($"Calling StateHasChanged in EOSE");
@@ -250,7 +267,7 @@
 
     private void FetchFounderApprovalsSignatures(FounderProject project)
     {
-        SignService.LookupInvestmentRequestApprovals(project.ProjectInfo.NostrPubKey,  
+        SignService.LookupInvestmentRequestApprovals(project.ProjectInfo.NostrPubKey,
             (investorPubKey, timeApproved, reqEventId) =>
             {
                 Logger.LogDebug($"Sig response event received investorPubKey: {investorPubKey} - timeApproved: {timeApproved} - reqEventId: {reqEventId}");
@@ -259,11 +276,11 @@
 
                 if (signatureRequest is null || signatureRequest.TimeApproved != null)
                     return; //multiple relays could mean the same massage multiple times
-                
+
                 if (signatureRequest.TimeArrived > timeApproved)
                 {
                     Logger.LogDebug($"The event received is replaced by time");
-                    return; // sig of an old request 
+                    return; // sig of an old request
                 }
 
                 if (reqEventId != null && signatureRequest.EventId != reqEventId)
@@ -277,7 +294,7 @@
                 signatureRequest.TimeApproved = timeApproved;
 
                 Logger.LogDebug($"Added to pendingSignatures");
-            }, 
+            },
             () =>
             {
                 scanedForApprovals = true;
@@ -291,7 +308,7 @@
                     if (FounderProject.LastRequestForSignaturesTime is null || FounderProject.LastRequestForSignaturesTime < latestApprovedTime)
                     {
                         FounderProject.LastRequestForSignaturesTime = latestApprovedTime;
-                        Storage.UpdateFounderProject(FounderProject);   
+                        Storage.UpdateFounderProject(FounderProject);
                     }
                 }
 
@@ -309,7 +326,7 @@
         }
         else
         {
-            passwordComponent.ShowPassword( async () =>
+            passwordComponent.ShowPassword(async () =>
             {
                 await ApproveSignature(signature); ;
             });
@@ -358,8 +375,8 @@
             notificationComponent.ShowErrorMessage(operationResult.Message);
         }
     }
-    
-    private SignatureInfo signProject(string transactionHex,ProjectInfo info, string founderSigningPrivateKey)
+
+    private SignatureInfo signProject(string transactionHex, ProjectInfo info, string founderSigningPrivateKey)
     {
         var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
 
