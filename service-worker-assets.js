@@ -33,15 +33,15 @@
       "url": "_framework\/icudt.dat"
     },
     {
-      "hash": "sha256-axcaQdtDKS8T83jhqp91AaalU6MOakOT6aHV6KshaqM=",
+      "hash": "sha256-gq3Zm5q6lD7\/5jNqFk8cSE8v2mKvRwP6uTLHbsU8DEs=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-CAfpO1i+5Bs74i9hIrs8f58\/SzgYNZIIuYYBONMyZp4=",
+      "hash": "sha256-aJFZtulSJPA35eTCx+rhrZHlRVTgi9AuvNGWs2fPiw4=",
       "url": "_framework\/Angor.Client.dll"
     },
     {
-      "hash": "sha256-\/0xnnGq+AFIIdAY719F9582oHjoqoXIOAz53C0dLW6Y=",
+      "hash": "sha256-e7Md2G4sVl7fUMHoBn\/DLQIJHNz6iZy8P\/muht+Akl0=",
       "url": "_framework\/Angor.Shared.dll"
     },
     {
@@ -517,11 +517,11 @@
       "url": "Angor.Client.styles.css"
     },
     {
-      "hash": "sha256-C6xS+pjjzzTkB97HuxUTZwQRAq\/jyTuyTuer4EuOSf8=",
+      "hash": "sha256-dqGyBzf5Mem9NVYkUpIeahPc+y9byOF6zX3EvbZcpZ0=",
       "url": "assets\/css\/app.css"
     },
     {
-      "hash": "sha256-fT4JfpT8XpIBKHtHfg0qvS4gjETChPtto+nIb5A4N6A=",
+      "hash": "sha256-k2t2Z8e3TVUuzO2FThWJ13RqxGBgUAIHx4ArXizcY1k=",
       "url": "assets\/css\/dashboard.css"
     },
     {
@@ -573,7 +573,7 @@
       "url": "assets\/img\/mobile-installation-screenshot.png"
     },
     {
-      "hash": "sha256-rOxHxGmx8HYt78adMIBIFOyUiwwsJGyQcMIUF\/LLTHc=",
+      "hash": "sha256-FY3AWgNWrFpUriPIAq3xnazlqkpuC9beKlh4xwaITiw=",
       "url": "assets\/js\/app.js"
     },
     {
@@ -581,11 +581,7 @@
       "url": "assets\/js\/appUpdate.js"
     },
     {
-      "hash": "sha256-lO9oRbTNin3J\/98qBUw5igbVMbmQmYjd1Yo6jJh4cbQ=",
-      "url": "assets\/js\/dashboard.js"
-    },
-    {
-      "hash": "sha256-SKQaaTimbydCCOB7rizAaMT0WFdovWEEJoU52eCMVno=",
+      "hash": "sha256-lCZW7f5qPRWEncvg6buWi3op3Tv2AKA85+rajesacAk=",
       "url": "index.html"
     },
     {
@@ -613,5 +609,5 @@
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "V+e1Pmg\/"
+  "version": "0Q7np+k2"
 };
