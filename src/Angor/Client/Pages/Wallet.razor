@@ -172,7 +172,7 @@
                                                 <p class="mb-0">The password unlocks your wallet only on this device and cannot be recovered by Angor.</p>
                                             </div>
                                             <div class="card-footer">
-                                                <div class="d-flex align-items-center">
+                                                <div class="form-check">
                                                     <input class="form-check-input border mt-0" type="checkbox" id="backupConfirmationCheckbox" @bind="backupConfirmation">
                                                     <label class="form-check-label mb-0" for="backupConfirmationCheckbox">
                                                         Confirm?
@@ -496,7 +496,7 @@
 
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="checkbox" @bind="@isTicked" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
-                                                    <label class="form-check-label" style="font-size: 0.7em;" for="@addressUtxoItem">
+                                                    <label class="form-check-label fs-lable-s">
                                                         @($"{addressUtxoItem.outpoint} - {Money.Satoshis(@addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} {@network.CoinTicker}")
                                                     </label>
                                                 </div>

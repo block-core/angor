@@ -2936,10 +2936,10 @@ textarea.form-control-lg {
 }
 
 .form-check {
-    display: block;
+    display: inline-flex;
     min-height: auto;
-    padding-left: 1.73em;
     margin-bottom: 0.125rem;
+    align-items: center;
 }
 
     .form-check .form-check-input {
@@ -22480,8 +22480,8 @@ body.dark-version {
 
         .form-check:not(.form-switch) .form-check-input[type="checkbox"]:after {
             transition: opacity 0.25s ease-in-out;
-            font-family: "FontAwesome";
-            content: "\f00c";
+            font-family: "Material Icons Round";
+            content: "check";
             width: 100%;
             height: 100%;
             color: #fff;
@@ -22489,7 +22489,7 @@ body.dark-version {
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 0.67rem;
+            font-size: 1rem;
             opacity: 0;
         }
 
@@ -22600,7 +22600,6 @@ label,
 .form-label {
     font-size: 0.875rem;
     font-weight: 400;
-    margin-bottom: 0.5rem;
     color: #7b809a;
     margin-left: 0.25rem;
 }
@@ -27760,4 +27759,7 @@ pre[class*="language-"] {
     .ps {
         overflow: auto !important;
     }
+}
+.fs-lable-s {
+    font-size: 0.6rem;
 }
