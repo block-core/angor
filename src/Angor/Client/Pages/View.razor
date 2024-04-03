@@ -36,7 +36,7 @@
         }
         else
         {
-            <p><em>project not found...</em></p>    
+            <p><em>project not found...</em></p>
         }
     }
     else
@@ -55,11 +55,11 @@
                     if (metadata?.Banner != null)
                     {
                         <div class="card-header overflow-hidden">
-                            <img class="card-img-top" src="@metadata.Banner" alt=""/>
+                            <img class="card-img-top" src="@metadata.Banner" alt="" />
                         </div>
                     }
 
-                    <br/>
+                    <br />
                     <h3 class="card-title">@metadata?.Name</h3>
                     <p class="card-subtitle">@metadata?.About</p>
                     <hr />
@@ -99,7 +99,7 @@
                         </div>
                     }
 
-                 }
+                }
             </div>
         </div>
 
@@ -117,7 +117,7 @@
                 <!-- Additional details section -->
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        
+
                         @if (projectStats.Loading)
                         {
                             <div class="loader"></div>
@@ -126,10 +126,10 @@
                         {
                             <p class="card-text mb-0">Total Raised: @Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                             <p class="card-text mb-0">Total Investors: @projectStats.TotalInvestors</p>
-                           @* <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>*@
-                            <p class="card-text mb-0">Time Left for Investing: @projectStats.TimeLeft days</p>    
+                            @* <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>*@
+                            <p class="card-text mb-0">Time Left for Investing: @projectStats.TimeLeft days</p>
                         }
-                        
+
                     </div>
                 </div>
             </div>
@@ -141,46 +141,48 @@
                 <h4>Stages</h4>
             </div>
             <div class="card-body">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>Stage </th>
-                        <th>Stage %</th>
-                        <th>Release Date</th>
-                        <!-- Other headers -->
-                    </tr>
-                    </thead>
-                    <tbody>
-                        @for (int index = 0; index < project.ProjectInfo.Stages.Count; index++)
-                        {
+                <div class="table-responsive">
+                    <table class="table align-items-center mb-0">
+                        <thead>
                             <tr>
-                                <td>@(index + 1)</td>
-                                <td>@project.ProjectInfo.Stages[index].AmountToRelease %</td>
-                                <td>@project.ProjectInfo.Stages[index].ReleaseDate.ToString("dd/MM/yyyy")</td>
-                                <!-- Other stage details -->
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage </th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage %</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Release Date</th>
+                                <!-- Other headers -->
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @for (int index = 0; index < project.ProjectInfo.Stages.Count; index++)
+                            {
+                                <tr>
+                                    <td>@(index + 1)</td>
+                                    <td>@project.ProjectInfo.Stages[index].AmountToRelease %</td>
+                                    <td>@project.ProjectInfo.Stages[index].ReleaseDate.ToString("dd/MM/yyyy")</td>
+                                    <!-- Other stage details -->
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- Seeders Section -->
-@*        <div class="card mb-3">
-            <div class="card-header">
-                <h4>Selected Seeders</h4>
-            </div>
-            <div class="card-body">
-                @if (SelectedSeeders.Any())
-                {
-                    <!-- Seeders table -->
-                }
-                else
-                {
-                    <p><i class="bi bi-exclamation-triangle-fill"></i> No seeders yet.</p>
-                }
-            </div>
-        </div>*@
+        @*        <div class="card mb-3">
+    <div class="card-header">
+    <h4>Selected Seeders</h4>
+    </div>
+    <div class="card-body">
+    @if (SelectedSeeders.Any())
+    {
+    <!-- Seeders table -->
+    }
+    else
+    {
+    <p><i class="bi bi-exclamation-triangle-fill"></i> No seeders yet.</p>
+    }
+    </div>
+    </div>*@
 
         <!-- Actions Section -->
         <div class="card mb-3">
@@ -203,7 +205,7 @@
                         <div class="mb-3">
                             <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                             <div class="input-group">
-                                <InputText id="NostrPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly/>
+                                <InputText id="NostrPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
                                 <button @onclick="CopyNsecToClipboardAsyncCheckPassword" class="btn btn-success">Copy NSec to clipboard</button>
                             </div>
                         </div>
@@ -212,7 +214,8 @@
                 }
                 else if (invested)
                 {
-                    <p>You have already invested in this project.
+                    <p>
+                        You have already invested in this project.
 
                         <a href="@myProjectExplorerLink" target="_blank">View the transaction on the explorer.</a>
                     </p>
@@ -225,7 +228,7 @@
                 }
             </div>
         </div>
-      
+
 
         <!-- Relays Section -->
         <div class="card mb-3">
@@ -273,25 +276,25 @@
     };
 
     ProjectStats projectStats = new ProjectStats
-    {
-        Loading = true,
-        TimeLeft = 0,
-        TotalInvestors = 0,
-        TotalRaised = 0,
-        TotalSeeders = 0,
-        FundingProgressPercent = 0,
-    };
+        {
+            Loading = true,
+            TimeLeft = 0,
+            TotalInvestors = 0,
+            TotalRaised = 0,
+            TotalSeeders = 0,
+            FundingProgressPercent = 0,
+        };
 
     bool founder = false;
     bool invested = false;
     bool findInProgress = false;
 
-    private List<string> NostrClients = new ();
+    private List<string> NostrClients = new();
 
     protected override async Task OnInitializedAsync()
     {
         NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
-        
+
         project = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
         if (project is InvestorProject findProject)
@@ -352,7 +355,7 @@
         if (project?.CreationTransactionId != null)
         {
             projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
-            
+
             await RefreshBalance();
         }
     }
@@ -373,7 +376,7 @@
                     projectStats.TotalRaised = data.AmountInvested;
 
                     projectStats.TimeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
-                    if (projectStats.TimeLeft < 0) 
+                    if (projectStats.TimeLeft < 0)
                         projectStats.TimeLeft = 0;
 
                     var targetSat = Money.Coins(project.ProjectInfo.TargetAmount).Satoshi;
@@ -389,7 +392,7 @@
         {
             projectStats.Loading = false;
         }
-      
+
     }
 
     private async Task RecoverFunds()
@@ -404,7 +407,7 @@
         else
             notificationComponent.ShowNotificationMessage("You must create a wallet if you want to invest");
     }
-    
+
     private async Task CopyNsecToClipboardAsyncCheckPassword()
     {
         if (!passwordComponent.HasPassword())
@@ -425,7 +428,7 @@
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, founderProject.ProjectIndex);
             var nsec = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
             await _clipboardService.WriteTextAsync(nsec);
-            StateHasChanged();   
+            StateHasChanged();
         }
     }
 }

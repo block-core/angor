@@ -23,9 +23,9 @@
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="mb-4">Invested Portfolio</h1>
         <button class="btn btn-secondary" @onclick="NavigateToPenalties">View Penalties</button>
-    </div>    
-    <NotificationComponent @ref="notificationComponent"/>
-    
+    </div>
+    <NotificationComponent @ref="notificationComponent" />
+
     <!-- Summary Statistics -->
     <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
         <div class="col">
@@ -63,65 +63,78 @@
     </div>
 
     <!-- List of Projects -->
-    <h2 class="mb-4">Your Projects</h2>
     <div class="row">
-        <div class="col">
-            <table class="table table-bordered">
-                <thead>
-                    <tr >
-                        <th></th>
-                        <th></th>
-                        <th>Funding Target (@network.CoinTicker)</th>
-                        <th>Raised (@network.CoinTicker)</th>
-                        <th>Raised  (% Target)</th>
-                        <th>Project Status</th>
-                        <th>My Investment (@network.CoinTicker)</th>
-                        <th>Spent by Founder</th>
-                        <th>Available to Founder</th>
-                        <th>In Recovery</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach(var project in projects)
-                {
-                    Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
-                    
-                    <tr>
-                        <td>
-                            <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link"> @TrimString(@project.ProjectInfo.ProjectIdentifier)</a>
-                        </td>
-                        <td> @project.Metadata?.Name</td>
-                        <td>@project.ProjectInfo.TargetAmount @network.CoinTicker</td>
-                        <td>@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
-                        <td>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</td>
-                        <td>
-                            @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
-                            {
-                                <p class="text-info">Funding</p>
-                            }
-                            else
-                            {
-                                <p class="text-success">Live</p>
-                            }
-                        </td>
-                        <td>@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker 
-                            @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
-                            {
-                                    <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link" data-toggle="tooltip" title="Pending"> <i class="oi oi-clock"></i></a>
-                            }
-                         </td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header pb-0 p-3">
+                    <div class="row">
+                        <div class="col-6 d-flex align-items-center">
+                            <h6 class="mb-0">Your Projects</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Funding Target (@network.CoinTicker)</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Raised (@network.CoinTicker)</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Raised  (% Target)</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Project Status</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">My Investment (@network.CoinTicker)</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Spent by Founder</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Available to Founder</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">In Recovery</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                @foreach (var project in projects)
+                                {
+                                    Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
+
+                                    <tr>
+                                        <td>
+                                             <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}")>@project.Metadata?.Name</a>
+                                        </td>
+                                        <td>@project.ProjectInfo.TargetAmount @network.CoinTicker</td>
+                                        <td>@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
+                                        <td>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</td>
+                                        <td>
+                                            @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+                                            {
+                                                <p class="text-info">Funding</p>
+                                            }
+                                            else
+                                            {
+                                                <p class="text-success">Live</p>
+                                            }
+                                        </td>
+                                        <td>
+                                            @Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                            @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
+                                            {
+                                                <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link" data-toggle="tooltip" title="Pending"> <i class="oi oi-clock"></i></a>
+                                            }
+                                        </td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
+
     </div>
 
 </div>
-
 @code {
 
     private List<InvestorProject> projects = new();
@@ -131,8 +144,8 @@
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
 
-    public Dictionary<string,ProjectStats> Stats = new();
-    
+    public Dictionary<string, ProjectStats> Stats = new();
+
     protected override async Task OnInitializedAsync()
     {
         hasWallet = _walletStorage.HasWallet();
@@ -148,7 +161,7 @@
             abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
 
             TotalFundedProjects = projects.Count;
-            TotalInvested =  projects.Sum(s => s.AmountInvested ?? 0);
+            TotalInvested = projects.Sum(s => s.AmountInvested ?? 0);
             TotalWallet = abi.TotalBalance;
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
 
@@ -161,7 +174,7 @@
         try
         {
             Stats.Clear();
-            
+
             foreach (var project in projects)
             {
                 var projectStats = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
