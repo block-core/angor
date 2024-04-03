@@ -30,44 +30,59 @@
     {
         <!-- Penalties Details Section -->
         <div class="row mt-4">
-            <div class="col">
-                <h4>Penalties Details</h4>
-                <table class="table table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            <th>Project ID</th>
-                            <th>Amount in Penalty</th>
-                            <th>Days Left</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var penalty in penaltyProjects)
-                        {
-                            <tr>
-                                <td>@penalty.ProjectIdentifier</td>
-                                <td>@penalty.Amount @network.CoinTicker</td>
-                                <td>
-                                    @if (penalty.IsExpired)
+
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header pb-0 p-3">
+                        <div class="row">
+                            <div class="col-6 d-flex align-items-center">
+                                <h6 class="mb-0">Penalties Details</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Project ID</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Amount in Penalty</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Days Left</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var penalty in penaltyProjects)
                                     {
-                                        if (penalty.IsReleased)
-                                        {
-                                            <button disabled class="btn btn-secondary">Penalty Released</button>
-                                        }
-                                        else
-                                        {
-                                            <button class="btn btn-info" @onclick="() => ClaimPenalty(penalty.ProjectIdentifier)">Claim Penalty</button>
-                                        }
+                                        <tr>
+                                            <td>@penalty.ProjectIdentifier</td>
+                                            <td>@penalty.Amount @network.CoinTicker</td>
+                                            <td>
+                                                @if (penalty.IsExpired)
+                                                {
+                                                    if (penalty.IsReleased)
+                                                    {
+                                                        <button disabled class="btn btn-secondary">Penalty Released</button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button class="btn btn-info" @onclick="() => ClaimPenalty(penalty.ProjectIdentifier)">Claim Penalty</button>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <button disabled class="btn btn-warning">Penalty Release in @penalty.DaysLeftForPenalty days</button>
+                                                }
+                                            </td>
+                                        </tr>
                                     }
-                                    else
-                                    {
-                                        <button disabled class="btn btn-warning">Penalty Release in @penalty.DaysLeftForPenalty days</button>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+
         </div>
     }
 </div>
@@ -86,7 +101,7 @@
         public int DaysLeftForPenalty;
     }
 
-   
+
     protected override async Task OnInitializedAsync()
     {
         if (hasWallet)
@@ -98,11 +113,11 @@
                 if (!string.IsNullOrEmpty(project.RecoveryTransactionId))
                 {
                     penaltyProjects.Add(new PenaltiesData
-                    {
-                        ProjectIdentifier = project.ProjectInfo.ProjectIdentifier,
-                        RecoveryTransactionId = project.RecoveryTransactionId,
-                        IsReleased = !string.IsNullOrEmpty(project.RecoveryReleaseTransactionId),
-                    });
+                        {
+                            ProjectIdentifier = project.ProjectInfo.ProjectIdentifier,
+                            RecoveryTransactionId = project.RecoveryTransactionId,
+                            IsReleased = !string.IsNullOrEmpty(project.RecoveryReleaseTransactionId),
+                        });
                 }
             }
         }
@@ -121,7 +136,7 @@
                     foreach (var penaltyProject in penaltyProjects)
                     {
                         var recoveryTansaction = await _IndexerService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
-                        
+
                         var totalsats = recoveryTansaction.Outputs.Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);
                         penaltyProject.Amount = Money.Satoshis(totalsats).ToUnit(MoneyUnit.BTC);
 
