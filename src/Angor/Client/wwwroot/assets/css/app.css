@@ -45,11 +45,11 @@
 }
 
 .form-check-input:checked[type="checkbox"] {
-    background-image: linear-gradient(195deg, #1f5d6a 0%, #1f5d6a 100%);
+    background-image: linear-gradient(195deg, #4caf50 0%, #4caf50 100%);
 }
 
 .form-check-input:checked[type="radio"] {
-    background-image: linear-gradient(195deg, #1f5d6a 0%, #1f5d6a 100%);
+    background-image: linear-gradient(195deg, #4caf50 0%, #4caf50 100%);
 }
 
 .form-check-input[type="checkbox"]:indeterminate {
@@ -459,9 +459,6 @@ tr[style*="cursor: pointer;"] {
     cursor: pointer;
 }
 
-    .clickable-row:hover {
-        background-color: #f5f5f5;
-    }
 
 .inner-table-inner-div p {
     margin-bottom: 5px;
@@ -680,7 +677,7 @@ tr[style*="cursor: pointer;"] {
     border-radius: 10px;
     padding: 16px;
     position: fixed;
-    z-index: 1;
+    z-index: 100000;
     left: 50%;
     bottom: 30px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.16);
@@ -896,4 +893,19 @@ tr[style*="cursor: pointer;"] {
         fill: #fff !important; /* Fill color for SVG elements */
     }
 
- 
+
+.btn-content {
+    font-size: 16px !important;
+}
+
+.dark-version .activeTB {
+    background-color: #1f5d6a !important;
+}
+
+.activeTB {
+    background-color: #1f5d6a25 !important;
+}
+
+.dark-version .card-body {
+    color: #e3f8fc !important
+}
