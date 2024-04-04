@@ -20,9 +20,34 @@ Cypress.Commands.add('clickOnButtonContain', (name) => {
 })
 
 
+Cypress.Commands.add("clickCardContains", (name, msg) => {
+    cy.get('.card-body[role="button"]').contains(`${name}`).click();
+    cy.log(msg)
+    if(msg){
+        cy.get('.snackbar').should('be.visible'); // Assuming snackbar has a class 'snackbar'
+        cy.get('.snackbar').contains(msg); // Assuming snackbar contains text
+    }
+  })
+  
 
-Cypress.Commands.add('clickSubmitButton', () => {
+
+
+Cypress.Commands.add('clickSubmitButton', (msg) => {
     cy.get('.btn.btn-success').click();
+    if(msg){
+        cy.get('#snackbar').should('be.visible'); // Assuming snackbar has a class 'snackbar'
+        cy.get('#snackbar').contains(msg); // Assuming snackbar contains text
+    }
+})
+
+Cypress.Commands.add('typeTextInElement', (type,msg) => {
+    cy.get(`.input-group input[type=${type}]`)
+        .type(msg);
+})
+
+Cypress.Commands.add('clickOnCheckBox', () => {
+    cy.get(`.form-check input[type="checkbox"]`)
+  .check();
 })
 
 Cypress.Commands.add('waitForLoader', () => {

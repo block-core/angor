@@ -8,11 +8,14 @@ describe('template spec', () => {
 
   it('createWallet', () => {
     cy.clickOnNavBar(Navbar.WALLET)
-    cy.clickOnButtonContain('Create Wallet') // should use enum, for some reason passes null
+    cy.clickCardContains('Create Wallet') // should use enum, for some reason passes null
     cy.clickOnButtonContain('Generate New Wallet Words')
+    cy.clickSubmitButton('New wallet password is null or empty');
+    cy.typeTextInElement('password','abc123')
+    cy.clickOnCheckBox()
     cy.clickSubmitButton();
     cy.waitForLoader()
-    cy.contains('span.fs-4', 'Confirmed balance:').should('be.visible');
+    cy.get('span.fs-4').should('have.text', 'Balance: ');
     cy.verifyBalance('0')
   });
 });
