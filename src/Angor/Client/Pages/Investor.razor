@@ -3,7 +3,6 @@
 @using Angor.Shared.Models
 @using Blockcore.NBitcoin
 @using Angor.Client.Models
-@using Angor.Client.Services
 @using Angor.Shared
 @using Angor.Shared
 @using Angor.Shared.Services
@@ -14,7 +13,7 @@
 @using Blockcore.NBitcoin.DataEncoders
 @using Nostr.Client.Keys
 
-@inject Logger<Investor> Logger
+@inject ILogger<Investor> Logger
 @inject IClientStorage storage
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage
