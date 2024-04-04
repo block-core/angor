@@ -3,13 +3,14 @@
 @using Angor.Shared.Models
 @using Blockcore.NBitcoin
 @using Angor.Client.Models
-@using Angor.Client.Services
 @using Angor.Shared
 @using Angor.Shared.Services
 @using Nostr.Client.Messages
 @using System.Text.Json
+@using Blockcore.NBitcoin.DataEncoders
+@using Nostr.Client.Keys
 
-@inject Logger<Investor> Logger
+@inject ILogger<Investor> Logger
 @inject IClientStorage storage
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage
@@ -154,7 +155,10 @@
     long TotalInRecovery = 0;
 
     public Dictionary<string, ProjectStats> Stats = new();
-
+    
+    Dictionary<string,ScannedProjectData> scannedProject = new ();
+    scanStage? _scanStage;
+    
     protected override async Task OnInitializedAsync()
     {
         hasWallet = _walletStorage.HasWallet();
@@ -177,13 +181,103 @@
             await RefreshBalance();
         }
     }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_scanStage == scanStage.ProjectDataLookup)
+            {
+                RelayService.RequestProjectCreateEventsByPubKey(x =>
+                {
+                    var investorProject = scannedProject.FirstOrDefault(p => p.Value.FounderNostrKey == x.Pubkey).Value;
+                    
+                    if (investorProject == null)
+                    {
+                        Logger.LogError(x.Pubkey + "was not found in the scanned project list");
+                        return;
+                    }
+
+                    investorProject.Project ??= new InvestorProject();
+
+                    switch (x.Kind)
+                    {
+                        case NostrKind.Metadata:
+                            investorProject.Project.Metadata ??=
+                                JsonSerializer.Deserialize<ProjectMetadata>(x.Content!, Angor.Shared.Services.RelayService.settings);
+                            break;
+                        case NostrKind.ApplicationSpecificData:
+                            if (investorProject.Project.ProjectInfo == null)
+                                investorProject.Project.ProjectInfo = JsonSerializer.Deserialize<ProjectInfo>(x.Content!, Angor.Shared.Services.RelayService.settings) ?? throw new Exception("The project info must be in the application specific data event");
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException($"{x.Kind}");
+                    }
+                },
+                    () =>
+                    {
+                        _scanStage = scanStage.InvestmentBlockchainLookup;
+                        StateHasChanged();
+                    },
+                    scannedProject.Values.Select(x => x.FounderNostrKey).ToArray());
+            }
+
+            if (_scanStage == scanStage.InvestmentBlockchainLookup)
+            {
+                foreach (var (nostrPubKey, scannedProjectData) in scannedProject)
+                {
+
+                    var investorKey = DerivationOperations.DeriveInvestorKey(_walletStorage.GetWallet().WalletWords, 
+                        scannedProjectData.Project!.ProjectInfo.FounderKey ?? throw new Exception("Did not get the application specific data"));
+
+                    var result = await _IndexerService.GetProjectInvestmentsAsync(scannedProjectData.Project!.ProjectInfo.ProjectIdentifier, investorKey);
+
+                    if (result != null)
+                    {
+                        scannedProjectData.Project.TransactionId = result.TransactionId;
+                        scannedProjectData.Project.AmountInvested = result?.TotalAmount;
+                        //TODO set the seeder when we implement the seeder logic in the UI    
+                    }
+                    
+                    SignService.LookupSignatureForInvestmentRequest(nostrPubKey, scannedProjectData.Project.ProjectInfo.NostrPubKey,
+                        scannedProjectData.RequestEventCreateAt, scannedProjectData.RequestEventId,
+                        s =>
+                        {
+                            //TODO decrypt the signatures and add to project
+                            Logger.LogInformation("Received encrypted founder signatures" + s);
+                            
+                            var accountInfo = storage.GetAccountInfo(network.Name);
+                            var unconfirmedInfo = SessionStorage.GetUnconfirmedInboundFunds();
+                            
+                            projects = storage.GetInvestmentProjects();
+
+                            var abi = new AccountBalanceInfo();
+                            abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
+
+                            TotalFundedProjects = projects.Count;
+                            TotalInvested =  projects.Sum(s => s.AmountInvested ?? 0);
+                            TotalWallet = abi.TotalBalance;
+                            TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
+
+                            StateHasChanged();
+                            return RefreshBalance();;
+                        });
+                }
+                
+                foreach (var scannedProjectData in scannedProject.Values.Where(x => x.Project != null))
+                {
+                    storage.AddInvestmentProject(scannedProjectData.Project);
+                }
+                
+                _scanStage = null;
+                StateHasChanged();
+            }
+    }
 
     private async Task RefreshBalance()
     {
         try
         {
             Stats.Clear();
-
+            
             foreach (var project in projects)
             {
                 var projectStats = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
@@ -213,83 +307,46 @@
 
     private async Task ScanForInvestedProjectsAsync()
     {
-        var scannedProject = new Dictionary<string, ScannedProjectData>();
-
-        InvestmentRequestLookup(scannedProject);
-        
-        RelayService.RequestProjectCreateEventsByPubKey(x =>
-        {
-            if (!scannedProject.ContainsKey(x.Pubkey))
-            {
-                Logger.LogError(x.Pubkey + "was not found in the scanned project list");
-                return;
-            }
-
-            scannedProject[x.Pubkey].Project ??= new InvestorProject();
-
-            var investorProject = scannedProject[x.Pubkey].Project;
-            
-            switch (x.Kind)
-            {
-                case NostrKind.Metadata:
-                    investorProject!.Metadata = JsonSerializer.Deserialize<ProjectMetadata>(x.Content!);
-                    break;
-                case NostrKind.ApplicationSpecificData:
-                    investorProject!.ProjectInfo = JsonSerializer.Deserialize<ProjectInfo>(x.Content!) ?? throw new Exception("The project info must be in the application specific data event");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException($"{x.Kind}");
-            }
-        },
-            () => { },
-            scannedProject.Keys.ToArray());
-        
-        foreach (var (nostrPubKey, scannedProjectData) in scannedProject)
-        {
-            
-            var investorKey = DerivationOperations.DeriveInvestorKey(_walletStorage.GetWallet().WalletWords, scannedProjectData.Project!.ProjectInfo.FounderKey 
-                                                                                                             ?? throw new Exception("Did not get the application specific data"));
-
-            var result = await _IndexerService.GetProjectInvestmentsAsync(scannedProjectData.Project!.ProjectInfo.ProjectIdentifier, investorKey);
-
-            scannedProjectData.Project.TransactionId = result.TransactionId;
-            scannedProjectData.Project.AmountInvested = result.TotalAmount;
-            //TODO set the seeder when we implement the seeder logic in the UI
-
-            SignService.LookupSignatureForInvestmentRequest(nostrPubKey, scannedProjectData.Project.ProjectInfo.NostrPubKey,
-                scannedProjectData.RequestEventCreateAt,scannedProjectData.RequestEventId,
-                s =>
-                {
-                    Logger.LogInformation("Received encrypted founder signatures" + s);
-                    return Task.CompletedTask;
-                });
-        }
-        
+        _scanStage = scanStage.NostrDMLookup;
+        InvestmentRequestLookup();
     }
 
-    private void InvestmentRequestLookup(Dictionary<string, ScannedProjectData> scannedProject)
+    private void InvestmentRequestLookup()
     {
-        var countPreLookup = scannedProject.Count;
+        var countPreLookup = scannedProject.Count == 0 ? projects.Count : scannedProject.Count;
 
     // foreach (var i in Enumerable.Range(1, 5))
     // {
         var key = DerivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, countPreLookup + 1);
 
-        scannedProject.Add(key.PubKey.ToHex(), new ScannedProjectData { Index = countPreLookup + 1 });
-    //}
+        var hexKey = Encoders.Hex.EncodeData(key.ToBytes());
 
-        SignService.LookupInvestmentRequestsSentByInvestorKey(scannedProject.Keys.Last(),
+        var nostrInvestorPubKey = NostrPrivateKey.FromHex(hexKey).DerivePublicKey().Hex;
+        
+        scannedProject.Add(nostrInvestorPubKey, new ScannedProjectData { Index = countPreLookup + 1 });
+    //}
+        
+        SignService.LookupInvestmentRequestsSentByInvestorKey(nostrInvestorPubKey,
             (investorNostrPubKey, founderNostrPubKey, createdAt,eventId) =>
             {
+                if (scannedProject.ContainsKey(investorNostrPubKey) && !string.IsNullOrEmpty(scannedProject[investorNostrPubKey].FounderNostrKey))
+                    return;
+
                 scannedProject[investorNostrPubKey].FounderNostrKey = founderNostrPubKey;
                 scannedProject[investorNostrPubKey].RequestEventCreateAt = createdAt;
                 scannedProject[investorNostrPubKey].RequestEventId = eventId;
             }, () =>
             {
-                if (scannedProject.Count == countPreLookup)
-                    return;
-
-                InvestmentRequestLookup(scannedProject);
+                if (!string.IsNullOrEmpty(scannedProject[nostrInvestorPubKey].FounderNostrKey))
+                {
+                    InvestmentRequestLookup();
+                }
+                else
+                {
+                    scannedProject.Remove(nostrInvestorPubKey);    
+                    _scanStage = scanStage.ProjectDataLookup;
+                    StateHasChanged();
+                }
             });
     }
 
@@ -300,5 +357,12 @@
         public string RequestEventId { get; set; }
         public DateTime RequestEventCreateAt { get; set; }
         public InvestorProject? Project { get; set; }
+    }
+    
+    private enum scanStage
+    {
+        NostrDMLookup,
+        ProjectDataLookup,
+        InvestmentBlockchainLookup
     }
 }
