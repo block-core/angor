@@ -10,13 +10,13 @@ namespace Angor.Shared.Services
 {
     public class SignService : ISignService
     {
-        private Logger<SignService> _logger;
+        private ILogger<SignService> _logger;
 
         private readonly INostrCommunicationFactory _communicationFactory;
         private readonly INetworkService _networkService;
         private IRelaySubscriptionsHandling _subscriptionsHanding;
 
-        public SignService(Logger<SignService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService,
+        public SignService(ILogger<SignService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService,
             IRelaySubscriptionsHandling subscriptionsHanding)
         {
             _communicationFactory = communicationFactory;
@@ -117,7 +117,7 @@ namespace Angor.Shared.Services
             Action onAllMessagesReceived)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            var subscriptionKey = nostrPubKey + "sigFind";
+            var subscriptionKey = nostrPubKey[..(nostrPubKey.Length/2)] + "Find";
 
             if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
             {
