@@ -14,18 +14,18 @@
 
 <div class="container my-4">
     <h1>Browse Projects</h1>
-    
-    <NotificationComponent @ref="notificationComponent"/>
+
+    <NotificationComponent @ref="notificationComponent" />
 
     <div class="row">
         <div class="col">
-			
+
             <!-- Search Section -->
             <div class="input-group mb-3">
                 <input type="text" class="form-control" placeholder="Enter Angor project identifier" id="searchQuery" @bind="searchQuery">
                 <button class="btn btn-primary" type="button" @onclick="FindProject" disabled="@findInProgress">Find</button>
             </div>
-            
+
             @if (findInProgress)
             {
                 <div class="d-flex justify-content-center">
@@ -54,7 +54,7 @@
                         }
                         <p>
                             Project ID:@findProject.ProjectIdentifier
-                            <br/>
+                            <br />
                             Nostr ID  :@(NostrPublicKey.FromHex(findProject.NostrPubKey).Bech32)
                         </p>
                         <button @onclick="() => ViewProjectDetails(findProject.ProjectIdentifier)" class="btn btn-primary card-">View</button>
@@ -62,7 +62,7 @@
                     </div>
                 </div>
             }
-            
+
             <div class="d-flex justify-content-center">
                 <button class="btn btn-secondary my-3" @onclick="SearchProjects">Fetch The Last 20 Projects</button>
             </div>
@@ -93,7 +93,7 @@
                                 if (project?.Metadata?.Banner != null)
                                 {
                                     <div class="card-header overflow-hidden">
-                                        <img class="card-img-top" src="@project.Metadata.Banner" alt=""/>
+                                        <img class="card-img-top" src="@project.Metadata.Banner" alt="" />
                                     </div>
                                 }
                             }
@@ -122,7 +122,7 @@
                                 }
                                 <p>
                                     Project ID:@indexerData.ProjectIdentifier
-                                    <br/>
+                                    <br />
                                     Nostr ID  :@(NostrPublicKey.FromHex(indexerData.NostrPubKey).Bech32)
                                 </p>
                                 <button @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)" class="btn btn-primary card-">View</button>
@@ -131,8 +131,8 @@
                     }
                 }
             }
-            
-          
+
+
         </div>
     </div>
 </div>
@@ -153,6 +153,14 @@
         projects = SessionStorage.GetProjectIndexerData() ?? new();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await FindProject();
+        }
+    }
+
     private async Task FindProject()
     {
         findProject = projects.FirstOrDefault(_ => _.ProjectIdentifier == searchQuery);
@@ -169,7 +177,7 @@
         if (findProject != null)
         {
             _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(),
-                StateHasChanged, 
+                StateHasChanged,
             new[] { findProject.NostrPubKey });
         }
 
@@ -179,9 +187,9 @@
     private async Task SearchProjects()
     {
         searchInProgress = true;
-        
+
         var blockchainProjects = await _IndexerService.GetProjectsAsync(null, 20);
-        
+
         var projectsNotInList = blockchainProjects
             .Where(blockchainProject => projects.All(_ => _.ProjectIdentifier != blockchainProject.ProjectIdentifier))
             .ToList();
@@ -227,7 +235,7 @@
             switch (e)
             {
                 case { Kind: NostrKind.Metadata }:
-                  
+
                     var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
                     if (projectIndexerData != null)
                     {
@@ -235,14 +243,14 @@
                         if (project != null)
                         {
                             project.Metadata = nostrMetadata;
-                            SessionStorage.StoreProject(project);   
+                            SessionStorage.StoreProject(project);
                         }
                     }
-                    
+
                     break;
 
                 case { Kind: NostrKind.ApplicationSpecificData }:
-                    
+
                     var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
                     if (projectInfo != null && projectIndexerData != null)
                     {
@@ -265,7 +273,7 @@
         }
         else
         {
-            notificationComponent.ShowNotificationMessage("The project was not loaded from the relay yet");   
+            notificationComponent.ShowNotificationMessage("The project was not loaded from the relay yet");
         }
     }
 }
