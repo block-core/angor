@@ -9,5 +9,8 @@
     "private": true,
     "dependencies": {
         "js-base64": "^3.7.7"
+    },
+    "devDependencies": {
+        "cypress": "^13.7.1"
     }
 }
