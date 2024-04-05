@@ -19,6 +19,10 @@ Cypress.Commands.add('clickOnButtonContain', (name) => {
         .click(); // Click on it
 })
 
+Cypress.Commands.add('clickElementWithDataCy', (datacy) => {
+    cy.get(`[data-cy=${datacy}]`).click();
+})
+
 
 Cypress.Commands.add("clickCardContains", (name, msg) => {
     cy.get('.card-body[role="button"]').contains(`${name}`).click();
@@ -50,12 +54,16 @@ Cypress.Commands.add('clickOnCheckBox', () => {
   .check();
 })
 
+Cypress.Commands.add('clickOnCheckBoxByDataCy', (datacy) => {
+    cy.get(`[data-cy=${datacy}]`).check();
+})
+
 Cypress.Commands.add('waitForLoader', () => {
     cy.get('.loader').should('not.exist');
 })
 
-Cypress.Commands.add('verifyBalance', (num) => {
-    cy.contains('span.fs-3 strong', `${num} TBTC`)
+Cypress.Commands.add('verifyBalance', (num,datacy) => {
+    cy.get(`[data-cy=${datacy}]`)
         .should('be.visible')
         .contains(`${num}`);
 })
