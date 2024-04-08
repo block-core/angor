@@ -8,13 +8,17 @@ using Blockcore.NBitcoin.BIP39;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.Networks;
 using Moq;
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Test
 {
     public class ScriptTDerivationOperationsTestest
     {
+        
 
-        private Mock<INetworkConfiguration> _networkConfiguration;
+        private readonly Mock<INetworkConfiguration> _networkConfiguration;
+        private readonly ILogger<DerivationOperations> _logger;
 
         private FeeEstimation _expectedFeeEstimation = new FeeEstimation()
             { Confirmations = 1, FeeRate = 10000 };
@@ -25,6 +29,10 @@ namespace Angor.Test
 
             _networkConfiguration.Setup(_ => _.GetNetwork())
                 .Returns(Networks.Bitcoin.Testnet());
+
+            var mockLogger = new Mock<ILogger<DerivationOperations>>();
+            _logger = mockLogger.Object;
+
         }
 
         [Fact]
@@ -94,6 +102,65 @@ namespace Angor.Test
 
             return angorRootKey;
         }
+
+        [Fact]
+        public void DeriveFounderKey_InvalidMnemonicWords_ThrowsException()
+        {
+            // Arrange
+            var derivationOperations = new DerivationOperations(new HdOperations(), _logger, _networkConfiguration.Object);
+            var invalidMnemonicWords = "invalid mnemonic words";
+            // Act
+            Action act = () => derivationOperations.DeriveFounderKey(new WalletWords { Words = invalidMnemonicWords }, 1);
+            // Assert
+            act.Should().Throw<Exception>().WithMessage("Please make sure you enter valid mnemonic words.");
+        }
+
+        [Fact]
+        public void GetProjectKey_ExceedKeysDerivationLimit_ThrowsException()
+        {
+            var derivationOperations = new DerivationOperations(new HdOperations(), null, _networkConfiguration.Object);
+            var founderKeyCollection = new FounderKeyCollection();
+            
+            Action act = () => derivationOperations.GetProjectKey(founderKeyCollection, 16);
+            
+            act.Should().Throw<Exception>().WithMessage("Keys derivation limit exceeded");
+        }
+
+         [Fact]
+        public void GetProjectKey_KeyExists_ReturnsArrayOfKeys()
+        {
+            var founderKeyCollection = new FounderKeyCollection();
+            founderKeyCollection.Keys.Add(new FounderKeys { Index = 1 });
+
+            var derivationOperations = new DerivationOperations(new HdOperations(), null, _networkConfiguration.Object);
+
+            var result1 = derivationOperations.GetProjectKey(founderKeyCollection, 1);
+
+            result1.Should().NotBeNull();
+            result1.Should().BeOfType<FounderKeys>();
+
+            founderKeyCollection.Keys.Add(new FounderKeys { Index = 2 });
+
+            var result2 = derivationOperations.GetProjectKey(founderKeyCollection, 2);
+
+            result2.Should().NotBeNull();
+            result2.Should().BeOfType<FounderKeys>();
+        }
+
+        [Fact]
+        public void GetProjectKey_NegativeIndex_ThrowsException()
+        {
+            var founderKeyCollection = new FounderKeyCollection();
+            var derivationOperations = new DerivationOperations(new HdOperations(), null, _networkConfiguration.Object);
+
+            Action act = () => derivationOperations.GetProjectKey(founderKeyCollection, -1);
+
+            act.Should().Throw<ArgumentOutOfRangeException>()
+                .WithMessage("*Index must be between 0 and the maximum index.*");
+        }
+
+        
+
 
     }
 }
