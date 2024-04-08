@@ -69,11 +69,6 @@ public class DerivationOperations : IDerivationOperations
 
     public FounderKeys GetProjectKey(FounderKeyCollection founderKeyCollection, int index)
     {
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(index), "Index must be between 0 and the maximum index.");
-        }
-
         var keys = founderKeyCollection.Keys.FirstOrDefault(k => k.Index == index);
 
         if (keys == null)

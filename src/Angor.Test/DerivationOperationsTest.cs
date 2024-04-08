@@ -147,20 +147,6 @@ namespace Angor.Test
             result2.Should().BeOfType<FounderKeys>();
         }
 
-        [Fact]
-        public void GetProjectKey_NegativeIndex_ThrowsException()
-        {
-            var founderKeyCollection = new FounderKeyCollection();
-            var derivationOperations = new DerivationOperations(new HdOperations(), null, _networkConfiguration.Object);
-
-            Action act = () => derivationOperations.GetProjectKey(founderKeyCollection, -1);
-
-            act.Should().Throw<ArgumentOutOfRangeException>()
-                .WithMessage("*Index must be between 0 and the maximum index.*");
-        }
-
-        
-
 
     }
 }
