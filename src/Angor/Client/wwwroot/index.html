@@ -11,11 +11,8 @@
     <link href="manifest.json" rel="manifest" />
     <link rel="apple-touch-icon" sizes="512x512" href="/assets/img/icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/assets/img/icon-192.png" />
-    <link href="/assets/css/nucleo-icons.css" rel="stylesheet" />
-    <link href="/assets/css/nucleo-svg.css" rel="stylesheet" />
-    <link id="pagestyle" href="/assets/css/dashboard.css" rel="stylesheet" />
-    <link href="/assets/css/app.css" rel="stylesheet" />
     <link href="Angor.Client.styles.css" rel="stylesheet" />
+    <link href="/assets/css/angor.min.css" rel="stylesheet" />
     <meta name="description" content="Angor is a decentralized crowdfunding platform built on Bitcoin, incorporating Nostr for enhanced security and transparency. It allows investors to maintain control over their funds and supports direct communication between investors and founders.">
     <meta name="keywords" content="Angor, blockchain, crowdfunding, smart contracts, blockchain technology, bitcoin, nostr, decentralized applications, dApps, development, easy to use, secure">
     <meta name="author" content="Angor Team">
@@ -29,9 +26,9 @@
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="/assets/img/icon-512.png">
     <meta name="msapplication-config" content="/manifest.json">
- </head>
+</head>
 
-<body class="sidenav-show bg-gray-100">
+<body>
     <div id="app">
         <div class="loader-wrapper">
             <div class="loader"></div>
@@ -45,10 +42,7 @@
     <script src="_framework/blazor.webassembly.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
     <script type="module" src="service-crypto.js"></script>
-    <script src="/assets/js/appUpdate.js"></script>
-    <script src="/ServiceWorkerRegister.js"></script>
-    <script src="/assets/js/app.js"></script>
-
+    <script src="/assets/js/angor.min.js"></script>
 </body>
 
 </html>

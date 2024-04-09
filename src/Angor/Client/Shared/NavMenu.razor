@@ -8,13 +8,13 @@
 
 <div class="sidenav-header">
     <div class="text-white">
-        <i class="material-icons p-3 cursor-pointer opacity-5 position-absolute end-0 top-0 d-xl-none" aria-hidden="true" id="iconSidenav" onclick="toggleSidenav()">
+        <i class="material-icons p-3 cursor-pointer opacity-5 position-absolute end-0 top-0 d-xl-none" aria-hidden="true" id="iconSidenav" @onclick="ToggleSidenav">
             close
         </i>
     </div>
 
-    <a class="navbar-brand m-0" href="" onclick="toggleSidenav()">
-        <img src="/assets/img/angor-logo.svg" class="navbar-brand-img h-100" alt="Angor"/>
+    <a class="navbar-brand m-0" href="" @onclick="ToggleSidenav">
+        <img src="/assets/img/angor-logo.svg" class="navbar-brand-img h-100" alt="Angor" />
         <span class="ms-1 font-weight-bold text-white">Angor App</span>
     </a>
 </div>
@@ -22,7 +22,7 @@
 <hr class="horizontal light mt-0 mb-2" />
 
 <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
-    <ul class="navbar-nav" onclick="toggleSidenav()">
+    <ul class="navbar-nav" @onclick="ToggleSidenav">
         <li class="nav-item">
             <NavLink class="nav-link text-white" href="wallet">
                 <i class="material-icons opacity-10">wallet</i>
@@ -87,17 +87,18 @@
 
 
 @code {
-    private bool collapseNavMenu = true;
-    private bool hasWallet;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    [Parameter]
+    public EventCallback ToggleSidenavCallback { get; set; }
+
+    private bool hasWallet;
 
     private Timer? _timer;
     private int _elapsedCount = 0;
 
-    private void ToggleNavMenu()
+    private async Task ToggleSidenav()
     {
-        collapseNavMenu = !collapseNavMenu;
+        await ToggleSidenavCallback.InvokeAsync();
     }
 
     /// <inheritdoc />
@@ -136,7 +137,6 @@
     /// </summary>
     public void Dispose()
     {
-
         _timer?.Dispose();
     }
 }
