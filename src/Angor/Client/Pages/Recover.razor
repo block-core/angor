@@ -115,7 +115,7 @@
             </div>
 
             <div>
-                <button class="btn btn-primary" @onclick="Scan" disabled="@refreshSpinner">
+                <button class="btn btn-primary" @onclick="RefreshInvestments" disabled="@refreshSpinner">
                     @if (refreshSpinner)
                     {
                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -374,12 +374,12 @@
         {
             if (hasWallet)
             {
-                await Scan();
+                await RefreshInvestments();
             }
         }
     }
 
-    private async Task Scan()
+    private async Task RefreshInvestments()
     {
         refreshSpinner = true;
         StateHasChanged();
