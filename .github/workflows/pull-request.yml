@@ -58,8 +58,8 @@ jobs:
         steps:
           - name: Checkout
             uses: actions/checkout@v4
-          - name: Start Application
-            run: dotnet run --project src/Angor/Client
+          #- name: Start Application
+          #  run: dotnet run --project src/Angor/Client
           # Install npm dependencies, cache them correctly
           # and run all Cypress tests
           - name: Cypress run
