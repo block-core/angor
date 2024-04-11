@@ -6,7 +6,6 @@ on:
       - main
 
 jobs:
-  
   buildAndUnitTest:
 
     strategy:
@@ -31,10 +30,6 @@ jobs:
       with:
         dotnet-version: | 
           7.0.x
-    - name: Setup Node.js (${{ matrix.node_version }})
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node_version }}
 
     - name: Variables
       run: |
@@ -54,16 +49,13 @@ jobs:
       run: dotnet test -v=normal -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
 
   cypress-run:
-        runs-on: ubuntu-22.04
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
-          #- name: Start Application
-          #  run: dotnet run --project src/Angor/Client
-          # Install npm dependencies, cache them correctly
-          # and run all Cypress tests
-          - name: Cypress run
-            uses: cypress-io/github-action@v6
-            with:
-              build: npm run build
-              start: npm start
+    runs-on: ubuntu-22.04
+    needs: buildAndUnitTest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          build: npm run build
+          start: npm start
