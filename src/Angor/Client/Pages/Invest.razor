@@ -196,14 +196,26 @@
             <div class="card mt-3 text-center">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>Waiting for the founder to approve</h4>
-                    <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
+                    <div>
+                        <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
+                        <button class="btn btn-primary" @onclick="RefreshSignatures" disabled="@refreshSpinner">
+                            @if (refreshSpinner)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Refresh...</span>
+                            }
+                            else
+                            {
+                                <span>Refresh</span>
+                            }
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
-                    @*<p>Waiting for the founder to sign the investment request</p>*@
-                    
                     <div class="loader-slow"></div>
                 </div>
             </div>
+
         }
         else
         {
@@ -244,6 +256,7 @@
     private bool buildSpinner = false;
     private bool investSpinner = false;
     private bool publishSpinner = false;
+    private bool refreshSpinner = false;
 
 
     public InvestmentModel Investment { get; set; } = new InvestmentModel { InvestmentAmount = 10 };
@@ -318,6 +331,17 @@
             }
         }
 
+        if (firstRender)
+        {
+            if (hasWallet)
+            {
+                await RefreshSignatures();
+            }
+        }
+    }
+
+    private async Task RefreshSignatures()
+    {
         if (project is InvestorProject investmentProject && investmentProject.WaitingForFounderResponse())
         {
             if (passwordComponent.HasPassword())
@@ -341,18 +365,37 @@
                 return;
             }
 
-            var words = await passwordComponent.GetWalletAsync();
+            refreshSpinner = true;
+            StateHasChanged();
+            await Task.Delay(10);
 
-            var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
+            try
+            {
+                var words = await passwordComponent.GetWalletAsync();
 
-            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, accountInfo.InvestmentsCount + 1);
+                var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
 
-            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+                var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, accountInfo.InvestmentsCount + 1);
 
-            _SignService.LookupSignatureForInvestmentRequest(
-                NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
-                , project.ProjectInfo.NostrPubKey, investmentProject.SignaturesInfo!.TimeOfSignatureRequest!.Value, investmentProject.SignaturesInfo!.SignatureRequestEventId!,
-                async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
+                var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+
+                _SignService.LookupSignatureForInvestmentRequest(
+                    NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
+                    , project.ProjectInfo.NostrPubKey, investmentProject.SignaturesInfo!.TimeOfSignatureRequest!.Value, investmentProject.SignaturesInfo!.SignatureRequestEventId!,
+                    async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
+            }
+            catch (Exception e)
+            {
+                _Logger.LogError(e, e.Message);
+                notificationComponent.ShowErrorMessage(e.Message);
+            }
+            finally
+            {
+                refreshSpinner = false;
+            }
+
+            StateHasChanged();
+            await Task.Delay(10);
         }
     }
 
