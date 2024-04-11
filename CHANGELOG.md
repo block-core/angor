@@ -1,8 +1,3 @@
-## <small>0.0.25 (2024-04-11)</small>
-
-
-
-
 ## <small>0.0.24 (2024-04-10)</small>
 
 * Add a refresh button in the invest page (#67) ([068679c](https://github.com/block-core/angor/commit/068679c)), closes [#67](https://github.com/block-core/angor/issues/67)
