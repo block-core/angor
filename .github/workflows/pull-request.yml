@@ -30,6 +30,10 @@ jobs:
       with:
         dotnet-version: | 
           7.0.x
+    - name: Setup Node.js (${{ matrix.node_version }})
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node_version }}
 
     - name: Variables
       run: |
