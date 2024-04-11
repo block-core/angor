@@ -1,3 +1,17 @@
+## <small>0.0.25 (2024-04-11)</small>
+
+
+
+
+## <small>0.0.24 (2024-04-10)</small>
+
+* Add a refresh button in the invest page (#67) ([068679c](https://github.com/block-core/angor/commit/068679c)), closes [#67](https://github.com/block-core/angor/issues/67)
+* Adding cypress to angor (#65) ([001ed7a](https://github.com/block-core/angor/commit/001ed7a)), closes [#65](https://github.com/block-core/angor/issues/65)
+* bump version ([9b77f2d](https://github.com/block-core/angor/commit/9b77f2d))
+* Fixed wallet UI (#63) ([9360a03](https://github.com/block-core/angor/commit/9360a03)), closes [#63](https://github.com/block-core/angor/issues/63)
+
+
+
 ## <small>0.0.23 (2024-03-29)</small>
 
 * Add password encryption (#49) ([f695155](https://github.com/block-core/angor/commit/f695155)), closes [#49](https://github.com/block-core/angor/issues/49)
