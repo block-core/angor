@@ -263,7 +263,7 @@
                     @if (accountBalanceInfo.TotalUnconfirmedBalance > 0)
                     {
                         <div class="mb-4 me-4">
-                            <p class="text-sm opacity-8 mb-0">Confirmed balance</p>
+                            <p class="text-sm opacity-8 mb-0">Unconfirmed balance</p>
                             <h6 class="mb-0">@Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
                         </div>
                     }
