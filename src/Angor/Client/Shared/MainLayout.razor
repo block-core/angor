@@ -9,6 +9,7 @@
 @inject INetworkConfiguration _networkConfiguration
 @inject INetworkService _networkService
 @inject NavigationManager _navManager
+@inject NavMenuState NavMenuState;
 
 <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 b-shadow bg-gradient-dark"
        id="sidenav-main">
@@ -111,6 +112,19 @@
 
         _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower());
 
+        CheckNetwork();
+
+        NavMenuState.OnChange += NavMenuStateOnOnChange;
+    }
+
+    private void NavMenuStateOnOnChange()
+    {
+        CheckNetwork();
+        StateHasChanged();
+    }
+
+    private void CheckNetwork()
+    {
         networkText = "(mainnet)";
         if (_networkConfiguration.GetNetwork().NetworkType != NetworkType.Mainnet)
         {
@@ -118,13 +132,8 @@
         }
     }
 
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="firstRender"></param>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await Js.InvokeVoidAsync("angor.setTheme");
     }
-
 }
