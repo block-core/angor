@@ -129,16 +129,24 @@
         }
     }
 
-    private void ToggleTheme()
+    private async void ToggleTheme()
     {
         isDarkTheme = !isDarkTheme;
-        UpdateThemeIcon(isDarkTheme);
-        SaveThemeToStorage(isDarkTheme);
+        await UpdateThemeIcon(isDarkTheme);
+        await SaveThemeToStorage(isDarkTheme);
     }
 
-    private void UpdateThemeIcon(bool isDark)
+    private async Task UpdateThemeIcon(bool isDark)
     {
         themeIcon = isDark ? "light_mode" : "dark_mode";
+        if (isDark)
+        {
+            await Js.InvokeVoidAsync("angor.addDarkBackground");
+        }
+        else
+        {
+            await Js.InvokeVoidAsync("angor.addLightBackground");
+        }
     }
 
     private async Task SaveThemeToStorage(bool isDark)

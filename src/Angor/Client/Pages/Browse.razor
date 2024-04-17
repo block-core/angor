@@ -112,33 +112,26 @@ else
 
     @if (isGridView)
     {
-
         <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
-                <div class="col">
-                    <div class="card mt-4">
-                        @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
-                        {
-                            var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                            if (project?.Metadata?.Banner != null)
-                            {
-                                <div class="card-header card-header-img">
-                                    <img class="card-img-top" src="@project.Metadata.Banner" alt="" />
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="card-header card-header-img">
-                                    <img class="card-img-top" src="/assets/img/no-image.jpg" alt="no-image" />
-                                </div>
-                            }
-                        }
+                <div class="col d-flex align-items-stretch">
+                    <div class="card mt-4 w-100">
+                             <a class="d-block blur-shadow-image">
+                                @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                                {
+                                    var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                <img class="card-img-top" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
 
-                        <div class="card-body">
+                                }
+                            </a>
+ 
+                         <div class="card-body text-center">
                             @if (nostrSearchInProgress)
                             {
-                                <div class="loader-small"></div>
+                                <div class="p-3">
+                                    <div class="loader-small m-auto"></div>
+                                </div>
                             }
                             else
                             {
@@ -147,9 +140,8 @@ else
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                     if (project?.Metadata != null)
                                     {
-                                        <h3 class="card-title">@project.Metadata.Name</h3>
-                                        <p class="card-subtitle">@project.Metadata.About</p>
-                                        <hr>
+                                        <h5 role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
+                                        <p class="mb-0 line-clamp-3">@((MarkupString)project.Metadata.About)</p>
                                     }
                                 }
                                 else
@@ -157,53 +149,61 @@ else
                                     <p class="text-warning-emphasis">Project not found in any relay!</p>
                                 }
                             }
-                            <p>
-                                Project ID:@indexerData.ProjectIdentifier
-                                <br />
-                                Nostr ID :@(NostrPublicKey.FromHex(indexerData.NostrPubKey).Bech32)
-                            </p>
-                            <button @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)" class="btn btn-primary card-">View</button>
                         </div>
                     </div>
                 </div>
             }
         </div>
-
     }
     else
     {
         @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
         {
-            <div class="card mb-3" style="max-width: 540px;">
-                <div class="row no-gutters">
+            <div class="card mt-4">
+                <div class="row g-0">
                     <div class="col-md-4">
-
-
-                        @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
-                        {
-                            var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                            if (project?.Metadata?.Banner != null)
+                        <div class="img-responsive img-responsive-16by9 position-relative" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                            @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                             {
-
-                                <img src="@project.Metadata.Banner" class="card-img" alt="...">
+                                var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                <div class="card-header card-header-img">
+                                    <img class="img-responsive-item" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                </div>
                             }
-                        }
-
-
-
-
+                        </div>
                     </div>
-                    <div class="col-md-8">
-                        <div class="card-body">
-                            <h5 class="card-title">Card title</h5>
-                            <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
-                            <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+                    <div class="col-md-8 d-flex align-items-center justify-content-center position-relative">
+                        <div class="card-body card-loader loading">
+                           
+                            @if (nostrSearchInProgress)
+                            {
+                                <div class="p-3">
+                                    <div class="loader-small m-auto"></div>
+                                </div>
+                            }
+                            else
+                            {
+                                @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                                {
+                                    var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                    if (project?.Metadata != null)
+                                    {
+                                        <h5 class="card-title text-center" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
+                                        <p class="card-text text-center line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@((MarkupString)project.Metadata.About)</p>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-warning-emphasis">Project not found in any relay!</p>
+                                }
+                            }
                         </div>
                     </div>
                 </div>
             </div>
         }
     }
+
 }
 
 
