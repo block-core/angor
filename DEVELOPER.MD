@@ -8,33 +8,54 @@
 <br>
 
 ## Table of Contents
-1) Installation
-2) Contributing
-3) Cypress
+1. [Installation](#installation)
+2. [Contributing](#contributing)
+3. [Running Cypress](#running-cypress)
 
+## Installation
 
-## Installation and running guide 
+To run Angor locally, you need to download .NET 8.0.4 or higher. You can download it from [here](https://dotnet.microsoft.com/en-us/download/dotnet/8.0).
 
-<h3>To run angor locally, you need to download dotnet 8.0.4 or higher</h3>
-<code> https://dotnet.microsoft.com/en-us/download/dotnet/8.0 </code>
+### Steps:
+1. Clone the repository:
+    ```bash
+    $ git clone https://github.com/block-core/angor.git
+    ```
 
-<code> $ git clone https://github.com/block-core/angor.git </code>
-Enter the project and go to the terminal
-<code> cd src\Angor\Client </code>
-<code> dotnet build </code>
-<code> dotnet run </code>
+2. Navigate to the project directory:
+    ```bash
+    $ cd angor/src/Angor/Client
+    ```
 
-Now you should have your local host running at http://localhost:5062/
+3. Build the project:
+    ```bash
+    $ dotnet build
+    ```
 
-## Contribution 
+4. Run the project:
+    ```bash
+    $ dotnet run
+    ```
+
+Now you should have Angor running locally at [http://localhost:5062/](http://localhost:5062/).
+
+## Contributing
+
 We welcome contributions to the codebase. Please maintain the same code style as the existing code.
 
+## Running Cypress
 
-## Running cypress
-To run cypress you need to:
-1) Go the base of your project and run
-<code> npm install </code>
+To run Cypress, follow these steps:
 
-2) Have your angor locally running  
-3) Run the command 
-<code> npx cypress open </code>
+1. Install dependencies:
+    ```bash
+    $ npm install
+    ```
+
+2. Ensure that Angor is running locally.
+
+3. Open Cypress:
+    ```bash
+    $ npx cypress open
+    ```
+
