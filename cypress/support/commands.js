@@ -5,7 +5,8 @@ Cypress.Commands.add('visitLocalhost', () => {
     cy.visit('http://localhost:5062/');
     // cy.log('Hello world');
     console.log('hello world');
-    cy.wait(10000);
+    // cy.wait(10000);
+    cy.get('#youtube-video', { timeout: 30000 }).should('be.visible');
     // cy.get('.loader-wrapper').should('not.exist'); // Wait for loader to disappear
     // cy.get('.loader-wrapper', { timeout: 30000 }).should('not.exist');
     // cy.document().then(doc => {
