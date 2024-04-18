@@ -3,13 +3,16 @@ Cypress.Commands.add('visitLocalhost', () => {
     // Set the viewport to a desktop resolution
     cy.viewport(1280, 720); // You can adjust the width and height as needed
     cy.visit('http://localhost:5062/');
-    cy.log('Hello world');
+    // cy.log('Hello world');
+    console.log('hello world');
+    cy.wait(10000);
     // cy.get('.loader-wrapper').should('not.exist'); // Wait for loader to disappear
-    cy.document().then(doc => {
-        cy.log('All elements on the page:');
-        cy.log(doc.body.outerHTML);
-      });
-    waitForWasmLoading();
+    // cy.get('.loader-wrapper', { timeout: 30000 }).should('not.exist');
+    // cy.document().then(doc => {
+    //     cy.log('All elements on the page:');
+    //     cy.log(doc.body.outerHTML);
+    //   });
+    // waitForWasmLoading();
     cy.log('Finished waiting wasm loading');
     cy.get('span[role="button"].material-icons.opacity-10.btn-angor.fs-3#theme-icon').should('be.visible').click(); // Interact with the theme icon
 }); 

@@ -55,7 +55,6 @@ jobs:
 
   cypress-run:
     runs-on: ubuntu-22.04
-    needs: buildAndUnitTest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,3 +67,22 @@ jobs:
         with:
           build: npm run build
           start: npm start
+          browser: electron
+
+  cypress-run-headed:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Print Working Directory
+        run: pwd
+      - name: Install Dependencies
+        run: npm install
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          build: npm run build
+          start: npm start
+          browser: chrome
+          headless: false
+
