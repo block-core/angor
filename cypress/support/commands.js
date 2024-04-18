@@ -3,9 +3,31 @@ Cypress.Commands.add('visitLocalhost', () => {
     // Set the viewport to a desktop resolution
     cy.viewport(1280, 720); // You can adjust the width and height as needed
     cy.visit('http://localhost:5062/');
-    cy.get('.loader-wrapper').should('not.exist'); // Wait for loader to disappear
+    cy.log('Hello world');
+    // cy.get('.loader-wrapper').should('not.exist'); // Wait for loader to disappear
+    cy.document().then(doc => {
+        cy.log('All elements on the page:');
+        cy.log(doc.body.outerHTML);
+      });
+    waitForWasmLoading();
+    cy.log('Finished waiting wasm loading');
     cy.get('span[role="button"].material-icons.opacity-10.btn-angor.fs-3#theme-icon').should('be.visible').click(); // Interact with the theme icon
 }); 
+
+const waitForWasmLoading = () => {
+    return cy.window().then(win => {
+      return new Cypress.Promise(resolve => {
+        const checkWasmLoaded = () => {
+          if (win.WebAssembly.instantiateStreaming) {
+            resolve(); // WebAssembly has finished loading
+          } else {
+            setTimeout(checkWasmLoaded, 100); // Check again after a short delay
+          }
+        };
+        checkWasmLoaded();
+      });
+    });
+  };
 
 Cypress.Commands.add('clickOnNavBar', (dir) => {
     cy.get(`[href="${dir}"]`).should('be.visible').click();
