@@ -3,7 +3,7 @@ Cypress.Commands.add('visitLocalhost', () => {
     // Set the viewport to a desktop resolution
     cy.viewport(1280, 720); // You can adjust the width and height as needed
     cy.visit('http://localhost:5062/');
-    //  cy.get('.loader').should('not.exist'); // Wait for loader to disappear
+    cy.get('#youtube-video', { timeout: 15000 }).should('be.visible');
     cy.get('span[role="button"].material-icons.opacity-10.btn-angor.fs-3#theme-icon').should('be.visible').click(); // Interact with the theme icon
 }); 
 
