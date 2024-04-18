@@ -30,7 +30,7 @@ Please visit and review the [Custom License](/LICENSE) before contributing.
 
 ## Contributing
 
-Check out [this page](/DEVELOPER.MD)
+Check out [this page](/CONTRIBUTING.MD)
 
 ## Contact
 * Discord: [https://www.blockcore.net/discord](https://www.blockcore.net/discord)
