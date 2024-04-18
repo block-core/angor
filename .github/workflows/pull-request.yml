@@ -68,6 +68,7 @@ jobs:
           build: npm run build
           start: npm start
           browser: electron
+          headless: true
 
   cypress-run-headed:
     runs-on: ubuntu-22.04
