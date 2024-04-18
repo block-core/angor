@@ -33,15 +33,15 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-FBuylWgkaLa5+1itUamTXZ5YQ1peOvLoumC6FjrFgHs=",
+      "hash": "sha256-PErUhf0EBC9TJwX5sSVh+Hb\/D7G6ZKCGf0Zs2\/+W7Q8=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-+1JY83nMFqwEX8fIWw4fIVtKCyrUkNx174t5f1WTmyI=",
+      "hash": "sha256-ajMfoi2vrHhTiZa\/cxZT9T1qil7LPL0ali5pD+iIZwc=",
       "url": "_framework\/Angor.Client.wasm"
     },
     {
-      "hash": "sha256-wJonNLduWgH8a1IHpFxPgYXXWtVDyS+2jv6B\/O2PKeQ=",
+      "hash": "sha256-Apa4domDFPKYNAaDg54Rp82w5cOpT1vnzJPoR26M6Fk=",
       "url": "_framework\/Angor.Shared.wasm"
     },
     {
@@ -81,7 +81,7 @@
       "url": "_framework\/Microsoft.AspNetCore.Components.Forms.wasm"
     },
     {
-      "hash": "sha256-IDWyEgS+roliObG\/RrV2EL8n\/wD9Wbe7weN8wBz2Cco=",
+      "hash": "sha256-WFZVx+1ac6NLAf5ED73MeBHw7j7Eom2P+oUEhk3QRQY=",
       "url": "_framework\/Microsoft.AspNetCore.Components.wasm"
     },
     {
@@ -365,7 +365,7 @@
       "url": "_framework\/System.ObjectModel.wasm"
     },
     {
-      "hash": "sha256-EAXV6JRtYRD+O0ZUDH8pHdEqqdxQ+LqsjlCo1uDmmwA=",
+      "hash": "sha256-YzN6PE2KQx2eGIUUPRNr\/we8SrHToxfU1OBTyCjFm3M=",
       "url": "_framework\/System.Private.CoreLib.wasm"
     },
     {
@@ -517,11 +517,11 @@
       "url": "Angor.Client.styles.css"
     },
     {
-      "hash": "sha256-dqGyBzf5Mem9NVYkUpIeahPc+y9byOF6zX3EvbZcpZ0=",
+      "hash": "sha256-VB1U6lq6ZQmTjWWK7jidvld+972Uhq3aBboI5EI6K2w=",
       "url": "assets\/css\/app.css"
     },
     {
-      "hash": "sha256-k2t2Z8e3TVUuzO2FThWJ13RqxGBgUAIHx4ArXizcY1k=",
+      "hash": "sha256-2065+QmlsYLmdHEf2Mbp3HKsjJ5cGXVwQAG2KWUpuOw=",
       "url": "assets\/css\/dashboard.css"
     },
     {
@@ -553,6 +553,10 @@
       "url": "assets\/img\/bitcoin.svg"
     },
     {
+      "hash": "sha256-f0nGBx8ePaUGd9Ev9RXTVoNqmsF77TM0CemtDvEj0sI=",
+      "url": "assets\/img\/browse-icon-192.png"
+    },
+    {
       "hash": "sha256-FAqMFN0hwuzVdes5qkygkN6EXrZSL8VI1DNEChpcpgg=",
       "url": "assets\/img\/desktop-installation-screenshot.png"
     },
@@ -573,7 +577,23 @@
       "url": "assets\/img\/mobile-installation-screenshot.png"
     },
     {
-      "hash": "sha256-FY3AWgNWrFpUriPIAq3xnazlqkpuC9beKlh4xwaITiw=",
+      "hash": "sha256-lN9Y4U5JdNdnPHFvCN+wL4pR2cQJFqcsPDtoUdSKUDA=",
+      "url": "assets\/img\/no-image.jpg"
+    },
+    {
+      "hash": "sha256-LIzFrWHUFTXsth14GCzXa5CN2+uZODdlAxjvnUIZmZg=",
+      "url": "assets\/img\/no-image.png"
+    },
+    {
+      "hash": "sha256-czPHYE0quC51u9hw0Yf4Ow70RUCrAuv7RJbPcmJ5Udo=",
+      "url": "assets\/img\/settings-icon-192.png"
+    },
+    {
+      "hash": "sha256-lyISlhOP1aDgGPX9iUHovg496ArIfw2KialnvZlwGFk=",
+      "url": "assets\/img\/wallet-icon-192.png"
+    },
+    {
+      "hash": "sha256-zOM8RmpHx91XzG\/Ep4uNoAqSv2wgQYs1BlgoHeEEGJk=",
       "url": "assets\/js\/app.js"
     },
     {
@@ -581,7 +601,7 @@
       "url": "assets\/js\/appUpdate.js"
     },
     {
-      "hash": "sha256-lCZW7f5qPRWEncvg6buWi3op3Tv2AKA85+rajesacAk=",
+      "hash": "sha256-mvcI1rkL5qPwDWaYOkGEqULUXdKLkPP4cWjub5jzbTw=",
       "url": "index.html"
     },
     {
@@ -593,7 +613,7 @@
       "url": "lib\/js-base64\/LICENSE.md"
     },
     {
-      "hash": "sha256-uI5EnXUjm46bp0nMNp4LRPcrWDg7yZB5i8usLQLAPpY=",
+      "hash": "sha256-L81lkcFg0Yg960DEs2im2iKXmWoxfRfslzURZ6eNQuA=",
       "url": "manifest.json"
     },
     {
@@ -609,5 +629,5 @@
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "L6zlouM9"
+  "version": "DnRQWOFU"
 };
