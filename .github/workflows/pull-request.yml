@@ -47,5 +47,24 @@ jobs:
     - name: Restore
       run: dotnet restore ${{env.SOLUTION_PATH}}
 
+    - name: Build
+      run: dotnet build -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
+
     - name: Unit Test
       run: dotnet test -v=normal -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
+
+  cypress-run:
+    runs-on: ubuntu-22.04
+    needs: buildAndUnitTest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Print Working Directory
+        run: pwd
+      - name: Install Dependencies
+        run: npm install
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          build: npm run build
+          start: npm start
