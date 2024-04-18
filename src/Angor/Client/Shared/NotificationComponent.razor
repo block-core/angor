@@ -1,22 +1,26 @@
 ﻿@using Angor.Shared.Models
 @using Angor.Shared.Services
 
-@inject IJSRuntime Js;
 @inject ILogger<NotificationComponent> Logger;
 @inject INetworkService networkService;
 
-<div class="row mt-4">
-    <div class="col">
 
-        @if (isLoading)
-        {
+
+@if (isLoading)
+{
+    <div class="row">
+        <div class="col">
             <div class="loader-wrapper">
                 <div class="loader"></div>
             </div>
-        }
+        </div>
+    </div>
+}
 
-        @if (!string.IsNullOrEmpty(notificationMessage))
-        {
+@if (!string.IsNullOrEmpty(notificationMessage))
+{
+    <div class="row z-index-3">
+        <div class="col">
             <div class="row justify-content-center">
                 <div class="col-lg-8 col-md-10">
                     <div class="alert alert-info fixed-bottom w-70 d-flex justify-content-between align-items-center" role="alert" style="left: 20%; right: 20%">
@@ -25,10 +29,14 @@
                     </div>
                 </div>
             </div>
-        }
+        </div>
+    </div>
+}
 
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="row">
+        <div class="col">
             <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
                 <div class="modal-dialog modal-dialog-centered modal-sm">
                     <div class="modal-content">
@@ -48,10 +56,11 @@
                     </div>
                 </div>
             </div>
-        }
-
+        </div>
     </div>
-</div>
+}
+
+
 <div id="snackbar"></div>
 @code {
     private string notificationMessage;
@@ -93,18 +102,6 @@
         StateHasChanged();
     }
 
-    public async Task ShowSnackbar(string message, int delaySeconds = 3)
-    {
-        try
-        {
-            await Js.InvokeVoidAsync("angor.showSnackbar", message, delaySeconds);
-        }
-        catch (Exception e)
-        {
-            Logger.LogError(e, e.Message);
-        }
-    }
-
     public async Task<OperationResult> LongOperation(Func<Task<OperationResult>> action)
     {
         OperationResult? res = default(OperationResult);
@@ -136,7 +133,7 @@
         }
         else
         {
-            if (res is {Success: false })
+            if (res is { Success: false })
             {
                 Logger.LogError(res.Message);
                 ShowErrorMessage($"Error: {res.Message}");
