@@ -1,7 +1,7 @@
 import '../support/commands'
 import {Navbar,WALLET_DATA_CY} from '../support/enums'
 
-describe('template spec', () => {
+describe('walletSpec', { retries: 3 }, () => {
   beforeEach(() => {
     cy.visitLocalhost();
   });
