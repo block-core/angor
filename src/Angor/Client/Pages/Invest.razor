@@ -76,7 +76,7 @@
                         <InputNumber class="form-control" id="investmentAmount" @bind-Value="@Investment.InvestmentAmount" @oninput="UpdateStagesBreakdown" />
                     </div>
 
-                    <div class="form-check">
+                  @*   <div class="form-check">
                         <InputCheckbox class="form-check-input" id="isSeeder" @bind-Value="@Investment.IsSeeder" disabled="@(!IsSeederTimePassed)" />
                         <label class="form-check-label" for="isSeeder">
                             Do you want to invest as a Seeder?
@@ -88,7 +88,7 @@
                         <div class="alert alert-info mt-2">
                             <strong>Seeder Requirements:</strong> Here are the requirements for a Seeder...
                         </div>
-                    }
+                    } *@
 
                     <button type="submit" class="btn btn-primary mt-3" disabled="@buildSpinner">
                         @if (buildSpinner)
@@ -125,8 +125,8 @@
                             <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
                             <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
 
-                            <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
-                            <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
+                            <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(signedTransactionFee).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                            <p class="mb-1"><strong>Angor fee:</strong> @signedTransaction?.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                         
                             <hr>
 
@@ -268,6 +268,7 @@
     private bool showCreateModal;
     Transaction? signedTransaction;
     Transaction unSignedTransaction;
+    long signedTransactionFee;
 
     private FeeData feeData = new();
 
@@ -504,6 +505,7 @@
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
+            signedTransactionFee = _WalletOperations.CalculateFee(accountInfo, signedTransaction);
         }
         catch (Exception e)
         {
@@ -529,12 +531,22 @@
             {
                 if (res <= feeData.FeeEstimations.Fees.Count)
                 {
+                    if (!passwordComponent.HasPassword())
+                    {
+                        showCreateModal = false;
+                        notificationComponent.ShowErrorMessage("Wallet password expired");
+                        return;
+                    }
+
                     var words = await passwordComponent.GetWalletAsync();
+
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
                    
                     var accountInfo = storage.GetAccountInfo(network.Name);
                     
                     signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+
+                    signedTransactionFee = _WalletOperations.CalculateFee(accountInfo, signedTransaction);
 
                     StateHasChanged();
                 }
@@ -572,6 +584,12 @@
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
 
             var accountInfo = storage.GetAccountInfo(network.Name);
+
+            if (!passwordComponent.HasPassword())
+            {
+                notificationComponent.ShowErrorMessage("Wallet password expired");
+                return;
+            }
 
             var words = await passwordComponent.GetWalletAsync();
             var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, accountInfo.InvestmentsCount + 1);
