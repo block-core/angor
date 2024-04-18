@@ -23,10 +23,8 @@
 @inherits BaseComponent
 
 <PageTitle>Wallet and balances</PageTitle>
-
-<div class="container mb-4">
-    <NotificationComponent @ref="notificationComponent" />
-    <PasswordComponent @ref="passwordComponent" />
+<NotificationComponent @ref="notificationComponent" />
+<PasswordComponent @ref="passwordComponent" />
     <div class="row">
         <div class="card card-body">
             <div class="d-flex align-items-center justify-content-between">
@@ -94,6 +92,9 @@
         @if (walletWordsCreateModal)
         {
             <!-- Wallet Words Create Modal -->
+        <div class="modal-wrapper">
+
+         
             <div class="modal fade show d-block">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -205,6 +206,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         }
     }
     else
@@ -680,8 +682,7 @@
             </div>
         </div>
     }
-</div>
-
+ 
 
 
 @code {
@@ -818,14 +819,14 @@
     private async Task CreateWalletAsync()
     {
         if (string.IsNullOrEmpty(newWalletWords))
-        {
-            await notificationComponent.ShowSnackbar("New wallet words are null or empty");
+        {  
+            notificationComponent.ShowNotificationMessage("New wallet words are null or empty");
             //throw new ArgumentNullException(nameof(newWalletWords));
             return;
         }
         if (string.IsNullOrEmpty(newWalletPassword))
         {
-            notificationComponent.ShowSnackbar("New wallet password is null or empty");
+            notificationComponent.ShowNotificationMessage("New wallet password is null or empty");
             //throw new ArgumentNullException(nameof(newWalletPassword));
             return;
         }
@@ -879,7 +880,7 @@
     {
         if (string.IsNullOrEmpty(showWalletPassword))
         {
-            notificationComponent.ShowSnackbar("Wallet password is null or empty");
+            notificationComponent.ShowNotificationMessage("Wallet password is null or empty");
             //throw new ArgumentNullException(nameof(showWalletPassword));
             return;
         }
@@ -965,8 +966,8 @@
             return;
         }
 
-        await _clipboardService.WriteTextAsync(address);
-        await notificationComponent.ShowSnackbar("Copied to clipboard!", 3);
+        await _clipboardService.WriteTextAsync(address); 
+        notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
     }
 
     private async Task RefreshFee()
