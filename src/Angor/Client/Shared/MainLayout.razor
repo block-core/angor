@@ -9,6 +9,7 @@
 @inject INetworkConfiguration _networkConfiguration
 @inject INetworkService _networkService
 @inject NavigationManager _navManager
+@inject NavMenuState NavMenuState;
 
 <div class="@($"{(isDarkTheme ? "dark-version" : "")}") sidenav-show bg-gray-100 @sidenavClass ">
     <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 b-shadow bg-gradient-dark overflow-x-hidden" id="sidenav-main">
@@ -85,6 +86,8 @@
         await InitializeAppVersion();
         InitializeNetworkConfiguration();
         await LoadThemeFromStorage();
+
+        NavMenuState.OnChange += NavMenuStateOnOnChange;
     }
 
     private async Task InitializeAppVersion()
@@ -100,10 +103,21 @@
     {
         _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower());
 
+        SetNetworkText();
+    }
+
+    private void SetNetworkText()
+    {
         if (_networkConfiguration.GetNetwork().NetworkType != NetworkType.Mainnet)
             networkText = "(testnet)";
         else
             networkText = "(mainnet)";
+    }
+
+    private void NavMenuStateOnOnChange()
+    {
+        SetNetworkText();
+        StateHasChanged();
     }
 
     private async Task LoadThemeFromStorage()
@@ -187,7 +201,6 @@
             isSidenavHidden = true;  
         }
     }
-
 
 
 
