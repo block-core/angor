@@ -1011,3 +1011,10 @@ tr[style*="cursor: pointer;"] {
     height: 230px; 
     object-fit: cover; 
 }
+.z-index-4 {
+    z-index: 1000001 !important;
+}
+.alert-message {
+    margin: auto;
+    bottom: 20px;
+}
