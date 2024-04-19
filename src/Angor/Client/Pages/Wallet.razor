@@ -112,13 +112,11 @@
                             }
                             else
                             {
-                                <div>
-                                    <label>@createWalletDescription:</label>
-                                </div>
+                     
 
                                 @if (isNewWallet)
                                 {
-                                    <div class="mb-3">
+                                    <div class="mb-2">
                                         <button class="btn btn-primary w-100" @onclick="GenerateNewWalletWords">
                                             <div class="d-flex align-items-center justify-content-center">
                                                 <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">
@@ -130,19 +128,17 @@
                                     </div>
                                 }
 
-                                <div class="mb-3">
-                                    <textarea class="form-control" readonly="@isNewWallet" rows="2" @bind="newWalletWords"></textarea>
+                                <div class="mb-2">
+                                    <textarea class="form-control" readonly="@isNewWallet" rows="2" @bind="newWalletWords" placeholder="@createWalletDescription"></textarea>
                                 </div>
 
-                                <div class="mb-3">
-                                    <label>Additional Passphrase (optional):</label>
-                                    <input type="text" class="form-control" @bind="newWalletWordsPassphrase" />
+                                <div class="mb-2">
+                                    <input type="text" class="form-control" @bind="newWalletWordsPassphrase" placeholder="Additional Passphrase (optional)" />
                                 </div>
 
-                                <div class="mb-3">
-                                    <label>Please enter a password for your wallet:</label>
-                                    <div class="input-group mb-3">
-                                        <input type="@passwordInputType" class="form-control" @bind="newWalletPassword" />
+                                <div class="mb-2">
+                                     <div class="input-group mb-3">
+                                        <input type="@passwordInputType" class="form-control" @bind="newWalletPassword" placeholder="Enter a password for your wallet" />
                                         <button class="btn btn-primary" type="button" @onclick="TogglePasswordVisibility">
                                             @if (passwordToggleText == "Show")
                                             {
@@ -158,21 +154,21 @@
                                             }
                                         </button>
                                     </div>
-                                    <div class="mb-3">
+                                    <div class="mb-2">
                                         <div class="card">
-                                            <div class="card-header">
+                                            <div class="card-header p-2">
                                                 <div class="d-flex align-items-center text-warning">
-                                                    <span class="material-icons opacity-10 me-1 fs-3">
+                                                    <span class="material-icons opacity-10 me-2 fs-3">
                                                         warning
                                                     </span>
                                                     <span>By continuing, you confirm understanding that:</span>
                                                 </div>
                                             </div>
-                                            <div class="card-body pb-0 pt-0">
-                                                <p>You've backed up your wallet words securely, as losing them means losing access to your wallet.</p>
+                                            <div class="card-body pb-0 pt-0 ps-3 pe-3">
+                                                <p class="mb-1">You've backed up your wallet words securely, as losing them means losing access to your wallet.</p>
                                                 <p class="mb-0">The password unlocks your wallet only on this device and cannot be recovered by Angor.</p>
                                             </div>
-                                            <div class="card-footer">
+                                            <div class="card-footer pb-2 pt-2 ps-3 pe-3">
                                                 <div class="form-check">
                                                     <input class="form-check-input border mt-0" type="checkbox" id="backupConfirmationCheckbox" data-cy="wallet-checkbox" @bind="backupConfirmation">
                                                     <label class="form-check-label mb-0" for="backupConfirmationCheckbox">
@@ -181,7 +177,7 @@
                                                 </div>
                                                 @if (showBackupConfirmationError)
                                                 {
-                                                    <div class="alert alert-danger text-white mt-3" role="alert">
+                                                    <div class="alert alert-danger text-white mt-2" role="alert">
                                                         Please confirm that you have backed up your wallet words and password.
                                                     </div>
                                                 }
