@@ -33,15 +33,15 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-yj3iYYtI5YGQqqixxg8iaZoocUdTb\/TE+WKP7IdxWBA=",
+      "hash": "sha256-QfZkQKSYJkiDgqiRXvkQX3UXgkqcWlP6ButSn02VMtA=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-Q9zt9Lu9FN1xtok2LzGxdOM0El\/g6hZWmtOMlCUNHeU=",
+      "hash": "sha256-TqsXZ4D+l3RtSEc3GxqMVz0ahXLoojP+mHFkzfkDCgM=",
       "url": "_framework\/Angor.Client.wasm"
     },
     {
-      "hash": "sha256-OikpikogH2U6SawUFIT9QyQWn1cNL1jdDpiNXQSy7Yg=",
+      "hash": "sha256-wfdkXV9qETS96Ul9cz1e14vLo7B+KsCBMbVqA7wxrss=",
       "url": "_framework\/Angor.Shared.wasm"
     },
     {
@@ -85,7 +85,7 @@
       "url": "_framework\/Microsoft.AspNetCore.Components.wasm"
     },
     {
-      "hash": "sha256-Q1vaaGms9ezi70Fl3QjUObEU\/ULmH0goTk4jm9a\/Kv8=",
+      "hash": "sha256-xxP2hIclLhBNFyOLUt702g1O0RB0\/TWozn+aFxvcMEg=",
       "url": "_framework\/Microsoft.AspNetCore.Components.Web.wasm"
     },
     {
@@ -297,7 +297,7 @@
       "url": "_framework\/System.Linq.Expressions.wasm"
     },
     {
-      "hash": "sha256-qvRWHtFiDjDWXDI\/mMXFb6RJp2dvSzrN4rH560BHdKQ=",
+      "hash": "sha256-4iIuHgYSaCv1JQB1OJJO7x\/wZQot8tyzOQE5a81sxaQ=",
       "url": "_framework\/System.Linq.wasm"
     },
     {
@@ -629,5 +629,5 @@
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "RXVM08ZT"
+  "version": "iQsCYP\/p"
 };
