@@ -81,6 +81,11 @@ namespace Angor.Shared.Services
                 return null;
             }
 
+            if (projectId.Length <= 1)
+            {
+                return null;
+            }
+
             var indexer = _networkService.GetPrimaryIndexer();
             var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}");
             _networkService.CheckAndHandleError(response);
