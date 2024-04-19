@@ -646,6 +646,8 @@
             investSpinner = false;
             passwordComponent.ClearPassword();
         }
+
+        StateHasChanged();
     }
 
     private async Task HandleSignatureReceivedAsync(string? nostrPrivateKeyHex, string encryptedSignatures)
