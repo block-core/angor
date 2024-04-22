@@ -10,7 +10,7 @@ describe('walletSpec', { retries: 3 }, () => {
     cy.clickOnNavBar(Navbar.WALLET)
     cy.clickElementWithDataCy(WALLET_DATA_CY.CREATE_WALLET)
     cy.clickElementWithDataCy(WALLET_DATA_CY.GENERATE_WALLET_WORDS)
-    //cy.clickSubmitButton('New wallet password is null or empty'); //add this line back when blur fixed
+    // cy.clickSubmitButton('New wallet password is null or empty'); //add this line back when blur fixed
     cy.typeTextInElement('password','abc123')
     cy.clickOnCheckBoxByDataCy(WALLET_DATA_CY.WALLET_CHECKBOX);
     cy.clickSubmitButton();

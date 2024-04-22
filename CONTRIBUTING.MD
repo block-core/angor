@@ -58,4 +58,8 @@ To run Cypress, follow these steps:
     ```bash
     $ npx cypress open
     ```
+4. If you want to run the test in your terminal you can also Run cypress in headless mode:
+    ```bash
+    $ npx cypress run
+    ```
 
