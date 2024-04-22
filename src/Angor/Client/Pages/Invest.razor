@@ -556,6 +556,14 @@
 
     private async Task Send()
     {
+        if (!passwordComponent.HasPassword())
+        {
+            investSpinner = false;
+            showCreateModal = false;
+            notificationComponent.ShowErrorMessage("Wallet password expired");
+            return;
+        }
+
         investSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
@@ -584,12 +592,6 @@
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
 
             var accountInfo = storage.GetAccountInfo(network.Name);
-
-            if (!passwordComponent.HasPassword())
-            {
-                notificationComponent.ShowErrorMessage("Wallet password expired");
-                return;
-            }
 
             var words = await passwordComponent.GetWalletAsync();
             var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, accountInfo.InvestmentsCount + 1);

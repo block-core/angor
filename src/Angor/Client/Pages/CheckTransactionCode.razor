@@ -190,9 +190,11 @@ else
         recoveryTransaction = SeederTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(context.ProjectInfo, transaction, testAddress.PubKey.ToHex(), signatures, Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()), 
             Encoders.Hex.EncodeData(secret.ToBytes()));
 
-        founderTransaction = FounderTransactionActions.SpendFounderStage(context.ProjectInfo, new List<string>(){ transaction.ToHex()}, 1,
+        var founderTransactionRes = FounderTransactionActions.SpendFounderStage(context.ProjectInfo, new List<string>(){ transaction.ToHex()}, 1,
             testAddress.ScriptPubKey , privateFounderKey.PrivateKey.ToHex(network.Consensus.ConsensusFactory), fee.First());
-        
+
+        founderTransaction = founderTransactionRes.Transaction;
+
         transaction = _walletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transaction, walletWords, localAccountInfo, fee.First());
         
         ShowTransaction = true;

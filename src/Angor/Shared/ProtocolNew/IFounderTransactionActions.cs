@@ -9,7 +9,7 @@ public interface IFounderTransactionActions
     SignatureInfo SignInvestorRecoveryTransactions(ProjectInfo projectInfo, string investmentTrxHex, 
         Transaction recoveryTransaction, string founderPrivateKey);
 
-    Transaction SpendFounderStage(ProjectInfo projectInfo, IEnumerable<string> investmentTransactionsHex,
+    TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<string> investmentTransactionsHex,
         int stageNumber, Script founderRecieveAddress, string founderPrivateKey,
         FeeEstimation fee);
 

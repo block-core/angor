@@ -233,7 +233,7 @@ namespace Angor.Test
                 funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderKey.ToBytes())
                 , _expectedFeeEstimation);
 
-            TransactionValidation.ThanTheTransactionHasNoErrors(founderTrxForSeeder1Stage1,
+            TransactionValidation.ThanTheTransactionHasNoErrors(founderTrxForSeeder1Stage1.Transaction,
                 founderContext.InvestmentTrasnactionsHex.Select(_ => Networks.Bitcoin.Testnet().CreateTransaction(_))
                     .SelectMany(_ => _.Outputs.AsCoins().Where(c => c.Amount > 0)));
         }
