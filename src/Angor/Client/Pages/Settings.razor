@@ -17,6 +17,7 @@
 @inherits BaseComponent
 <NotificationComponent @ref="notificationComponent" />
 
+@* Settings *@
 <div class="row">
     <div class="card card-body">
         <div class="d-flex align-items-center justify-content-between">
@@ -30,7 +31,7 @@
                 </div>
             </div>
 
-            <button class="btn btn-info" @onclick="Refresh" disabled="@refreshSpinner">
+            <button class="btn btn-success" @onclick="Refresh" disabled="@refreshSpinner">
                 @if (refreshSpinner)
                 {
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -45,10 +46,7 @@
     </div>
 </div>
 
-
-
-
-
+@* Change Network *@
 <div class="row mt-4">
     <div class="card card-body">
         <div class="d-flex align-items-center justify-content-between">
@@ -79,7 +77,7 @@
                                     </div>
                                     <div class="modal-body modal-body-scroll">
                                         <div class="alert alert-danger" role="alert">
-                                            <h5>This will wipe your wallet as well!</h5>
+                                            <h5>This will wipe your wallet!</h5>
                                         </div>
 
                                         <div class="card">
@@ -136,90 +134,30 @@
     </div>
 </div>
 
-
-
-
-
+@* Explorer *@
 <div class="row mt-4">
     <div class="card card-body">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">delete_forever</span>
+                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">search</span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
-                        Wipe Storage
+                        Explorer
                     </h5>
                     <p class="mb-0 mt-2 font-weight-normal text-sm">
-                        This will wipe your wallet as well!
+                        Explorer url: @_networkConfiguration.GetDefaultExplorerUrl().First().Url
                     </p>
                 </div>
             </div>
             <div>
-
-                <button class="btn btn-danger" @onclick="() => showWipeallModal = true">Wipe All Storage</button>
-
-
-                @if (showWipeallModal)
-                {
-                    <div class="modal-wrapper">
-                        <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="coinControlModalLabel">Wipe Storage</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body modal-body-scroll">
-                                        <div class="card">
-                                            <div class="card-header p-2">
-                                                <div class="d-flex align-items-center text-warning">
-                                                    <span class="material-icons opacity-10 me-2 fs-3">
-                                                        warning
-                                                    </span>
-                                                    <span>Warning</span>
-                                                </div>
-                                            </div>
-                                            <div class="card-body pb-0 pt-0 ps-3 pe-3">
-                                                <p class="mb-0">By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
-                                            </div>
-                                            <div class="card-footer pb-2 pt-2 ps-3 pe-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
-                                                    <label class="form-check-label mb-0" for="confirmWipeCheckbox">
-                                                        Confirm?
-                                                    </label>
-                                                </div>
-                                                @if (showConfirmWipeMessage)
-                                                {
-                                                    <div class="alert alert-danger text-white mt-2" role="alert">
-                                                        Please tick the box to wipe all storage!
-                                                    </div>
-                                                }
-
-                                            </div>
-                                        </div>
-
-
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button class="btn btn-danger" @onclick="WipteAllData">Wipe Storage</button>
-
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false">Close</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
-
+                <a class="btn btn-success" href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">Open Explorer</a>
             </div>
         </div>
     </div>
 </div>
 
 
-
-
+@* Indexer *@
 <div class="row mt-4">
 
     <div class="card card-body">
@@ -233,8 +171,6 @@
                 </div>
             </div>
         </div>
-
-
         <form @onsubmit="AddIndexer">
             <div class="input-group mb-3">
                 <input type="text" @bind-value="newIndexerLink" class="form-control" placeholder="Enter new indexer link" aria-label="Enter new indexer link" aria-describedby="button-addon">
@@ -279,13 +215,9 @@
 </div>
 
 
-
+@* Nostr Relays *@
 <div class="row mt-4">
-
-
-
     <div class="card card-body">
-
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center">
                 <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">wifi</span>
@@ -342,24 +274,73 @@
 
 </div>
 
-
-
+@* Wipe Storage *@
 <div class="row mt-4">
-    <div class="card card-body">
+    <div class="card card-body border-danger border-3">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">search</span>
+                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">delete_forever</span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
-                        Explorer
+                        Wipe Storage
                     </h5>
                     <p class="mb-0 mt-2 font-weight-normal text-sm">
-                        Explorer url: @_networkConfiguration.GetDefaultExplorerUrl().First().Url
+                        This will wipe your wallet!
                     </p>
                 </div>
             </div>
             <div>
-                <a class="btn btn-success" href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">Open Explorer</a>
+                <button class="btn btn-danger" @onclick="() => showWipeallModal = true">Wipe All Storage</button>
+                @if (showWipeallModal)
+                {
+                    <div class="modal-wrapper">
+                        <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="coinControlModalLabel">Wipe Storage</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body modal-body-scroll">
+                                        <div class="card">
+                                            <div class="card-header p-2">
+                                                <div class="d-flex align-items-center text-warning">
+                                                    <span class="material-icons opacity-10 me-2 fs-3">
+                                                        warning
+                                                    </span>
+                                                    <span>Warning</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-body pb-0 pt-0 ps-3 pe-3">
+                                                <p class="mb-0">By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
+                                            </div>
+                                            <div class="card-footer pb-2 pt-2 ps-3 pe-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                                    <label class="form-check-label mb-0" for="confirmWipeCheckbox">
+                                                        Confirm?
+                                                    </label>
+                                                </div>
+                                                @if (showConfirmWipeMessage)
+                                                {
+                                                    <div class="alert alert-danger text-white mt-2" role="alert">
+                                                        Please tick the box to wipe all storage!
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button class="btn btn-danger" @onclick="WipteAllData">Wipe Storage</button>
+
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
             </div>
         </div>
     </div>
