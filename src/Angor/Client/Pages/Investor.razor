@@ -4,14 +4,13 @@
 @using Blockcore.NBitcoin
 @using Angor.Client.Models
 @using Angor.Shared
-@using Angor.Shared
 @using Angor.Shared.Services
-@using Nostr.Client.Messages
-@using System.Text.Json
 @using Nostr.Client.Messages
 @using System.Text.Json
 @using Blockcore.NBitcoin.DataEncoders
 @using Nostr.Client.Keys
+
+@inject IJSRuntime JS
 
 @inject ILogger<Investor> Logger
 @inject IClientStorage storage
@@ -19,8 +18,8 @@
 @inject IWalletStorage _walletStorage
 @inject ICacheStorage SessionStorage
 @inject IIndexerService _IndexerService
-@inject ISignService SignService
-@inject IRelayService RelayService
+@inject ISignService ISignService
+@inject IRelayService IRelayService
 @inject IDerivationOperations DerivationOperations
 
 @inherits BaseComponent
@@ -36,8 +35,10 @@
         <h1 class="mb-4">Invested Portfolio</h1>
         <button class="btn btn-primary" @onclick="ScanForInvestedProjectsAsync">Scan for my projects</button>
         <button class="btn btn-secondary" @onclick="NavigateToPenalties">View Penalties</button>
-    </div>    
-    <NotificationComponent @ref="notificationComponent"/>
+    </div>
+
+    <NotificationComponent @ref="notificationComponent" />
+    <PasswordComponent @ref="passwordComponent" />
     
     <!-- Summary Statistics -->
     <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
@@ -157,135 +158,181 @@
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
 
-    public Dictionary<string, ProjectStats> Stats = new();
-    
     Dictionary<string,ScannedProjectData> scannedProject = new ();
     scanStage? _scanStage;
-    
-    protected override async Task OnInitializedAsync()
+
+    private Dictionary<string, ProjectStats> Stats = new();
+
+    protected override Task OnInitializedAsync()
     {
         hasWallet = _walletStorage.HasWallet();
 
-        if (hasWallet)
-        {
-            var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = SessionStorage.GetUnconfirmedInboundFunds();
+        return hasWallet ? UpdatePortfolioAsync() : Task.CompletedTask;
+    }
 
-            projects = storage.GetInvestmentProjects();
+    private Task UpdatePortfolioAsync()
+    {
+        var accountInfo = storage.GetAccountInfo(network.Name);
+        var unconfirmedInfo = SessionStorage.GetUnconfirmedInboundFunds();
 
-            var abi = new AccountBalanceInfo();
-            abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
+        projects = storage.GetInvestmentProjects();
 
-            TotalFundedProjects = projects.Count;
-            TotalInvested = projects.Sum(s => s.AmountInvested ?? 0);
-            TotalWallet = abi.TotalBalance;
-            TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
+        var abi = new AccountBalanceInfo();
+        abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
 
-            return RefreshBalance();
-        }
-        return Task.CompletedTask;
+        TotalFundedProjects = projects.Count;
+        TotalInvested = projects.Sum(s => s.AmountInvested ?? 0);
+        TotalWallet = abi.TotalBalance;
+        TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
+
+        return RefreshBalance();
     }
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_scanStage == scanStage.ProjectDataLookup)
+        if (javascriptNostrToolsModule == null)
+        {
+            try
             {
-                RelayService.RequestProjectCreateEventsByPubKey(x =>
-                {
-                    var investorProject = scannedProject.FirstOrDefault(p => p.Value.FounderNostrKey == x.Pubkey).Value;
-                    
-                    if (investorProject == null)
-                    {
-                        Logger.LogError(x.Pubkey + "was not found in the scanned project list");
-                        return;
-                    }
+                Logger.LogDebug("load nostr tools");
+    //TODO import the nostr tool module directly to c# class
+                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
+            }
+            catch (JSException e)
+            {
+                Console.WriteLine(e);
+                notificationComponent.ShowErrorMessage(e.Message);
+                return;
+            }
+        }
+        
+        switch (_scanStage)
+        {
+            case scanStage.ProjectDataLookup:
+                GetProjectDetailsFromNostr();
+                break;
+            case scanStage.InvestmentBlockchainLookup:
+                await GetInvestmentBlockchainDataAndUpdateLocalStorage();
+                break;
+            default:
+                return;
+        }
+    }
+    private IJSInProcessObjectReference? javascriptNostrToolsModule;
+    private async Task GetInvestmentBlockchainDataAndUpdateLocalStorage()
+    {
+        var words = await passwordComponent.GetWalletAsync();
+        foreach (var (nostrPubKey, scannedProjectData) in scannedProject)
+        {
+            var investorKey = DerivationOperations.DeriveInvestorKey(words,
+                scannedProjectData.Project!.ProjectInfo.FounderKey ??
+                throw new Exception("Did not get the application specific data"));
 
-                    investorProject.Project ??= new InvestorProject();
+            var result =
+                await _IndexerService.GetProjectInvestmentsAsync(scannedProjectData.Project!.ProjectInfo.ProjectIdentifier,
+                    investorKey);
 
-                    switch (x.Kind)
-                    {
-                        case NostrKind.Metadata:
-                            investorProject.Project.Metadata ??=
-                                JsonSerializer.Deserialize<ProjectMetadata>(x.Content!, Angor.Shared.Services.RelayService.settings);
-                            break;
-                        case NostrKind.ApplicationSpecificData:
-                            if (investorProject.Project.ProjectInfo == null)
-                                investorProject.Project.ProjectInfo = JsonSerializer.Deserialize<ProjectInfo>(x.Content!, Angor.Shared.Services.RelayService.settings) ?? throw new Exception("The project info must be in the application specific data event");
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException($"{x.Kind}");
-                    }
-                },
-                    () =>
-                    {
-                        _scanStage = scanStage.InvestmentBlockchainLookup;
-                        StateHasChanged();
-                    },
-                    scannedProject.Values.Select(x => x.FounderNostrKey).ToArray());
+            if (result != null)
+            {
+                scannedProjectData.Project.TransactionId = result.TransactionId;
+                scannedProjectData.Project.AmountInvested = result?.TotalAmount;
+                 //TODO set the seeder when we implement the seeder logic in the UI    
             }
 
-            if (_scanStage == scanStage.InvestmentBlockchainLookup)
-            {
-                foreach (var (nostrPubKey, scannedProjectData) in scannedProject)
+            ISignService.LookupSignatureForInvestmentRequest(nostrPubKey, scannedProjectData.Project.ProjectInfo.NostrPubKey,
+                scannedProjectData.RequestEventCreateAt, scannedProjectData.RequestEventId, encryptedSignatures =>
                 {
+                    //TODO decrypt the signatures and add to project
 
-                    var investorKey = DerivationOperations.DeriveInvestorKey(_walletStorage.GetWallet().WalletWords, 
-                        scannedProjectData.Project!.ProjectInfo.FounderKey ?? throw new Exception("Did not get the application specific data"));
+                    InvestorProject investorProject = scannedProjectData.Project;
+                    
+                    if (investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
+                        return Task.CompletedTask;
+        
+                    var signatureJson = javascriptNostrToolsModule.Invoke<string>(
+                        "decryptNostr", scannedProjectData.NostrPrivateKey, scannedProjectData.FounderNostrKey, encryptedSignatures);
+        
+                    var res = System.Text.Json.JsonSerializer.Deserialize<SignatureInfo>(signatureJson, RelayService.settings);
 
-                    var result = await _IndexerService.GetProjectInvestmentsAsync(scannedProjectData.Project!.ProjectInfo.ProjectIdentifier, investorKey);
-
-                    if (result != null)
+                    if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
                     {
-                        scannedProjectData.Project.TransactionId = result.TransactionId;
-                        scannedProjectData.Project.AmountInvested = result?.TotalAmount;
-                        //TODO set the seeder when we implement the seeder logic in the UI    
+                        investorProject.SignaturesInfo.Signatures = res.Signatures;
                     }
                     
-                    SignService.LookupSignatureForInvestmentRequest(nostrPubKey, scannedProjectData.Project.ProjectInfo.NostrPubKey,
-                        scannedProjectData.RequestEventCreateAt, scannedProjectData.RequestEventId,
-                        s =>
-                        {
-                            //TODO decrypt the signatures and add to project
-                            Logger.LogInformation("Received encrypted founder signatures" + s);
-                            
-                            var accountInfo = storage.GetAccountInfo(network.Name);
-                            var unconfirmedInfo = SessionStorage.GetUnconfirmedInboundFunds();
-                            
-                            projects = storage.GetInvestmentProjects();
+                    Logger.LogInformation("Received encrypted founder signatures" + encryptedSignatures);
 
-                            var abi = new AccountBalanceInfo();
-                            abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
+                    return UpdatePortfolioAsync();
+                });
+        }
 
-                            TotalFundedProjects = projects.Count;
-                            TotalInvested =  projects.Sum(s => s.AmountInvested ?? 0);
-                            TotalWallet = abi.TotalBalance;
-                            TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
+        foreach (var scannedProjectData in scannedProject.Values.Where(x => x.Project != null))
+        {
+            storage.AddInvestmentProject(scannedProjectData.Project);
+        }
 
-                            StateHasChanged();
-                            return RefreshBalance();;
-                        });
-                }
-                
-                foreach (var scannedProjectData in scannedProject.Values.Where(x => x.Project != null))
-                {
-                    storage.AddInvestmentProject(scannedProjectData.Project);
-                }
-                
-                _scanStage = null;
+        _scanStage = null;
+        StateHasChanged();
+    }
+
+    private void GetProjectDetailsFromNostr()
+    {
+        IRelayService.RequestProjectCreateEventsByPubKey(x =>
+        {
+            var investorProject = scannedProject.FirstOrDefault(p => p.Value.FounderNostrKey == x.Pubkey).Value;
+
+            if (investorProject == null)
+            {
+                Logger.LogError(x.Pubkey + "was not found in the scanned project list");
+                return;
+            }
+
+            investorProject.Project ??= new InvestorProject();
+
+            switch (x.Kind)
+            {
+                case NostrKind.Metadata:
+                    investorProject.Project.Metadata ??=
+                        JsonSerializer.Deserialize<ProjectMetadata>(x.Content!,
+                            Angor.Shared.Services.RelayService.settings);
+                    break;
+                case NostrKind.ApplicationSpecificData:
+                    if (investorProject.Project.ProjectInfo == null)
+                        investorProject.Project.ProjectInfo =
+                            JsonSerializer.Deserialize<ProjectInfo>(x.Content!,
+                                Angor.Shared.Services.RelayService.settings) ??
+                            throw new Exception("The project info must be in the application specific data event");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException($"{x.Kind}");
+            }
+        },
+            () =>
+            {
+                _scanStage = scanStage.InvestmentBlockchainLookup;
                 StateHasChanged();
-            }
+            },
+            scannedProject.Values.Select(x => x.FounderNostrKey).ToArray());
     }
 
     private async Task RefreshBalance()
     {
         try
         {
+            var lookups = projects.Select(x =>
+            {
+                var task = _IndexerService.GetProjectStatsAsync(x.ProjectInfo.ProjectIdentifier);
+
+                return (x.ProjectInfo.ProjectIdentifier,task);
+            }).ToList();
+
+            await Task.WhenAll(lookups.Select(x => x.task));
+
             Stats.Clear();
             
-            foreach (var project in projects)
+            foreach (var result in lookups)
             {
-                var projectStats = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
-                Stats.Add(project.ProjectInfo.ProjectIdentifier, projectStats);
+                if (result.task.Result != null) 
+                    Stats.Add(result.ProjectIdentifier, result.task.Result);
             }
         }
         catch (Exception ex)
@@ -312,25 +359,34 @@
     private async Task ScanForInvestedProjectsAsync()
     {
         _scanStage = scanStage.NostrDMLookup;
-        InvestmentRequestLookup();
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(InvestmentRequestLookup);
+        }
+        else
+        {
+            InvestmentRequestLookup();
+        }
     }
 
-    private void InvestmentRequestLookup()
+    private async Task InvestmentRequestLookup()
     {
         var countPreLookup = scannedProject.Count == 0 ? projects.Count : scannedProject.Count;
 
     // foreach (var i in Enumerable.Range(1, 5))
     // {
-        var key = DerivationOperations.DeriveProjectNostrPrivateKey(_walletStorage.GetWallet().WalletWords, countPreLookup + 1);
+        var words = await passwordComponent.GetWalletAsync();
+        
+        var key = DerivationOperations.DeriveProjectNostrPrivateKey(words, countPreLookup + 1);
 
         var hexKey = Encoders.Hex.EncodeData(key.ToBytes());
 
         var nostrInvestorPubKey = NostrPrivateKey.FromHex(hexKey).DerivePublicKey().Hex;
         
-        scannedProject.Add(nostrInvestorPubKey, new ScannedProjectData { Index = countPreLookup + 1 });
+        scannedProject.Add(nostrInvestorPubKey, new ScannedProjectData { Index = countPreLookup + 1, NostrPrivateKey = hexKey});
     //}
         
-        SignService.LookupInvestmentRequestsSentByInvestorKey(nostrInvestorPubKey,
+        ISignService.LookupInvestmentRequestsSentByInvestorKey(nostrInvestorPubKey,
             (investorNostrPubKey, founderNostrPubKey, createdAt,eventId) =>
             {
                 if (scannedProject.ContainsKey(investorNostrPubKey) && !string.IsNullOrEmpty(scannedProject[investorNostrPubKey].FounderNostrKey))
@@ -358,6 +414,7 @@
     {
         public int Index { get; set; }
         public string FounderNostrKey { get; set; }
+        public string NostrPrivateKey { get; set; }
         public string RequestEventId { get; set; }
         public DateTime RequestEventCreateAt { get; set; }
         public InvestorProject? Project { get; set; }
