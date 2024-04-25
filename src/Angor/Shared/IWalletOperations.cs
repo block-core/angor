@@ -18,7 +18,7 @@ public interface IWalletOperations
     decimal CalculateTransactionFee(SendInfo sendInfo,AccountInfo accountInfo, long feeRate);
     (List<Coin>? coins, List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths);
 
-    Transaction AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
+    TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo,
         FeeEstimation feeRate);
 
@@ -29,6 +29,4 @@ public interface IWalletOperations
         WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate);
 
     List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction);
-
-    long CalculateFee(AccountInfo accountInfo, Transaction transaction);
 }

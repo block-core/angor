@@ -242,6 +242,9 @@
                         <p class="mb-1"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
                         <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
                         <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
+                        
+                        <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                        <p class="mb-1"><strong>Angor fee:</strong> @signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
                         <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
                         <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
@@ -296,7 +299,7 @@
     private bool showCreateModal;
 
     Transaction unsignedTransaction;
-    Transaction signedTransaction;
+    TransactionInfo signedTransaction;
 
     private FeeData feeData = new();
 
@@ -623,7 +626,7 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), 10000, project.ProjectInfo.NostrPubKey);
+            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), NetworkConfiguration.AngorCreateFeeSats, project.ProjectInfo.NostrPubKey);
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
@@ -675,7 +678,7 @@
         {
             showCreateModal = false;
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
 
             if (!response.Success)
             {
@@ -683,7 +686,7 @@
                 return;
             }
 
-            project.CreationTransactionId = signedTransaction.GetHash().ToString();
+            project.CreationTransactionId = signedTransaction.Transaction.GetHash().ToString();
 
             storage.UpdateFounderProject(project);
         }

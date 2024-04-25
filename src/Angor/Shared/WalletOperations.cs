@@ -36,13 +36,16 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
     
-    public Transaction AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
+    public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
         var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+
+        if (coins.coins == null)
+            throw new ApplicationException("No coins found");
 
         var builder = new TransactionBuilder(network)
             .AddCoins(coins.coins)
@@ -54,10 +57,23 @@ public class WalletOperations : IWalletOperations
 
         var signTransaction = builder.BuildTransaction(true);
 
-        return signTransaction;
+        // find the coins used
+        long totaInInputs = 0;
+        long totaInOutputs = signTransaction.Outputs.Select(s => s.Value.Satoshi).Sum();
+
+        foreach (var input in signTransaction.Inputs)
+        {
+            var foundInput = coins.coins.First(c => c.Outpoint.ToString() == input.PrevOut.ToString());
+
+            totaInInputs += foundInput.Amount.Satoshi;
+        }
+
+        var fee = totaInInputs - totaInOutputs;
+
+        return new TransactionInfo { Transaction = signTransaction, TransactionFee = fee };
     }
 
-    public long CalculateFee(AccountInfo accountInfo, Transaction transaction)
+    public long CalculateFee1(AccountInfo accountInfo, Transaction transaction)
     {
         var inputs = transaction.Inputs.Select(s => s.PrevOut.ToString());
 
@@ -70,7 +86,7 @@ public class WalletOperations : IWalletOperations
          
             foreach (UtxoData utxoData in accountInfo.AllUtxos())
             {
-                if (input == utxoData.outpoint.ToString()) ;
+                if (input == utxoData.outpoint.ToString())
                 {
                     totaInInputs += utxoData.value;
                     foundUtxo = true;
