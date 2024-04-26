@@ -42,7 +42,7 @@
                 @if (hasWallet)
                 {
                     <div>
-                        <button type="button" class="btn btn-primary mb-0" @onclick="() => walletWordsModal = true">Wallet Words</button>
+                        <button type="button" class="btn btn-primary mb-0" @onclick="() => walletWordsModal = true" data-cy="wallet-words">Wallet Words</button>
                     </div>
                 }
 
@@ -291,8 +291,8 @@
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title">Wallet Words</h5>
-                                <button type="button" class="btn-close" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" aria-label="Close"></button>
+                                <h5 class="modal-title" >Wallet Words</h5>
+                                <button type="button" class="btn-close" data-cy="close-show-wallet-words" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }" aria-label="Close"></button>
                             </div>
                             <div class="modal-body modal-body-scroll">
 
@@ -337,13 +337,13 @@
                                     }
 
                                     <div class="mb-3">
-                                        <button class="btn btn-warning" @onclick="ShowWords">Show Words</button>
+                                        <button class="btn btn-warning" @onclick="ShowWords" data-cy="wallet-words-in-popup">Show Words</button>
                                     </div>
                                 }
                                 else
                                 {
                                     <!-- Wallet words will be shown here -->
-                                    <div class="alert alert-success text-white" role="alert">
+                                    <div class="alert alert-success text-white" role="alert" data-cy="alert-wallet-words">
                                         <p>@showWalletWords</p>
                                         <div class="mt-3 d-flex justify-content-end">
 
@@ -400,7 +400,7 @@
                             <span class="material-icons opacity-10 btn-angor fs-1 mb-3" aria-hidden="true">
                                 download
                             </span>
-                            <h5 class="text-secondary"> Receive </h5>
+                            <h5 class="text-secondary" data-cy="receive-button"> Receive </h5>
                         </div>
                     </div>
                 </div>
@@ -585,10 +585,10 @@
                         <div class="card-body p-3">
                             <div class="row">
                                 <div class="col-md-12 mb-md-0 mb-4">
-                                    <div class="card card-body border card-plain border-radius-lg d-flex align-items-center flex-row">
+                                    <div class="card card-body border card-plain border-radius-lg d-flex align-items-center flex-row" data-cy="wallet-address">
                                         <img class="address-image me-3 mb-0" src="/assets/img/bitcoin.svg" alt="Bitcoin">
                                         <h6 class="address-text mb-0 overflow-x-auto">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</h6>
-                                        <i @onclick="CopyNextReceiveAddress" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer user-select-none">copy</i>
+                                        <i @onclick="CopyNextReceiveAddress" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer user-select-none" data-cy="SHOW_QR_CODE_WALLET">copy</i>
                                     </div>
                                 </div>
 

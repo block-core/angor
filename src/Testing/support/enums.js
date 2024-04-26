@@ -10,6 +10,20 @@ const WALLET_DATA_CY = {
     BALANCE: 'balance',
     BALANCE_AMOUNT: 'balance-amount',
     WALLET_CHECKBOX: 'wallet-checkbox',
+    WALLET_WORDS: 'wallet-words',
+    WALLET_WORDS_SHOW: "wallet-words-in-popup",
+    WALLET_WORDS_ALERT: 'alert-wallet-words',
+    WALLET_ADDRESS: 'wallet-address',
+    RECEIVE_FUNDS: 'receive-button',
+    WALLET_QR:'SHOW_QR_CODE_WALLET',
+    CLOSE_WALLET_WORDS: 'close-show-wallet-words',
 };
 
-export {Navbar,WALLET_DATA_CY};
+const QR_CODE_CY = {
+    QR_IMAGE: 'QR_IMAGE_IN_POPUP',
+    WALLET_ADDRESS: 'WALLET_ADRESS_IN_QR_POPUP',
+    WALLET_QR:'SHOW_QR_CODE',
+
+};
+
+export {Navbar,WALLET_DATA_CY,QR_CODE_CY};

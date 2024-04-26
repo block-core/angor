@@ -23,6 +23,10 @@ Cypress.Commands.add('clickElementWithDataCy', (datacy) => {
     cy.get(`[data-cy=${datacy}]`).click();
 })
 
+Cypress.Commands.add('ElementWithDataCyShouldBeVisible', (datacy) => {
+    cy.get(`[data-cy=${datacy}]`).should('be.visible');
+})
+
 
 Cypress.Commands.add("clickCardContains", (name, msg) => {
     cy.get('.card-body[role="button"]').contains(`${name}`).click();
@@ -39,8 +43,8 @@ Cypress.Commands.add("clickCardContains", (name, msg) => {
 Cypress.Commands.add('clickSubmitButton', (msg) => {
     cy.get('.btn.btn-success').click();
     if(msg){
-        cy.get('#snackbar').should('be.visible'); // Assuming snackbar has a class 'snackbar'
-        cy.get('#snackbar').contains(msg); // Assuming snackbar contains text
+        cy.get(`[data-cy=alert]`).should('be.visible'); // Assuming snackbar has a class 'snackbar'
+        cy.get(`[data-cy=alert]`).contains(msg); // Assuming snackbar contains text
     }
 })
 
