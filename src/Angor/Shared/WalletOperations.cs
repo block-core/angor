@@ -68,48 +68,12 @@ public class WalletOperations : IWalletOperations
             totaInInputs += foundInput.Amount.Satoshi;
         }
 
-        var fee = totaInInputs - totaInOutputs;
+        var minerFee = totaInInputs - totaInOutputs;
 
-        return new TransactionInfo { Transaction = signTransaction, TransactionFee = fee };
+        return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
     }
 
-    public long CalculateFee1(AccountInfo accountInfo, Transaction transaction)
-    {
-        var inputs = transaction.Inputs.Select(s => s.PrevOut.ToString());
-
-        long totaInOutputs = transaction.Outputs.Select( s => s.Value.Satoshi).Sum();
-        long totaInInputs = 0;
-
-        foreach (var input in inputs)
-        {
-            bool foundUtxo = false;
-         
-            foreach (UtxoData utxoData in accountInfo.AllUtxos())
-            {
-                if (input == utxoData.outpoint.ToString())
-                {
-                    totaInInputs += utxoData.value;
-                    foundUtxo = true;
-                    continue;
-                }
-            }
-
-            if (foundUtxo == false)
-            {
-                throw new ApplicationException("Utxo not found");
-            }
-        }
-
-        if (totaInInputs <= totaInOutputs)
-        {
-            throw new ApplicationException("Could not calculate fee correctly");
-        }
-
-        return totaInInputs - totaInOutputs;
-    }
-
-
-    public Transaction AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
+    public TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
@@ -123,6 +87,9 @@ public class WalletOperations : IWalletOperations
         
         var utxoDataWithPaths = FindOutputsForTransaction((long)fee, accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+
+        // todo: dan - the fee here is calculated for the trx size before adding inputs,
+        // we must increase the fee to account also for the new inputs that the fee is paid from.
 
         var totalSats = coins.coins.Sum(s => s.Amount.Satoshi);
         totalSats -= fee;
@@ -147,7 +114,7 @@ public class WalletOperations : IWalletOperations
             index++;
         }
 
-        return clonedTransaction;
+        return new TransactionInfo { Transaction = clonedTransaction, TransactionFee = fee };
     }
 
     public async Task<OperationResult<Transaction>> SendAmountToAddress(WalletWords walletWords, SendInfo sendInfo) //TODO change the passing of wallet words as parameter after refactoring is complete

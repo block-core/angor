@@ -197,9 +197,6 @@
         <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
         <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
 
-        <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
-        <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
-
         <h6 class="mt-3 mb-2">Stages</h6>
         @foreach (var stage in project.ProjectInfo.Stages)
         {
@@ -245,9 +242,6 @@
                         
                         <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                         <p class="mb-1"><strong>Angor fee:</strong> @signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-
-                        <p class="mb-1"><strong>Miner fee:</strong> [Your fee here]</p>
-                        <p class="mb-1"><strong>Angor fee:</strong> 1000 sats</p>
 
                         <hr>
 
@@ -655,6 +649,13 @@
             {
                 if (res <= feeData.FeeEstimations.Fees.Count)
                 {
+                    if (!passwordComponent.HasPassword())
+                    {
+                        showCreateModal = false;
+                        notificationComponent.ShowErrorMessage("Wallet password expired");
+                        return;
+                    }
+
                     var words = await passwordComponent.GetWalletAsync();
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 

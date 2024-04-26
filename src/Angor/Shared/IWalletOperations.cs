@@ -25,7 +25,7 @@ public interface IWalletOperations
     Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,
         Transaction signedTransaction);
 
-    Transaction AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
+    TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate);
 
     List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction);
