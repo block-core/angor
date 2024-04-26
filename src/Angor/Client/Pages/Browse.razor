@@ -12,137 +12,222 @@
 @inject IRelayService _RelayService
 @inject IIndexerService _IndexerService
 
-<div class="container my-4">
-    <h1>Browse Projects</h1>
-    
-    <NotificationComponent @ref="notificationComponent"/>
+<NotificationComponent @ref="notificationComponent" />
 
-    <div class="row">
-        <div class="col">
-			
-            <!-- Search Section -->
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="Enter Angor project identifier" id="searchQuery" @bind="searchQuery">
-                <button class="btn btn-primary" type="button" @onclick="FindProject" disabled="@findInProgress">Find</button>
+<div class="row">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex col-auto my-auto">
+                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">search</span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-1 font-weight-bolder">
+                        Browse
+                    </h5>
+                    <p class="mb-0 font-weight-normal text-sm">
+                        Browse Projects
+                    </p>
+                </div>
+
+
+
             </div>
-            
-            @if (findInProgress)
-            {
-                <div class="d-flex justify-content-center">
-                    <div class="loader"></div>
-                </div>
-            }
-
-            <!-- Search Result -->
-            @if (findProject != null)
-            {
-                <div class="card mb-3">
-                    <div class="card-body">
-                        @if (SessionStorage.IsProjectInStorageById(findProject.ProjectIdentifier))
-                        {
-                            var project = SessionStorage.GetProjectById(findProject.ProjectIdentifier);
-                            if (project?.Metadata != null)
-                            {
-                                <h3 class="card-title">@project.Metadata.Name</h3>
-                                <p class="card-subtitle">@project.Metadata.About</p>
-                                <hr>
-                            }
-                        }
-                        else
-                        {
-                            <p class="text-warning-emphasis">Project not found in any relay!</p>
-                        }
-                        <p>
-                            Project ID:@findProject.ProjectIdentifier
-                            <br/>
-                            Nostr ID  :@(NostrPublicKey.FromHex(findProject.NostrPubKey).Bech32)
-                        </p>
-                        <button @onclick="() => ViewProjectDetails(findProject.ProjectIdentifier)" class="btn btn-primary card-">View</button>
-
-                    </div>
-                </div>
-            }
-            
-            <div class="d-flex justify-content-center">
-                <button class="btn btn-secondary my-3" @onclick="SearchProjects">Fetch The Last 20 Projects</button>
+            <div>
+                @if (projects.Count > 0)
+                {
+                    <span role="button" class="material-icons fs-3 opacity-10 btn-angor user-select-none" @onclick="ToggleView">
+                        @viewModeIcon
+                    </span>
+                }
             </div>
-
-            <!-- List of projects -->
-            @if (searchInProgress)
-            {
-                <div class="d-flex justify-content-center">
-                    <div class="loader"></div>
-                </div>
-            }
-            else
-            {
-                @if (projects.Count == 0)
-                {
-                    <div class="d-flex justify-content-center">
-                        <p>No projects found.</p>
-                    </div>
-                }
-                else
-                {
-                    foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
-                    {
-                        <div class="card mb-3">
-                            @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
-                            {
-                                var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                if (project?.Metadata?.Banner != null)
-                                {
-                                    <div class="card-header overflow-hidden">
-                                        <img class="card-img-top" src="@project.Metadata.Banner" alt=""/>
-                                    </div>
-                                }
-                            }
-
-                            <div class="card-body">
-                                @if (nostrSearchInProgress)
-                                {
-                                    <div class="loader-small"></div>
-                                }
-                                else
-                                {
-                                    @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
-                                    {
-                                        var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                        if (project?.Metadata != null)
-                                        {
-                                            <h3 class="card-title">@project.Metadata.Name</h3>
-                                            <p class="card-subtitle">@project.Metadata.About</p>
-                                            <hr>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <p class="text-warning-emphasis">Project not found in any relay!</p>
-                                    }
-                                }
-                                <p>
-                                    Project ID:@indexerData.ProjectIdentifier
-                                    <br/>
-                                    Nostr ID  :@(NostrPublicKey.FromHex(indexerData.NostrPubKey).Bech32)
-                                </p>
-                                <button @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)" class="btn btn-primary card-">View</button>
-                            </div>
-                        </div>
-                    }
-                }
-            }
-            
-          
         </div>
     </div>
 </div>
+<div class="row mt-4">
+
+    <div class="card card-body">
+        <div class="d-flex align-items-center">
+            <!-- Search Section -->
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Enter Angor project identifier" id="searchQuery" @bind="searchQuery">
+                <button class="btn btn-primary" type="button" @onclick="FindProject" disabled="@findInProgress">Find</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@if (findInProgress)
+{
+    <div class="d-flex justify-content-center mt-4">
+        <div class="loader"></div>
+    </div>
+}
+
+<!-- Search Result -->
+@if (findProject != null)
+{
+    <div class="card mt-4">
+        <div class="card-body">
+            @if (SessionStorage.IsProjectInStorageById(findProject.ProjectIdentifier))
+            {
+                var project = SessionStorage.GetProjectById(findProject.ProjectIdentifier);
+                if (project?.Metadata != null)
+                {
+                    <h3 class="card-title">@project.Metadata.Name</h3>
+                    <p class="card-subtitle">@project.Metadata.About</p>
+                    <hr>
+                }
+            }
+            else
+            {
+                <p class="text-warning-emphasis">Project not found in any relay!</p>
+            }
+            <p>
+                Project ID:@findProject.ProjectIdentifier
+                <br />
+                Nostr ID  :@(NostrPublicKey.FromHex(findProject.NostrPubKey).Bech32)
+            </p>
+            <button @onclick="() => ViewProjectDetails(findProject.ProjectIdentifier)" class="btn btn-primary card-">View</button>
+
+        </div>
+    </div>
+}
+
+
+@if (projects.Count == 0)
+{
+    <div class="row mt-4">
+        <div class="card card-body">
+            <div class="d-flex align-items-center">
+                <span class="material-icons opacity-10 fs-1 me-3 btn-angor user-select-none">
+                    info
+                </span>
+                <span class="text-warning">No projects found.</span>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+
+    @if (isGridView)
+    {
+        <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3">
+            @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
+            {
+                <div class="col d-flex align-items-stretch">
+                    <div class="card mt-4 w-100">
+                             <a class="d-block blur-shadow-image">
+                                @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                                {
+                                    var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                <img class="card-img-top" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+
+                                }
+                            </a>
+ 
+                         <div class="card-body text-center">
+                            @if (nostrSearchInProgress)
+                            {
+                                <div class="p-3">
+                                    <div class="loader-small m-auto"></div>
+                                </div>
+                            }
+                            else
+                            {
+                                @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                                {
+                                    var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                    if (project?.Metadata != null)
+                                    {
+                                        <h5 role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
+                                        <p class="mb-0 line-clamp-3">@((MarkupString)project.Metadata.About)</p>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-warning-emphasis">Project not found in any relay!</p>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
+        {
+            <div class="card mt-4">
+                <div class="row g-0">
+                    <div class="col-md-4">
+                        <div class="img-responsive img-responsive-16by9 position-relative" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                            @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                            {
+                                var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                <div class="card-header card-header-img">
+                                    <img class="img-responsive-item" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-8 d-flex align-items-center justify-content-center position-relative">
+                        <div class="card-body card-loader loading">
+                           
+                            @if (nostrSearchInProgress)
+                            {
+                                <div class="p-3">
+                                    <div class="loader-small m-auto"></div>
+                                </div>
+                            }
+                            else
+                            {
+                                @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                                {
+                                    var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                    if (project?.Metadata != null)
+                                    {
+                                        <h5 class="card-title text-center" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
+                                        <p class="card-text text-center line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@((MarkupString)project.Metadata.About)</p>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-warning-emphasis">Project not found in any relay!</p>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+}
+
+
+<div class="d-flex justify-content-center mt-4">
+    <button class="btn btn-secondary my-3" @onclick="SearchProjects">Fetch Projects</button>
+</div>
+@if (searchInProgress)
+{
+    <div class="d-flex justify-content-center">
+        <div class="loader"></div>
+    </div>
+}
+
+
 
 @code {
+
     NotificationComponent notificationComponent;
     private string searchQuery;
     bool searchInProgress = false;
     bool nostrSearchInProgress;
     bool findInProgress = false;
+    bool isGridView = true;
+    string viewModeIcon = "grid_view";
 
     ProjectIndexerData? findProject = null;
 
@@ -151,6 +236,20 @@
     protected override async Task OnInitializedAsync()
     {
         projects = SessionStorage.GetProjectIndexerData() ?? new();
+    }
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (firstRender)
+    //     {
+    //         await SearchProjects();
+    //     }
+    // }
+
+    void ToggleView()
+    {
+        isGridView = !isGridView;
+        viewModeIcon = isGridView ? "grid_view" : "view_list";
     }
 
     private async Task FindProject()
@@ -169,7 +268,7 @@
         if (findProject != null)
         {
             _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(),
-                StateHasChanged, 
+                StateHasChanged,
             new[] { findProject.NostrPubKey });
         }
 
@@ -179,9 +278,9 @@
     private async Task SearchProjects()
     {
         searchInProgress = true;
-        
+
         var blockchainProjects = await _IndexerService.GetProjectsAsync(null, 20);
-        
+
         var projectsNotInList = blockchainProjects
             .Where(blockchainProject => projects.All(_ => _.ProjectIdentifier != blockchainProject.ProjectIdentifier))
             .ToList();
@@ -227,7 +326,7 @@
             switch (e)
             {
                 case { Kind: NostrKind.Metadata }:
-                  
+
                     var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
                     if (projectIndexerData != null)
                     {
@@ -235,14 +334,14 @@
                         if (project != null)
                         {
                             project.Metadata = nostrMetadata;
-                            SessionStorage.StoreProject(project);   
+                            SessionStorage.StoreProject(project);
                         }
                     }
-                    
+
                     break;
 
                 case { Kind: NostrKind.ApplicationSpecificData }:
-                    
+
                     var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
                     if (projectInfo != null && projectIndexerData != null)
                     {
@@ -265,7 +364,7 @@
         }
         else
         {
-            notificationComponent.ShowNotificationMessage("The project was not loaded from the relay yet");   
+            notificationComponent.ShowNotificationMessage("The project was not loaded from the relay yet");
         }
     }
 }

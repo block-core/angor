@@ -86,8 +86,7 @@
     private async Task CopyToClipboard()
     {
         await _clipboardService.WriteTextAsync(Data);
-        await notificationComponent.ShowSnackbar("Copied to clipboard!", 3);
+        notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
 
     }
 }
- 

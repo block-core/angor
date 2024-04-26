@@ -1,58 +1,67 @@
 ﻿@using Angor.Shared.Models
 @using Angor.Shared.Services
 
-@inject IJSRuntime Js;
 @inject ILogger<NotificationComponent> Logger;
 @inject INetworkService networkService;
 
-<div class="row mt-4">
-    <div class="col">
 
-        @if (isLoading)
-        {
+
+@if (isLoading)
+{
+    <div class="row">
+        <div class="col">
             <div class="loader-wrapper">
                 <div class="loader"></div>
             </div>
-        }
-
-        @if (!string.IsNullOrEmpty(notificationMessage))
-        {
-            <div class="row justify-content-center">
-                <div class="col-lg-8 col-md-10">
-                    <div class="alert alert-info fixed-bottom w-70 d-flex justify-content-between align-items-center" role="alert" style="left: 20%; right: 20%">
-                        @notificationMessage
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                </div>
-            </div>
-        }
-
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-                <div class="modal-dialog modal-dialog-centered modal-sm">
-                    <div class="modal-content">
-                        <div class="modal-header bg-danger text-white">
-                            <h5 class="modal-title">
-                                <i class="bi bi-exclamation-triangle-fill"></i>
-                                Error
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" @onclick="ClearErrorMessage"></button>
-                        </div>
-                        <div class="modal-body modal-body-scroll">
-                            <p>@errorMessage</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-light" @onclick="ClearErrorMessage">Dismiss</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-
+        </div>
     </div>
-</div>
-<div id="snackbar"></div>
+}
+
+@if (!string.IsNullOrEmpty(notificationMessage))
+{
+    <div class="row">
+        <div class="col z-index-4">
+             <div class="row justify-content-center">
+                <div class="col-lg-8 col-md-10">
+                    <div class="alert alert-info fixed-bottom w-70 d-flex justify-content-between align-items-center alert-message" role="alert" >
+                        @notificationMessage
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @onclick="closeAlert"></button>
+                    </div>
+                </div>
+             </div>
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="row">
+        <div class="col">
+            <div class="modal-wrapper">
+                <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    Error
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" @onclick="ClearErrorMessage"></button>
+                            </div>
+                            <div class="modal-body modal-body-scroll">
+                                <p>@errorMessage</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light" @onclick="ClearErrorMessage">Dismiss</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private string notificationMessage;
     private string errorMessage;
@@ -86,23 +95,15 @@
         errorMessage = string.Empty;
         StateHasChanged();
     }
-
+    private void closeAlert()
+    {
+        notificationMessage = string.Empty;
+        StateHasChanged();
+    }
     public void StopLoading()
     {
         isLoading = false;
         StateHasChanged();
-    }
-
-    public async Task ShowSnackbar(string message, int delaySeconds = 3)
-    {
-        try
-        {
-            await Js.InvokeVoidAsync("angor.showSnackbar", message, delaySeconds);
-        }
-        catch (Exception e)
-        {
-            Logger.LogError(e, e.Message);
-        }
     }
 
     public async Task<OperationResult> LongOperation(Func<Task<OperationResult>> action)
@@ -136,7 +137,7 @@
         }
         else
         {
-            if (res is {Success: false })
+            if (res is { Success: false })
             {
                 Logger.LogError(res.Message);
                 ShowErrorMessage($"Error: {res.Message}");

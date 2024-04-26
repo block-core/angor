@@ -29,7 +29,8 @@ It can be downloaded directly from this repository or accessed via the website: 
 Please visit and review the [Custom License](/LICENSE) before contributing.
 
 ## Contributing
-We welcome contributions to the codebase. Please maintain the same code style as the existing code.
+
+Check out [this page](/CONTRIBUTING.MD)
 
 ## Contact
 * Discord: [https://www.blockcore.net/discord](https://www.blockcore.net/discord)

@@ -31,13 +31,41 @@
   ],
   "shortcuts": [
     {
-      "name": "Angor",
-      "short_name": "Angor",
-      "description": "Stay in control of your investments with Angor",
+      "name": "Home",
       "url": "/",
       "icons": [
         {
           "src": "assets/img/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "url": "/wallet",
+      "icons": [
+        {
+          "src": "assets/img/wallet-icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Browse",
+      "url": "/browse",
+      "icons": [
+        {
+          "src": "assets/img/browse-icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "url": "/settings",
+      "icons": [
+        {
+          "src": "assets/img/settings-icon-192.png",
           "sizes": "192x192"
         }
       ]

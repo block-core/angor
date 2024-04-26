@@ -29,4 +29,6 @@ public interface IWalletOperations
         WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate);
 
     List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction);
+
+    long CalculateFee(AccountInfo accountInfo, Transaction transaction);
 }

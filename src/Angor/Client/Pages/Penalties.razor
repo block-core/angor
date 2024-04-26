@@ -8,6 +8,7 @@
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
 @inject IIndexerService _IndexerService
+@inject ILogger<Penalties> Logger;
 
 @inherits BaseComponent
 
@@ -21,6 +22,29 @@
     <h1>View Penalties</h1>
 
     <NotificationComponent @ref="notificationComponent" />
+    
+    @if (firstTimeRefreshSpinner && refreshSpinner)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="loader"></div>
+        </div>
+    }
+    else
+    {
+        <div>
+            <button class="btn btn-primary" @onclick="RefreshPenalties" disabled="@refreshSpinner">
+                @if (refreshSpinner)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Refresh...</span>
+                }
+                else
+                {
+                    <span>Refresh</span>
+                }
+            </button>
+        </div>
+    }
 
     @if (!penaltyProjects.Any())
     {
@@ -101,6 +125,8 @@
         public int DaysLeftForPenalty;
     }
 
+    private bool refreshSpinner = false;
+    private bool firstTimeRefreshSpinner = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -120,43 +146,50 @@
                         });
                 }
             }
+
+            firstTimeRefreshSpinner = true;
+
+            await RefreshPenalties();
         }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private async Task RefreshPenalties()
     {
-        if (firstRender)
+        refreshSpinner = true;
+        StateHasChanged();
+        await Task.Delay(10);
+
+        try
         {
-            if (hasWallet)
+            var projects = storage.GetInvestmentProjects();
+
+            foreach (var penaltyProject in penaltyProjects)
             {
-                var operationResult = await notificationComponent.LongOperation(async () =>
-                {
-                    var projects = storage.GetInvestmentProjects();
+                var recoveryTansaction = await _IndexerService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
 
-                    foreach (var penaltyProject in penaltyProjects)
-                    {
-                        var recoveryTansaction = await _IndexerService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
+                var totalsats = recoveryTansaction.Outputs.Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);
+                penaltyProject.Amount = Money.Satoshis(totalsats).ToUnit(MoneyUnit.BTC);
 
-                        var totalsats = recoveryTansaction.Outputs.Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);
-                        penaltyProject.Amount = Money.Satoshis(totalsats).ToUnit(MoneyUnit.BTC);
+                var project = projects.First(p => p.ProjectInfo.ProjectIdentifier == penaltyProject.ProjectIdentifier);
 
-                        var project = projects.First(p => p.ProjectInfo.ProjectIdentifier == penaltyProject.ProjectIdentifier);
-
-                        var expieryDate = Utils.UnixTimeToDateTime(recoveryTansaction.Timestamp).AddDays(project.ProjectInfo.PenaltyDays);
-                        penaltyProject.DaysLeftForPenalty = (expieryDate - DateTimeOffset.UtcNow).Days;
-                        penaltyProject.IsExpired = (expieryDate - DateTimeOffset.UtcNow).Days <= 0;
-                    }
-
-                    return new OperationResult { Success = true };
-
-                });
-
-                if (operationResult.Success)
-                {
-                    StateHasChanged();
-                }
+                var expieryDate = Utils.UnixTimeToDateTime(recoveryTansaction.Timestamp).AddDays(project.ProjectInfo.PenaltyDays);
+                penaltyProject.DaysLeftForPenalty = (expieryDate - DateTimeOffset.UtcNow).Days;
+                penaltyProject.IsExpired = (expieryDate - DateTimeOffset.UtcNow).Days <= 0;
             }
         }
+        catch (Exception e)
+        {
+            Logger.LogError(e, e.Message);
+            notificationComponent.ShowErrorMessage(e.Message);
+        }
+        finally
+        {
+            refreshSpinner = false;
+            firstTimeRefreshSpinner = false;
+        }
+
+        StateHasChanged();
+        await Task.Delay(10);
     }
 
     private void ClaimPenalty(string projectId)

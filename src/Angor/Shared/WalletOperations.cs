@@ -57,6 +57,42 @@ public class WalletOperations : IWalletOperations
         return signTransaction;
     }
 
+    public long CalculateFee(AccountInfo accountInfo, Transaction transaction)
+    {
+        var inputs = transaction.Inputs.Select(s => s.PrevOut.ToString());
+
+        long totaInOutputs = transaction.Outputs.Select( s => s.Value.Satoshi).Sum();
+        long totaInInputs = 0;
+
+        foreach (var input in inputs)
+        {
+            bool foundUtxo = false;
+         
+            foreach (UtxoData utxoData in accountInfo.AllUtxos())
+            {
+                if (input == utxoData.outpoint.ToString()) ;
+                {
+                    totaInInputs += utxoData.value;
+                    foundUtxo = true;
+                    continue;
+                }
+            }
+
+            if (foundUtxo == false)
+            {
+                throw new ApplicationException("Utxo not found");
+            }
+        }
+
+        if (totaInInputs <= totaInOutputs)
+        {
+            throw new ApplicationException("Could not calculate fee correctly");
+        }
+
+        return totaInInputs - totaInOutputs;
+    }
+
+
     public Transaction AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
     {

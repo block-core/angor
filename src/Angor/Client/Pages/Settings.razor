@@ -15,206 +15,332 @@
 @inject NavigationManager _navManager
 
 @inherits BaseComponent
+<NotificationComponent @ref="notificationComponent" />
 
-<div class="container my-4">
-    <h1>Settings</h1><br />
+@* Settings *@
+<div class="row">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex col-auto my-auto align-items-center">
+                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">settings</span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Settings
+                    </h5>
 
-    <NotificationComponent @ref="notificationComponent" />
-
-    <div class="row">
-        <div class="col">
-
-            <p>Network Type: <strong>@networkType</strong></p>
-            <p>Explorer url: <a href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">@_networkConfiguration.GetDefaultExplorerUrl().First().Url</a> </p>
-
-            <div class="d-flex justify-content-end">
-                <button class="btn btn-danger" @onclick="() => showWipeallModal = true">Wipe All Storage</button>
+                </div>
             </div>
 
-            @if (showWipeallModal)
-            {
-                <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="coinControlModalLabel">Wipe Storage</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false" aria-label="Close"></button>
+            <button class="btn btn-success" @onclick="Refresh" disabled="@refreshSpinner">
+                @if (refreshSpinner)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Refresh...</span>
+                }
+                else
+                {
+                    <span>Refresh</span>
+                }
+            </button>
+        </div>
+    </div>
+</div>
+
+@* Change Network *@
+<div class="row mt-4">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">currency_bitcoin</span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Change Network
+                    </h5>
+                    <p class="mb-0 mt-2 font-weight-normal text-sm">
+                        <span>Network Type: <strong>@networkType</strong></span>
+                    </p>
+                </div>
+            </div>
+            <div>
+
+                <button class="btn btn-warning" @onclick="() => showChangeNetworkModal = true">Change Network</button>
+
+                @if (showChangeNetworkModal)
+                {
+                    <div class="modal-wrapper">
+                        <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="coinControlModalLabel">Change Network</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => showChangeNetworkModal = false" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body modal-body-scroll">
+                                        <div class="alert alert-danger" role="alert">
+                                            <h5>This will wipe your wallet!</h5>
+                                        </div>
+
+                                        <div class="card">
+                                            <div class="card-header p-2">
+                                                <div class="d-flex align-items-center text-warning">
+                                                    <span class="material-icons opacity-10 me-2 fs-3">
+                                                        warning
+                                                    </span>
+                                                    <span>Warning</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-body pb-0 pt-0 ps-3 pe-3">
+                                                <p class="mb-0">By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
+                                            </div>
+                                            <div class="card-footer pb-2 pt-2 ps-3 pe-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                                    <label class="form-check-label mb-0" for="confirmWipeCheckbox">
+                                                        Confirm?
+                                                    </label>
+                                                </div>
+                                                @if (showConfirmWipeMessage)
+                                                {
+                                                    <div class="alert alert-danger text-white mt-2" role="alert">
+                                                        Please tick the box to wipe all storage!
+                                                    </div>
+                                                }
+
+                                            </div>
+                                        </div>
+
+
+                                        <!-- Dropdown for network selection -->
+                                        <div class="card card-body mb-3 mt-4">
+                                            <label for="networkSelection">Select Network:</label>
+                                            <select class="form-control mt-2" id="networkSelection" @bind="selectedNetwork">
+                                                <option value="testnet" selected>Testnet</option>
+                                                <option value="mainnet">Mainnet</option>
+                                            </select>
+                                        </div>
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button class="btn btn-danger" @onclick="ChangeNetwork">Change Network</button>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showChangeNetworkModal = false">Close</button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="modal-body modal-body-scroll">
-                                <div class="alert alert-danger" role="alert">
-                                    <h5>Are you sure you want to wipe all storage?</h5>
-                                </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
 
-                                <p>This will wipe your wallet as well!</p>
+@* Explorer *@
+<div class="row mt-4">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">search</span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Explorer
+                    </h5>
+                    <p class="mb-0 mt-2 font-weight-normal text-sm">
+                        Explorer url: @_networkConfiguration.GetDefaultExplorerUrl().First().Url
+                    </p>
+                </div>
+            </div>
+            <div>
+                <a class="btn btn-success" href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">Open Explorer</a>
+            </div>
+        </div>
+    </div>
+</div>
 
-                                <!-- Checkbox for confirmation -->
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
-                                    <label class="form-check-label" for="confirmWipeCheckbox">
-                                        I confirm I have a backup of my wallet words, yes wipe all data from this device.
-                                    </label>
-                                </div>
-                                <br />
-                                @if (showConfirmWipeMessage)
+
+@* Indexer *@
+<div class="row mt-4">
+
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">fact_check</span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Indexer
+                    </h5>
+                </div>
+            </div>
+        </div>
+        <form @onsubmit="AddIndexer">
+            <div class="input-group mb-3">
+                <input type="text" @bind-value="newIndexerLink" class="form-control" placeholder="Enter new indexer link" aria-label="Enter new indexer link" aria-describedby="button-addon">
+                <button class="btn btn-primary" type="submit" id="button-addon">Add indexer Link</button>
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table align-items-center mb-0">
+                <thead>
+                    <tr>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var indexer in settingsInfo.Indexers)
+                    {
+                        <tr>
+                            <td><a href="@indexer.Url" target="_blank">@indexer.Url</a></td>
+                            <td style="color: @(indexer.Status == UrlStatus.Online ? "green" : indexer.Status == UrlStatus.NotReady ? "yellow" :  "red");">@indexer.Status.ToString()</td>
+                            <td>
+                                @if (indexer.IsPrimary)
                                 {
-                                    <p class="text-danger-emphasis">Please tick the box to wipe all storage!</p>
+                                    <button class="btn btn-primary btn-sm" disabled>Primary</button>
                                 }
+                                else
+                                {
+                                    <button class="btn btn-secondary btn-sm" @onclick="() => SetPrimaryIndexer(indexer)">Set</button>
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-                                <hr />
 
-                                <!-- Dropdown for network selection -->
-                                <div class="mb-3">
-                                    <label for="networkSelection">Select Network:</label>
-                                    <select class="form-control" id="networkSelection" @bind="selectedNetwork">
-                                        <option value="testnet" selected>Testnet</option>
-                                        <option value="mainnet">Mainnet</option>
-                                    </select>
+@* Nostr Relays *@
+<div class="row mt-4">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">wifi</span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Nostr Relays
+                    </h5>
+                </div>
+            </div>
+        </div>
+        <form @onsubmit="AddRelay">
+            <div class="input-group mb-3">
+                <input type="text" @bind-value="newRelayLink" class="form-control" placeholder="Enter new relay link" aria-label="Enter new relay link" aria-describedby="button-addon2">
+                <button class="btn btn-primary" type="submit" id="button-addon2">Add relay Link</button>
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table align-items-center mb-0">
+                <thead>
+                    <tr>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var relay in settingsInfo.Relays)
+                    {
+                        <tr>
+                            <td><a href="@relay.Url" target="_blank">@relay.Url</a></td>
+                            <td>@relay.Name</td>
+                            <td style="color: @(relay.Status == UrlStatus.Online ? "green" : relay.Status == UrlStatus.NotReady ? "yellow" :  "red");">@relay.Status.ToString()</td>
+                            <td>
+                                @if (relay.IsPrimary)
+                                {
+                                    <button class="btn btn-primary btn-sm" disabled>Primary</button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-secondary btn-sm" @onclick="() => SetPrimaryRelay(relay)">Set</button>
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+@* Wipe Storage *@
+<div class="row mt-4">
+    <div class="card card-body border-danger border-3">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">delete_forever</span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Wipe Storage
+                    </h5>
+                    <p class="mb-0 mt-2 font-weight-normal text-sm">
+                        This will wipe your wallet!
+                    </p>
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-danger" @onclick="() => showWipeallModal = true">Wipe All Storage</button>
+                @if (showWipeallModal)
+                {
+                    <div class="modal-wrapper">
+                        <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="coinControlModalLabel">Wipe Storage</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body modal-body-scroll">
+                                        <div class="card">
+                                            <div class="card-header p-2">
+                                                <div class="d-flex align-items-center text-warning">
+                                                    <span class="material-icons opacity-10 me-2 fs-3">
+                                                        warning
+                                                    </span>
+                                                    <span>Warning</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-body pb-0 pt-0 ps-3 pe-3">
+                                                <p class="mb-0">By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
+                                            </div>
+                                            <div class="card-footer pb-2 pt-2 ps-3 pe-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                                    <label class="form-check-label mb-0" for="confirmWipeCheckbox">
+                                                        Confirm?
+                                                    </label>
+                                                </div>
+                                                @if (showConfirmWipeMessage)
+                                                {
+                                                    <div class="alert alert-danger text-white mt-2" role="alert">
+                                                        Please tick the box to wipe all storage!
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button class="btn btn-danger" @onclick="WipteAllData">Wipe Storage</button>
+
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false">Close</button>
+                                    </div>
                                 </div>
-
-                                <button class="btn btn-danger" @onclick="WipteAllData">Wipe Storage</button>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false">Close</button>
                             </div>
                         </div>
                     </div>
-                </div>
+                }
 
-            }
-
-            <hr /> <!-- Line separator -->
-            <br />
-
-            <div class="d-flex justify-content-end">
-                <button class="btn btn-info" @onclick="Refresh" disabled="@refreshSpinner">
-                    @if (refreshSpinner)
-                    {
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span>Refresh...</span>
-                    }
-                    else
-                    {
-                        <span>Refresh</span>
-                    }
-                </button>
-            </div>
-
-            <!-- Indexers Section -->
-            <h4>Indexers</h4>
-            <form @onsubmit="AddIndexer">
-                <div class="input-group mb-3">
-                    <input type="text" @bind-value="newIndexerLink" class="form-control" placeholder="Enter new indexer link" aria-label="Enter new indexer link" aria-describedby="button-addon">
-                    <button class="btn btn-primary" type="submit" id="button-addon">Add indexer Link</button>
-                </div>
-            </form>
-
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header pb-0 p-3">
-                        <div class="row">
-                            <div class="col-6 d-flex align-items-center">
-                                <h6 class="mb-0">Indexers</h6>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table align-items-center mb-0">
-                                <thead>
-                                    <tr>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var indexer in settingsInfo.Indexers)
-                                    {
-                                        <tr>
-                                            <td><a href="@indexer.Url" target="_blank">@indexer.Url</a></td>
-                                            <td style="color: @(indexer.Status == UrlStatus.Online ? "green" : indexer.Status == UrlStatus.NotReady ? "yellow" :  "red");">@indexer.Status.ToString()</td>
-                                            <td>
-                                                @if (indexer.IsPrimary)
-                                                {
-                                                    <button class="btn btn-primary btn-sm" disabled>Primary</button>
-                                                }
-                                                else
-                                                {
-                                                    <button class="btn btn-secondary btn-sm" @onclick="() => SetPrimaryIndexer(indexer)">Set</button>
-                                                }
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">Delete</button>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <br />
-            @* <hr />*@ <!-- Line separator -->
-            <!-- Nostr Relays Section -->
-
-            <h4>Nostr Relays</h4>
-            <form @onsubmit="AddRelay">
-                <div class="input-group mb-3">
-                    <input type="text" @bind-value="newRelayLink" class="form-control" placeholder="Enter new relay link" aria-label="Enter new relay link" aria-describedby="button-addon2">
-                    <button class="btn btn-primary" type="submit" id="button-addon2">Add relay Link</button>
-                </div>
-            </form>
-
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header pb-0 p-3">
-                        <div class="row">
-                            <div class="col-6 d-flex align-items-center">
-                                <h6 class="mb-0">Nostr Relays</h6>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table align-items-center mb-0">
-                                <thead>
-                                    <tr>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var relay in settingsInfo.Relays)
-                                    {
-                                        <tr>
-                                            <td><a href="@relay.Url" target="_blank">@relay.Url</a></td>
-                                            <td>@relay.Name</td>
-                                            <td style="color: @(relay.Status == UrlStatus.Online ? "green" : relay.Status == UrlStatus.NotReady ? "yellow" :  "red");">@relay.Status.ToString()</td>
-                                            <td>
-                                                @if (relay.IsPrimary)
-                                                {
-                                                    <button class="btn btn-primary btn-sm" disabled>Primary</button>
-                                                }
-                                                else
-                                                {
-                                                    <button class="btn btn-secondary btn-sm" @onclick="() => SetPrimaryRelay(relay)">Set</button>
-                                                }
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">Delete</button>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -228,6 +354,9 @@
     private bool refreshSpinner = false;
 
     private bool showWipeallModal = false;
+    private bool showChangeNetworkModal = false;
+
+
     private bool confirmWipe = false;
     private bool showConfirmWipeMessage = false;
     private string selectedNetwork = "testnet"; // Default to "testnet"
@@ -432,6 +561,10 @@
 
         showWipeallModal = false;
         showConfirmWipeMessage = false;
+        confirmWipe = false;
+
+        if (!networkType.ToLower().Contains("test"))
+            selectedNetwork = "mainnet";
 
         _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
         _networkService.AddSettingsIfNotExist();
@@ -444,4 +577,32 @@
 
         NavMenuState.NotifyStateChanged();
     }
+
+    private void ChangeNetwork()
+    {
+        if (!confirmWipe)
+        {
+            showConfirmWipeMessage = true;
+            return;
+        }
+
+        _clientStorage.WipeStorage();
+        _cacheStorage.WipeSession();
+
+        showChangeNetworkModal = false;
+        showConfirmWipeMessage = false;
+        confirmWipe = false;
+
+        _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
+        _networkService.AddSettingsIfNotExist();
+
+        networkType = _networkConfiguration.GetNetwork().Name;
+        settingsInfo = _clientStorage.GetSettingsInfo();
+
+        hasWallet = _walletStorage.HasWallet();
+        StateHasChanged();
+
+        NavMenuState.NotifyStateChanged();
+    }
+
 }
