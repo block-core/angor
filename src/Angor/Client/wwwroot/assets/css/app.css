@@ -771,7 +771,7 @@ tr[style*="cursor: pointer;"] {
     padding: 0;
     overflow: hidden;
     border-radius: 10px 0 0 10px;
-    max-height:230px;
+    max-height: 230px;
 }
 
 @media (max-width: 768px) {
@@ -1007,14 +1007,34 @@ tr[style*="cursor: pointer;"] {
     z-index: 1000000;
     backdrop-filter: blur(3px);
 }
+
 .card-img-top {
-    height: 230px; 
-    object-fit: cover; 
+    height: 230px;
+    object-fit: cover;
 }
+
 .z-index-4 {
     z-index: 1000001 !important;
 }
+
 .alert-message {
     margin: auto;
     bottom: 20px;
 }
+
+.menu-text {
+    color: #1f5d6a !important;
+}
+
+.dark-version .menu-text {
+    color: #FFFDFA !important;
+}
+
+.menu-text.active {
+    color: #1f5d6a !important;
+}
+
+.dark-version .menu-text.active {
+    color: #FFFDFA !important;
+}
+ 

@@ -119,7 +119,6 @@ h6,
     margin-bottom: 0.5rem;
     font-weight: 400;
     line-height: 1.2;
-    color: #344767;
 }
 
 h1,
@@ -21485,6 +21484,11 @@ fieldset:disabled .btn {
     }
 }
 
+.sidenav {
+    background: #fefefd !important;
+    color: #1f5d6a !important;
+}
+
 .dark-version {
     background-color: #022229 !important
 }
@@ -23068,33 +23072,23 @@ hr {
         width: 1px;
     }
 
-        hr.vertical.light {
-            background-image: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff, rgba(255, 255, 255, 0));
-        }
+.dark-version hr.vertical {
+    background-image: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff, rgba(255, 255, 255, 0));
+}
 
-        hr.vertical.dark {
-            background-image: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.4), transparent);
-        }
+hr.vertical {
+    background-image: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.4), transparent);
+}
 
-        hr.vertical.gray-light {
-            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
-        }
+.dark-version hr.horizontal {
+    background-image: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff, rgba(255, 255, 255, 0));
+}
 
-    hr.horizontal {
-        background-color: transparent;
-    }
+hr.horizontal {
+    background-image: linear-gradient(90deg, rgba(255, 255, 255, 0), #000, rgba(255, 255, 255, 0));
+}
 
-        hr.horizontal.light {
-            background-image: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff, rgba(255, 255, 255, 0));
-        }
 
-        hr.horizontal.dark {
-            background-image: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff, rgba(255, 255, 255, 0));
-        }
-
-        hr.horizontal.gray-light {
-            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
-        }
 
 .lock-size {
     width: 1.7rem;
@@ -23224,22 +23218,6 @@ hr {
         height: 40px;
         min-height: 40px;
     }
-
-    hr.horizontal {
-        background-color: transparent;
-    }
-
-        hr.horizontal:not(.dark) {
-            background-image: linear-gradient(to right, rgba(255, 255, 255, 0), white, rgba(255, 255, 255, 0));
-        }
-
-        hr.horizontal.vertical {
-            transform: rotate(90deg);
-        }
-
-        hr.horizontal.dark {
-            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0));
-        }
 }
 
 .overflow-visible {
@@ -24383,12 +24361,20 @@ hr {
     padding: 1.5rem 2rem;
 }
 
-.sidenav .collapse .nav-item .nav-link.active {
+.dark-version .sidenav .collapse .nav-item .nav-link.active {
     color: #fff !important;
 }
 
-    .sidenav .collapse .nav-item .nav-link.active i {
+    .dark-version .sidenav .collapse .nav-item .nav-link.active i {
         color: #fff !important;
+    }
+
+.sidenav .collapse .nav-item .nav-link.active {
+    color: #1f5d6a !important;
+}
+
+    .sidenav .collapse .nav-item .nav-link.active i {
+        color: #1f5d6a !important;
     }
 
 body:not(.dark-version) .sidenav.bg-white .collapse .nav-item .nav-link.active.text-dark i,
