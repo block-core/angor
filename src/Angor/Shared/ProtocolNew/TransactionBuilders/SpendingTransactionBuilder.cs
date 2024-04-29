@@ -86,9 +86,9 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
             inputIndex++;
         }
 
-        var ret = network.CreateTransaction(spendingTrx.ToHex());
+        var transaction = network.CreateTransaction(spendingTrx.ToHex());
 
-        return new TransactionInfo { Transaction = ret, TransactionFee = feeToReduce };
+        return new TransactionInfo { Transaction = transaction, TransactionFee = feeToReduce };
     }
 
     private (string investorKey, uint256? secretHash, List<IndexedTxOut> investmentTrxOutputs) GetInvestorTransactionData(
