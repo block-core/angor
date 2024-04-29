@@ -1,5 +1,6 @@
 const Navbar = {
     WALLET: 'wallet',
+    BROWSE: 'browse',
     CREATE_WALLET: 'Create Wallet',
     GENERATE_WALLET: 'Generate New Wallet Words',
 };
@@ -28,6 +29,16 @@ const QR_CODE_CY = {
 
 const ERROR_MESSAGES = {
     NULL_PASSWORD_MESSAGE: "New wallet password is null or empty",
+    NO_PROJECTS_FOUND: "No projects found.",
 }
 
-export {Navbar,WALLET_DATA_CY,QR_CODE_CY,ERROR_MESSAGES};
+const BROWSE_DATA_CY = {
+    FIND_BUTTON: "find-button",
+    SEARCHED_PROJECT: "searchedProject",
+    SEARCHED_TITLE: "searchedTitle",
+    SEARCHED_SUB_TITLE: "searchedSubTitle",
+    PROJECT_INFO: "project-info",
+    PROJECT_GRID: "projectsGrid",
+}
+
+export {Navbar,WALLET_DATA_CY,QR_CODE_CY,ERROR_MESSAGES,BROWSE_DATA_CY};

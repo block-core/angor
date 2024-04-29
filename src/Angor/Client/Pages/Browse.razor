@@ -49,7 +49,7 @@
             <!-- Search Section -->
             <div class="input-group">
                 <input type="text" class="form-control" placeholder="Enter Angor project identifier" id="searchQuery" @bind="searchQuery">
-                <button class="btn btn-primary" type="button" @onclick="FindProject" disabled="@findInProgress">Find</button>
+                <button class="btn btn-primary" type="button" @onclick="FindProject" disabled="@findInProgress" data-cy="find-button">Find</button>
             </div>
         </div>
     </div>
@@ -66,15 +66,15 @@
 <!-- Search Result -->
 @if (findProject != null)
 {
-    <div class="card mt-4">
+    <div class="card mt-4" data-cy="searchedProject">
         <div class="card-body">
             @if (SessionStorage.IsProjectInStorageById(findProject.ProjectIdentifier))
             {
                 var project = SessionStorage.GetProjectById(findProject.ProjectIdentifier);
                 if (project?.Metadata != null)
                 {
-                    <h3 class="card-title">@project.Metadata.Name</h3>
-                    <p class="card-subtitle">@project.Metadata.About</p>
+                    <h3 class="card-title" data-cy="searchedTitle">@project.Metadata.Name</h3>
+                    <p class="card-subtitle" data-cy="searchedSubTitle">@project.Metadata.About</p>
                     <hr>
                 }
             }
@@ -82,7 +82,7 @@
             {
                 <p class="text-warning-emphasis">Project not found in any relay!</p>
             }
-            <p>
+            <p data-cy="project-info">
                 Project ID:@findProject.ProjectIdentifier
                 <br />
                 Nostr ID  :@(NostrPublicKey.FromHex(findProject.NostrPubKey).Bech32)
@@ -102,7 +102,7 @@
                 <span class="material-icons opacity-10 fs-1 me-3 btn-angor user-select-none">
                     info
                 </span>
-                <span class="text-warning">No projects found.</span>
+                <span class="text-warning" data-cy="projectsGrid">No projects found.</span>
             </div>
         </div>
     </div>

@@ -58,6 +58,14 @@ Cypress.Commands.add('clickOnCheckBoxByDataCy', (datacy) => {
     cy.get(`[data-cy=${datacy}]`).check();
 })
 
+Cypress.Commands.add('verifyTextInDataCy', (datacy,text) => {
+    cy.get(`[data-cy=${datacy}]`).contains(text).should('exist');
+})
+
+Cypress.Commands.add('verifyTextInDataCyWithExistElement', (exist,datacy,text) => {
+    cy.get(exist).get(`[data-cy=${datacy}]`).contains(text).should('exist');
+})
+
 Cypress.Commands.add('waitForLoader', () => {
     cy.get('.loader').should('not.exist');
 })
