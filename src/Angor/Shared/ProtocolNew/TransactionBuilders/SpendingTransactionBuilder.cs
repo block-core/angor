@@ -21,7 +21,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         _investmentScriptBuilder = investmentScriptBuilder;
     }
 
-    public Transaction BuildRecoverInvestorRemainingFundsInProject(string investmentTransactionHex ,ProjectInfo projectInfo, 
+    public TransactionInfo BuildRecoverInvestorRemainingFundsInProject(string investmentTransactionHex ,ProjectInfo projectInfo, 
         int startStageIndex, string receiveAddress, string privateKey, FeeRate feeRate, 
         Func<ProjectScripts, WitScript> buildWitScriptWithSigPlaceholder,
         Func<WitScript, TaprootSignature, WitScript> addSignatureToWitScript)
@@ -86,7 +86,9 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
             inputIndex++;
         }
 
-        return network.CreateTransaction(spendingTrx.ToHex());
+        var transaction = network.CreateTransaction(spendingTrx.ToHex());
+
+        return new TransactionInfo { Transaction = transaction, TransactionFee = feeToReduce };
     }
 
     private (string investorKey, uint256? secretHash, List<IndexedTxOut> investmentTrxOutputs) GetInvestorTransactionData(

@@ -10,6 +10,9 @@ public class NetworkConfiguration : INetworkConfiguration
     public static string AngorTestKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
     public static string AngorMainKey = "todo: add an Angor key here";
 
+    public static long AngorCreateFeeSats = 10000;
+
+
     private Network currentNetwork;
 
     public void SetNetwork(Network network)

@@ -178,7 +178,9 @@
                         <p class="mb-1">The amount to be recovered in to a penalty = @StageInfo.Items.Where(s=> !s.IsSpent).Sum(s=> s.Amount) @network.CoinTicker</p>
 
                         <p class="mb-1">The penalty duration is @project.ProjectInfo.PenaltyDays days </p>
-                        
+
+                        <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(recoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+
                         <hr>
 
                         <div class="mb-3">
@@ -220,9 +222,11 @@
                     </div>
                     <div class="modal-body modal-body-scroll">
 
-                        <p class="mb-1">The amount to be released from the penalty = @Money.Satoshis(releaseRecoveryTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                        <p class="mb-1">The amount to be released from the penalty = @Money.Satoshis(releaseRecoveryTransaction.Transaction.Outputs.Sum(s => s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
-                        <p class="mb-1">Send to @releaseRecoveryTransaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
+                        <p class="mb-1">Send to @releaseRecoveryTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
+
+                        <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(releaseRecoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
                         <hr>
 
@@ -265,9 +269,11 @@
                     </div>
                     <div class="modal-body modal-body-scroll">
 
-                        <p class="mb-1">The amount to claim back after project ended = @Money.Satoshis(endOfProjectTransaction.Outputs.Sum(s=> s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                        <p class="mb-1">The amount to claim back after project ended = @Money.Satoshis(endOfProjectTransaction.Transaction.Outputs.Sum(s => s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
-                        <p class="mb-1">Send to @endOfProjectTransaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
+                        <p class="mb-1">Send to @endOfProjectTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
+
+                        <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(endOfProjectTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
                         <hr>
 
@@ -324,9 +330,9 @@
 
     private Transaction? investmentTransaction; 
     private Transaction? unsignedRecoveryTransaction;
-    private Transaction? recoveryTransaction;
-    private Transaction? releaseRecoveryTransaction;
-    private Transaction? endOfProjectTransaction;
+    private TransactionInfo? recoveryTransaction;
+    private TransactionInfo? releaseRecoveryTransaction;
+    private TransactionInfo? endOfProjectTransaction;
 
     StageData StageInfo = new();
     string explorerLink;
@@ -639,7 +645,7 @@
             // add fee to the recovery trx
             recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
-            Logger.LogInformation($"recoveryTransaction={recoveryTransaction.GetHash().ToString()}");
+            Logger.LogInformation($"recoveryTransaction={recoveryTransaction.Transaction.GetHash().ToString()}");
 
             showRecoveryModal = true;
         }
@@ -666,6 +672,13 @@
             {
                 if (res <= feeData.FeeEstimations.Fees.Count)
                 {
+                    if (!passwordComponent.HasPassword())
+                    {
+                        showRecoveryModal = false;
+                        notificationComponent.ShowErrorMessage("Wallet password expired");
+                        return;
+                    }
+
                     var words =  await passwordComponent.GetWalletAsync();
 
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
@@ -692,7 +705,7 @@
 
             storage.UpdateInvestmentProject(project);
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, recoveryTransaction);
+            var response = await _WalletOperations.PublishTransactionAsync(network, recoveryTransaction.Transaction);
 
             if (!response.Success)
             {
@@ -700,12 +713,12 @@
                 return;
             }
 
-            project.RecoveryTransactionId = recoveryTransaction.GetHash().ToString();
-            project.AmountInRecovery = recoveryTransaction.TotalOut;
+            project.RecoveryTransactionId = recoveryTransaction.Transaction.GetHash().ToString();
+            project.AmountInRecovery = recoveryTransaction.Transaction.TotalOut;
 
             storage.UpdateInvestmentProject(project);
 
-            AddTransactionToPending(recoveryTransaction);
+            AddTransactionToPending(recoveryTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
 
@@ -754,14 +767,16 @@
 
             if (recoveryTransaction == null)
             {
+                recoveryTransaction = new TransactionInfo();
+
                 var trxHex = await _IndexerService.GetTransactionHexByIdAsync(project.RecoveryTransactionId);
-                recoveryTransaction = network.CreateTransaction(trxHex);
+                recoveryTransaction.Transaction = network.CreateTransaction(trxHex);
             }
 
-            releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project.ProjectInfo, investmentTransaction, recoveryTransaction,
+            releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project.ProjectInfo, investmentTransaction, recoveryTransaction.Transaction,
                 accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
-            Logger.LogInformation($"recoveryReleaseTransactionId={releaseRecoveryTransaction.GetHash().ToString()}");
+            Logger.LogInformation($"recoveryReleaseTransactionId={releaseRecoveryTransaction.Transaction.GetHash().ToString()}");
 
             showRecoveryReleaseModal = true;
         }
@@ -788,6 +803,13 @@
             {
                 if (res <= feeData.FeeEstimations.Fees.Count)
                 {
+                    if (!passwordComponent.HasPassword())
+                    {
+                        showRecoveryReleaseModal = false;
+                        notificationComponent.ShowErrorMessage("Wallet password expired");
+                        return;
+                    }
+
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
@@ -795,7 +817,7 @@
 
                     var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
 
-                    releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project.ProjectInfo, investmentTransaction, recoveryTransaction,
+                    releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project.ProjectInfo, investmentTransaction, recoveryTransaction.Transaction,
                         accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
                     StateHasChanged();
@@ -816,7 +838,7 @@
 
             storage.UpdateInvestmentProject(project);
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, releaseRecoveryTransaction);
+            var response = await _WalletOperations.PublishTransactionAsync(network, releaseRecoveryTransaction.Transaction);
 
             if (!response.Success)
             {
@@ -824,10 +846,10 @@
                 return;
             }
 
-            project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.GetHash().ToString();
+            project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.Transaction.GetHash().ToString();
             storage.UpdateInvestmentProject(project);
 
-            AddTransactionToPending(releaseRecoveryTransaction);
+            AddTransactionToPending(releaseRecoveryTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
 
@@ -879,7 +901,7 @@
             endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project.ProjectInfo, fromStage.StageIndex,
                 accountInfo.GetNextChangeReceiveAddress(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), feeData.SelectedFeeEstimation);
 
-            Logger.LogInformation($"EndOfProjectTransactionId={endOfProjectTransaction.GetHash().ToString()}");
+            Logger.LogInformation($"EndOfProjectTransactionId={endOfProjectTransaction.Transaction.GetHash().ToString()}");
 
             showEndOfProjectModal = true;
         }
@@ -906,6 +928,13 @@
             {
                 if (res <= feeData.FeeEstimations.Fees.Count)
                 {
+                    if (!passwordComponent.HasPassword())
+                    {
+                        showEndOfProjectModal = false;
+                        notificationComponent.ShowErrorMessage("Wallet password expired");
+                        return;
+                    }
+
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
@@ -936,7 +965,7 @@
 
             storage.UpdateInvestmentProject(project);
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, endOfProjectTransaction);
+            var response = await _WalletOperations.PublishTransactionAsync(network, endOfProjectTransaction.Transaction);
 
             if (!response.Success)
             {
@@ -944,10 +973,10 @@
                 return;
             }
 
-            project.EndOfProjectTransactionId = endOfProjectTransaction.GetHash().ToString();
+            project.EndOfProjectTransactionId = endOfProjectTransaction.Transaction.GetHash().ToString();
             storage.UpdateInvestmentProject(project);
 
-            AddTransactionToPending(endOfProjectTransaction);
+            AddTransactionToPending(endOfProjectTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
         }

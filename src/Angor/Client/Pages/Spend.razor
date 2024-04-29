@@ -143,7 +143,8 @@
                         
                         <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
 
-                        <p class="mb-1">The transactions to be spent @signedTransaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
+                        <p class="mb-1">The transactions to be spent @signedTransaction.Transaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
+                        <p class="mb-1">Miner fee @Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
                         <hr>
 
@@ -226,7 +227,7 @@
 
     List<StageData> stageDatas = new();
 
-    Transaction signedTransaction;
+    TransactionInfo signedTransaction;
     FounderContext founderContext;
     int selectedStageId;
 
@@ -456,6 +457,13 @@
             {
                 if (res <= feeData.FeeEstimations.Fees.Count)
                 {
+                    if (!passwordComponent.HasPassword())
+                    {
+                        showCreateModal = false;
+                        notificationComponent.ShowErrorMessage("Wallet password expired");
+                        return;
+                    }
+
                     var words = await passwordComponent.GetWalletAsync();
                     feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
@@ -485,7 +493,7 @@
         {
             showCreateModal = false;
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
 
             if (!response.Success)
             {
@@ -496,18 +504,18 @@
             // add all outptus to the pending list
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInbound = _cacheStorage.GetUnconfirmedInboundFunds();
-            var pendingInbound = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction);
+            var pendingInbound = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction.Transaction);
             unconfirmedInbound.AddRange(pendingInbound);
             _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInbound);
 
             var unconfirmedOutbound = _cacheStorage.GetUnconfirmedOutboundFunds();
-            unconfirmedOutbound.AddRange(signedTransaction.Inputs.Select(_ => new Outpoint(_.PrevOut.Hash.ToString(), (int)_.PrevOut.N)));
+            unconfirmedOutbound.AddRange(signedTransaction.Transaction.Inputs.Select(_ => new Outpoint(_.PrevOut.Hash.ToString(), (int)_.PrevOut.N)));
             _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
 
             // mark stage as spent
             stageDatas.FirstOrDefault(_ => _.StageIndex == selectedStageId)?.Items.ForEach(_ =>
             {
-                if (signedTransaction.Inputs.Any(a => _.Trxid == a.PrevOut.Hash.ToString() && _.Outputindex == a.PrevOut.N))
+                if (signedTransaction.Transaction.Inputs.Any(a => _.Trxid == a.PrevOut.Hash.ToString() && _.Outputindex == a.PrevOut.N))
                     _.IsSpent = true;
             });
 

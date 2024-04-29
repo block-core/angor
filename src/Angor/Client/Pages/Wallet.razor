@@ -815,15 +815,15 @@
     private async Task CreateWalletAsync()
     {
         if (string.IsNullOrEmpty(newWalletWords))
-        {  
-            notificationComponent.ShowNotificationMessage("New wallet words are null or empty");
-            //throw new ArgumentNullException(nameof(newWalletWords));
+        {
+            walletWordsCreateModal = false;
+            notificationComponent.ShowErrorMessage("New wallet words are null or empty");
             return;
         }
         if (string.IsNullOrEmpty(newWalletPassword))
         {
-            notificationComponent.ShowNotificationMessage("New wallet password is null or empty");
-            //throw new ArgumentNullException(nameof(newWalletPassword));
+            walletWordsCreateModal = false;
+            notificationComponent.ShowErrorMessage("New wallet password is null or empty");
             return;
         }
 
@@ -863,6 +863,7 @@
         }
         catch (Exception e)
         {
+            walletWordsCreateModal = false;
             Logger.LogError(e, e.Message);
             notificationComponent.ShowErrorMessage(e.Message);
         }
@@ -1077,7 +1078,7 @@
         {
             sendConfirmSpinner = false;
             sendConfirmModal = false;
-            notificationComponent.ShowErrorMessage("Wallet password not found");
+            notificationComponent.ShowErrorMessage("Wallet password expired");
             return;
         }
 
