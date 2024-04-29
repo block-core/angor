@@ -11,6 +11,7 @@ public class NetworkConfiguration : INetworkConfiguration
     public static string AngorMainKey = "todo: add an Angor key here";
 
     public static long AngorCreateFeeSats = 10000;
+    public static double AngorInvestFeePercentage = 1;
 
 
     private Network currentNetwork;
