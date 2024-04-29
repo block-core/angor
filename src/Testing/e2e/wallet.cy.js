@@ -1,5 +1,6 @@
-import '../support/commands'
-import {Navbar,WALLET_DATA_CY,QR_CODE_CY} from '../support/enums'
+import '../support/commands/commands'
+import '../support/commands/wallet_commands'
+import {Navbar,WALLET_DATA_CY,QR_CODE_CY,ERROR_MESSAGES} from '../support/enums'
 
 describe('walletSpec', { retries: 3 }, () => {
   beforeEach(() => {
@@ -10,10 +11,10 @@ describe('walletSpec', { retries: 3 }, () => {
     cy.clickOnNavBar(Navbar.WALLET)
     cy.clickElementWithDataCy(WALLET_DATA_CY.CREATE_WALLET)
     cy.clickElementWithDataCy(WALLET_DATA_CY.GENERATE_WALLET_WORDS)
-    cy.get('textarea.form-control[readonly]').invoke('val').then(walletWords => {
-      cy.clickSubmitButton('New wallet password is null or empty'); //try to create wallet without password and checkbox
+    cy.get('textarea.form-control[readonly]').invoke('val').as('walletWords').then(walletWords => {
+      cy.clickSubmitButton(ERROR_MESSAGES.NULL_PASSWORD_MESSAGE); //try to create wallet without password and checkbox
       cy.typeTextInElement('password','abc123')
-      cy.clickSubmitButton('New wallet password is null or empty'); //try to create wallet without checkbox
+      cy.clickSubmitButton(ERROR_MESSAGES.NULL_PASSWORD_MESSAGE); //try to create wallet without checkbox
       cy.clickOnCheckBoxByDataCy(WALLET_DATA_CY.WALLET_CHECKBOX);
       cy.clickSubmitButton();
       cy.waitForLoader()
@@ -25,7 +26,7 @@ describe('walletSpec', { retries: 3 }, () => {
       cy.clickElementWithDataCy(WALLET_DATA_CY.WALLET_WORDS_SHOW)
       cy.get(`[data-cy=${WALLET_DATA_CY.WALLET_WORDS_ALERT}]`).should('contain.text', walletWords);
       cy.clickElementWithDataCy(WALLET_DATA_CY.CLOSE_WALLET_WORDS)
-    });
+    })
     cy.clickElementWithDataCy(WALLET_DATA_CY.RECEIVE_FUNDS)
     cy.get(`[data-cy=${WALLET_DATA_CY.WALLET_ADDRESS}]`).invoke('text').then(walletAdress => {
       cy.clickElementWithDataCy(QR_CODE_CY.WALLET_QR);
@@ -35,5 +36,9 @@ describe('walletSpec', { retries: 3 }, () => {
         });
     });
     
+  });
+
+  it('sendFunds', () => {
+    cy.createWallet();
   });
 });

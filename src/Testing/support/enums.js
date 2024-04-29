@@ -26,4 +26,8 @@ const QR_CODE_CY = {
 
 };
 
-export {Navbar,WALLET_DATA_CY,QR_CODE_CY};
+const ERROR_MESSAGES = {
+    NULL_PASSWORD_MESSAGE: "New wallet password is null or empty",
+}
+
+export {Navbar,WALLET_DATA_CY,QR_CODE_CY,ERROR_MESSAGES};

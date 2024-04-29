@@ -1,4 +1,3 @@
-
 Cypress.Commands.add('visitLocalhost', () => {
     // Set the viewport to a desktop resolution
     cy.viewport(1280, 720); // You can adjust the width and height as needed
@@ -35,10 +34,7 @@ Cypress.Commands.add("clickCardContains", (name, msg) => {
         cy.get('.snackbar').should('be.visible'); // Assuming snackbar has a class 'snackbar'
         cy.get('.snackbar').contains(msg); // Assuming snackbar contains text
     }
-  })
-  
-
-
+})
 
 Cypress.Commands.add('clickSubmitButton', (msg) => {
     cy.get('.btn.btn-success').click();
@@ -55,7 +51,7 @@ Cypress.Commands.add('typeTextInElement', (type,msg) => {
 
 Cypress.Commands.add('clickOnCheckBox', () => {
     cy.get(`.form-check input[type="checkbox"]`)
-  .check();
+.check();
 })
 
 Cypress.Commands.add('clickOnCheckBoxByDataCy', (datacy) => {
@@ -66,10 +62,6 @@ Cypress.Commands.add('waitForLoader', () => {
     cy.get('.loader').should('not.exist');
 })
 
-Cypress.Commands.add('verifyBalance', (num,datacy) => {
-    cy.get(`[data-cy=${datacy}]`)
-        .should('be.visible')
-        .contains(`${num}`);
-})
+
 
 
