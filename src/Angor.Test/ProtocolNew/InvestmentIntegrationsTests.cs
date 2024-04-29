@@ -285,7 +285,7 @@ namespace Angor.Test
 
             Assert.NotNull(seeder1Expierytrx);
             
-            TransactionValidation.ThanTheTransactionHasNoErrors(seeder1Expierytrx,
+            TransactionValidation.ThanTheTransactionHasNoErrors(seeder1Expierytrx.Transaction,
                 seeder1InvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
         }
 
@@ -338,7 +338,7 @@ namespace Angor.Test
 
             Assert.NotNull(investor1Expierytrx);
             
-            TransactionValidation.ThanTheTransactionHasNoErrors(investor1Expierytrx,
+            TransactionValidation.ThanTheTransactionHasNoErrors(investor1Expierytrx.Transaction,
                 investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
         }
 
@@ -395,7 +395,7 @@ namespace Angor.Test
 
             Assert.NotNull(investorExpierytrx);
             
-            TransactionValidation.ThanTheTransactionHasNoErrors(investorExpierytrx,
+            TransactionValidation.ThanTheTransactionHasNoErrors(investorExpierytrx.Transaction,
                 investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
         }
 
@@ -555,7 +555,7 @@ namespace Angor.Test
                 coins.Add(new Blockcore.NBitcoin.Coin(indexedTxOut));
             }
 
-            TransactionValidation.ThanTheTransactionHasNoErrors(releaseTransaction, coins);
+            TransactionValidation.ThanTheTransactionHasNoErrors(releaseTransaction.Transaction, coins);
 
         }
 
@@ -622,6 +622,7 @@ namespace Angor.Test
                 var partSecrets = secrets.Where((_, index) => index != i)
                     .ToList();
                 
+
                 var investorRecoverFundsNoPenalty = _investorTransactionActions.RecoverRemainingFundsWithOutPenalty(
                     investorInvTrx.ToHex(), projectInvestmentInfo, stageIndex,
                     investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
@@ -630,7 +631,7 @@ namespace Angor.Test
 
                 Assert.NotNull(investorRecoverFundsNoPenalty);
             
-                TransactionValidation.ThanTheTransactionHasNoErrors(investorRecoverFundsNoPenalty,
+                TransactionValidation.ThanTheTransactionHasNoErrors(investorRecoverFundsNoPenalty.Transaction,
                     investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
             }
         }

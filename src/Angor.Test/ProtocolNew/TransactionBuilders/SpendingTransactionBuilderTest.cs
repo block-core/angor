@@ -51,7 +51,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
         );
 
         //All inputs are from the investment transaction outputs
-        Assert.Contains(recoveryTransaction.Inputs.AsIndexedInputs(),
+        Assert.Contains(recoveryTransaction.Transaction.Inputs.AsIndexedInputs(),
             _ => investmentTrx.Outputs.AsIndexedOutputs().Any(o => o.ToOutPoint().Equals(_.PrevOut)));
     }
     
@@ -126,7 +126,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
             (_, s) => { return expectedFinalWitSig; }
         );
 
-        Assert.Equivalent(recoveryTransaction.Inputs.Select(_ => _.WitScript.ToString()),
+        Assert.Equivalent(recoveryTransaction.Transaction.Inputs.Select(_ => _.WitScript.ToString()),
             new List<string>()
                 { expectedFinalWitSig.ToString(), expectedFinalWitSig.ToString(), expectedFinalWitSig.ToString() });
     }

@@ -119,7 +119,7 @@ public class WalletOperationsTest : AngorTestData
                 new Money(utxo.value), Blockcore.Consensus.ScriptInfo.Script.FromHex(utxo.scriptHex))); //Adding fee inputs
         }
 
-        TransactionValidation.ThanTheTransactionHasNoErrors(recoveryTransactions, coins);
+        TransactionValidation.ThanTheTransactionHasNoErrors(recoveryTransactions.Transaction, coins);
     }
 
     [Fact]
@@ -187,6 +187,6 @@ public class WalletOperationsTest : AngorTestData
                     new Money(utxo.value), Blockcore.Consensus.ScriptInfo.Script.FromHex(utxo.scriptHex))); //Adding fee inputs
         }
 
-        TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction, coins);
+        TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction.Transaction, coins);
     }
 }
