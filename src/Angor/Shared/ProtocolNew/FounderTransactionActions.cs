@@ -77,7 +77,7 @@ public class FounderTransactionActions : IFounderTransactionActions
     /// Allow the founder to spend the coins in a stage after the timelock has passed
     /// </summary>
     /// <exception cref="Exception"></exception>
-    public Transaction SpendFounderStage(ProjectInfo projectInfo, IEnumerable<string> investmentTransactionsHex, int stageNumber, Script founderRecieveAddress, string founderPrivateKey,
+    public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<string> investmentTransactionsHex, int stageNumber, Script founderRecieveAddress, string founderPrivateKey,
         FeeEstimation fee)
     {
         var network = _networkConfiguration.GetNetwork();
@@ -100,10 +100,12 @@ public class FounderTransactionActions : IFounderTransactionActions
             .Select(trx => AddInputToSpendingTransaction(projectInfo, stageNumber, trx, spendingTransaction))
             .ToList();
 
-        spendingTransaction.Outputs[0].Value -= nbitcoinNetwork
+        var totalFee = nbitcoinNetwork
             .CreateTransactionBuilder()
             .AddCoins(stageOutputs.Select(_ => _.ToCoin()))
             .EstimateFees(spendingTransaction, new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(fee.FeeRate)));
+
+        spendingTransaction.Outputs[0].Value -= totalFee;
 
         // Step 4 - sign the taproot inputs
         var trxData = spendingTransaction.PrecomputeTransactionData(stageOutputs.Select(_ => _.TxOut).ToArray());
@@ -132,7 +134,9 @@ public class FounderTransactionActions : IFounderTransactionActions
             inputIndex++;
         }
 
-        return network.CreateTransaction(spendingTransaction.ToHex());
+        var finalTrx = network.CreateTransaction(spendingTransaction.ToHex());
+
+        return new TransactionInfo {Transaction = finalTrx, TransactionFee = totalFee};
     }
 
     public Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, string nostrPubKey)

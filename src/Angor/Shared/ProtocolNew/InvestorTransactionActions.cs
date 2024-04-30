@@ -18,6 +18,7 @@ using DBreeze.Utils;
 using Money = Blockcore.NBitcoin.Money;
 using SigHash = Blockcore.Consensus.ScriptInfo.SigHash;
 using Utils = Blockcore.NBitcoin.Utils;
+using NBitcoin.OpenAsset;
 
 namespace Angor.Shared.ProtocolNew;
 
@@ -92,7 +93,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDays, investorKey);
     }
 
-    public Transaction BuildAndSignRecoverReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
+    public TransactionInfo BuildAndSignRecoverReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
         Transaction recoveryTransaction, string investorReceiveAddress, FeeEstimation feeEstimation, string investorPrivateKey)
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
@@ -143,10 +144,10 @@ public class InvestorTransactionActions : IInvestorTransactionActions
                 Blockcore.Consensus.ScriptInfo.Op.GetPushOp(spendingScript.ToBytes()));
         }
 
-        return transaction;
+        return new TransactionInfo { Transaction = transaction, TransactionFee = fee };
     }
 
-    public Transaction RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex,
+    public TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex,
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation)
     {
         return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, stageIndex,
@@ -169,7 +170,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             });
     }
 
-    public Transaction RecoverRemainingFundsWithOutPenalty(string transactionHex, ProjectInfo projectInfo, int stageIndex,
+    public TransactionInfo RecoverRemainingFundsWithOutPenalty(string transactionHex, ProjectInfo projectInfo, int stageIndex,
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation,
         IEnumerable<byte[]> seederSecrets)
     {

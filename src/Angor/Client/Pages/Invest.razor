@@ -125,9 +125,9 @@
                             <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
                             <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
 
-                            <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(signedTransactionFee).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-                            <p class="mb-1"><strong>Angor fee:</strong> @signedTransaction?.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-                        
+                            <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                            <p class="mb-1"><strong>Angor fee:</strong> @signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+
                             <hr>
 
                             <div class="mb-3">
@@ -266,9 +266,8 @@
     bool invested = false;
     private Project? project;
     private bool showCreateModal;
-    Transaction? signedTransaction;
+    TransactionInfo? signedTransaction;
     Transaction unSignedTransaction;
-    long signedTransactionFee;
 
     private FeeData feeData = new();
 
@@ -505,7 +504,7 @@
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
-            signedTransactionFee = _WalletOperations.CalculateFee(accountInfo, signedTransaction);
+            showCreateModal = true;
         }
         catch (Exception e)
         {
@@ -514,7 +513,6 @@
         }
         finally
         {
-            showCreateModal = true;
             buildSpinner = false;
         }
 
@@ -546,8 +544,6 @@
                     
                     signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
-                    signedTransactionFee = _WalletOperations.CalculateFee(accountInfo, signedTransaction);
-
                     StateHasChanged();
                 }
             }
@@ -556,6 +552,14 @@
 
     private async Task Send()
     {
+        if (!passwordComponent.HasPassword())
+        {
+            investSpinner = false;
+            showCreateModal = false;
+            notificationComponent.ShowErrorMessage("Wallet password expired");
+            return;
+        }
+
         investSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
@@ -568,7 +572,7 @@
             {
                 ProjectInfo = project.ProjectInfo, 
                 Metadata = project.Metadata, 
-                SignedTransactionHex = signedTransaction!.ToHex(), 
+                SignedTransactionHex = signedTransaction!.Transaction!.ToHex(), 
                 CreationTransactionId = project.CreationTransactionId
             };
 
@@ -584,12 +588,6 @@
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
 
             var accountInfo = storage.GetAccountInfo(network.Name);
-
-            if (!passwordComponent.HasPassword())
-            {
-                notificationComponent.ShowErrorMessage("Wallet password expired");
-                return;
-            }
 
             var words = await passwordComponent.GetWalletAsync();
             var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, accountInfo.InvestmentsCount + 1);
@@ -679,10 +677,13 @@
 
         if (!string.IsNullOrEmpty(investorProject.SignedTransactionHex))
         {
-            signedTransaction ??= network.CreateTransaction(investorProject.SignedTransactionHex);
+            if (signedTransaction == null)
+                signedTransaction = new TransactionInfo();
+
+            signedTransaction.Transaction ??= network.CreateTransaction(investorProject.SignedTransactionHex);
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            foreach (var input in signedTransaction.Inputs)
+            foreach (var input in signedTransaction.Transaction.Inputs)
                 accountInfo.UtxoReservedForInvestment.Remove(input.PrevOut.ToString());
 
             storage.SetAccountInfo(network.Name, accountInfo);
@@ -708,9 +709,12 @@
             Debug.Assert(investorProject.SignaturesInfo != null, nameof(investorProject.SignaturesInfo) + " != null");
             Debug.Assert(investorProject.SignedTransactionHex != null, nameof(investorProject.SignedTransactionHex) + " != null");
 
-            signedTransaction ??= _networkConfiguration.GetNetwork().CreateTransaction(investorProject.SignedTransactionHex);
+            if (signedTransaction == null)
+                signedTransaction = new TransactionInfo();
 
-            var validSignatures = _InvestorTransactionActions.CheckInvestorRecoverySignatures(investorProject.ProjectInfo, signedTransaction, investorProject.SignaturesInfo);
+            signedTransaction.Transaction ??= _networkConfiguration.GetNetwork().CreateTransaction(investorProject.SignedTransactionHex);
+
+            var validSignatures = _InvestorTransactionActions.CheckInvestorRecoverySignatures(investorProject.ProjectInfo, signedTransaction.Transaction, investorProject.SignaturesInfo);
 
             if (!validSignatures)
             {
@@ -718,7 +722,7 @@
                 return;
             }
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction);
+            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
 
             if (!response.Success)
             {
@@ -727,16 +731,16 @@
             }
 
             // link the trx to the signatures
-            investorProject.CompleteProjectInvestment(signedTransaction);
+            investorProject.CompleteProjectInvestment(signedTransaction.Transaction);
 
             storage.UpdateInvestmentProject(investorProject);
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
 
-            var spendUtxos = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction);
+            var spendUtxos = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction.Transaction);
 
-            foreach (var input in signedTransaction.Inputs)
+            foreach (var input in signedTransaction.Transaction.Inputs)
                 accountInfo.UtxoReservedForInvestment.Remove(input.PrevOut.ToString());
 
             storage.SetAccountInfo(network.Name, accountInfo);

@@ -119,7 +119,7 @@ public class WalletOperationsTest : AngorTestData
                 new Money(utxo.value), Blockcore.Consensus.ScriptInfo.Script.FromHex(utxo.scriptHex))); //Adding fee inputs
         }
 
-        TransactionValidation.ThanTheTransactionHasNoErrors(recoveryTransactions, coins);
+        TransactionValidation.ThanTheTransactionHasNoErrors(recoveryTransactions.Transaction, coins);
     }
 
     [Fact]
@@ -156,16 +156,16 @@ public class WalletOperationsTest : AngorTestData
 
         var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investorKey, Money.Coins(investmentAmount).Satoshi);
         var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
-        var strippedInvestmentTransaction = network.CreateTransaction(signedInvestmentTransaction.ToHex());
+        var strippedInvestmentTransaction = network.CreateTransaction(signedInvestmentTransaction.Transaction.ToHex());
         strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
-        Assert.Equal(signedInvestmentTransaction.GetHash(), strippedInvestmentTransaction.GetHash());
+        Assert.Equal(signedInvestmentTransaction.Transaction.GetHash(), strippedInvestmentTransaction.GetHash());
 
         var unsignedRecoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInfo, strippedInvestmentTransaction);
         var recoverySigs = _founderTransactionActions.SignInvestorRecoveryTransactions(projectInfo, strippedInvestmentTransaction.ToHex(), unsignedRecoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
-        _investorTransactionActions.CheckInvestorRecoverySignatures(projectInfo, signedInvestmentTransaction, recoverySigs);
+        _investorTransactionActions.CheckInvestorRecoverySignatures(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs);
 
-        var recoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(projectInfo, signedInvestmentTransaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+        var recoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
         // remove the first stage to simulate that is was spent
         recoveryTransaction.Outputs.RemoveAt(0);
@@ -177,7 +177,7 @@ public class WalletOperationsTest : AngorTestData
         List<Blockcore.NBitcoin.Coin> coins = new();
         foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2))
         {
-            coins.Add(new Blockcore.NBitcoin.Coin(signedInvestmentTransaction, (uint)output.N));
+            coins.Add(new Blockcore.NBitcoin.Coin(signedInvestmentTransaction.Transaction, (uint)output.N));
         }
 
         //add all utxos as coins (easier)
@@ -187,6 +187,6 @@ public class WalletOperationsTest : AngorTestData
                     new Money(utxo.value), Blockcore.Consensus.ScriptInfo.Script.FromHex(utxo.scriptHex))); //Adding fee inputs
         }
 
-        TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction, coins);
+        TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction.Transaction, coins);
     }
 }

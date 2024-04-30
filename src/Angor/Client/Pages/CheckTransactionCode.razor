@@ -28,7 +28,7 @@
     
 </div>
         
-@if (transaction == null)
+@if (transactionInfo == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -36,15 +36,15 @@ else
 {
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">@transaction.GetHash()</h5>
+            <h5 class="card-title">@transactionInfo.Transaction.GetHash()</h5>
             <h6>Inputs</h6>
-            @foreach (var input in transaction.Inputs)
+            @foreach (var input in transactionInfo.Transaction.Inputs)
             {
                 <p class="card-text">From: @input.ScriptSig</p>
                 <p class="card-text">Script: @input.WitScript</p>
             }
             <h6>Outputs</h6>
-            @foreach (var output in transaction.Outputs)
+            @foreach (var output in transactionInfo.Transaction.Outputs)
             {
                 <p class="card-text">To: @output.ScriptPubKey</p>
                 <p class="card-text">Amount: @output.Value BTC</p>
@@ -109,7 +109,7 @@ else
 
 @code {
 
-    Transaction transaction;
+    TransactionInfo transactionInfo;
     Transaction founderTransaction;
     Transaction recoveryTransaction;
     
@@ -167,12 +167,14 @@ else
             }
         };
 
-        transaction = SeederTransactionActions.CreateInvestmentTransaction(context.ProjectInfo, pubKey.ToHex(), Hashes.Hash256(secret.ToBytes())
+        transactionInfo = new TransactionInfo();
+
+        transactionInfo.Transaction = SeederTransactionActions.CreateInvestmentTransaction(context.ProjectInfo, pubKey.ToHex(), Hashes.Hash256(secret.ToBytes())
             , 1000000);
 
-        context.TransactionHex = transaction.ToHex();
+        context.TransactionHex = transactionInfo.Transaction.ToHex();
 
-        recoveryTransaction = SeederTransactionActions.BuildRecoverSeederFundsTransaction(context.ProjectInfo, transaction, context.ProjectInfo.PenaltyDays, testAddress.PubKey.ToHex());
+        recoveryTransaction = SeederTransactionActions.BuildRecoverSeederFundsTransaction(context.ProjectInfo, transactionInfo.Transaction, context.ProjectInfo.PenaltyDays, testAddress.PubKey.ToHex());
 
         var signatures = FounderTransactionActions.SignInvestorRecoveryTransactions(context.ProjectInfo, context.TransactionHex, recoveryTransaction, Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()));
 
@@ -187,13 +189,15 @@ else
 
         var fee = await _walletOperations.GetFeeEstimationAsync();
 
-        recoveryTransaction = SeederTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(context.ProjectInfo, transaction, testAddress.PubKey.ToHex(), signatures, Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()), 
+        recoveryTransaction = SeederTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(context.ProjectInfo, transactionInfo.Transaction, testAddress.PubKey.ToHex(), signatures, Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()),
             Encoders.Hex.EncodeData(secret.ToBytes()));
 
-        founderTransaction = FounderTransactionActions.SpendFounderStage(context.ProjectInfo, new List<string>(){ transaction.ToHex()}, 1,
+        var founderTransactionRes = FounderTransactionActions.SpendFounderStage(context.ProjectInfo, new List<string>() { transactionInfo.Transaction.ToHex() }, 1,
             testAddress.ScriptPubKey , privateFounderKey.PrivateKey.ToHex(network.Consensus.ConsensusFactory), fee.First());
-        
-        transaction = _walletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transaction, walletWords, localAccountInfo, fee.First());
+
+        founderTransaction = founderTransactionRes.Transaction;
+
+        transactionInfo = _walletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transactionInfo.Transaction, walletWords, localAccountInfo, fee.First());
         
         ShowTransaction = true;
     }
