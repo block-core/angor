@@ -49,7 +49,7 @@ jobs:
 
     - name: Unit Test
       run: |
-        dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Release src/Angor.sln | grep -E '(Passed|Failed) .*ms' | awk '{print $NF}'
+       dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Release src/Angor.sln | grep -E '(Passed|Failed) .*ms'
   
 
   cypress-run:
