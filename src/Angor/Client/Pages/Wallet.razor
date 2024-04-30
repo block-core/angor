@@ -25,73 +25,73 @@
 <PageTitle>Wallet and balances</PageTitle>
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
-    <div class="row">
-        <div class="card card-body">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex col-auto my-auto">
-                    <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">wallet</span>
-                    <div class="h-100 ms-3">
-                        <h5 class="mb-1 font-weight-bolder">
-                            Wallet
-                        </h5>
-                        <p class="mb-0 font-weight-normal text-sm">
-                            Wallet and balances
-                        </p>
-                    </div>
+<div class="row">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex col-auto my-auto">
+                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">wallet</span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-1 font-weight-bolder">
+                        Wallet
+                    </h5>
+                    <p class="mb-0 font-weight-normal text-sm">
+                        Wallet and balances
+                    </p>
                 </div>
-                @if (hasWallet)
-                {
-                    <div>
-                        <button type="button" class="btn btn-primary mb-0" @onclick="() => walletWordsModal = true">Wallet Words</button>
-                    </div>
-                }
+            </div>
+            @if (hasWallet)
+            {
+                <div>
+                    <button type="button" class="btn btn-primary mb-0" @onclick="() => walletWordsModal = true">Wallet Words</button>
+                </div>
+            }
 
+        </div>
+    </div>
+</div>
+
+<!-- This part of the page is visible only if the wallet is found -->
+@if (!hasWallet)
+{
+
+    <!-- No Wallet found -->
+    <div class="row mt-4">
+        <div class="card card-body">
+            <div class="d-flex align-items-center">
+                <span class="material-icons opacity-10 fs-1 me-3 btn-angor user-select-none">
+                    info
+                </span>
+                <span class="text-warning">No Wallet Found</span>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4 d-flex justify-content-center text-center align-items-center">
+        <div class="col-lg-3 col-sm-6 mt-lg-0 mt-4">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column justify-content-center text-center" @onclick="@(() => ShowCreateWalletModal("new"))" role="button">
+
+                    <span class="material-icons opacity-10 btn-angor fs-1 mb-3" aria-hidden="true" data-cy="create-wallet">
+                        wallet
+                    </span>
+                    <h5> Create Wallet </h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 mt-lg-0 mt-4">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column justify-content-center text-center" @onclick="@(() => ShowCreateWalletModal("recover"))" role="button">
+                    <span class="material-icons opacity-10 btn-angor fs-1 mb-3" aria-hidden="true">
+                        history
+                    </span>
+                    <h5> Recover Wallet </h5>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- This part of the page is visible only if the wallet is found -->
-    @if (!hasWallet)
+    @if (walletWordsCreateModal)
     {
-
-        <!-- No Wallet found -->
-        <div class="row mt-4">
-            <div class="card card-body">
-                <div class="d-flex align-items-center">
-                    <span class="material-icons opacity-10 fs-1 me-3 btn-angor user-select-none">
-                        info
-                    </span>
-                    <span class="text-warning">No Wallet Found</span>
-                </div>
-            </div>
-        </div>
-        <div class="row mt-4 d-flex justify-content-center text-center align-items-center">
-            <div class="col-lg-3 col-sm-6 mt-lg-0 mt-4">
-                <div class="card h-100">
-                    <div class="card-body d-flex flex-column justify-content-center text-center" @onclick="@(() => ShowCreateWalletModal("new"))" role="button">
-
-                        <span class="material-icons opacity-10 btn-angor fs-1 mb-3" aria-hidden="true"  data-cy="create-wallet">
-                            wallet
-                        </span>
-                        <h5> Create Wallet </h5>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-sm-6 mt-lg-0 mt-4">
-                <div class="card h-100">
-                    <div class="card-body d-flex flex-column justify-content-center text-center" @onclick="@(() => ShowCreateWalletModal("recover"))" role="button">
-                        <span class="material-icons opacity-10 btn-angor fs-1 mb-3" aria-hidden="true">
-                            history
-                        </span>
-                        <h5> Recover Wallet </h5>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @if (walletWordsCreateModal)
-        {
-            <!-- Wallet Words Create Modal -->
+        <!-- Wallet Words Create Modal -->
         <div class="modal-wrapper">
             <div class="modal fade show d-block">
                 <div class="modal-dialog">
@@ -110,7 +110,7 @@
                             }
                             else
                             {
-                     
+
 
                                 @if (isNewWallet)
                                 {
@@ -135,7 +135,7 @@
                                 </div>
 
                                 <div class="mb-2">
-                                     <div class="input-group mb-3">
+                                    <div class="input-group mb-3">
                                         <input type="@passwordInputType" class="form-control" @bind="newWalletPassword" placeholder="Enter a password for your wallet" />
                                         <button class="btn btn-primary" type="button" @onclick="TogglePasswordVisibility">
                                             @if (passwordToggleText == "Show")
@@ -201,76 +201,76 @@
                 </div>
             </div>
         </div>
-        }
     }
-    else
-    {
-        <!-- Section 1 -->
-        <div class="row mt-4">
+}
+else
+{
+    <!-- Section 1 -->
+    <div class="row mt-4">
 
-            <div class="card card-body position-relative z-index-1">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="mt-2 mb-2 pb-2 d-flex flex-wrap align-items-center">
-                        <div class="d-flex flex-wrap align-items-center">
-                            <span class="fs-4 me-2" data-cy="balance">Balance: </span>
-                            <span class="fs-3 me-2" data-cy="balance-amount"><strong> @Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong></span>
-                        </div>
-                        @if (accountBalanceInfo.TotalUnconfirmedBalance <= 0 & accountBalanceInfo.TotalBalance <= 0)
-                        {
-                            <div class="d-flex flex-wrap align-items-center">
-                                <button class="btn btn-secondary" @onclick="GetTestCoins" disabled="@testCoinsSpinner">
-                                    @if (testCoinsSpinner)
-                                    {
-                                        <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status" aria-hidden="true"></span>
-                                    }
-                                    else
-                                    {
-                                        <span>Get some test coins</span>
-                                    }
-                                </button>
-                            </div>
-                        }
-
+        <div class="card card-body position-relative z-index-1">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="mt-2 mb-2 pb-2 d-flex flex-wrap align-items-center">
+                    <div class="d-flex flex-wrap align-items-center">
+                        <span class="fs-4 me-2" data-cy="balance">Balance: </span>
+                        <span class="fs-3 me-2" data-cy="balance-amount"><strong> @Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong></span>
                     </div>
-
-
-                    <button class="btn btn-primary ml-2" @onclick="RefreshBalance" disabled="@balanceSpinner">
-                        @if (balanceSpinner)
-                        {
-                            <!-- If balanceSpinner is true, show spinner icon -->
-                            <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status" aria-hidden="true"></span>
-                        }
-                        else
-                        {
-                            <!-- If balanceSpinner is false, show 'history' icon -->
-                            <span class="material-icons opacity-10 btn-angor btn-content text-white" aria-hidden="true">
-                                history
-                            </span>
-                        }
-                    </button>
-
-
-                </div>
-                <div class="d-flex">
-                    @if (accountBalanceInfo.TotalUnconfirmedBalance > 0)
+                    @if (accountBalanceInfo.TotalUnconfirmedBalance <= 0 & accountBalanceInfo.TotalBalance <= 0)
                     {
-                        <div class="mb-4 me-4">
-                            <p class="text-sm opacity-8 mb-0">Unconfirmed balance</p>
-                            <h6 class="mb-0">@Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
+                        <div class="d-flex flex-wrap align-items-center">
+                            <button class="btn btn-secondary" @onclick="GetTestCoins" disabled="@testCoinsSpinner">
+                                @if (testCoinsSpinner)
+                                {
+                                    <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status" aria-hidden="true"></span>
+                                }
+                                else
+                                {
+                                    <span>Get some test coins</span>
+                                }
+                            </button>
                         </div>
                     }
-                    @if (accountBalanceInfo.TotalBalanceReserved > 0)
-                    {
-                        <div class="mb-4 me-4">
-                            <p class="text-sm opacity-8 mb-0">Reserved balance</p>
-                            <h6 class="mb-0">@Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
-                        </div>
-                    }
+
                 </div>
+
+
+                <button class="btn btn-primary ml-2" @onclick="RefreshBalance">
+                    @if (balanceSpinner)
+                    {
+                        <!-- If balanceSpinner is true, show spinner icon -->
+                        <span class="spinner-border spinner-border-sm opacity-10 btn-content" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <!-- If balanceSpinner is false, show 'history' icon -->
+                        <span class="material-icons opacity-10 btn-content text-white" aria-hidden="true">
+                            history
+                        </span>
+                    }
+                </button>
+
+
             </div>
-            @if (walletWordsModal)
-            {
-                <!-- Wallet Words Modal -->
+            <div class="d-flex">
+                @if (accountBalanceInfo.TotalUnconfirmedBalance > 0)
+                {
+                    <div class="mb-4 me-4">
+                        <p class="text-sm opacity-8 mb-0">Unconfirmed balance</p>
+                        <h6 class="mb-0">@Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
+                    </div>
+                }
+                @if (accountBalanceInfo.TotalBalanceReserved > 0)
+                {
+                    <div class="mb-4 me-4">
+                        <p class="text-sm opacity-8 mb-0">Reserved balance</p>
+                        <h6 class="mb-0">@Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
+                    </div>
+                }
+            </div>
+        </div>
+        @if (walletWordsModal)
+        {
+            <!-- Wallet Words Modal -->
             <div class="modal-wrapper">
                 <div class="modal fade show d-block">
                     <div class="modal-dialog">
@@ -345,7 +345,7 @@
                             </div>
                             <div class="modal-footer">
 
-                               @*<button class="btn btn-danger" @onclick="DeleteWallet">Delete Wallet</button> *@
+                                @*<button class="btn btn-danger" @onclick="DeleteWallet">Delete Wallet</button> *@
 
                                 <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }">Close</button>
                             </div>
@@ -353,91 +353,91 @@
                     </div>
                 </div>
             </div>
-            }
-        </div>
+        }
+    </div>
 
 
-        <!-- Section 2 -->
-        <div class="row mt-4">
-            <div class="row d-flex justify-content-center text-center align-items-center">
-                <div class="col-lg-3 col-sm-6 mt-lg-0">
-                    <div class="card h-100 @((activeTab == 1) ? "activeTB" : "")" id="tab1">
-                        <div class="card-body d-flex flex-column justify-content-center text-center" role="button" @onclick="() => SetActiveTab(1)">
-                            <span class="material-icons opacity-10 btn-angor fs-1 mb-3" aria-hidden="true">
-                                upload
-                            </span>
-                            <h5> Send </h5>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-6 mt-4 mt-lg-0 mt-sm-0">
-                    <div class="card h-100 @((activeTab == 2) ? "activeTB" : "")" id="tab2">
-                        <div class="card-body d-flex flex-column justify-content-center text-center" role="button" @onclick="() => SetActiveTab(2)">
-                            <span class="material-icons opacity-10 btn-angor fs-1 mb-3" aria-hidden="true">
-                                download
-                            </span>
-                            <h5> Receive </h5>
-                        </div>
+    <!-- Section 2 -->
+    <div class="row mt-4">
+        <div class="row d-flex justify-content-center text-center align-items-center">
+            <div class="col-lg-3 col-sm-6 mt-lg-0">
+                <div class="card h-100 @((activeTab == 1) ? "activeTB" : "")" id="tab1">
+                    <div class="card-body d-flex flex-column justify-content-center text-center" role="button" @onclick="() => SetActiveTab(1)">
+                        <span class="material-icons opacity-10 btn-angor fs-1 mb-3" aria-hidden="true">
+                            upload
+                        </span>
+                        <h5> Send </h5>
                     </div>
                 </div>
             </div>
-            <br />
-            @if (activeTab == 1)
-            {
-                <!-- Section 3 -->
-                <div class="col-md-12 mb-lg-0 mb-4">
-                    <div class="card mt-4">
-                        <div class="card-header pb-0 p-3">
-                            <div class="row">
-                                <div class="col-6 d-flex align-items-center">
-                                    <h6 class="mb-0">Send</h6>
-                                </div>
-
+            <div class="col-lg-3 col-sm-6 mt-4 mt-lg-0 mt-sm-0">
+                <div class="card h-100 @((activeTab == 2) ? "activeTB" : "")" id="tab2">
+                    <div class="card-body d-flex flex-column justify-content-center text-center" role="button" @onclick="() => SetActiveTab(2)">
+                        <span class="material-icons opacity-10 btn-angor fs-1 mb-3" aria-hidden="true">
+                            download
+                        </span>
+                        <h5> Receive </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br />
+        @if (activeTab == 1)
+        {
+            <!-- Section 3 -->
+            <div class="col-md-12 mb-lg-0 mb-4">
+                <div class="card mt-4">
+                    <div class="card-header pb-0 p-3">
+                        <div class="row">
+                            <div class="col-6 d-flex align-items-center">
+                                <h6 class="mb-0">Send</h6>
                             </div>
-                        </div>
-                        <div class="card-body p-3">
-                            <div class="row">
 
-                                <form>
-                                    <div class="mb-3">
-                                        <label for="sendToAddress" class="form-label">Send to Address</label>
-                                        <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="sendAmount" class="form-label">Amount</label>
-                                        <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
-                                    </div>
-
-                                    <button type="button" class="btn btn-primary mb-3" @onclick="() => coinControlModal = true">
-                                        Coin Control
-                                        @if (_sendInfo.SendUtxos.Any())
-                                        {
-                                            <span class="badge text-bg-warning">@_sendInfo.SendUtxos.Count</span>
-                                        }
-                                    </button>
-
-                                    <!-- New Send button that triggers a confirmation dialog -->
-                                    <button type="button" class="btn btn-primary mb-3" @onclick="AskPassword" disabled="@sendLoadSpinner">
-                                        @if (sendLoadSpinner)
-                                        {
-                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                            <span>Sending...</span>
-                                        }
-                                        else
-                                        {
-                                            <span>Send</span>
-                                        }
-                                    </button>
-
-                                </form>
-
-                            </div>
                         </div>
                     </div>
-                    @if (coinControlModal)
-                    {
-                        <!-- Coin Control Modal -->
+                    <div class="card-body p-3">
+                        <div class="row">
+
+                            <form>
+                                <div class="mb-3">
+                                    <label for="sendToAddress" class="form-label">Send to Address</label>
+                                    <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="sendAmount" class="form-label">Amount</label>
+                                    <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
+                                </div>
+
+                                <button type="button" class="btn btn-primary mb-3" @onclick="() => coinControlModal = true">
+                                    Coin Control
+                                    @if (_sendInfo.SendUtxos.Any())
+                                    {
+                                        <span class="badge text-bg-warning">@_sendInfo.SendUtxos.Count</span>
+                                    }
+                                </button>
+
+                                <!-- New Send button that triggers a confirmation dialog -->
+                                <button type="button" class="btn btn-primary mb-3" @onclick="AskPassword" disabled="@sendLoadSpinner">
+                                    @if (sendLoadSpinner)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>Sending...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Send</span>
+                                    }
+                                </button>
+
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+                @if (coinControlModal)
+                {
+                    <!-- Coin Control Modal -->
                     <div class="modal-wrapper">
                         <div class="modal fade show d-block">
                             <div class="modal-dialog">
@@ -473,12 +473,12 @@
                             </div>
                         </div>
                     </div>
-                    }
+                }
 
-                    @if (sendConfirmModal)
-                    {
-                        <!-- Send Confirmation Modal -->
-                            <div class="modal-wrapper">
+                @if (sendConfirmModal)
+                {
+                    <!-- Send Confirmation Modal -->
+                    <div class="modal-wrapper">
                         <div class="modal fade show d-block">
                             <div class="modal-dialog">
                                 <div class="modal-content">
@@ -531,120 +531,120 @@
                                 </div>
                             </div>
                         </div>
-                            </div>
-                    }
-                </div>
-            }
-            @if (activeTab == 2)
-            {
-                <div class="col-md-12 mb-lg-0 mb-4">
-                    <div class="card mt-4">
-                        <div class="card-header pb-0 p-3">
-                            <div class="row">
-                                <div class="col-6 d-flex align-items-center">
-                                    <h6 class="mb-0">Receive</h6>
-                                </div>
-                                <ShowQrCode @ref="showQrCode" Data="@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()" />
-
-                            </div>
-                        </div>
-                        <div class="card-body p-3">
-                            <div class="row">
-                                <div class="col-md-12 mb-md-0 mb-4">
-                                    <div class="card card-body border card-plain border-radius-lg d-flex align-items-center flex-row">
-                                        <img class="address-image me-3 mb-0" src="/assets/img/bitcoin.svg" alt="Bitcoin">
-                                        <h6 class="address-text mb-0 overflow-x-auto">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</h6>
-                                        <i @onclick="CopyNextReceiveAddress" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer user-select-none">copy</i>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
                     </div>
-                </div>
-
-            }
-        </div>
-
-
-        <!-- Section 4 -->
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="card">
+                }
+            </div>
+        }
+        @if (activeTab == 2)
+        {
+            <div class="col-md-12 mb-lg-0 mb-4">
+                <div class="card mt-4">
                     <div class="card-header pb-0 p-3">
                         <div class="row">
                             <div class="col-6 d-flex align-items-center">
-                                <h6 class="mb-0">Addresses and Amounts</h6>
+                                <h6 class="mb-0">Receive</h6>
                             </div>
+                            <ShowQrCode @ref="showQrCode" Data="@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()" />
+
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table align-items-center mb-0">
-                                <thead>
-                                    <tr>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Address</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Amount</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Path</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">UTXO count</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AllAddresses())
-                                    {
-                                        var total = addressInfo.Balance;
-                                        var count = addressInfo.UtxoData.Count();
+                    <div class="card-body p-3">
+                        <div class="row">
+                            <div class="col-md-12 mb-md-0 mb-4">
+                                <div class="card card-body border card-plain border-radius-lg d-flex align-items-center flex-row">
+                                    <img class="address-image me-3 mb-0" src="/assets/img/bitcoin.svg" alt="Bitcoin">
+                                    <h6 class="address-text mb-0 overflow-x-auto">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</h6>
+                                    <i @onclick="CopyNextReceiveAddress" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer user-select-none">copy</i>
+                                </div>
+                            </div>
 
-                                        if (total > 0)
-                                        {
-                                            <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
-                                                <td>@addressInfo.Address</td>
-                                                <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                                <td>@addressInfo.HdPath</td>
-                                                <td>@count</td>
-                                            </tr>
-                                            @if (IsExpanded(addressInfo.Address))
-                                            {
-                                                <tr>
-                                                    <td colspan="4">
-                                                        <div class="collapse show" id="@($"collapse-{addressInfo.Address}")">
-                                                            <div class="card card-body">
-                                                                <!-- Inner table goes here -->
-                                                                <div class="table-responsive">
-                                                                    <table class="table table-sm">
-                                                                        <thead>
-                                                                            <tr>
-                                                                                <th scope="col">Coin</th>
-                                                                                <th scope="col">Amount</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                            @foreach (var addressUtxoItem in addressInfo.UtxoData)
-                                                                            {
-                                                                                <tr>
-                                                                                    <td>@($"{addressUtxoItem.outpoint}")</td>
-                                                                                    <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                                                                </tr>
-                                                                            }
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            }
-                                        }
-                                    }
-                                </tbody>
-                            </table>
                         </div>
                     </div>
                 </div>
             </div>
+
+        }
+    </div>
+
+
+    <!-- Section 4 -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header pb-0 p-3">
+                    <div class="row">
+                        <div class="col-6 d-flex align-items-center">
+                            <h6 class="mb-0">Addresses and Amounts</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Address</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Amount</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Path</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">UTXO count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AllAddresses())
+                                {
+                                    var total = addressInfo.Balance;
+                                    var count = addressInfo.UtxoData.Count();
+
+                                    if (total > 0)
+                                    {
+                                        <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
+                                            <td>@addressInfo.Address</td>
+                                            <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                            <td>@addressInfo.HdPath</td>
+                                            <td>@count</td>
+                                        </tr>
+                                        @if (IsExpanded(addressInfo.Address))
+                                        {
+                                            <tr>
+                                                <td colspan="4">
+                                                    <div class="collapse show" id="@($"collapse-{addressInfo.Address}")">
+                                                        <div class="card card-body">
+                                                            <!-- Inner table goes here -->
+                                                            <div class="table-responsive">
+                                                                <table class="table table-sm">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th scope="col">Coin</th>
+                                                                            <th scope="col">Amount</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                                                        {
+                                                                            <tr>
+                                                                                <td>@($"{addressUtxoItem.outpoint}")</td>
+                                                                                <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                                                            </tr>
+                                                                        }
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-    }
- 
+    </div>
+}
+
 
 
 @code {
@@ -716,40 +716,43 @@
 
     private async Task RefreshBalance()
     {
-        balanceSpinner = true;
-
-        try
+        if (!balanceSpinner)
         {
-            var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInboundFunds = _cacheStorage.GetUnconfirmedInboundFunds();
+            balanceSpinner = true;
 
-            await _walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
+            try
+            {
+                var accountInfo = storage.GetAccountInfo(network.Name);
+                var unconfirmedInboundFunds = _cacheStorage.GetUnconfirmedInboundFunds();
 
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+                await _walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
 
-            storage.SetAccountInfo(network.Name, accountInfo);
+                await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
-            var utxos = accountInfo.AllUtxos()
-                .Select(x => x.outpoint.ToString()).ToList();
+                storage.SetAccountInfo(network.Name, accountInfo);
 
-            var spentToUpdate = unconfirmedInboundFunds
-                .RemoveAll(x => utxos.Contains(x.outpoint.ToString()));
+                var utxos = accountInfo.AllUtxos()
+                    .Select(x => x.outpoint.ToString()).ToList();
 
-            if (spentToUpdate > 0)
-                _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInboundFunds);
+                var spentToUpdate = unconfirmedInboundFunds
+                    .RemoveAll(x => utxos.Contains(x.outpoint.ToString()));
 
-            accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInboundFunds);
+                if (spentToUpdate > 0)
+                    _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInboundFunds);
 
-            showQrCode?.SetQRCode(accountBalanceInfo.AccountInfo.GetNextReceiveAddress());
-        }
-        catch (Exception e)
-        {
-            Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
-        }
-        finally
-        {
-            balanceSpinner = false;
+                accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInboundFunds);
+
+                showQrCode?.SetQRCode(accountBalanceInfo.AccountInfo.GetNextReceiveAddress());
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, e.Message);
+                notificationComponent.ShowErrorMessage(e.Message);
+            }
+            finally
+            {
+                balanceSpinner = false;
+            }
         }
     }
 
@@ -781,7 +784,7 @@
     private async Task CreateWalletAsync()
     {
         if (string.IsNullOrEmpty(newWalletWords))
-        {  
+        {
             notificationComponent.ShowNotificationMessage("New wallet words are null or empty");
             //throw new ArgumentNullException(nameof(newWalletWords));
             return;
@@ -928,7 +931,7 @@
             return;
         }
 
-        await _clipboardService.WriteTextAsync(address); 
+        await _clipboardService.WriteTextAsync(address);
         notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
     }
 

@@ -1037,4 +1037,11 @@ tr[style*="cursor: pointer;"] {
 .dark .menu-text.active {
     color: #FFFDFA !important;
 }
+
+.navbar-main {
+    background: #fefefd !important;
+}
+.dark .navbar-main {
+    background: #083b46 !important;
+}
  
