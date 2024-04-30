@@ -49,7 +49,7 @@ jobs:
 
     - name: Unit Test
       run: |
-        dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}} > /dev/null
+        dotnet test --logger "trx;LogFileName=testresults.trx" -v minimal -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}} | grep -E '(Passed|Failed) .*ms'
   
 
   cypress-run:
