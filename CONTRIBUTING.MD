@@ -56,10 +56,10 @@ To run Cypress, follow these steps:
 
 3. Open Cypress:
     ```bash
-    $ npx cypress open
+    $ npm run cypress:open
     ```
 4. If you want to run the test in your terminal you can also Run cypress in headless mode:
     ```bash
-    $ npx cypress run
+    $ npm run cypress:run
     ```
 
