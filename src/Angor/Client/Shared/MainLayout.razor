@@ -11,7 +11,7 @@
 @inject NavigationManager _navManager
 @inject NavMenuState NavMenuState;
 
-<div class="@($"{(isDarkTheme ? "dark-version" : "")}") sidenav-show bg-gray-100 @sidenavClass ">
+<div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show bg-gray-100 @sidenavClass ">
     <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 b-shadow overflow-x-hidden" id="sidenav-main">
         <NavMenu ToggleSidenavCallback="ToggleSidenavMobile" ToggleSidenavTextCallback="ToggleSidenav" ToggleleLockMenuCallback="ToggleLockMenu" />
     </aside>
@@ -34,7 +34,7 @@
                         <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
                             <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="iconNavbarSidenav" @onclick="ToggleSidenav">menu</span>
                         </li>
-                        <li class="nav-item ps-3 d-flex align-items-center" id="dark-version" @onclick="ToggleTheme">
+                        <li class="nav-item ps-3 d-flex align-items-center" id="dark" @onclick="ToggleTheme">
                             <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="theme-icon">@themeIcon</span>
                         </li>
                         <li class="nav-item ps-3 d-flex align-items-center d-none" id="installButton">
