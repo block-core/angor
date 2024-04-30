@@ -14,7 +14,8 @@ describe('walletSpec', { retries: 3 }, () => {
     cy.get('textarea.form-control[readonly]').invoke('val').as('walletWords').then(walletWords => {
       cy.clickSubmitButton(ERROR_MESSAGES.NULL_PASSWORD_MESSAGE); //try to create wallet without password and checkbox
       cy.typeTextInElement('password','abc123')
-      cy.clickSubmitButton(ERROR_MESSAGES.NULL_PASSWORD_MESSAGE); //try to create wallet without checkbox
+      cy.clickSubmitButton()
+      cy.get(`[data-cy=${WALLET_DATA_CY.CHECKBOX_ERROR}]`).should('contain', ERROR_MESSAGES.NO_CHECKBOX_TICK);
       cy.clickOnCheckBoxByDataCy(WALLET_DATA_CY.WALLET_CHECKBOX);
       cy.clickSubmitButton();
       cy.waitForLoader()
@@ -42,3 +43,4 @@ describe('walletSpec', { retries: 3 }, () => {
     cy.createWallet();
   });
 });
+

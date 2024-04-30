@@ -18,6 +18,7 @@ const WALLET_DATA_CY = {
     RECEIVE_FUNDS: 'receive-button',
     WALLET_QR:'SHOW_QR_CODE_WALLET',
     CLOSE_WALLET_WORDS: 'close-show-wallet-words',
+    CHECKBOX_ERROR: 'checkbox-error',
 };
 
 const QR_CODE_CY = {
@@ -30,6 +31,7 @@ const QR_CODE_CY = {
 const ERROR_MESSAGES = {
     NULL_PASSWORD_MESSAGE: "New wallet password is null or empty",
     NO_PROJECTS_FOUND: "No projects found.",
+    NO_CHECKBOX_TICK: "Please confirm that you have backed up your wallet words and password.",
 }
 
 const BROWSE_DATA_CY = {
