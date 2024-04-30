@@ -100,7 +100,7 @@ public class SeederTransactionActions : ISeederTransactionActions
         return recoveryTransaction;
     }
 
-    public Transaction RecoverEndOfProjectFunds(string investmentTransactionHex, ProjectInfo projectInfo, int stageIndex, string investorReceiveAddress,
+    public TransactionInfo RecoverEndOfProjectFunds(string investmentTransactionHex, ProjectInfo projectInfo, int stageIndex, string investorReceiveAddress,
         string investorPrivateKey, FeeEstimation feeEstimation)
     {
         return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(investmentTransactionHex, projectInfo, stageIndex,

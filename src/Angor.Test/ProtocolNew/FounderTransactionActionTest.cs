@@ -165,7 +165,7 @@ public class FounderTransactionActionTest : AngorTestData
         , 1, funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderPrivateKey.ToBytes())
         , _expectedFeeEstimation);
         
-        TransactionValidation.ThanTheTransactionHasNoErrors(founderTrx,
+        TransactionValidation.ThanTheTransactionHasNoErrors(founderTrx.Transaction,
             transactionHexList
                 .Select(_ => Networks.Bitcoin.Testnet().CreateTransaction(_))
                 .Select(_ => _.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1).ToCoin()));
@@ -197,7 +197,7 @@ public class FounderTransactionActionTest : AngorTestData
             funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderPrivateKey.ToBytes())
             , _expectedFeeEstimation);
 
-        TransactionValidation.ThanTheTransactionHasNoErrors(founderTrxSpendStageOne,
+        TransactionValidation.ThanTheTransactionHasNoErrors(founderTrxSpendStageOne.Transaction,
             transactionList.Select(_ => _.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1).ToCoin()));
     }
 
