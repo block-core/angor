@@ -32,7 +32,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
 
         // create the output and script of the project id 
         var angorFeeOutputScript = _projectScriptsBuilder.GetAngorFeeOutputScript(projectInfo.ProjectIdentifier);
-        int angorFeePercentage = 1; // 1% todo: take this from the settings.
+        int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
         long angorFee = (totalInvestmentAmount * angorFeePercentage) / 100; 
         var angorOutput = new TxOut(new Money(angorFee), angorFeeOutputScript);
         investmentTransaction.AddOutput(angorOutput);

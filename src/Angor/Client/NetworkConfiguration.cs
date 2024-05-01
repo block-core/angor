@@ -1,3 +1,4 @@
+using System.Reflection.Metadata.Ecma335;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
@@ -11,8 +12,9 @@ public class NetworkConfiguration : INetworkConfiguration
     public static string AngorMainKey = "todo: add an Angor key here";
 
     public static long AngorCreateFeeSats = 10000;
-    public static double AngorInvestFeePercentage = 1;
+    public static int AngorInvestFeePercentage = 1;
 
+    public int GetAngorInvestFeePercentage => AngorInvestFeePercentage;
 
     private Network currentNetwork;
 
