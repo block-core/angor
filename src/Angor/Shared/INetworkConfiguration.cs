@@ -14,4 +14,5 @@ public interface INetworkConfiguration
     List<SettingsUrl> GetDefaultExplorerUrl();
 
     int GetAngorInvestFeePercentage { get; }
+    string GetAngorKey();
 }

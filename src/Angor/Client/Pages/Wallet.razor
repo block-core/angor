@@ -851,7 +851,7 @@
             accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
 
             // pre-derive the angor wallet keys
-            FounderKeyCollection founderKeyCollection = _derivationOperations.DeriveProjectKeys(data, NetworkConfiguration.AngorTestKey);
+            FounderKeyCollection founderKeyCollection = _derivationOperations.DeriveProjectKeys(data, _networkConfiguration.GetAngorKey());
             _walletStorage.SetFounderKeys(founderKeyCollection);
 
             hasWallet = _walletStorage.HasWallet();

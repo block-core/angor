@@ -9,12 +9,24 @@ namespace Angor.Client;
 public class NetworkConfiguration : INetworkConfiguration
 {
     public static string AngorTestKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
-    public static string AngorMainKey = "todo: add an Angor key here";
+    public static string AngorMainKey = "xpub661MyMwAqRbcEo7z4zshCkEF57GHJ55DP5Ty6suMxPmDbhktLt8Ddbg53SbaGWUafsVtd6DcVT38t7A7kEUrRwDrJxHNBvr1WX45nwE6ocj";
 
     public static long AngorCreateFeeSats = 10000;
     public static int AngorInvestFeePercentage = 1;
 
     public int GetAngorInvestFeePercentage => AngorInvestFeePercentage;
+
+    public string GetAngorKey()
+    {
+        var network = GetNetwork();
+
+        if (network.NetworkType == NetworkType.Mainnet)
+        {
+            return AngorMainKey;
+        }
+
+        return AngorTestKey;
+    }
 
     private Network currentNetwork;
 
