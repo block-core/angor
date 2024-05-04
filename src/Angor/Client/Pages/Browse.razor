@@ -283,7 +283,7 @@ else
     {
         searchInProgress = true;
 
-        var blockchainProjects = await _IndexerService.GetProjectsAsync(null, 20);
+        var blockchainProjects = await _IndexerService.GetProjectsAsync(null, 21);
 
         var projectsNotInList = blockchainProjects
             .Where(blockchainProject => projects.All(_ => _.ProjectIdentifier != blockchainProject.ProjectIdentifier))
