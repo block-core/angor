@@ -56,12 +56,12 @@
 
     <!-- No Wallet found -->
     <div class="row mt-4">
-        <div class="card card-body">
+        <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center">
-                <span class="material-icons opacity-10 fs-1 me-3 btn-angor user-select-none">
+                <span class="material-icons opacity-10 fs-1 me-3 text-white user-select-none">
                     info
                 </span>
-                <span class="text-warning">No Wallet Found</span>
+                <span class="text-white">No Wallet Found</span>
             </div>
         </div>
     </div>
@@ -115,7 +115,7 @@
                                 @if (isNewWallet)
                                 {
                                     <div class="mb-2">
-                                        <button class="btn btn-primary w-100" @onclick="GenerateNewWalletWords">
+                                        <button class="btn btn-secondary w-100" @onclick="GenerateNewWalletWords">
                                             <div class="d-flex align-items-center justify-content-center">
                                                 <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">
                                                     add
