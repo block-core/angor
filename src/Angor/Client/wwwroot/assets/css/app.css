@@ -1044,12 +1044,25 @@ tr[style*="cursor: pointer;"] {
 .navbar-main {
     background: #fefefd !important;
 }
+
 .dark .navbar-main {
     background: #083b46 !important;
 }
+
 .angor-alert-info {
     background-color: var(--angor-secondary) !important;
 }
+
 .text-white {
     color: var(--angor-white) !important;
+}
+
+.project-card {
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
+}
+
+.project-wrapper {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
 }
