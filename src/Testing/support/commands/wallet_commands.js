@@ -16,8 +16,12 @@ Cypress.Commands.add("createWallet", () => {
 
 Cypress.Commands.add("recoverWallet", (walletWords, password) => {
   cy.clickElementWithDataCy(WALLET_DATA_CY.RECOVER_WALLET);
-  cy.get(".modal-body > :nth-child(1) > .form-control").type(walletWords);
-  cy.typeTextInElement("password", password);
+  if (walletWords) {
+    cy.get(".modal-body > :nth-child(1) > .form-control").type(walletWords);
+  }
+  if (password) {
+    cy.typeTextInElement("password", password);
+  }
   cy.clickOnCheckBoxByDataCy(WALLET_DATA_CY.WALLET_CHECKBOX);
   cy.clickSubmitButton();
   cy.waitForLoader();
@@ -33,4 +37,13 @@ Cypress.Commands.add("extractBTCValue", { prevSubject: true }, ($element) => {
       // Return the extracted numerical value
       return btcAmount;
     });
+});
+
+Cypress.Commands.add("confirmSendFunds", (err) => {
+  cy.contains("button.btn.btn-primary", "Submit").click();
+  if (err) {
+    cy.contains("div.text-danger-emphasis", err).should(
+      "be.visible"
+    );
+  }
 });

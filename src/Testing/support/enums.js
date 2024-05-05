@@ -30,6 +30,7 @@ const TEST_DATA = {
   TEST_WALLET:
     "desk sadness wrong odor home cabbage shove panic unusual wool force fee",
   TEST_ADRESS: "tb1qyhyspf53js8xp889zrwj2fjnd4y9wxsckzafrm",
+  WALLET_PASSWORD: 'aa',
 };
 
 const QR_CODE_CY = {

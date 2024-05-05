@@ -26,8 +26,11 @@ Cypress.Commands.add("clickElementWithDataCy", (datacy) => {
   cy.get(`[data-cy=${datacy}]`).click();
 });
 
-Cypress.Commands.add("clickAndTypeElementWithDataCy", (datacy, msg) => {
-  cy.get(`[data-cy=${datacy}]`).type(msg);
+Cypress.Commands.add("clickAndTypeElementWithDataCy", (datacy, msg,clear) => {
+  if(clear){
+    cy.get(`[data-cy=${datacy}]`).clear()
+  }
+    cy.get(`[data-cy=${datacy}]`).type(msg);
 });
 
 Cypress.Commands.add("ElementWithDataCyShouldBeVisible", (datacy) => {
@@ -90,3 +93,7 @@ Cypress.Commands.add("dismissModal", () => {
   // Click the "Dismiss" button
   cy.get("button.btn.btn-light").contains("Dismiss").click();
 });
+
+Cypress.Commands.add("verifyElementPopUp", (element,msg) => {
+    cy.contains(element, msg).should("be.visible");
+  });

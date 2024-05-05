@@ -60,13 +60,34 @@ describe("walletSpec", { retries: 3 }, () => {
       });
   });
 
-  it.only("failRecoverWallet", () => {
+  it("failRecoverWallet", () => {
     cy.clickOnNavBar(Navbar.WALLET);
+    cy.recoverWallet("these are not valid wallet words", "");
+    cy.verifyElementPopUp(
+      ".modal-body",
+      "New wallet password is null or empty"
+    );
+    cy.dismissModal();
+    cy.recoverWallet(
+      "they are not in the dictionary",
+      TEST_DATA.WALLET_PASSWORD
+    );
+    cy.verifyElementPopUp(
+      ".modal-body",
+      "Word count should be equals to 12,15,18,21 or 24"
+    );
+    cy.dismissModal();
+    cy.recoverWallet(" twelve", "");
+    cy.verifyElementPopUp(
+      ".modal-body",
+      "Word these is not in the wordlist for this language, cannot continue to rebuild entropy from wordlist"
+    );
+    cy.dismissModal();
   });
 
   it("recoverWalletAndsendFunds", () => {
     cy.clickOnNavBar(Navbar.WALLET);
-    cy.recoverWallet(TEST_DATA.TEST_WALLET, "aa"); // add one with fail because password not correct/words are not correct
+    cy.recoverWallet(TEST_DATA.TEST_WALLET, TEST_DATA.WALLET_PASSWORD); // add one with fail because password not correct/words are not correct
     //get funds
     cy.get(`[data-cy=${WALLET_DATA_CY.BALANCE_AMOUNT}]`)
       .extractBTCValue()
@@ -78,7 +99,7 @@ describe("walletSpec", { retries: 3 }, () => {
         //expect error:
         cy.get(".modal-content").should("be.visible"); // Verify that the modal content is visible
         cy.get(".modal-header").should("have.class", "bg-danger"); // Verify that the modal header has a danger background
-        cy.contains(".modal-body", "Specify an amount").should("be.visible"); // Verify that the modal body contains the text "Specify an amount"
+        cy.verifyElementPopUp(".modal-body", "Specify an amount");
 
         cy.dismissModal();
         cy.get("#sendAmount").type(0.001);
@@ -86,9 +107,9 @@ describe("walletSpec", { retries: 3 }, () => {
         cy.clickElementWithDataCy(WALLET_DATA_CY.SEND_FUNDS);
         cy.clickAndTypeElementWithDataCy(
           WALLET_DATA_CY.PASSWORD_FOR_SEND,
-          "aa"
+          TEST_DATA.WALLET_PASSWORD
         );
-        cy.contains("button.btn.btn-primary", "Submit").click();
+        cy.confirmSendFunds()
 
         cy.get(".modal-content").should("be.visible");
 
@@ -109,5 +130,26 @@ describe("walletSpec", { retries: 3 }, () => {
             // need to add verify Addresses and Amounts
           });
       });
+  });
+
+  it("wrongAdressAndPassword", () => {
+    cy.clickOnNavBar(Navbar.WALLET);
+    cy.recoverWallet(TEST_DATA.TEST_WALLET, TEST_DATA.WALLET_PASSWORD); // add one with fail because password not correct/words are not correct
+    cy.get("#sendToAddress").type("address not valid");
+    cy.get("#sendAmount").type(0.0001);
+    cy.clickElementWithDataCy(WALLET_DATA_CY.SEND_FUNDS);
+    cy.clickAndTypeElementWithDataCy(
+      WALLET_DATA_CY.PASSWORD_FOR_SEND,
+      "wrong password"
+    );
+    cy.confirmSendFunds("Invalid password")
+    cy.clickAndTypeElementWithDataCy(
+      WALLET_DATA_CY.PASSWORD_FOR_SEND,
+      TEST_DATA.WALLET_PASSWORD,
+      true
+    );
+    cy.confirmSendFunds()
+    cy.verifyElementPopUp(".modal-body", "Invalid string");
+    cy.dismissModal();
   });
 });
