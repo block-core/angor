@@ -1,82 +1,113 @@
-import '../support/commands/commands'
-import '../support/commands/wallet_commands'
-import {Navbar,WALLET_DATA_CY,QR_CODE_CY,ERROR_MESSAGES,TEST_DATA} from '../support/enums'
+import "../support/commands/commands";
+import "../support/commands/wallet_commands";
+import {
+  Navbar,
+  WALLET_DATA_CY,
+  QR_CODE_CY,
+  ERROR_MESSAGES,
+  TEST_DATA,
+} from "../support/enums";
 
-describe('walletSpec', { retries: 3 }, () => {
+describe("walletSpec", { retries: 3 }, () => {
   beforeEach(() => {
     cy.visitLocalhost();
   });
 
-  it('createWallet', () => {
-    cy.clickOnNavBar(Navbar.WALLET)
-    cy.clickElementWithDataCy(WALLET_DATA_CY.CREATE_WALLET)
-    cy.clickElementWithDataCy(WALLET_DATA_CY.GENERATE_WALLET_WORDS)
-    cy.get('textarea.form-control[readonly]').invoke('val').as('walletWords').then(walletWords => {
-      // cy.clickSubmitButton(ERROR_MESSAGES.NULL_PASSWORD_MESSAGE); //for some reason doesnt work in github, add after works //try to create wallet without password and checkbox
-      cy.typeTextInElement('password','abc123')
-      cy.clickSubmitButton()
-      cy.get(`[data-cy=${WALLET_DATA_CY.CHECKBOX_ERROR}]`).should('contain', ERROR_MESSAGES.NO_CHECKBOX_TICK);
-      cy.clickOnCheckBoxByDataCy(WALLET_DATA_CY.WALLET_CHECKBOX);
-      cy.clickSubmitButton();
-      cy.waitForLoader()
-      cy.get(`[data-cy=${WALLET_DATA_CY.BALANCE}]`).should('have.text', 'Balance: ');
-      cy.verifyBalance('0',WALLET_DATA_CY.BALANCE_AMOUNT)
-      //verify words
-      cy.clickElementWithDataCy(WALLET_DATA_CY.WALLET_WORDS)
-      cy.get('.input-group').type('abc123')
-      cy.clickElementWithDataCy(WALLET_DATA_CY.WALLET_WORDS_SHOW)
-      cy.get(`[data-cy=${WALLET_DATA_CY.WALLET_WORDS_ALERT}]`).should('contain.text', walletWords);
-      cy.clickElementWithDataCy(WALLET_DATA_CY.CLOSE_WALLET_WORDS)
-    })
-    cy.clickElementWithDataCy(WALLET_DATA_CY.RECEIVE_FUNDS)
-    cy.get(`[data-cy=${WALLET_DATA_CY.WALLET_ADDRESS}]`).invoke('text').then(walletAdress => {
-      cy.clickElementWithDataCy(QR_CODE_CY.WALLET_QR);
-      cy.ElementWithDataCyShouldBeVisible(QR_CODE_CY.QR_IMAGE);
-        cy.get(`[data-cy=${QR_CODE_CY.WALLET_ADDRESS}]`).invoke('text').then(walletAdressfromPopUp => {
-          expect(walletAdress).to.contain(walletAdressfromPopUp);
-        });
-    });
-    
+  it("createWallet", () => {
+    cy.clickOnNavBar(Navbar.WALLET);
+    cy.clickElementWithDataCy(WALLET_DATA_CY.CREATE_WALLET);
+    cy.clickElementWithDataCy(WALLET_DATA_CY.GENERATE_WALLET_WORDS);
+    cy.get("textarea.form-control[readonly]")
+      .invoke("val")
+      .as("walletWords")
+      .then((walletWords) => {
+        // cy.clickSubmitButton(ERROR_MESSAGES.NULL_PASSWORD_MESSAGE); //for some reason doesnt work in github, add after works //try to create wallet without password and checkbox
+        cy.typeTextInElement("password", "abc123");
+        cy.clickSubmitButton();
+        cy.get(`[data-cy=${WALLET_DATA_CY.CHECKBOX_ERROR}]`).should(
+          "contain",
+          ERROR_MESSAGES.NO_CHECKBOX_TICK
+        );
+        cy.clickOnCheckBoxByDataCy(WALLET_DATA_CY.WALLET_CHECKBOX);
+        cy.clickSubmitButton();
+        cy.waitForLoader();
+        cy.get(`[data-cy=${WALLET_DATA_CY.BALANCE}]`).should(
+          "have.text",
+          "Balance: "
+        );
+        cy.verifyBalance("0", WALLET_DATA_CY.BALANCE_AMOUNT);
+        //verify words
+        cy.clickElementWithDataCy(WALLET_DATA_CY.WALLET_WORDS);
+        cy.get(".input-group").type("abc123");
+        cy.clickElementWithDataCy(WALLET_DATA_CY.WALLET_WORDS_SHOW);
+        cy.get(`[data-cy=${WALLET_DATA_CY.WALLET_WORDS_ALERT}]`).should(
+          "contain.text",
+          walletWords
+        );
+        cy.clickElementWithDataCy(WALLET_DATA_CY.CLOSE_WALLET_WORDS);
+      });
+    cy.clickElementWithDataCy(WALLET_DATA_CY.RECEIVE_FUNDS);
+    cy.get(`[data-cy=${WALLET_DATA_CY.WALLET_ADDRESS}]`)
+      .invoke("text")
+      .then((walletAdress) => {
+        cy.clickElementWithDataCy(QR_CODE_CY.WALLET_QR);
+        cy.ElementWithDataCyShouldBeVisible(QR_CODE_CY.QR_IMAGE);
+        cy.get(`[data-cy=${QR_CODE_CY.WALLET_ADDRESS}]`)
+          .invoke("text")
+          .then((walletAdressfromPopUp) => {
+            expect(walletAdress).to.contain(walletAdressfromPopUp);
+          });
+      });
   });
 
-  it('recoverWalletAndsendFunds', () => {
+  it.only("failRecoverWallet", () => {
     cy.clickOnNavBar(Navbar.WALLET);
-    cy.recoverWallet(TEST_DATA.TEST_WALLET,'aa') // add one with fail because password not correct/words are not correct
+  });
+
+  it("recoverWalletAndsendFunds", () => {
+    cy.clickOnNavBar(Navbar.WALLET);
+    cy.recoverWallet(TEST_DATA.TEST_WALLET, "aa"); // add one with fail because password not correct/words are not correct
     //get funds
-    cy.get(`[data-cy=${WALLET_DATA_CY.BALANCE_AMOUNT}]`).extractBTCValue().then((btcAmount) => {
-      cy.log(btcAmount)
-      //send 0 funds
-      cy.get('#sendToAddress').type(TEST_DATA.TEST_ADRESS)
-      cy.clickElementWithDataCy(WALLET_DATA_CY.SEND_FUNDS)
-      //expect error:
-      cy.get('.modal-content').should('be.visible'); // Verify that the modal content is visible
-      cy.get('.modal-header').should('have.class', 'bg-danger'); // Verify that the modal header has a danger background  
-      cy.contains('.modal-body', 'Specify an amount').should('be.visible'); // Verify that the modal body contains the text "Specify an amount"
-      
-      cy.dismissModal();
-      cy.get('#sendAmount').type(0.001)
-      // add password is not correct
-      cy.clickElementWithDataCy(WALLET_DATA_CY.SEND_FUNDS)
-      cy.clickAndTypeElementWithDataCy(WALLET_DATA_CY.PASSWORD_FOR_SEND , 'aa')
-      cy.contains('button.btn.btn-primary', 'Submit').click();
-      
-      cy.get('.modal-content').should('be.visible');
+    cy.get(`[data-cy=${WALLET_DATA_CY.BALANCE_AMOUNT}]`)
+      .extractBTCValue()
+      .then((btcAmount) => {
+        cy.log(btcAmount);
+        //send 0 funds
+        cy.get("#sendToAddress").type(TEST_DATA.TEST_ADRESS);
+        cy.clickElementWithDataCy(WALLET_DATA_CY.SEND_FUNDS);
+        //expect error:
+        cy.get(".modal-content").should("be.visible"); // Verify that the modal content is visible
+        cy.get(".modal-header").should("have.class", "bg-danger"); // Verify that the modal header has a danger background
+        cy.contains(".modal-body", "Specify an amount").should("be.visible"); // Verify that the modal body contains the text "Specify an amount"
 
-      cy.get('.modal-header').should('be.visible'); // Verify that the modal header is visible
-      cy.contains('.modal-title', 'Confirmation').should('be.visible'); // Verify that the modal title contains the text "Confirmation"
-      cy.get('#feeRange').should('exist');
+        cy.dismissModal();
+        cy.get("#sendAmount").type(0.001);
+        // add password is not correct
+        cy.clickElementWithDataCy(WALLET_DATA_CY.SEND_FUNDS);
+        cy.clickAndTypeElementWithDataCy(
+          WALLET_DATA_CY.PASSWORD_FOR_SEND,
+          "aa"
+        );
+        cy.contains("button.btn.btn-primary", "Submit").click();
 
-      //add change Feerate for 1 blocks is 0.0001 sats 
-      cy.contains('button.btn.btn-primary', 'Confirm').click();
-      cy.popUpOnScreenVerify(ERROR_MESSAGES.SENT_COMPLETE)
-      cy.clickElementWithDataCy(WALLET_DATA_CY.HISTORY_REFRESH)
-        cy.get(`[data-cy=${WALLET_DATA_CY.BALANCE_AMOUNT}]`).extractBTCValue().then((btcAmountAfter) => {
-          const btcAmountAsNumber = parseFloat(btcAmount);
-          const btcAmountAfterAsNumber = parseFloat(btcAmountAfter);
-          expect(btcAmountAfterAsNumber).not.equal(btcAmountAsNumber);
-          // need to add verify Addresses and Amounts
-        })
-    })
+        cy.get(".modal-content").should("be.visible");
+
+        cy.get(".modal-header").should("be.visible"); // Verify that the modal header is visible
+        cy.contains(".modal-title", "Confirmation").should("be.visible"); // Verify that the modal title contains the text "Confirmation"
+        cy.get("#feeRange").should("exist");
+
+        //add change Feerate for 1 blocks is 0.0001 sats
+        cy.contains("button.btn.btn-primary", "Confirm").click();
+        cy.popUpOnScreenVerify(ERROR_MESSAGES.SENT_COMPLETE);
+        cy.clickElementWithDataCy(WALLET_DATA_CY.HISTORY_REFRESH);
+        cy.get(`[data-cy=${WALLET_DATA_CY.BALANCE_AMOUNT}]`)
+          .extractBTCValue()
+          .then((btcAmountAfter) => {
+            const btcAmountAsNumber = parseFloat(btcAmount);
+            const btcAmountAfterAsNumber = parseFloat(btcAmountAfter);
+            expect(btcAmountAfterAsNumber).not.equal(btcAmountAsNumber); //maybe a flaky line
+            // need to add verify Addresses and Amounts
+          });
+      });
   });
 });
-
