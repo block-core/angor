@@ -19,7 +19,17 @@ const WALLET_DATA_CY = {
     WALLET_QR:'SHOW_QR_CODE_WALLET',
     CLOSE_WALLET_WORDS: 'close-show-wallet-words',
     CHECKBOX_ERROR: 'checkbox-error',
+    RECOVER_WALLET: 'recover-wallet',
+    SEND_FUNDS: 'send-button',
+    PASSWORD_FOR_SEND: 'password-enter-for-send',
+    HISTORY_REFRESH: 'history-refresh',
+    CONFIRMED_BALANCE: 'confirmed-balance',
 };
+
+const TEST_DATA = {
+    TEST_WALLET: 'desk sadness wrong odor home cabbage shove panic unusual wool force fee',
+    TEST_ADRESS: 'tb1qyhyspf53js8xp889zrwj2fjnd4y9wxsckzafrm',
+}
 
 const QR_CODE_CY = {
     QR_IMAGE: 'QR_IMAGE_IN_POPUP',
@@ -32,6 +42,7 @@ const ERROR_MESSAGES = {
     NULL_PASSWORD_MESSAGE: "New wallet password is null or empty",
     NO_PROJECTS_FOUND: "No projects found.",
     NO_CHECKBOX_TICK: "Please confirm that you have backed up your wallet words and password.",
+    SENT_COMPLETE: 'Sent complete!',
 }
 
 const BROWSE_DATA_CY = {
@@ -43,4 +54,4 @@ const BROWSE_DATA_CY = {
     PROJECT_GRID: "projectsGrid",
 }
 
-export {Navbar,WALLET_DATA_CY,QR_CODE_CY,ERROR_MESSAGES,BROWSE_DATA_CY};
+export {Navbar,WALLET_DATA_CY,QR_CODE_CY,ERROR_MESSAGES,BROWSE_DATA_CY,TEST_DATA};

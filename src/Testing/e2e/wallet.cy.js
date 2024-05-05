@@ -1,6 +1,6 @@
 import '../support/commands/commands'
 import '../support/commands/wallet_commands'
-import {Navbar,WALLET_DATA_CY,QR_CODE_CY,ERROR_MESSAGES} from '../support/enums'
+import {Navbar,WALLET_DATA_CY,QR_CODE_CY,ERROR_MESSAGES,TEST_DATA} from '../support/enums'
 
 describe('walletSpec', { retries: 3 }, () => {
   beforeEach(() => {
@@ -39,8 +39,44 @@ describe('walletSpec', { retries: 3 }, () => {
     
   });
 
-  it('sendFunds', () => {
-    cy.createWallet();
+  it('recoverWalletAndsendFunds', () => {
+    cy.clickOnNavBar(Navbar.WALLET);
+    cy.recoverWallet(TEST_DATA.TEST_WALLET,'aa') // add one with fail because password not correct/words are not correct
+    //get funds
+    cy.get(`[data-cy=${WALLET_DATA_CY.BALANCE_AMOUNT}]`).extractBTCValue().then((btcAmount) => {
+      cy.log(btcAmount)
+      //send 0 funds
+      cy.get('#sendToAddress').type(TEST_DATA.TEST_ADRESS)
+      cy.clickElementWithDataCy(WALLET_DATA_CY.SEND_FUNDS)
+      //expect error:
+      cy.get('.modal-content').should('be.visible'); // Verify that the modal content is visible
+      cy.get('.modal-header').should('have.class', 'bg-danger'); // Verify that the modal header has a danger background  
+      cy.contains('.modal-body', 'Specify an amount').should('be.visible'); // Verify that the modal body contains the text "Specify an amount"
+      
+      cy.dismissModal();
+      cy.get('#sendAmount').type(0.001)
+      // add password is not correct
+      cy.clickElementWithDataCy(WALLET_DATA_CY.SEND_FUNDS)
+      cy.clickAndTypeElementWithDataCy(WALLET_DATA_CY.PASSWORD_FOR_SEND , 'aa')
+      cy.contains('button.btn.btn-primary', 'Submit').click();
+      
+      cy.get('.modal-content').should('be.visible');
+
+      cy.get('.modal-header').should('be.visible'); // Verify that the modal header is visible
+      cy.contains('.modal-title', 'Confirmation').should('be.visible'); // Verify that the modal title contains the text "Confirmation"
+      cy.get('#feeRange').should('exist');
+
+      //add change Feerate for 1 blocks is 0.0001 sats 
+      cy.contains('button.btn.btn-primary', 'Confirm').click();
+      cy.popUpOnScreenVerify(ERROR_MESSAGES.SENT_COMPLETE)
+      cy.clickElementWithDataCy(WALLET_DATA_CY.HISTORY_REFRESH)
+        cy.get(`[data-cy=${WALLET_DATA_CY.BALANCE_AMOUNT}]`).extractBTCValue().then((btcAmountAfter) => {
+          const btcAmountAsNumber = parseFloat(btcAmount);
+          const btcAmountAfterAsNumber = parseFloat(btcAmountAfter);
+          expect(btcAmountAfterAsNumber).not.equal(btcAmountAsNumber);
+          // need to add verify Addresses and Amounts
+        })
+    })
   });
 });
 

@@ -22,6 +22,10 @@ Cypress.Commands.add('clickElementWithDataCy', (datacy) => {
     cy.get(`[data-cy=${datacy}]`).click();
 })
 
+Cypress.Commands.add('clickAndTypeElementWithDataCy', (datacy,msg) => {
+    cy.get(`[data-cy=${datacy}]`).type(msg);
+})
+
 Cypress.Commands.add('ElementWithDataCyShouldBeVisible', (datacy) => {
     cy.get(`[data-cy=${datacy}]`).should('be.visible');
 })
@@ -43,6 +47,12 @@ Cypress.Commands.add('clickSubmitButton', (msg) => {
         cy.get(`[data-cy=alert]`).contains(msg); // Assuming snackbar contains text
     }
 })
+
+Cypress.Commands.add('popUpOnScreenVerify', (msg) => {
+    cy.get(`[data-cy=alert]`).should('be.visible'); // Assuming snackbar has a class 'snackbar'
+    cy.get(`[data-cy=alert]`).contains(msg); // Assuming snackbar contains text
+})
+
 
 Cypress.Commands.add('typeTextInElement', (type,msg) => {
     cy.get(`.input-group input[type=${type}]`)
@@ -69,6 +79,14 @@ Cypress.Commands.add('verifyTextInDataCyWithExistElement', (exist,datacy,text) =
 Cypress.Commands.add('waitForLoader', () => {
     cy.get('.loader').should('not.exist');
 })
+
+Cypress.Commands.add('dismissModal', () => {
+    // Verify that the modal is visible
+    cy.get('.modal-content').should('be.visible');
+
+    // Click the "Dismiss" button
+    cy.get('button.btn.btn-light').contains('Dismiss').click();
+});
 
 
 
