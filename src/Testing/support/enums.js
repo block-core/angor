@@ -24,6 +24,8 @@ const WALLET_DATA_CY = {
   PASSWORD_FOR_SEND: "password-enter-for-send",
   HISTORY_REFRESH: "history-refresh",
   CONFIRMED_BALANCE: "confirmed-balance",
+  ADRESS_ROW: 'adress-row',
+  ADRESS_EXPEND: 'expend-amount',
 };
 
 const TEST_DATA = {

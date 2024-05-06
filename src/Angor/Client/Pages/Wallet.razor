@@ -597,7 +597,7 @@ else
 
                                     if (total > 0)
                                     {
-                                        <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
+                                        <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
                                             <td>@addressInfo.Address</td>
                                             <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
                                             <td>@addressInfo.HdPath</td>
@@ -607,7 +607,7 @@ else
                                         {
                                             <tr>
                                                 <td colspan="4">
-                                                    <div class="collapse show" id="@($"collapse-{addressInfo.Address}")">
+                                                    <div class="collapse show" data-cy="expend-amount" id="@($"collapse-{addressInfo.Address}")">
                                                         <div class="card card-body">
                                                             <!-- Inner table goes here -->
                                                             <div class="table-responsive">

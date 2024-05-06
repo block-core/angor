@@ -87,7 +87,7 @@ describe("walletSpec", { retries: 3 }, () => {
 
   it("recoverWalletAndsendFunds", () => {
     cy.clickOnNavBar(Navbar.WALLET);
-    cy.recoverWallet(TEST_DATA.TEST_WALLET, TEST_DATA.WALLET_PASSWORD); // add one with fail because password not correct/words are not correct
+    cy.recoverWallet(TEST_DATA.TEST_WALLET, TEST_DATA.WALLET_PASSWORD);
     //get funds
     cy.get(`[data-cy=${WALLET_DATA_CY.BALANCE_AMOUNT}]`)
       .extractBTCValue()
@@ -103,13 +103,12 @@ describe("walletSpec", { retries: 3 }, () => {
 
         cy.dismissModal();
         cy.get("#sendAmount").type(0.001);
-        // add password is not correct
         cy.clickElementWithDataCy(WALLET_DATA_CY.SEND_FUNDS);
         cy.clickAndTypeElementWithDataCy(
           WALLET_DATA_CY.PASSWORD_FOR_SEND,
           TEST_DATA.WALLET_PASSWORD
         );
-        cy.confirmSendFunds()
+        cy.confirmSendFunds();
 
         cy.get(".modal-content").should("be.visible");
 
@@ -127,14 +126,19 @@ describe("walletSpec", { retries: 3 }, () => {
             const btcAmountAsNumber = parseFloat(btcAmount);
             const btcAmountAfterAsNumber = parseFloat(btcAmountAfter);
             expect(btcAmountAfterAsNumber).not.equal(btcAmountAsNumber); //maybe a flaky line
-            // need to add verify Addresses and Amounts
+            //verify Addresses and Amounts
+            cy.get(`[data-cy=${WALLET_DATA_CY.ADRESS_ROW}]`).eq(0).click();
+            cy.get(`[data-cy=${WALLET_DATA_CY.ADRESS_EXPEND}]`).should(
+              "contain.text",
+              "0.001"
+            );
           });
       });
   });
 
   it("wrongAdressAndPassword", () => {
     cy.clickOnNavBar(Navbar.WALLET);
-    cy.recoverWallet(TEST_DATA.TEST_WALLET, TEST_DATA.WALLET_PASSWORD); // add one with fail because password not correct/words are not correct
+    cy.recoverWallet(TEST_DATA.TEST_WALLET, TEST_DATA.WALLET_PASSWORD);
     cy.get("#sendToAddress").type("address not valid");
     cy.get("#sendAmount").type(0.0001);
     cy.clickElementWithDataCy(WALLET_DATA_CY.SEND_FUNDS);
@@ -142,13 +146,13 @@ describe("walletSpec", { retries: 3 }, () => {
       WALLET_DATA_CY.PASSWORD_FOR_SEND,
       "wrong password"
     );
-    cy.confirmSendFunds("Invalid password")
+    cy.confirmSendFunds("Invalid password");
     cy.clickAndTypeElementWithDataCy(
       WALLET_DATA_CY.PASSWORD_FOR_SEND,
       TEST_DATA.WALLET_PASSWORD,
       true
     );
-    cy.confirmSendFunds()
+    cy.confirmSendFunds();
     cy.verifyElementPopUp(".modal-body", "Invalid string");
     cy.dismissModal();
   });
