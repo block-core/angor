@@ -33,7 +33,16 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="mb-4">Invested Portfolio</h1>
-        <button class="btn btn-primary" @onclick="ScanForInvestedProjectsAsync">Scan for my projects</button>
+        <button class="btn btn-primary" @onclick="ScanForInvestedProjectsAsync" hidden="@projects.Any()">
+            @if (_scanStage == null)
+            {
+                <span>Scan for my projects</span>
+            }
+            else
+            {
+                <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status" aria-hidden="true"></span>
+            }
+        </button>
         <button class="btn btn-secondary" @onclick="NavigateToPenalties">View Penalties</button>
     </div>
 
@@ -92,7 +101,7 @@
                         <table class="table align-items-center mb-0">
                             <thead>
                                 <tr>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
+                                    @* <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th> *@
                                     <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
                                     <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Funding Target (@network.CoinTicker)</th>
                                     <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Raised (@network.CoinTicker)</th>
@@ -139,7 +148,24 @@
                                         <td>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
                                     </tr>
                                 }
-                            </tbody>
+                                
+                                @foreach (var p in scannedProject)
+                                {
+                                    <tr>
+                                        @if (string.IsNullOrEmpty(p.Value.Project?.Metadata?.Name))
+                                        {
+                                            <td>fetching project</td>
+                                        }
+                                        else
+                                        {
+                                            <td>@p.Value.Project?.Metadata?.Name</td>   
+                                        }
+                                        <td colspan="3"></td>
+                                        <td><span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status" aria-hidden="true"></span></td>
+                                        <td colspan="4"></td>
+                                    </tr>
+                                    }
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -214,6 +240,9 @@
             case scanStage.InvestmentBlockchainLookup:
                 await GetInvestmentBlockchainDataAndUpdateLocalStorage();
                 break;
+            case scanStage.DecryptNostrSignature:
+                await EncryptProjectSignaturesAndAddToStorage();
+                break;
             default:
                 return;
         }
@@ -242,38 +271,53 @@
             ISignService.LookupSignatureForInvestmentRequest(nostrPubKey, scannedProjectData.Project.ProjectInfo.NostrPubKey,
                 scannedProjectData.RequestEventCreateAt, scannedProjectData.RequestEventId, encryptedSignatures =>
                 {
-                    //TODO decrypt the signatures and add to project
-
-                    InvestorProject investorProject = scannedProjectData.Project;
-                    
-                    if (investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
+                    //TODO validate the project is correct
+                    if (!string.IsNullOrEmpty(scannedProjectData.EncryptedSignatures)) //multiple relays for the same message
                         return Task.CompletedTask;
-        
-                    var signatureJson = javascriptNostrToolsModule.Invoke<string>(
-                        "decryptNostr", scannedProjectData.NostrPrivateKey, scannedProjectData.FounderNostrKey, encryptedSignatures);
-        
-                    var res = System.Text.Json.JsonSerializer.Deserialize<SignatureInfo>(signatureJson, RelayService.settings);
 
-                    if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
-                    {
-                        investorProject.SignaturesInfo.Signatures = res.Signatures;
-                    }
+                    scannedProjectData.EncryptedSignatures = encryptedSignatures;
+                    
+                    _scanStage = scanStage.DecryptNostrSignature;
                     
                     Logger.LogInformation("Received encrypted founder signatures" + encryptedSignatures);
 
+                    StateHasChanged();
+                    
                     return UpdatePortfolioAsync();
                 });
         }
-
-        foreach (var scannedProjectData in scannedProject.Values.Where(x => x.Project != null))
-        {
-            storage.AddInvestmentProject(scannedProjectData.Project);
-        }
-
-        _scanStage = null;
-        StateHasChanged();
     }
 
+    private async Task EncryptProjectSignaturesAndAddToStorage()
+    {
+        KeyValuePair<string, ScannedProjectData>? lookup = scannedProject.FirstOrDefault(x => !string.IsNullOrEmpty(x.Value.EncryptedSignatures));
+
+        if (lookup.Value.Value == null)
+        {
+            _scanStage = null;
+            StateHasChanged();
+            return;
+        }
+
+        var decryptProject = lookup.Value.Value;
+        
+        var signatureJson = await javascriptNostrToolsModule.InvokeAsync<string>(
+            "decryptNostr", decryptProject.NostrPrivateKey, decryptProject.FounderNostrKey, decryptProject.EncryptedSignatures);
+        
+        var res = JsonSerializer.Deserialize<SignatureInfo>(signatureJson, RelayService.settings);
+
+        if (res.ProjectIdentifier == decryptProject.Project.ProjectInfo.ProjectIdentifier)
+        {
+            decryptProject.Project.SignaturesInfo!.Signatures = res.Signatures;
+            decryptProject.EncryptedSignatures = null;
+            
+            storage.AddInvestmentProject(decryptProject.Project);
+            projects.Add(decryptProject.Project);
+            scannedProject.Remove(lookup.Value.Key);
+            StateHasChanged();
+        }
+    }
+    
     private void GetProjectDetailsFromNostr()
     {
         IRelayService.RequestProjectCreateEventsByPubKey(x =>
@@ -415,6 +459,7 @@
         public int Index { get; set; }
         public string FounderNostrKey { get; set; }
         public string NostrPrivateKey { get; set; }
+        public string EncryptedSignatures { get; set; }
         public string RequestEventId { get; set; }
         public DateTime RequestEventCreateAt { get; set; }
         public InvestorProject? Project { get; set; }
@@ -424,6 +469,7 @@
     {
         NostrDMLookup,
         ProjectDataLookup,
-        InvestmentBlockchainLookup
+        InvestmentBlockchainLookup,
+        DecryptNostrSignature
     }
 }
