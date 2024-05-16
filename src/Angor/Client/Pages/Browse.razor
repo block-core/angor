@@ -173,7 +173,15 @@ else
 
     }
 }
-
+@if (!searchInProgress)
+{
+    <div class="d-flex justify-content-center mt-4">
+        <a class="btn btn-secondary my-3" href="https://browse.angor.io" target="_blank">
+            <i class="material-icons opacity-10">search</i>
+            <span class="nav-link-text ms-1">Project Explorer</span>
+        </a>
+    </div>
+}
 @if (searchInProgress)
 {
     <div class="d-flex justify-content-center mt-4">
