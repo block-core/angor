@@ -54,7 +54,7 @@ const BROWSE_DATA_CY = {
   SEARCHED_PROJECT: "searchedProject",
   SEARCHED_TITLE: "searchedTitle",
   SEARCHED_SUB_TITLE: "searchedSubTitle",
-  PROJECT_INFO: "project-info",
+  // PROJECT_INFO: "project-info", removed for now
   PROJECT_GRID: "projectsGrid",
 };
 
