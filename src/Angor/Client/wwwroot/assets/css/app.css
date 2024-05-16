@@ -1,12 +1,15 @@
 :root {
-    --bs-primary: #e91e63;
-    --bs-secondary: #7b809a;
+    --bs-primary: #1f5d6a;
+    --bs-secondary: #ff9900;
     --bs-primary-rgb: 233, 30, 99;
     --bs-secondary-rgb: 128, 154, 0;
     --bs-body-color-rgb: 128, 154, 0;
-    --bs-body-color: #7b809a;
-    --bs-link-color: #e91e63;
-    --bs-link-hover-color: #e91e63;
+    --bs-body-color: #ff9900;
+    --bs-link-color: #1f5d6a;
+    --bs-link-hover-color: #1f5d6a;
+    --angor-primary: #1f5d6a;
+    --angor-secondary: #ff9900;
+    --angor-white: #e7fbff;
 }
 
 body {
@@ -593,11 +596,11 @@ tr[style*="cursor: pointer;"] {
 }
 
 .btn-angor {
-    color: #1f5d6a;
+    color: var(--angor-primary) !important;
 }
 
 .dark .btn-angor {
-    color: #E7FBFF;
+    color: var(--angor-white) !important;
 }
 
 .btn-angor:hover {
@@ -1041,7 +1044,25 @@ tr[style*="cursor: pointer;"] {
 .navbar-main {
     background: #fefefd !important;
 }
+
 .dark .navbar-main {
     background: #083b46 !important;
 }
- 
+
+.angor-alert-info {
+    background-color: var(--angor-secondary) !important;
+}
+
+.text-white {
+    color: var(--angor-white) !important;
+}
+
+.project-card {
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
+}
+
+.project-wrapper {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+}
