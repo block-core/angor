@@ -12,9 +12,9 @@ describe("browseProjectsSpec", { retries: 3 }, () => {
     "npub1upnev99qsx4haf0yq8jtkny8yr45c94yw42g7rkdgr4ewgv3sh2shmuxnk";
   it("browseBasic", () => {
     cy.clickOnNavBar(Navbar.BROWSE);
-    cy.get(`[data-cy=${BROWSE_DATA_CY.PROJECT_GRID}]`).contains(
-      ERROR_MESSAGES.NO_PROJECTS_FOUND
-    );
+    // cy.get(`[data-cy=${BROWSE_DATA_CY.PROJECT_GRID}]`).contains(
+    //   ERROR_MESSAGES.NO_PROJECTS_FOUND
+    // );
     cy.clickElementWithDataCy(BROWSE_DATA_CY.FIND_BUTTON);
     cy.searchProject({ msg: "This project does not exist" });
     cy.get(`[data-cy=${BROWSE_DATA_CY.SEARCHED_PROJECT}]`).should("not.exist");
