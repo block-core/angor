@@ -11,7 +11,8 @@
 @inject NavigationManager NavigationManager
 @inject IRelayService _RelayService
 @inject IIndexerService _IndexerService
- 
+@inject IJSRuntime JS
+
 <NotificationComponent @ref="notificationComponent" />
 
 <div class="row">
@@ -45,53 +46,16 @@
         <div class="d-flex align-items-center">
             <!-- Search Section -->
             <div class="input-group">
-                <input type="text" class="form-control" placeholder="Enter Angor project identifier" id="searchQuery" @bind="searchQuery">
-                <button class="btn btn-primary" type="button" @onclick="FindProject" disabled="@findInProgress" data-cy="find-button">Find</button>
+                <input type="text" class="form-control" placeholder="Enter Angor project identifier" id="searchQuery" @bind="searchQuery" @onkeydown="HandleKeyDown">
+                <button class="btn btn-primary" type="button" @onclick="SearchProject" disabled="@searchInProgress" data-cy="find-button">Find</button>
             </div>
         </div>
     </div>
 
 </div>
 
-@if (findInProgress)
-{
-    <div class="d-flex justify-content-center mt-4">
-        <div class="loader"></div>
-    </div>
-}
 
-<!-- Search Result -->
-@if (findProject != null)
-{
-    <div class="card mt-4" data-cy="searchedProject">
-        <div class="card-body">
-            @if (SessionStorage.IsProjectInStorageById(findProject.ProjectIdentifier))
-            {
-                var project = SessionStorage.GetProjectById(findProject.ProjectIdentifier);
-                if (project?.Metadata != null)
-                {
-                    <h3 class="card-title" data-cy="searchedTitle">@project.Metadata.Name</h3>
-                    <p class="card-subtitle" data-cy="searchedSubTitle">@project.Metadata.About</p>
-                    <hr>
-                }
-            }
-            else
-            {
-                <p class="text-warning-emphasis">Project not found in any relay!</p>
-            }
-            <p data-cy="project-info">
-                Project ID:@findProject.ProjectIdentifier
-                <br />
-                Nostr ID  :@(NostrPublicKey.FromHex(findProject.NostrPubKey).Bech32)
-            </p>
-            <button @onclick="() => ViewProjectDetails(findProject.ProjectIdentifier)" class="btn btn-primary card-">View</button>
-
-        </div>
-    </div>
-}
-
-
-@if (!projects.Any() & !searchInProgress)
+@if (!projects.Any() && !searchInProgress)
 {
     <div class="row mt-4">
         <div class="card card-body angor-alert-info pt-2 pb-2">
@@ -210,12 +174,6 @@ else
     }
 }
 
-@if (!searchInProgress)
-{
-    <div class="d-flex justify-content-center mt-4">
-        <button class="btn btn-secondary my-3" @onclick="SearchProjects">Fetch Projects</button>
-    </div>
-}
 @if (searchInProgress)
 {
     <div class="d-flex justify-content-center mt-4">
@@ -231,8 +189,7 @@ else
     private string searchQuery;
     bool searchInProgress = false;
     bool nostrSearchInProgress;
-    bool findInProgress = false;
-    bool isGridView = true;
+     bool isGridView = true;
     string viewModeIcon = "grid_view";
 
     ProjectIndexerData? findProject = null;
@@ -244,8 +201,10 @@ else
         projects = SessionStorage.GetProjectIndexerData() ?? new();
         if (!projects.Any())
         {
-            await SearchProjects();
+            await GetAllProjects();
         }
+        // Handle '/' key press for focusing search input
+        await JS.InvokeVoidAsync("angor.initSearchFocus", "searchQuery");
     }
 
 
@@ -255,30 +214,49 @@ else
         viewModeIcon = isGridView ? "grid_view" : "view_list";
     }
 
-    private async Task FindProject()
+    private async Task SearchProject()
     {
+        if (string.IsNullOrEmpty(searchQuery))
+        {
+            await GetAllProjects();
+            return;
+        }
+
         findProject = projects.FirstOrDefault(_ => _.ProjectIdentifier == searchQuery);
 
         if (findProject != null)
         {
+            projects = new List<ProjectIndexerData> { findProject };
+            StateHasChanged();
             return;
         }
 
-        findInProgress = true;
+        searchInProgress = true;
 
-        findProject = await _IndexerService.GetProjectByIdAsync(searchQuery);
-
-        if (findProject != null)
+        try
         {
-            _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(),
-                StateHasChanged,
-            new[] { findProject.NostrPubKey });
-        }
+            findProject = await _IndexerService.GetProjectByIdAsync(searchQuery);
 
-        findInProgress = false;
+            if (findProject != null)
+            {
+                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), StateHasChanged, new[] { findProject.NostrPubKey });
+                projects = new List<ProjectIndexerData> { findProject };
+            }
+            else
+            {
+                projects.Clear();
+                StateHasChanged();
+            }
+        }
+        finally
+        {
+            searchInProgress = false;
+            StateHasChanged();
+        }
     }
 
-    private async Task SearchProjects()
+
+    private async Task GetAllProjects()
     {
         searchInProgress = true;
 
@@ -368,6 +346,14 @@ else
         else
         {
             notificationComponent.ShowNotificationMessage("The project was not loaded from the relay yet");
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SearchProject();
         }
     }
 }
