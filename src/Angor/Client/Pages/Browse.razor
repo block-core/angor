@@ -73,7 +73,7 @@ else
 
     @if (isGridView)
     {
-        <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper">
+        <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper" data-cy="project-grid">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
                 <div class="col d-flex align-items-stretch">
@@ -101,8 +101,8 @@ else
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                     if (project?.Metadata != null)
                                     {
-                                        <h5 role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
-                                        <p class="mb-0 line-clamp-3">@((MarkupString)project.Metadata.About)</p>
+                                        <h5 role="button" data-cy="searchedTitle" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
+                                        <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle"> @((MarkupString)project.Metadata.About)</p>
                                     }
                                 }
                                 else

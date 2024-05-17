@@ -15,6 +15,6 @@
         "js-base64": "^3.7.7"
     },
     "devDependencies": {
-        "cypress": "^13.8.1"
+        "cypress": "^13.9.0"
     }
 }
