@@ -47,6 +47,7 @@ const ERROR_MESSAGES = {
   NO_CHECKBOX_TICK:
     "Please confirm that you have backed up your wallet words and password.",
   SENT_COMPLETE: "Sent complete!",
+  WALLET_FOR_INVEST: "You must create a wallet if you want to invest",
 };
 
 const BROWSE_DATA_CY = {
@@ -56,6 +57,8 @@ const BROWSE_DATA_CY = {
   SEARCHED_SUB_TITLE: "searchedSubTitle",
   // PROJECT_INFO: "project-info", removed for now
   PROJECT_GRID: "projectsGrid",
+  INVEST_BUTTON: "INVEST_BUTTON",
+  NEXT_BUTTON: "NEXT_BUTTON",
 };
 
 export {

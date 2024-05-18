@@ -11,6 +11,8 @@ using Moq;
 using Angor.Shared.Services;
 using Money = Blockcore.NBitcoin.Money;
 using uint256 = Blockcore.NBitcoin.uint256;
+using Blockcore.Consensus.TransactionInfo;
+using Blockcore.Networks;
 
 namespace Angor.Test;
 
@@ -21,6 +23,7 @@ public class WalletOperationsTest : AngorTestData
     private readonly Mock<IIndexerService> _indexerService;
     private readonly InvestorTransactionActions _investorTransactionActions;
     private readonly FounderTransactionActions _founderTransactionActions;
+    private readonly IHdOperations _hdOperations;
 
     public WalletOperationsTest()
     {
@@ -188,5 +191,19 @@ public class WalletOperationsTest : AngorTestData
         }
 
         TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction.Transaction, coins);
+    }
+
+    [Fact]
+    public void GenerateWalletWords_ReturnsCorrectFormat()
+    {
+        // Arrange
+        var walletOps = new WalletOperations(_indexerService.Object, _hdOperations, NullLogger<WalletOperations>.Instance, _networkConfiguration.Object);
+
+        // Act
+        var result = walletOps.GenerateWalletWords();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(12, result.Split(' ').Length); // Assuming a 12-word mnemonic
     }
 }

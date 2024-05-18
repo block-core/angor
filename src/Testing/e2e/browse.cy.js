@@ -1,7 +1,7 @@
 import "../support/commands/commands";
 import "../support/commands/browse_commands";
 
-import { Navbar, BROWSE_DATA_CY, ERROR_MESSAGES } from "../support/enums";
+import { Navbar, BROWSE_DATA_CY, ERROR_MESSAGES,WALLET_DATA_CY,TEST_DATA } from "../support/enums";
 
 describe("browseProjectsSpec", { retries: 3 }, () => {
   beforeEach(() => {
@@ -36,5 +36,14 @@ describe("browseProjectsSpec", { retries: 3 }, () => {
     );
     // Verify Project MetaData
     cy.clickElementWithDataCy(BROWSE_DATA_CY.SEARCHED_TITLE)
+    cy.clickElementWithDataCy(BROWSE_DATA_CY.INVEST_BUTTON)
+    cy.popUpOnScreenVerify(ERROR_MESSAGES.WALLET_FOR_INVEST);
+    //add in another test.
+    // cy.get('#investmentAmount').type('3')
+    // cy.clickElementWithDataCy(BROWSE_DATA_CY.NEXT_BUTTON)
+    // cy.clickAndTypeElementWithDataCy(
+    //   WALLET_DATA_CY.PASSWORD_FOR_SEND,
+    //   TEST_DATA.WALLET_PASSWORD
+    // );
   });
 });
