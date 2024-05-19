@@ -54,6 +54,12 @@
 
 </div>
 
+@if (searchInProgress)
+{
+    <div class="d-flex justify-content-center mt-4">
+        <div class="loader"></div>
+    </div>
+}
 
 @if (!projects.Any() && !searchInProgress)
 {
@@ -87,7 +93,7 @@ else
                             }
                         </a>
 
-                        <div class="card-body text-center">
+                        <div class="card-body pb-0">
                             @if (nostrSearchInProgress)
                             {
                                 <div class="p-3">
@@ -101,7 +107,11 @@ else
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                     if (project?.Metadata != null)
                                     {
-                                        <h5 role="button" data-cy="searchedTitle" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
+
+                                        <h5 role="button" data-cy="searchedTitle" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                            @project.Metadata.Name
+                                        </h5>
+
                                         <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle"> @((MarkupString)project.Metadata.About)</p>
                                     }
                                 }
@@ -110,6 +120,17 @@ else
                                     <p class="text-warning-emphasis">Project not found in any relay!</p>
                                 }
                             }
+                        </div>
+                        <div class="card-footer pt-0">
+                            <hr class="horizontal light mt-3">
+                            <div role="button" class="btn btn-view w-100" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">
+                                        chevron_right
+                                    </span>
+                                    <span> View Project </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -122,7 +143,7 @@ else
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
 
-                <div class="card mt-4 project-card ">
+                <div class="card mt-4 project-card">
                     <div class="row g-0">
                         <div class="col-md-4">
                             <div class="img-responsive img-responsive-16by9 position-relative" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
@@ -135,7 +156,7 @@ else
                                 }
                             </div>
                         </div>
-                        <div class="col-md-8 d-flex align-items-center justify-content-center position-relative">
+                        <div class="col-md-8 d-flex align-items-center position-relative">
                             <div class="card-body card-loader loading">
 
                                 @if (nostrSearchInProgress)
@@ -146,19 +167,35 @@ else
                                 }
                                 else
                                 {
-                                    @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
-                                    {
-                                        var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                        if (project?.Metadata != null)
-                                        {
-                                            <h5 class="card-title text-center" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
-                                            <p class="card-text text-center line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@((MarkupString)project.Metadata.About)</p>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <p class="text-warning-emphasis">Project not found in any relay!</p>
-                                    }
+                                    <div class="project-list">
+                                        <div>
+                                            @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                                            {
+                                                var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                                if (project?.Metadata != null)
+                                                {
+                                                    <h5 class="card-title" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
+                                                    <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@((MarkupString)project.Metadata.About)</p>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <p class="text-warning-emphasis">Project not found in any relay!</p>
+                                            }
+                                        </div>
+
+                                        <hr class="horizontal light m-only">
+
+                                        <div role="button" class="btn btn-view vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                            <div class="d-flex align-items-center justify-content-center">
+                                                <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">
+                                                    chevron_right
+                                                </span>
+                                                <span> View Project </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 }
                             </div>
                         </div>
@@ -182,13 +219,6 @@ else
         </a>
     </div>
 }
-@if (searchInProgress)
-{
-    <div class="d-flex justify-content-center mt-4">
-        <div class="loader"></div>
-    </div>
-}
-
 
 
 @code {

@@ -1066,3 +1066,46 @@ tr[style*="cursor: pointer;"] {
     margin-left: -0.5rem;
     margin-right: -0.5rem;
 }
+
+.btn-view {
+    font-weight: 400;
+    border-radius: 10px;
+}
+
+    .btn-view:hover {
+        background-color: rgba(199, 199, 199, 0.2);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+
+@media (max-width: 768px) {
+    .w-100-m {
+        width: 100%;
+    }
+}
+
+@media (min-width: 768px) {
+    .project-list {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .m-only {
+        display: none;
+    }
+
+    .vertical-button {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        position: relative;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        height: fit-content;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+    }
+}
