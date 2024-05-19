@@ -1109,3 +1109,13 @@ tr[style*="cursor: pointer;"] {
         width: 40px;
     }
 }
+
+
+ .blur-shadow-image img {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+ .blur-shadow-image:hover img {
+    transform: scale(1.05);  
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); 
+}

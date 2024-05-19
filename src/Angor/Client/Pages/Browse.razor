@@ -7,10 +7,10 @@
 @using System.Text.Json
 @using Angor.Client.Models
 @using Angor.Client.Storage
-@inject ICacheStorage SessionStorage;
+@inject ICacheStorage SessionStorage
 @inject NavigationManager NavigationManager
-@inject IRelayService _RelayService
-@inject IIndexerService _IndexerService
+@inject IRelayService RelayService
+@inject IIndexerService IndexerService
 @inject IJSRuntime JS
 
 <NotificationComponent @ref="notificationComponent" />
@@ -21,12 +21,8 @@
             <div class="d-flex col-auto my-auto">
                 <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">search</span>
                 <div class="h-100 ms-3">
-                    <h5 class="mb-1 font-weight-bolder">
-                        Browse
-                    </h5>
-                    <p class="mb-0 font-weight-normal text-sm">
-                        Browse Projects
-                    </p>
+                    <h5 class="mb-1 font-weight-bolder">Browse</h5>
+                    <p class="mb-0 font-weight-normal text-sm">Browse Projects</p>
                 </div>
             </div>
             <div>
@@ -40,8 +36,8 @@
         </div>
     </div>
 </div>
-<div class="row mt-4">
 
+<div class="row mt-4">
     <div class="card card-body">
         <div class="d-flex align-items-center">
             <!-- Search Section -->
@@ -51,7 +47,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 @if (searchInProgress)
@@ -66,9 +61,7 @@
     <div class="row mt-4">
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center">
-                <span class="material-icons opacity-10 fs-1 me-3 text-white user-select-none">
-                    info
-                </span>
+                <span class="material-icons opacity-10 fs-1 me-3 text-white user-select-none">info</span>
                 <span class="text-white" data-cy="projectsGrid">No projects found.</span>
             </div>
         </div>
@@ -76,7 +69,6 @@
 }
 else
 {
-
     @if (isGridView)
     {
         <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper" data-cy="project-grid">
@@ -89,7 +81,6 @@ else
                             {
                                 var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                 <img class="card-img-top" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-
                             }
                         </a>
 
@@ -107,12 +98,11 @@ else
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                     if (project?.Metadata != null)
                                     {
-
                                         <h5 role="button" data-cy="searchedTitle" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
                                             @project.Metadata.Name
                                         </h5>
 
-                                        <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle"> @((MarkupString)project.Metadata.About)</p>
+                                        <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle">@((MarkupString)project.Metadata.About)</p>
                                     }
                                 }
                                 else
@@ -125,10 +115,8 @@ else
                             <hr class="horizontal light mt-3">
                             <div role="button" class="btn btn-view w-100" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
                                 <div class="d-flex align-items-center justify-content-center">
-                                    <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">
-                                        chevron_right
-                                    </span>
-                                    <span> View Project </span>
+                                    <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">chevron_right</span>
+                                    <span>View Project</span>
                                 </div>
                             </div>
                         </div>
@@ -142,11 +130,10 @@ else
         <div class="project-wrapper">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
-
                 <div class="card mt-4 project-card">
                     <div class="row g-0">
                         <div class="col-md-4">
-                            <div class="img-responsive img-responsive-16by9 position-relative" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                            <div class="img-responsive img-responsive-16by9 position-relative blur-shadow-image" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
                                 @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                                 {
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
@@ -158,7 +145,6 @@ else
                         </div>
                         <div class="col-md-8 d-flex align-items-center position-relative">
                             <div class="card-body card-loader loading">
-
                                 @if (nostrSearchInProgress)
                                 {
                                     <div class="p-3">
@@ -188,28 +174,21 @@ else
 
                                         <div role="button" class="btn btn-view vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
                                             <div class="d-flex align-items-center justify-content-center">
-                                                <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">
-                                                    chevron_right
-                                                </span>
-                                                <span> View Project </span>
+                                                <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">chevron_right</span>
+                                                <span>View Project</span>
                                             </div>
                                         </div>
                                     </div>
-
                                 }
                             </div>
                         </div>
                     </div>
                 </div>
-
-
             }
-
         </div>
-
-
     }
 }
+
 @if (!searchInProgress)
 {
     <div class="d-flex justify-content-center mt-4">
@@ -220,33 +199,28 @@ else
     </div>
 }
 
-
 @code {
-
-    NotificationComponent notificationComponent;
+    private NotificationComponent notificationComponent;
     private string searchQuery;
-    bool searchInProgress = false;
-    bool nostrSearchInProgress;
-    bool isGridView = true;
-    string viewModeIcon = "grid_view";
+    private bool searchInProgress = false;
+    private bool nostrSearchInProgress;
+    private bool isGridView = true;
+    private string viewModeIcon = "grid_view";
 
-    ProjectIndexerData? findProject = null;
-
+    private ProjectIndexerData? findProject = null;
     private List<ProjectIndexerData> projects = new();
 
     protected override async Task OnInitializedAsync()
     {
-        projects = SessionStorage.GetProjectIndexerData() ?? new();
+        projects = SessionStorage.GetProjectIndexerData() ?? new List<ProjectIndexerData>();
         if (!projects.Any())
         {
             await GetAllProjects();
         }
-        // Handle '/' key press for focusing search input
         await JS.InvokeVoidAsync("angor.initSearchFocus", "searchQuery");
     }
 
-
-    void ToggleView()
+    private void ToggleView()
     {
         isGridView = !isGridView;
         viewModeIcon = isGridView ? "grid_view" : "view_list";
@@ -273,11 +247,11 @@ else
 
         try
         {
-            findProject = await _IndexerService.GetProjectByIdAsync(searchQuery);
+            findProject = await IndexerService.GetProjectByIdAsync(searchQuery);
 
             if (findProject != null)
             {
-                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), StateHasChanged, new[] { findProject.NostrPubKey });
+                RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), StateHasChanged, new[] { findProject.NostrPubKey });
                 projects = new List<ProjectIndexerData> { findProject };
             }
             else
@@ -293,12 +267,11 @@ else
         }
     }
 
-
     private async Task GetAllProjects()
     {
         searchInProgress = true;
 
-        var blockchainProjects = await _IndexerService.GetProjectsAsync(null, 21);
+        var blockchainProjects = await IndexerService.GetProjectsAsync(null, 21);
 
         var projectsNotInList = blockchainProjects
             .Where(blockchainProject => projects.All(_ => _.ProjectIdentifier != blockchainProject.ProjectIdentifier))
@@ -306,24 +279,22 @@ else
 
         if (projectsNotInList.Any())
         {
-            projects.AddRange(projectsNotInList.ToArray());
+            projects.AddRange(projectsNotInList);
             SessionStorage.SetProjectIndexerData(projects);
 
             var projectsForLookup = projectsNotInList
-                .Where(_ => _.NostrPubKey != null) //For old projects in the indexer
+                .Where(_ => _.NostrPubKey != null)
                 .Select(_ => _.NostrPubKey)
                 .ToArray();
 
             nostrSearchInProgress = true;
 
             if (projectsForLookup.Any())
-                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(),
-                    () =>
+                RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), () =>
                 {
                     nostrSearchInProgress = false;
                     StateHasChanged();
-                },
-                projectsForLookup);
+                }, projectsForLookup);
 
             StateHasChanged();
         }
@@ -345,7 +316,6 @@ else
             switch (e)
             {
                 case { Kind: NostrKind.Metadata }:
-
                     var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
                     if (projectIndexerData != null)
                     {
@@ -356,11 +326,9 @@ else
                             SessionStorage.StoreProject(project);
                         }
                     }
-
                     break;
 
                 case { Kind: NostrKind.ApplicationSpecificData }:
-
                     var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
                     if (projectInfo != null && projectIndexerData != null)
                     {
@@ -369,7 +337,6 @@ else
                             SessionStorage.StoreProject(new Project { ProjectInfo = projectInfo, CreationTransactionId = projectIndexerData.TrxId });
                         }
                     }
-
                     break;
             }
         };
