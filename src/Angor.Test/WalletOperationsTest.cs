@@ -13,6 +13,7 @@ using Money = Blockcore.NBitcoin.Money;
 using uint256 = Blockcore.NBitcoin.uint256;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Test;
 
@@ -61,15 +62,15 @@ public class WalletOperationsTest : AngorTestData
         });
 
         int outputIndex = 0;
-        _indexerService.Setup(_ => _.FetchUtxoAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>())).Returns<string,int, int>((address, limit, offset) =>
+        _indexerService.Setup(_ => _.FetchUtxoAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>())).Returns<string, int, int>((address, limit, offset) =>
         {
             var res = new List<UtxoData>
             {
                 new ()
                 {
-                    address =address, 
-                    value = Money.Satoshis(amount).Satoshi, 
-                    outpoint = new Outpoint( uint256.Zero.ToString(),outputIndex++ ), 
+                    address =address,
+                    value = Money.Satoshis(amount).Satoshi,
+                    outpoint = new Outpoint( uint256.Zero.ToString(),outputIndex++ ),
                     scriptHex = new Blockcore.NBitcoin.BitcoinWitPubKeyAddress(address,network).ScriptPubKey.ToHex()
                 }
             };
@@ -140,7 +141,7 @@ public class WalletOperationsTest : AngorTestData
         projectInfo.TargetAmount = 3;
         projectInfo.StartDate = DateTime.UtcNow;
         projectInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
-        projectInfo.PenaltyDays= 10;
+        projectInfo.PenaltyDays = 10;
         projectInfo.Stages = new List<Stage>
         {
             new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
@@ -186,8 +187,8 @@ public class WalletOperationsTest : AngorTestData
         //add all utxos as coins (easier)
         foreach (var utxo in accountInfo.AddressesInfo.Concat(accountInfo.ChangeAddressesInfo).SelectMany(s => s.UtxoData))
         {
-                coins.Add(new Blockcore.NBitcoin.Coin(Blockcore.NBitcoin.uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
-                    new Money(utxo.value), Blockcore.Consensus.ScriptInfo.Script.FromHex(utxo.scriptHex))); //Adding fee inputs
+            coins.Add(new Blockcore.NBitcoin.Coin(Blockcore.NBitcoin.uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
+                new Money(utxo.value), Blockcore.Consensus.ScriptInfo.Script.FromHex(utxo.scriptHex))); //Adding fee inputs
         }
 
         TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction.Transaction, coins);
@@ -206,4 +207,49 @@ public class WalletOperationsTest : AngorTestData
         Assert.NotNull(result);
         Assert.Equal(12, result.Split(' ').Length); // Assuming a 12-word mnemonic
     }
+
+    [Fact]
+
+    public async Task transaction_fails_due_to_insufficient_funds() // funds are null
+    {
+        // Arrange
+        var mockNetworkConfiguration = new Mock<INetworkConfiguration>();
+        var mockIndexerService = new Mock<IIndexerService>();
+        var mockHdOperations = new Mock<IHdOperations>();
+        var mockLogger = new Mock<ILogger<WalletOperations>>();
+        var network = new Mock<Network>();
+        mockNetworkConfiguration.Setup(x => x.GetNetwork()).Returns(network.Object);
+        mockIndexerService.Setup(x => x.PublishTransactionAsync(It.IsAny<string>())).ReturnsAsync(string.Empty);
+
+        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object);
+
+        var walletWords = new WalletWords { Words = "test seed", Passphrase = "test" };
+        var sendInfo = new SendInfo
+        {
+            SendAmount = 0.01m,
+            SendUtxos = new Dictionary<string, UtxoDataWithPath>
+        {
+            {
+                "key", new UtxoDataWithPath
+                {
+                    UtxoData = new UtxoData
+                    {
+                        value = 500,  // Intentionally insufficient to cover the send amount and fees
+                        address = "someAddress",
+                        scriptHex = "someScriptHex",
+                        outpoint = new Outpoint(), // Ensure Outpoint is also correctly initialized
+                        blockIndex = 1,
+                        PendingSpent = false
+                    },
+                    HdPath = "your_hd_path_here"
+                }
+            }
+        }
+        };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ApplicationException>(() => walletOperations.SendAmountToAddress(walletWords, sendInfo));
+        Assert.Contains("not enough funds", exception.Message);
+    }
+
 }
