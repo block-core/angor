@@ -48,6 +48,9 @@ const ERROR_MESSAGES = {
     "Please confirm that you have backed up your wallet words and password.",
   SENT_COMPLETE: "Sent complete!",
   WALLET_FOR_INVEST: "You must create a wallet if you want to invest",
+  FUNDS_INVESTED: "Signature request sent",
+  MIN_FUNDS_ERROR: "Seeder minimum investment amount of 2 BTC was not reached",
+  NOT_ENOUGH_FUNDS: "Not enough funds",
 };
 
 const BROWSE_DATA_CY = {
