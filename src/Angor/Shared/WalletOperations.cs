@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Blockcore.Consensus.ScriptInfo;
@@ -248,7 +249,7 @@ public class WalletOperations : IWalletOperations
 
         var coins = new List<Coin>();
         var keys = new List<Key>();
-
+        
         foreach (var utxoDataWithPath in utxoDataWithPaths)
         {
             var utxo = utxoDataWithPath.UtxoData;
