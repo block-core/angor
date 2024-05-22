@@ -93,9 +93,8 @@ public class WalletOperationsTest : AngorTestData
         }
         catch (FormatException ex)
         {
-            // Handle the exception or log it based on your application's requirements
             Console.WriteLine($"Error: Invalid address format. Details: {ex.Message}");
-            throw; // Re-throwing the exception after logging or handling is optional based on how you want to manage errors
+            throw; 
         }
     }
 
