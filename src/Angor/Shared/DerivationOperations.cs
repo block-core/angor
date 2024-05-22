@@ -1,3 +1,4 @@
+using System.Text;
 using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
@@ -205,6 +206,14 @@ public class DerivationOperations : IDerivationOperations
         return extKey.PrivateKey;
     }
     
+    public Key DeriveProjectNostrInvestorPrivateKey(WalletWords walletWords, string projectId)
+    {
+        var hash = Hashes.Hash256(Encoding.UTF8.GetBytes(projectId)); //TODO check if this is too predictable
+        var index = (int)hash.GetLow32() & int.MaxValue;
+
+        return DeriveProjectNostrPrivateKey(walletWords, index);
+    }
+
     public Key DeriveProjectNostrPrivateKey(WalletWords walletWords, int index)
     {
         // founder key is derived from the path m/5'

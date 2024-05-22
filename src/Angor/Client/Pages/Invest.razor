@@ -373,9 +373,7 @@
             {
                 var words = await passwordComponent.GetWalletAsync();
 
-                var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
-
-                var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, accountInfo.InvestmentsCount + 1);
+                var nostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
 
                 var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -590,7 +588,8 @@
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             var words = await passwordComponent.GetWalletAsync();
-            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, accountInfo.InvestmentsCount + 1);
+            
+            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier); 
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
