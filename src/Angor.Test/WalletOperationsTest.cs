@@ -14,6 +14,7 @@ using uint256 = Blockcore.NBitcoin.uint256;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
+using Blockcore.NBitcoin.BIP32;
 
 namespace Angor.Test;
 
@@ -275,7 +276,7 @@ public class WalletOperationsTest : AngorTestData
 
 
     [Fact]
-    public async Task TransactionSucceeds_WithSufficientFunds()
+    public async Task TransactionSucceeds_WithSufficientFundsWallet()
     {
         // Arrange
         var mockNetworkConfiguration = new Mock<INetworkConfiguration>();
@@ -284,9 +285,10 @@ public class WalletOperationsTest : AngorTestData
         var mockLogger = new Mock<ILogger<WalletOperations>>();
         var network = _networkConfiguration.Object.GetNetwork();
         mockNetworkConfiguration.Setup(x => x.GetNetwork()).Returns(network);
-        mockIndexerService.Setup(x => x.PublishTransactionAsync(It.IsAny<string>())).ReturnsAsync("fake-tx-id");
         mockHdOperations.Setup(x => x.GetAccountHdPath(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>()))
                         .Returns("m/0/0");
+        var expectedExtendedKey = new ExtKey();
+        mockHdOperations.Setup(x => x.GetExtendedKey(It.IsAny<string>(), It.IsAny<string>())).Returns(expectedExtendedKey);
 
         var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object);
 
@@ -295,7 +297,9 @@ public class WalletOperationsTest : AngorTestData
         string scriptHex = GenerateScriptHex(address, network);
         var sendInfo = new SendInfo
         {
-            SendAmount = 0.01m, 
+            SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
+            ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
+            SendAmount = 0.01m,
             SendUtxos = new Dictionary<string, UtxoDataWithPath>
         {
             {
@@ -310,7 +314,7 @@ public class WalletOperationsTest : AngorTestData
                         blockIndex = 1,
                         PendingSpent = false
                     },
-                    HdPath = "m/0/0" 
+                    HdPath = "m/0/0"
                 }
             }
         }
@@ -321,7 +325,47 @@ public class WalletOperationsTest : AngorTestData
 
         // Assert
         Assert.True(operationResult.Success);
-        // Assert.NotNull(operationResult.Value); // Ensure a transaction is returned
+        Assert.NotNull(operationResult.Data); // ensure data is saved
+    }
+
+
+    [Fact]
+    public void GetUnspentOutputsForTransaction_ReturnsCorrectOutputs()
+    {
+        // Arrange
+        var mockHdOperations = new Mock<IHdOperations>();
+        var walletWords = new WalletWords { Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel", Passphrase = "" };
+        var utxos = new List<UtxoDataWithPath>
+    {
+        new UtxoDataWithPath
+        {
+            UtxoData = new UtxoData
+            {
+                value = 1500000,
+                address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679",
+                scriptHex = "0014b7d165bb8b25f567f05c57d3b484159582ac2827",
+                outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
+                blockIndex = 1,
+                PendingSpent = false
+            },
+            HdPath = "m/0/0"
+        }
+    };
+
+        var expectedExtKey = new ExtKey();
+        mockHdOperations.Setup(x => x.GetExtendedKey(walletWords.Words, walletWords.Passphrase)).Returns(expectedExtKey);
+
+        var walletOperations = new WalletOperations(null, mockHdOperations.Object, null, null);
+
+        // Act
+        var (coins, keys) = walletOperations.GetUnspentOutputsForTransaction(walletWords, utxos);
+
+        // Assert
+        Assert.Single(coins);
+        Assert.Single(keys);
+        Assert.Equal((uint)0, coins[0].Outpoint.N);
+        Assert.Equal(1500000, coins[0].Amount.Satoshi);
+        Assert.Equal(expectedExtKey.Derive(new KeyPath("m/0/0")).PrivateKey, keys[0]);
     }
 
 

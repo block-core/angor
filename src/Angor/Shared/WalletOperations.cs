@@ -249,7 +249,7 @@ public class WalletOperations : IWalletOperations
 
         var coins = new List<Coin>();
         var keys = new List<Key>();
-        
+
         foreach (var utxoDataWithPath in utxoDataWithPaths)
         {
             var utxo = utxoDataWithPath.UtxoData;
@@ -265,6 +265,7 @@ public class WalletOperations : IWalletOperations
 
         return (coins,keys);
     }
+
 
     public AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords)
     {
