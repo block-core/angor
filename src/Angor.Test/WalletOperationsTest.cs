@@ -242,7 +242,6 @@ public class WalletOperationsTest : AngorTestData
         var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
         string address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
         AccountInfo accountInfo = _sut.BuildAccountInfoForWalletWords(words);
-        // var walletWords = new WalletWords { Words = "test seed", Passphrase = "test" };
         string scriptHex = GenerateScriptHex(address, network);
         var sendInfo = new SendInfo
         {
@@ -254,7 +253,7 @@ public class WalletOperationsTest : AngorTestData
                 {
                     UtxoData = new UtxoData
                     {
-                        value = 500,  // Intentionally insufficient to cover the send amount and fees
+                        value = 500,  //  insufficient to cover the send amount and fees
                         address = address,
                         scriptHex = scriptHex,
                         outpoint = new Outpoint(), // Ensure Outpoint is also correctly initialized
@@ -368,5 +367,85 @@ public class WalletOperationsTest : AngorTestData
         Assert.Equal(expectedExtKey.Derive(new KeyPath("m/0/0")).PrivateKey, keys[0]);
     }
 
+    [Fact]
+    public void CalculateTransactionFee_WithMultipleScenarios()
+    {
+        // Arrange common elements
+        var mockNetworkConfiguration = new Mock<INetworkConfiguration>();
+        var mockIndexerService = new Mock<IIndexerService>();
+        var mockHdOperations = new Mock<IHdOperations>();
+        var mockLogger = new Mock<ILogger<WalletOperations>>();
+        var network = _networkConfiguration.Object.GetNetwork();
+        mockNetworkConfiguration.Setup(x => x.GetNetwork()).Returns(network);
+
+        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object);
+
+        var words = new WalletWords { Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel", Passphrase = "" };
+        var address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
+        var scriptHex = "0014b7d165bb8b25f567f05c57d3b484159582ac2827";  
+        var accountInfo = new AccountInfo(); 
+        long feeRate = 10; 
+
+        // Scenario 1: Sufficient funds
+        var sendInfoSufficientFunds = new SendInfo
+        {
+            SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
+            ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
+            SendAmount = 0.0001m,  // Lower amount for successful fee calculation
+            SendUtxos = new Dictionary<string, UtxoDataWithPath>
+        {
+            {
+                "key", new UtxoDataWithPath
+                {
+                    UtxoData = new UtxoData
+                    {
+                        value = 150000000, // Sufficient to cover the send amount and estimated fees
+                        address = address,
+                        scriptHex = scriptHex,
+                        outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
+                        blockIndex = 1,
+                        PendingSpent = false
+                    },
+                    HdPath = "m/0/0"
+                }
+            }
+        }
+        };
+
+        // Act & Assert for sufficient funds
+        var calculatedFeeSufficient = walletOperations.CalculateTransactionFee(sendInfoSufficientFunds, accountInfo, feeRate);
+        Assert.True(calculatedFeeSufficient > 0);
+        Assert.Equal(0.00000001m, calculatedFeeSufficient);  // Assuming an expected fee for validation
+
+        // Scenario 2: Insufficient funds
+        var sendInfoInsufficientFunds = new SendInfo
+        {
+            SendToAddress = sendInfoSufficientFunds.SendToAddress,
+            ChangeAddress = sendInfoSufficientFunds.ChangeAddress,
+            SendAmount = 10000m,  // High amount to trigger insufficient funds
+            SendUtxos = new Dictionary<string, UtxoDataWithPath>
+        {
+            {
+                "key", new UtxoDataWithPath
+                {
+                    UtxoData = new UtxoData
+                    {
+                        value = 500, //  low to ensure insufficient funds
+                        address = address,
+                        scriptHex = scriptHex,
+                        outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
+                        blockIndex = 1,
+                        PendingSpent = false
+                    },
+                    HdPath = "m/0/0"
+                }
+            }
+        }
+        };
+
+        // Act & Assert for insufficient funds
+        var exception = Assert.Throws<Blockcore.Consensus.TransactionInfo.NotEnoughFundsException>(() => walletOperations.CalculateTransactionFee(sendInfoInsufficientFunds, accountInfo, feeRate));
+        Assert.Equal("Not enough funds to cover the target with missing amount 9999.99999500", exception.Message);
+    }
 
 }
