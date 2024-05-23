@@ -10,29 +10,31 @@
 
 <!-- Trigger Button -->
 <div class="col-6 text-end">
-    <i @onclick="ShowModal" class="material-icons opacity-10 btn-angor fs-3 cursor-pointer user-select-none">qr_code_2</i>
+    <i @onclick="ShowModal" class="material-icons opacity-10 btn-angor fs-3 cursor-pointer user-select-none" data-cy="SHOW_QR_CODE">qr_code_2</i>
 </div>
 <!-- Modal -->
 @if (showModal)
 {
-    <div class="modal fade show d-block" id="qrcodeModal" tabindex="-1" aria-labelledby="qrcodeModalLabel" aria-hidden="true">
-        <div class="modal-dialog custom-modal-size">
-            <!-- Custom modal size -->
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="coinControlModalLabel">QR Code</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="HideModal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <img src="data:image/png;base64,@base64qrcode" class="qrcode-image" alt="QR Code" />
-                    <div class="address-container">
-                        <div class="d-flex align-items-center">
-                            <p id="receive-address" class="address-text mb-0 overflow-x-auto">@Data</p>
-                            <i @onclick="CopyToClipboard" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer user-select-none">copy</i>
+    <div class="modal-wrapper">
+        <div class="modal fade show d-block" id="qrcodeModal" tabindex="-1" aria-labelledby="qrcodeModalLabel" aria-hidden="true">
+            <div class="modal-dialog custom-modal-size">
+                <!-- Custom modal size -->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="coinControlModalLabel">QR Code</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="HideModal" aria-label="Close" data-cy="QR_IMAGE_IN_POPUP"></button>
+                    </div>
+                    <div class="modal-body">
+                        <img src="data:image/png;base64,@base64qrcode" class="qrcode-image" alt="QR Code" />
+                        <div class="address-container">
+                            <div class="d-flex align-items-center">
+                                <p id="receive-address" class="address-text mb-0 overflow-x-auto" data-cy="WALLET_ADRESS_IN_QR_POPUP">@Data</p>
+                                <i @onclick="CopyToClipboard" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer user-select-none">copy</i>
+                            </div>
                         </div>
                     </div>
-                </div>
 
+                </div>
             </div>
         </div>
     </div>

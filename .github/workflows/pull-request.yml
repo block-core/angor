@@ -48,7 +48,9 @@ jobs:
       run: dotnet restore ${{env.SOLUTION_PATH}}
 
     - name: Unit Test
-      run: dotnet test -v=normal -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
+      run: |
+       dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Release src/Angor.sln | grep -E '(Passed|Failed) .*ms'
+  
 
   cypress-run:
     runs-on: ubuntu-22.04
@@ -65,4 +67,5 @@ jobs:
           build: npm run build
           start: npm start
           browser: electron
-          headless: true      
+          headless: true
+          config-file: src/Testing/cypress.config.js      

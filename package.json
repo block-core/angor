@@ -7,14 +7,14 @@
         "changelog": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md",
         "build": "dotnet build src/Angor/Client",
         "start": "dotnet run --project src/Angor/Client",
-        "cypress:open": "cypress open --config-file src/testing/cypress.json",
-        "cypress:run": "cypress run --config-file src/testing/cypress.json"
+        "cypress:open": "cypress open --config-file src/testing/cypress.config.js",
+        "cypress:run": "cypress run --config-file src/testing/cypress.config.js"
     },
     "private": true,
     "dependencies": {
         "js-base64": "^3.7.7"
     },
     "devDependencies": {
-        "cypress": "^13.7.1"
+        "cypress": "^13.9.0"
     }
 }

@@ -7,7 +7,7 @@
 @inject INetworkService _networkService;
 
 <div class="sidenav-header">
-    <div class="text-white">
+    <div class="menu-text">
         <i class="material-icons p-3 cursor-pointer opacity-5 position-absolute end-0 top-0 d-xl-none" aria-hidden="true" id="iconSidenav" @onclick="ToggleSidenav">
             close
         </i>
@@ -15,22 +15,22 @@
 
     <a class="navbar-brand m-0" href="" @onclick="ToggleSidenav">
         <img src="/assets/img/angor-logo.svg" class="navbar-brand-img h-100" alt="Angor" />
-        <span class="ms-1 font-weight-bold text-white">Angor App</span>
+        <span class="ms-1 font-weight-bold menu-text">Angor App</span>
     </a>
 </div>
 
-<hr class="horizontal light mt-0 mb-2" />
+<hr class="horizontal mt-0 mb-2" />
 
 <div class="collapse navbar-collapse w-auto overflow-x-hidden" id="sidenav-collapse-main">
     <ul class="navbar-nav" @onclick="ToggleSidenav">
         <li class="nav-item">
-            <NavLink class="nav-link text-white" href="wallet">
+            <NavLink class="nav-link menu-text" href="wallet">
                 <i class="material-icons opacity-10">wallet</i>
                 <span class="nav-link-text ms-1">Wallet</span>
             </NavLink>
         </li>
         <li class="nav-item">
-            <NavLink class="nav-link text-white" href="browse">
+            <NavLink class="nav-link menu-text" href="browse">
                 <i class="material-icons opacity-10">search</i>
                 <span class="nav-link-text ms-1">Browse</span>
             </NavLink>
@@ -41,14 +41,14 @@
         @if (hasWallet)
         {
             <li class="nav-item">
-                <NavLink class="nav-link text-white" href="investor">
+                <NavLink class="nav-link menu-text" href="investor">
                     <i class="material-icons opacity-10">badge</i>
                     <span class="nav-link-text ms-1">Portfolio</span>
                 </NavLink>
             </li>
 
             <li class="nav-item">
-                <NavLink class="nav-link text-white" href="founder">
+                <NavLink class="nav-link menu-text" href="founder">
                     <i class="material-icons opacity-10">add_circle</i>
                     <span class="nav-link-text ms-1">Founder</span>
                 </NavLink>
@@ -57,10 +57,10 @@
         }
 
 
-        <hr class="horizontal light mt-0">
+        <hr class="horizontal mt-0">
 
         <li class="nav-item">
-            <NavLink class="nav-link text-white" href="settings">
+            <NavLink class="nav-link menu-text" href="settings">
                 <i class="material-icons opacity-10">settings</i>
                 <span class="nav-link-text ms-1">Settings</span>
             </NavLink>
@@ -73,16 +73,30 @@
 
 <div class="sidenav-footer position-absolute w-100 bottom-0">
     <ul class="navbar-nav">
-        <li class="nav-item" @onclick="ToggleSidenavText">
-            <span class="nav-link text-white">
-                <i class="material-icons opacity-10">@hideTextIcon</i>
-                <span class="nav-link-text ms-1"></span>
-            </span>
+
+        <li class="nav-item d-flex align-items-center justify-content-@betweenOrEnd">
+            @if (!islockMenu)
+            {
+                <span class="nav-link menu-text" @onclick="ToggleSidenavText">
+                    <i class="material-icons opacity-10">@hideTextIcon</i>
+                </span>
+            }
+            @if (!isSidenavHide)
+            {
+                <span class="nav-link menu-text" @onclick="ToggleLockMenu">
+                    <i class="material-icons opacity-10">@lockMenuIcon</i>
+                </span>
+            }
+
         </li>
+
+
+
+
         <hr class="horizontal light mt-0">
 
         <li class="nav-item">
-            <a class="nav-link text-white" href="https://browse.angor.io">
+            <a class="nav-link menu-text" href="https://browse.angor.io">
                 <i class="material-icons opacity-10">search</i>
                 <span class="nav-link-text ms-1">Project Explorer</span>
             </a>
@@ -100,9 +114,19 @@
     [Parameter]
     public EventCallback ToggleSidenavTextCallback { get; set; }
 
+    [Parameter]
+    public EventCallback ToggleleLockMenuCallback { get; set; }
+
     private bool hasWallet;
     private string hideTextIcon = "chevron_left";
-    private bool isSidenavHide = false;
+    private string lockMenuIcon = "lock_open";
+    private string betweenOrEnd = "between";
+
+
+    private bool islockMenu = false;
+
+
+    private bool isSidenavHide = true;
     private Timer? _timer;
     private int _elapsedCount = 0;
 
@@ -115,14 +139,30 @@
     private async Task ToggleSidenavText()
     {
         await ToggleSidenavTextCallback.InvokeAsync();
-       
+
         isSidenavHide = !isSidenavHide;
         UpdateHideTextIcon(isSidenavHide);
 
     }
+
+
     private void UpdateHideTextIcon(bool isHideText)
     {
-        hideTextIcon = isHideText ? "chevron_left" : "chevron_right";
+        hideTextIcon = isHideText ? "chevron_right" : "chevron_left";
+    }
+
+    private async Task ToggleLockMenu()
+    {
+        await ToggleleLockMenuCallback.InvokeAsync();
+
+        islockMenu = !islockMenu;
+        UpdateLockMenuIcon(islockMenu);
+
+    }
+    private void UpdateLockMenuIcon(bool islockMenu)
+    {
+        lockMenuIcon = islockMenu ? "lock" : "lock_open";
+        betweenOrEnd = islockMenu ? "end" : "between";
     }
 
     /// <inheritdoc />
