@@ -9,11 +9,13 @@
 @using Angor.Client.Storage
 @inject ICacheStorage SessionStorage
 @inject NavigationManager NavigationManager
-@inject IRelayService RelayService
-@inject IIndexerService IndexerService
+@inject IRelayService _RelayService
+@inject IIndexerService _IndexerService
 @inject IJSRuntime JS
 
 <NotificationComponent @ref="notificationComponent" />
+
+
 
 <div class="row">
     <div class="card card-body">
@@ -247,11 +249,11 @@ else
 
         try
         {
-            findProject = await IndexerService.GetProjectByIdAsync(searchQuery);
+            findProject = await _IndexerService.GetProjectByIdAsync(searchQuery);
 
             if (findProject != null)
             {
-                RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), StateHasChanged, new[] { findProject.NostrPubKey });
+                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), StateHasChanged, new[] { findProject.NostrPubKey });
                 projects = new List<ProjectIndexerData> { findProject };
             }
             else
@@ -271,7 +273,7 @@ else
     {
         searchInProgress = true;
 
-        var blockchainProjects = await IndexerService.GetProjectsAsync(null, 21);
+        var blockchainProjects = await _IndexerService.GetProjectsAsync(null, 21);
 
         var projectsNotInList = blockchainProjects
             .Where(blockchainProject => projects.All(_ => _.ProjectIdentifier != blockchainProject.ProjectIdentifier))
@@ -290,7 +292,7 @@ else
             nostrSearchInProgress = true;
 
             if (projectsForLookup.Any())
-                RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), () =>
+                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), () =>
                 {
                     nostrSearchInProgress = false;
                     StateHasChanged();
