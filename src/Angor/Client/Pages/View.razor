@@ -199,18 +199,6 @@
                         <NavLink href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-primary me-2">Spend Funds</NavLink>
                         <NavLink href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-primary">Approve signature</NavLink>
                     </div>
-
-                    @if (project.ProjectInfo.NostrPubKey != null)
-                    {
-                        <div class="mb-3">
-                            <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
-                            <div class="input-group">
-                                <InputText id="NostrPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                                <button @onclick="CopyNsecToClipboardAsyncCheckPassword" class="btn btn-success">Copy NSec to clipboard</button>
-                            </div>
-                        </div>
-                    }
-
                 }
                 else if (invested)
                 {
@@ -224,7 +212,7 @@
                 }
                 else
                 {
-                    <button class="btn btn-primary" @onclick="InvestInProject">Invest</button>
+                    <button class="btn btn-primary" data-cy="INVEST_BUTTON" @onclick="InvestInProject">Invest</button>
                 }
             </div>
         </div>
@@ -233,9 +221,25 @@
         <!-- Relays Section -->
         <div class="card mb-3">
             <div class="card-header">
-                <h4>Relays</h4>
+                <h4>Nostr</h4>
             </div>
             <div class="card-body">
+                @if (project.ProjectInfo.NostrPubKey != null)
+                {
+                    <div class="mb-3">
+                        <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
+                        <div class="input-group">
+                            <InputText id="NostrPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
+                           @if (founder)
+                           {
+                               <button @onclick="CopyNsecToClipboardAsyncCheckPassword" class="btn btn-success">Copy NSec to clipboard</button>
+                           }
+                        </div>
+                    </div>
+                }
+
+                <br/>
+                <h6>Relays</h6>
                 @foreach (var relay in NostrClients)
                 {
                     <a href="@relay" target="_blank" class="d-block mb-2">

@@ -1,3 +1,35 @@
+## <small>0.0.25 (2024-05-24)</small>
+
+* Add ci/cd on PR for cypress e2e, and add developer read me (#77) ([eb92419](https://github.com/block-core/angor/commit/eb92419)), closes [#77](https://github.com/block-core/angor/issues/77)
+* Add cy tests (#95) ([eb0e493](https://github.com/block-core/angor/commit/eb0e493)), closes [#95](https://github.com/block-core/angor/issues/95)
+* Adjusted window popup to show tickbox without scrolling. (#83) ([4da9df3](https://github.com/block-core/angor/commit/4da9df3)), closes [#83](https://github.com/block-core/angor/issues/83)
+* Browse UI (#75) ([08f0ccd](https://github.com/block-core/angor/commit/08f0ccd)), closes [#75](https://github.com/block-core/angor/issues/75)
+* bump version ([e59bf88](https://github.com/block-core/angor/commit/e59bf88))
+* Calculate miner fee  (#86) ([9abd95c](https://github.com/block-core/angor/commit/9abd95c)), closes [#86](https://github.com/block-core/angor/issues/86)
+* change command in pull-request for better readability in regression log (#92) ([664bc51](https://github.com/block-core/angor/commit/664bc51)), closes [#92](https://github.com/block-core/angor/issues/92)
+* Change wallet extra passphrase text (#93) ([95e4a0a](https://github.com/block-core/angor/commit/95e4a0a)), closes [#93](https://github.com/block-core/angor/issues/93)
+* changelog ([2e478b3](https://github.com/block-core/angor/commit/2e478b3))
+* Changing the colors of some elements and improving the UI (#91) ([0b17256](https://github.com/block-core/angor/commit/0b17256)), closes [#91](https://github.com/block-core/angor/issues/91)
+* Derivation operations unit tests (#88) ([9e9e8a6](https://github.com/block-core/angor/commit/9e9e8a6)), closes [#88](https://github.com/block-core/angor/issues/88)
+* Fix cypress test after UI change (#96) ([4486df3](https://github.com/block-core/angor/commit/4486df3)), closes [#96](https://github.com/block-core/angor/issues/96)
+* Fix issue when search is only 1 char (#81) ([71990b0](https://github.com/block-core/angor/commit/71990b0)), closes [#81](https://github.com/block-core/angor/issues/81)
+* fix tests ([dbab5b6](https://github.com/block-core/angor/commit/dbab5b6))
+* Fixed show alert message (#82) ([7aa7d69](https://github.com/block-core/angor/commit/7aa7d69)), closes [#82](https://github.com/block-core/angor/issues/82)
+* Improving the user experience of the project section (#94) ([a8bb6e2](https://github.com/block-core/angor/commit/a8bb6e2)), closes [#94](https://github.com/block-core/angor/issues/94)
+* Move cypress folder to src/testing (#84) ([c62e84c](https://github.com/block-core/angor/commit/c62e84c)), closes [#84](https://github.com/block-core/angor/issues/84)
+* move cypress-json (#87) ([e05862a](https://github.com/block-core/angor/commit/e05862a)), closes [#87](https://github.com/block-core/angor/issues/87)
+* Prepare to calculate the angor fee for mainnet (#90) ([4b94ca0](https://github.com/block-core/angor/commit/4b94ca0)), closes [#90](https://github.com/block-core/angor/issues/90)
+* Remove the long operation form penalty page (#73) ([777d4f6](https://github.com/block-core/angor/commit/777d4f6)), closes [#73](https://github.com/block-core/angor/issues/73)
+* Rename contributer readme ([4b9cad1](https://github.com/block-core/angor/commit/4b9cad1))
+* Show mainnet or testnet change on header (#74) ([31c806c](https://github.com/block-core/angor/commit/31c806c)), closes [#74](https://github.com/block-core/angor/issues/74)
+* Unit tests for walletOperations, and cypress test (#97) ([a9c63b6](https://github.com/block-core/angor/commit/a9c63b6)), closes [#97](https://github.com/block-core/angor/issues/97)
+* Update gh-pages.yml ([9f3c06b](https://github.com/block-core/angor/commit/9f3c06b))
+* Update README.md ([e19cba4](https://github.com/block-core/angor/commit/e19cba4))
+* Update Settings layout for better user experience (#85) ([ad24486](https://github.com/block-core/angor/commit/ad24486)), closes [#85](https://github.com/block-core/angor/issues/85)
+* Upgrade to Dotnet 8 (#71) ([b6db18a](https://github.com/block-core/angor/commit/b6db18a)), closes [#71](https://github.com/block-core/angor/issues/71)
+
+
+
 ## <small>0.0.24 (2024-04-10)</small>
 
 * Add a refresh button in the invest page (#67) ([068679c](https://github.com/block-core/angor/commit/068679c)), closes [#67](https://github.com/block-core/angor/issues/67)

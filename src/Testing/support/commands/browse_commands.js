@@ -9,3 +9,12 @@ Cypress.Commands.add("searchProject", ({ msg, clear }) => {
   searchField.type(msg);
   cy.clickElementWithDataCy(BROWSE_DATA_CY.FIND_BUTTON);
 });
+
+Cypress.Commands.add("confirmInvest", (err) => {
+  cy.contains("button.btn.btn-primary", "Submit").click();
+  if (err) {
+    cy.contains("div.text-danger-emphasis", err).should(
+      "be.visible"
+    );
+  }
+});

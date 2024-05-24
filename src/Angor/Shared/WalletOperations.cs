@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Blockcore.Consensus.ScriptInfo;
@@ -264,6 +265,7 @@ public class WalletOperations : IWalletOperations
 
         return (coins,keys);
     }
+
 
     public AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords)
     {
