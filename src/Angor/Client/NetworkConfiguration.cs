@@ -9,7 +9,7 @@ namespace Angor.Client;
 public class NetworkConfiguration : INetworkConfiguration
 {
     public static string AngorTestKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
-    public static string AngorMainKey = "xpub661MyMwAqRbcEo7z4zshCkEF57GHJ55DP5Ty6suMxPmDbhktLt8Ddbg53SbaGWUafsVtd6DcVT38t7A7kEUrRwDrJxHNBvr1WX45nwE6ocj";
+    public static string AngorMainKey = "xpub661MyMwAqRbcGNxKe9aFkPisf3h32gHLJm8f9XAqx8FB1Nk6KngCY8hkhGqxFr2Gyb6yfUaQVbodxLoC1f3K5HU9LM1CXE59gkEXSGCCZ1B";
 
     public static long AngorCreateFeeSats = 10000;
     public static int AngorInvestFeePercentage = 1;
