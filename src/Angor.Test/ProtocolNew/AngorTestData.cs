@@ -20,7 +20,10 @@ public class AngorTestData
         _networkConfiguration = new Mock<INetworkConfiguration>();
         _networkConfiguration.Setup(_ => _.GetNetwork())
             .Returns(Networks.Bitcoin.Testnet());
-        
+
+        _networkConfiguration.Setup(_ => _.GetAngorInvestFeePercentage)
+            .Returns(1);
+
         _derivationOperations = new DerivationOperations(new HdOperations(),
             new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
     }
