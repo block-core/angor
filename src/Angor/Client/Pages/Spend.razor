@@ -22,6 +22,7 @@
 
 @inherits BaseComponent
 
+
 @if (!hasWallet)
 {
     NavigationManager.NavigateTo($"/wallet");
@@ -57,13 +58,13 @@
             </button>
         </div>
     }
-
+  
     @foreach (var stage in stageDatas)
     {
         bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
         var investedCount = stage.Items.Count(c => c.IsSpent == false);
         var investedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
-
+        
         <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -183,8 +184,57 @@
                 </div>
             </div>
         </div>
+    
 
     }
+    @{
+    // Initialize variables to hold aggregated statistics
+    var totalInvestedAmount = 0.0m;
+    var totalInvestedCount = 0;
+    var totalSpentAmount = 0.0m;
+    var totalSpentCount = 0;
+    var currentMoneyCanBeOut = 0.0m;
+}
+
+<script>
+    // Loop through stageDatas
+    @foreach (var stage in stageDatas)
+    {
+        
+        var stageIsActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
+        var investedCount = stage.Items.Count(c => c.IsSpent == false);
+        var investedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
+        var spentAmount = stage.Items.Where(c => c.IsSpent == true).Sum(c => c.Amount);
+        var spentCount = stage.Items.Count(c => c.IsSpent == true);
+        var daysUntilRelease = (stage.Stage.ReleaseDate - DateTime.UtcNow).Days;
+        var CurrentStagePercent = @stage.Stage.AmountToRelease;
+        
+        //<h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
+        //totalInvestedAmount += (int)investedAmount;
+        totalInvestedAmount += @investedAmount;
+        totalInvestedCount += investedCount;
+        totalSpentAmount += (int) spentAmount;
+        totalSpentCount += spentCount;
+        if(!(daysUntilRelease>0)){
+            currentMoneyCanBeOut += @investedAmount;
+        }
+    }
+</script>
+    <div class="container my-4">
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <h5 class="card-title">Spend statistics</h5>
+            </div>
+            <p class="card-subtitle text-muted mb-2">Total Invested Amount: @totalInvestedAmount</p>
+            <p class="card-subtitle text-muted mb-2">Money you can pull out @currentMoneyCanBeOut</p>
+            <p class="card-subtitle text-muted mb-2">Total Invested Count: @totalInvestedCount</p>
+            <p class="card-subtitle text-muted mb-2">Total Spent Amount: @totalSpentAmount</p>
+            <p class="card-subtitle text-muted mb-2">Total Spent Count: @totalSpentCount</p>
+        </div>
+    </div>
+</div>
+
 
 </div>
 
