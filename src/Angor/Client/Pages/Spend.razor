@@ -19,6 +19,7 @@
 @inject IWalletOperations _WalletOperations
 @inject IFounderTransactionActions _founderTransactionActions
 @inject ILogger<Recover> Logger;
+@inject IClipboardService _clipboardService
 
 @inherits BaseComponent
 
@@ -64,14 +65,16 @@
         bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
         var investedCount = stage.Items.Count(c => c.IsSpent == false);
         var investedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
-        
+        bool noCoinsToClaim = investedCount == 0 || stage.StagePinner == true;
+                        
         <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
                     @if (stageisActive)
                     {
-                        <button class="btn btn-success" disabled="@(investedCount == 0 || stage.StagePinner == true)" @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
+                        
+                        <button class="btn @((noCoinsToClaim) ? "btn-light" : "btn-success")" disabled="@noCoinsToClaim" @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
                             @if (stage.StagePinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -79,7 +82,14 @@
                             }
                             else
                             {
-                                <span>Claim Coins</span>
+                                @if (investedCount == 0)
+                                {
+                                    <span>Claimed</span>
+                                }
+                                else
+                                {
+                                    <span>Claim Coins</span>
+                                }
                             }
                         </button>
                     }
@@ -102,33 +112,30 @@
                         @foreach (var transaction in stage.Items)
                         {
                             bool isTicked = selected.ContainsKey(transaction.Trxid);
+                            string statusClass = transaction.IsSpent ? "bg-warning text-dark" : "bg-success text-light";
+                            string statusText = transaction.IsSpent ? "Spent" : "Unspent";
 
                             <div class="d-flex mb-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
-                                </div>
-                                <div class="flex-grow-1 ms-3">
-                                    <p class="mb-0">
-                                        @transaction.Amount @network.CoinTicker - utxo : @transaction.Trxid-@transaction.Outputindex
-
-                                        @if (transaction.IsSpent)
-                                        {
-                                            <p class="text-primary">spent</p>
-                                        }
-                                        else
-                                        {
-                                            <p class="text-success">unspent</p>
-                                        }
-
-                                    </p>
-                                </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
                             </div>
+                            <div class="flex-grow-1 ms-3">
+                                <p class="mb-0">
+                                    @transaction.Amount @network.CoinTicker - utxo : 
+                                    <span style="cursor: pointer; text-decoration: underline;" @onclick="() => CopyTRXToClipboard(transaction.Trxid)">@transaction.Trxid</span> -@transaction.Outputindex
+                                    <span class="p-1 rounded @statusClass">
+                                        @statusText
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
                         }
                     </div>
                 }
             </div>
         </div>
     }
+    
     
     @if (showCreateModal)
     {
@@ -187,53 +194,73 @@
     
 
     }
-    @{
+@{
     // Initialize variables to hold aggregated statistics
-    var totalInvestedAmount = 0.0m;
-    var totalInvestedCount = 0;
-    var totalSpentAmount = 0.0m;
-    var totalSpentCount = 0;
-    var currentMoneyCanBeOut = 0.0m;
+    decimal totalAvailableInvestedAmount = 0.0m;
+    int totalInvestedTransactions = 0;
+    decimal totalSpentAmount = 0.0m;
+    int totalSpentTransactions = 0;
+    decimal currentWithdrawableAmount = 0.0m;
+    int totalStages = stageDatas.Any() ? stageDatas.Count() : 1;
+
+    // Calculate the time until the next stage release
+    var nextStage = stageDatas.Where(stage => stage.Stage.ReleaseDate > DateTime.UtcNow)
+                            .OrderBy(stage => stage.Stage.ReleaseDate)
+                            .FirstOrDefault();
+    TimeSpan? timeUntilNextStage = nextStage != null ? nextStage.Stage.ReleaseDate - DateTime.UtcNow : (TimeSpan?)null;
 }
 
 <script>
-    // Loop through stageDatas
+    // Loop through stageDatas to aggregate statistics
     @foreach (var stage in stageDatas)
     {
-        
         var stageIsActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
-        var investedCount = stage.Items.Count(c => c.IsSpent == false);
-        var investedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
-        var spentAmount = stage.Items.Where(c => c.IsSpent == true).Sum(c => c.Amount);
-        var spentCount = stage.Items.Count(c => c.IsSpent == true);
+        var totalStageTransactions = stage.Items.Count();
+        var availableInvestedAmount = stage.Items.Where(c => !c.IsSpent).Sum(c => c.Amount);
+        var spentStageAmount = stage.Items.Where(c => c.IsSpent).Sum(c => c.Amount);
+        var spentStageTransactions = stage.Items.Count(c => c.IsSpent);
         var daysUntilRelease = (stage.Stage.ReleaseDate - DateTime.UtcNow).Days;
-        var CurrentStagePercent = @stage.Stage.AmountToRelease;
-        
-        //<h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
-        //totalInvestedAmount += (int)investedAmount;
-        totalInvestedAmount += @investedAmount;
-        totalInvestedCount += investedCount;
-        totalSpentAmount += (int) spentAmount;
-        totalSpentCount += spentCount;
-        if(!(daysUntilRelease>0)){
-            currentMoneyCanBeOut += @investedAmount;
+        var stageReleasePercentage = stage.Stage.AmountToRelease;
+
+        totalAvailableInvestedAmount += availableInvestedAmount;
+        totalInvestedTransactions += totalStageTransactions;
+        totalSpentAmount += spentStageAmount;
+        totalSpentTransactions += spentStageTransactions;
+
+        if (daysUntilRelease <= 0)
+        {
+            currentWithdrawableAmount += availableInvestedAmount;
         }
     }
 </script>
-    <div class="container my-4">
+
+<div class="container my-4">
     <div class="card mb-3">
         <div class="card-body">
             <div class="d-flex justify-content-between">
-                <h5 class="card-title">Spend statistics</h5>
+                <h5 class="card-title">Project Statistics</h5>
             </div>
-            <p class="card-subtitle text-muted mb-2">Total Invested Amount: @totalInvestedAmount</p>
-            <p class="card-subtitle text-muted mb-2">Money you can pull out @currentMoneyCanBeOut</p>
-            <p class="card-subtitle text-muted mb-2">Total Invested Count: @totalInvestedCount</p>
-            <p class="card-subtitle text-muted mb-2">Total Spent Amount: @totalSpentAmount</p>
-            <p class="card-subtitle text-muted mb-2">Total Spent Count: @totalSpentCount</p>
+            <p class="card-subtitle text-muted mb-2">Total Invested Amount (Spent + Unspent): @(totalAvailableInvestedAmount + totalSpentAmount) @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Unspent Invested Amount: @totalAvailableInvestedAmount @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Withdrawable Amount: @currentWithdrawableAmount @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Transactions: @totalInvestedTransactions</p>
+            <p class="card-subtitle text-muted mb-2">Total Unspent Transactions: @(totalInvestedTransactions - totalSpentTransactions) @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Spent Amount: @totalSpentAmount @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Spent Transactions: @totalSpentTransactions</p>
+            <p class="card-subtitle text-muted mb-2">Total Stages: @totalStages</p>
+            @if (timeUntilNextStage.HasValue)
+            {
+                <p class="card-subtitle text-muted mb-2">Time until next stage: @timeUntilNextStage.Value.Days days, @timeUntilNextStage.Value.Hours hours, @timeUntilNextStage.Value.Minutes minutes</p>
+            }
+            else
+            {
+                <p class="card-subtitle text-muted mb-2">No upcoming stages.</p>
+            }
         </div>
     </div>
 </div>
+
+
 
 
 </div>
@@ -600,4 +627,15 @@
             selected.Add(trxId, null);
         }
     }
+
+    private async Task CopyTRXToClipboard(string trxData)
+    {
+    if (string.IsNullOrEmpty(trxData))
+    {
+        throw new ArgumentNullException(nameof(trxData), "Transaction data is null or empty.");
+    }
+
+    await _clipboardService.WriteTextAsync(trxData);
+    StateHasChanged();
+    }   
 }
