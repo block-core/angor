@@ -379,7 +379,7 @@
                     projectStats.TotalInvestors = (int)data.InvestorCount;
                     projectStats.TotalRaised = data.AmountInvested;
 
-                    projectStats.TimeLeft = (project.ProjectInfo.ExpiryDate - DateTime.Now).Days;
+                    projectStats.TimeLeft = (project.ProjectInfo.ExpiryDate - DateTime.UtcNow).Days;
                     if (projectStats.TimeLeft < 0)
                         projectStats.TimeLeft = 0;
 

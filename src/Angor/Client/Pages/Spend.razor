@@ -66,6 +66,7 @@
         var investedCount = stage.Items.Count(c => c.IsSpent == false);
         var investedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
         bool noCoinsToClaim = investedCount == 0 || stage.StagePinner == true;
+
                         
         <div class="card mb-3">
             <div class="card-body">
@@ -194,45 +195,7 @@
     
 
     }
-@{
-    // Initialize variables to hold aggregated statistics
-    decimal totalAvailableInvestedAmount = 0.0m;
-    int totalInvestedTransactions = 0;
-    decimal totalSpentAmount = 0.0m;
-    int totalSpentTransactions = 0;
-    decimal currentWithdrawableAmount = 0.0m;
-    int totalStages = stageDatas.Any() ? stageDatas.Count() : 1;
 
-    // Calculate the time until the next stage release
-    var nextStage = stageDatas.Where(stage => stage.Stage.ReleaseDate > DateTime.UtcNow)
-                            .OrderBy(stage => stage.Stage.ReleaseDate)
-                            .FirstOrDefault();
-    TimeSpan? timeUntilNextStage = nextStage != null ? nextStage.Stage.ReleaseDate - DateTime.UtcNow : (TimeSpan?)null;
-}
-
-<script>
-    // Loop through stageDatas to aggregate statistics
-    @foreach (var stage in stageDatas)
-    {
-        var stageIsActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
-        var totalStageTransactions = stage.Items.Count();
-        var availableInvestedAmount = stage.Items.Where(c => !c.IsSpent).Sum(c => c.Amount);
-        var spentStageAmount = stage.Items.Where(c => c.IsSpent).Sum(c => c.Amount);
-        var spentStageTransactions = stage.Items.Count(c => c.IsSpent);
-        var daysUntilRelease = (stage.Stage.ReleaseDate - DateTime.UtcNow).Days;
-        var stageReleasePercentage = stage.Stage.AmountToRelease;
-
-        totalAvailableInvestedAmount += availableInvestedAmount;
-        totalInvestedTransactions += totalStageTransactions;
-        totalSpentAmount += spentStageAmount;
-        totalSpentTransactions += spentStageTransactions;
-
-        if (daysUntilRelease <= 0)
-        {
-            currentWithdrawableAmount += availableInvestedAmount;
-        }
-    }
-</script>
 
 <div class="container my-4">
     <div class="card mb-3">
@@ -244,7 +207,7 @@
             <p class="card-subtitle text-muted mb-2">Total Unspent Invested Amount: @totalAvailableInvestedAmount @network.CoinTicker</p>
             <p class="card-subtitle text-muted mb-2">Total Withdrawable Amount: @currentWithdrawableAmount @network.CoinTicker</p>
             <p class="card-subtitle text-muted mb-2">Total Transactions: @totalInvestedTransactions</p>
-            <p class="card-subtitle text-muted mb-2">Total Unspent Transactions: @(totalInvestedTransactions - totalSpentTransactions) @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Unspent Transactions: @(totalInvestedTransactions - totalSpentTransactions) </p>
             <p class="card-subtitle text-muted mb-2">Total Spent Amount: @totalSpentAmount @network.CoinTicker</p>
             <p class="card-subtitle text-muted mb-2">Total Spent Transactions: @totalSpentTransactions</p>
             <p class="card-subtitle text-muted mb-2">Total Stages: @totalStages</p>
@@ -276,6 +239,14 @@
     private bool refreshSpinner = false;
     private bool firstTimeRefreshSpinner = false;
     private bool spendSpinner = false;
+
+    decimal totalAvailableInvestedAmount = 0.0m;
+    int totalInvestedTransactions = 0;
+    decimal totalSpentAmount = 0.0m;
+    int totalSpentTransactions = 0;
+    decimal currentWithdrawableAmount = 0.0m;
+    int totalStages;
+    TimeSpan? timeUntilNextStage;
 
     private ProjectInfo project;
 
@@ -310,10 +281,50 @@
 
     protected override async Task OnInitializedAsync()
     {
+        
+
         project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
 
         firstTimeRefreshSpinner = true;
+
+        CalculateTotalValues();
     }
+
+    private void CalculateTotalValues()
+{
+    totalStages = stageDatas.Any() ? stageDatas.Count() : 1;    
+
+    var nextStage = stageDatas.Where(stage => stage.Stage.ReleaseDate > DateTime.UtcNow)
+                            .OrderBy(stage => stage.Stage.ReleaseDate)
+                            .FirstOrDefault();
+        timeUntilNextStage = nextStage != null ? nextStage.Stage.ReleaseDate - DateTime.UtcNow : (TimeSpan?)null;
+    totalAvailableInvestedAmount = 0.0m;
+    totalInvestedTransactions = 0;
+    totalSpentAmount = 0.0m;
+    totalSpentTransactions = 0;
+    currentWithdrawableAmount = 0.0m;
+
+    foreach (var stage in stageDatas)
+    {
+        var stageIsActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
+        var totalStageTransactions = stage.Items.Count();
+        var availableInvestedAmount = stage.Items.Where(c => !c.IsSpent).Sum(c => c.Amount);
+        var spentStageAmount = stage.Items.Where(c => c.IsSpent).Sum(c => c.Amount);
+        var spentStageTransactions = stage.Items.Count(c => c.IsSpent);
+        var daysUntilRelease = (stage.Stage.ReleaseDate - DateTime.UtcNow).Days;
+        var stageReleasePercentage = stage.Stage.AmountToRelease;
+
+        totalAvailableInvestedAmount += availableInvestedAmount;
+        totalInvestedTransactions += totalStageTransactions;
+        totalSpentAmount += spentStageAmount;
+        totalSpentTransactions += spentStageTransactions;
+
+        if (daysUntilRelease <= 0)
+        {
+            currentWithdrawableAmount += availableInvestedAmount;
+        }
+    }
+}
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -347,6 +358,7 @@
         {
             refreshSpinner = false;
             firstTimeRefreshSpinner = false;
+            CalculateTotalValues();
         }
 
         StateHasChanged();
@@ -411,6 +423,8 @@
             }
         }
     }
+
+    
 
     private async Task CheckSpentFund()
     {
