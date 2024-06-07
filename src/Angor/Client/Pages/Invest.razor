@@ -14,9 +14,9 @@
 @using System.Diagnostics
 @using Angor.Client.Models
 
-@inject IJSRuntime JS
-
 @inherits BaseComponent
+
+@inject IJSRuntime JS
 
 @inject ILogger<Invest> _Logger;
 @inject IDerivationOperations _derivationOperations
@@ -25,6 +25,7 @@
 @inject IWalletOperations _WalletOperations
 
 @inject ISignService _SignService
+@inject IRelayService _RelayService
 
 @inject IInvestorTransactionActions _InvestorTransactionActions
 
@@ -708,8 +709,7 @@
             Debug.Assert(investorProject.SignaturesInfo != null, nameof(investorProject.SignaturesInfo) + " != null");
             Debug.Assert(investorProject.SignedTransactionHex != null, nameof(investorProject.SignedTransactionHex) + " != null");
 
-            if (signedTransaction == null)
-                signedTransaction = new TransactionInfo();
+            signedTransaction ??= new TransactionInfo();
 
             signedTransaction.Transaction ??= _networkConfiguration.GetNetwork().CreateTransaction(investorProject.SignedTransactionHex);
 
@@ -734,6 +734,26 @@
 
             storage.UpdateInvestmentProject(investorProject);
 
+            var words = await passwordComponent.GetWalletAsync();
+            var rootNostrPrivateKey = await _derivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 0); 
+            var rootNostrPrivateKeyHex = Encoders.Hex.EncodeData(rootNostrPrivateKey.ToBytes());
+
+            var nostrDMKey = _derivationOperations.DeriveNostrPubKey(words, 1); //TODO David 1 must not be the answer
+
+            var encryptedProjectIdList = await javascriptNostrToolsModule.InvokeAsync<string>(
+                "encryptNostr",
+                rootNostrPrivateKey,
+                nostrDMKey,
+                storage.GetInvestmentProjects().Where(x => x.InvestedInProject()).Select(x => x.ProjectInfo.ProjectIdentifier));
+            
+            _RelayService.SendDirectMessagesForPubKeyAsync(rootNostrPrivateKeyHex, nostrDMKey, encryptedProjectIdList, x =>
+            {
+                if (!x.Accepted)
+                {
+                    //TODO need to handle failure to save the list of projects
+                }
+            });
+            
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
 
