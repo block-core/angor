@@ -240,13 +240,13 @@
         
         await _RelayService.LookupDirectMessagesForPubKeyAsync( nostrDMPubey, null,1, x =>
         {
-            var projectIdList = javascriptNostrToolsModule.Invoke<List<string>>(
+            var projectIdList = javascriptNostrToolsModule.Invoke<Investments>(
                 "decryptNostr",
                 rootNostrPrivateKey,
                 nostrDMPubey,
                 storage.GetInvestmentProjects().Where(x => x.InvestedInProject()).Select(x => x.ProjectInfo.ProjectIdentifier));
             
-            var tasks = projectIdList.Select(GetInvestmentProjectDataAsync);
+            var tasks = projectIdList.ProjectIdentifiers.Select(GetInvestmentProjectDataAsync);
 
             Task.WhenAll(tasks);
         });
@@ -262,13 +262,15 @@
         
         var words = await passwordComponent.GetWalletAsync();
         var investmentPubKey = _DerivationOperations.DeriveInvestorKey(words, project.FounderKey);
-        var investorNostrPrivateKey = _DerivationOperations.DeriveInvestorPrivateKey(words, project.FounderKey);
+       
         var investments = await _IndexerService.GetInvestmentsAsync(projectId);
         var investment = investments.SingleOrDefault(x => x.InvestorPublicKey == investmentPubKey);
 
         if (investment == null)
             return;
 
+        var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectIdentifier);
+        
         var investorProject = new InvestorProject
         {
             TransactionId = investment.TransactionId,

@@ -740,11 +740,19 @@
 
             var nostrDMKey = _derivationOperations.DeriveNostrPubKey(words, 1); //TODO David 1 must not be the answer
 
+            Investments investmentList = new()
+            {
+                ProjectIdentifiers = storage.GetInvestmentProjects()
+                    .Where(x => x.InvestedInProject())
+                    .Select(x => x.ProjectInfo.ProjectIdentifier)
+                    .ToList()
+            };
+            
             var encryptedProjectIdList = await javascriptNostrToolsModule.InvokeAsync<string>(
                 "encryptNostr",
                 rootNostrPrivateKey,
                 nostrDMKey,
-                storage.GetInvestmentProjects().Where(x => x.InvestedInProject()).Select(x => x.ProjectInfo.ProjectIdentifier));
+                System.Text.Json.JsonSerializer.Serialize(investmentList, RelayService.settings));
             
             _RelayService.SendDirectMessagesForPubKeyAsync(rootNostrPrivateKeyHex, nostrDMKey, encryptedProjectIdList, x =>
             {
