@@ -1,3 +1,16 @@
+## <small>0.0.27 (2024-06-07)</small>
+
+* Fixed the founder scan not saving the project index and the create transaction id (#101) ([4ae20a7](https://github.com/block-core/angor/commit/4ae20a7)), closes [#101](https://github.com/block-core/angor/issues/101)
+* hide testnet coins button for mainnet (dah) (#99) ([2fc366f](https://github.com/block-core/angor/commit/2fc366f)), closes [#99](https://github.com/block-core/angor/issues/99)
+
+
+
+## <small>0.0.26 (2024-05-24)</small>
+
+* bump version and upgrade docker release ([57f4003](https://github.com/block-core/angor/commit/57f4003))
+
+
+
 ## <small>0.0.25 (2024-05-24)</small>
 
 * Add ci/cd on PR for cypress e2e, and add developer read me (#77) ([eb92419](https://github.com/block-core/angor/commit/eb92419)), closes [#77](https://github.com/block-core/angor/issues/77)
