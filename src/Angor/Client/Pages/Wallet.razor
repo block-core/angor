@@ -215,7 +215,7 @@ else
                         <span class="fs-4 me-2" data-cy="balance">Balance: </span>
                         <span class="fs-3 me-2" data-cy="balance-amount"><strong> @Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong></span>
                     </div>
-                    @if (accountBalanceInfo.TotalUnconfirmedBalance <= 0 & accountBalanceInfo.TotalBalance <= 0)
+                    @if (network.NetworkType != NetworkType.Mainnet && accountBalanceInfo.TotalUnconfirmedBalance <= 0 & accountBalanceInfo.TotalBalance <= 0)
                     {
                         <div class="d-flex flex-wrap align-items-center">
                             <button class="btn btn-secondary" data-cy="get-test-coins" @onclick="GetTestCoins" disabled="@testCoinsSpinner">

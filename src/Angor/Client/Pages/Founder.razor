@@ -102,7 +102,7 @@
 
         var keys = _walletStorage.GetFounderKeys();
 
-        var founderProjectsToLookup = new List<string>();
+        var founderProjectsToLookup = new Dictionary<string,ProjectIndexerData>();
 
         foreach (var key in keys.Keys)
         {
@@ -114,7 +114,7 @@
             if (indexerProject == null)
                 break;
 
-            founderProjectsToLookup.Add(key.NostrPubKey);
+            founderProjectsToLookup.Add(key.NostrPubKey,indexerProject);
         }
 
         if (founderProjectsToLookup.Any())
@@ -133,7 +133,12 @@
                     case { Kind: NostrKind.ApplicationSpecificData }:
                         var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
                         if (founderProjects.All(_ => _.ProjectInfo.NostrPubKey != e.Pubkey)) //Getting events from multiple relays
-                            founderProjects.Add(new FounderProject { ProjectInfo = projectInfo });
+                            founderProjects.Add(new FounderProject
+                            {
+                                ProjectInfo = projectInfo,
+                                ProjectIndex = founderProjectsToLookup.Keys.ToList().IndexOf(e.Pubkey) + 1,
+                                CreationTransactionId = founderProjectsToLookup[e.Pubkey].TrxId
+                            });
                         break;
                 }
             },
@@ -143,7 +148,7 @@
                     storage.AddFounderProject(founderProjects.ToArray());
                     StateHasChanged();
                 },
-                founderProjectsToLookup.ToArray());
+                founderProjectsToLookup.Keys.ToArray());
         else
             scanningForProjects = false;
     }
