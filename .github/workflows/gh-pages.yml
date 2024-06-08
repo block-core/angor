@@ -1,51 +1,96 @@
-name: gh-pages
+name: Build and Deploy
+
+permissions:
+  contents: write
 
 on:
   push:
     branches:
       - main
 
-permissions:
-  contents: write
-
 jobs:
-  build:
-    concurrency: ci-${{ github.ref }} 
+  deploy-test:
     runs-on: ubuntu-latest
-
-    env:
-      PROJECT_PATH: "src/Angor/Server/Angor.Server.csproj"
-      OUTPUT_PATH: "Output"
-      BUILD_CONFIGURATION: "Release"
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 8.0.x
-    
-    - name: Publish (Angor)
-      run: dotnet publish ${{env.PROJECT_PATH}} -f net8.0 --configuration ${{env.BUILD_CONFIGURATION}} --output ${{env.OUTPUT_PATH}}
-   
-    - name: Copy index.html to 404.html
-      run: cp ${{env.OUTPUT_PATH}}/wwwroot/index.html ${{env.OUTPUT_PATH}}/wwwroot/404.html
-      
-    - name: Add .nojekyll file
-      run: touch ${{env.OUTPUT_PATH}}/wwwroot/.nojekyll
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
-    - name: Minify and replace JS files
-      run: |
-        npm install uglify-js -g
-        find ${{env.OUTPUT_PATH}}/wwwroot/assets/js -type f -name '*.js' -exec uglifyjs {} -o {} --compress --mangle \;
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 8.0.x
 
-    - name: Minify and replace CSS files
-      run: |
-        npm install csso-cli -g
-        find ${{env.OUTPUT_PATH}}/wwwroot/assets/css -type f -name '*.css' -exec csso {} -o {} \;
+      - name: Publish (Angor)
+        run: dotnet publish src/Angor/Server/Angor.Server.csproj -f net8.0 --configuration Release --output Output
 
-    - name: Deploy to Github Pages
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-          branch: gh-pages 
-          folder: ${{env.OUTPUT_PATH}}/wwwroot
+      - name: Copy index.html to 404.html
+        run: cp Output/wwwroot/index.html Output/wwwroot/404.html
+
+      - name: Add .nojekyll file
+        run: touch Output/wwwroot/.nojekyll
+
+      - name: Minify and replace JS files
+        run: |
+          npm install uglify-js -g
+          find Output/wwwroot/assets/js -type f -name '*.js' -exec uglifyjs {} -o {} --compress --mangle \;
+
+      - name: Minify and replace CSS files
+        run: |
+          npm install csso-cli -g
+          find Output/wwwroot/assets/css -type f -name '*.css' -exec csso {} -o {} \;
+
+      - name: Create CNAME for Test
+        run: echo "test.angor.io" > Output/wwwroot/CNAME
+
+      - name: Deploy to GitHub Pages - Test
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages-test
+          folder: Output/wwwroot
+          clean: true
+          clean-exclude: |
+            .nojekyll
+            CNAME
+
+  deploy-beta:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish (Angor)
+        run: dotnet publish src/Angor/Server/Angor.Server.csproj -f net8.0 --configuration Release --output Output
+
+      - name: Copy index.html to 404.html
+        run: cp Output/wwwroot/index.html Output/wwwroot/404.html
+
+      - name: Add .nojekyll file
+        run: touch Output/wwwroot/.nojekyll
+
+      - name: Minify and replace JS files
+        run: |
+          npm install uglify-js -g
+          find Output/wwwroot/assets/js -type f -name '*.js' -exec uglifyjs {} -o {} --compress --mangle \;
+
+      - name: Minify and replace CSS files
+        run: |
+          npm install csso-cli -g
+          find Output/wwwroot/assets/css -type f -name '*.css' -exec csso {} -o {} \;
+
+      - name: Create CNAME for Beta
+        run: echo "beta.angor.io" > Output/wwwroot/CNAME
+
+      - name: Deploy to GitHub Pages - Beta
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages-beta
+          folder: Output/wwwroot
+          clean: true
+          clean-exclude: |
+            .nojekyll
+            CNAME
