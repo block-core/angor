@@ -58,7 +58,7 @@
                                     </div>
                                     <div class="col-6 d-flex justify-content-end">
                                         <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">Approve All</button>
-                                        <button class="btn btn-sm btn-secondary ml-2" @onclick="RefreshSignatures" disabled="@isCooldown">Refresh</button>
+                                        <button class="btn btn-sm btn-secondary ml-2" @onclick="RefreshSignaturesInternal" disabled="@isCooldown">Refresh</button>
 
                                     </div>
                                 </div>
@@ -174,6 +174,21 @@
         }
     }
 
+    private async Task RefreshSignaturesInternal()
+    {
+        if (passwordComponent.HasPassword())
+        {
+            await RefreshSignatures();
+        }
+        else
+        {
+            passwordComponent.ShowPassword(async () =>
+            {
+                await RefreshSignatures();
+            });
+        }
+    }
+
     private async Task RefreshSignatures()
     {
         if (isCooldown)
@@ -183,14 +198,6 @@
         isCooldown = true;
         await FetchPendingSignatures(FounderProject);
 
-
-        if (!await EnsurePassword())
-        {
-            notificationComponent.ShowErrorMessage("Password retrieval failed.");
-            isLoading = false;
-            StateHasChanged();
-            return;
-        }
 
         await FetchSignatures();
         await Task.Delay(1000);
@@ -253,7 +260,7 @@
         }
 
         Logger.LogDebug("OnAfterRenderAsync Completed");
-        Console.WriteLine($"Signatures retrieved: {signaturesRequests.Count}");
+        Logger.LogDebug($"Signatures retrieved: {signaturesRequests.Count}");
     }
 
     private async Task FetchPendingSignatures(FounderProject project)
