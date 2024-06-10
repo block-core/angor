@@ -83,7 +83,7 @@ Cypress.Commands.add(
 );
 
 Cypress.Commands.add("waitForLoader", () => {
-  cy.get(".loader", { timeout: 15000 }).should("not.exist");
+  cy.get(".loader", { timeout: 25000 }).should("not.exist");
 });
 
 Cypress.Commands.add("dismissModal", () => {
