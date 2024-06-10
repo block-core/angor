@@ -14,7 +14,22 @@
     </div>
 
     <a class="navbar-brand m-0" href="" @onclick="ToggleSidenav">
-        <img src="/assets/img/angor-logo.svg" class="navbar-brand-img h-100" alt="Angor" />
+        <svg width="32px" height="32px" viewBox="0 0 364.4 336.7" fill="none">
+            <path stroke="var(--bs-primary)" stroke-width="20" d="M180.9,15.7L180.9,15.7c1-1.8,3.6-1.8,4.6,0c20.2,37,40.2,74.1,60.5,111.1c15.3,28.1,30.7,56.2,46,84.4
+		c0.7,1.3,0.2,2.9-1.1,3.5c-35.5,18.8-71,37.4-106.5,56.3c-0.8,0.4-1.7,0.4-2.4,0c-35.4-18.9-71-37.5-106.5-56.3
+		c-1.3-0.7-1.8-2.3-1.1-3.5c5.7-10.4,11.3-20.9,17-31.3c10-18,19.7-36.1,29.6-54.1C141,89.2,160.9,52.4,180.9,15.7z M182.1,125.3
+		c-12.1,22.4-24.2,44.7-36.4,67c0,0,0,0.1,0,0.1c11.9,6.5,24.1,12.7,36,19.1c0.8,0.5,1.9,0.5,2.8,0c12-6.5,24.1-12.6,36.1-19.1
+		c0,0,0,0,0,0c-2.3-3.8-4.3-7.9-6.5-11.8c-10-18.4-20-36.8-30-55.2C183.8,124.5,182.6,124.5,182.1,125.3z" />
+
+            <path stroke="var(--bs-primary)" stroke-width="20" d="M55.4,246.3c1.4-2.6,4.7-3.5,7.3-2.2c12.6,6.6,25.2,13.3,37.8,19.9c2.7,1.4,3.7,4.7,2.3,7.4
+		c-2.3,4.2-4.7,8.3-6.9,12.6c-6.2,11.2-12.3,22.6-18.5,33.8c-1,1.7-2.8,2.8-4.7,2.8c-14,0.1-28.1,0-42.1,0c0,0-8,0.1-12.7,0.1
+		c-1.5,0-2.4-1.5-1.7-2.8C22.1,307,43.2,268.1,55.4,246.3z" />
+
+            <path stroke="var(--bs-primary)" stroke-width="20" d="M263.7,265.3c14.2-7.3,28.4-14.8,42.6-22.2c1.4-0.7,3.1-0.2,3.9,1.2c12.8,22.6,25,45.4,37.6,68.1
+		c0.7,1.4,1.5,2.8,2.3,4.1c1.1,1.9-0.3,4.3-2.5,4.3c-18.3,0-36.7,0-55,0c-1,0-1.9-0.5-2.5-1.4c-1.7-2.9-3.2-6-4.9-8.9
+		c-6.4-11.6-12.8-23.2-19.1-34.8c-1.1-2.2-2.5-4.3-3.6-6.5C261.7,267.8,262.2,266,263.7,265.3z" />
+
+        </svg>
         <span class="ms-1 font-weight-bold menu-text">Angor App</span>
     </a>
 </div>
@@ -25,13 +40,29 @@
     <ul class="navbar-nav" @onclick="ToggleSidenav">
         <li class="nav-item">
             <NavLink class="nav-link menu-text" href="wallet">
-                <i class="material-icons opacity-10">wallet</i>
+                <i class="me-1">
+                    <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none">
+                        <path d="M6 8H10" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M20.8333 9H18.2308C16.4465 9 15 10.3431 15 12C15 13.6569 16.4465 15 18.2308 15H20.8333C20.9167 15 20.9583 15 20.9935 14.9979C21.5328 14.965 21.9623 14.5662 21.9977 14.0654C22 14.0327 22 13.994 22 13.9167V10.0833C22 10.006 22 9.96726 21.9977 9.9346C21.9623 9.43384 21.5328 9.03496 20.9935 9.00214C20.9583 9 20.9167 9 20.8333 9Z" stroke="var(--bs-primary)" stroke-width="1.5" />
+                        <path d="M20.965 9C20.8873 7.1277 20.6366 5.97975 19.8284 5.17157C18.6569 4 16.7712 4 13 4L10 4C6.22876 4 4.34315 4 3.17157 5.17157C2 6.34315 2 8.22876 2 12C2 15.7712 2 17.6569 3.17157 18.8284C4.34315 20 6.22876 20 10 20H13C16.7712 20 18.6569 20 19.8284 18.8284C20.6366 18.0203 20.8873 16.8723 20.965 15" stroke="var(--bs-primary)" stroke-width="1.5" />
+                        <path d="M17.9912 12H18.0002" stroke="var(--bs-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </i>
+
                 <span class="nav-link-text ms-1">Wallet</span>
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link menu-text" href="browse">
-                <i class="material-icons opacity-10">search</i>
+               <i class="me-1">
+                    <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 13V12C22 8.22876 22 6.34315 20.8284 5.17157C19.6569 4 17.7712 4 14 4H10C6.22876 4 4.34315 4 3.17157 5.17157C2 6.34315 2 8.22876 2 12C2 15.7712 2 17.6569 3.17157 18.8284C4.34315 20 6.22876 20 10 20H13" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                        <path d="M10 16H6" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                        <path d="M2 10L22 10" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                        <circle cx="18" cy="17" r="3" stroke="var(--bs-primary)" stroke-width="1.5" />
+                        <path d="M20.5 19.5L21.5 20.5" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+               </i>
                 <span class="nav-link-text ms-1">Browse</span>
             </NavLink>
         </li>
@@ -42,15 +73,36 @@
         {
             <li class="nav-item">
                 <NavLink class="nav-link menu-text" href="investor">
-                    <i class="material-icons opacity-10">badge</i>
+                    <i class="me-1">
+                        <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none">
+                            <path d="M17.4142 10.4142C18 9.82843 18 8.88562 18 7C18 5.11438 18 4.17157 17.4142 3.58579M17.4142 10.4142C16.8284 11 15.8856 11 14 11H10C8.11438 11 7.17157 11 6.58579 10.4142M17.4142 10.4142C17.4142 10.4142 17.4142 10.4142 17.4142 10.4142ZM17.4142 3.58579C16.8284 3 15.8856 3 14 3L10 3C8.11438 3 7.17157 3 6.58579 3.58579M17.4142 3.58579C17.4142 3.58579 17.4142 3.58579 17.4142 3.58579ZM6.58579 3.58579C6 4.17157 6 5.11438 6 7C6 8.88562 6 9.82843 6.58579 10.4142M6.58579 3.58579C6.58579 3.58579 6.58579 3.58579 6.58579 3.58579ZM6.58579 10.4142C6.58579 10.4142 6.58579 10.4142 6.58579 10.4142Z" stroke="var(--bs-primary)" stroke-width="1.5" />
+                            <path d="M13 7C13 7.55228 12.5523 8 12 8C11.4477 8 11 7.55228 11 7C11 6.44772 11.4477 6 12 6C12.5523 6 13 6.44772 13 7Z" stroke="var(--bs-primary)" stroke-width="1.5" />
+                            <path d="M18 6C16.3431 6 15 4.65685 15 3" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M18 8C16.3431 8 15 9.34315 15 11" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M6 6C7.65685 6 9 4.65685 9 3" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M6 8C7.65685 8 9 9.34315 9 11" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M5 20.3884H7.25993C8.27079 20.3884 9.29253 20.4937 10.2763 20.6964C12.0166 21.0549 13.8488 21.0983 15.6069 20.8138C16.4738 20.6734 17.326 20.4589 18.0975 20.0865C18.7939 19.7504 19.6469 19.2766 20.2199 18.7459C20.7921 18.216 21.388 17.3487 21.8109 16.6707C22.1736 16.0894 21.9982 15.3762 21.4245 14.943C20.7873 14.4619 19.8417 14.462 19.2046 14.9433L17.3974 16.3084C16.697 16.8375 15.932 17.3245 15.0206 17.4699C14.911 17.4874 14.7962 17.5033 14.6764 17.5172M14.6764 17.5172C14.6403 17.5214 14.6038 17.5254 14.5668 17.5292M14.6764 17.5172C14.8222 17.486 14.9669 17.396 15.1028 17.2775C15.746 16.7161 15.7866 15.77 15.2285 15.1431C15.0991 14.9977 14.9475 14.8764 14.7791 14.7759C11.9817 13.1074 7.62942 14.3782 5 16.2429M14.6764 17.5172C14.6399 17.525 14.6033 17.5292 14.5668 17.5292M14.5668 17.5292C14.0434 17.5829 13.4312 17.5968 12.7518 17.5326" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                            <rect x="2" y="14" width="3" height="8" rx="1.5" stroke="var(--bs-primary)" stroke-width="1.5" />
+                        </svg>
+                    </i>
                     <span class="nav-link-text ms-1">Portfolio</span>
                 </NavLink>
             </li>
 
             <li class="nav-item">
                 <NavLink class="nav-link menu-text" href="founder">
-                    <i class="material-icons opacity-10">add_circle</i>
-                    <span class="nav-link-text ms-1">Founder</span>
+                     <i class="me-1">
+                        <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none">
+                            <path d="M2 11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5H13C15.8284 5 17.2426 5 18.1213 5.87868C19 6.75736 19 8.17157 19 11C19 13.8284 19 15.2426 18.1213 16.1213C17.2426 17 15.8284 17 13 17H8C5.17157 17 3.75736 17 2.87868 16.1213C2 15.2426 2 13.8284 2 11Z" stroke="var(--bs-primary)" stroke-width="1.5" />
+                            <path d="M19.0001 8.07617C19.9751 8.17208 20.6315 8.38885 21.1214 8.87873C22.0001 9.75741 22.0001 11.1716 22.0001 14.0001C22.0001 16.8285 22.0001 18.2427 21.1214 19.1214C20.2427 20.0001 18.8285 20.0001 16.0001 20.0001H11.0001C8.17163 20.0001 6.75742 20.0001 5.87874 19.1214C5.38884 18.6315 5.17208 17.9751 5.07617 17" stroke="var(--bs-primary)" stroke-width="1.5" />
+                            <path d="M13 11C13 12.3807 11.8807 13.5 10.5 13.5C9.11929 13.5 8 12.3807 8 11C8 9.61929 9.11929 8.5 10.5 8.5C11.8807 8.5 13 9.61929 13 11Z" stroke="var(--bs-primary)" stroke-width="1.5" />
+                            <path d="M16 13L16 9" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M5 13L5 9" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                     </i>
+                    <span class="nav-link-text ms-1">
+                        Founder
+                    </span>
                 </NavLink>
             </li>
 
@@ -61,7 +113,12 @@
 
         <li class="nav-item">
             <NavLink class="nav-link menu-text" href="settings">
-                <i class="material-icons opacity-10">settings</i>
+                <i class="me-1">
+                    <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="3" stroke="var(--bs-primary)" stroke-width="1.5" />
+                        <path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z" stroke="var(--bs-primary)" stroke-width="1.5" />
+                    </svg>
+                </i>
                 <span class="nav-link-text ms-1">Settings</span>
             </NavLink>
         </li>
@@ -78,13 +135,43 @@
             @if (!islockMenu)
             {
                 <span class="nav-link menu-text" @onclick="ToggleSidenavText">
-                    <i class="material-icons opacity-10">@hideTextIcon</i>
+                    <i class="me-1">
+                        @if (isSidenavHide)
+                        {
+                            <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none">
+                                <path d="M4 12H20M20 12L14 6M20 12L14 18" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none">
+                                <path d="M20 12H4M4 12L10 6M4 12L10 18" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        }
+                    </i>
                 </span>
             }
             @if (!isSidenavHide)
             {
                 <span class="nav-link menu-text" @onclick="ToggleLockMenu">
-                    <i class="material-icons opacity-10">@lockMenuIcon</i>
+                    <i class="me-1">
+                        @if (islockMenu)
+                        {
+                            <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none">
+                                <path d="M2 16C2 13.1716 2 11.7574 2.87868 10.8787C3.75736 10 5.17157 10 8 10H16C18.8284 10 20.2426 10 21.1213 10.8787C22 11.7574 22 13.1716 22 16C22 18.8284 22 20.2426 21.1213 21.1213C20.2426 22 18.8284 22 16 22H8C5.17157 22 3.75736 22 2.87868 21.1213C2 20.2426 2 18.8284 2 16Z" stroke="var(--bs-primary)" stroke-width="1.5" />
+                                <path d="M12 14V18" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                                <path d="M6 10V8C6 4.68629 8.68629 2 12 2C15.3137 2 18 4.68629 18 8V10" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none">
+                                <path d="M2 16C2 13.1716 2 11.7574 2.87868 10.8787C3.75736 10 5.17157 10 8 10H16C18.8284 10 20.2426 10 21.1213 10.8787C22 11.7574 22 13.1716 22 16C22 18.8284 22 20.2426 21.1213 21.1213C20.2426 22 18.8284 22 16 22H8C5.17157 22 3.75736 22 2.87868 21.1213C2 20.2426 2 18.8284 2 16Z" stroke="var(--bs-primary)" stroke-width="1.5" />
+                                <path d="M6 10V8C6 4.68629 8.68629 2 12 2C14.7958 2 17.1449 3.91216 17.811 6.5" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                                <path d="M12 14V18" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                            </svg>
+                        }
+                    </i>
                 </span>
             }
 
@@ -97,7 +184,15 @@
 
         <li class="nav-item">
             <a class="nav-link menu-text" href="https://browse.angor.io">
-                <i class="material-icons opacity-10">search</i>
+               <i class="me-1">
+                    <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 13V12C22 8.22876 22 6.34315 20.8284 5.17157C19.6569 4 17.7712 4 14 4H10C6.22876 4 4.34315 4 3.17157 5.17157C2 6.34315 2 8.22876 2 12C2 15.7712 2 17.6569 3.17157 18.8284C4.34315 20 6.22876 20 10 20H13" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                        <path d="M10 16H6" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                        <path d="M2 10L22 10" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                        <circle cx="18" cy="17" r="3" stroke="var(--bs-primary)" stroke-width="1.5" />
+                        <path d="M20.5 19.5L21.5 20.5" stroke="var(--bs-primary)" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+               </i>
                 <span class="nav-link-text ms-1">Project Explorer</span>
             </a>
         </li>
@@ -118,9 +213,7 @@
     public EventCallback ToggleleLockMenuCallback { get; set; }
 
     private bool hasWallet;
-    private string hideTextIcon = "chevron_left";
-    private string lockMenuIcon = "lock_open";
-    private string betweenOrEnd = "between";
+      private string betweenOrEnd = "between";
 
 
     private bool islockMenu = false;
@@ -141,14 +234,7 @@
         await ToggleSidenavTextCallback.InvokeAsync();
 
         isSidenavHide = !isSidenavHide;
-        UpdateHideTextIcon(isSidenavHide);
-
-    }
-
-
-    private void UpdateHideTextIcon(bool isHideText)
-    {
-        hideTextIcon = isHideText ? "chevron_right" : "chevron_left";
+ 
     }
 
     private async Task ToggleLockMenu()
@@ -161,7 +247,6 @@
     }
     private void UpdateLockMenuIcon(bool islockMenu)
     {
-        lockMenuIcon = islockMenu ? "lock" : "lock_open";
         betweenOrEnd = islockMenu ? "end" : "between";
     }
 
