@@ -219,7 +219,7 @@
         }
         else
         {
-            if (investorProject.ReceivedFounderSignatures() && !investorProject.InvestedInProject())
+            @if (investorProject.ReceivedFounderSignatures() && !investorProject.InvestedInProject())
             {
                 <div class="card mt-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -240,9 +240,21 @@
                                 <span>Invest</span>
                             }
                         </button>
+                        
+                        @if (investorProject.SignaturesInfo != null)
+                        {
+                            <div class="mt-3">
+                                <h5>Transaction Details</h5>
+                                <div class="mb-1">
+                                    <strong>Amount to invest:</strong> @FormattedAmountToInvest
+                                </div>
+                                <p><strong>Date:</strong> @FormattedDate</p>
+                            </div>
+                        }
                     </div>
                 </div>
-            }   
+            }
+
         }
     }
 </div>
@@ -269,12 +281,14 @@
     TransactionInfo? signedTransaction;
     Transaction unSignedTransaction;
 
+    private InvestorProject investorProjectStats;
+
     private FeeData feeData = new();
 
     private IJSInProcessObjectReference? javascriptNostrToolsModule;
 
     protected override async Task OnInitializedAsync()
-    {
+    {       
         if (!hasWallet)
         {
             NavigationManager.NavigateTo($"/wallet");
@@ -286,7 +300,7 @@
         {
             var investmentProject = findProject as InvestorProject;
             project = investmentProject;
-            
+            investorProjectStats = investmentProject;            
             invested = investmentProject?.InvestedInProject() ?? false;
         }
         else
@@ -409,6 +423,34 @@
 
         return Task.CompletedTask;
     }
+    private string FormattedDate
+    {
+        get
+        {
+            return investorProjectStats?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("MM/dd/yyyy HH:mm") ?? "N/A";
+        }
+    }
+
+    private string FormattedAmountToInvest
+    {
+        get
+        {
+            if (signedTransaction != null)
+            {
+                
+                var amountToInvest = signedTransaction.Transaction.Outputs.Skip(2).FirstOrDefault()?.Value ?? 0;
+                var amountInBTC = Money.Satoshis(amountToInvest).ToUnit(MoneyUnit.BTC);
+                return $"{amountInBTC} {network.CoinTicker}";
+            }
+            else
+            {
+                return "N/A";
+            }
+        }
+    }
+
+
+    
 
     private void UpdateStagesBreakdown(ChangeEventArgs e)
     {
