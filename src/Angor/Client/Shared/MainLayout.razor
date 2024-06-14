@@ -11,7 +11,6 @@
 @inject INetworkService _networkService
 @inject NavigationManager _navManager
 @inject NavMenuState NavMenuState;
-@inject IconService IconService;
 
 <div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show bg-gray-100 @sidenavClass ">
     <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 b-shadow overflow-x-hidden" id="sidenav-main">
@@ -35,17 +34,17 @@
                     <ul class="navbar-nav justify-content-end user-select-none">
                         <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
                             <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="iconNavbarSidenav" @onclick="ToggleSidenav">
-                                @((MarkupString)menuIcon)
+                                <Icon IconName="hamburger-menu" />
                             </span>
                         </li>
                         <li class="nav-item ps-3 d-flex align-items-center" id="dark" @onclick="ToggleTheme">
                             <span role="button" id="theme-icon">
-                                @((MarkupString)themeIconMarkup)
+                                <Icon IconName=@themeIcon />
                             </span>
                         </li>
                         <li class="nav-item ps-3 d-flex align-items-center d-none" id="installButton">
                             <span @onclick="InstallApp" role="button">
-                                @((MarkupString)installIcon)
+                                <Icon IconName="install" />
                             </span>
                         </li>
                     </ul>
@@ -64,7 +63,7 @@
                     <div class="card card-body border-radius-lg d-flex align-items-center flex-row p-3 ms-0 me-0">
                         <h6 class="mb-0">Version: @_softwareVersion</h6>
                         <a href="https://github.com/block-core/angor" class="ms-auto text-dark cursor-pointer" target="_blank">
-                            @((MarkupString)githubIcon)
+                            <Icon IconName="github" />
                         </a>
                     </div>
                 </div>
@@ -82,21 +81,12 @@
 
     private string networkText = string.Empty;
 
-    private string menuIcon;
-    private string themeIconMarkup;
-    private string installIcon;
-    private string githubIcon;
     protected override async Task OnInitializedAsync()
     {
         InitializeAppVersion();
         InitializeNetworkConfiguration();
         await LoadThemeFromStorage();
 
-        var iconColor = "var(--bs-primary)";
-
-        menuIcon = await IconService.GetIcon("hamburger-menu", 32, 32, iconColor);
-        installIcon = await IconService.GetIcon("install", 32, 32, iconColor);
-        githubIcon = await IconService.GetIcon("github", 32, 32, iconColor);
         await UpdateThemeIcon(isDarkTheme);
 
         NavMenuState.OnChange += NavMenuStateOnOnChange;
@@ -165,7 +155,6 @@
     private async Task UpdateThemeIcon(bool isDark)
     {
         themeIcon = isDark ? "light_mode" : "dark_mode";
-        themeIconMarkup = await IconService.GetIcon(themeIcon, 32, 32, "var(--bs-primary)");
         if (isDark)
         {
             await Js.InvokeVoidAsync("angor.addDarkBackground");
