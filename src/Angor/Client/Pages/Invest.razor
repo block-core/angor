@@ -246,7 +246,7 @@
                             <div class="mt-3">
                                 <h5>Transaction Details</h5>
                                 <div class="mb-1">
-                                    <strong>Amount to invest:</strong> @FormattedAmountToInvest
+                                    <strong>Amount to invest:</strong> @storage.GetInvestmentAmount()
                                 </div>
                                 <p><strong>Date:</strong> @FormattedDate</p>
                             </div>
@@ -323,7 +323,7 @@
                 }
             }
         }
-
+        var formattedDate = FormattedDate;
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
@@ -435,12 +435,11 @@
     {
         get
         {
-            if (signedTransaction != null)
-            {
-                
-                var amountToInvest = signedTransaction.Transaction.Outputs.Skip(2).FirstOrDefault()?.Value ?? 0;
-                var amountInBTC = Money.Satoshis(amountToInvest).ToUnit(MoneyUnit.BTC);
-                return $"{amountInBTC} {network.CoinTicker}";
+            var storedAmount = storage.GetInvestmentAmount();
+            if (storedAmount!=0)
+            {              
+                var amountInBTC = Money.Satoshis(storedAmount).ToUnit(MoneyUnit.BTC);
+                return $"{storedAmount} {network.CoinTicker}";
             }
             else
             {
@@ -654,6 +653,9 @@
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
 
             storage.AddInvestmentProject(investorProject);
+            if(Investment.InvestmentAmount!=0){
+                storage.SetInvestmentAmount(Investment.InvestmentAmount);
+            } 
 
             foreach (var input in strippedInvestmentTransaction.Inputs)
                 accountInfo.UtxoReservedForInvestment.Add(input.PrevOut.ToString());
@@ -732,6 +734,7 @@
         }
 
         storage.RemoveInvestmentProject(project.ProjectInfo.ProjectIdentifier);
+        storage.SetInvestmentAmount(0);
 
         investorProject.SignaturesInfo = null;
         project = SessionStorage.GetProjectById(ProjectId);

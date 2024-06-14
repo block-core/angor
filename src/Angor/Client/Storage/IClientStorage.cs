@@ -11,6 +11,8 @@ namespace Angor.Client.Storage
         
         
         void AddInvestmentProject(InvestorProject project);
+        void SetInvestmentAmount(decimal amount);
+        decimal GetInvestmentAmount();  
         void RemoveInvestmentProject(string projectId);
         void UpdateInvestmentProject(InvestorProject project);
         List<InvestorProject> GetInvestmentProjects();

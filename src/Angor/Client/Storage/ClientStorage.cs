@@ -59,6 +59,16 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem("projects", ret);
     }
 
+    public void SetInvestmentAmount(decimal amount)
+    {
+        _storage.SetItem("investmentAmount", amount);
+    }
+
+    public decimal GetInvestmentAmount()
+    {
+        return _storage.GetItem<decimal>("investmentAmount");
+    }
+
     public void RemoveInvestmentProject(string projectId)
     {
         var ret = GetInvestmentProjects();
