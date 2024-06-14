@@ -246,9 +246,10 @@
                             <div class="mt-3">
                                 <h5>Transaction Details</h5>
                                 <div class="mb-1">
-                                    <strong>Amount to invest:</strong> @storage.GetInvestmentAmount()
+                                <strong>Amount to invest:</strong> @storage.GetInvestmentAmount(project.ProjectInfo.ProjectIdentifier) @network.CoinTicker                            
+                                <p><strong>Date:</strong> @investorProject?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("MM/dd/yyyy HH:mm")</p>
+                                <p><strong>Project Name: </strong> @investorProject?.Metadata?.Name</p>
                                 </div>
-                                <p><strong>Date:</strong> @FormattedDate</p>
                             </div>
                         }
                     </div>
@@ -281,7 +282,6 @@
     TransactionInfo? signedTransaction;
     Transaction unSignedTransaction;
 
-    private InvestorProject investorProjectStats;
 
     private FeeData feeData = new();
 
@@ -299,8 +299,7 @@
         if (findProject != null)
         {
             var investmentProject = findProject as InvestorProject;
-            project = investmentProject;
-            investorProjectStats = investmentProject;            
+            project = investmentProject;      
             invested = investmentProject?.InvestedInProject() ?? false;
         }
         else
@@ -323,7 +322,6 @@
                 }
             }
         }
-        var formattedDate = FormattedDate;
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
@@ -423,30 +421,7 @@
 
         return Task.CompletedTask;
     }
-    private string FormattedDate
-    {
-        get
-        {
-            return investorProjectStats?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("MM/dd/yyyy HH:mm") ?? "N/A";
-        }
-    }
 
-    private string FormattedAmountToInvest
-    {
-        get
-        {
-            var storedAmount = storage.GetInvestmentAmount();
-            if (storedAmount!=0)
-            {              
-                var amountInBTC = Money.Satoshis(storedAmount).ToUnit(MoneyUnit.BTC);
-                return $"{storedAmount} {network.CoinTicker}";
-            }
-            else
-            {
-                return "N/A";
-            }
-        }
-    }
 
 
     
@@ -653,9 +628,9 @@
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
 
             storage.AddInvestmentProject(investorProject);
-            if(Investment.InvestmentAmount!=0){
-                storage.SetInvestmentAmount(Investment.InvestmentAmount);
-            } 
+            
+            storage.SetInvestmentAmount(investorProject.ProjectInfo.ProjectIdentifier, Investment.InvestmentAmount);
+             
 
             foreach (var input in strippedInvestmentTransaction.Inputs)
                 accountInfo.UtxoReservedForInvestment.Add(input.PrevOut.ToString());
@@ -734,7 +709,7 @@
         }
 
         storage.RemoveInvestmentProject(project.ProjectInfo.ProjectIdentifier);
-        storage.SetInvestmentAmount(0);
+        storage.SetInvestmentAmount(project.ProjectInfo.ProjectIdentifier ,0);
 
         investorProject.SignaturesInfo = null;
         project = SessionStorage.GetProjectById(ProjectId);
