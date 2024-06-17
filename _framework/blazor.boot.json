@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "Angor.Client",
   "resources": {
-    "hash": "sha256-tA/Nz2f73OkpwNXAEn7/tn4BP8DcbhgI3OGN0EGMXsw=",
+    "hash": "sha256-ZZYH8BUG7zyNUoWYbkKjEatI75kRBfQiWporRnDg8s0=",
     "jsModuleNative": {
       "dotnet.native.8.0.6.suuomc2hr0.js": "sha256-YU6M9+jtDVnB8/wtrgIndOstzNh778Ls8g9XnbjorSk="
     },
@@ -17,8 +17,8 @@
       "icudt_no_CJK.dat": "sha256-L7sV7NEYP37/Qr2FPCePo5cJqRgTXRwGHuwF5Q+0Nfs="
     },
     "assembly": {
-      "Angor.Client.wasm": "sha256-Be+/Y/cAoWG1KaFjMQqQrkHmgayl0UAODOkpWvSyVv4=",
-      "Angor.Shared.wasm": "sha256-rSgU3kZDYho7ivXJMhPnOtgX3IhXH6+mg9bAnMb2WlU=",
+      "Angor.Client.wasm": "sha256-OE8cMHPDzVXHXBEYCb+cgcYLZxwkOeCl99U9tW9Xo4E=",
+      "Angor.Shared.wasm": "sha256-Lm3eyaDdTOebJ+eJsmi3AtV07Xhd7YHd94OpQd1XwCQ=",
       "Blazored.LocalStorage.wasm": "sha256-OaMAAd5n7ORfyur5e3QIyEVKJ76MKIvwbg7/icnnYcU=",
       "Blazored.SessionStorage.wasm": "sha256-nQXuCGHos7iwp2WxRUgarKmWgJYChaVQp2NajgNU3V8=",
       "Blockcore.wasm": "sha256-CBQlVpfGReXAmGwkmcEbhDOwBh0fvD1emA7PELfTtEw=",
@@ -99,10 +99,10 @@
       "System.Net.WebSockets.wasm": "sha256-AinWJX/hLdN/JG2z/K180oZKE+E5MXYZDHXT17yhBbo=",
       "System.Numerics.Vectors.wasm": "sha256-nIzHIZN3wfNR+HUMJ808+9ir5g9TLRgF/FdrIwQF2Fk=",
       "System.ObjectModel.wasm": "sha256-EPSobZoRsT3+kBtSwtt1QpymhKhISPacaTlqxfKg1lc=",
-      "System.Private.CoreLib.wasm": "sha256-6g5JNdciEOluYTD9TJ77oGbfBDIyJ/Izv52ghWXjIQU=",
+      "System.Private.CoreLib.wasm": "sha256-glN7rZtBT8DJjKDHsB2H939G2nS8TX33kqLXCjVKIVc=",
       "System.Private.Uri.wasm": "sha256-NeU2uUh3sdyMfbHj0C3axsdsaTNnlV3Cp6ZxZFL8fKc=",
-      "System.Private.Xml.Linq.wasm": "sha256-5NIJvcdD3De0kcRDbJEQS6klIe/i1eO/d1McvdVd6ts=",
-      "System.Private.Xml.wasm": "sha256-5jxDLY8XfpcwjQefPWRHYxCuezXvazTW40TKlEuRTqQ=",
+      "System.Private.Xml.Linq.wasm": "sha256-QaMVcWU9+PfYm4qtJEetuh3kaAxv5TkqUMTpi19PkEA=",
+      "System.Private.Xml.wasm": "sha256-SGi8cQelo/almuXascyXoV04a0LgPDHd6/PYPAv/Uxo=",
       "System.Reactive.wasm": "sha256-wo82odTSEMJVUoNHyiyrUNXTlmyrNuGx/ec4afB5kz8=",
       "System.Reflection.Emit.ILGeneration.wasm": "sha256-hVvnod24dzKl641iwTW14rsqMOBPclwCAjzC5+qcuzs=",
       "System.Reflection.Emit.Lightweight.wasm": "sha256-0fg5QcnpXxefKE1ygE2sXFr1ZNlb8V3E0dmQiGNmkIc=",

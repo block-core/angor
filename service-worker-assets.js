@@ -33,15 +33,15 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-C84XTTsb3q3T\/Xl0BSM5x1JWD3kcxwlgtsrUcCGSYHA=",
+      "hash": "sha256-+huN1GtzaYyVTkNIoKo61C91ak9oVubFTNIqquCJfoo=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-Be+\/Y\/cAoWG1KaFjMQqQrkHmgayl0UAODOkpWvSyVv4=",
+      "hash": "sha256-OE8cMHPDzVXHXBEYCb+cgcYLZxwkOeCl99U9tW9Xo4E=",
       "url": "_framework\/Angor.Client.wasm"
     },
     {
-      "hash": "sha256-rSgU3kZDYho7ivXJMhPnOtgX3IhXH6+mg9bAnMb2WlU=",
+      "hash": "sha256-Lm3eyaDdTOebJ+eJsmi3AtV07Xhd7YHd94OpQd1XwCQ=",
       "url": "_framework\/Angor.Shared.wasm"
     },
     {
@@ -365,7 +365,7 @@
       "url": "_framework\/System.ObjectModel.wasm"
     },
     {
-      "hash": "sha256-6g5JNdciEOluYTD9TJ77oGbfBDIyJ\/Izv52ghWXjIQU=",
+      "hash": "sha256-glN7rZtBT8DJjKDHsB2H939G2nS8TX33kqLXCjVKIVc=",
       "url": "_framework\/System.Private.CoreLib.wasm"
     },
     {
@@ -373,11 +373,11 @@
       "url": "_framework\/System.Private.Uri.wasm"
     },
     {
-      "hash": "sha256-5NIJvcdD3De0kcRDbJEQS6klIe\/i1eO\/d1McvdVd6ts=",
+      "hash": "sha256-QaMVcWU9+PfYm4qtJEetuh3kaAxv5TkqUMTpi19PkEA=",
       "url": "_framework\/System.Private.Xml.Linq.wasm"
     },
     {
-      "hash": "sha256-5jxDLY8XfpcwjQefPWRHYxCuezXvazTW40TKlEuRTqQ=",
+      "hash": "sha256-SGi8cQelo\/almuXascyXoV04a0LgPDHd6\/PYPAv\/Uxo=",
       "url": "_framework\/System.Private.Xml.wasm"
     },
     {
@@ -517,11 +517,11 @@
       "url": "Angor.Client.styles.css"
     },
     {
-      "hash": "sha256-1Rr53umz2d8Xngs+9VyzfpJFXcwc92YnuSAs9kCDuKc=",
+      "hash": "sha256-ddIZ8XuVYge4\/702f\/Ixb0pzD8UJDPJZU98pp+SEElM=",
       "url": "assets\/css\/app.css"
     },
     {
-      "hash": "sha256-YL1WpIctuwkPPHm7nKtHQTkv7at525d0VirMSU6CMQw=",
+      "hash": "sha256-a3fKcj3li6cnrEZQANm1yOCza0eCFSH\/M7UntddiZlg=",
       "url": "assets\/css\/dashboard.css"
     },
     {
@@ -537,11 +537,99 @@
       "url": "assets\/fonts\/material.woff2"
     },
     {
+      "hash": "sha256-yU1S1RltM8wy09kQP6Q9qLn51aTRNk09sjNnCnCNXlo=",
+      "url": "assets\/icons\/angor-logo.svg"
+    },
+    {
+      "hash": "sha256-gqgFT9KaZQK1eul7Pz1wjaaWRdz1Q2\/waQEdIFBxbVM=",
+      "url": "assets\/icons\/browse.svg"
+    },
+    {
+      "hash": "sha256-PhF6BXFYY2K3cun1zpsS5dkuDLTTp5NzSbP\/PjdfE4U=",
+      "url": "assets\/icons\/close-circle.svg"
+    },
+    {
+      "hash": "sha256-0f2Vvhsbi07SVKtWY1m+AW3rcDYLxelqhjAt3A5BcxA=",
+      "url": "assets\/icons\/copy.svg"
+    },
+    {
+      "hash": "sha256-ee7qLqfBPWIazkCuZfL0vkh3h9X3gq0tvODxRMwP38k=",
+      "url": "assets\/icons\/dark_mode.svg"
+    },
+    {
+      "hash": "sha256-iGkprFezO9TAXdbdT3xIv+xhQvtnmgBGOmeaxlWMs14=",
+      "url": "assets\/icons\/founder.svg"
+    },
+    {
+      "hash": "sha256-owXGrcSJmW+hOSqbYN3pkrlP8qAXFC4kKixz6u\/1g1c=",
+      "url": "assets\/icons\/github.svg"
+    },
+    {
+      "hash": "sha256-9Lwa\/NhaWojZfbs9LAg5PBvdfSYFKuxT6AqhlFVjRN8=",
+      "url": "assets\/icons\/hamburger-menu.svg"
+    },
+    {
+      "hash": "sha256-pjAg4c0KAHe6wEWfDK0qnISRW+MhnbiNY6hkCCgvMcM=",
+      "url": "assets\/icons\/install.svg"
+    },
+    {
+      "hash": "sha256-ocGgufrLbHs46ka2kuuR3NWFVNaYWMXBVCs786MPBmw=",
+      "url": "assets\/icons\/light_mode.svg"
+    },
+    {
+      "hash": "sha256-yWdzvAiVrvnBiNLXWB98H9vg5Hv\/ht4SXyAotcTtrSc=",
+      "url": "assets\/icons\/lock.svg"
+    },
+    {
+      "hash": "sha256-HWDiWi+D5LinW0oTPk0PaYtGLzTSW0Y1UGc02MBYLFI=",
+      "url": "assets\/icons\/menu_close.svg"
+    },
+    {
+      "hash": "sha256-Zv7pUKpIazYf\/N3NWsFQu9Kz3iM0ZhF7JjGWN4wRc4A=",
+      "url": "assets\/icons\/menu_open.svg"
+    },
+    {
+      "hash": "sha256-TfWOU2HHK1uq7BKvA76USYq5mISyuQcj8ewp4MWHcxs=",
+      "url": "assets\/icons\/portfolio.svg"
+    },
+    {
+      "hash": "sha256-gqgFT9KaZQK1eul7Pz1wjaaWRdz1Q2\/waQEdIFBxbVM=",
+      "url": "assets\/icons\/project_explorer.svg"
+    },
+    {
+      "hash": "sha256-6w0Zqev592P5pklZf8URIlbEBLLL\/+7WvcnDzrmNCCY=",
+      "url": "assets\/icons\/qr-code.svg"
+    },
+    {
+      "hash": "sha256-IRIy7idGyzYbRGaTNtYyplTN8sqUzztDtRxMS2XfeBg=",
+      "url": "assets\/icons\/receive.svg"
+    },
+    {
+      "hash": "sha256-2salPWalUdqngcrb1l4ReUE4Ar4xJK6u02Na4miTe0U=",
+      "url": "assets\/icons\/refresh.svg"
+    },
+    {
+      "hash": "sha256-qKKQPdFHrDr790ZFYIw0455X4XPWeUqlQWmiYn9yOU4=",
+      "url": "assets\/icons\/send.svg"
+    },
+    {
+      "hash": "sha256-2gGJKgY12r7IGFd+Apnqfb9QaxoTc8E9KA1enhlvf4I=",
+      "url": "assets\/icons\/settings.svg"
+    },
+    {
+      "hash": "sha256-fLpMNmpLpNvkj0uF6uIDr74IcG64KEXxG8Cn2euwtfg=",
+      "url": "assets\/icons\/unlock.svg"
+    },
+    {
+      "hash": "sha256-9656Bys\/ehySDp8MV\/C3t6durg8w90Y5\/ShbcjU3u6w=",
+      "url": "assets\/icons\/wallet.svg"
+    },
+    {
       "hash": "sha256-9gLXfFoNz\/\/AdhmdzCLoskgMixwFf5aOGauQ0bZKPlU=",
       "url": "assets\/img\/angor-icon.svg"
     },
     {
-      "hash": "sha256-RyVR5Ide7+YOaaljRlrx2cxpJRi2vKl85sRjjaEsNiE=",
+      "hash": "sha256-FboBuU4gRVWKrrynqajC17yhDVlW7s2mF9huPEbnIP8=",
       "url": "assets\/img\/angor-logo.svg"
     },
     {
@@ -557,7 +645,7 @@
       "url": "assets\/img\/browse-icon-192.png"
     },
     {
-      "hash": "sha256-FAqMFN0hwuzVdes5qkygkN6EXrZSL8VI1DNEChpcpgg=",
+      "hash": "sha256-7O2dfFAYXDdrn5HEm6QcbFd6BcYzBdyRRNjJEhwFOQo=",
       "url": "assets\/img\/desktop-installation-screenshot.png"
     },
     {
@@ -573,7 +661,7 @@
       "url": "assets\/img\/icon-512.png"
     },
     {
-      "hash": "sha256-2Au99MYjklhwtogs\/IXaTUrS1PVTZRG4iNki0WfFSRA=",
+      "hash": "sha256-4bUzW9cKdp6T4iGfXYdozk\/5e8pp1k+hWb6qMGTw0bQ=",
       "url": "assets\/img\/mobile-installation-screenshot.png"
     },
     {
@@ -601,7 +689,7 @@
       "url": "assets\/js\/appUpdate.js"
     },
     {
-      "hash": "sha256-mvcI1rkL5qPwDWaYOkGEqULUXdKLkPP4cWjub5jzbTw=",
+      "hash": "sha256-OTOSwe4It7cnWzY5LmRpiQcPV+7UXGxU1PaNoRnlNFA=",
       "url": "index.html"
     },
     {
@@ -629,5 +717,5 @@
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "WvWJUxOY"
+  "version": "jcFO9LrL"
 };
