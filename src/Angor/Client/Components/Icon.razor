@@ -1,0 +1,22 @@
+﻿@inject Angor.Client.Services.IconService IconService
+@code {
+    [Parameter] public string IconName { get; set; }
+    [Parameter] public int Width { get; set; } = 32;
+    [Parameter] public int Height { get; set; } = 32;
+    [Parameter] public string Color { get; set; } = "var(--bs-primary)";
+    private string svgContent;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        svgContent = await IconService.GetIcon(IconName, Width, Height, Color);
+    }
+}
+
+@if (!string.IsNullOrEmpty(svgContent))
+{
+    @((MarkupString)svgContent)
+}
+else
+{
+    @string.Empty
+}

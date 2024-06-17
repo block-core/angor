@@ -53,4 +53,6 @@ builder.Services.AddSingleton<INostrCommunicationFactory,NostrCommunicationFacto
 builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
 builder.Services.AddSingleton<IPasswordCacheService, PasswordCacheService>();
 
+builder.Services.AddScoped<IconService>();
+
 await builder.Build().RunAsync();

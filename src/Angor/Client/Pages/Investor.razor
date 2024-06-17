@@ -29,7 +29,7 @@
     <!-- Summary Statistics -->
     <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
         <div class="col">
-            <div class="card text-white bg-primary">
+            <div class="card text-white bg-gradient">
                 <div class="card-body">
                     <h5 class="card-title">Funded Projects</h5>
                     <p class="card-text">@TotalFundedProjects</p>
@@ -37,7 +37,7 @@
             </div>
         </div>
         <div class="col">
-            <div class="card text-white bg-success">
+            <div class="card text-white bg-gradient">
                 <div class="card-body">
                     <h5 class="card-title">Total invested</h5>
                     <p class="card-text"> @Money.Satoshis(TotalInvested).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -45,7 +45,7 @@
             </div>
         </div>
         <div class="col">
-            <div class="card text-white bg-info">
+            <div class="card text-white bg-gradient">
                 <div class="card-body">
                     <h5 class="card-title">Wallet</h5>
                     <p class="card-text">@Money.Satoshis(TotalWallet).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -53,7 +53,7 @@
             </div>
         </div>
         <div class="col">
-            <div class="card text-white bg-secondary">
+            <div class="card text-white bg-gradient">
                 <div class="card-body">
                     <h5 class="card-title">In Recovery</h5>
                     <p class="card-text">@Money.Satoshis(TotalInRecovery).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
