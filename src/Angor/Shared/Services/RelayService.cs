@@ -129,6 +129,7 @@ namespace Angor.Shared.Services
                 Kind = NostrKind.EncryptedDm,
                 CreatedAt = DateTime.UtcNow,
                 Content = encryptedMessage,
+                Tags = new NostrEventTags(NostrEventTag.Profile(nostrPubKey))
             };
             
             var signed = ev.Sign(sender);

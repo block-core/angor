@@ -720,7 +720,7 @@
                 notificationComponent.ShowErrorMessage("The signatures returned from the founder failed validation");
                 return;
             }
-
+            
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
 
             if (!response.Success)
@@ -734,34 +734,8 @@
 
             storage.UpdateInvestmentProject(investorProject);
 
-            var words = await passwordComponent.GetWalletAsync();
-            var rootNostrPrivateKey = await _derivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 0); 
-            var rootNostrPrivateKeyHex = Encoders.Hex.EncodeData(rootNostrPrivateKey.ToBytes());
+            await SaveInvestmentsListToNostrAsync();
 
-            var nostrDMKey = _derivationOperations.DeriveNostrPubKey(words, 1); //TODO David 1 must not be the answer
-
-            Investments investmentList = new()
-            {
-                ProjectIdentifiers = storage.GetInvestmentProjects()
-                    .Where(x => x.InvestedInProject())
-                    .Select(x => x.ProjectInfo.ProjectIdentifier)
-                    .ToList()
-            };
-            
-            var encryptedProjectIdList = await javascriptNostrToolsModule.InvokeAsync<string>(
-                "encryptNostr",
-                rootNostrPrivateKey,
-                nostrDMKey,
-                System.Text.Json.JsonSerializer.Serialize(investmentList, RelayService.settings));
-            
-            _RelayService.SendDirectMessagesForPubKeyAsync(rootNostrPrivateKeyHex, nostrDMKey, encryptedProjectIdList, x =>
-            {
-                if (!x.Accepted)
-                {
-                    //TODO need to handle failure to save the list of projects
-                }
-            });
-            
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
 
@@ -794,6 +768,37 @@
         {
             publishSpinner = false;
         }
+    }
+
+    private async Task SaveInvestmentsListToNostrAsync()
+    {
+        var words = await passwordComponent.GetWalletAsync();
+        var rootNostrPrivateKey = await _derivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 0); 
+        var rootNostrPrivateKeyHex = Encoders.Hex.EncodeData(rootNostrPrivateKey.ToBytes());
+
+        var nostrDMKey = _derivationOperations.DeriveNostrPubKey(words, 1);
+
+        Investments investmentList = new()
+        {
+            ProjectIdentifiers = storage.GetInvestmentProjects()
+                .Where(x => x.InvestedInProject())
+                .Select(x => x.ProjectInfo.ProjectIdentifier)
+                .ToList()
+        };
+            
+        var encryptedProjectIdList = await javascriptNostrToolsModule.InvokeAsync<string>(
+            "encryptNostr",
+            rootNostrPrivateKeyHex,
+            nostrDMKey,
+            System.Text.Json.JsonSerializer.Serialize(investmentList, RelayService.settings));
+            
+        _RelayService.SendDirectMessagesForPubKeyAsync(rootNostrPrivateKeyHex, nostrDMKey, encryptedProjectIdList, x =>
+        {
+            if (!x.Accepted)
+            {
+                //TODO need to handle failure to save the list of projects
+            }
+        });
     }
 
     public class InvestmentModel

@@ -7,6 +7,7 @@
 @using Angor.Client.Services
 @using Angor.Shared
 @using Angor.Shared.Services
+@using Blockcore.NBitcoin.DataEncoders
 @using Nostr.Client.Messages
 
 @inject IClientStorage storage;
@@ -89,7 +90,6 @@
                         <table class="table align-items-center mb-0">
                             <thead>
                                 <tr>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
                                     <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
                                     <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Funding Target (@network.CoinTicker)</th>
                                     <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Raised (@network.CoinTicker)</th>
@@ -234,16 +234,18 @@
             return;
         }
         var words = await passwordComponent.GetWalletAsync();
-        var rootNostrPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1); 
-
-        var nostrDMPubey = _DerivationOperations.DeriveNostrPubKey(words, 0); //TODO David 1 must not be the answer
+        var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1); 
+        var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
+        var NostrDMPubey = _DerivationOperations.DeriveNostrPubKey(words, 1);
         
-        await _RelayService.LookupDirectMessagesForPubKeyAsync( nostrDMPubey, null,1, x =>
+        var rootNostrPubey = _DerivationOperations.DeriveNostrPubKey(words, 0);
+        
+        await _RelayService.LookupDirectMessagesForPubKeyAsync( NostrDMPubey, null,1, x =>
         {
             var projectIdList = javascriptNostrToolsModule.Invoke<Investments>(
                 "decryptNostr",
-                rootNostrPrivateKey,
-                nostrDMPubey,
+                NostrDMPrivateKeyHex,
+                rootNostrPubey,
                 storage.GetInvestmentProjects().Where(x => x.InvestedInProject()).Select(x => x.ProjectInfo.ProjectIdentifier));
             
             var tasks = projectIdList.ProjectIdentifiers.Select(GetInvestmentProjectDataAsync);
