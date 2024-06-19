@@ -33,17 +33,7 @@
                 </div>
             </div>
 
-            <button class="btn btn-success" @onclick="Refresh" disabled="@refreshSpinner">
-                @if (refreshSpinner)
-                {
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    <span>Refresh...</span>
-                }
-                else
-                {
-                    <span>Refresh</span>
-                }
-            </button>
+
         </div>
     </div>
 </div>
@@ -53,7 +43,9 @@
     <div class="card card-body">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">currency_bitcoin</span>
+                <span class="user-select-none">
+                    <Icon IconName="network" Height="64" Width="64"></Icon>
+                </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
                         Change Network
@@ -65,7 +57,9 @@
             </div>
             <div>
 
-                <button class="btn btn-warning" @onclick="() => showChangeNetworkModal = true">Change Network</button>
+                <button class="btn btn-warning" @onclick="() => showChangeNetworkModal = true">
+                    <Icon IconName="change" Height="24" Width="24" Color="var(--bs-primary-btn-icon)"></Icon>
+                </button>
 
                 @if (showChangeNetworkModal)
                 {
@@ -85,9 +79,6 @@
                                         <div class="card">
                                             <div class="card-header p-2">
                                                 <div class="d-flex align-items-center text-warning">
-                                                    <span class="material-icons opacity-10 me-2 fs-3">
-                                                        warning
-                                                    </span>
                                                     <span>Warning</span>
                                                 </div>
                                             </div>
@@ -141,7 +132,9 @@
     <div class="card card-body">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">search</span>
+                <span class="user-select-none">
+                    <Icon IconName="explorer" Height="64" Width="64"></Icon>
+                </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
                         Explorer
@@ -152,7 +145,9 @@
                 </div>
             </div>
             <div>
-                <a class="btn btn-success" href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">Open Explorer</a>
+                <a class="btn btn-success" href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">
+                    <Icon IconName="link" Height="24" Width="24" Color="var(--bs-primary-btn-icon)"></Icon>
+                </a>
             </div>
         </div>
     </div>
@@ -165,21 +160,31 @@
     <div class="card card-body">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center">
-                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">fact_check</span>
+                <span class="user-select-none">
+                    <Icon IconName="indexer" Height="64" Width="64"></Icon>
+                </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
                         Indexer
                     </h5>
+
                 </div>
             </div>
+            <button class="btn btn-success" @onclick="Refresh" disabled="@refreshSpinner">
+                <span role="status" aria-hidden="true" class="@(refreshSpinner ? "rotate-icon" : "")">
+                    <Icon IconName="refresh" Height="24" Width="24" Color="var(--bs-primary-btn-icon)"></Icon>
+                </span>
+            </button>
         </div>
         <form @onsubmit="AddIndexer">
             <div class="input-group mb-3">
                 <input type="text" @bind-value="newIndexerLink" class="form-control" placeholder="Enter new indexer link" aria-label="Enter new indexer link" aria-describedby="button-addon">
-                <button class="btn btn-primary" type="submit" id="button-addon">Add indexer Link</button>
+                <button class="btn btn-primary" type="submit" id="button-addon">
+                    <Icon IconName="plus" Height="24" Width="24" Color="var(--bs-primary-btn-icon)"></Icon>
+                </button>
             </div>
         </form>
-        <div class="table-responsive">
+        <div class="table-responsive form-control">
             <table class="table align-items-center mb-0">
                 <thead>
                     <tr>
@@ -222,21 +227,30 @@
     <div class="card card-body">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center">
-                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">wifi</span>
+                <span class="user-select-none">
+                    <Icon IconName="relay" Height="64" Width="64"></Icon>
+                </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
                         Nostr Relays
                     </h5>
                 </div>
             </div>
+            <button class="btn btn-success" @onclick="Refresh" disabled="@refreshSpinner">
+                <span role="status" aria-hidden="true" class="@(refreshSpinner ? "rotate-icon" : "")">
+                    <Icon IconName="refresh" Height="24" Width="24" Color="var(--bs-primary-btn-icon)"></Icon>
+                </span>
+            </button>
         </div>
         <form @onsubmit="AddRelay">
             <div class="input-group mb-3">
                 <input type="text" @bind-value="newRelayLink" class="form-control" placeholder="Enter new relay link" aria-label="Enter new relay link" aria-describedby="button-addon2">
-                <button class="btn btn-primary" type="submit" id="button-addon2">Add relay Link</button>
+                <button class="btn btn-primary" type="submit" id="button-addon2">
+                    <Icon IconName="plus" Height="24" Width="24" Color="var(--bs-primary-btn-icon)"></Icon>
+                </button>
             </div>
         </form>
-        <div class="table-responsive">
+        <div class="table-responsive form-control">
             <table class="table align-items-center mb-0">
                 <thead>
                     <tr>
@@ -281,7 +295,9 @@
     <div class="card card-body border-danger border-3">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">delete_forever</span>
+                <span class="user-select-none">
+                    <Icon IconName="remove" Height="64" Width="64"></Icon>
+                </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
                         Wipe Storage
@@ -292,7 +308,9 @@
                 </div>
             </div>
             <div>
-                <button class="btn btn-danger" @onclick="() => showWipeallModal = true">Wipe All Storage</button>
+                <button class="btn btn-danger" @onclick="() => showWipeallModal = true">
+                    <Icon IconName="remove" Height="24" Width="24" Color="var(--bs-primary-btn-icon)"></Icon>
+                </button>
                 @if (showWipeallModal)
                 {
                     <div class="modal-wrapper">
@@ -307,9 +325,6 @@
                                         <div class="card">
                                             <div class="card-header p-2">
                                                 <div class="d-flex align-items-center text-warning">
-                                                    <span class="material-icons opacity-10 me-2 fs-3">
-                                                        warning
-                                                    </span>
                                                     <span>Warning</span>
                                                 </div>
                                             </div>
