@@ -239,7 +239,7 @@ else
                 <button class="btn btn-primary ml-2" @onclick="RefreshBalance">
 
                     <span data-cy="history-refresh" class="@(balanceSpinner ? "rotate-icon" : "")" aria-hidden="true">
-                        <Icon IconName="refresh" Color="var(--bs-primary-btn-icon)"></Icon>
+                        <Icon IconName="refresh" Height="24" Width="24" Color="var(--bs-primary-btn-icon)"></Icon>
                     </span>
 
                 </button>
@@ -573,7 +573,7 @@ else
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
+                    <div class="table-responsive form-control">
                         <table class="table align-items-center mb-0">
                             <thead>
                                 <tr>
@@ -604,7 +604,7 @@ else
                                                     <div class="collapse show" data-cy="expend-amount" id="@($"collapse-{addressInfo.Address}")">
                                                         <div class="card card-body">
                                                             <!-- Inner table goes here -->
-                                                            <div class="table-responsive">
+                                                            <div class="table-responsive form-control">
                                                                 <table class="table table-sm">
                                                                     <thead>
                                                                         <tr>
