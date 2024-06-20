@@ -109,6 +109,7 @@
 
         </div>
     }
+    <button class="btn btn-secondary mt-4" @onclick="NavigateToInvestor">Back To Portfolio</button>
 </div>
 
 @code {
@@ -195,5 +196,10 @@
     private void ClaimPenalty(string projectId)
     {
         NavigationManager.NavigateTo($"/recover/{projectId}");
+    }
+
+    private void NavigateToInvestor()
+    {
+        NavigationManager.NavigateTo("/investor");
     }
 }

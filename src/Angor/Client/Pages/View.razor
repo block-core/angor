@@ -25,6 +25,7 @@
     <h1>View Project</h1>
 
     <NotificationComponent @ref="notificationComponent" />
+    <PasswordComponent @ref="passwordComponent" />
 
     @if (project?.ProjectInfo == null)
     {
@@ -148,16 +149,32 @@
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage </th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage %</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Release Date</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Days Until Stage</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Amount Per Stage</th>
                                 <!-- Other headers -->
                             </tr>
                         </thead>
                         <tbody>
                             @for (int index = 0; index < project.ProjectInfo.Stages.Count; index++)
                             {
+                                var stage = project.ProjectInfo.Stages[index];
+                                var daysUntilStage = (stage.ReleaseDate - currentDate).Days;
+                                var amountInStage = (Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC)) * stage.AmountToRelease /100;
                                 <tr>
                                     <td>@(index + 1)</td>
-                                    <td>@project.ProjectInfo.Stages[index].AmountToRelease %</td>
-                                    <td>@project.ProjectInfo.Stages[index].ReleaseDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@stage.AmountToRelease %</td>
+                                    <td>@stage.ReleaseDate.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                    @if (daysUntilStage < 0)
+                                        {
+                                            <span>Released</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@daysUntilStage days</span>
+                                        }
+                                    </td>
+                                    <td>@amountInStage @network.CoinTicker</td>
                                     <!-- Other stage details -->
                                 </tr>
                             }
@@ -292,6 +309,7 @@
     bool founder = false;
     bool invested = false;
     bool findInProgress = false;
+    DateTime currentDate = DateTime.UtcNow;
 
     private List<string> NostrClients = new();
 
