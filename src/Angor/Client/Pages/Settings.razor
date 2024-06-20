@@ -23,7 +23,7 @@
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex col-auto my-auto align-items-center">
                 <span class="user-select-none">
-                    <Icon IconName="settings" Height="64" Width="64"/>
+                    <Icon IconName="settings" Height="64" Width="64" />
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
@@ -203,15 +203,21 @@
                             <td>
                                 @if (indexer.IsPrimary)
                                 {
-                                    <button class="btn btn-primary btn-sm" disabled>Primary</button>
+                                     <span role="button">
+                                        <Icon IconName="primary" Height="24" Width="24"></Icon>
+                                     </span>
                                 }
                                 else
                                 {
-                                    <button class="btn btn-secondary btn-sm" @onclick="() => SetPrimaryIndexer(indexer)">Set</button>
+                                    <span @onclick="() => SetPrimaryIndexer(indexer)" role="button">
+                                        <Icon IconName="set" Height="24" Width="24"></Icon>
+                                    </span>
                                 }
                             </td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">Delete</button>
+                            <td class="text-end">
+                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">
+                                    <Icon IconName="remove" Height="20" Width="20" Color="var(--bs-primary-btn-icon)"></Icon>
+                                </button>
                             </td>
                         </tr>
                     }
@@ -267,19 +273,27 @@
                         <tr>
                             <td><a href="@relay.Url" target="_blank">@relay.Url</a></td>
                             <td>@relay.Name</td>
-                            <td style="color: @(relay.Status == UrlStatus.Online ? "green" : relay.Status == UrlStatus.NotReady ? "yellow" :  "red");">@relay.Status.ToString()</td>
+                            <td class="@((relay.Status == UrlStatus.Online) ? "text-success" : (relay.Status == UrlStatus.NotReady) ? "text-warning" : "text-danger")">
+                                @relay.Status.ToString()
+                            </td>
                             <td>
                                 @if (relay.IsPrimary)
                                 {
-                                    <button class="btn btn-primary btn-sm" disabled>Primary</button>
+                                    <span role="button">
+                                        <Icon IconName="primary" Height="24" Width="24"></Icon>
+                                    </span>
                                 }
                                 else
                                 {
-                                    <button class="btn btn-secondary btn-sm" @onclick="() => SetPrimaryRelay(relay)">Set</button>
+                                    <span @onclick="() => SetPrimaryRelay(relay)" role="button">
+                                        <Icon IconName="set" Height="24" Width="24" ></Icon>
+                                    </span>
                                 }
                             </td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">Delete</button>
+                            <td class="text-end">
+                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">
+                                    <Icon IconName="remove" Height="20" Width="20" Color="var(--bs-primary-btn-icon)"></Icon>
+                                </button>
                             </td>
                         </tr>
                     }
