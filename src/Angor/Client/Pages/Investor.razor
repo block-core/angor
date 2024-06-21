@@ -236,23 +236,30 @@
         var words = await passwordComponent.GetWalletAsync();
         var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1); 
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
-        var NostrDMPubey = _DerivationOperations.DeriveNostrPubKey(words, 1);
+        var NostrDMPubkey = _DerivationOperations.DeriveNostrPubKey(words, 1);
         
         var rootNostrPubey = _DerivationOperations.DeriveNostrPubKey(words, 0);
         
-        await _RelayService.LookupDirectMessagesForPubKeyAsync( NostrDMPubey, null,1, x =>
-        {
-            var projectIdList = javascriptNostrToolsModule.Invoke<Investments>(
-                "decryptNostr",
-                NostrDMPrivateKeyHex,
-                rootNostrPubey,
-                storage.GetInvestmentProjects().Where(x => x.InvestedInProject()).Select(x => x.ProjectInfo.ProjectIdentifier));
+        await _RelayService.LookupDirectMessagesForPubKeyAsync( NostrDMPubkey, null,null,
+            async x =>
+            {
+                if (x.Pubkey != rootNostrPubey)
+                    return;
             
-            var tasks = projectIdList.ProjectIdentifiers.Select(GetInvestmentProjectDataAsync);
+                var decryptedString = await javascriptNostrToolsModule.InvokeAsync<string>(
+                    "decryptNostr",
+                    NostrDMPrivateKeyHex,
+                    rootNostrPubey,
+                    x.Content);
+                
+                 var projectIdList = JsonSerializer.Deserialize<Investments>(decryptedString, RelayService.settings);
+            
+                var tasks = projectIdList.ProjectIdentifiers
+                    .Where(x => projects.All(p => p.ProjectInfo.ProjectIdentifier != x)) // only add new projects
+                    .Select(GetInvestmentProjectDataAsync);
 
-            Task.WhenAll(tasks);
-        });
-        
+                await Task.WhenAll(tasks);
+            });
     }
 
     private async Task GetInvestmentProjectDataAsync(string projectId)
@@ -272,6 +279,7 @@
             return;
 
         var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectIdentifier);
+        var investorNostrPubKey = investorNostrPrivateKey.PubKey.ToHex()[2..];
         
         var investorProject = new InvestorProject
         {
@@ -285,7 +293,7 @@
         await _SignService.LookupInvestmentRequestsAsync(project.NostrPubKey, null,
             (id, publisherPubKey, content, eventTime) =>
             {
-                if ((createdAt == null || createdAt < eventTime) && publisherPubKey == investorNostrPrivateKey.PubKey.ToHex())
+                if ((createdAt == null || createdAt < eventTime) && publisherPubKey == investorNostrPubKey)
                 {
                     createdAt = eventTime;
                     eventId = id;
@@ -299,7 +307,7 @@
                             case NostrKind.Metadata:
                                 investorProject.Metadata ??=
                                     JsonSerializer.Deserialize<ProjectMetadata>(x.Content!,
-                                        Angor.Shared.Services.RelayService.settings);
+                                        RelayService.settings);
                                 break;
                             case NostrKind.ApplicationSpecificData:
                                 investorProject.ProjectInfo ??= JsonSerializer.Deserialize<ProjectInfo>(x.Content!,
@@ -311,27 +319,30 @@
                         }
                     }, () =>
                     {
-                        _SignService.LookupSignatureForInvestmentRequest(investorNostrPrivateKey.PubKey.ToHex(), project.NostrPubKey,
-                            createdAt!.Value, eventId!, encryptedSignatures =>
+                        _SignService.LookupSignatureForInvestmentRequest(investorNostrPubKey, project.NostrPubKey,
+                            createdAt!.Value, eventId!, async encryptedSignatures =>
                             {
                                 //TODO decrypt the signatures and add to project
 
                                 if (investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
-                                    return Task.CompletedTask;
+                                    return;
 
-                                var signatureJson = javascriptNostrToolsModule.Invoke<string>(
-                                    "decryptNostr", investorNostrPrivateKey, project.NostrPubKey, encryptedSignatures);
+                                var signatureJson = await javascriptNostrToolsModule.InvokeAsync<string>(
+                                    "decryptNostr", Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes()), project.NostrPubKey, encryptedSignatures);
 
-                                var res = System.Text.Json.JsonSerializer.Deserialize<SignatureInfo>(signatureJson, RelayService.settings);
+                                var res = JsonSerializer.Deserialize<SignatureInfo>(signatureJson, RelayService.settings);
 
-                                if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
+                                if (res.ProjectIdentifier == investorProject.ProjectInfo.ProjectIdentifier)
                                 {
-                                    investorProject.SignaturesInfo.Signatures = res.Signatures;
+                                    investorProject.SignaturesInfo = res;
                                 }
 
-                                projects.Add(investorProject);
-
-                                return Task.CompletedTask;
+                                if (projects.All(x => x.ProjectInfo.ProjectIdentifier != investorProject.ProjectInfo.ProjectIdentifier))
+                                {
+                                    projects.Add(investorProject);
+                                    storage.AddInvestmentProject(investorProject);
+                                    StateHasChanged();
+                                }
                             });
                     },
                     project.NostrPubKey);

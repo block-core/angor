@@ -89,7 +89,7 @@ namespace Angor.Shared.Services
             }));
         }
 
-        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)
+        public Task LookupSignaturesDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
@@ -111,6 +111,34 @@ namespace Angor.Shared.Services
                 P = new[] { nostrPubKey },
                 Kinds = new[] { NostrKind.EncryptedDm },
                 A = new []{ NostrCoordinatesIdentifierTag(nostrPubKey)},
+                Since = since,
+                Limit = limit
+            }));
+            
+            return Task.CompletedTask;
+        }
+
+        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Func<NostrEvent,Task> onResponseAction)
+        {
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+
+            var subscriptionKey = nostrPubKey;
+
+            if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event is not null)
+                    .Select(_ => _.Event)
+                    .Subscribe(@event => onResponseAction(@event));
+
+                _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                P = new[] { nostrPubKey },
+                Kinds = new[] { NostrKind.EncryptedDm },
                 Since = since,
                 Limit = limit
             }));

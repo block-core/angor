@@ -778,7 +778,7 @@
 
         var nostrDMKey = _derivationOperations.DeriveNostrPubKey(words, 1);
 
-        Investments investmentList = new()
+        Investments investments = new()
         {
             ProjectIdentifiers = storage.GetInvestmentProjects()
                 .Where(x => x.InvestedInProject())
@@ -790,7 +790,7 @@
             "encryptNostr",
             rootNostrPrivateKeyHex,
             nostrDMKey,
-            System.Text.Json.JsonSerializer.Serialize(investmentList, RelayService.settings));
+            System.Text.Json.JsonSerializer.Serialize(investments));
             
         _RelayService.SendDirectMessagesForPubKeyAsync(rootNostrPrivateKeyHex, nostrDMKey, encryptedProjectIdList, x =>
         {
