@@ -362,7 +362,7 @@
                                         </div>
                                     </div>
                                     <div class="modal-footer">
-                                        <button class="btn btn-danger" @onclick="WipteAllData">Wipe Storage</button>
+                                        <button class="btn btn-danger" @onclick="WipeAllData">Wipe Storage</button>
 
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false">Close</button>
                                     </div>
@@ -579,7 +579,7 @@
         }
     }
 
-    private void WipteAllData()
+    private void WipeAllData()
     {
         if (!confirmWipe)
         {
