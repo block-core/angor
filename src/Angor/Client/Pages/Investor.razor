@@ -32,7 +32,18 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="mb-4">Invested Portfolio</h1>
-        <button class="btn btn-secondary" @onclick="GetProjectsAndUpdateAsync">Refresh</button>
+        <button class="btn btn-secondary" @onclick="GetProjectsAndUpdateAsync">
+            @if (RefreshBalanceTriggered)
+            {
+            <!-- If balanceSpinner is true, show spinner icon -->
+            <span class="spinner-border spinner-border-sm opacity-10 btn-content" role="status" aria-hidden="true"></span>
+            }
+            else
+            {
+                <!-- If balanceSpinner is false, show 'history' icon -->
+                <span>refresh</span>
+            }
+        </button>
         <button class="btn btn-secondary" @onclick="NavigateToPenalties">View Penalties</button>
     </div>
     <NotificationComponent @ref="notificationComponent" />
@@ -148,6 +159,8 @@
 </div>
 @code {
 
+    bool RefreshBalanceTriggered;
+    
     private List<InvestorProject> projects = new();
 
     long TotalInvested = 0;
@@ -233,6 +246,10 @@
             passwordComponent.ShowPassword(GetProjectsAndUpdateAsync);
             return;
         }
+
+        RefreshBalanceTriggered = true;
+        StateHasChanged();
+        
         var words = await passwordComponent.GetWalletAsync();
         var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1); 
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
@@ -253,10 +270,19 @@
                     x.Content);
                 
                  var projectIdList = JsonSerializer.Deserialize<Investments>(decryptedString, RelayService.settings);
-            
-                var tasks = projectIdList.ProjectIdentifiers
-                    .Where(x => projects.All(p => p.ProjectInfo.ProjectIdentifier != x)) // only add new projects
-                    .Select(GetInvestmentProjectDataAsync);
+
+                 var newProjects = projectIdList.ProjectIdentifiers
+                     .Where(x => projects.All(p => p.ProjectInfo.ProjectIdentifier != x)) // only add new projects;
+                     .ToList();
+
+                 if (newProjects.Count == 0)
+                 {
+                     RefreshBalanceTriggered = false;
+                     StateHasChanged();
+                     return;
+                 }
+                 
+                var tasks = newProjects.Select(GetInvestmentProjectDataAsync);
 
                 await Task.WhenAll(tasks);
             });
@@ -341,6 +367,7 @@
                                 {
                                     projects.Add(investorProject);
                                     storage.AddInvestmentProject(investorProject);
+                                    RefreshBalanceTriggered = false;
                                     StateHasChanged();
                                 }
                             });
