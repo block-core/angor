@@ -35,6 +35,7 @@ builder.Services.AddScoped<NavMenuState>();
 
 builder.Services.AddScoped<IIndexerService, IndexerService>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
+builder.Services.AddHostedService<NetworkMonitoringService>();
 
 builder.Services.AddTransient<IRelayService, RelayService>();
 builder.Services.AddTransient<ISignService, SignService>();
