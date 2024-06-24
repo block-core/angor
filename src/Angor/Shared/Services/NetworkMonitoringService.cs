@@ -1,11 +1,12 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Angor.Shared.Services;
+ using Angor.Shared.Services;
 
-public class NetworkMonitoringService : BackgroundService
+public class NetworkMonitoringService : IDisposable
 {
     private readonly INetworkService _networkService;
+    private Timer _timer;
     private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(1);
 
     public NetworkMonitoringService(INetworkService networkService)
@@ -13,13 +14,20 @@ public class NetworkMonitoringService : BackgroundService
         _networkService = networkService;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public void Start()
     {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            await _networkService.CheckServices(true);
+         _timer = new Timer(async _ => await CheckServices(), null, TimeSpan.Zero, _checkInterval);
+    }
 
-            await Task.Delay(_checkInterval, stoppingToken);
-        }
+    private async Task CheckServices()
+    {
+        _networkService.AddSettingsIfNotExist();
+
+         await _networkService.CheckServices(true);
+     }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
     }
 }
