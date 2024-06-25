@@ -11,6 +11,7 @@
 @inject NavigationManager NavigationManager
 @inject IRelayService _RelayService
 @inject IIndexerService _IndexerService
+@inject INetworkService _NetworkService
 @inject IJSRuntime JS
 
 <NotificationComponent @ref="notificationComponent" />
@@ -214,13 +215,37 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        projects = SessionStorage.GetProjectIndexerData() ?? new List<ProjectIndexerData>();
-        if (!projects.Any())
+        try
         {
-            await GetAllProjects();
+             if (SessionStorage.GetProjectIndexerData() == null)
+            {
+                _NetworkService.AddSettingsIfNotExist();
+                await _NetworkService.CheckServices(true);
+
+                 var primaryIndexer = _NetworkService.GetPrimaryIndexer();
+                var primaryRelay = _NetworkService.GetPrimaryRelay();
+
+                if (primaryIndexer == null || primaryRelay == null)
+                {
+                    notificationComponent.ShowNotificationMessage("No primary indexer or relay found. Please add them in settings.");
+                    return;
+                }
+
+                 await GetAllProjects();
+            }
+            else
+            {
+                 projects = SessionStorage.GetProjectIndexerData();
+            }
         }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowNotificationMessage($"Initialization failed: {ex.Message}");
+        }
+
         await JS.InvokeVoidAsync("angor.initSearchFocus", "searchQuery");
     }
+
 
     private void ToggleView()
     {
