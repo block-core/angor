@@ -412,11 +412,8 @@
 
     private void UpdateUI()
     {
-        InvokeAsync(async () =>
-        {
-            settingsInfo = _clientStorage.GetSettingsInfo();
-            StateHasChanged();
-        });
+        settingsInfo = _clientStorage.GetSettingsInfo();
+        StateHasChanged();
     }
 
     public void Dispose()
