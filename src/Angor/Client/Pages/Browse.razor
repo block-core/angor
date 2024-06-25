@@ -215,37 +215,95 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        projects = SessionStorage.GetProjectIndexerData() ?? new List<ProjectIndexerData>();
+
+        if (projects.Any())
+        {
+            // Projects exist, initialize the search focus
+            await JS.InvokeVoidAsync("angor.initSearchFocus", "searchQuery");
+
+            // Check for indexer and relay availability in the background
+            _ = CheckIndexerAndRelayAvailability();
+        }
+        else
+        {
+            // No projects are cached, fetch new projects after ensuring services are available
+            await FetchAndEnsureServices();
+        }
+    }
+
+    private async Task FetchAndEnsureServices()
+    {
         try
         {
-             if (SessionStorage.GetProjectIndexerData() == null)
+            _NetworkService.AddSettingsIfNotExist();
+            await _NetworkService.CheckServices(true);
+
+            var primaryIndexer = _NetworkService.GetPrimaryIndexer();
+            var primaryRelay = _NetworkService.GetPrimaryRelay();
+
+            if (primaryIndexer == null || primaryRelay == null)
             {
-                _NetworkService.AddSettingsIfNotExist();
-                await _NetworkService.CheckServices(true);
-
-                 var primaryIndexer = _NetworkService.GetPrimaryIndexer();
-                var primaryRelay = _NetworkService.GetPrimaryRelay();
-
-                if (primaryIndexer == null || primaryRelay == null)
-                {
-                    notificationComponent.ShowNotificationMessage("No primary indexer or relay found. Please add them in settings.");
-                    return;
-                }
-
-                 await GetAllProjects();
+                notificationComponent.ShowNotificationMessage("No primary indexer or relay found. Please configure them in settings.");
+                return;
             }
-            else
-            {
-                 projects = SessionStorage.GetProjectIndexerData();
-            }
+
+            await GetAllProjects();
         }
         catch (Exception ex)
         {
             notificationComponent.ShowNotificationMessage($"Initialization failed: {ex.Message}");
         }
-
-        await JS.InvokeVoidAsync("angor.initSearchFocus", "searchQuery");
     }
 
+    private async Task CheckIndexerAndRelayAvailability()
+    {
+        try
+        {
+            // Attempt to retrieve primary indexer and relay
+            var primaryIndexer = _NetworkService.GetPrimaryIndexer();
+            var primaryRelay = _NetworkService.GetPrimaryRelay();
+
+            // Initialize flags to track service availability
+            bool indexerAvailable = false;
+            bool relayAvailable = false;
+
+            // Check if the primary indexer is available
+            if (primaryIndexer != null)
+            {
+                await _NetworkService.CheckServices(false); // Refresh service status
+                indexerAvailable = primaryIndexer.Status == UrlStatus.Online;
+                if (!indexerAvailable)
+                {
+                    notificationComponent.ShowNotificationMessage("Primary indexer is offline. Please check your network settings.");
+                }
+            }
+            else
+            {
+                notificationComponent.ShowNotificationMessage("No primary indexer configured. Please add one in settings.");
+            }
+
+            // Check if the primary relay is available
+            if (primaryRelay != null)
+            {
+                await _NetworkService.CheckServices(false); // Refresh service status
+                relayAvailable = primaryRelay.Status == UrlStatus.Online;
+                if (!relayAvailable)
+                {
+                    notificationComponent.ShowNotificationMessage("Primary relay is offline. Please check your relay settings.");
+                }
+            }
+            else
+            {
+                notificationComponent.ShowNotificationMessage("No primary relay configured. Please add one in settings.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // General error handling if the service check fails
+            notificationComponent.ShowNotificationMessage($"Service check failed: {ex.Message}");
+        }
+    }
 
     private void ToggleView()
     {
