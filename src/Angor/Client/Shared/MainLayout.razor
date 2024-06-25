@@ -11,7 +11,8 @@
 @inject INetworkService _networkService
 @inject NavigationManager _navManager
 @inject NavMenuState NavMenuState;
-@inject NetworkMonitoringService NetworkMonitoringService
+@implements IDisposable
+@inject NetworkMonitoringService MonitoringService
 
 <div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show bg-gray-100 @sidenavClass ">
     <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 b-shadow overflow-x-hidden" id="sidenav-main">
@@ -84,10 +85,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        NetworkMonitoringService.Start();
-
         InitializeAppVersion();
         InitializeNetworkConfiguration();
+        await MonitoringService.CheckAndEnsureServices();
+
         await LoadThemeFromStorage();
 
         await UpdateThemeIcon(isDarkTheme);
@@ -107,8 +108,9 @@
 
     public void Dispose()
     {
-        NetworkMonitoringService.Dispose();
+        MonitoringService.Dispose();
     }
+
     private void InitializeNetworkConfiguration()
     {
         _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower());
