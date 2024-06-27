@@ -1,7 +1,5 @@
 ﻿using System.Reactive.Linq;
-using System.Text.Json;
 using Angor.Shared.Models;
-using Angor.Shared.Utilities;
 using Nostr.Client.Requests;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Keys;
@@ -17,14 +15,16 @@ namespace Angor.Shared.Services
         private readonly INostrCommunicationFactory _communicationFactory;
         private readonly INetworkService _networkService;
         private readonly IRelaySubscriptionsHandling _subscriptionsHandling;
+        private readonly ISerializer _serializer;
         
         
-        public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService, IRelaySubscriptionsHandling subscriptionsHanding)
+        public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService, IRelaySubscriptionsHandling subscriptionsHanding, ISerializer serializer)
         {
             _logger = logger;
             _communicationFactory = communicationFactory;
             _networkService = networkService;
             _subscriptionsHandling = subscriptionsHanding;
+            _serializer = serializer;
         }
 
         public void LookupProjectsInfoByPubKeys<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,params string[] nostrPubKeys)
@@ -47,7 +47,7 @@ namespace Angor.Shared.Services
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionName)
                     .Select(_ => _.Event)
-                    .Subscribe(ev => { responseDataAction(JsonSerializer.Deserialize<T>(ev.Content, settings)); });
+                    .Subscribe(ev => { responseDataAction(_serializer.Deserialize<T>(ev.Content)); });
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionName, subscription);
             }
@@ -188,7 +188,7 @@ namespace Angor.Shared.Services
             if (!project.NostrPubKey.Contains(key.DerivePublicKey().Hex))
                 throw new ArgumentException($"The nostr pub key on the project does not fit the npub calculated from the nsec {project.NostrPubKey} {key.DerivePublicKey().Hex}");
             
-            var content = JsonSerializer.Serialize(project,settings);
+            var content = _serializer.Serialize(project);
             
             var signed = GetNip78NostrEvent(content)
                 .Sign(key);
@@ -206,7 +206,7 @@ namespace Angor.Shared.Services
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
-            var content = JsonSerializer.Serialize(metadata,settings);
+            var content = _serializer.Serialize(metadata);
             
             var signed = new NostrEvent
                 {
@@ -281,20 +281,6 @@ namespace Angor.Shared.Services
             
             return ev;
         }
-        
-        public static JsonSerializerOptions settings =>  new ()
-        {
-            // Equivalent to Formatting = Formatting.None
-            WriteIndented = false,
-
-            // Equivalent to NullValueHandling = NullValueHandling.Ignore
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-
-            // PropertyNamingPolicy equivalent to CamelCasePropertyNamesContractResolver
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-
-            Converters = { new UnixDateTimeConverter() }
-        };
     }
 
 }

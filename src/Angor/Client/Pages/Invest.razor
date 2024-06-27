@@ -3,7 +3,6 @@
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Blockcore.NBitcoin
-@using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
 @using Blockcore.NBitcoin.DataEncoders
 @using JSException = Microsoft.JSInterop.JSException
@@ -28,6 +27,8 @@
 @inject IRelayService _RelayService
 
 @inject IInvestorTransactionActions _InvestorTransactionActions
+
+@inject ISerializer serializer
 
 @if (!hasWallet)
 {
@@ -625,12 +626,6 @@
                 investorProject.SignaturesInfo.SignatureRequestEventId,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
 
-            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.ProjectInfo.NostrPubKey);
-            if (metadata != null)
-            {
-                storage.AddInvestmentProjectMetadata(project.ProjectInfo.NostrPubKey, metadata);
-            }
-
             notificationComponent.ShowNotificationMessage("Signature request sent", 5);
         }
         catch (Exception e)
@@ -658,7 +653,7 @@
         
         _Logger.LogInformation("signature : " + signatureJson);
 
-        var res = System.Text.Json.JsonSerializer.Deserialize<SignatureInfo>(signatureJson, RelayService.settings);
+        var res = serializer.Deserialize<SignatureInfo>(signatureJson);
 
         if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
         {
@@ -749,12 +744,6 @@
             unspentInfo.AddRange(spendUtxos);
             SessionStorage.SetUnconfirmedInboundFunds(unspentInfo);
 
-            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.ProjectInfo.NostrPubKey);
-            if (metadata != null)
-            {
-                storage.AddInvestmentProjectMetadata(project.ProjectInfo.NostrPubKey, metadata);
-            }
-
             notificationComponent.ShowNotificationMessage("Invested in project", 5);
 
             NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
@@ -782,7 +771,7 @@
         {
             ProjectIdentifiers = storage.GetInvestmentProjects()
                 .Where(x => x.InvestedInProject())
-                .Select(x => x.ProjectInfo.ProjectIdentifier)
+                .Select(x => new InvestmentState{ProjectIdentifier =  x.ProjectInfo.ProjectIdentifier})
                 .ToList()
         };
             
@@ -790,7 +779,7 @@
             "encryptNostr",
             rootNostrPrivateKeyHex,
             nostrDMKey,
-            System.Text.Json.JsonSerializer.Serialize(investments));
+            serializer.Serialize(investments));
             
         _RelayService.SendDirectMessagesForPubKeyAsync(rootNostrPrivateKeyHex, nostrDMKey, encryptedProjectIdList, x =>
         {
