@@ -230,6 +230,10 @@
                 RefreshBalanceTriggered = false;
                 StateHasChanged();
             }
+            else
+            {
+                RefreshBalanceTriggered = false;   
+            }
         }
 
         if (TotalFundedProjects != projects.Count)
@@ -327,11 +331,8 @@
                     if (foundNewProjects)
                     {
                         addedProjectsFromEvent = true;
+                        RefreshBalanceTriggered = true;
                         StateHasChanged();
-                    }
-                    else
-                    {
-                        RefreshBalanceTriggered = false;   
                     }
                 }
                 catch (Exception e)
