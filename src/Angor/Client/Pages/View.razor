@@ -3,14 +3,11 @@
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Blockcore.NBitcoin
-@using Angor.Client.Services
 @using Angor.Shared.Services
-@using System.Text.Json
 @using Angor.Client.Models
 @using Nostr.Client.Messages
 
 @inject IDerivationOperations _derivationOperations
-@inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
 @inject ICacheStorage SessionStorage;
 @inject NavigationManager NavigationManager
@@ -18,6 +15,7 @@
 @inject IClipboardService _clipboardService
 @inject IIndexerService _IndexerService
 @inject IRelayService _RelayService
+@inject  ISerializer serializer
 
 @inherits BaseComponent
 
@@ -334,11 +332,11 @@
                                 switch (e)
                                 {
                                     case { Kind: NostrKind.Metadata }:
-                                        var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
+                                        var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
                                         project.Metadata ??= nostrMetadata;
                                         break;
                                     case { Kind: NostrKind.ApplicationSpecificData }:
-                                        var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
+                                        var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
                                         project.ProjectInfo ??= projectInfo;
                                         break;
                                 }

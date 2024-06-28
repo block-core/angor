@@ -2,17 +2,15 @@
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Angor.Shared.Services
-@using Angor.Client.Services
 @using Angor.Client.Models
-@using Angor.Client.Components
 @using Nostr.Client.Messages
-@using System.Text.Json
 
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
 @inject IRelayService RelayService;
 @inject IIndexerService _IndexerService
+@inject ISerializer serializer
 
 @if (!hasWallet)
 {
@@ -123,7 +121,7 @@
                 switch (e)
                 {
                     case { Kind: NostrKind.Metadata }:
-                        var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
+                        var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
                         var founderProject = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
                         if (founderProject != null && founderProject.Metadata is null)
                             founderProject.Metadata = nostrMetadata;
@@ -131,7 +129,7 @@
                         //     notificationComponent.ShowNotificationMessage($"Couldn't find the project details for the project {nostrMetadata.Name} try adding the missing relay."); //TODO
                         break;
                     case { Kind: NostrKind.ApplicationSpecificData }:
-                        var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
+                        var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
                         if (founderProjects.All(_ => _.ProjectInfo.NostrPubKey != e.Pubkey)) //Getting events from multiple relays
                             founderProjects.Add(new FounderProject
                             {

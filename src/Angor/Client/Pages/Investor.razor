@@ -3,13 +3,23 @@
 @using Angor.Shared.Models
 @using Blockcore.NBitcoin
 @using Angor.Client.Models
+@using Angor.Shared
 @using Angor.Shared.Services
+@using Blockcore.NBitcoin.DataEncoders
+@using Nostr.Client.Messages
 
+@inject ILogger<Investor> _Logger
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
 @inject ICacheStorage SessionStorage;
 @inject IIndexerService _IndexerService
+@inject IDerivationOperations _DerivationOperations
+@inject IRelayService _RelayService
+@inject ISignService _SignService
+@inject ISerializer serializer
+
+@inject IJSRuntime JS
 
 @inherits BaseComponent
 
@@ -22,9 +32,24 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="mb-4">Invested Portfolio</h1>
-        <button class="btn btn-secondary" @onclick="NavigateToPenalties">View Penalties</button>
+        <div>
+            <button class="btn btn-secondary" @onclick="GetProjectsAndUpdateAsync">
+                @if (RefreshBalanceTriggered)
+                {
+                <!-- If balanceSpinner is true, show spinner icon -->
+                <span class="spinner-border spinner-border-sm opacity-10 btn-content" role="status" aria-hidden="true"></span>
+                }
+                else
+                {
+                    <!-- If balanceSpinner is false, show 'history' icon -->
+                    <span>refresh</span>
+                }
+            </button>
+            <button class="btn btn-secondary" @onclick="NavigateToPenalties">View Penalties</button>
+        </div>
     </div>
     <NotificationComponent @ref="notificationComponent" />
+    <PasswordComponent @ref="passwordComponent" />
 
     <!-- Summary Statistics -->
     <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
@@ -78,7 +103,6 @@
                         <table class="table align-items-center mb-0">
                             <thead>
                                 <tr>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
                                     <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
                                     <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Funding Target (@network.CoinTicker)</th>
                                     <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Raised (@network.CoinTicker)</th>
@@ -137,6 +161,9 @@
 </div>
 @code {
 
+    bool RefreshBalanceTriggered;
+    bool addedProjectsFromEvent;
+    
     private List<InvestorProject> projects = new();
 
     long TotalInvested = 0;
@@ -146,6 +173,10 @@
 
     public Dictionary<string, ProjectStats> Stats = new();
 
+    private IJSInProcessObjectReference? javascriptNostrToolsModule;
+
+    private Investments scannedInvestments = new();
+    
     protected override async Task OnInitializedAsync()
     {
         hasWallet = _walletStorage.HasWallet();
@@ -168,6 +199,62 @@
             await RefreshBalance();
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (javascriptNostrToolsModule == null)
+        {
+            try
+            {
+                //TODO import the nostr tool module directly to c# class
+                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
+            }
+            catch (JSException e)
+            {
+                notificationComponent.ShowErrorMessage(e.Message);
+            }
+        }
+
+        if (RefreshBalanceTriggered)
+        {
+            if (addedProjectsFromEvent)
+            {
+                addedProjectsFromEvent = false;
+                
+                var tasks = scannedInvestments.ProjectIdentifiers.Select(GetInvestmentProjectDataAsync);
+
+                await Task.WhenAll(tasks);
+
+                scannedInvestments.ProjectIdentifiers = new();
+                
+                RefreshBalanceTriggered = false;
+                StateHasChanged();
+            }
+            else
+            {
+                RefreshBalanceTriggered = false;   
+            }
+        }
+
+        if (TotalFundedProjects != projects.Count)
+        {
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var unconfirmedInfo = SessionStorage.GetUnconfirmedInboundFunds();
+            
+            var abi = new AccountBalanceInfo();
+            abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
+
+            TotalFundedProjects = projects.Count;
+            TotalInvested = projects.Sum(s => s.AmountInvested ?? 0);
+            TotalWallet = abi.TotalBalance;
+            TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
+
+            await RefreshBalance();
+        }
+        
+    }
+    
+    
 
     private async Task RefreshBalance()
     {
@@ -197,6 +284,151 @@
         return input;
     }
 
+    private async Task GetProjectsAndUpdateAsync()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(GetProjectsAndUpdateAsync);
+            return;
+        }
+     
+        RefreshBalanceTriggered = true;
+        
+        var words = await passwordComponent.GetWalletAsync();
+        var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1); 
+        var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
+        var NostrDMPubkey = _DerivationOperations.DeriveNostrPubKey(words, 1);
+        
+        var rootNostrPubey = _DerivationOperations.DeriveNostrPubKey(words, 0);
+        
+        await _RelayService.LookupDirectMessagesForPubKeyAsync( NostrDMPubkey, null,1,
+            async x =>
+            {
+                if (x.Pubkey != rootNostrPubey)
+                    return;
+
+                try
+                {
+                    var decryptedString = await javascriptNostrToolsModule.InvokeAsync<string>(
+                        "decryptNostr",
+                        NostrDMPrivateKeyHex,
+                        rootNostrPubey,
+                        x.Content);
+                
+                    var projectIdList = serializer.Deserialize<Investments>(decryptedString);
+
+                    bool foundNewProjects = false;
+                    foreach (var investment in projectIdList.ProjectIdentifiers)
+                    {
+                        if (projects.Any(x => x.ProjectInfo.ProjectIdentifier == investment.ProjectIdentifier) ||
+                            scannedInvestments.ProjectIdentifiers.Any(x => x.ProjectIdentifier == investment.ProjectIdentifier))
+                            continue;
+
+                        scannedInvestments.ProjectIdentifiers.Add(investment);
+                        foundNewProjects = true;
+                    }
+                    
+                    if (foundNewProjects)
+                    {
+                        addedProjectsFromEvent = true;
+                        RefreshBalanceTriggered = true;
+                        StateHasChanged();
+                    }
+                }
+                catch (Exception e)
+                {
+                    _Logger.LogError(e,"failed to get handle investment list event from relay");
+                }
+            });
+    }
+
+    private async Task GetInvestmentProjectDataAsync(InvestmentState investmentState)
+    {
+        var project = await _IndexerService.GetProjectByIdAsync(investmentState.ProjectIdentifier);
+
+        if (project == null)
+            return;
+        
+        var words = await passwordComponent.GetWalletAsync();
+        var investmentPubKey = _DerivationOperations.DeriveInvestorKey(words, project.FounderKey);
+       
+        var investments = await _IndexerService.GetInvestmentsAsync(investmentState.ProjectIdentifier);
+        var investment = investments.SingleOrDefault(x => x.InvestorPublicKey == investmentPubKey);
+
+        if (investment == null)
+            return;
+
+        var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectIdentifier);
+        var investorNostrPubKey = investorNostrPrivateKey.PubKey.ToHex()[2..];
+        
+        var investorProject = new InvestorProject
+        {
+            TransactionId = investment.TransactionId,
+            AmountInvested = investment.TotalAmount,
+        };
+
+        DateTime? createdAt = null;
+        string? eventId = null;
+
+        await _SignService.LookupInvestmentRequestsAsync(project.NostrPubKey, null,
+            (id, publisherPubKey, content, eventTime) =>
+            {
+                if ((createdAt == null || createdAt < eventTime) && publisherPubKey == investorNostrPubKey)
+                {
+                    createdAt = eventTime;
+                    eventId = id;
+                }
+            }, () =>
+            {
+                _RelayService.RequestProjectCreateEventsByPubKey(x =>
+                    {
+                        switch (x.Kind)
+                        {
+                            case NostrKind.Metadata:
+                                investorProject.Metadata ??=
+                                    serializer.Deserialize<ProjectMetadata>(x.Content!);
+                                break;
+                            case NostrKind.ApplicationSpecificData:
+                                investorProject.ProjectInfo ??= serializer.Deserialize<ProjectInfo>(x.Content!) ??
+                                                                throw new Exception("The project info must be in the application specific data event");
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException($"{x.Kind}");
+                        }
+                    }, () =>
+                    {
+                        _SignService.LookupSignatureForInvestmentRequest(investorNostrPubKey, project.NostrPubKey,
+                            createdAt!.Value, eventId!, async encryptedSignatures =>
+                            {
+                                //TODO decrypt the signatures and add to project
+
+                                if (investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
+                                    return;
+
+                                var signatureJson = await javascriptNostrToolsModule.InvokeAsync<string>(
+                                    "decryptNostr", Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes()), project.NostrPubKey, encryptedSignatures);
+
+                                var res = serializer.Deserialize<SignatureInfo>(signatureJson);
+
+                                if (res.ProjectIdentifier == investorProject.ProjectInfo.ProjectIdentifier)
+                                {
+                                    investorProject.SignaturesInfo = res;
+                                }
+
+                                if (projects.All(x => x.ProjectInfo.ProjectIdentifier != investorProject.ProjectInfo.ProjectIdentifier))
+                                {
+                                    projects.Add(investorProject);
+                                    storage.AddInvestmentProject(investorProject);
+                                    RefreshBalanceTriggered = false;
+                                    StateHasChanged();
+                                }
+                            });
+                    },
+                    project.NostrPubKey);
+            });
+
+    }
+    
     private void NavigateToPenalties()
     {
         NavigationManager.NavigateTo("/penalties");

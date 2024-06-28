@@ -12,6 +12,7 @@
 @inject IRelayService _RelayService
 @inject IIndexerService _IndexerService
 @inject IJSRuntime JS
+@inject ISerializer serializer
 
 <NotificationComponent @ref="notificationComponent" />
 
@@ -318,7 +319,7 @@ else
             switch (e)
             {
                 case { Kind: NostrKind.Metadata }:
-                    var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
+                    var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
                     if (projectIndexerData != null)
                     {
                         var project = SessionStorage.GetProjectById(projectIndexerData.ProjectIdentifier);
@@ -331,7 +332,7 @@ else
                     break;
 
                 case { Kind: NostrKind.ApplicationSpecificData }:
-                    var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
+                    var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
                     if (projectInfo != null && projectIndexerData != null)
                     {
                         if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
