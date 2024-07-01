@@ -112,6 +112,8 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 
     public class NetworkServiceMock : INetworkService
     {
+        public event Action OnStatusChanged;
+
         public Task CheckServices(bool force = false)
         {
             throw new NotImplementedException();

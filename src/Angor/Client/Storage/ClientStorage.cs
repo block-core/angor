@@ -99,22 +99,6 @@ public class ClientStorage : IClientStorage, INetworkStorage
         return ret ?? new List<InvestorProject>();
     }
 
-    public void AddInvestmentProjectMetadata(string pubkey, ProjectMetadata projectMetadata)
-    {
-        var ret = GetInvestmentProjectsMetadata();
-
-        ret.TryAdd(pubkey, projectMetadata);
-
-        _storage.SetItem("projects-metadata", ret);
-
-    }
-    public Dictionary<string, ProjectMetadata> GetInvestmentProjectsMetadata()
-    {
-        var ret = _storage.GetItem<Dictionary<string,ProjectMetadata>>("projects-metadata");
-     
-        return ret ?? new Dictionary<string, ProjectMetadata>();
-    }
-
     public void AddFounderProject(params FounderProject[] projects)
     {
         var ret = GetFounderProjects();

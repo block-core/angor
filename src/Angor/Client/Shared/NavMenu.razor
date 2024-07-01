@@ -1,4 +1,5 @@
-﻿@using Angor.Client.Storage
+﻿@using Angor.Client.Components
+@using Angor.Client.Storage
 @using System.Reflection
 @using Angor.Client.Services
 @using Angor.Shared.Services
@@ -8,13 +9,13 @@
 
 <div class="sidenav-header">
     <div class="menu-text">
-        <i class="material-icons p-3 cursor-pointer opacity-5 position-absolute end-0 top-0 d-xl-none" aria-hidden="true" id="iconSidenav" @onclick="ToggleSidenav">
-            close
+        <i class="cursor-pointer opacity-5 position-absolute end-0 top-0 d-xl-none" aria-hidden="true" id="iconSidenav" @onclick="ToggleSidenav">
+            <Icon IconName="close-circle" />
         </i>
     </div>
 
     <a class="navbar-brand m-0" href="" @onclick="ToggleSidenav">
-        <img src="/assets/img/angor-logo.svg" class="navbar-brand-img h-100" alt="Angor" />
+        <Icon IconName="angor-logo" />
         <span class="ms-1 font-weight-bold menu-text">Angor App</span>
     </a>
 </div>
@@ -25,13 +26,17 @@
     <ul class="navbar-nav" @onclick="ToggleSidenav">
         <li class="nav-item">
             <NavLink class="nav-link menu-text" href="wallet">
-                <i class="material-icons opacity-10">wallet</i>
+                <i class="me-1">
+                    <Icon IconName="wallet" />
+                </i>
                 <span class="nav-link-text ms-1">Wallet</span>
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link menu-text" href="browse">
-                <i class="material-icons opacity-10">search</i>
+                <i class="me-1">
+                    <Icon IconName="browse" />
+                </i>
                 <span class="nav-link-text ms-1">Browse</span>
             </NavLink>
         </li>
@@ -42,26 +47,32 @@
         {
             <li class="nav-item">
                 <NavLink class="nav-link menu-text" href="investor">
-                    <i class="material-icons opacity-10">badge</i>
+                    <i class="me-1">
+                        <Icon IconName="portfolio" />
+                    </i>
                     <span class="nav-link-text ms-1">Portfolio</span>
                 </NavLink>
             </li>
 
             <li class="nav-item">
                 <NavLink class="nav-link menu-text" href="founder">
-                    <i class="material-icons opacity-10">add_circle</i>
-                    <span class="nav-link-text ms-1">Founder</span>
+                    <i class="me-1">
+                        <Icon IconName="founder" />
+                    </i>
+                    <span class="nav-link-text ms-1">
+                        Founder
+                    </span>
                 </NavLink>
             </li>
 
         }
-
-
         <hr class="horizontal mt-0">
 
         <li class="nav-item">
             <NavLink class="nav-link menu-text" href="settings">
-                <i class="material-icons opacity-10">settings</i>
+                <i class="me-1">
+                    <Icon IconName="settings" />
+                </i>
                 <span class="nav-link-text ms-1">Settings</span>
             </NavLink>
         </li>
@@ -78,13 +89,33 @@
             @if (!islockMenu)
             {
                 <span class="nav-link menu-text" @onclick="ToggleSidenavText">
-                    <i class="material-icons opacity-10">@hideTextIcon</i>
+                    <i class="me-1">
+                        @if (isSidenavHide)
+                        {
+                            <Icon IconName="menu_open" />
+                        }
+                        else
+                        {
+                            <Icon IconName="menu_close" />
+                        }
+                    </i>
                 </span>
             }
             @if (!isSidenavHide)
             {
                 <span class="nav-link menu-text" @onclick="ToggleLockMenu">
-                    <i class="material-icons opacity-10">@lockMenuIcon</i>
+                    <i class="me-1">
+                        @if (islockMenu)
+                        {
+                            <Icon IconName="lock" />
+
+                        }
+                        else
+                        {
+                            <Icon IconName="unlock" />
+
+                        }
+                    </i>
                 </span>
             }
 
@@ -97,7 +128,9 @@
 
         <li class="nav-item">
             <a class="nav-link menu-text" href="https://browse.angor.io">
-                <i class="material-icons opacity-10">search</i>
+                <i class="me-1">
+                    <Icon IconName="project_explorer" />
+                </i>
                 <span class="nav-link-text ms-1">Project Explorer</span>
             </a>
         </li>
@@ -118,8 +151,6 @@
     public EventCallback ToggleleLockMenuCallback { get; set; }
 
     private bool hasWallet;
-    private string hideTextIcon = "chevron_left";
-    private string lockMenuIcon = "lock_open";
     private string betweenOrEnd = "between";
 
 
@@ -129,6 +160,15 @@
     private bool isSidenavHide = true;
     private Timer? _timer;
     private int _elapsedCount = 0;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        hasWallet = _walletStorage.HasWallet();
+        NavMenuState.OnChange += NavMenuStateOnOnChange;
+        await base.OnInitializedAsync();
+    }
+
 
     private async Task ToggleSidenav()
     {
@@ -141,14 +181,7 @@
         await ToggleSidenavTextCallback.InvokeAsync();
 
         isSidenavHide = !isSidenavHide;
-        UpdateHideTextIcon(isSidenavHide);
 
-    }
-
-
-    private void UpdateHideTextIcon(bool isHideText)
-    {
-        hideTextIcon = isHideText ? "chevron_right" : "chevron_left";
     }
 
     private async Task ToggleLockMenu()
@@ -161,7 +194,6 @@
     }
     private void UpdateLockMenuIcon(bool islockMenu)
     {
-        lockMenuIcon = islockMenu ? "lock" : "lock_open";
         betweenOrEnd = islockMenu ? "end" : "between";
     }
 
@@ -172,16 +204,6 @@
 
         NavMenuState.OnChange += NavMenuStateOnOnChange;
 
-    }
-
-    /// <inheritdoc />
-    protected override async Task OnInitializedAsync()
-    {
-        _networkService.AddSettingsIfNotExist();
-
-        await _networkService.CheckServices();
-
-        await base.OnInitializedAsync();
     }
 
     private void NavMenuStateOnOnChange()

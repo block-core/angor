@@ -4,7 +4,7 @@ Cypress.Commands.add("visitLocalhost", () => {
   cy.visit("http://localhost:5062/");
   cy.get("#youtube-video", { timeout: 5000 }).should("be.visible");
   cy.get(
-    'span[role="button"].material-icons.opacity-10.btn-angor.fs-3#theme-icon'
+    '#theme-icon'
   )
     .should("be.visible")
     .click(); // Interact with the theme icon
