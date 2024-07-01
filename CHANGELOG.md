@@ -1,5 +1,35 @@
+## <small>0.0.28 (2024-06-28)</small>
+
+* Add  form-control to tables ([8aab634](https://github.com/block-core/angor/commit/8aab634))
+* Change Settings Icons ([0cd4019](https://github.com/block-core/angor/commit/0cd4019))
+* Change Settings Icons (#107) ([58dade4](https://github.com/block-core/angor/commit/58dade4)), closes [#107](https://github.com/block-core/angor/issues/107)
+* Change size of Refresh Balance icon ([dbeedad](https://github.com/block-core/angor/commit/dbeedad))
+* Create NetworkMonitoringService.cs ([9c44845](https://github.com/block-core/angor/commit/9c44845))
+* Create primary.svg ([d7c144a](https://github.com/block-core/angor/commit/d7c144a))
+* Create set.svg ([764a6c4](https://github.com/block-core/angor/commit/764a6c4))
+* Enhance Network Service Monitoring ([c784675](https://github.com/block-core/angor/commit/c784675))
+* Fix typo ([6624b64](https://github.com/block-core/angor/commit/6624b64))
+* Optimize Data Loading in Browse Component ([13dfa68](https://github.com/block-core/angor/commit/13dfa68))
+* Refactor NetworkMonitoringService for Robust Interval Management ([a2b537b](https://github.com/block-core/angor/commit/a2b537b))
+* Remove NetworkMonitoringService.cs and use NetworkService ([9b39f35](https://github.com/block-core/angor/commit/9b39f35))
+* Run NetworkMonitoringService in background ([8a63c9c](https://github.com/block-core/angor/commit/8a63c9c))
+* Storing investments list to nostr (#109) ([4f3753e](https://github.com/block-core/angor/commit/4f3753e)), closes [#109](https://github.com/block-core/angor/issues/109)
+* Update Angor.Shared.csproj ([b0d1a78](https://github.com/block-core/angor/commit/b0d1a78))
+* Update dashboard.css ([e424c9f](https://github.com/block-core/angor/commit/e424c9f))
+* Update MainLayout.razor ([35037f1](https://github.com/block-core/angor/commit/35037f1))
+* Update NetworkMonitoringService type ([4429036](https://github.com/block-core/angor/commit/4429036))
+* Update NetworkMonitoringService.cs ([b6bd1d4](https://github.com/block-core/angor/commit/b6bd1d4))
+* Update searchQuery on input change to handle Enter key press correctly (#105) ([2730a0a](https://github.com/block-core/angor/commit/2730a0a)), closes [#105](https://github.com/block-core/angor/issues/105)
+* Update Settings.razor ([1714df0](https://github.com/block-core/angor/commit/1714df0))
+* Use Icons instead of text in setting page ([3f3620b](https://github.com/block-core/angor/commit/3f3620b))
+* Use Icons instead of text in setting page (#108) ([d28f4da](https://github.com/block-core/angor/commit/d28f4da)), closes [#108](https://github.com/block-core/angor/issues/108)
+* Use NetworkMonitoringService ([ee5251b](https://github.com/block-core/angor/commit/ee5251b))
+
+
+
 ## <small>0.0.27 (2024-06-07)</small>
 
+* bump version ([91213ed](https://github.com/block-core/angor/commit/91213ed))
 * Fixed the founder scan not saving the project index and the create transaction id (#101) ([4ae20a7](https://github.com/block-core/angor/commit/4ae20a7)), closes [#101](https://github.com/block-core/angor/issues/101)
 * hide testnet coins button for mainnet (dah) (#99) ([2fc366f](https://github.com/block-core/angor/commit/2fc366f)), closes [#99](https://github.com/block-core/angor/issues/99)
 

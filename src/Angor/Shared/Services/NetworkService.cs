@@ -14,6 +14,8 @@ namespace Angor.Shared.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<NetworkService> _logger;
         private readonly INetworkConfiguration _networkConfiguration;
+        public event Action OnStatusChanged;
+
 
         public NetworkService(INetworkStorage networkStorage, HttpClient httpClient, ILogger<NetworkService> logger, INetworkConfiguration networkConfiguration)
         {
@@ -104,6 +106,7 @@ namespace Angor.Shared.Services
                         {
                             _logger.LogError($"Failed to check indexer status url = {indexerUrl.Url}, StatusCode = {response.StatusCode}");
                         }
+                        OnStatusChanged?.Invoke();
                     }
                     catch (Exception ex)
                     {

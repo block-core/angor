@@ -203,9 +203,9 @@
                             <td>
                                 @if (indexer.IsPrimary)
                                 {
-                                     <span role="button">
+                                    <span role="button">
                                         <Icon IconName="primary" Height="24" Width="24"></Icon>
-                                     </span>
+                                    </span>
                                 }
                                 else
                                 {
@@ -286,7 +286,7 @@
                                 else
                                 {
                                     <span @onclick="() => SetPrimaryRelay(relay)" role="button">
-                                        <Icon IconName="set" Height="24" Width="24" ></Icon>
+                                        <Icon IconName="set" Height="24" Width="24"></Icon>
                                     </span>
                                 }
                             </td>
@@ -362,7 +362,7 @@
                                         </div>
                                     </div>
                                     <div class="modal-footer">
-                                        <button class="btn btn-danger" @onclick="WipteAllData">Wipe Storage</button>
+                                        <button class="btn btn-danger" @onclick="WipeAllData">Wipe Storage</button>
 
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false">Close</button>
                                     </div>
@@ -402,10 +402,23 @@
 
         networkType = _networkConfiguration.GetNetwork().Name;
 
+        _networkService.OnStatusChanged += UpdateUI;
+
         if (!networkType.ToLower().Contains("test"))
             selectedNetwork = "mainnet";
 
         return base.OnInitializedAsync();
+    }
+
+    private void UpdateUI()
+    {
+        settingsInfo = _clientStorage.GetSettingsInfo();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _networkService.OnStatusChanged -= UpdateUI;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -565,21 +578,21 @@
         try
         {
             await _networkService.CheckServices(force);
-
             settingsInfo = _clientStorage.GetSettingsInfo();
         }
         catch (Exception e)
         {
-            Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            Logger.LogError(e, $"Error during Refresh: {e.Message}");
+            notificationComponent.ShowErrorMessage("Failed to refresh settings: " + e.Message);
         }
         finally
         {
             refreshSpinner = false;
+            StateHasChanged();
         }
     }
 
-    private void WipteAllData()
+    private void WipeAllData()
     {
         if (!confirmWipe)
         {

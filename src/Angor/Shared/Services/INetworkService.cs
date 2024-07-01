@@ -12,4 +12,6 @@ public interface INetworkService
     void CheckAndHandleError(HttpResponseMessage httpResponseMessage);
     void HandleException(Exception exception);
     void CheckAndSetNetwork(string url, string? setNetwork = null);
+    event Action OnStatusChanged;
+
 }
