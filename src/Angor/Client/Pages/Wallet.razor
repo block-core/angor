@@ -18,6 +18,8 @@
 @inject IDerivationOperations _derivationOperations
 @inject NavMenuState NavMenuState
 @inject IEncryptionService _encryptionService
+@inject IClipboardService ClipboardService
+
 
 
 @inherits BaseComponent
@@ -391,10 +393,23 @@ else
                         <div class="row">
 
                             <form>
-                                <div class="mb-3">
+                                <div class="mb-3 position-relative">
                                     <label for="sendToAddress" class="form-label">Send to Address</label>
-                                    <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
+                                        <span class="input-group-text">
+                                            <span style="cursor: pointer;" @onclick="ClearAddress">
+                                                <Icon IconName="close-circle" />
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <button type="button" class="btn btn-primary mt-2" @onclick="PasteFromClipboard">Paste from Clipboard</button>
                                 </div>
+
+                               
+
+
+
 
                                 <div class="mb-3">
                                     <label for="sendAmount" class="form-label">Amount</label>
@@ -1189,5 +1204,24 @@ else
             collapseStates[address] = !collapseStates[address];
         else
             collapseStates[address] = true;
+    }
+    
+    private async Task PasteFromClipboard()
+    {
+        try
+        {
+            var text = await ClipboardService.ReadTextAsync();
+            _sendInfo.SendToAddress = text;
+            StateHasChanged(); // Refresh the UI to reflect the updated value
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to read clipboard contents: {ex}");
+        }
+    }
+    
+    private void ClearAddress()
+    {
+        _sendInfo.SendToAddress = string.Empty;
     }
 }
