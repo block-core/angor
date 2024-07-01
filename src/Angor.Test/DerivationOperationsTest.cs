@@ -43,6 +43,9 @@ namespace Angor.Test
 
                 _networkConfiguration.Setup(_ => _.GetNetwork())
                     .Returns(Networks.Bitcoin.Testnet());
+                
+                _networkConfiguration.Setup(_ => _.GetAngorKey())
+                    .Returns("tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL");
 
                 var mockLogger = new Mock<ILogger<DerivationOperations>>();
                 _logger = mockLogger.Object;
@@ -123,6 +126,122 @@ namespace Angor.Test
                 // Assert
                 result1.Should().NotBeNull().And.BeOfType<FounderKeys>();
                 result2.Should().NotBeNull().And.BeOfType<FounderKeys>();
+            }
+            
+            
+            
+            [Fact]
+            public void DeriveProjectKeys_ReturnsExpectedKeys()
+            {
+                // Arrange
+                var derivationOperations = new DerivationOperations(new HdOperations(), _logger, _networkConfiguration.Object);
+                var words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor";
+                var walletWords = new WalletWords { Words = words };
+
+                // Act
+                FounderKeyCollection result = derivationOperations.DeriveProjectKeys(walletWords, _networkConfiguration.Object.GetAngorKey());
+
+                // Assert
+                result.Should().NotBeNull();
+                result.Keys.Should().HaveCount(15); 
+                foreach (var keys in result.Keys)
+                {
+                    keys.ProjectIdentifier.Should().NotBeNullOrEmpty();
+                    keys.FounderRecoveryKey.Should().NotBeNullOrEmpty();
+                    keys.FounderKey.Should().NotBeNullOrEmpty();
+                    keys.NostrPubKey.Should().NotBeNullOrEmpty();
+                    keys.Index.Should().BeInRange(1, 15); 
+                }
+            }
+            
+            [Fact]
+            public void DeriveProjectKeys_InvalidWalletWords_ThrowsException()
+            {
+                // Arrange
+                var derivationOperations = new DerivationOperations(new HdOperations(), _logger, _networkConfiguration.Object);
+                WalletWords invalidWalletWords = null; 
+
+                // Act
+                Action act = () => derivationOperations.DeriveProjectKeys(invalidWalletWords, _networkConfiguration.Object.GetAngorKey());
+
+                // Assert
+                act.Should().Throw<NullReferenceException>(); 
+            }
+            
+            [Fact]
+            public void DeriveProjectKeys_InvalidAngorKey_ThrowsException()
+            {
+                // Arrange
+                var derivationOperations = new DerivationOperations(new HdOperations(), _logger, _networkConfiguration.Object);
+                var words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor";
+                var walletWords = new WalletWords { Words = words };
+                string invalidAngorKey = null; 
+
+                // Act
+                Action act = () => derivationOperations.DeriveProjectKeys(walletWords, invalidAngorKey);
+
+                // Assert
+                act.Should().Throw<ArgumentNullException>(); 
+            }
+            
+            [Fact]
+            public void DeriveProjectKeys_NetworkConfigurationFailure_ThrowsException()
+            {
+                // Arrange
+                var invalidNetworkConfiguration = new Mock<INetworkConfiguration>();
+                invalidNetworkConfiguration.Setup(_ => _.GetAngorKey()).Throws<Exception>(); 
+
+                var derivationOperations = new DerivationOperations(new HdOperations(), _logger, invalidNetworkConfiguration.Object);
+                var words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor";
+                var walletWords = new WalletWords { Words = words };
+                var angorTestKey = _networkConfiguration.Object.GetAngorKey();
+
+                // Act
+                Action act = () => derivationOperations.DeriveProjectKeys(walletWords, angorTestKey);
+
+                // Assert
+                act.Should().Throw<Exception>(); 
+            }
+            
+            [Fact]
+            public async Task DeriveProjectNostrPrivateKeyAsync_ConcurrencyTest_ReturnsPrivateKey()
+            {
+                // Arrange
+                var derivationOperations = new DerivationOperations(new HdOperations(), _logger, _networkConfiguration.Object);
+                var words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor";
+                var walletWords = new WalletWords { Words = words };
+                int index = 1;
+
+                // Act
+                var tasks = Enumerable.Range(1, 10)
+                    .Select(i => derivationOperations.DeriveProjectNostrPrivateKeyAsync(walletWords, i));
+
+                var results = await Task.WhenAll(tasks);
+
+                // Assert
+                results.Should().NotBeNull().And.NotContainNulls();
+                results.Should().OnlyContain(r => r is Key);
+            }
+            
+            [Fact]
+            public void DeriveAngorKey_TestnetConfiguration_ReturnsValidKey()
+            {
+                // Arrange
+                var mockLogger = new Mock<ILogger<DerivationOperations>>();
+                var mockNetworkConfig = new Mock<INetworkConfiguration>();
+                mockNetworkConfig.Setup(_ => _.GetNetwork()).Returns(Networks.Bitcoin.Testnet());
+                
+                var words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor";
+                var derivationOperations = new DerivationOperations(new HdOperations(), mockLogger.Object, mockNetworkConfig.Object);
+                var founderKey = derivationOperations.DeriveFounderKey(new WalletWords { Words = words }, 1);
+                var angorRootKey = CreateAngorRootKey("area frost rapid guitar salon tower bless fly where inmate trouble daughter");
+
+                // Act
+                var result = derivationOperations.DeriveAngorKey(founderKey, angorRootKey);
+
+                // Assert
+                result.Should().NotBeNull();
+                result.Should().BeOfType<string>();
             }
 
             private static string CreateAngorRootKey(string words = null)
