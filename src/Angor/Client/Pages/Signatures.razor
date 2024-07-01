@@ -57,6 +57,11 @@
                                     <div class="col-6 d-flex align-items-center">
                                         <h6 class="mb-0">Signatures</h6>
                                     </div>
+                                    <div class="col-6 d-flex justify-content-end">
+                                        <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">Approve All</button>
+                                        <button class="btn btn-sm btn-secondary ml-2" @onclick="RefreshSignaturesInternal" disabled="@isCooldown">Refresh</button>
+
+                                    </div>
                                 </div>
                             </div>
                             <div class="card-body">
@@ -110,6 +115,15 @@
     bool messagesReceived;
     bool scanedForApprovals;
 
+    private bool CanApproveAllSignatures => signaturesRequests != null && signaturesRequests.Any(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null);
+
+    private string ApproveButtonClass => CanApproveAllSignatures ? "btn-success" : "btn-primary";
+
+    private bool ApproveButtonDisabled => !CanApproveAllSignatures;
+
+    private bool isLoading = false;
+    private bool isCooldown = false;
+
     protected override async Task OnInitializedAsync()
     {
         Logger.LogDebug("OnInitializedAsync");
@@ -160,6 +174,40 @@
             }
         }
     }
+
+    private async Task RefreshSignaturesInternal()
+    {
+        if (passwordComponent.HasPassword())
+        {
+            await RefreshSignatures();
+        }
+        else
+        {
+            passwordComponent.ShowPassword(async () =>
+            {
+                await RefreshSignatures();
+            });
+        }
+    }
+
+    private async Task RefreshSignatures()
+    {
+        if (isCooldown)
+            return;
+        isLoading = true;
+        StateHasChanged();
+        isCooldown = true;
+        await FetchPendingSignatures(FounderProject);
+
+
+        await FetchSignatures();
+        await Task.Delay(1000);
+        
+        isLoading = false;
+        isCooldown = false;
+        StateHasChanged();
+    }
+
 
     protected async Task FetchSignatures()
     {
@@ -213,6 +261,7 @@
         }
 
         Logger.LogDebug("OnAfterRenderAsync Completed");
+        Logger.LogDebug($"Signatures retrieved: {signaturesRequests.Count}");
     }
 
     private async Task FetchPendingSignatures(FounderProject project)
@@ -329,25 +378,28 @@
         {
             passwordComponent.ShowPassword(async () =>
             {
-                await ApproveSignature(signature); ;
+                await ApproveSignature(signature);
             });
         }
     }
 
-    private async Task ApproveSignature(SignatureRequest signature)
+
+    private async Task<OperationResult> TryApproveSignature(SignatureRequest signature)
     {
-        var operationResult = await notificationComponent.LongOperation(async () =>
+        return await notificationComponent.LongOperation(async () =>
         {
             var words = await passwordComponent.GetWalletAsync();
+            if (words == null)
+            {
+                return new OperationResult { Success = false, Message = "Password retrieval failed." };
+            }
 
             var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex);
-
             var signatureInfo = signProject(signature.TransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
 
             var sigJson = serializer.Serialize(signatureInfo);
 
             var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
-
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
             var encryptedContent = await javascriptNostrToolsModule.InvokeAsync<string>(
@@ -357,7 +409,6 @@
                 sigJson);
 
             FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorPubKey, signature.EventId);
-
             Storage.UpdateFounderProject(FounderProject);
 
             signaturesRequests.Single(_ => _.investorPubKey == signature.investorPubKey && _.TimeApproved is null)
@@ -365,17 +416,84 @@
 
             return new OperationResult { Success = true };
         });
+    }
 
-        if (operationResult.Success)
+
+
+    private async Task ApproveSignature(SignatureRequest signature)
+    {
+        await EnsurePassword();
+        var operationResult = await TryApproveSignature(signature);
+
+        if (!operationResult.Success && operationResult.Message == "Password retrieval failed.")
         {
-            passwordComponent.ClearPassword();
-            StateHasChanged();
+            passwordComponent.ShowPassword(async () =>
+            {
+                await ApproveSignature(signature);
+            });
         }
-        else
+        else if (!operationResult.Success)
         {
             notificationComponent.ShowErrorMessage(operationResult.Message);
         }
+        else
+        {
+            StateHasChanged();
+        }
     }
+
+
+
+
+        private async Task ApproveAllSignatures()
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            if (!await EnsurePassword())
+            {
+                notificationComponent.ShowErrorMessage("Password retrieval failed.");
+                isLoading = false;
+                StateHasChanged();
+                return;
+            }
+
+            await ProcessSignatures();
+
+            passwordComponent.ClearPassword(); 
+            isLoading = false;
+            StateHasChanged();
+        }
+
+    private async Task ProcessSignatures()
+    {
+        var pendingSignatures = signaturesRequests.Where(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null).ToList();
+
+        foreach (var signature in pendingSignatures)
+        {
+            await ApproveSignatureCheckPassword(signature);
+        }
+    }
+
+    private async Task<bool> EnsurePassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            passwordComponent.ShowPassword(async () =>
+            {
+                var words = await passwordComponent.GetWalletAsync();
+                tcs.SetResult(words != null);
+            });
+            await tcs.Task;
+        }
+        return true; 
+    }
+
+
+
+
+
 
     private SignatureInfo signProject(string transactionHex, ProjectInfo info, string founderSigningPrivateKey)
     {
