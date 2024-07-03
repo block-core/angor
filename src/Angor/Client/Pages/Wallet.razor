@@ -61,7 +61,7 @@
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center align-items-center">
                 <span class="me-3 user-select-none">
-                    <Icon IconName="info" Width="40" Height="40" />
+                    <Icon IconName="info" Width="40" Height="40" Color="var(--bs-primary-btn-icon)" />
                 </span>
                 <span class="text-white">No Wallet Found</span>
             </div>
@@ -100,7 +100,9 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">@createWalletTitle</h5>
-                            <button class="btn-close" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" disabled="@createWalletSpinner"></button>
+                            <span type="button" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" disabled="@createWalletSpinner">
+                                <Icon IconName="close-circle"/>
+                            </span>
                         </div>
                         <div class="modal-body modal-body-scroll">
 
@@ -139,40 +141,31 @@
                                 <div class="mb-2">
                                     <div class="input-group mb-3">
                                         <input type="@passwordInputType" class="form-control" @bind="newWalletPassword" placeholder="Enter a password for your wallet" />
-                                        <button class="btn btn-primary" type="button" @onclick="TogglePasswordVisibility">
+                                        <button class="btn btn-border" type="button" @onclick="TogglePasswordVisibility">
                                             @if (passwordToggleText == "Show")
                                             {
-                                                <span class="material-icons opacity-10">
-                                                    visibility
-                                                </span>
+                                                <Icon IconName="visibility-off" Height="24" Width="24"></Icon>
                                             }
                                             else
                                             {
-                                                <span class="material-icons opacity-10">
-                                                    visibility_off
-                                                </span>
+                                                <Icon IconName="visibility" Height="24" Width="24"></Icon>
                                             }
                                         </button>
                                     </div>
+
                                     <div class="mb-2">
                                         <div class="card">
-                                            <div class="card-header p-2">
-                                                <div class="d-flex align-items-center text-warning">
-                                                    <span class="material-icons opacity-10 me-2 fs-3">
-                                                        warning
-                                                    </span>
-                                                    <span>By continuing, you confirm understanding that:</span>
-                                                </div>
-                                            </div>
-                                            <div class="card-body pb-0 pt-0 ps-3 pe-3">
+
+                                            <div class="card-body pb-3 pt-3 ps-3 pe-3">
                                                 <p class="mb-1">You've backed up your wallet words and passphrase securely, as losing them means losing access to your wallet.</p>
                                                 <p class="mb-0">The password unlocks your wallet only on this device and cannot be recovered by Angor.</p>
                                             </div>
                                             <div class="card-footer pb-2 pt-2 ps-3 pe-3">
                                                 <div class="form-check">
                                                     <input class="form-check-input border mt-0" type="checkbox" id="backupConfirmationCheckbox" data-cy="wallet-checkbox" @bind="backupConfirmation">
-                                                    <label class="form-check-label mb-0" for="backupConfirmationCheckbox">
-                                                        Confirm?
+                                                   
+                                                    <label class="form-check-label mb-0 text-warning" for="backupConfirmationCheckbox">
+                                                        I have backed up my wallet words and passphrase.
                                                     </label>
                                                 </div>
                                                 @if (showBackupConfirmationError)
@@ -195,9 +188,7 @@
                             @if (!createWalletSpinner)
                             {
                                 <button class="btn btn-success" @onclick="CreateWalletAsync">Create Wallet</button>
-
                             }
-                            <button type="button" class="btn btn-secondary" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" disabled="@createWalletSpinner">Close</button>
                         </div>
                     </div>
                 </div>
@@ -293,17 +284,17 @@ else
                                         <label>Please enter your wallet password:</label>
                                         <div class="input-group">
                                             <input type="@passwordInputType" class="form-control" @bind="showWalletPassword" />
-                                            <button class="btn btn-primary" type="button" @onclick="TogglePasswordVisibility">
+                                            <button class="btn btn-border" type="button" @onclick="TogglePasswordVisibility">
                                                 @if (passwordToggleText == "Show")
                                                 {
-                                                    <span class="material-icons opacity-10">
-                                                        visibility
+                                                    <span>
+                                                        <Icon IconName="visibility-off" Height="24" Width="24"></Icon>
                                                     </span>
                                                 }
                                                 else
                                                 {
-                                                    <span class="material-icons opacity-10">
-                                                        visibility_off
+                                                    <span>
+                                                        <Icon IconName="visibility" Height="24" Width="24"></Icon>
                                                     </span>
                                                 }
                                             </button>
