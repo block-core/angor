@@ -121,8 +121,8 @@
                                     <div class="mb-2">
                                         <button class="btn btn-secondary w-100" @onclick="GenerateNewWalletWords">
                                             <div class="d-flex align-items-center justify-content-center">
-                                                <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">
-                                                    add
+                                                <span class="me-1" data-cy="generate-wallet-words">
+                                                    <Icon IconName="plus" Height="24" Width="24" Color="var(--bs-primary-btn-icon)"></Icon>
                                                 </span>
                                                 <span> Generate New Wallet Words</span>
                                             </div>
@@ -267,7 +267,6 @@ else
                                     <Icon IconName="close-circle" />
                                 </span>
                             </div>
-                            <hr class="horizontal mt-0 mb-2">
                             <div class="modal-body modal-body-scroll">
 
                                 <!-- Show words button with warning -->
@@ -280,8 +279,8 @@ else
                                 @if (string.IsNullOrEmpty(showWalletWords))
                                 {
                                     <!-- Show words button with warning -->
-                                    <div class="mb-3">
-                                        <label>Please enter your wallet password:</label>
+                                    <div class="mb-1">
+                                        <label class="mb-3">Please enter your wallet password:</label>
                                         <div class="input-group">
                                             <input type="@passwordInputType" class="form-control" @bind="showWalletPassword" />
                                             <button class="btn btn-border" type="button" @onclick="TogglePasswordVisibility">
@@ -306,9 +305,7 @@ else
                                         <div class="text-danger">@showWalletPasswordError</div>
                                     }
 
-                                    <div class="mb-3">
-                                        <button class="btn btn-warning" @onclick="ShowWords" data-cy="wallet-words-in-popup">Show Words</button>
-                                    </div>
+                  
                                 }
                                 else
                                 {
@@ -317,7 +314,9 @@ else
                                         <p>@showWalletWords</p>
                                         <div class="mt-3 d-flex justify-content-end">
 
-                                            <i @onclick="CopyWordsToClibboard" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer user-select-none">copy</i>
+                                            <i @onclick="CopyWordsToClibboard" class="ms-auto cursor-pointer user-select-none">
+                                                <Icon IconName="copy"></Icon>
+                                            </i>
 
                                         </div>
                                     </div>
@@ -329,8 +328,10 @@ else
 
                                     <!-- Copy words to clipboard -->
                                 }
-                                <hr>
                                 <!-- Delete wallet button -->
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-warning" @onclick="ShowWords" data-cy="wallet-words-in-popup">Show Words</button>
                             </div>
                         </div>
                     </div>
