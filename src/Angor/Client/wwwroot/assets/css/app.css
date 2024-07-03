@@ -125,6 +125,7 @@
     --bs-modal-footer-border-color-dark: #046479;
     --bs-modal-footer-border-width: 1px;
     --btn-border: #ccc;
+    --bs-modal-color:#fff;
 }
 
 .dark {
