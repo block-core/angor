@@ -6598,13 +6598,8 @@ fieldset:disabled .btn {
     justify-content: flex-end;
     padding: calc(var(--bs-modal-padding) - var(--bs-modal-footer-gap) * .5);
     background-color: var(--bs-modal-footer-bg);
-    border-top: var(--bs-modal-footer-border-width) solid var(--bs-modal-footer-border-color);
     border-bottom-right-radius: var(--bs-modal-inner-border-radius);
     border-bottom-left-radius: var(--bs-modal-inner-border-radius);
-}
-
-.dark .modal-footer {
-    border-top: var(--bs-modal-footer-border-width) solid var(--bs-modal-footer-border-color-dark);
 }
 
 .modal-footer > * {
@@ -21631,10 +21626,6 @@ fieldset:disabled .btn {
 
     .dark .table > :not(caption) > * > * {
         border-color: #046479 !important;
-    }
-
-    .dark label {
-        color: rgba(255, 255, 255, 0.8) !important;
     }
 
     .dark .list-group-item,
