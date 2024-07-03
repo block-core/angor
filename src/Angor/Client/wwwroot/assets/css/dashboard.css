@@ -91,6 +91,7 @@ body {
     color: var(--bs-body-color);
     text-align: var(--bs-body-text-align);
     background-color: var(--bs-body-bg);
+    overflow-y: scroll;
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
@@ -6471,7 +6472,6 @@ fieldset:disabled .btn {
 }
 
 .modal {
-
     position: fixed;
     top: 0;
     left: 0;
@@ -6602,9 +6602,9 @@ fieldset:disabled .btn {
     border-bottom-left-radius: var(--bs-modal-inner-border-radius);
 }
 
-.modal-footer > * {
-    margin: calc(var(--bs-modal-footer-gap) * .5);
-}
+    .modal-footer > * {
+        margin: calc(var(--bs-modal-footer-gap) * .5);
+    }
 
 @media (min-width: 576px) {
     .modal {
@@ -22446,18 +22446,16 @@ body.dark {
 
         .form-check:not(.form-switch) .form-check-input[type="checkbox"]:after {
             transition: opacity 0.25s ease-in-out;
-            font-family: "Material Icons Round";
-            content: "check";
+            content: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTZweCIgaGVpZ2h0PSIxNnB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiPgo8cGF0aCBkPSJNNyAxMkw5Ljg5MDc1IDE0Ljg5MDdWMTQuODkwN0M5Ljk1MTE0IDE0Ljk1MSAxMC4wNDkgMTQuOTUxMSAxMC4xMDk0IDE0Ljg5MDdWMTQuODkwN0wxNyA4IiBzdHJva2U9IiMzMjMyMzIiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPg==);
             width: 100%;
             height: 100%;
-            color: #fff;
             position: absolute;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1rem;
             opacity: 0;
         }
+
 
         .form-check:not(.form-switch) .form-check-input[type="checkbox"]:checked {
             background: #ff9900;
