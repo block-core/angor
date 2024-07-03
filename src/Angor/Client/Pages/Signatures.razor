@@ -194,19 +194,29 @@
     {
         if (isCooldown)
             return;
+
         isLoading = true;
         StateHasChanged();
         isCooldown = true;
-        await FetchPendingSignatures(FounderProject);
 
-
-        await FetchSignatures();
-        await Task.Delay(1000);
-        
-        isLoading = false;
-        isCooldown = false;
-        StateHasChanged();
+        try
+        {
+            await FetchPendingSignatures(FounderProject);
+            await FetchSignatures();
+            await Task.Delay(1000);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error fetching signatures: {e.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            isCooldown = false;
+            StateHasChanged();
+        }
     }
+
 
 
     protected async Task FetchSignatures()
@@ -383,10 +393,11 @@
         }
     }
 
+    
 
-    private async Task<OperationResult> TryApproveSignature(SignatureRequest signature)
+    private async Task<OperationResult> PerformSignatureApproval(SignatureRequest signature)
     {
-        return await notificationComponent.LongOperation(async () =>
+        try
         {
             var words = await passwordComponent.GetWalletAsync();
             if (words == null)
@@ -415,15 +426,26 @@
                 .TimeApproved = FounderProject.LastRequestForSignaturesTime;
 
             return new OperationResult { Success = true };
-        });
+        }
+        catch (Exception ex)
+        {
+           
+            return new OperationResult { Success = false, Message = $"An error occurred: {ex.Message}" };
+        }
+        finally
+        {
+            
+        }
     }
+
+
 
 
 
     private async Task ApproveSignature(SignatureRequest signature)
     {
         await EnsurePassword();
-        var operationResult = await TryApproveSignature(signature);
+        var operationResult = await PerformSignatureApproval(signature);
 
         if (!operationResult.Success && operationResult.Message == "Password retrieval failed.")
         {
@@ -445,25 +467,34 @@
 
 
 
-        private async Task ApproveAllSignatures()
-        {
-            isLoading = true;
-            StateHasChanged();
+    private async Task ApproveAllSignatures()
+    {
+        isLoading = true;
+        StateHasChanged();
 
+        try
+        {
             if (!await EnsurePassword())
             {
                 notificationComponent.ShowErrorMessage("Password retrieval failed.");
-                isLoading = false;
-                StateHasChanged();
                 return;
             }
 
             await ProcessSignatures();
 
-            passwordComponent.ClearPassword(); 
+            passwordComponent.ClearPassword();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error approving signatures: {e.Message}");
+        }
+        finally
+        {
             isLoading = false;
             StateHasChanged();
         }
+    }
+
 
     private async Task ProcessSignatures()
     {
