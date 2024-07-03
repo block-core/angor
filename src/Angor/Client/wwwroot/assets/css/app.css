@@ -124,6 +124,7 @@
     --bs-modal-footer-border-color: #dee2e6;
     --bs-modal-footer-border-color-dark: #046479;
     --bs-modal-footer-border-width: 1px;
+    --btn-border: #ccc;
 }
 
 .dark {
@@ -231,6 +232,7 @@
     --bs-modal-footer-border-color: #fff;
     --bs-modal-footer-border-color-dark: #046479;
     --bs-modal-footer-border-width: 1px;
+    --btn-border: #046479;
 }
 
 
@@ -1266,4 +1268,8 @@ tr[style*="cursor: pointer;"] {
 .rotate-icon {
     display: inline-block;
     animation: rotate 2s linear infinite;
+}
+
+.btn-border {
+    border: 1px solid var(--btn-border) !important;
 }
