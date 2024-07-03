@@ -53,19 +53,21 @@
     </div>
 </div>
 
-@if (searchInProgress)
+@if (searchInProgress )
 {
     <div class="d-flex justify-content-center mt-4">
         <div class="loader"></div>
     </div>
 }
 
-@if (!projects.Any() && !searchInProgress)
+@if (!projects.Any() && !searchInProgress && noProject)
 {
     <div class="row mt-4">
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center">
-                <span class="material-icons opacity-10 fs-1 me-3 text-white user-select-none">info</span>
+                <span class="me-3 user-select-none">
+                    <Icon IconName="info" Width="40" Height="40" Color="var(--bs-primary-btn-icon)" />
+                </span>
                 <span class="text-white" data-cy="projectsGrid">No projects found.</span>
             </div>
         </div>
@@ -210,6 +212,7 @@ else
     private bool nostrSearchInProgress;
     private bool isGridView = true;
     private string viewModeIcon = "grid_view";
+    private bool noProject = false;
 
     private ProjectIndexerData? findProject = null;
     private List<ProjectIndexerData> projects = new();
@@ -228,6 +231,7 @@ else
         }
         else
         {
+            searchInProgress = true;
             // No projects are cached, fetch new projects after ensuring services are available
             await FetchAndEnsureServices();
         }
@@ -246,6 +250,8 @@ else
             if (primaryIndexer == null || primaryRelay == null)
             {
                 notificationComponent.ShowNotificationMessage("No primary indexer or relay found. Please configure them in settings.");
+                searchInProgress = false;
+                noProject = true;
                 return;
             }
 
