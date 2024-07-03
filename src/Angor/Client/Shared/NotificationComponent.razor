@@ -25,7 +25,9 @@
                 <div class="col-lg-8 col-md-10">
                     <div class="alert alert-info angor-alert-info fixed-bottom w-50 d-flex justify-content-between align-items-center alert-message" role="alert" data-cy="alert">
                         @notificationMessage
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @onclick="closeAlert"></button>
+                        <span type="button" data-bs-dismiss="alert" aria-label="Close" @onclick="closeAlert">
+                            <Icon IconName="close-circle" />
+                        </span>
                     </div>
                 </div>
              </div>
@@ -40,19 +42,18 @@
             <div class="modal-wrapper">
                 <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
                     <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header bg-danger text-white">
+                        <div class="modal-content bg-danger">
+                            <div class="modal-header text-white">
                                 <h5 class="modal-title">
                                     <i class="bi bi-exclamation-triangle-fill"></i>
                                     Error
                                 </h5>
-                                <button type="button" class="btn-close btn-close-white" @onclick="ClearErrorMessage"></button>
+                                <span type="button" @onclick="ClearErrorMessage">
+                                    <Icon IconName="close-circle" Color="var(--bs-primary-btn-icon)" />
+                                </span>
                             </div>
                             <div class="modal-body modal-body-scroll">
                                 <p>@errorMessage</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-light" @onclick="ClearErrorMessage">Dismiss</button>
                             </div>
                         </div>
                     </div>
