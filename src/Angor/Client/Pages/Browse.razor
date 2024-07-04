@@ -32,8 +32,9 @@
             <div>
                 @if (projects.Count > 0)
                 {
-                    <span role="button" class="material-icons fs-3 opacity-10 btn-angor user-select-none" @onclick="ToggleView">
-                        @viewModeIcon
+                    <span role="button" class="user-select-none" @onclick="ToggleView">
+                        <Icon IconName="@viewModeIcon" />
+                       
                     </span>
                 }
             </div>
@@ -211,7 +212,7 @@ else
     private bool searchInProgress = false;
     private bool nostrSearchInProgress;
     private bool isGridView = true;
-    private string viewModeIcon = "grid_view";
+    private string viewModeIcon = "grid";
     private bool noProject = false;
 
     private ProjectIndexerData? findProject = null;
@@ -315,7 +316,7 @@ else
     private void ToggleView()
     {
         isGridView = !isGridView;
-        viewModeIcon = isGridView ? "grid_view" : "view_list";
+        viewModeIcon = isGridView ? "grid" : "list";
     }
 
     private async Task SearchProject()
