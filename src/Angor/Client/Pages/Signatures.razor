@@ -44,10 +44,19 @@
         <!-- Signatures Details Section -->
         <div class="row mt-4">
             <div class="col">
-                @if (messagesReceived)
+                @if (messagesReceived || isLoading)
                 {
-                    <div class="loader"></div>
+                    <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+                        <div class="text-center mb-3">
+                            @if (isLoading)
+                            {
+                                <h6 class="mb-0">Approving Signatures...</h6>
+                            }
+                            <div class="loader"></div>
+                        </div>
+                    </div>
                 }
+                
                 else
                 {
                     <div class="col-md-12">
@@ -59,12 +68,23 @@
                                     </div>
                                     <div class="col-6 d-flex justify-content-end">
                                         <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">Approve All</button>
-                                        <button class="btn btn-sm btn-secondary ml-2" @onclick="RefreshSignaturesInternal" disabled="@isCooldown">Refresh</button>
-
+                                        <button class="btn btn-sm btn-secondary ml-2" @onclick="RefreshSignaturesInternal" disabled="@isCooldown">
+                                            @if (refreshButtonSpinner)
+                                            {
+                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            <span>Refreshing...</span>
+                                            }
+                                            else
+                                            {
+                                            <span>Refresh</span>
+                                            }
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                             <div class="card-body">
+                                
+                                
                                 <div class="table-responsive form-control">
                                     <table class="table align-items-center mb-0">
                                         <thead>
@@ -82,7 +102,7 @@
                                                     <td>@signature.TimeArrived.ToString("g")</td>
                                                     @if (signature.TimeApproved is null)
                                                     {
-                                                        <td><button class="btn btn-success" @onclick="() => ApproveSignature(signature)">Approve</button></td>
+                                                        <td><button class="btn btn-success" @onclick="() => ApproveSignatureCheckPassword(signature)">Approve</button></td>
                                                     }
                                                     else
                                                     {
@@ -122,6 +142,7 @@
     private bool ApproveButtonDisabled => !CanApproveAllSignatures;
 
     private bool isLoading = false;
+    private bool refreshButtonSpinner = false;
     private bool isCooldown = false;
 
     protected override async Task OnInitializedAsync()
@@ -194,8 +215,8 @@
     {
         if (isCooldown)
             return;
-
-        isLoading = true;
+        
+        refreshButtonSpinner = true;
         StateHasChanged();
         isCooldown = true;
 
@@ -211,8 +232,8 @@
         }
         finally
         {
-            isLoading = false;
             isCooldown = false;
+            refreshButtonSpinner = false;
             StateHasChanged();
         }
     }
@@ -395,11 +416,10 @@
 
     
 
-    private async Task<OperationResult> PerformSignatureApproval(SignatureRequest signature)
+    private async Task<OperationResult> PerformSignatureApproval(SignatureRequest signature, WalletWords words)
     {
         try
         {
-            var words = await passwordComponent.GetWalletAsync();
             if (words == null)
             {
                 return new OperationResult { Success = false, Message = "Password retrieval failed." };
@@ -429,12 +449,7 @@
         }
         catch (Exception ex)
         {
-           
             return new OperationResult { Success = false, Message = $"An error occurred: {ex.Message}" };
-        }
-        finally
-        {
-            
         }
     }
 
@@ -442,19 +457,22 @@
 
 
 
+
     private async Task ApproveSignature(SignatureRequest signature)
     {
-        await EnsurePassword();
-        var operationResult = await PerformSignatureApproval(signature);
-
-        if (!operationResult.Success && operationResult.Message == "Password retrieval failed.")
+        var words = await passwordComponent.GetWalletAsync();
+        if (words == null)
         {
             passwordComponent.ShowPassword(async () =>
             {
                 await ApproveSignature(signature);
             });
+            return;
         }
-        else if (!operationResult.Success)
+
+        var operationResult = await PerformSignatureApproval(signature, words);
+
+        if (!operationResult.Success)
         {
             notificationComponent.ShowErrorMessage(operationResult.Message);
         }
@@ -467,6 +485,7 @@
 
 
 
+
     private async Task ApproveAllSignatures()
     {
         isLoading = true;
@@ -474,13 +493,17 @@
 
         try
         {
-            if (!await EnsurePassword())
+            if (passwordComponent.HasPassword())
             {
-                notificationComponent.ShowErrorMessage("Password retrieval failed.");
-                return;
+                await ProcessSignatures();
             }
-
-            await ProcessSignatures();
+            else
+            {
+                passwordComponent.ShowPassword(async () =>
+                {
+                    await ProcessSignatures();
+                });
+            }
 
             passwordComponent.ClearPassword();
         }
@@ -496,6 +519,7 @@
     }
 
 
+
     private async Task ProcessSignatures()
     {
         var pendingSignatures = signaturesRequests.Where(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null).ToList();
@@ -504,21 +528,6 @@
         {
             await ApproveSignatureCheckPassword(signature);
         }
-    }
-
-    private async Task<bool> EnsurePassword()
-    {
-        if (!passwordComponent.HasPassword())
-        {
-            var tcs = new TaskCompletionSource<bool>();
-            passwordComponent.ShowPassword(async () =>
-            {
-                var words = await passwordComponent.GetWalletAsync();
-                tcs.SetResult(words != null);
-            });
-            await tcs.Task;
-        }
-        return true; 
     }
 
 
