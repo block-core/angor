@@ -434,7 +434,9 @@ else
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <h5 class="modal-title" id="coinControlModalLabel">Coin Control</h5>
-                                        <button type="button" class="btn-close" @onclick="() => coinControlModal = false" aria-label="Close"></button>
+                                        <span type="button" @onclick="() => coinControlModal = false" aria-label="Close">
+                                            <Icon IconName="close-circle" />
+                                        </span>
                                     </div>
                                     <div class="modal-body modal-body-scroll">
                                         <!-- The tick boxes and amounts will go here -->
@@ -446,13 +448,10 @@ else
                                             @foreach (var addressUtxoItem in addressInfo.UtxoData)
                                             {
                                                 bool isTicked = _sendInfo.SendUtxos.ContainsKey(addressUtxoItem.outpoint.ToString());
-
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" @bind="@isTicked" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
-                                                    <label class="form-check-label fs-lable-s">
+                                                <input type="checkbox" id="@addressUtxoItem.outpoint.ToString()" @bind="@isTicked" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
+                                                <label class="fs-lable-s" for="@addressUtxoItem.outpoint.ToString()">
                                                         @($"{addressUtxoItem.outpoint} - {Money.Satoshis(@addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} {@network.CoinTicker}")
-                                                    </label>
-                                                </div>
+                                                </label>
                                             }
                                         }
                                     </div>
