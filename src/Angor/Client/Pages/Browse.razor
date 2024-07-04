@@ -34,7 +34,6 @@
                 {
                     <span role="button" class="user-select-none" @onclick="ToggleView">
                         <Icon IconName="@viewModeIcon" />
-                       
                     </span>
                 }
             </div>
@@ -122,7 +121,6 @@ else
                             <hr class="horizontal light mt-3">
                             <div role="button" class="btn btn-view w-100" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
                                 <div class="d-flex align-items-center justify-content-center">
-                                    <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">chevron_right</span>
                                     <span>View Project</span>
                                 </div>
                             </div>
@@ -181,7 +179,6 @@ else
 
                                         <div role="button" class="btn btn-view vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
                                             <div class="d-flex align-items-center justify-content-center">
-                                                <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">chevron_right</span>
                                                 <span>View Project</span>
                                             </div>
                                         </div>
@@ -200,7 +197,9 @@ else
 {
     <div class="d-flex justify-content-center mt-4">
         <a class="btn btn-secondary my-3" href="https://browse.angor.io" target="_blank">
-            <i class="material-icons opacity-10">search</i>
+            <i>
+                <Icon IconName="browse" Color="var(--bs-primary-btn-icon)"></Icon>
+            </i>
             <span class="nav-link-text ms-1">Project Explorer</span>
         </a>
     </div>
@@ -212,7 +211,7 @@ else
     private bool searchInProgress = false;
     private bool nostrSearchInProgress;
     private bool isGridView = true;
-    private string viewModeIcon = "grid";
+    private string viewModeIcon = "list";
     private bool noProject = false;
 
     private ProjectIndexerData? findProject = null;
@@ -316,7 +315,7 @@ else
     private void ToggleView()
     {
         isGridView = !isGridView;
-        viewModeIcon = isGridView ? "grid" : "list";
+        viewModeIcon = isGridView ? "list" : "grid";
     }
 
     private async Task SearchProject()
