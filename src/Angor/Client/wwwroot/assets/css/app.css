@@ -102,7 +102,7 @@
     --bs-dark-border-dark: #343a40;
     --bs-dark-shadow: rgba(255, 255, 255, 0.4);
     --bs-primary-btn-icon: #e7fbff;
-     --bs-modal-zindex: 1050;
+    --bs-modal-zindex: 1050;
     --bs-modal-width: 500px;
     --bs-modal-padding: 1rem;
     --bs-modal-margin: 0.5rem;
@@ -124,7 +124,7 @@
     --bs-modal-footer-border-color-dark: #046479;
     --bs-modal-footer-border-width: 1px;
     --btn-border: #ccc;
- }
+}
 
 .dark {
     --bs-primary: #e7fbff;
@@ -209,7 +209,7 @@
     --bs-dark-bg-gray-600: #6c757d;
     --bs-dark-border-dark: #343a40;
     --bs-dark-shadow: rgba(255, 255, 255, 0.4);
-     --bs-modal-zindex: 1050;
+    --bs-modal-zindex: 1050;
     --bs-modal-width: 500px;
     --bs-modal-padding: 1rem;
     --bs-modal-margin: 0.5rem;
@@ -1064,7 +1064,6 @@ tr[style*="cursor: pointer;"] {
 }
 
 .dark .btn-link.text-white,
-
 .dark .border-dark {
     border-color: var(--bs-dark-border-dark) !important;
 }
@@ -1219,6 +1218,7 @@ tr[style*="cursor: pointer;"] {
     transform: scale(1.05);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
+
 @keyframes rotate {
     0% {
         transform: rotate(360deg);
@@ -1236,6 +1236,7 @@ tr[style*="cursor: pointer;"] {
 
 .btn-border {
     border: 1px solid var(--btn-border) !important;
+    background-color: rgba(31, 93, 106, 0.2);
 }
 
 input[type="checkbox"] + label {
