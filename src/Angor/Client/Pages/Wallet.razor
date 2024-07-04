@@ -101,7 +101,7 @@
                         <div class="modal-header">
                             <h5 class="modal-title">@createWalletTitle</h5>
                             <span type="button" @onclick="() => { WalletWordsClose(); walletWordsCreateModal = false; }" disabled="@createWalletSpinner">
-                                <Icon IconName="close-circle"/>
+                                <Icon IconName="close-circle" />
                             </span>
                         </div>
                         <div class="modal-body modal-body-scroll">
@@ -133,11 +133,17 @@
                                 <div class="mb-2">
                                     <textarea class="form-control" readonly="@isNewWallet" rows="2" @bind="newWalletWords" placeholder="@createWalletDescription"></textarea>
                                 </div>
-
                                 <div class="mb-2">
-                                    <input type="text" class="form-control" @bind="newWalletWordsPassphrase" placeholder="Advanced: optional extra word (passphrase)" />
+                                    <button class="btn btn-border w-100" @onclick="ShowExtraWord">
+                                            <span>Optional extra word</span>                         
+                                    </button>
                                 </div>
-
+                                @if (isShowExtraWord)
+                                {
+                                    <div class="mb-2">
+                                        <input type="text" class="form-control" @bind="newWalletWordsPassphrase" placeholder="Advanced: optional extra word (passphrase)" />
+                                    </div>
+                                }
                                 <div class="mb-2">
                                     <div class="input-group mb-3">
                                         <input type="@passwordInputType" class="form-control" @bind="newWalletPassword" placeholder="Enter a password for your wallet" />
@@ -163,7 +169,7 @@
                                             <div class="card-footer pb-2 pt-2 ps-3 pe-3">
                                                 <div class="form-check">
                                                     <input class="mt-0" type="checkbox" id="backupConfirmationCheckbox" data-cy="wallet-checkbox" @bind="backupConfirmation">
-                                                   
+
                                                     <label class="form-check-label mb-0 text-warning" for="backupConfirmationCheckbox">
                                                         I have backed up my wallet words and passphrase.
                                                     </label>
@@ -305,7 +311,7 @@ else
                                         <div class="text-danger">@showWalletPasswordError</div>
                                     }
 
-                  
+
                                 }
                                 else
                                 {
@@ -539,7 +545,7 @@ else
                                     <img class="address-image me-3 mb-0" src="/assets/img/bitcoin.svg" alt="Bitcoin">
                                     <h6 class="address-text mb-0 overflow-x-auto">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</h6>
                                     <i @onclick="CopyNextReceiveAddress" class="ms-auto cursor-pointer user-select-none" data-cy="SHOW_QR_CODE_WALLET">
-                                        <Icon IconName="copy" ></Icon>
+                                        <Icon IconName="copy"></Icon>
                                     </i>
                                 </div>
                             </div>
@@ -662,6 +668,7 @@ else
     private bool walletWordsModal;
     private bool walletWordsCreateModal;
 
+    private bool isShowExtraWord = false;
 
     private bool backupConfirmation = false;
     private bool showBackupConfirmationError = false;
@@ -1181,5 +1188,10 @@ else
             collapseStates[address] = !collapseStates[address];
         else
             collapseStates[address] = true;
+    }
+
+    private void ShowExtraWord(MouseEventArgs e)
+    {
+        isShowExtraWord = !isShowExtraWord;
     }
 }
