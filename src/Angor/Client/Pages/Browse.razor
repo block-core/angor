@@ -7,11 +7,13 @@
 @using System.Text.Json
 @using Angor.Client.Models
 @using Angor.Client.Storage
-@inject ICacheStorage SessionStorage;
+@inject ICacheStorage SessionStorage
 @inject NavigationManager NavigationManager
 @inject IRelayService _RelayService
 @inject IIndexerService _IndexerService
+@inject INetworkService _NetworkService
 @inject IJSRuntime JS
+@inject ISerializer serializer
 
 <NotificationComponent @ref="notificationComponent" />
 
@@ -19,14 +21,12 @@
     <div class="card card-body">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex col-auto my-auto">
-                <span class="material-icons fs-1 opacity-10 btn-angor user-select-none">search</span>
+                <span class="user-select-none">
+                    <Icon IconName="browse" Height="64" Width="64" />
+                </span>
                 <div class="h-100 ms-3">
-                    <h5 class="mb-1 font-weight-bolder">
-                        Browse
-                    </h5>
-                    <p class="mb-0 font-weight-normal text-sm">
-                        Browse Projects
-                    </p>
+                    <h5 class="mb-1 font-weight-bolder">Browse</h5>
+                    <p class="mb-0 font-weight-normal text-sm">Browse Projects</p>
                 </div>
             </div>
             <div>
@@ -40,29 +40,32 @@
         </div>
     </div>
 </div>
-<div class="row mt-4">
 
+<div class="row mt-4">
     <div class="card card-body">
         <div class="d-flex align-items-center">
             <!-- Search Section -->
             <div class="input-group">
-                <input type="text" class="form-control" placeholder="Enter Angor project identifier" id="searchQuery" @bind="searchQuery" @onkeydown="HandleKeyDown">
+                <input type="text" class="form-control" placeholder="Enter Angor project identifier" id="searchQuery" @oninput="UpdateSearchQuery" @onkeydown="HandleKeyDown">
                 <button class="btn btn-primary" type="button" @onclick="SearchProject" disabled="@searchInProgress" data-cy="find-button">Find</button>
             </div>
         </div>
     </div>
-
 </div>
 
+@if (searchInProgress)
+{
+    <div class="d-flex justify-content-center mt-4">
+        <div class="loader"></div>
+    </div>
+}
 
 @if (!projects.Any() && !searchInProgress)
 {
     <div class="row mt-4">
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center">
-                <span class="material-icons opacity-10 fs-1 me-3 text-white user-select-none">
-                    info
-                </span>
+                <span class="material-icons opacity-10 fs-1 me-3 text-white user-select-none">info</span>
                 <span class="text-white" data-cy="projectsGrid">No projects found.</span>
             </div>
         </div>
@@ -70,7 +73,6 @@
 }
 else
 {
-
     @if (isGridView)
     {
         <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper" data-cy="project-grid">
@@ -83,11 +85,10 @@ else
                             {
                                 var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                 <img class="card-img-top" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-
                             }
                         </a>
 
-                        <div class="card-body text-center">
+                        <div class="card-body pb-0">
                             @if (nostrSearchInProgress)
                             {
                                 <div class="p-3">
@@ -101,8 +102,11 @@ else
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                     if (project?.Metadata != null)
                                     {
-                                        <h5 role="button" data-cy="searchedTitle" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
-                                        <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle"> @((MarkupString)project.Metadata.About)</p>
+                                        <h5 role="button" data-cy="searchedTitle" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                            @project.Metadata.Name
+                                        </h5>
+
+                                        <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle">@((MarkupString)project.Metadata.About)</p>
                                     }
                                 }
                                 else
@@ -110,6 +114,15 @@ else
                                     <p class="text-warning-emphasis">Project not found in any relay!</p>
                                 }
                             }
+                        </div>
+                        <div class="card-footer pt-0">
+                            <hr class="horizontal light mt-3">
+                            <div role="button" class="btn btn-view w-100" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">chevron_right</span>
+                                    <span>View Project</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -121,11 +134,10 @@ else
         <div class="project-wrapper">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
-
-                <div class="card mt-4 project-card ">
+                <div class="card mt-4 project-card">
                     <div class="row g-0">
                         <div class="col-md-4">
-                            <div class="img-responsive img-responsive-16by9 position-relative" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                            <div class="img-responsive img-responsive-16by9 position-relative blur-shadow-image" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
                                 @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                                 {
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
@@ -135,9 +147,8 @@ else
                                 }
                             </div>
                         </div>
-                        <div class="col-md-8 d-flex align-items-center justify-content-center position-relative">
+                        <div class="col-md-8 d-flex align-items-center position-relative">
                             <div class="card-body card-loader loading">
-
                                 @if (nostrSearchInProgress)
                                 {
                                     <div class="p-3">
@@ -146,33 +157,42 @@ else
                                 }
                                 else
                                 {
-                                    @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
-                                    {
-                                        var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                        if (project?.Metadata != null)
-                                        {
-                                            <h5 class="card-title text-center" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
-                                            <p class="card-text text-center line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@((MarkupString)project.Metadata.About)</p>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <p class="text-warning-emphasis">Project not found in any relay!</p>
-                                    }
+                                    <div class="project-list">
+                                        <div>
+                                            @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                                            {
+                                                var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                                if (project?.Metadata != null)
+                                                {
+                                                    <h5 class="card-title" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
+                                                    <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@((MarkupString)project.Metadata.About)</p>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <p class="text-warning-emphasis">Project not found in any relay!</p>
+                                            }
+                                        </div>
+
+                                        <hr class="horizontal light m-only">
+
+                                        <div role="button" class="btn btn-view vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                            <div class="d-flex align-items-center justify-content-center">
+                                                <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">chevron_right</span>
+                                                <span>View Project</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 }
                             </div>
                         </div>
                     </div>
                 </div>
-
-
             }
-
         </div>
-
-
     }
 }
+
 @if (!searchInProgress)
 {
     <div class="d-flex justify-content-center mt-4">
@@ -182,41 +202,111 @@ else
         </a>
     </div>
 }
-@if (searchInProgress)
-{
-    <div class="d-flex justify-content-center mt-4">
-        <div class="loader"></div>
-    </div>
-}
-
-
 
 @code {
-
-    NotificationComponent notificationComponent;
+    private NotificationComponent notificationComponent;
     private string searchQuery;
-    bool searchInProgress = false;
-    bool nostrSearchInProgress;
-     bool isGridView = true;
-    string viewModeIcon = "grid_view";
+    private bool searchInProgress = false;
+    private bool nostrSearchInProgress;
+    private bool isGridView = true;
+    private string viewModeIcon = "grid_view";
 
-    ProjectIndexerData? findProject = null;
-
+    private ProjectIndexerData? findProject = null;
     private List<ProjectIndexerData> projects = new();
 
     protected override async Task OnInitializedAsync()
     {
-        projects = SessionStorage.GetProjectIndexerData() ?? new();
-        if (!projects.Any())
+        projects = SessionStorage.GetProjectIndexerData() ?? new List<ProjectIndexerData>();
+
+        if (projects.Any())
         {
-            await GetAllProjects();
+            // Projects exist, initialize the search focus
+            await JS.InvokeVoidAsync("angor.initSearchFocus", "searchQuery");
+
+            // Check for indexer and relay availability in the background
+            _ = CheckIndexerAndRelayAvailability();
         }
-        // Handle '/' key press for focusing search input
-        await JS.InvokeVoidAsync("angor.initSearchFocus", "searchQuery");
+        else
+        {
+            // No projects are cached, fetch new projects after ensuring services are available
+            await FetchAndEnsureServices();
+        }
     }
 
+    private async Task FetchAndEnsureServices()
+    {
+        try
+        {
+            _NetworkService.AddSettingsIfNotExist();
+            await _NetworkService.CheckServices(true);
 
-    void ToggleView()
+            var primaryIndexer = _NetworkService.GetPrimaryIndexer();
+            var primaryRelay = _NetworkService.GetPrimaryRelay();
+
+            if (primaryIndexer == null || primaryRelay == null)
+            {
+                notificationComponent.ShowNotificationMessage("No primary indexer or relay found. Please configure them in settings.");
+                return;
+            }
+
+            await GetAllProjects();
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowNotificationMessage($"Initialization failed: {ex.Message}");
+        }
+    }
+
+    private async Task CheckIndexerAndRelayAvailability()
+    {
+        try
+        {
+            // Attempt to retrieve primary indexer and relay
+            var primaryIndexer = _NetworkService.GetPrimaryIndexer();
+            var primaryRelay = _NetworkService.GetPrimaryRelay();
+
+            // Initialize flags to track service availability
+            bool indexerAvailable = false;
+            bool relayAvailable = false;
+
+            // Check if the primary indexer is available
+            if (primaryIndexer != null)
+            {
+                await _NetworkService.CheckServices(false); // Refresh service status
+                indexerAvailable = primaryIndexer.Status == UrlStatus.Online;
+                if (!indexerAvailable)
+                {
+                    notificationComponent.ShowNotificationMessage("Primary indexer is offline. Please check your network settings.");
+                }
+            }
+            else
+            {
+                notificationComponent.ShowNotificationMessage("No primary indexer configured. Please add one in settings.");
+            }
+
+            // Check if the primary relay is available
+            if (primaryRelay != null)
+            {
+                await _NetworkService.CheckServices(false); // Refresh service status
+                relayAvailable = primaryRelay.Status == UrlStatus.Online;
+                if (!relayAvailable)
+                {
+                    notificationComponent.ShowNotificationMessage("Primary relay is offline. Please check your relay settings.");
+                }
+            }
+            else
+            {
+                notificationComponent.ShowNotificationMessage("No primary relay configured. Please add one in settings.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // General error handling if the service check fails
+            notificationComponent.ShowNotificationMessage($"Service check failed: {ex.Message}");
+        }
+    }
+
+    private void ToggleView()
     {
         isGridView = !isGridView;
         viewModeIcon = isGridView ? "grid_view" : "view_list";
@@ -263,7 +353,6 @@ else
         }
     }
 
-
     private async Task GetAllProjects()
     {
         searchInProgress = true;
@@ -276,24 +365,22 @@ else
 
         if (projectsNotInList.Any())
         {
-            projects.AddRange(projectsNotInList.ToArray());
+            projects.AddRange(projectsNotInList);
             SessionStorage.SetProjectIndexerData(projects);
 
             var projectsForLookup = projectsNotInList
-                .Where(_ => _.NostrPubKey != null) //For old projects in the indexer
+                .Where(_ => _.NostrPubKey != null)
                 .Select(_ => _.NostrPubKey)
                 .ToArray();
 
             nostrSearchInProgress = true;
 
             if (projectsForLookup.Any())
-                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(),
-                    () =>
+                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), () =>
                 {
                     nostrSearchInProgress = false;
                     StateHasChanged();
-                },
-                projectsForLookup);
+                }, projectsForLookup);
 
             StateHasChanged();
         }
@@ -315,8 +402,7 @@ else
             switch (e)
             {
                 case { Kind: NostrKind.Metadata }:
-
-                    var nostrMetadata = JsonSerializer.Deserialize<ProjectMetadata>(e.Content, Angor.Shared.Services.RelayService.settings);
+                    var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
                     if (projectIndexerData != null)
                     {
                         var project = SessionStorage.GetProjectById(projectIndexerData.ProjectIdentifier);
@@ -326,12 +412,10 @@ else
                             SessionStorage.StoreProject(project);
                         }
                     }
-
                     break;
 
                 case { Kind: NostrKind.ApplicationSpecificData }:
-
-                    var projectInfo = JsonSerializer.Deserialize<ProjectInfo>(e.Content, Angor.Shared.Services.RelayService.settings);
+                    var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
                     if (projectInfo != null && projectIndexerData != null)
                     {
                         if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
@@ -339,7 +423,6 @@ else
                             SessionStorage.StoreProject(new Project { ProjectInfo = projectInfo, CreationTransactionId = projectIndexerData.TrxId });
                         }
                     }
-
                     break;
             }
         };
@@ -363,5 +446,10 @@ else
         {
             await SearchProject();
         }
+    }
+
+    private void UpdateSearchQuery(ChangeEventArgs e)
+    {
+        searchQuery = e.Value.ToString();
     }
 }

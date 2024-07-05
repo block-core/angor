@@ -3,7 +3,6 @@
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Blockcore.NBitcoin
-@using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
 @using Blockcore.NBitcoin.DataEncoders
 @using JSException = Microsoft.JSInterop.JSException
@@ -14,9 +13,9 @@
 @using System.Diagnostics
 @using Angor.Client.Models
 
-@inject IJSRuntime JS
-
 @inherits BaseComponent
+
+@inject IJSRuntime JS
 
 @inject ILogger<Invest> _Logger;
 @inject IDerivationOperations _derivationOperations
@@ -25,8 +24,11 @@
 @inject IWalletOperations _WalletOperations
 
 @inject ISignService _SignService
+@inject IRelayService _RelayService
 
 @inject IInvestorTransactionActions _InvestorTransactionActions
+
+@inject ISerializer serializer
 
 @if (!hasWallet)
 {
@@ -373,9 +375,7 @@
             {
                 var words = await passwordComponent.GetWalletAsync();
 
-                var accountInfo = storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
-
-                var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, accountInfo.InvestmentsCount + 1);
+                var nostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
 
                 var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -590,7 +590,8 @@
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             var words = await passwordComponent.GetWalletAsync();
-            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, accountInfo.InvestmentsCount + 1);
+            
+            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier); 
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -625,12 +626,6 @@
                 investorProject.SignaturesInfo.SignatureRequestEventId,
                 async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
 
-            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.ProjectInfo.NostrPubKey);
-            if (metadata != null)
-            {
-                storage.AddInvestmentProjectMetadata(project.ProjectInfo.NostrPubKey, metadata);
-            }
-
             notificationComponent.ShowNotificationMessage("Signature request sent", 5);
         }
         catch (Exception e)
@@ -658,7 +653,7 @@
         
         _Logger.LogInformation("signature : " + signatureJson);
 
-        var res = System.Text.Json.JsonSerializer.Deserialize<SignatureInfo>(signatureJson, RelayService.settings);
+        var res = serializer.Deserialize<SignatureInfo>(signatureJson);
 
         if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
         {
@@ -709,8 +704,7 @@
             Debug.Assert(investorProject.SignaturesInfo != null, nameof(investorProject.SignaturesInfo) + " != null");
             Debug.Assert(investorProject.SignedTransactionHex != null, nameof(investorProject.SignedTransactionHex) + " != null");
 
-            if (signedTransaction == null)
-                signedTransaction = new TransactionInfo();
+            signedTransaction ??= new TransactionInfo();
 
             signedTransaction.Transaction ??= _networkConfiguration.GetNetwork().CreateTransaction(investorProject.SignedTransactionHex);
 
@@ -721,7 +715,7 @@
                 notificationComponent.ShowErrorMessage("The signatures returned from the founder failed validation");
                 return;
             }
-
+            
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
 
             if (!response.Success)
@@ -734,6 +728,8 @@
             investorProject.CompleteProjectInvestment(signedTransaction.Transaction);
 
             storage.UpdateInvestmentProject(investorProject);
+
+            await SaveInvestmentsListToNostrAsync();
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
@@ -748,12 +744,6 @@
             unspentInfo.AddRange(spendUtxos);
             SessionStorage.SetUnconfirmedInboundFunds(unspentInfo);
 
-            var metadata = SessionStorage.GetProjectMetadataByPubkey(project.ProjectInfo.NostrPubKey);
-            if (metadata != null)
-            {
-                storage.AddInvestmentProjectMetadata(project.ProjectInfo.NostrPubKey, metadata);
-            }
-
             notificationComponent.ShowNotificationMessage("Invested in project", 5);
 
             NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
@@ -767,6 +757,37 @@
         {
             publishSpinner = false;
         }
+    }
+
+    private async Task SaveInvestmentsListToNostrAsync()
+    {
+        var words = await passwordComponent.GetWalletAsync();
+        var rootNostrPrivateKey = await _derivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 0); 
+        var rootNostrPrivateKeyHex = Encoders.Hex.EncodeData(rootNostrPrivateKey.ToBytes());
+
+        var nostrDMKey = _derivationOperations.DeriveNostrPubKey(words, 1);
+
+        Investments investments = new()
+        {
+            ProjectIdentifiers = storage.GetInvestmentProjects()
+                .Where(x => x.InvestedInProject())
+                .Select(x => new InvestmentState{ProjectIdentifier =  x.ProjectInfo.ProjectIdentifier})
+                .ToList()
+        };
+            
+        var encryptedProjectIdList = await javascriptNostrToolsModule.InvokeAsync<string>(
+            "encryptNostr",
+            rootNostrPrivateKeyHex,
+            nostrDMKey,
+            serializer.Serialize(investments));
+            
+        _RelayService.SendDirectMessagesForPubKeyAsync(rootNostrPrivateKeyHex, nostrDMKey, encryptedProjectIdList, x =>
+        {
+            if (!x.Accepted)
+            {
+                //TODO need to handle failure to save the list of projects
+            }
+        });
     }
 
     public class InvestmentModel

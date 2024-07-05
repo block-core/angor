@@ -18,6 +18,7 @@
 @inject ISignService SignService
 @inject IInvestorTransactionActions InvestorTransactionActions
 @inject IFounderTransactionActions FounderTransactionActions
+@inject ISerializer serializer
 
 @inherits BaseComponent
 
@@ -59,7 +60,7 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <div class="table-responsive">
+                                <div class="table-responsive form-control">
                                     <table class="table align-items-center mb-0">
                                         <thead>
                                             <tr>
@@ -343,7 +344,7 @@
 
             var signatureInfo = signProject(signature.TransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
 
-            var sigJson = JsonSerializer.Serialize(signatureInfo, RelayService.settings);
+            var sigJson = serializer.Serialize(signatureInfo);
 
             var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
 

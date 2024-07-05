@@ -21,6 +21,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddBlazoredSessionStorage();
 
+builder.Services.AddSingleton<ISerializer, Serializer>();
 builder.Services.AddSingleton<INetworkConfiguration, NetworkConfiguration>();
 builder.Services.AddTransient<IHdOperations, HdOperations>();
 builder.Services.AddTransient <IClientStorage, ClientStorage>();
@@ -52,5 +53,7 @@ builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 builder.Services.AddSingleton<INostrCommunicationFactory,NostrCommunicationFactory>();
 builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
 builder.Services.AddSingleton<IPasswordCacheService, PasswordCacheService>();
+
+builder.Services.AddScoped<IconService>();
 
 await builder.Build().RunAsync();

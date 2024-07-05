@@ -5,12 +5,15 @@
 @using Nostr.Client.Messages.Metadata
 @using QRCoder
 
+@inject IconService IconService;
 @inject IClipboardService _clipboardService
 
 
 <!-- Trigger Button -->
 <div class="col-6 text-end">
-    <i @onclick="ShowModal" class="material-icons opacity-10 btn-angor fs-3 cursor-pointer user-select-none" data-cy="SHOW_QR_CODE">qr_code_2</i>
+    <i @onclick="ShowModal" data-cy="SHOW_QR_CODE">
+        @((MarkupString)qrCodeIcon)
+    </i>
 </div>
 <!-- Modal -->
 @if (showModal)
@@ -21,8 +24,10 @@
                 <!-- Custom modal size -->
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="coinControlModalLabel">QR Code</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="HideModal" aria-label="Close" data-cy="QR_IMAGE_IN_POPUP"></button>
+                        <h5 class="modal-title" id="coinControlModalLabel">Receive</h5>
+                        <span type="button" data-bs-dismiss="modal" @onclick="HideModal"  data-cy="QR_IMAGE_IN_POPUP">
+                            @((MarkupString)closeIcon)
+                        </span>
                     </div>
                     <div class="modal-body">
                         <img src="data:image/png;base64,@base64qrcode" class="qrcode-image" alt="QR Code" />
@@ -51,6 +56,17 @@
     private bool showModal = false;
 
     public NotificationComponent notificationComponent;
+
+    private string qrCodeIcon;
+    private string closeIcon;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var iconColor = "var(--bs-primary)";
+        qrCodeIcon = await IconService.GetIcon("qr-code", 32, 32, iconColor);
+        closeIcon = await IconService.GetIcon("close-circle", 32, 32, iconColor);
+
+    }
 
     private void ShowModal()
     {

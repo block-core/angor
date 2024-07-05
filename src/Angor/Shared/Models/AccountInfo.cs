@@ -11,8 +11,6 @@ public class AccountInfo
 
     public List<string> UtxoReservedForInvestment { get; set; } = new();
 
-    public int InvestmentsCount { get; set; } //TODO David handle the set logic
-
     public IEnumerable<AddressInfo> AllAddresses()
     {
         foreach (var addressInfo in AddressesInfo.Concat(ChangeAddressesInfo))
