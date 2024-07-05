@@ -84,16 +84,14 @@
     protected override async Task OnInitializedAsync()
     {
         InitializeAppVersion();
+        await LoadThemeFromStorage();
+        await UpdateThemeIcon(isDarkTheme);
+
+        NavMenuState.OnChange += NavMenuStateOnOnChange;
         InitializeNetworkConfiguration();
 
         _networkService.AddSettingsIfNotExist();
         await _networkService.CheckServices(true);
-
-        await LoadThemeFromStorage();
-
-        await UpdateThemeIcon(isDarkTheme);
-
-        NavMenuState.OnChange += NavMenuStateOnOnChange;
     }
 
     private void InitializeAppVersion()
