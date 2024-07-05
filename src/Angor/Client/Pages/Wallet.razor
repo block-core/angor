@@ -455,9 +455,6 @@ else
                                             }
                                         }
                                     </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" @onclick="() => coinControlModal = false">Close</button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -473,7 +470,9 @@ else
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <h5 class="modal-title">Confirmation</h5>
-                                        <button type="button" class="btn-close" aria-label="Close" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner"></button>
+                                        <span type="button" aria-label="Close" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner">
+                                            <Icon IconName="close-circle" />
+                                        </span>
                                     </div>
                                     <div class="modal-body modal-body-scroll">
                                         Are you sure you want to send <strong>@_sendInfo.SendAmount @network.CoinTicker</strong> to <strong> @_sendInfo.SendToAddress?</strong>
