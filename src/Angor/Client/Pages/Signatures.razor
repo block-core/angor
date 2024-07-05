@@ -50,7 +50,7 @@
                         <div class="text-center mb-3">
                             @if (isLoading)
                             {
-                                <h6 class="mb-0">Approving Signatures...</h6>
+                                <h6 class="mb-0">Approving Signatures... @numOfSignaturesSigned / @numOfSignatureToSign</h6>
                             }
                             <div class="loader"></div>
                         </div>
@@ -68,7 +68,7 @@
                                     </div>
                                     <div class="col-6 d-flex justify-content-end">
                                         <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">Approve All</button>
-                                        <button class="btn btn-sm btn-secondary ml-2" @onclick="RefreshSignaturesInternal" disabled="@isCooldown">
+                                        <button class="btn btn-sm btn-secondary ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
                                             @if (refreshButtonSpinner)
                                             {
                                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -143,7 +143,8 @@
 
     private bool isLoading = false;
     private bool refreshButtonSpinner = false;
-    private bool isCooldown = false;
+    private int numOfSignatureToSign = 0;
+    private int numOfSignaturesSigned = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -213,12 +214,11 @@
 
     private async Task RefreshSignatures()
     {
-        if (isCooldown)
-            return;
+        
         
         refreshButtonSpinner = true;
         StateHasChanged();
-        isCooldown = true;
+        
 
         try
         {
@@ -228,11 +228,11 @@
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Error fetching signatures: {e.Message}");
+            Logger.LogDebug($"Error fetching signatures: {e.Message}");
         }
         finally
         {
-            isCooldown = false;
+            
             refreshButtonSpinner = false;
             StateHasChanged();
         }
@@ -509,7 +509,7 @@
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Error approving signatures: {e.Message}");
+            Logger.LogDebug($"Error approving signatures: {e.Message}");
         }
         finally
         {
@@ -523,10 +523,24 @@
     private async Task ProcessSignatures()
     {
         var pendingSignatures = signaturesRequests.Where(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null).ToList();
-
+        numOfSignatureToSign = pendingSignatures.Count;
+        numOfSignaturesSigned = 0;
+        
+        var words = await passwordComponent.GetWalletAsync();
+        if (words == null)
+        {
+            passwordComponent.ShowPassword(async () =>
+            {
+                await ProcessSignatures();
+            });
+            return;
+        }
+        
         foreach (var signature in pendingSignatures)
         {
-            await ApproveSignatureCheckPassword(signature);
+            await PerformSignatureApproval(signature, words);
+            numOfSignaturesSigned++;
+            StateHasChanged();
         }
     }
 
