@@ -47,7 +47,9 @@
             <!-- Search Section -->
             <div class="input-group">
                 <input type="text" class="form-control" placeholder="Enter Angor project identifier" id="searchQuery" @oninput="UpdateSearchQuery" @onkeydown="HandleKeyDown">
-                <button class="btn btn-primary" type="button" @onclick="SearchProject" disabled="@searchInProgress" data-cy="find-button">Find</button>
+                <button class="btn btn-border" type="button" @onclick="SearchProject" disabled="@searchInProgress" data-cy="find-button">
+                    <Icon IconName="search" />
+                </button>
             </div>
         </div>
     </div>
