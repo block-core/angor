@@ -69,7 +69,9 @@
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <h5 class="modal-title" id="coinControlModalLabel">Change Network</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => showChangeNetworkModal = false" aria-label="Close"></button>
+                                        <span type="button" data-bs-dismiss="modal" @onclick="() => showChangeNetworkModal = false" aria-label="Close">
+                                            <Icon IconName="close-circle" />
+                                        </span>
                                     </div>
                                     <div class="modal-body modal-body-scroll">
                                         <div class="alert alert-danger" role="alert">
@@ -115,8 +117,7 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button class="btn btn-danger" @onclick="ChangeNetwork">Change Network</button>
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showChangeNetworkModal = false">Close</button>
-                                    </div>
+                                     </div>
                                 </div>
                             </div>
                         </div>
@@ -179,8 +180,8 @@
         <form @onsubmit="AddIndexer">
             <div class="input-group mb-3">
                 <input type="text" @bind-value="newIndexerLink" class="form-control" placeholder="Enter new indexer link" aria-label="Enter new indexer link" aria-describedby="button-addon">
-                <button class="btn btn-primary" type="submit" id="button-addon">
-                    <Icon IconName="plus" Height="24" Width="24" Color="var(--bs-primary-btn-icon)"></Icon>
+                <button class="btn btn-border" type="submit" id="button-addon">
+                    <Icon IconName="plus" Height="24" Width="24"></Icon>
                 </button>
             </div>
         </form>
@@ -251,8 +252,8 @@
         <form @onsubmit="AddRelay">
             <div class="input-group mb-3">
                 <input type="text" @bind-value="newRelayLink" class="form-control" placeholder="Enter new relay link" aria-label="Enter new relay link" aria-describedby="button-addon2">
-                <button class="btn btn-primary" type="submit" id="button-addon2">
-                    <Icon IconName="plus" Height="24" Width="24" Color="var(--bs-primary-btn-icon)"></Icon>
+                <button class="btn btn-border" type="submit" id="button-addon2">
+                    <Icon IconName="plus" Height="24" Width="24"></Icon>
                 </button>
             </div>
         </form>
@@ -333,7 +334,9 @@
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <h5 class="modal-title" id="coinControlModalLabel">Wipe Storage</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false" aria-label="Close"></button>
+                                        <span type="button" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false" aria-label="Close">
+                                            <Icon IconName="close-circle" />
+                                        </span>
                                     </div>
                                     <div class="modal-body modal-body-scroll">
                                         <div class="card">
@@ -363,8 +366,6 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button class="btn btn-danger" @onclick="WipeAllData">Wipe Storage</button>
-
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false">Close</button>
                                     </div>
                                 </div>
                             </div>
