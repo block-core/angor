@@ -221,6 +221,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await GetAllProjects();
         projects = SessionStorage.GetProjectIndexerData() ?? new List<ProjectIndexerData>();
 
         if (projects.Any())
