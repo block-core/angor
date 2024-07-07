@@ -1,27 +1,29 @@
 ﻿@page "/"
 
 <PageTitle>Angor</PageTitle>
-     <div class="card">
-        <div class="row g-0">
-            <div class="col-md-6">
-                <div class="embed-responsive embed-responsive-16by9 position-relative">
-                    <!-- Loader for Video -->
-                    <div class="video-loader loading">
-                        <div class="loader"></div>
-                    </div>
-                    <!-- Replace 'VIDEO_ID' with the actual ID of your YouTube video -->
-                    <iframe id="youtube-video" class="embed-responsive-item" src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe>
+<div class="card">
+    <div class="row g-0">
+        <div class="col-md-6">
+            <div class="embed-responsive embed-responsive-16by9 position-relative">
+                <!-- Loader for Video -->
+                <div class="video-loader loading">
+                    <div class="loader"></div>
                 </div>
+                <!-- Replace 'VIDEO_ID' with the actual ID of your YouTube video -->
+                <iframe id="youtube-video" class="embed-responsive-item" src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe>
             </div>
-            <div class="col-md-6 d-flex align-items-center justify-content-center position-relative">
-                <!-- Loader for Card -->
-                <div class="card-body card-loader loading">
-                    <div class="card-loader-overlay"></div>
-                    <h5 class="card-title text-center">Welcome to Angor</h5>
-                    <p class="card-text text-center">Stay in control of your investments with Angor</p>
-                </div>
+        </div>
+        <div class="col-md-6 d-flex align-items-center justify-content-center position-relative">
+            <!-- Loader for Card -->
+            <div class="card-body card-loader loading text-center">
+                 <span class="main-logo mb-3">
+                    <Icon IconName="angor-logo" Width="72" Height="72" />
+                </span>
+                <h5 class="card-title text-center">Welcome to Angor</h5>
+                <p class="card-text text-center">Stay in control of your investments with Angor</p>
             </div>
         </div>
     </div>
- 
+</div>
+
 
