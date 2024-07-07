@@ -353,7 +353,7 @@ else
             <div class="col-lg-3 col-sm-6 mt-lg-0">
                 <div class="card h-100 @((activeTab == 1) ? "active" : "")" id="tab1">
                     <div class="card-body d-flex flex-column justify-content-center text-center" role="button" @onclick="() => SetActiveTab(1)">
-                        <span class="mb-3" aria-hidden="true">
+                        <span class="mb-3 @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
                             <Icon IconName="send" Height="64" Width="64"></Icon>
                         </span>
                         <h5> Send </h5>
@@ -363,7 +363,7 @@ else
             <div class="col-lg-3 col-sm-6 mt-4 mt-lg-0 mt-sm-0">
                 <div class="card h-100 @((activeTab == 2) ? "active" : "")" id="tab2">
                     <div class="card-body d-flex flex-column justify-content-center text-center" role="button" @onclick="() => SetActiveTab(2)">
-                        <span class="mb-3" aria-hidden="true">
+                        <span class="mb-3 @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
                             <Icon IconName="receive" Height="64" Width="64"></Icon>
                         </span>
                         <h5 data-cy="receive-button"> Receive </h5>

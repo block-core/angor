@@ -1285,3 +1285,28 @@ input[type="checkbox"] {
         background-color: #bfb;
         border-color: #bfb;
     }
+@keyframes heartbeat {
+    0% {
+        transform: scale(1);
+    }
+
+    25% {
+        transform: scale(1.2);
+    }
+
+    50% {
+        transform: scale(1);
+    }
+
+    75% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.heartbeat {
+    animation: heartbeat 1s infinite;
+}
