@@ -84,11 +84,16 @@ else
             {
                 <div class="col d-flex align-items-stretch">
                     <div class="card mt-4 w-100 project-card">
-                        <a class="d-block blur-shadow-image">
+                        <a class="d-block">
                             @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                             {
                                 var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                <img class="card-img-top" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                <div class="banner-container">
+                                    <img class="banner-image" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    <div class="profile-container">
+                                        <img class="profile-image" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    </div>
+                                </div>
                             }
                         </a>
 
@@ -131,6 +136,7 @@ else
                 </div>
             }
         </div>
+
     }
     else
     {
@@ -139,19 +145,20 @@ else
             {
                 <div class="card mt-4 project-card">
                     <div class="row g-0">
-                        <div class="col-md-4">
-                            <div class="img-responsive img-responsive-16by9 position-relative blur-shadow-image" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                        <div class="col-md-4 position-relative">
+                            <div class="banner-container-list">
                                 @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                                 {
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                    <div class="card-header card-header-img">
-                                        <img class="img-responsive-item" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    <img class="banner-image" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    <div class="profile-container">
+                                        <img class="profile-image" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="Profile Image" />
                                     </div>
                                 }
                             </div>
                         </div>
-                        <div class="col-md-8 d-flex align-items-center position-relative">
-                            <div class="card-body card-loader loading">
+                        <div class="col-md-8 d-flex align-items-center">
+                            <div class="card-body">
                                 @if (nostrSearchInProgress)
                                 {
                                     <div class="p-3">
@@ -176,9 +183,7 @@ else
                                                 <p class="text-warning-emphasis">Project not found in any relay!</p>
                                             }
                                         </div>
-
                                         <hr class="horizontal light m-only">
-
                                         <div role="button" class="btn btn-view vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
                                             <div class="d-flex align-items-center justify-content-center">
                                                 <span>View Project</span>
@@ -192,6 +197,7 @@ else
                 </div>
             }
         </div>
+
     }
 }
 
