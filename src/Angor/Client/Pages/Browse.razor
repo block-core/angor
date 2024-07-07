@@ -152,7 +152,7 @@ else
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                     <img class="banner-image" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                     <div class="profile-container">
-                                        <img class="profile-image" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="Profile Image" />
+                                        <img class="profile-image" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Image" />
                                     </div>
                                 }
                             </div>
