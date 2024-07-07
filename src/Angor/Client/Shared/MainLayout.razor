@@ -82,13 +82,13 @@
     private string networkText = string.Empty;
 
     protected override async Task OnInitializedAsync()
-    {
+    {     
+        InitializeNetworkConfiguration();
+
         InitializeAppVersion();
         await LoadThemeFromStorage();
         await UpdateThemeIcon(isDarkTheme);
-
         NavMenuState.OnChange += NavMenuStateOnOnChange;
-        InitializeNetworkConfiguration();
 
         _networkService.AddSettingsIfNotExist();
         await _networkService.CheckServices(true);
