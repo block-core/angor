@@ -33,15 +33,15 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-OUNcTXuiJHeyUDdQNWufATC2iC5E0GmdWwE9w1UeS4o=",
+      "hash": "sha256-QEQSUW63yOzL0UhJKgppi8alYD6O38sgCWM9xJhin4A=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-F8q9qRwOAhRPnhHTJSutZgDSi7sv9P23dhYEuI56jOw=",
+      "hash": "sha256-AsQQTClyx+957MWFmHlEZcjd5Av7GB5zpytgvM3lO+0=",
       "url": "_framework\/Angor.Client.wasm"
     },
     {
-      "hash": "sha256-+KXcNIbEHnIq\/Rk+hTwI6OQBFZHqpnXYHftdIH8rU04=",
+      "hash": "sha256-+Sho6gnmVG6AruA2dsjYiwHpDYTn5gC+X7v1kQJ3Trw=",
       "url": "_framework\/Angor.Shared.wasm"
     },
     {
@@ -517,11 +517,11 @@
       "url": "Angor.Client.styles.css"
     },
     {
-      "hash": "sha256-ddIZ8XuVYge4\/702f\/Ixb0pzD8UJDPJZU98pp+SEElM=",
+      "hash": "sha256-Zwv4NstwdZ4AM6AiWk2uURYnPQkO3+L9wnmtzKEsjdE=",
       "url": "assets\/css\/app.css"
     },
     {
-      "hash": "sha256-JmB27LmO+1PnWHi0+Y\/0bazyK25oakFI\/SufWGP2oHI=",
+      "hash": "sha256-sjn6hAxY2JamPDV4KjClTOtMmO1TaQyRA6qX7cXqgjk=",
       "url": "assets\/css\/dashboard.css"
     },
     {
@@ -537,7 +537,11 @@
       "url": "assets\/fonts\/material.woff2"
     },
     {
-      "hash": "sha256-yU1S1RltM8wy09kQP6Q9qLn51aTRNk09sjNnCnCNXlo=",
+      "hash": "sha256-Y4d4+zviZZO77b4R+WIEPK5SiNyuN24e9c0jFJqJH\/A=",
+      "url": "assets\/icons\/add.svg"
+    },
+    {
+      "hash": "sha256-eUXKM7Tlrhuk7wxJNl4V18\/nqxB9fblyp8HEleJI7kk=",
       "url": "assets\/icons\/angor-logo.svg"
     },
     {
@@ -573,12 +577,20 @@
       "url": "assets\/icons\/github.svg"
     },
     {
+      "hash": "sha256-sf+TUBNklw1b7Oq\/hch56xPXXK9QnBBg0I1bSpPhWxQ=",
+      "url": "assets\/icons\/grid.svg"
+    },
+    {
       "hash": "sha256-9Lwa\/NhaWojZfbs9LAg5PBvdfSYFKuxT6AqhlFVjRN8=",
       "url": "assets\/icons\/hamburger-menu.svg"
     },
     {
       "hash": "sha256-taX7glliecwzopDl83uEPCARPGpqxXnd5\/0OEoa+dCo=",
       "url": "assets\/icons\/indexer.svg"
+    },
+    {
+      "hash": "sha256-3VaRt535aygpH31qVVTyH4GyhBMtqeEQqw++iR0RntI=",
+      "url": "assets\/icons\/info.svg"
     },
     {
       "hash": "sha256-pjAg4c0KAHe6wEWfDK0qnISRW+MhnbiNY6hkCCgvMcM=",
@@ -591,6 +603,10 @@
     {
       "hash": "sha256-5lB599SKg2d00RHJpXHyyBfecqxFneE1gRaMnwvkBvU=",
       "url": "assets\/icons\/link.svg"
+    },
+    {
+      "hash": "sha256-tDlg2FDohM05+rsQ7me6KUULCyWvtP5tlUb9ynZLsKY=",
+      "url": "assets\/icons\/list.svg"
     },
     {
       "hash": "sha256-yWdzvAiVrvnBiNLXWB98H9vg5Hv\/ht4SXyAotcTtrSc=",
@@ -633,6 +649,10 @@
       "url": "assets\/icons\/receive.svg"
     },
     {
+      "hash": "sha256-CPs4ED0lywsfrUIZVT1MGRCTq6OPRIUIoN2q2+fapAs=",
+      "url": "assets\/icons\/recovery.svg"
+    },
+    {
       "hash": "sha256-2salPWalUdqngcrb1l4ReUE4Ar4xJK6u02Na4miTe0U=",
       "url": "assets\/icons\/refresh.svg"
     },
@@ -643,6 +663,10 @@
     {
       "hash": "sha256-Dw5x\/bvCHEEGDSCYt48Ux4HK1GypjpNkadxn2P9Msb4=",
       "url": "assets\/icons\/remove.svg"
+    },
+    {
+      "hash": "sha256-J3IsKV14oi0YG9V\/KpAcKlD1ZfidQEtxhl3KabnxoRs=",
+      "url": "assets\/icons\/search.svg"
     },
     {
       "hash": "sha256-qKKQPdFHrDr790ZFYIw0455X4XPWeUqlQWmiYn9yOU4=",
@@ -659,6 +683,18 @@
     {
       "hash": "sha256-fLpMNmpLpNvkj0uF6uIDr74IcG64KEXxG8Cn2euwtfg=",
       "url": "assets\/icons\/unlock.svg"
+    },
+    {
+      "hash": "sha256-zy1kF8Rodh8g0l0PGlHY+uXiMGkGtXgj2rLmQi5i0CA=",
+      "url": "assets\/icons\/view.svg"
+    },
+    {
+      "hash": "sha256-Xb6AQEpTrWrzXftO6yldjngPzwEwatp3XfoAvrgLbgY=",
+      "url": "assets\/icons\/visibility-off.svg"
+    },
+    {
+      "hash": "sha256-9IvxvjvTpzLoYcnv8ZqK6u9fKFQr2JVX2LYHmG6C2Lk=",
+      "url": "assets\/icons\/visibility.svg"
     },
     {
       "hash": "sha256-9656Bys\/ehySDp8MV\/C3t6durg8w90Y5\/ShbcjU3u6w=",
@@ -705,12 +741,8 @@
       "url": "assets\/img\/mobile-installation-screenshot.png"
     },
     {
-      "hash": "sha256-nhAGYNiDG4bjhasDEqEoKg3Q1vvXB6vLreNvWKyk7BM=",
+      "hash": "sha256-Ney\/3LjLILGuiFUdQkCM8ZLWEvDPUKF8Ffgr\/sxVlzM=",
       "url": "assets\/img\/no-image.jpg"
-    },
-    {
-      "hash": "sha256-LIzFrWHUFTXsth14GCzXa5CN2+uZODdlAxjvnUIZmZg=",
-      "url": "assets\/img\/no-image.png"
     },
     {
       "hash": "sha256-czPHYE0quC51u9hw0Yf4Ow70RUCrAuv7RJbPcmJ5Udo=",
@@ -757,5 +789,5 @@
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "+zzXttFM"
+  "version": "r\/GnVVck"
 };
