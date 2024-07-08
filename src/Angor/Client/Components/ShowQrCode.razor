@@ -11,8 +11,8 @@
 
 <!-- Trigger Button -->
 <div class="col-6 text-end">
-    <i @onclick="ShowModal" data-cy="SHOW_QR_CODE">
-        @((MarkupString)qrCodeIcon)
+    <i role="button" @onclick="ShowModal" data-cy="SHOW_QR_CODE">
+        <Icon IconName="qr-code"></Icon>
     </i>
 </div>
 <!-- Modal -->
@@ -26,7 +26,7 @@
                     <div class="modal-header">
                         <h5 class="modal-title" id="coinControlModalLabel">Receive</h5>
                         <span type="button" data-bs-dismiss="modal" @onclick="HideModal"  data-cy="QR_IMAGE_IN_POPUP">
-                            @((MarkupString)closeIcon)
+                            <Icon IconName="close-circle"></Icon>
                         </span>
                     </div>
                     <div class="modal-body">
@@ -34,7 +34,9 @@
                         <div class="address-container">
                             <div class="d-flex align-items-center">
                                 <p id="receive-address" class="address-text mb-0 overflow-x-auto" data-cy="WALLET_ADRESS_IN_QR_POPUP">@Data</p>
-                                <i @onclick="CopyToClipboard" class="material-icons opacity-10 btn-angor fs-3 ms-auto cursor-pointer user-select-none">copy</i>
+                                <i @onclick="CopyToClipboard" class="ms-auto cursor-pointer user-select-none">
+                                    <Icon IconName="copy"></Icon>
+                                </i>
                             </div>
                         </div>
                     </div>
@@ -57,16 +59,7 @@
 
     public NotificationComponent notificationComponent;
 
-    private string qrCodeIcon;
-    private string closeIcon;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var iconColor = "var(--bs-primary)";
-        qrCodeIcon = await IconService.GetIcon("qr-code", 32, 32, iconColor);
-        closeIcon = await IconService.GetIcon("close-circle", 32, 32, iconColor);
-
-    }
+ 
 
     private void ShowModal()
     {
