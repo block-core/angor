@@ -44,10 +44,19 @@
         <!-- Signatures Details Section -->
         <div class="row mt-4">
             <div class="col">
-                @if (messagesReceived)
+                @if (messagesReceived || isLoading)
                 {
-                    <div class="loader"></div>
+                    <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+                        <div class="text-center mb-3">
+                            @if (isLoading)
+                            {
+                                <h6 class="mb-0">Approving Signatures... @numOfSignaturesSigned / @numOfSignatureToSign</h6>
+                            }
+                            <div class="loader"></div>
+                        </div>
+                    </div>
                 }
+                
                 else
                 {
                     <div class="col-md-12">
@@ -57,9 +66,25 @@
                                     <div class="col-6 d-flex align-items-center">
                                         <h6 class="mb-0">Signatures</h6>
                                     </div>
+                                    <div class="col-6 d-flex justify-content-end">
+                                        <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">Approve All</button>
+                                        <button class="btn btn-sm btn-secondary ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
+                                            @if (refreshButtonSpinner)
+                                            {
+                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                <span>Refreshing...</span>
+                                            }
+                                            else
+                                            {
+                                                 <span>Refresh</span>
+                                            }
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="card-body">
+                                
+                                
                                 <div class="table-responsive form-control">
                                     <table class="table align-items-center mb-0">
                                         <thead>
@@ -77,7 +102,7 @@
                                                     <td>@signature.TimeArrived.ToString("g")</td>
                                                     @if (signature.TimeApproved is null)
                                                     {
-                                                        <td><button class="btn btn-success" @onclick="() => ApproveSignature(signature)">Approve</button></td>
+                                                        <td><button class="btn btn-success" @onclick="() => ApproveSignatureCheckPassword(signature)">Approve</button></td>
                                                     }
                                                     else
                                                     {
@@ -110,6 +135,17 @@
     bool messagesReceived;
     bool scanedForApprovals;
 
+    private bool CanApproveAllSignatures => signaturesRequests != null && signaturesRequests.Any(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null);
+
+    private string ApproveButtonClass => CanApproveAllSignatures ? "btn-success" : "btn-primary";
+
+    private bool ApproveButtonDisabled => !CanApproveAllSignatures;
+
+    private bool isLoading = false;
+    private bool refreshButtonSpinner = false;
+    private int numOfSignatureToSign = 0;
+    private int numOfSignaturesSigned = 0;
+
     protected override async Task OnInitializedAsync()
     {
         Logger.LogDebug("OnInitializedAsync");
@@ -137,7 +173,7 @@
             }
             catch (JSException e)
             {
-                Console.WriteLine(e);
+                Logger.LogError($"Error loading nostr tools: {e.Message}", e);
                 notificationComponent.ShowErrorMessage(e.Message);
                 return;
             }
@@ -161,9 +197,47 @@
         }
     }
 
+    private async Task RefreshSignaturesInternal()
+    {
+        if (passwordComponent.HasPassword())
+        {
+            await RefreshSignatures();
+        }
+        else
+        {
+            passwordComponent.ShowPassword(async () =>
+            {
+                await RefreshSignatures();
+            });
+        }
+    }
+
+    private async Task RefreshSignatures()
+    {
+        refreshButtonSpinner = true;
+        StateHasChanged();
+        
+        try
+        {
+            await FetchPendingSignatures(FounderProject);
+            await FetchSignatures();
+            await Task.Delay(1000);
+        }
+        catch (Exception e)
+        {
+            Logger.LogError($"Error fetching signatures: {e.Message}");
+        }
+        finally
+        {
+            
+            refreshButtonSpinner = false;
+            StateHasChanged();
+        }
+    }
+
     protected async Task FetchSignatures()
     {
-        Logger.LogDebug("handled = {Count}, total = {SignaturesRequestsCount}", signaturesRequests.Count(x => x.AmountToInvest.HasValue), signaturesRequests.Count);
+        Logger.LogDebug($"handled = {signaturesRequests.Count(x => x.AmountToInvest.HasValue)}, total = {signaturesRequests.Count}");
 
         if (signaturesRequests.Any(x => x.AmountToInvest == null))
         {
@@ -202,8 +276,7 @@
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    Logger.LogDebug(pendingSignature.TransactionHex);
+                    Logger.LogError(pendingSignature.TransactionHex, e);
                     pendingSignature.TransactionHex = null;
                 }
             }
@@ -213,6 +286,7 @@
         }
 
         Logger.LogDebug("OnAfterRenderAsync Completed");
+        Logger.LogDebug($"Signatures retrieved: {signaturesRequests.Count}");
     }
 
     private async Task FetchPendingSignatures(FounderProject project)
@@ -329,25 +403,26 @@
         {
             passwordComponent.ShowPassword(async () =>
             {
-                await ApproveSignature(signature); ;
+                await ApproveSignature(signature);
             });
         }
     }
 
-    private async Task ApproveSignature(SignatureRequest signature)
+    private async Task<OperationResult> PerformSignatureApproval(SignatureRequest signature, WalletWords words)
     {
-        var operationResult = await notificationComponent.LongOperation(async () =>
+        try
         {
-            var words = await passwordComponent.GetWalletAsync();
+            if (words == null)
+            {
+                return new OperationResult { Success = false, Message = "Password retrieval failed." };
+            }
 
             var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex);
-
             var signatureInfo = signProject(signature.TransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
 
             var sigJson = serializer.Serialize(signatureInfo);
 
             var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
-
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
             var encryptedContent = await javascriptNostrToolsModule.InvokeAsync<string>(
@@ -357,23 +432,79 @@
                 sigJson);
 
             FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorPubKey, signature.EventId);
-
             Storage.UpdateFounderProject(FounderProject);
 
             signaturesRequests.Single(_ => _.investorPubKey == signature.investorPubKey && _.TimeApproved is null)
                 .TimeApproved = FounderProject.LastRequestForSignaturesTime;
 
             return new OperationResult { Success = true };
-        });
-
-        if (operationResult.Success)
+        }
+        catch (Exception ex)
         {
-            passwordComponent.ClearPassword();
-            StateHasChanged();
+            return new OperationResult { Success = false, Message = $"An error occurred: {ex.Message}" };
+        }
+    }
+
+    private async Task ApproveSignature(SignatureRequest signature)
+    {
+        var words = await passwordComponent.GetWalletAsync();
+
+        var operationResult = await PerformSignatureApproval(signature, words);
+
+        if (!operationResult.Success)
+        {
+            notificationComponent.ShowErrorMessage(operationResult.Message);
         }
         else
         {
-            notificationComponent.ShowErrorMessage(operationResult.Message);
+            StateHasChanged();
+        }
+    }
+
+    private async Task ApproveAllSignatures()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            if (passwordComponent.HasPassword())
+            {
+                await ProcessSignatures();
+            }
+            else
+            {
+                passwordComponent.ShowPassword(async () =>
+                {
+                    await ProcessSignatures();
+                });
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.LogError("Error approving signatures: {ErrorMessage}", e.Message, e);
+        }
+        finally
+        {
+            isLoading = false;
+            passwordComponent.ClearPassword();
+            StateHasChanged();
+        }
+    }
+
+    private async Task ProcessSignatures()
+    {
+        var pendingSignatures = signaturesRequests.Where(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null).ToList();
+        numOfSignatureToSign = pendingSignatures.Count;
+        numOfSignaturesSigned = 0;
+        
+        var words = await passwordComponent.GetWalletAsync();
+        
+        foreach (var signature in pendingSignatures)
+        {
+            await PerformSignatureApproval(signature, words);
+            numOfSignaturesSigned++;
+            StateHasChanged();
         }
     }
 
