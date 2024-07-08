@@ -32,8 +32,8 @@
             <div>
                 @if (projects.Count > 0)
                 {
-                    <span role="button" class="material-icons fs-3 opacity-10 btn-angor user-select-none" @onclick="ToggleView">
-                        @viewModeIcon
+                    <span role="button" class="user-select-none" @onclick="ToggleView">
+                        <Icon IconName="@viewModeIcon" />
                     </span>
                 }
             </div>
@@ -47,25 +47,29 @@
             <!-- Search Section -->
             <div class="input-group">
                 <input type="text" class="form-control" placeholder="Enter Angor project identifier" id="searchQuery" @oninput="UpdateSearchQuery" @onkeydown="HandleKeyDown">
-                <button class="btn btn-primary" type="button" @onclick="SearchProject" disabled="@searchInProgress" data-cy="find-button">Find</button>
+                <button class="btn btn-border" type="button" @onclick="SearchProject" disabled="@searchInProgress" data-cy="find-button">
+                    <Icon IconName="search" />
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-@if (searchInProgress)
+@if (searchInProgress )
 {
     <div class="d-flex justify-content-center mt-4">
         <div class="loader"></div>
     </div>
 }
 
-@if (!projects.Any() && !searchInProgress)
+@if (!projects.Any() && !searchInProgress && noProject)
 {
     <div class="row mt-4">
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center">
-                <span class="material-icons opacity-10 fs-1 me-3 text-white user-select-none">info</span>
+                <span class="me-3 user-select-none">
+                    <Icon IconName="info" Width="40" Height="40" Color="var(--bs-primary-btn-icon)" />
+                </span>
                 <span class="text-white" data-cy="projectsGrid">No projects found.</span>
             </div>
         </div>
@@ -80,11 +84,16 @@ else
             {
                 <div class="col d-flex align-items-stretch">
                     <div class="card mt-4 w-100 project-card">
-                        <a class="d-block blur-shadow-image">
+                        <a class="d-block">
                             @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                             {
                                 var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                <img class="card-img-top" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                <div class="banner-container">
+                                    <img class="banner-image" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    <div class="profile-container">
+                                        <img class="profile-image" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    </div>
+                                </div>
                             }
                         </a>
 
@@ -119,7 +128,6 @@ else
                             <hr class="horizontal light mt-3">
                             <div role="button" class="btn btn-view w-100" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
                                 <div class="d-flex align-items-center justify-content-center">
-                                    <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">chevron_right</span>
                                     <span>View Project</span>
                                 </div>
                             </div>
@@ -128,6 +136,7 @@ else
                 </div>
             }
         </div>
+
     }
     else
     {
@@ -136,19 +145,20 @@ else
             {
                 <div class="card mt-4 project-card">
                     <div class="row g-0">
-                        <div class="col-md-4">
-                            <div class="img-responsive img-responsive-16by9 position-relative blur-shadow-image" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                        <div class="col-md-4 position-relative">
+                            <div class="banner-container-list">
                                 @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                                 {
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                    <div class="card-header card-header-img">
-                                        <img class="img-responsive-item" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    <img class="banner-image" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    <div class="profile-container">
+                                        <img class="profile-image" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Image" />
                                     </div>
                                 }
                             </div>
                         </div>
-                        <div class="col-md-8 d-flex align-items-center position-relative">
-                            <div class="card-body card-loader loading">
+                        <div class="col-md-8 d-flex align-items-center">
+                            <div class="card-body">
                                 @if (nostrSearchInProgress)
                                 {
                                     <div class="p-3">
@@ -173,12 +183,9 @@ else
                                                 <p class="text-warning-emphasis">Project not found in any relay!</p>
                                             }
                                         </div>
-
                                         <hr class="horizontal light m-only">
-
                                         <div role="button" class="btn btn-view vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
                                             <div class="d-flex align-items-center justify-content-center">
-                                                <span class="material-icons opacity-10 me-1" data-cy="generate-wallet-words">chevron_right</span>
                                                 <span>View Project</span>
                                             </div>
                                         </div>
@@ -190,6 +197,7 @@ else
                 </div>
             }
         </div>
+
     }
 }
 
@@ -197,7 +205,9 @@ else
 {
     <div class="d-flex justify-content-center mt-4">
         <a class="btn btn-secondary my-3" href="https://browse.angor.io" target="_blank">
-            <i class="material-icons opacity-10">search</i>
+            <i>
+                <Icon IconName="browse" Color="var(--bs-primary-btn-icon)"></Icon>
+            </i>
             <span class="nav-link-text ms-1">Project Explorer</span>
         </a>
     </div>
@@ -209,13 +219,15 @@ else
     private bool searchInProgress = false;
     private bool nostrSearchInProgress;
     private bool isGridView = true;
-    private string viewModeIcon = "grid_view";
+    private string viewModeIcon = "list";
+    private bool noProject = false;
 
     private ProjectIndexerData? findProject = null;
     private List<ProjectIndexerData> projects = new();
 
     protected override async Task OnInitializedAsync()
     {
+        await GetAllProjects();
         projects = SessionStorage.GetProjectIndexerData() ?? new List<ProjectIndexerData>();
 
         if (projects.Any())
@@ -228,6 +240,7 @@ else
         }
         else
         {
+            searchInProgress = true;
             // No projects are cached, fetch new projects after ensuring services are available
             await FetchAndEnsureServices();
         }
@@ -246,6 +259,8 @@ else
             if (primaryIndexer == null || primaryRelay == null)
             {
                 notificationComponent.ShowNotificationMessage("No primary indexer or relay found. Please configure them in settings.");
+                searchInProgress = false;
+                noProject = true;
                 return;
             }
 
@@ -309,7 +324,7 @@ else
     private void ToggleView()
     {
         isGridView = !isGridView;
-        viewModeIcon = isGridView ? "grid_view" : "view_list";
+        viewModeIcon = isGridView ? "list" : "grid";
     }
 
     private async Task SearchProject()
