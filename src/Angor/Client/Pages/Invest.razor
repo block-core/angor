@@ -248,7 +248,7 @@
                             <div class="mt-3">
                                 <h5>Transaction Details</h5>
                                 <div class="mb-1">
-                                <strong>Amount to invest:</strong> @storage.GetInvestmentAmount(project.ProjectInfo.ProjectIdentifier) @network.CoinTicker                            
+                                <strong>Amount to invest:</strong> @investorProject.AmountInvested @network.CoinTicker
                                 <p><strong>Date:</strong> @investorProject?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("MM/dd/yyyy HH:mm")</p>
                                 <p><strong>Project Name: </strong> @investorProject?.Metadata?.Name</p>
                                 </div>
@@ -589,7 +589,8 @@
                 ProjectInfo = project.ProjectInfo, 
                 Metadata = project.Metadata, 
                 SignedTransactionHex = signedTransaction!.Transaction!.ToHex(), 
-                CreationTransactionId = project.CreationTransactionId
+                CreationTransactionId = project.CreationTransactionId,
+                AmountInvested = (long) Investment.InvestmentAmount
             };
 
             var investorProject = (InvestorProject)project;
@@ -630,7 +631,6 @@
 
             storage.AddInvestmentProject(investorProject);
             
-            storage.SetInvestmentAmount(investorProject.ProjectInfo.ProjectIdentifier, Investment.InvestmentAmount);
              
 
             foreach (var input in strippedInvestmentTransaction.Inputs)
@@ -704,7 +704,6 @@
         }
 
         storage.RemoveInvestmentProject(project.ProjectInfo.ProjectIdentifier);
-        storage.SetInvestmentAmount(project.ProjectInfo.ProjectIdentifier ,0);
 
         investorProject.SignaturesInfo = null;
         project = SessionStorage.GetProjectById(ProjectId);

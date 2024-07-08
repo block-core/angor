@@ -214,12 +214,9 @@
 
     private async Task RefreshSignatures()
     {
-        
-        
         refreshButtonSpinner = true;
         StateHasChanged();
         
-
         try
         {
             await FetchPendingSignatures(FounderProject);
@@ -242,7 +239,7 @@
 
     protected async Task FetchSignatures()
     {
-        Logger.LogDebug("handled = {Count}, total = {SignaturesRequestsCount}", signaturesRequests.Count(x => x.AmountToInvest.HasValue), signaturesRequests.Count);
+        Logger.LogDebug($"handled = {signaturesRequests.Count(x => x.AmountToInvest.HasValue)}, total = {signaturesRequests.Count}");
 
         if (signaturesRequests.Any(x => x.AmountToInvest == null))
         {
@@ -510,7 +507,7 @@
         }
         catch (Exception e)
         {
-            Logger.LogDebug($"Error approving signatures: {e.Message}");
+            Logger.LogError("Error approving signatures: {ErrorMessage}", e.Message, e);
         }
         finally
         {

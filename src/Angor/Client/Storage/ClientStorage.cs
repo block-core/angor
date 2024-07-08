@@ -59,22 +59,8 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem("projects", ret);
     }
 
-    public void SetInvestmentAmount(string projectId, decimal amount)
-    {
-        var investmentAmounts = _storage.GetItem<Dictionary<string, decimal>>("investmentAmounts") ?? new Dictionary<string, decimal>();
-        investmentAmounts[projectId] = amount;
-        _storage.SetItem("investmentAmounts", investmentAmounts);
-    }
-
-    public decimal GetInvestmentAmount(string projectId)
-    {
-        var investmentAmounts = _storage.GetItem<Dictionary<string, decimal>>("investmentAmounts");
-        if (investmentAmounts != null && investmentAmounts.TryGetValue(projectId, out var amount))
-        {
-            return amount;
-        }
-        return 0; // default value
-    }
+    
+    
 
     public void RemoveInvestmentProject(string projectId)
     {
