@@ -33,15 +33,15 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-QEQSUW63yOzL0UhJKgppi8alYD6O38sgCWM9xJhin4A=",
+      "hash": "sha256-JaU84LHd6XG2FUw\/YMYg\/h\/X2tw39QeKVTJSrpNzjXA=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-AsQQTClyx+957MWFmHlEZcjd5Av7GB5zpytgvM3lO+0=",
+      "hash": "sha256-Sr5TwjQAOEYZ3i8bdQC2iSF9+ejZHASzTcEAptFUNJQ=",
       "url": "_framework\/Angor.Client.wasm"
     },
     {
-      "hash": "sha256-+Sho6gnmVG6AruA2dsjYiwHpDYTn5gC+X7v1kQJ3Trw=",
+      "hash": "sha256-SmVDwu3ug0ZCGYiTAxyB16c43qyPVp+MBte\/q6XheyA=",
       "url": "_framework\/Angor.Shared.wasm"
     },
     {
@@ -229,7 +229,7 @@
       "url": "_framework\/System.ComponentModel.wasm"
     },
     {
-      "hash": "sha256-BuIb6JJfTki1BdV5tFbhtdhrbxnGA6GNTO7wJffp0Vs=",
+      "hash": "sha256-6PwVQYraSkcpmMywxkmpvx1iYn\/IIu\/tuCakOXthRTo=",
       "url": "_framework\/System.Console.wasm"
     },
     {
@@ -365,7 +365,7 @@
       "url": "_framework\/System.ObjectModel.wasm"
     },
     {
-      "hash": "sha256-glN7rZtBT8DJjKDHsB2H939G2nS8TX33kqLXCjVKIVc=",
+      "hash": "sha256-RF\/U2HaNfrxL7iRexJkhiR1uGzjvpsukF6ujpC6+cSQ=",
       "url": "_framework\/System.Private.CoreLib.wasm"
     },
     {
@@ -789,5 +789,5 @@
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "r\/GnVVck"
+  "version": "Vagb3ml5"
 };
