@@ -458,15 +458,6 @@
     private async Task ApproveSignature(SignatureRequest signature)
     {
         var words = await passwordComponent.GetWalletAsync();
-        if (words == null)
-        {
-            Logger.LogDebug("words is null.");
-            passwordComponent.ShowPassword(async () =>
-            {
-                await ApproveSignature(signature);
-            });
-            return;
-        }
 
         var operationResult = await PerformSignatureApproval(signature, words);
 
@@ -502,8 +493,6 @@
                     await ProcessSignatures();
                 });
             }
-
-            passwordComponent.ClearPassword();
         }
         catch (Exception e)
         {
@@ -512,6 +501,7 @@
         finally
         {
             isLoading = false;
+            passwordComponent.ClearPassword();
             StateHasChanged();
         }
     }
@@ -525,15 +515,6 @@
         numOfSignaturesSigned = 0;
         
         var words = await passwordComponent.GetWalletAsync();
-        if (words == null)
-        {
-            Logger.LogDebug("words is null.");
-            passwordComponent.ShowPassword(async () =>
-            {
-                await ProcessSignatures();
-            });
-            return;
-        }
         
         foreach (var signature in pendingSignatures)
         {
