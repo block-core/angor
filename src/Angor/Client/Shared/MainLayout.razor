@@ -82,18 +82,16 @@
     private string networkText = string.Empty;
 
     protected override async Task OnInitializedAsync()
-    {
-        InitializeAppVersion();
+    {     
         InitializeNetworkConfiguration();
+
+        InitializeAppVersion();
+        await LoadThemeFromStorage();
+        await UpdateThemeIcon(isDarkTheme);
+        NavMenuState.OnChange += NavMenuStateOnOnChange;
 
         _networkService.AddSettingsIfNotExist();
         await _networkService.CheckServices(true);
-
-        await LoadThemeFromStorage();
-
-        await UpdateThemeIcon(isDarkTheme);
-
-        NavMenuState.OnChange += NavMenuStateOnOnChange;
     }
 
     private void InitializeAppVersion()
