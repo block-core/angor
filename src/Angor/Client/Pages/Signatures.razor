@@ -71,12 +71,12 @@
                                         <button class="btn btn-sm btn-secondary ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
                                             @if (refreshButtonSpinner)
                                             {
-                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                            <span>Refreshing...</span>
+                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                <span>Refreshing...</span>
                                             }
                                             else
                                             {
-                                            <span>Refresh</span>
+                                                 <span>Refresh</span>
                                             }
                                         </button>
                                     </div>
@@ -173,7 +173,7 @@
             }
             catch (JSException e)
             {
-                Console.WriteLine(e);
+                Logger.LogError($"Error loading nostr tools: {e.Message}", e);
                 notificationComponent.ShowErrorMessage(e.Message);
                 return;
             }
@@ -225,7 +225,7 @@
         }
         catch (Exception e)
         {
-            Logger.LogDebug($"Error fetching signatures: {e.Message}");
+            Logger.LogError($"Error fetching signatures: {e.Message}");
         }
         finally
         {
@@ -234,8 +234,6 @@
             StateHasChanged();
         }
     }
-
-
 
     protected async Task FetchSignatures()
     {
@@ -278,8 +276,7 @@
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    Logger.LogDebug(pendingSignature.TransactionHex);
+                    Logger.LogError(pendingSignature.TransactionHex, e);
                     pendingSignature.TransactionHex = null;
                 }
             }
@@ -411,8 +408,6 @@
         }
     }
 
-    
-
     private async Task<OperationResult> PerformSignatureApproval(SignatureRequest signature, WalletWords words)
     {
         try
@@ -450,11 +445,6 @@
         }
     }
 
-
-
-
-
-
     private async Task ApproveSignature(SignatureRequest signature)
     {
         var words = await passwordComponent.GetWalletAsync();
@@ -470,10 +460,6 @@
             StateHasChanged();
         }
     }
-
-
-
-
 
     private async Task ApproveAllSignatures()
     {
@@ -506,8 +492,6 @@
         }
     }
 
-
-
     private async Task ProcessSignatures()
     {
         var pendingSignatures = signaturesRequests.Where(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null).ToList();
@@ -523,11 +507,6 @@
             StateHasChanged();
         }
     }
-
-
-
-
-
 
     private SignatureInfo signProject(string transactionHex, ProjectInfo info, string founderSigningPrivateKey)
     {
