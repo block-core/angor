@@ -174,8 +174,6 @@
 
     public Dictionary<string, ProjectStats> Stats = new();
 
-    private IJSInProcessObjectReference? javascriptNostrToolsModule;
-
     private Investments scannedInvestments = new();
     
     protected override async Task OnInitializedAsync()
@@ -274,33 +272,28 @@
 
     private async Task GetProjectsAndUpdateAsync()
     {
+        RefreshBalanceTriggered = true;
+        
         if (!passwordComponent.HasPassword())
         {
             passwordComponent.ShowPassword(GetProjectsAndUpdateAsync);
             return;
         }
      
-        RefreshBalanceTriggered = true;
-        
         var words = await passwordComponent.GetWalletAsync();
         var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1); 
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
-        var NostrDMPubkey = _DerivationOperations.DeriveNostrPubKey(words, 1);
         
-        var rootNostrPubey = _DerivationOperations.DeriveProjectNostrPrivateKey(words, 0).PubKey;
-        var rootNostrPubkeyHex = Encoders.Hex.EncodeData(rootNostrPubey.ToBytes());
+        var rootNostrPubKeyHex = _DerivationOperations.DeriveNostrPubKey(words, 0);
         
         
-        await _RelayService.LookupDirectMessagesForPubKeyAsync( NostrDMPubkey, null,1,
+        await _RelayService.LookupDirectMessagesForPubKeyAsync( NostrDMPrivateKey.PubKey.ToHex()[2..], null,1,
             async x =>
             {
-                if (x.Pubkey != rootNostrPubkeyHex[2..])
-                    return;
-
                 try
                 {
-                    var decryptedString = await _encryptionService.DecryptNostrContentAsync(NostrDMPrivateKeyHex,
-                        rootNostrPubkeyHex, x.Content);
+                    var decryptedString = await _encryptionService.DecryptNostrContentAsync(
+                        NostrDMPrivateKeyHex, rootNostrPubKeyHex, x.Content);
                 
                     var projectIdList = serializer.Deserialize<Investments>(decryptedString);
 
@@ -326,7 +319,7 @@
                 {
                     _Logger.LogError(e,"failed to get handle investment list event from relay");
                 }
-            });
+            },rootNostrPubKeyHex);
     }
 
     private async Task GetInvestmentProjectDataAsync(InvestmentState investmentState)
