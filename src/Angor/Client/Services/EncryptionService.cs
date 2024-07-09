@@ -1,4 +1,5 @@
 ﻿using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.JSInterop;
 using NBitcoin.Crypto;
@@ -26,20 +27,20 @@ namespace Angor.Client.Services
 
         public async Task<string> EncryptNostrContentAsync(string nsec, string npub, string content)
         {
-            var secertHex = GetSharedSecretAsHex(nsec, npub);
+            var secertHex = GetSharedSecretHexWithoutPrefix(nsec, npub);
             return await _jsRuntime.InvokeAsync<string>("encryptNostr", secertHex, content);
         }
 
         public async Task<string> DecryptNostrContentAsync(string nsec, string npub, string encryptedContent)
         {
-            var secertHex = GetSharedSecretAsHex(nsec, npub);
+            var secertHex = GetSharedSecretHexWithoutPrefix(nsec, npub);
             return await _jsRuntime.InvokeAsync<string>("decryptNostr", secertHex, encryptedContent);
         }
 
-        private static string GetSharedSecretAsHex(string nsec, string npub)
+        private static string GetSharedSecretHexWithoutPrefix(string nsec, string npub)
         {
             var privateKey = new Key(Encoders.Hex.DecodeData(nsec));
-            var publicKey = new PubKey(npub);
+            var publicKey = new PubKey("02" + npub);
             
             var secert = publicKey.GetSharedPubkey(privateKey);
             return Encoders.Hex.EncodeData(secert.ToBytes()[1..]);

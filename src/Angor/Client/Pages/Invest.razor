@@ -29,6 +29,7 @@
 @inject IInvestorTransactionActions _InvestorTransactionActions
 
 @inject ISerializer serializer
+@inject IEncryptionService encryption
 
 @if (!hasWallet)
 {
@@ -287,8 +288,6 @@
 
     private FeeData feeData = new();
 
-    private IJSInProcessObjectReference? javascriptNostrToolsModule;
-
     protected override async Task OnInitializedAsync()
     {       
         if (!hasWallet)
@@ -331,20 +330,6 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (javascriptNostrToolsModule == null)
-        {
-            try
-            {
-                //TODO import the nostr tool module directly to c# class
-                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
-            }
-            catch (JSException e)
-            {
-                _Logger.LogError(e,"Failed to load the nostr tools module");
-                notificationComponent.ShowErrorMessage(e.Message);
-            }
-        }
-
         if (firstRender)
         {
             if (hasWallet)
@@ -612,10 +597,8 @@
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            var encryptedContent = await javascriptNostrToolsModule.InvokeAsync<string>(
-                "encryptNostr",
-                nostrPrivateKeyHex,
-                investorProject.ProjectInfo.NostrPubKey,
+            var encryptedContent = await encryption.DecryptNostrContentAsync(
+                nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey,
                 strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory));
 
             var investmentSigsRequest = _SignService.RequestInvestmentSigs(new SignRecoveryRequest
@@ -667,8 +650,8 @@
         if (project is not InvestorProject investorProject || investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
             return;
         
-        var signatureJson = await javascriptNostrToolsModule.InvokeAsync<string>(
-            "decryptNostr", nostrPrivateKeyHex, project.ProjectInfo.NostrPubKey, encryptedSignatures);
+        var signatureJson = await encryption.DecryptNostrContentAsync(
+             nostrPrivateKeyHex, project.ProjectInfo.NostrPubKey, encryptedSignatures);
         
         _Logger.LogInformation("signature : " + signatureJson);
 
@@ -794,11 +777,8 @@
                 .ToList()
         };
             
-        var encryptedProjectIdList = await javascriptNostrToolsModule.InvokeAsync<string>(
-            "encryptNostr",
-            rootNostrPrivateKeyHex,
-            nostrDMKey,
-            serializer.Serialize(investments));
+        var encryptedProjectIdList = await encryption.EncryptNostrContentAsync(
+            rootNostrPrivateKeyHex, nostrDMKey, serializer.Serialize(investments));
             
         _RelayService.SendDirectMessagesForPubKeyAsync(rootNostrPrivateKeyHex, nostrDMKey, encryptedProjectIdList, x =>
         {
