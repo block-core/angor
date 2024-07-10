@@ -7,10 +7,6 @@ function hexToBytes(hex) {
     return new Uint8Array(bytes);
 }
 
-function bytesToHex(bytes) {
-    return Array.prototype.map.call(bytes, x => ('00' + x.toString(16)).slice(-2)).join('');
-}
-
 async function encryptNostr(sharedSecretHex, message) {
     try {
         const sharedSecret = hexToBytes(sharedSecretHex);
@@ -27,7 +23,10 @@ async function encryptNostr(sharedSecretHex, message) {
             iv: iv
         }, key, data);
 
-        return bytesToHex(new Uint8Array(encrypted)) + "?iv=" + bytesToHex(iv);
+        const encryptedBase64 = Base64.fromUint8Array(new Uint8Array(encrypted));
+        const ivBase64 = Base64.fromUint8Array(iv);
+
+        return  `${encryptedBase64}?iv=${ivBase64}`;
     } catch (e) {
         console.log(e)
         throw e;
@@ -62,6 +61,3 @@ async function decryptNostr(sharedSecretHex, encryptedMessage) {
 
 window.encryptNostr = encryptNostr;
 window.decryptNostr = decryptNostr;
-    
-console.log(window.encryptNostr);
-console.log(window.decryptNostr);

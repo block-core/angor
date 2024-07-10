@@ -144,7 +144,7 @@ namespace Angor.Shared.Services
             };
 
             if (senderNpub != null)
-                nostrFilter.A = new[] { senderNpub };
+                nostrFilter.Authors = new[] { senderNpub };
 
             nostrClient.Send(new NostrRequest(subscriptionKey, nostrFilter));
             
