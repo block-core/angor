@@ -202,8 +202,8 @@
 
                     <div class="mb-3">
                         <!-- Buttons Spend Funds and Approve Signature next to each other -->
-                        <NavLink href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-primary me-2">Spend Funds</NavLink>
-                        <NavLink href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-primary">Approve signature</NavLink>
+                        <NavLink href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border me-2">Spend Funds</NavLink>
+                        <NavLink href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border">Approve signature</NavLink>
                     </div>
                 }
                 else if (invested)
@@ -218,7 +218,7 @@
                 }
                 else
                 {
-                    <button class="btn btn-primary" data-cy="INVEST_BUTTON" @onclick="InvestInProject">Invest</button>
+                    <button class="btn btn-border" data-cy="INVEST_BUTTON" @onclick="InvestInProject">Invest</button>
                 }
             </div>
         </div>

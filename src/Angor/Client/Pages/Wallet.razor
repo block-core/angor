@@ -399,7 +399,7 @@ else
                                     <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
                                 </div>
 
-                                <button type="button" class="btn btn-primary mb-3" @onclick="() => coinControlModal = true">
+                                <button type="button" class="btn btn-border mb-3" @onclick="() => coinControlModal = true">
                                     Coin Control
                                     @if (_sendInfo.SendUtxos.Any())
                                     {
@@ -408,7 +408,7 @@ else
                                 </button>
 
                                 <!-- New Send button that triggers a confirmation dialog -->
-                                <button type="button" class="btn btn-primary mb-3" data-cy="send-button" @onclick="AskPassword" disabled="@sendLoadSpinner">
+                                <button type="button" class="btn btn-border mb-3" data-cy="send-button" @onclick="AskPassword" disabled="@sendLoadSpinner">
                                     @if (sendLoadSpinner)
                                     {
                                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -504,7 +504,7 @@ else
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner">Cancel</button>
-                                        <button type="button" class="btn btn-primary" @onclick="SendCoins" disabled="@sendConfirmSpinner">
+                                        <button type="button" class="btn btn-border" @onclick="SendCoins" disabled="@sendConfirmSpinner">
                                             @if (sendConfirmSpinner)
                                             {
                                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>

@@ -152,7 +152,7 @@
 
     private bool CanApproveAllSignatures => signaturesRequests != null && signaturesRequests.Any(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null);
 
-    private string ApproveButtonClass => CanApproveAllSignatures ? "btn-success" : "btn-primary";
+    private string ApproveButtonClass => CanApproveAllSignatures ? "btn-success" : "btn-border";
 
     private bool ApproveButtonDisabled => !CanApproveAllSignatures;
 
