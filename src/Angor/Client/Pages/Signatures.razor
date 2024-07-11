@@ -103,7 +103,7 @@
                                                     @if (signature.TimeApproved is null)
                                                     {
                                                         <td>
-                                                            <button class="btn btn-success" @onclick="() => ApproveSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.ContainsKey(signature)">
+                                                            <button class="btn btn-success" @onclick="() => ApproveSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.Any()">
                                                                 @if (signaturesRequestsApproving.ContainsKey(signature))
                                                                 {
                                                                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -505,11 +505,6 @@
     {
         try
         {
-            if (words == null)
-            {
-                return new OperationResult { Success = false, Message = "Password retrieval failed." };
-            }
-
             var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex);
             var signatureInfo = signProject(signature.TransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
 
