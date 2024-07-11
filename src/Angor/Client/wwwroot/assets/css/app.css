@@ -1301,11 +1301,11 @@ input[type="checkbox"] {
 }
 
 .heartbeat {
-    animation: heartbeat 1.5s ease-in-out infinite;
+    animation: heartbeat 1.5s ease-in-out 1;
 }
 
 .card.active .card-body {
-    animation: heartbeat 1.5s ease-in-out infinite;
+    animation: heartbeat 1.5s ease-in-out 1;
 }
 @keyframes drawLogo {
     from {
