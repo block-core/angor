@@ -391,7 +391,7 @@ else
                         <div class="row">
 
                             <form>
-                                <div class="mb-3 position-relative">
+                                <div class="mb-3">
                                     <label for="sendToAddress" class="form-label">Send to Address</label>
                                     <div class="input-group">
                                         <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
@@ -799,6 +799,7 @@ else
             notificationComponent.ShowErrorMessage("New wallet words are null or empty");
             return;
         }
+
         if (string.IsNullOrEmpty(newWalletPassword))
         {
             walletWordsCreateModal = false;
@@ -1184,6 +1185,7 @@ else
             testCoinsSpinner = false;
         }
     }
+
     void SetActiveTab(int tab)
     {
         activeTab = tab;
@@ -1202,7 +1204,7 @@ else
         else
             collapseStates[address] = true;
     }
-    
+
     private async Task PasteFromClipboard()
     {
         try
@@ -1216,10 +1218,11 @@ else
             Console.Error.WriteLine($"Failed to read clipboard contents: {ex}");
         }
     }
-    
+
     private void ClearAddress()
     {
         _sendInfo.SendToAddress = string.Empty;
+    }
 
     private void ShowExtraWord(MouseEventArgs e)
     {
