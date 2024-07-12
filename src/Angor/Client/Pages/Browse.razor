@@ -233,9 +233,6 @@ else
 
         if (projects.Any())
         {
-            // Projects exist, initialize the search focus
-            await JS.InvokeVoidAsync("angor.initSearchFocus", "searchQuery");
-
             // Check for indexer and relay availability in the background
             _ = CheckIndexerAndRelayAvailability();
         }
@@ -468,8 +465,6 @@ else
     {
         searchQuery = e.Value.ToString();
     }
-
-
 
     public string StripHtmlTags(string input)
     {
