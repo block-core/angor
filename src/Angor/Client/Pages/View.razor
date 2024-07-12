@@ -39,75 +39,76 @@
     else
     {
         <!-- Project Details Section -->
-        <div class="card card-body">
-  
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <div class="d-flex align-items-center">
-                    <span class="user-select-none">
-                        <Icon IconName="view" Height="64" Width="64"></Icon>
-                    </span>
-                    <div class="h-100 ms-3">
-                        <h5 class="mb-0 font-weight-bolder">
-                            @project.ProjectInfo.ProjectIdentifier
-                        </h5>
+        <div class="card card-body p-0">
+            @if (project.ProjectInfo.NostrPubKey != null)
+            {
+                var metadata = project.Metadata;
+
+
+                    <div class="card-header p-0 overflow-hidden position-relative">
+                    <img class="card-img-top card-img-top-view" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                    <img class="profile-image-view rounded-circle" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                     </div>
-                </div>
+           
 
-            </div>
- 
-                @if (project.ProjectInfo.NostrPubKey != null)
-                {
-                    var metadata = project.Metadata;
-
-                    if (metadata?.Banner != null)
-                    {
-                        <div class="card-header overflow-hidden">
-                            <img class="card-img-top" src="@metadata.Banner" alt="" />
+                <div class="p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center">
+                            <span class="user-select-none">
+                                <Icon IconName="view" Height="32" Width="32"></Icon>
+                            </span>
+                            <div class="h-100 ms-3">
+                                <h5 class="mb-0 font-weight-bolder">
+                                    <a href="/view/@project.ProjectInfo.ProjectIdentifier">@metadata?.Name</a>
+                                </h5>
+                            </div>
                         </div>
-                    }
+                    </div>
 
-                    <br />
-                    <h3 class="card-title">@metadata?.Name</h3>
-                    <p class="card-subtitle">@metadata?.About</p>
+                     <p class="card-subtitle">@((MarkupString)metadata?.About)</p>
                     <hr />
-                }
 
-                <a href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
-                <p class="card-text">Project Identifier: @project.ProjectInfo.ProjectIdentifier</p>
-                <p class="card-text">Founder Key: @project.ProjectInfo.FounderKey</p>
-                <p class="card-text">Target Amount: @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
-                <p class="card-text">Penalty duration: @project.ProjectInfo.PenaltyDays days</p>
+                    <a href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
+                    <p class="card-text">Project Identifier: @project.ProjectInfo.ProjectIdentifier</p>
+                    <p class="card-text">Founder Key: @project.ProjectInfo.FounderKey</p>
+                    <p class="card-text">Target Amount: @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
+                    <p class="card-text">Penalty duration: @project.ProjectInfo.PenaltyDays days</p>
 
-                <p class="card-text">
-                    Project dates: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") - @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")
-                </p>
+                    <p class="card-text">
+                        Project dates: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") - @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")
+                    </p>
 
-                @{
-                    int startsInDays = (project.ProjectInfo.StartDate - DateTime.Now).Days;
+                    @{
+                        int startsInDays = (project.ProjectInfo.StartDate - DateTime.Now).Days;
 
-                    if (startsInDays > 0)
-                    {
-                        <p class="card-text">Starts in @startsInDays days</p>
+                        if (startsInDays > 0)
+                        {
+                            <p class="card-text">Starts in @startsInDays days</p>
+                        }
+                        else
+                        {
+                            int totalDays = (project.ProjectInfo.ExpiryDate - project.ProjectInfo.StartDate).Days;
+                            int currentDays = (DateTime.Now - project.ProjectInfo.StartDate).Days;
+                            currentDays = currentDays < 0 ? 0 : currentDays;
+                            currentDays = currentDays > totalDays ? totalDays : currentDays;
+
+                            var completePercent = 0;
+
+                            if (totalDays > 0)
+                                completePercent = (currentDays * 100) / totalDays;
+
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: @completePercent%;" aria-valuenow="@completePercent" aria-valuemin="0" aria-valuemax="100">@currentDays/@totalDays days</div>
+                            </div>
+                        }
                     }
-                    else
-                    {
-                        int totalDays = (project.ProjectInfo.ExpiryDate - project.ProjectInfo.StartDate).Days;
-                        int currentDays = (DateTime.Now - project.ProjectInfo.StartDate).Days;
-                        currentDays = currentDays < 0 ? 0 : currentDays;
-                        currentDays = currentDays > totalDays ? totalDays : currentDays;
+                </div>
+            }
+        </div>
 
-                        var completePercent = 0;
 
-                        if (totalDays > 0)
-                            completePercent = (currentDays * 100) / totalDays;
 
-                        <div class="progress mb-2">
-                            <div class="progress-bar bg-info" role="progressbar" style="width: @completePercent%;" aria-valuenow="@completePercent" aria-valuemin="0" aria-valuemax="100">@currentDays/@totalDays days</div>
-                        </div>
-                    }
 
-                }
-         </div>
 
         <!-- Stats Section -->
         <div class="card mt-4">
