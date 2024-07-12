@@ -59,6 +59,9 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem("projects", ret);
     }
 
+    
+    
+
     public void RemoveInvestmentProject(string projectId)
     {
         var ret = GetInvestmentProjects();

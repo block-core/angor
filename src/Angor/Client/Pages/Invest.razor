@@ -221,7 +221,7 @@
         }
         else
         {
-            if (investorProject.ReceivedFounderSignatures() && !investorProject.InvestedInProject())
+            @if (investorProject.ReceivedFounderSignatures() && !investorProject.InvestedInProject())
             {
                 <div class="card mt-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -242,9 +242,22 @@
                                 <span>Invest</span>
                             }
                         </button>
+                        
+                        @if (investorProject.SignaturesInfo != null)
+                        {
+                            <div class="mt-3">
+                                <h5>Transaction Details</h5>
+                                <div class="mb-1">
+                                <strong>Amount to invest:</strong>  @Money.Satoshis((investorProject.AmountInvested ?? 0)).ToUnit(MoneyUnit.BTC) @network.CoinTicker 
+                                <p><strong>Date:</strong> @investorProject?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("MM/dd/yyyy HH:mm")</p>
+                                <p><strong>Project Name: </strong> @investorProject?.Metadata?.Name</p>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
-            }   
+            }
+
         }
     }
 </div>
@@ -271,12 +284,13 @@
     TransactionInfo? signedTransaction;
     Transaction unSignedTransaction;
 
+
     private FeeData feeData = new();
 
     private IJSInProcessObjectReference? javascriptNostrToolsModule;
 
     protected override async Task OnInitializedAsync()
-    {
+    {       
         if (!hasWallet)
         {
             NavigationManager.NavigateTo($"/wallet");
@@ -287,8 +301,7 @@
         if (findProject != null)
         {
             var investmentProject = findProject as InvestorProject;
-            project = investmentProject;
-            
+            project = investmentProject;      
             invested = investmentProject?.InvestedInProject() ?? false;
         }
         else
@@ -311,7 +324,6 @@
                 }
             }
         }
-
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
@@ -409,6 +421,10 @@
 
         return Task.CompletedTask;
     }
+
+
+
+    
 
     private void UpdateStagesBreakdown(ChangeEventArgs e)
     {
@@ -573,7 +589,8 @@
                 ProjectInfo = project.ProjectInfo, 
                 Metadata = project.Metadata, 
                 SignedTransactionHex = signedTransaction!.Transaction!.ToHex(), 
-                CreationTransactionId = project.CreationTransactionId
+                CreationTransactionId = project.CreationTransactionId,
+                AmountInvested = new Money(Investment.InvestmentAmount, MoneyUnit.BTC).Satoshi
             };
 
             var investorProject = (InvestorProject)project;
@@ -613,6 +630,8 @@
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
 
             storage.AddInvestmentProject(investorProject);
+            
+             
 
             foreach (var input in strippedInvestmentTransaction.Inputs)
                 accountInfo.UtxoReservedForInvestment.Add(input.PrevOut.ToString());

@@ -18,12 +18,12 @@
 @inject  ISerializer serializer
 
 @inherits BaseComponent
+<NotificationComponent @ref="notificationComponent" />
 
-<div class="container mt-4">
-    <h1>View Project</h1>
 
     <NotificationComponent @ref="notificationComponent" />
     <PasswordComponent @ref="passwordComponent" />
+<div class="row">
 
     @if (project?.ProjectInfo == null)
     {
@@ -41,12 +41,22 @@
     else
     {
         <!-- Project Details Section -->
-        <div class="card mb-3">
-            <div class="card-header">
-                <h4>@project.ProjectInfo.ProjectIdentifier</h4>
-            </div>
-            <div class="card-body">
+        <div class="card card-body">
+  
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center">
+                    <span class="user-select-none">
+                        <Icon IconName="view" Height="64" Width="64"></Icon>
+                    </span>
+                    <div class="h-100 ms-3">
+                        <h5 class="mb-0 font-weight-bolder">
+                            @project.ProjectInfo.ProjectIdentifier
+                        </h5>
+                    </div>
+                </div>
 
+            </div>
+ 
                 @if (project.ProjectInfo.NostrPubKey != null)
                 {
                     var metadata = project.Metadata;
@@ -99,11 +109,10 @@
                     }
 
                 }
-            </div>
-        </div>
+         </div>
 
         <!-- Stats Section -->
-        <div class="card mb-3">
+        <div class="card mt-4">
             <div class="card-header">
                 <h4>Stats</h4>
             </div>
@@ -135,11 +144,11 @@
         </div>
 
         <!-- Stages Section -->
-        <div class="card mb-3">
+        <div class="card mt-4">
             <div class="card-header">
                 <h4>Stages</h4>
             </div>
-            <div class="card-body">
+            <div class="card-body mt-4">
                 <div class="table-responsive form-control">
                     <table class="table align-items-center mb-0">
                         <thead>
@@ -200,7 +209,7 @@
     </div>*@
 
         <!-- Actions Section -->
-        <div class="card mb-3">
+        <div class="card mt-4">
             <div class="card-header">
                 <h4>Actions</h4>
             </div>
@@ -235,7 +244,7 @@
 
 
         <!-- Relays Section -->
-        <div class="card mb-3">
+        <div class="card mt-4">
             <div class="card-header">
                 <h4>Nostr</h4>
             </div>
@@ -396,7 +405,7 @@
                     projectStats.TotalInvestors = (int)data.InvestorCount;
                     projectStats.TotalRaised = data.AmountInvested;
 
-                    projectStats.TimeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
+                    projectStats.TimeLeft = (project.ProjectInfo.ExpiryDate - DateTime.UtcNow).Days;
                     if (projectStats.TimeLeft < 0)
                         projectStats.TimeLeft = 0;
 
