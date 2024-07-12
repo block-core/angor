@@ -7,6 +7,7 @@
 @using System.Text.Json
 @using Angor.Client.Models
 @using Angor.Client.Storage
+@using System.Text.RegularExpressions
 @inject ICacheStorage SessionStorage
 @inject NavigationManager NavigationManager
 @inject IRelayService _RelayService
@@ -55,7 +56,7 @@
     </div>
 </div>
 
-@if (searchInProgress )
+@if (searchInProgress)
 {
     <div class="d-flex justify-content-center mt-4">
         <div class="loader"></div>
@@ -115,7 +116,7 @@ else
                                             @project.Metadata.Name
                                         </h5>
 
-                                        <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle">@((MarkupString)project.Metadata.About)</p>
+                                        <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle">@(ConvertToMarkupString(StripHtmlTags(project.Metadata.About)))</p>
                                     }
                                 }
                                 else
@@ -175,7 +176,7 @@ else
                                                 if (project?.Metadata != null)
                                                 {
                                                     <h5 class="card-title" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
-                                                    <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@((MarkupString)project.Metadata.About)</p>
+                                                    <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@ConvertToMarkupString(StripHtmlTags(project.Metadata.About))</p>
                                                 }
                                             }
                                             else
@@ -467,4 +468,35 @@ else
     {
         searchQuery = e.Value.ToString();
     }
+
+
+
+    public string StripHtmlTags(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return string.Empty;
+        }
+        string[] blockTags = { "h1", "h2", "h3", "h4", "h5", "h6", "p", "div", "section", "article", "footer", "header", "main" };
+
+        foreach (var tag in blockTags)
+        {
+            input = Regex.Replace(input, $@"<\/?{tag}[^>]*>", $"<br />", RegexOptions.IgnoreCase);
+        }
+
+        input = Regex.Replace(input, @"<((?!br\s*/?)[^>]+)>", string.Empty);
+        input = Regex.Replace(input, @"(\r?\n){2,}", "\n");
+        input = Regex.Replace(input, @"(<br />\s*){2,}", "<br />");
+        input = Regex.Replace(input, @"^\s*<br />\s*|\s*<br />\s*$", string.Empty);
+        input = Regex.Replace(input, @"\s*(<br />)\s*", "$1");
+
+        return input;
+    }
+
+    public MarkupString ConvertToMarkupString(string input)
+    {
+        return new MarkupString(input);
+    }
+
+
 }
