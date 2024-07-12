@@ -162,7 +162,7 @@ namespace Angor.Shared.Services
 
             if (ret == null)
             {
-                throw new ApplicationException("No indexer found. The indexer appears to be offline. To resolve this issue, please go to the settings and add or refresh the indexer.");
+                throw new ApplicationException("No indexer found go to settings to add an indexer.");
             }
 
             return ret;

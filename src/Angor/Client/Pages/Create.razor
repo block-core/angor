@@ -36,12 +36,12 @@
 
     <ul class="nav nav-tabs">
         <li class="nav-item">
-            <button class="nav-link @GetActiveClass(1)" @onclick="() => { SwitchTabs(1); }">
+            <button class="nav-link @GetActiveClass(1)" @onclick="() => activeTab = 1">
                 <span class="oi oi-browser" aria-hidden="true"></span>  Project Metadata
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link @GetActiveClass(2)" @onclick="() => {SwitchTabs(2);}">
+            <button class="nav-link @GetActiveClass(2)" @onclick="() => activeTab = 2" disabled="@(!nostrMetadataCreated)">
                 <span class="oi oi-list" aria-hidden="true"></span>  Project Info
             </button>
         </li>
@@ -56,7 +56,7 @@
 
     @if (activeTab == 1)
     {
-        <EditForm Model="project.Metadata" OnValidSubmit="ProjectMetaDataTestInput">
+        <EditForm Model="project.Metadata" OnValidSubmit="CreatNostrProfileAnCheckPassword">
             <div class="mb-3">
                 <label for="NostrMetadataName" class="form-label">Project name</label>
                 <InputText id="NostrMetadataName" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the project name" />
@@ -111,7 +111,7 @@
 
     @if (activeTab == 2)
     {
-        <EditForm Model="project" OnValidSubmit="ProjectInfoMetaDataTestInput">
+        <EditForm Model="project" OnValidSubmit="CreatProjectInfoOnNostrAnCheckPassword">
 
             <!-- Angor Fee Key -->
             <div class="mb-3">
@@ -206,7 +206,7 @@
             </div>
         }
 
-        <button type="button" class="btn btn-success mb-3" @onclick="CreateProjectAsync" disabled="@creatProjectSpinner">
+        <button type="button" class="btn btn-success mb-3" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@creatProjectSpinner">
             @if (creatProjectSpinner)
             {
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -316,8 +316,6 @@
     bool createApplicationDataSpinner = false;
     bool creatProjectSpinner = false;
     bool publishProjectSpinner = false;
-    bool canSwitchTabs = false;
-    bool switchingTabs = false;
 
     bool nostrMetadataCreated = false;
     bool nostrApplicationSpecificDataCreated = false;
@@ -362,6 +360,7 @@
     {
         if (tabNumber == 2)
         {
+            if (nostrMetadataCreated && !nostrApplicationSpecificDataCreated)
             {
                 if (!project.ProjectInfo.Stages.Any())
                 {
@@ -377,115 +376,6 @@
         }
 
         return activeTab == tabNumber ? "active" : "";
-    }
-    
-
-    private async Task SwitchTabs(int tab)
-    {
-        
-        if (activeTab == 3)
-        {
-            activeTab = tab;
-            
-            return;
-        }
-        switchingTabs = true;
-
-        if (tab == 1)
-        {
-            await ProjectInfoMetaDataTestInput();
-            if (canSwitchTabs)
-            {
-                activeTab = 1; 
-                canSwitchTabs = false;
-            }
-        }
-        else if (tab == 2)
-        {
-            await ProjectMetaDataTestInput();
-            if (canSwitchTabs)
-            {
-                activeTab = 2; 
-                canSwitchTabs = false;
-            }
-        }
-        switchingTabs = false;
-    }
-
-
-    private async Task ProjectMetaDataTestInput()
-    {
-        if (string.IsNullOrEmpty(project.Metadata.Name))
-        {
-            notificationComponent.ShowErrorMessage("Project name is mandatory");
-            return;
-        }
-        canSwitchTabs = true;
-        if(!switchingTabs){
-            activeTab =2;
-        }
-    }
-
-    private async Task ProjectInfoMetaDataTestInput()
-    {
-        if (nostrApplicationSpecificDataCreated)
-        {
-            notificationComponent.ShowErrorMessage("Nostr project already created");
-            return;
-        }
-
-        if (project.ProjectInfo.TargetAmount < (decimal)0.1)
-        {
-            notificationComponent.ShowErrorMessage("Project target amount must be higher then 0.1 BTC");
-            return;
-        }
-
-        if (project.ProjectInfo.StartDate < DateTime.UtcNow)
-        {
-            notificationComponent.ShowErrorMessage("Project must start in the future");
-            return;
-        }
-
-        if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.StartDate)
-        {
-            notificationComponent.ShowErrorMessage("Project must expire after start date");
-            return;
-        }
-
-        if (project.ProjectInfo.Stages.Any() && project.ProjectInfo.ExpiryDate < project.ProjectInfo.Stages.Last().ReleaseDate)
-        {
-            notificationComponent.ShowErrorMessage("Project expire date must be after the last stage date");
-            return;
-        }
-
-        if (project.ProjectInfo.PenaltyDays < 10)
-        {
-            notificationComponent.ShowErrorMessage("Project penalty must be higher then 10 days");
-            return;
-        }
-
-        if (project.ProjectInfo.Stages.Count() < 3)
-        {
-            notificationComponent.ShowErrorMessage("There must be at least 3 stages");
-            return;
-        }
-
-        if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
-        {
-            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
-            return;
-        }
-        canSwitchTabs = true;
-        if(!switchingTabs){
-            activeTab =3;
-        }
-    }
-
-    private async Task CreateProjectAsync()
-    {
-        await CreatNostrProfileAnCheckPassword();
-        await CreatProjectInfoOnNostrAnCheckPassword();
-        await CreatProjectTransactionAnCheckPassword();
     }
 
     private async Task CreatNostrProfileAnCheckPassword()
@@ -583,7 +473,53 @@
 
     private async Task CreatProjectInfoOnNostr()
     {
-        
+        if (nostrApplicationSpecificDataCreated)
+        {
+            notificationComponent.ShowErrorMessage("Nostr project already created");
+            return;
+        }
+
+        if (project.ProjectInfo.TargetAmount < (decimal)0.1)
+        {
+            notificationComponent.ShowErrorMessage("Project target amount must be higher then 0.1 BTC");
+            return;
+        }
+
+        if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+        {
+            notificationComponent.ShowErrorMessage("Project must start in the future");
+            return;
+        }
+
+        if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.StartDate)
+        {
+            notificationComponent.ShowErrorMessage("Project must expire after start date");
+            return;
+        }
+
+        if (project.ProjectInfo.Stages.Any() && project.ProjectInfo.ExpiryDate < project.ProjectInfo.Stages.Last().ReleaseDate)
+        {
+            notificationComponent.ShowErrorMessage("Project expire date must be after the last stage date");
+            return;
+        }
+
+        if (project.ProjectInfo.PenaltyDays < 10)
+        {
+            notificationComponent.ShowErrorMessage("Project penalty must be higher then 10 days");
+            return;
+        }
+
+        if (project.ProjectInfo.Stages.Count() < 3)
+        {
+            notificationComponent.ShowErrorMessage("There must be at least 3 stages");
+            return;
+        }
+
+        if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
+        {
+            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
+            return;
+        }
 
         var projects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
 
