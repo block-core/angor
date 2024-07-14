@@ -112,10 +112,16 @@ else
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                     if (project?.Metadata != null)
                                     {
-                                        <h5 role="button" data-cy="searchedTitle" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                            @project.Metadata.Name
-                                        </h5>
-
+                                        <div class="d-flex align-items-center mb-4">
+                                            <span class="user-select-none">
+                                                <Icon IconName="view" Height="24" Width="24"></Icon>
+                                            </span>
+                                            <div class="h-100 ms-3">
+                                                <h5 class="mb-0 font-weight-bolder" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                                    <a href="/view/@project.ProjectInfo.ProjectIdentifier"> @project.Metadata.Name</a>
+                                                </h5>
+                                            </div>
+                                        </div>
                                         <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle">@(ConvertToMarkupString(StripHtmlTags(project.Metadata.About)))</p>
                                     }
                                 }
@@ -127,11 +133,18 @@ else
                         </div>
                         <div class="card-footer pt-0">
                             <hr class="horizontal light mt-3">
-                            <div role="button" class="btn btn-view w-100" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                <div class="d-flex align-items-center justify-content-center">
-                                    <span>View Project</span>
+
+                            <div role="button" class="d-flex align-items-center btn btn-border w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                <span class="user-select-none">
+                                    <Icon IconName="view-project" Height="24" Width="24"></Icon>
+                                </span>
+                                <div class="h-100 ms-3">
+                                    <span class="mb-0 font-weight-bolder text-primary">
+                                        View Project
+                                    </span>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -175,7 +188,18 @@ else
                                                 var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                                 if (project?.Metadata != null)
                                                 {
-                                                    <h5 class="card-title" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
+
+                                                    <div class="d-flex align-items-center mb-4">
+                                                        <span class="user-select-none">
+                                                            <Icon IconName="view" Height="24" Width="24"></Icon>
+                                                        </span>
+                                                        <div class="h-100 ms-3">
+                                                            <h5 class="mb-0 font-weight-bolder" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                                                <a href="/view/@project.ProjectInfo.ProjectIdentifier"> @project.Metadata.Name</a>
+                                                            </h5>
+                                                        </div>
+                                                    </div>
+
                                                     <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@ConvertToMarkupString(StripHtmlTags(project.Metadata.About))</p>
                                                 }
                                             }
@@ -185,11 +209,19 @@ else
                                             }
                                         </div>
                                         <hr class="horizontal light m-only">
-                                        <div role="button" class="btn btn-view vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                            <div class="d-flex align-items-center justify-content-center">
-                                                <span>View Project</span>
+ 
+                                            <div role="button" class="d-flex align-items-center btn btn-border vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                                <span class="user-select-none">
+                                                    <Icon IconName="view-project" Height="24" Width="24"></Icon>
+                                                </span>
+                                                <div class="h-100 mt-3">
+                                                    <span class="mb-0 font-weight-bolder">
+                                                        View Project
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
+
+                                       
                                     </div>
                                 }
                             </div>

@@ -15,7 +15,7 @@
 @inject IClipboardService _clipboardService
 @inject IIndexerService _IndexerService
 @inject IRelayService _RelayService
-@inject  ISerializer serializer
+@inject ISerializer serializer
 
 @inherits BaseComponent
 <NotificationComponent @ref="notificationComponent" />
@@ -45,11 +45,11 @@
                 var metadata = project.Metadata;
 
 
-                    <div class="card-header p-0 overflow-hidden position-relative">
+                <div class="card-header p-0 overflow-hidden position-relative">
                     <img class="card-img-top card-img-top-view" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                     <img class="profile-image-view rounded-circle" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                    </div>
-           
+                </div>
+
 
                 <div class="p-4">
                     <div class="d-flex align-items-center justify-content-between mb-4">
@@ -65,7 +65,7 @@
                         </div>
                     </div>
 
-                     <p class="card-subtitle">@((MarkupString)metadata?.About)</p>
+                    <p class="card-subtitle">@((MarkupString)metadata?.About)</p>
                     <hr />
 
                     <a href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
@@ -92,22 +92,19 @@
                             currentDays = currentDays < 0 ? 0 : currentDays;
                             currentDays = currentDays > totalDays ? totalDays : currentDays;
 
-                            var completePercent = 0;
 
                             if (totalDays > 0)
-                                completePercent = (currentDays * 100) / totalDays;
+                            {
+                                <div class="progress-container">
+                                    <div role="progressbar" data-type="days" aria-valuenow="@currentDays" aria-valuemin="0" aria-valuemax="@totalDays" style="--day: @currentDays; --total: @totalDays;" data-day="@currentDays" data-total="@totalDays"></div>
+                                </div>
+                            }
 
-                            <div class="progress mb-2">
-                                <div class="progress-bar bg-info" role="progressbar" style="width: @completePercent%;" aria-valuenow="@completePercent" aria-valuemin="0" aria-valuemax="100">@currentDays/@totalDays days</div>
-                            </div>
                         }
                     }
                 </div>
             }
         </div>
-
-
-
 
 
         <!-- Stats Section -->
@@ -116,13 +113,12 @@
                 <h4>Stats</h4>
             </div>
             <div class="card-body">
-                <!-- Progress bar section -->
-                <div class="progress mb-2">
-                    <div class="progress-bar" role="progressbar" style="width: @projectStats.FundingProgressPercent%;" aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100">@projectStats.FundingProgressPercent%</div>
-                </div>
+
+
+                <div role="progressbar" data-type="percent" aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100" style="--value: @projectStats.FundingProgressPercent;"></div>
 
                 <!-- Additional details section -->
-                <div class="row align-items-center">
+                <div class="row align-items-center mt-4">
                     <div class="col-md-8">
 
                         @if (projectStats.Loading)
@@ -237,15 +233,15 @@
                         <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                         <div class="input-group">
                             <InputText id="NostrPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                           @if (founder)
-                           {
-                               <button @onclick="CopyNsecToClipboardAsyncCheckPassword" class="btn btn-success">Copy NSec to clipboard</button>
-                           }
+                            @if (founder)
+                            {
+                                <button @onclick="CopyNsecToClipboardAsyncCheckPassword" class="btn btn-success">Copy NSec to clipboard</button>
+                            }
                         </div>
                     </div>
                 }
 
-                <br/>
+                <br />
                 <h6>Relays</h6>
                 @foreach (var relay in NostrClients)
                 {
