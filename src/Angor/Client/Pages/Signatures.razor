@@ -275,7 +275,7 @@
         await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,// project.LastRequestForSignaturesTime , async
             (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
         {
-            Logger.LogDebug($"Sig request event received investorPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
+            Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
 
             var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
 
