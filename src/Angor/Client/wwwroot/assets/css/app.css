@@ -1486,8 +1486,8 @@ img, a {
 }
 
 [role="progressbar"] {
-    --primary: #1f5d6a;
-    --secondary: #ff9900;
+    --primary: #ff9900;
+    --secondary: #1f5d6a;
     --size: 220px;
     width: var(--size);
     aspect-ratio: 1;
@@ -1505,8 +1505,8 @@ img, a {
     }
 
     [role="progressbar"][data-type="days"] {
-        --primary: #1f5d6a;
-        --secondary: #ff9900;
+        --primary: #ff9900;
+        --secondary: #1f5d6a;
         --percentage: calc(var(--day) / var(--total) * 100);
         animation: dayProgress 2s 0.5s forwards;
     }
