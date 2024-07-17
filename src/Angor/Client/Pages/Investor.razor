@@ -18,6 +18,7 @@
 @inject IRelayService _RelayService
 @inject ISignService _SignService
 @inject ISerializer serializer
+@inject ISignService _SignService
 
 @inject IJSRuntime JS
 
@@ -112,6 +113,7 @@
                                     <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Spent by Founder</th>
                                     <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Available to Founder</th>
                                     <th class="text-uppercase text-xxs font-weight-bolder opacity-7">In Recovery</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Founder Approval</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -119,6 +121,8 @@
                                 @foreach (var project in projects)
                                 {
                                     Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
+                                    var nostrPubKey = project.ProjectInfo.NostrPubKey;
+                                    investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
 
                                     <tr>
                                         <td>
@@ -147,6 +151,17 @@
                                         <td>-</td>
                                         <td>-</td>
                                         <td>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                        @* <td>temp  + @founderApproved + @project.ReceivedFounderSignatures()</td> *@
+                                        <td>
+                                            @if (hasInvestmentRequests)
+                                            {
+                                            <a href="@($"/invest/{project.ProjectInfo.ProjectIdentifier}")" class="text-success">Approved</a>
+                                            }
+                                            else
+                                            {
+                                            <a href="@($"/invest/{project.ProjectInfo.ProjectIdentifier}")" class="text-danger">Pending</a>
+                                            }
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -170,6 +185,8 @@
     long TotalWallet = 0;
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
+    
+    private Dictionary<string, bool> investmentRequestsMap = new Dictionary<string, bool>();
 
     public Dictionary<string, ProjectStats> Stats = new();
 
@@ -254,6 +271,37 @@
         
     }
     
+    private async Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
+    {
+        if (investmentRequestsMap.ContainsKey(nostrPubKey))
+        {
+            investmentRequestsMap[nostrPubKey] = true;
+            StateHasChanged();
+        }
+    }
+    
+    private async Task checkSignatureFromFounder(WalletWords words)
+    {
+        foreach (var project in projects)
+        {
+            investmentRequestsMap[project.ProjectInfo.NostrPubKey] = false;
+
+            var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
+
+            var investorNostrPubKey = investorNostrPrivateKey.PubKey.ToHex()[2..]; // is there a way to derive investorNostrPubKey without the nostr private key?
+
+            _SignService.LookupSignatureForInvestmentRequest(
+                investorNostrPubKey,
+                project.ProjectInfo.NostrPubKey,
+                project.SignaturesInfo.TimeOfSignatureRequest.Value,
+                project.SignaturesInfo.SignatureRequestEventId,
+                async signatureContent => await HandleSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
+            );
+        }
+    }
+
+
+    
     
 
     private async Task RefreshBalance()
@@ -293,13 +341,15 @@
         }
      
         RefreshBalanceTriggered = true;
-        
+        // await checkSignatureFromFounder();
         var words = await passwordComponent.GetWalletAsync();
         var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1); 
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
         var NostrDMPubkey = _DerivationOperations.DeriveNostrPubKey(words, 1);
         
         var rootNostrPubey = _DerivationOperations.DeriveNostrPubKey(words, 0);
+
+        await checkSignatureFromFounder(words);
         
         await _RelayService.LookupDirectMessagesForPubKeyAsync( NostrDMPubkey, null,1,
             async x =>
