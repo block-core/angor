@@ -220,13 +220,12 @@
 
         <!-- Actions Section -->
 
-
         <div class="card card-body mt-4">
             @if (founder)
             {
                 <div class="text-center justify-content-center">
                     <Icon IconName="verified-check" Height="100" Width="100"></Icon>
-                    <p class="mt-4 text-success">You are the founder.</p>
+                    <p class="mt-4 text-success">Congratulations, you are the founder!</p>
 
                     <div class="mb-3">
                         <!-- Buttons Spend Funds and Approve Signature next to each other -->
@@ -234,24 +233,31 @@
                         <NavLink href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border">Approve signature</NavLink>
                     </div>
                 </div>
-
             }
             else if (invested)
             {
-                <p>
-                    You have already invested in this project.
+                <div class="text-center justify-content-center">
+                    <Icon IconName="cup" Height="100" Width="100"></Icon>
+                    <p class="mt-4">
+                        Thank you for your investment in this project!
 
-                    <a href="@myProjectExplorerLink" target="_blank">View the transaction on the explorer.</a>
-                </p>
+                        <a href="@myProjectExplorerLink" target="_blank">Track your transaction on the explorer.</a>
+                    </p>
 
-                <button class="btn btn-danger" @onclick="RecoverFunds">Recover</button>
+                    <button class="btn btn-danger mb-3" @onclick="RecoverFunds">Recover</button>
+                </div>
             }
             else
             {
-                <button class="btn btn-border" data-cy="INVEST_BUTTON" @onclick="InvestInProject">Invest</button>
+                <div class="text-center justify-content-center mt-4">
+                    <Icon IconName="shield-star" Height="100" Width="100"></Icon>
+                    <p class="mt-4">
+                        Seize the opportunity to invest in this project.
+                    </p>
+                    <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON" @onclick="InvestInProject">Invest Now</button>
+                </div>
             }
         </div>
-
 
 
         <!-- Relays Section -->
