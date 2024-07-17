@@ -1480,12 +1480,15 @@ img, a {
 .progress-container {
     display: flex;
     gap: 20px;
+    justify-content: center;
+    align-items: center;
+    margin:10px;
 }
 
 [role="progressbar"] {
     --primary: #1f5d6a;
     --secondary: #ff9900;
-    --size: 250px;
+    --size: 220px;
     width: var(--size);
     aspect-ratio: 1;
     border-radius: 50%;
@@ -1516,12 +1519,9 @@ img, a {
         width: 100%;
         height: 100%;
         background: conic-gradient(var(--primary) calc(var(--percentage) * 1%), var(--secondary) 0);
-        mask: radial-gradient(white 60%, transparent 0);  
-        mask-mode: alpha;
-        -webkit-mask: radial-gradient(#0000 60%, #000 0);  
-        -webkit-mask-mode: alpha;
+        mask-image: radial-gradient(circle, transparent 60%, white 61%);
         filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.25));
-    }
+     }
 
 
     [role="progressbar"][data-type="percent"]::after {
