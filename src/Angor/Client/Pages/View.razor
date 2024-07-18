@@ -15,7 +15,7 @@
 @inject IClipboardService _clipboardService
 @inject IIndexerService _IndexerService
 @inject IRelayService _RelayService
-@inject  ISerializer serializer
+@inject ISerializer serializer
 
 @inherits BaseComponent
 <NotificationComponent @ref="notificationComponent" />
@@ -39,139 +39,167 @@
     else
     {
         <!-- Project Details Section -->
-        <div class="card card-body">
-  
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <div class="d-flex align-items-center">
-                    <span class="user-select-none">
-                        <Icon IconName="view" Height="64" Width="64"></Icon>
-                    </span>
-                    <div class="h-100 ms-3">
-                        <h5 class="mb-0 font-weight-bolder">
-                            @project.ProjectInfo.ProjectIdentifier
-                        </h5>
-                    </div>
+        <div class="card card-body p-0">
+            @if (project.ProjectInfo.NostrPubKey != null)
+            {
+                var metadata = project.Metadata;
+
+
+                <div class="card-header p-0 overflow-hidden position-relative">
+                    <img class="card-img-top card-img-top-view" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                    <img class="profile-image-view rounded-circle" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                 </div>
 
-            </div>
- 
-                @if (project.ProjectInfo.NostrPubKey != null)
-                {
-                    var metadata = project.Metadata;
 
-                    if (metadata?.Banner != null)
-                    {
-                        <div class="card-header overflow-hidden">
-                            <img class="card-img-top" src="@metadata.Banner" alt="" />
+                <div class="p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center">
+                            <span class="user-select-none">
+                                <Icon IconName="view" Height="32" Width="32"></Icon>
+                            </span>
+                            <div class="h-100 ms-3">
+                                <h5 class="mb-0 font-weight-bolder">
+                                    <a href="/view/@project.ProjectInfo.ProjectIdentifier">@metadata?.Name</a>
+                                </h5>
+                            </div>
                         </div>
-                    }
-
-                    <br />
-                    <h3 class="card-title">@metadata?.Name</h3>
-                    <p class="card-subtitle">@metadata?.About</p>
-                    <hr />
-                }
-
-                <a href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
-                <p class="card-text">Project Identifier: @project.ProjectInfo.ProjectIdentifier</p>
-                <p class="card-text">Founder Key: @project.ProjectInfo.FounderKey</p>
-                <p class="card-text">Target Amount: @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
-                <p class="card-text">Penalty duration: @project.ProjectInfo.PenaltyDays days</p>
-
-                <p class="card-text">
-                    Project dates: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") - @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")
-                </p>
-
-                @{
-                    int startsInDays = (project.ProjectInfo.StartDate - DateTime.Now).Days;
-
-                    if (startsInDays > 0)
-                    {
-                        <p class="card-text">Starts in @startsInDays days</p>
-                    }
-                    else
-                    {
-                        int totalDays = (project.ProjectInfo.ExpiryDate - project.ProjectInfo.StartDate).Days;
-                        int currentDays = (DateTime.Now - project.ProjectInfo.StartDate).Days;
-                        currentDays = currentDays < 0 ? 0 : currentDays;
-                        currentDays = currentDays > totalDays ? totalDays : currentDays;
-
-                        var completePercent = 0;
-
-                        if (totalDays > 0)
-                            completePercent = (currentDays * 100) / totalDays;
-
-                        <div class="progress mb-2">
-                            <div class="progress-bar bg-info" role="progressbar" style="width: @completePercent%;" aria-valuenow="@completePercent" aria-valuemin="0" aria-valuemax="100">@currentDays/@totalDays days</div>
-                        </div>
-                    }
-
-                }
-         </div>
-
-        <!-- Stats Section -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h4>Stats</h4>
-            </div>
-            <div class="card-body">
-                <!-- Progress bar section -->
-                <div class="progress mb-2">
-                    <div class="progress-bar" role="progressbar" style="width: @projectStats.FundingProgressPercent%;" aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100">@projectStats.FundingProgressPercent%</div>
-                </div>
-
-                <!-- Additional details section -->
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-
-                        @if (projectStats.Loading)
-                        {
-                            <div class="loader"></div>
-                        }
-                        else
-                        {
-                            <p class="card-text mb-0">Total Raised: @Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-                            <p class="card-text mb-0">Total Investors: @projectStats.TotalInvestors</p>
-                            @* <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>*@
-                            <p class="card-text mb-0">Time Left for Investing: @projectStats.TimeLeft days</p>
-                        }
-
                     </div>
+
+                    <p class="card-subtitle">@((MarkupString)metadata?.About)</p>
+
+                    <div class="row align-items-center">
+                        <div class="col-12 col-md-12 col-lg-8 order-2 order-md-2 mt-4">
+                            <div class="form-control d-flex align-items-center">
+                                <Icon IconName="explorer"></Icon>
+                                <a class="ms-2" href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
+                            </div>
+                            @* <div class="form-control mt-1 d-flex align-items-center">
+                    <Icon IconName="view"></Icon>
+                    <p class="card-text ms-2">Project Identifier: @project.ProjectInfo.ProjectIdentifier</p>
+                    </div>
+                    <div class="form-control mt-1 d-flex align-items-center">
+                    <Icon IconName="key"></Icon>
+                    <p class="card-text ms-2">Founder Key: @project.ProjectInfo.FounderKey</p>
+                    </div> *@
+                            <div class="form-control mt-1 d-flex align-items-center">
+                                <Icon IconName="balance"></Icon>
+                                <p class="card-text ms-2">Target Amount: @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
+                            </div>
+                            <div class="form-control mt-1 d-flex align-items-center">
+                                <Icon IconName="calendar"></Icon>
+                                <p class="card-text ms-2">Penalty duration: @project.ProjectInfo.PenaltyDays days</p>
+                            </div>
+                            <div class="form-control mt-1 d-flex align-items-center">
+                                <Icon IconName="date"></Icon>
+                                <p class="card-text ms-2">
+                                    Project dates: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") - @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")
+                                </p>
+                            </div>
+
+                        </div>
+                        <div class="col-12 col-md-12 col-lg-4 order-1 order-md-1 d-flex justify-content-center align-items-center mt-4">
+                            <div class="w-100">
+                                @{
+                                    int startsInDays = (project.ProjectInfo.StartDate - DateTime.Now).Days;
+
+                                    if (startsInDays > 0)
+                                    {
+                                        <p class="card-text text-center">Starts in @startsInDays days</p>
+                                    }
+                                    else
+                                    {
+                                        int totalDays = (project.ProjectInfo.ExpiryDate - project.ProjectInfo.StartDate).Days;
+                                        int currentDays = (DateTime.Now - project.ProjectInfo.StartDate).Days;
+                                        currentDays = currentDays < 0 ? 0 : currentDays;
+                                        currentDays = currentDays > totalDays ? totalDays : currentDays;
+
+                                        if (totalDays > 0)
+                                        {
+                                            <div class="progress-container">
+                                                <div role="progressbar" data-type="days" aria-valuenow="@currentDays" aria-valuemin="0" aria-valuemax="@totalDays" style="--day: @currentDays; --total: @totalDays;" data-day="@currentDays" data-total="@totalDays"></div>
+                                            </div>
+                                        }
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row align-items-center">
+                        <div class="col-12 col-lg-4 d-flex justify-content-center align-items-center mt-4 order-1 order-lg-1">
+                            <div class="w-100">
+                                <div class="progress-container">
+                                    <div role="progressbar" data-type="percent" aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100" style="--value: @projectStats.FundingProgressPercent;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-8 mt-4 order-2 order-lg-2">
+                            @if (projectStats.Loading)
+                            {
+                                <div class="loader"></div>
+                            }
+                            else
+                            {
+                                <div class="form-control mt-1 d-flex align-items-center">
+                                    <Icon IconName="calculator"></Icon>
+                                    <p class="card-text ms-2">Total Raised: @Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                </div>
+                                <div class="form-control mt-1 d-flex align-items-center">
+                                    <Icon IconName="users"></Icon>
+                                    <p class="card-text ms-2">Total Investors: @projectStats.TotalInvestors</p>
+                                </div>
+                                @* <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>*@
+                                <div class="form-control mt-1 d-flex align-items-center">
+                                    <Icon IconName="calendar"></Icon>
+                                    <p class="card-text ms-2">Time Left for Investing: @projectStats.TimeLeft days</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
                 </div>
-            </div>
+            }
         </div>
 
         <!-- Stages Section -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h4>Stages</h4>
-            </div>
-            <div class="card-body mt-4">
-                <div class="table-responsive form-control">
-                    <table class="table align-items-center mb-0">
-                        <thead>
-                            <tr>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage </th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage %</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Release Date</th>
-                                <!-- Other headers -->
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for (int index = 0; index < project.ProjectInfo.Stages.Count; index++)
-                            {
-                                <tr>
-                                    <td>@(index + 1)</td>
-                                    <td>@project.ProjectInfo.Stages[index].AmountToRelease %</td>
-                                    <td>@project.ProjectInfo.Stages[index].ReleaseDate.ToString("dd/MM/yyyy")</td>
-                                    <!-- Other stage details -->
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+
+
+        <div class="card card-body mt-4">
+            <div class="d-flex align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="stages"></Icon>
+                </span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Stages
+                    </h5>
                 </div>
             </div>
+            <div class="table-responsive form-control mt-4">
+                <table class="table align-items-center mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage </th>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage %</th>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Release Date</th>
+                            <!-- Other headers -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int index = 0; index < project.ProjectInfo.Stages.Count; index++)
+                        {
+                            <tr>
+                                <td>@(index + 1)</td>
+                                <td>@project.ProjectInfo.Stages[index].AmountToRelease %</td>
+                                <td>@project.ProjectInfo.Stages[index].ReleaseDate.ToString("dd/MM/yyyy")</td>
+                                <!-- Other stage details -->
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
+
 
         <!-- Seeders Section -->
         @*        <div class="card mb-3">
@@ -191,36 +219,44 @@
     </div>*@
 
         <!-- Actions Section -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h4>Actions</h4>
-            </div>
-            <div class="card-body">
-                @if (founder)
-                {
-                    <p>You are the founder.</p>
+
+        <div class="card card-body mt-4">
+            @if (founder)
+            {
+                <div class="text-center justify-content-center">
+                    <Icon IconName="verified-check" Height="100" Width="100"></Icon>
+                    <p class="mt-4 text-success">Congratulations, you are the founder!</p>
 
                     <div class="mb-3">
                         <!-- Buttons Spend Funds and Approve Signature next to each other -->
-                        <NavLink href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-primary me-2">Spend Funds</NavLink>
-                        <NavLink href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-primary">Approve signature</NavLink>
+                        <NavLink href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border me-2">Spend Funds</NavLink>
+                        <NavLink href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border">Approve signature</NavLink>
                     </div>
-                }
-                else if (invested)
-                {
-                    <p>
-                        You have already invested in this project.
+                </div>
+            }
+            else if (invested)
+            {
+                <div class="text-center justify-content-center">
+                    <Icon IconName="cup" Height="100" Width="100"></Icon>
+                    <p class="mt-4">
+                        Thank you for your investment in this project!
 
-                        <a href="@myProjectExplorerLink" target="_blank">View the transaction on the explorer.</a>
+                        <a href="@myProjectExplorerLink" target="_blank">Track your transaction on the explorer.</a>
                     </p>
 
-                    <button class="btn btn-danger" @onclick="RecoverFunds">Recover</button>
-                }
-                else
-                {
-                    <button class="btn btn-primary" data-cy="INVEST_BUTTON" @onclick="InvestInProject">Invest</button>
-                }
-            </div>
+                    <button class="btn btn-danger mb-3" @onclick="RecoverFunds">Recover</button>
+                </div>
+            }
+            else
+            {
+                <div class="text-center justify-content-center mt-4">
+                    <Icon IconName="shield-star" Height="100" Width="100"></Icon>
+                    <p class="mt-4">
+                        Seize the opportunity to invest in this project.
+                    </p>
+                    <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON" @onclick="InvestInProject">Invest Now</button>
+                </div>
+            }
         </div>
 
 
@@ -236,15 +272,15 @@
                         <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                         <div class="input-group">
                             <InputText id="NostrPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                           @if (founder)
-                           {
-                               <button @onclick="CopyNsecToClipboardAsyncCheckPassword" class="btn btn-success">Copy NSec to clipboard</button>
-                           }
+                            @if (founder)
+                            {
+                                <button @onclick="CopyNsecToClipboardAsyncCheckPassword" class="btn btn-success">Copy NSec to clipboard</button>
+                            }
                         </div>
                     </div>
                 }
 
-                <br/>
+                <br />
                 <h6>Relays</h6>
                 @foreach (var relay in NostrClients)
                 {
@@ -270,8 +306,8 @@
 
     private List<(string Hash, int Amount)> SelectedSeeders = new List<(string hash, int amount)>
     {
-        { (new uint256().ToString(), 10) },
-        { (new uint256().ToString(), 20) },
+    { (new uint256().ToString(), 10) },
+    { (new uint256().ToString(), 20) },
     };
 
     public class ProjectStats
@@ -356,7 +392,7 @@
                                 SessionStorage.StoreProject(project);
                             StateHasChanged();
                         },
-                            new[] { projectIndexerData.NostrPubKey });
+                        new[] { projectIndexerData.NostrPubKey });
                     }
                 }
             }

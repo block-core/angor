@@ -46,7 +46,7 @@
     else
     {
         <div class="d-flex justify-content-end">
-            <button class="btn btn-primary mb-2" @onclick="RefreshBalance" disabled="@refreshSpinner">
+            <button class="btn btn-border mb-2" @onclick="RefreshBalance" disabled="@refreshSpinner">
                 @if (refreshSpinner)
                 {
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -177,7 +177,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false" disabled="@spendSpinner">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="Send" disabled="@spendSpinner">
+                        <button type="button" class="btn btn-border" @onclick="Send" disabled="@spendSpinner">
                             @if (spendSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
