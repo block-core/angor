@@ -33,15 +33,15 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-N62BYwYdYJQDQytYgEat0y3YuVVakxapbSStebIxRho=",
+      "hash": "sha256-e3Vrp\/YvGGLkUndZlAx85wKAOHTk+2hJHolVUdJIuNs=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-GbvrZRDiniqJvmp2P7uOGhmd4LBaGxK9\/skahb5nWo8=",
+      "hash": "sha256-4mfZ24VWJwA6dIFOYGZucASdCJb10jYbtU0Is2lC\/6g=",
       "url": "_framework\/Angor.Client.wasm"
     },
     {
-      "hash": "sha256-+VxrFS0Oxu52\/AhhXF0EpZgrMbeWZemwJsDlpS33LcI=",
+      "hash": "sha256-RZap\/hgPjYxocgnxCwNP4\/G43WjSt5v5iaPOdVLGC74=",
       "url": "_framework\/Angor.Shared.wasm"
     },
     {
@@ -149,7 +149,7 @@
       "url": "_framework\/Microsoft.Extensions.Primitives.wasm"
     },
     {
-      "hash": "sha256-BlVEya7d77f+wXLZ+CbwQLrwSv172GbNHfHkl5pZ+Ac=",
+      "hash": "sha256-3O3gWyrEr74DBx9YVdApbuDBLG2cw8DkHPzqZ2JoG2Q=",
       "url": "_framework\/Microsoft.JSInterop.wasm"
     },
     {
@@ -365,7 +365,7 @@
       "url": "_framework\/System.ObjectModel.wasm"
     },
     {
-      "hash": "sha256-KZnHofZIrCjJJkC+HvIfo+Z3V7nleOhQuEG4jgraz2A=",
+      "hash": "sha256-jUa3vGbQvKOO0kxjqHN5G5a0+VKgG3FOBGnojMf68hc=",
       "url": "_framework\/System.Private.CoreLib.wasm"
     },
     {
@@ -425,7 +425,7 @@
       "url": "_framework\/System.Runtime.Serialization.Primitives.wasm"
     },
     {
-      "hash": "sha256-BxWK\/X\/Tq+4fxNwiT8zA0eJiZYjzl5lOL84oLZNBr9Q=",
+      "hash": "sha256-rKenoVw5Ox9dDPUZFYvDroWI+10c1Q\/yPMV4ZvWngFM=",
       "url": "_framework\/System.Runtime.wasm"
     },
     {
@@ -761,7 +761,7 @@
       "url": "assets\/js\/appUpdate.js"
     },
     {
-      "hash": "sha256-OTOSwe4It7cnWzY5LmRpiQcPV+7UXGxU1PaNoRnlNFA=",
+      "hash": "sha256-1hamodEVd3U8RwN9ZpfIDmthWjfT8MDBifZ0t4BrE10=",
       "url": "index.html"
     },
     {
@@ -777,8 +777,8 @@
       "url": "manifest.json"
     },
     {
-      "hash": "sha256-EWRC0pGHE2QJzBvNZmUi\/qMR+Kax7j7zorijXcwUbRo=",
-      "url": "NostrToolsMethods.js"
+      "hash": "sha256-SB9wmlKftJJeKWS\/k95NEM219AoESNbeaFmEXZqLHQs=",
+      "url": "nostr-tools-methods.js"
     },
     {
       "hash": "sha256-noWk5RFri18kEjAe1w2pQAVTfL9Hbbx477FV03+k87k=",
@@ -789,5 +789,5 @@
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "nPLTSdZ7"
+  "version": "wJdKlxQl"
 };
