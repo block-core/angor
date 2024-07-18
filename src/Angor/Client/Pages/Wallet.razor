@@ -408,29 +408,29 @@ else
 
                         <form>
 
-                            <form>
-                                <div class="mb-3">
-                                    <label for="sendToAddress" class="form-label">Send to Address</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
-                                        <span class="input-group-text">
-                                            <span style="cursor: pointer;" @onclick="ClearAddress">
-                                                <Icon IconName="close-circle" />
-                                            </span>
+                        <form>
+                            <div class="mb-3">
+                                <label for="sendToAddress" class="form-label">Send to Address</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
+                                    <span class="input-group-text">
+                                        <span style="cursor: pointer;" @onclick="ClearAddress">
+                                            <Icon IconName="close-circle" />
                                         </span>
-                                    </div>
-                                    <button type="button" class="btn btn-primary mt-2" @onclick="PasteFromClipboard">Paste from Clipboard</button>
+                                    </span>
                                 </div>
+                                <button type="button" class="btn btn-border mt-2" @onclick="PasteFromClipboard">Paste from Clipboard</button>
+                            </div>
 
                                
 
 
 
 
-                                <div class="mb-3">
-                                    <label for="sendAmount" class="form-label">Amount</label>
-                                    <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
-                                </div>
+                            <div class="mb-3">
+                                <label for="sendAmount" class="form-label">Amount</label>
+                                <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
+                            </div>
                             <button type="button" class="btn btn-border mb-3" @onclick="() => coinControlModal = true">
                                 Coin Control
                                 @if (_sendInfo.SendUtxos.Any())
@@ -452,6 +452,7 @@ else
                                 }
                             </button>
 
+                        </form>
                         </form>
 
                     </div>
