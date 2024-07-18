@@ -21,7 +21,6 @@
 @inject IClipboardService ClipboardService
 
 
-
 @inherits BaseComponent
 
 <PageTitle>Wallet and balances</PageTitle>
@@ -407,7 +406,6 @@ else
                     <div class="row mt-4">
 
                         <form>
-
                         <form>
                             <div class="mb-3">
                                 <label for="sendToAddress" class="form-label">Send to Address</label>
@@ -421,11 +419,6 @@ else
                                 </div>
                                 <button type="button" class="btn btn-border mt-2" @onclick="PasteFromClipboard">Paste from Clipboard</button>
                             </div>
-
-                               
-
-
-
 
                             <div class="mb-3">
                                 <label for="sendAmount" class="form-label">Amount</label>
@@ -834,7 +827,6 @@ else
             notificationComponent.ShowErrorMessage("New wallet password is null or empty");
             return;
         }
-
         if (!backupConfirmation)
         {
             showBackupConfirmationError = true;
@@ -1218,8 +1210,7 @@ else
     {
         activeTab = tab;
     }
-
-
+    
     bool IsExpanded(string address)
     {
         return collapseStates.ContainsKey(address) ? collapseStates[address] : false;
