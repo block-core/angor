@@ -69,7 +69,7 @@
 
                     @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
                     {
-                        <button class="btn btn-primary me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
+                        <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
                             @if (PrepareToRecoverCoinsModalSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -99,7 +99,7 @@
 
                     @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
                     {
-                        <button class="btn btn-primary" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
+                        <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
                             @if (PrepareEndOfProjectCoinsModalSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -115,7 +115,7 @@
             </div>
 
             <div>
-                <button class="btn btn-primary" @onclick="RefreshInvestments" disabled="@refreshSpinner">
+                <button class="btn btn-border" @onclick="RefreshInvestments" disabled="@refreshSpinner">
                     @if (refreshSpinner)
                     {
                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -194,7 +194,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="RecoverCoins" disabled="@PrepareToRecoverCoinsConfirmSpinner">
+                        <button type="button" class="btn btn-border" @onclick="RecoverCoins" disabled="@PrepareToRecoverCoinsConfirmSpinner">
                             @if (PrepareToRecoverCoinsConfirmSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -241,7 +241,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @onclick="() => showRecoveryReleaseModal = false" disabled="@PrepareToReleaseCoinsConfirmSpinner">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="ReleaseCoins" disabled="@PrepareToReleaseCoinsConfirmSpinner">
+                        <button type="button" class="btn btn-border" @onclick="ReleaseCoins" disabled="@PrepareToReleaseCoinsConfirmSpinner">
                             @if (PrepareToReleaseCoinsConfirmSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -288,7 +288,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @onclick="() => showEndOfProjectModal = false" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="EndOfProjectCoins" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">
+                        <button type="button" class="btn btn-border" @onclick="EndOfProjectCoins" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">
                             @if (PrepareEndOfProjectCoinsConfirmSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>

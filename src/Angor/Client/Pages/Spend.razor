@@ -19,8 +19,10 @@
 @inject IWalletOperations _WalletOperations
 @inject IFounderTransactionActions _founderTransactionActions
 @inject ILogger<Recover> Logger;
+@inject IClipboardService _clipboardService
 
 @inherits BaseComponent
+
 
 @if (!hasWallet)
 {
@@ -44,7 +46,7 @@
     else
     {
         <div class="d-flex justify-content-end">
-            <button class="btn btn-primary mb-2" @onclick="RefreshBalance" disabled="@refreshSpinner">
+            <button class="btn btn-border mb-2" @onclick="RefreshBalance" disabled="@refreshSpinner">
                 @if (refreshSpinner)
                 {
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -57,20 +59,23 @@
             </button>
         </div>
     }
-
+  
     @foreach (var stage in stageDatas)
     {
         bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
         var investedCount = stage.Items.Count(c => c.IsSpent == false);
         var investedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
+        bool noCoinsToClaim = investedCount == 0 || stage.StagePinner == true;
 
+                        
         <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
                     @if (stageisActive)
                     {
-                        <button class="btn btn-success" disabled="@(investedCount == 0 || stage.StagePinner == true)" @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
+                        
+                        <button class="btn @((noCoinsToClaim) ? "btn-light" : "btn-success")" disabled="@noCoinsToClaim" @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
                             @if (stage.StagePinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -78,7 +83,14 @@
                             }
                             else
                             {
-                                <span>Claim Coins</span>
+                                @if (investedCount == 0)
+                                {
+                                    <span>Claimed</span>
+                                }
+                                else
+                                {
+                                    <span>Claim Coins</span>
+                                }
                             }
                         </button>
                     }
@@ -101,33 +113,30 @@
                         @foreach (var transaction in stage.Items)
                         {
                             bool isTicked = selected.ContainsKey(transaction.Trxid);
+                            string statusClass = transaction.IsSpent ? "bg-warning text-dark" : "bg-success text-light";
+                            string statusText = transaction.IsSpent ? "Spent" : "Unspent";
 
                             <div class="d-flex mb-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
-                                </div>
-                                <div class="flex-grow-1 ms-3">
-                                    <p class="mb-0">
-                                        @transaction.Amount @network.CoinTicker - utxo : @transaction.Trxid-@transaction.Outputindex
-
-                                        @if (transaction.IsSpent)
-                                        {
-                                            <p class="text-primary">spent</p>
-                                        }
-                                        else
-                                        {
-                                            <p class="text-success">unspent</p>
-                                        }
-
-                                    </p>
-                                </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
                             </div>
+                            <div class="flex-grow-1 ms-3">
+                                <p class="mb-0">
+                                    @transaction.Amount @network.CoinTicker - utxo : 
+                                    <span style="cursor: pointer; text-decoration: underline;" @onclick="() => CopyTRXToClipboard(transaction.Trxid)">@transaction.Trxid</span> -@transaction.Outputindex
+                                    <span class="p-1 rounded @statusClass">
+                                        @statusText
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
                         }
                     </div>
                 }
             </div>
         </div>
     }
+    
     
     @if (showCreateModal)
     {
@@ -168,7 +177,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false" disabled="@spendSpinner">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="Send" disabled="@spendSpinner">
+                        <button type="button" class="btn btn-border" @onclick="Send" disabled="@spendSpinner">
                             @if (spendSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -183,8 +192,39 @@
                 </div>
             </div>
         </div>
+    
 
     }
+
+
+<div class="container my-4">
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <h5 class="card-title">Project Statistics</h5>
+            </div>
+            <p class="card-subtitle text-muted mb-2">Total Invested Amount (Spent + Unspent): @(totalAvailableInvestedAmount + totalSpentAmount) @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Unspent Invested Amount: @totalAvailableInvestedAmount @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Withdrawable Amount: @currentWithdrawableAmount @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Transactions: @totalInvestedTransactions</p>
+            <p class="card-subtitle text-muted mb-2">Total Unspent Transactions: @(totalInvestedTransactions - totalSpentTransactions) </p>
+            <p class="card-subtitle text-muted mb-2">Total Spent Amount: @totalSpentAmount @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Spent Transactions: @totalSpentTransactions</p>
+            <p class="card-subtitle text-muted mb-2">Total Stages: @totalStages</p>
+            @if (timeUntilNextStage.HasValue)
+            {
+                <p class="card-subtitle text-muted mb-2">Time until next stage: @timeUntilNextStage.Value.Days days, @timeUntilNextStage.Value.Hours hours, @timeUntilNextStage.Value.Minutes minutes</p>
+            }
+            else
+            {
+                <p class="card-subtitle text-muted mb-2">No upcoming stages.</p>
+            }
+        </div>
+    </div>
+</div>
+
+
+
 
 </div>
 
@@ -199,6 +239,14 @@
     private bool refreshSpinner = false;
     private bool firstTimeRefreshSpinner = false;
     private bool spendSpinner = false;
+
+    decimal totalAvailableInvestedAmount = 0.0m;
+    int totalInvestedTransactions = 0;
+    decimal totalSpentAmount = 0.0m;
+    int totalSpentTransactions = 0;
+    decimal currentWithdrawableAmount = 0.0m;
+    int totalStages;
+    TimeSpan? timeUntilNextStage;
 
     private ProjectInfo project;
 
@@ -233,10 +281,50 @@
 
     protected override async Task OnInitializedAsync()
     {
+        
+
         project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
 
         firstTimeRefreshSpinner = true;
+
+        CalculateTotalValues();
     }
+
+    private void CalculateTotalValues()
+{
+    totalStages = stageDatas.Any() ? stageDatas.Count() : 1;    
+
+    var nextStage = stageDatas.Where(stage => stage.Stage.ReleaseDate > DateTime.UtcNow)
+                            .OrderBy(stage => stage.Stage.ReleaseDate)
+                            .FirstOrDefault();
+        timeUntilNextStage = nextStage != null ? nextStage.Stage.ReleaseDate - DateTime.UtcNow : (TimeSpan?)null;
+    totalAvailableInvestedAmount = 0.0m;
+    totalInvestedTransactions = 0;
+    totalSpentAmount = 0.0m;
+    totalSpentTransactions = 0;
+    currentWithdrawableAmount = 0.0m;
+
+    foreach (var stage in stageDatas)
+    {
+        var stageIsActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
+        var totalStageTransactions = stage.Items.Count();
+        var availableInvestedAmount = stage.Items.Where(c => !c.IsSpent).Sum(c => c.Amount);
+        var spentStageAmount = stage.Items.Where(c => c.IsSpent).Sum(c => c.Amount);
+        var spentStageTransactions = stage.Items.Count(c => c.IsSpent);
+        var daysUntilRelease = (stage.Stage.ReleaseDate - DateTime.UtcNow).Days;
+        var stageReleasePercentage = stage.Stage.AmountToRelease;
+
+        totalAvailableInvestedAmount += availableInvestedAmount;
+        totalInvestedTransactions += totalStageTransactions;
+        totalSpentAmount += spentStageAmount;
+        totalSpentTransactions += spentStageTransactions;
+
+        if (daysUntilRelease <= 0)
+        {
+            currentWithdrawableAmount += availableInvestedAmount;
+        }
+    }
+}
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -270,6 +358,7 @@
         {
             refreshSpinner = false;
             firstTimeRefreshSpinner = false;
+            CalculateTotalValues();
         }
 
         StateHasChanged();
@@ -334,6 +423,8 @@
             }
         }
     }
+
+    
 
     private async Task CheckSpentFund()
     {
@@ -550,4 +641,15 @@
             selected.Add(trxId, null);
         }
     }
+
+    private async Task CopyTRXToClipboard(string trxData)
+    {
+    if (string.IsNullOrEmpty(trxData))
+    {
+        throw new ArgumentNullException(nameof(trxData), "Transaction data is null or empty.");
+    }
+
+    await _clipboardService.WriteTextAsync(trxData);
+    StateHasChanged();
+    }   
 }

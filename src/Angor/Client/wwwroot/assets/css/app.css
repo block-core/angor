@@ -1118,6 +1118,10 @@ tr[style*="cursor: pointer;"] {
     object-fit: cover;
 }
 
+.card-img-top-view {
+    height: 330px !important;
+ }
+
 .z-index-4 {
     z-index: 1000001 !important;
 }
@@ -1301,11 +1305,11 @@ input[type="checkbox"] {
 }
 
 .heartbeat {
-    animation: heartbeat 1.5s ease-in-out infinite;
+    animation: heartbeat 1.5s ease-in-out 1;
 }
 
 .card.active .card-body {
-    animation: heartbeat 1.5s ease-in-out infinite;
+    animation: heartbeat 1.5s ease-in-out 1;
 }
 @keyframes drawLogo {
     from {
@@ -1400,7 +1404,7 @@ input[type="checkbox"] {
 
 .profile-container {
     position: absolute;
-    bottom: 10px; /* Adjusted to show half of the profile image outside the banner */
+    bottom: 10px;  
     left: 10px;
     width: 80px;
     height: 80px;
@@ -1416,8 +1420,125 @@ input[type="checkbox"] {
     border-radius: 50%;
     object-fit: cover;
     position: absolute;
-    bottom: 0; /* Align the bottom of the profile image with the bottom of the container */
+    bottom: 0;  
     left: 0;
 }
 
- 
+.profile-image-view {
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    border: 3px solid white;
+    z-index: 10;
+}
+
+h1:focus {
+    outline: none;
+}
+
+h1:focus-visible {
+    outline: none;
+}
+
+img, a {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+}
+
+
+@keyframes progress {
+    0% {
+        --percentage: 0;
+    }
+
+    100% {
+        --percentage: var(--value);
+    }
+}
+
+@keyframes dayProgress {
+    0% {
+        --percentage: 0;
+    }
+
+    100% {
+        --percentage: calc(var(--day) / var(--total) * 100);
+    }
+}
+
+@property --percentage {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+}
+
+.progress-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    margin:10px;
+}
+
+[role="progressbar"] {
+    --primary: #ff9900;
+    --secondary: #1f5d6a;
+    --size: 220px;
+    width: var(--size);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 6px 20px rgba(0, 0, 0, 0.19);
+}
+
+    [role="progressbar"][data-type="percent"] {
+        --percentage: var(--value);
+        animation: progress 2s 0.5s forwards;
+    }
+
+    [role="progressbar"][data-type="days"] {
+        --primary: #ff9900;
+        --secondary: #1f5d6a;
+        --percentage: calc(var(--day) / var(--total) * 100);
+        animation: dayProgress 2s 0.5s forwards;
+    }
+
+    [role="progressbar"]::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: conic-gradient(var(--primary) calc(var(--percentage) * 1%), var(--secondary) 0);
+        mask-image: radial-gradient(circle, transparent 60%, white 61%);
+        filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.25));
+     }
+
+
+    [role="progressbar"][data-type="percent"]::after {
+        counter-reset: percentage var(--value);
+        content: counter(percentage) '%';
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: calc(var(--size) / 10);
+        color: var(--bs-primaryy);
+        position: absolute;
+        z-index: 1;
+    }
+
+    [role="progressbar"][data-type="days"]::after {
+        content: attr(data-day) '/' attr(data-total) ' days';
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: calc(var(--size) / 10);
+        color: var(--bs-primary);
+        position: absolute;
+        z-index: 1;
+    }
