@@ -214,6 +214,7 @@
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
 
             await RefreshBalance();
+            await checkSignatureFromFounder();
         }
     }
 
@@ -280,18 +281,21 @@
         }
     }
     
-    private async Task checkSignatureFromFounder(WalletWords words)
+    private async Task checkSignatureFromFounder()
     {
         foreach (var project in projects)
         {
             investmentRequestsMap[project.ProjectInfo.NostrPubKey] = false;
 
-            var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
-
-            var investorNostrPubKey = investorNostrPrivateKey.PubKey.ToHex()[2..]; // is there a way to derive investorNostrPubKey without the nostr private key?
+            // var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
+            //
+            // var investorNostrPubKey = investorNostrPrivateKey.PubKey.ToHex()[2..]; 
+            var investorProject = (InvestorProject)project;
+            // investorProject.ProjectInfo.NostrPubKey;
+            var test = storage.GetNostrPublicKeyPerProject(project.ProjectInfo.ProjectIdentifier);
 
             _SignService.LookupSignatureForInvestmentRequest(
-                investorNostrPubKey,
+                test,
                 project.ProjectInfo.NostrPubKey,
                 project.SignaturesInfo.TimeOfSignatureRequest.Value,
                 project.SignaturesInfo.SignatureRequestEventId,
@@ -341,7 +345,6 @@
         }
      
         RefreshBalanceTriggered = true;
-        // await checkSignatureFromFounder();
         var words = await passwordComponent.GetWalletAsync();
         var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1); 
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
@@ -349,7 +352,7 @@
         
         var rootNostrPubey = _DerivationOperations.DeriveNostrPubKey(words, 0);
 
-        await checkSignatureFromFounder(words);
+        await checkSignatureFromFounder();
         
         await _RelayService.LookupDirectMessagesForPubKeyAsync( NostrDMPubkey, null,1,
             async x =>

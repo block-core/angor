@@ -630,6 +630,7 @@
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
 
             storage.AddInvestmentProject(investorProject);
+            storage.SetNostrPublicKeyPerProject(project.ProjectInfo.ProjectIdentifier, nostrPrivateKey.PubKey.ToHex()[2..]);
             
              
 
