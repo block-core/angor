@@ -257,6 +257,9 @@ public class DerivationOperations : IDerivationOperations
 
         var ret = projectid / 2; // the max size of bip32 derivation range is 2,147,483,648 (2^31) the max number of uint is 4,294,967,295 so we must divide by two
 
+        _logger.LogInformation($"DeriveProjectId - founderKey = {founderKey}, hashOfFounderKey = {hashOfid}, hashOfFounderKeyCastToInt = {projectid}, hashOfFounderKeyCastToIntDivided = {ret}");
+
+
         if (ret >= 2_147_483_648)
             throw new Exception();
 
@@ -278,6 +281,9 @@ public class DerivationOperations : IDerivationOperations
         var encoder = new Bech32Encoder("angor");
 
         var address = encoder.Encode(0, angorKey.WitHash.ToBytes());
+
+        _logger.LogInformation($"DeriveAngorKey - angorRootKey = {angorRootKey}, founderKey = {founderKey}, projectid = {projectid}, angorKey = {angorKey}, angorKeyWitHash = {angorKey.WitHash}, address = {address}");
+
 
         return address;
     }
