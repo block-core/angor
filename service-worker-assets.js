@@ -33,15 +33,15 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-e3Vrp\/YvGGLkUndZlAx85wKAOHTk+2hJHolVUdJIuNs=",
+      "hash": "sha256-BGKa84U2fuqbc0qbL1\/3bEiIZiejpCeXnzNltePs7oM=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-4mfZ24VWJwA6dIFOYGZucASdCJb10jYbtU0Is2lC\/6g=",
+      "hash": "sha256-2Ye5AA8N1cnCs+EKGArtJyDHITDPDOaanl2ILfG203Y=",
       "url": "_framework\/Angor.Client.wasm"
     },
     {
-      "hash": "sha256-RZap\/hgPjYxocgnxCwNP4\/G43WjSt5v5iaPOdVLGC74=",
+      "hash": "sha256-bjBISMGNk7DLNbKJXy44ICLYNDO++GLuA7YXAZb8c94=",
       "url": "_framework\/Angor.Shared.wasm"
     },
     {
@@ -517,7 +517,7 @@
       "url": "Angor.Client.styles.css"
     },
     {
-      "hash": "sha256-Zwv4NstwdZ4AM6AiWk2uURYnPQkO3+L9wnmtzKEsjdE=",
+      "hash": "sha256-4Osc20nQnDvWD9cdNor2ttPyn+g5N9g+YFLOP8GmGN0=",
       "url": "assets\/css\/app.css"
     },
     {
@@ -525,28 +525,36 @@
       "url": "assets\/css\/dashboard.css"
     },
     {
-      "hash": "sha256-sBwqd0TOT7ph4P5OE6+b5q2HCKuy3VrQTSuENCMauRQ=",
-      "url": "assets\/css\/nucleo-icons.css"
-    },
-    {
-      "hash": "sha256-E8NYtl7LPC3pMBVl\/VEF0XurQalAQV6yRYUVKxIto9s=",
-      "url": "assets\/css\/nucleo-svg.css"
-    },
-    {
-      "hash": "sha256-yUjxJjNBaZs8HpxV2NDz5EZmnQ8rnVVJTGFpIiwCQ6Y=",
-      "url": "assets\/fonts\/material.woff2"
+      "hash": "sha256-oBJKAxtmUfmkR440heaX9RyAs4X0PN90Qjt5EXb6QXw=",
+      "url": "assets\/icons\/actions.svg"
     },
     {
       "hash": "sha256-Y4d4+zviZZO77b4R+WIEPK5SiNyuN24e9c0jFJqJH\/A=",
       "url": "assets\/icons\/add.svg"
     },
     {
+      "hash": "sha256-3sfBsAbxllhdqGmoVhdd7jH9\/Vcax8\/tveuNXj5yQkU=",
+      "url": "assets\/icons\/addresses.svg"
+    },
+    {
       "hash": "sha256-eUXKM7Tlrhuk7wxJNl4V18\/nqxB9fblyp8HEleJI7kk=",
       "url": "assets\/icons\/angor-logo.svg"
     },
     {
+      "hash": "sha256-lgDmhys5N1zJYIxHX\/qPhCpcC7X+++U84FpaaWfzoFU=",
+      "url": "assets\/icons\/balance.svg"
+    },
+    {
       "hash": "sha256-gqgFT9KaZQK1eul7Pz1wjaaWRdz1Q2\/waQEdIFBxbVM=",
       "url": "assets\/icons\/browse.svg"
+    },
+    {
+      "hash": "sha256-V71lkk\/Y6zuOzrRMQcFF3nzYdVeZ+zP+DHfi8IMBDao=",
+      "url": "assets\/icons\/calculator.svg"
+    },
+    {
+      "hash": "sha256-R2ZRpf21Jb6PlqKLPg3cC6FeTz0qvniXH6fb7IuzsII=",
+      "url": "assets\/icons\/calendar.svg"
     },
     {
       "hash": "sha256-oBgyMlpnucpSzEwtjqYjDGsC0fs5FBAUl8ReWH7CwO8=",
@@ -561,8 +569,16 @@
       "url": "assets\/icons\/copy.svg"
     },
     {
+      "hash": "sha256-gT8Zg1US1UF1vzMs8QEVjU8SBo+fEuEHAT6iGTvQuhk=",
+      "url": "assets\/icons\/cup.svg"
+    },
+    {
       "hash": "sha256-ee7qLqfBPWIazkCuZfL0vkh3h9X3gq0tvODxRMwP38k=",
       "url": "assets\/icons\/dark_mode.svg"
+    },
+    {
+      "hash": "sha256-jqFALzq7K29bLHduNumQcFduCKl6fEMDsft7w1fJ8kM=",
+      "url": "assets\/icons\/date.svg"
     },
     {
       "hash": "sha256-PTbkByCWTUTAAjtc34KC3NYtwVsJ\/hMLQbLaSWHYuYg=",
@@ -595,6 +611,10 @@
     {
       "hash": "sha256-pjAg4c0KAHe6wEWfDK0qnISRW+MhnbiNY6hkCCgvMcM=",
       "url": "assets\/icons\/install.svg"
+    },
+    {
+      "hash": "sha256-p3zuDev4+1dePEZTPKxHIHpMilKIFNX6WzFSafDcRmM=",
+      "url": "assets\/icons\/key.svg"
     },
     {
       "hash": "sha256-ocGgufrLbHs46ka2kuuR3NWFVNaYWMXBVCs786MPBmw=",
@@ -681,8 +701,36 @@
       "url": "assets\/icons\/settings.svg"
     },
     {
+      "hash": "sha256-A2BDUojbEse9AEeNac1thRHkFKvb5yNP0ZqdsxUyh\/8=",
+      "url": "assets\/icons\/shield-star.svg"
+    },
+    {
+      "hash": "sha256-VsHr+rMRXGi3pGzsGNGsCbx7OHzXWbkRnqSlhlh6aR0=",
+      "url": "assets\/icons\/stages.svg"
+    },
+    {
+      "hash": "sha256-xxyi1C9lJ5I7M5kC\/iMFYRxiOoUo5R05YGL3qjf6mSg=",
+      "url": "assets\/icons\/stats.svg"
+    },
+    {
       "hash": "sha256-fLpMNmpLpNvkj0uF6uIDr74IcG64KEXxG8Cn2euwtfg=",
       "url": "assets\/icons\/unlock.svg"
+    },
+    {
+      "hash": "sha256-eoBskNuliTIJmLTS41xECqk+xmNSfIY3OEBBhESdPYA=",
+      "url": "assets\/icons\/user.svg"
+    },
+    {
+      "hash": "sha256-Y19EhTqB6P3Yuj0s9rfyA\/dXoOVQEQpWUDveVME44kw=",
+      "url": "assets\/icons\/users.svg"
+    },
+    {
+      "hash": "sha256-6SxkM9CwOCUdkNC\/d20jsWNYcM1NdYLXiPQLmBfM430=",
+      "url": "assets\/icons\/verified-check.svg"
+    },
+    {
+      "hash": "sha256-gsrDKU4tzQUIgMp91cs5z+jonMc\/nCZvgax7iC6eV7Y=",
+      "url": "assets\/icons\/view-project.svg"
     },
     {
       "hash": "sha256-zy1kF8Rodh8g0l0PGlHY+uXiMGkGtXgj2rLmQi5i0CA=",
@@ -753,7 +801,7 @@
       "url": "assets\/img\/wallet-icon-192.png"
     },
     {
-      "hash": "sha256-SwKW0nFXZr9frFhcWutvr9OG6OKyhxogMordYK1Jh6o=",
+      "hash": "sha256-WK+580r34iLi5K6mtQLNXa9Q46ITfwsPwO3j3Wp+zI8=",
       "url": "assets\/js\/app.js"
     },
     {
@@ -789,5 +837,5 @@
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "wJdKlxQl"
+  "version": "UaLQB7rI"
 };
