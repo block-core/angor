@@ -7,6 +7,7 @@
 @using Angor.Shared.Services
 @using Angor.Client.Components
 @using Blockcore.Networks
+@using System.Text.Json
 
 @inject HttpClient _httpClient;
 @inject IClientStorage storage;
@@ -751,6 +752,9 @@ else
                 await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
                 storage.SetAccountInfo(network.Name, accountInfo);
+
+                // lets log the entire account class to see what has changed
+                Logger.LogInformation(System.Text.Json.JsonSerializer.Serialize(accountInfo, new JsonSerializerOptions { WriteIndented = true }));
 
                 var utxos = accountInfo.AllUtxos()
                     .Select(x => x.outpoint.ToString()).ToList();
