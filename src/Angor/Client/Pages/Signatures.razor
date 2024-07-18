@@ -326,7 +326,7 @@
         SignService.LookupInvestmentRequestApprovals(project.ProjectInfo.NostrPubKey,
             (investorNostrPubKey, timeApproved, reqEventId) =>
             {
-                Logger.LogDebug($"Sig response event received investorPubKey: {investorNostrPubKey} - timeApproved: {timeApproved} - reqEventId: {reqEventId}");
+                Logger.LogDebug($"Sig response event received investorNostrPubKey: {investorNostrPubKey} - timeApproved: {timeApproved} - reqEventId: {reqEventId}");
 
                 var signatureRequest = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
 
