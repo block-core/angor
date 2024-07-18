@@ -19,6 +19,7 @@
 @inject IInvestorTransactionActions InvestorTransactionActions
 @inject IFounderTransactionActions FounderTransactionActions
 @inject ISerializer serializer
+@inject IEncryptionService encryption
 
 @inherits BaseComponent
 
@@ -142,7 +143,6 @@
 
     public FounderProject FounderProject { get; set; }
     private List<SignatureRequest> signaturesRequests = new();
-    private IJSInProcessObjectReference? javascriptNostrToolsModule;
 
     
     private Dictionary<SignatureRequest,string> signaturesRequestsApproving = new();
@@ -178,22 +178,6 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         Logger.LogDebug("OnAfterRenderAsync");
-        if (javascriptNostrToolsModule == null && signaturesRequests.Any())
-        {
-            try
-            {
-                Logger.LogDebug("load nostr tools");
-                //TODO import the nostr tool module directly to c# class
-                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
-            }
-            catch (JSException e)
-            {
-                Logger.LogError($"Error loading nostr tools: {e.Message}", e);
-                notificationComponent.ShowErrorMessage(e.Message);
-                return;
-            }
-        }
-
         await FetchSignaturesCheckPassword();
     }
 
@@ -276,11 +260,8 @@
 
             foreach (var pendingSignature in signaturesRequests.Where(_ => _.AmountToInvest == null))
             {
-                pendingSignature.TransactionHex = await javascriptNostrToolsModule.InvokeAsync<string>(
-                    "decryptNostr",
-                    nostrPrivateKeyHex,
-                    pendingSignature.investorPubKey,
-                    pendingSignature.TransactionHex);
+                pendingSignature.TransactionHex = await encryption.DecryptNostrContentAsync(
+                    nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.TransactionHex);
 
                 try
                 {
@@ -307,11 +288,11 @@
     private async Task FetchPendingSignatures(FounderProject project)
     {
         await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,// project.LastRequestForSignaturesTime , async
-            (eventId, investorPubKey, encryptedMessage, timeArrived) =>
+            (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
         {
-            Logger.LogDebug($"Sig request event received investorPubKey: {investorPubKey} - timeArrived: {timeArrived}");
+            Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
 
-            var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorPubKey == investorPubKey);
+            var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
 
             if (sigReq != null)
             {
@@ -334,7 +315,7 @@
 
             var signatureRequest = new SignatureRequest
                 {
-                    investorPubKey = investorPubKey,
+                    investorNostrPubKey = investorNostrPubKey,
                     TimeArrived = timeArrived,
                     TransactionHex = encryptedMessage, //To be encrypted after js interop is loaded
                     EventId = eventId
@@ -358,11 +339,11 @@
     private void FetchFounderApprovalsSignatures(FounderProject project)
     {
         SignService.LookupInvestmentRequestApprovals(project.ProjectInfo.NostrPubKey,
-            (investorPubKey, timeApproved, reqEventId) =>
+            (investorNostrPubKey, timeApproved, reqEventId) =>
             {
-                Logger.LogDebug($"Sig response event received investorPubKey: {investorPubKey} - timeApproved: {timeApproved} - reqEventId: {reqEventId}");
+                Logger.LogDebug($"Sig response event received investorNostrPubKey: {investorNostrPubKey} - timeApproved: {timeApproved} - reqEventId: {reqEventId}");
 
-                var signatureRequest = signaturesRequests.FirstOrDefault(_ => _.investorPubKey == investorPubKey);
+                var signatureRequest = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
 
                 if (signatureRequest is null || signatureRequest.TimeApproved != null)
                     return; //multiple relays could mean the same massage multiple times
@@ -513,16 +494,14 @@
             var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            var encryptedContent = await javascriptNostrToolsModule.InvokeAsync<string>(
-                "encryptNostr",
-                nostrPrivateKeyHex,
-                signature.investorPubKey,
-                sigJson);
+            var encryptedContent = await encryption.EncryptNostrContentAsync(
+                nostrPrivateKeyHex, signature.investorNostrPubKey, sigJson);
 
-            FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorPubKey, signature.EventId);
+            FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
+
             Storage.UpdateFounderProject(FounderProject);
 
-            signaturesRequests.Single(_ => _.investorPubKey == signature.investorPubKey && _.TimeApproved is null)
+            signaturesRequests.Single(_ => _.investorNostrPubKey == signature.investorNostrPubKey && _.TimeApproved is null)
                 .TimeApproved = FounderProject.LastRequestForSignaturesTime;
 
             return new OperationResult { Success = true };
@@ -549,7 +528,7 @@
 
     public class SignatureRequest
     {
-        public string investorPubKey { get; set; }
+        public string investorNostrPubKey { get; set; }
 
         public decimal? AmountToInvest { get; set; }
 
