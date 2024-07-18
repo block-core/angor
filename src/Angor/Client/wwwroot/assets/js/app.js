@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 window.angor = {
     installApp: function () {
@@ -20,15 +20,4 @@ window.angor = {
         document.body.style.backgroundColor = "#f4f1ec";
     },
 
-    initSearchFocus: function (searchInputId) {
-        document.addEventListener('keydown', function (event) {
-            if (event.key === '/') {
-                event.preventDefault();
-                document.getElementById(searchInputId).focus();
-            }
-        });
-    }
-};
-
-// Initialize search focus functionality
-window.angor.initSearchFocus('searchQuery');
+ };

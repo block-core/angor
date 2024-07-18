@@ -1,12 +1,10 @@
 ﻿@page "/browse"
-@using Angor.Client.Services
 @using Angor.Shared.Models
 @using Angor.Shared.Services
-@using Nostr.Client.Keys
 @using Nostr.Client.Messages
-@using System.Text.Json
 @using Angor.Client.Models
 @using Angor.Client.Storage
+@using System.Text.RegularExpressions
 @inject ICacheStorage SessionStorage
 @inject NavigationManager NavigationManager
 @inject IRelayService _RelayService
@@ -55,7 +53,7 @@
     </div>
 </div>
 
-@if (searchInProgress )
+@if (searchInProgress)
 {
     <div class="d-flex justify-content-center mt-4">
         <div class="loader"></div>
@@ -111,11 +109,17 @@ else
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                     if (project?.Metadata != null)
                                     {
-                                        <h5 role="button" data-cy="searchedTitle" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                            @project.Metadata.Name
-                                        </h5>
-
-                                        <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle">@((MarkupString)project.Metadata.About)</p>
+                                        <div class="d-flex align-items-center mb-4">
+                                            <span class="user-select-none">
+                                                <Icon IconName="view" Height="24" Width="24"></Icon>
+                                            </span>
+                                            <div class="h-100 ms-3">
+                                                <h5 class="mb-0 font-weight-bolder" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                                    <a href="/view/@project.ProjectInfo.ProjectIdentifier"> @project.Metadata.Name</a>
+                                                </h5>
+                                            </div>
+                                        </div>
+                                        <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle">@(ConvertToMarkupString(StripHtmlTags(project.Metadata.About)))</p>
                                     }
                                 }
                                 else
@@ -126,11 +130,18 @@ else
                         </div>
                         <div class="card-footer pt-0">
                             <hr class="horizontal light mt-3">
-                            <div role="button" class="btn btn-view w-100" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                <div class="d-flex align-items-center justify-content-center">
-                                    <span>View Project</span>
+
+                            <div role="button" class="d-flex align-items-center btn btn-border w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                <span class="user-select-none">
+                                    <Icon IconName="view-project" Height="24" Width="24"></Icon>
+                                </span>
+                                <div class="h-100 ms-3">
+                                    <span class="mb-0 font-weight-bolder text-primary">
+                                        View Project
+                                    </span>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -174,8 +185,19 @@ else
                                                 var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                                 if (project?.Metadata != null)
                                                 {
-                                                    <h5 class="card-title" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@project.Metadata.Name</h5>
-                                                    <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@((MarkupString)project.Metadata.About)</p>
+
+                                                    <div class="d-flex align-items-center mb-4">
+                                                        <span class="user-select-none">
+                                                            <Icon IconName="view" Height="24" Width="24"></Icon>
+                                                        </span>
+                                                        <div class="h-100 ms-3">
+                                                            <h5 class="mb-0 font-weight-bolder" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                                                <a href="/view/@project.ProjectInfo.ProjectIdentifier"> @project.Metadata.Name</a>
+                                                            </h5>
+                                                        </div>
+                                                    </div>
+
+                                                    <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@ConvertToMarkupString(StripHtmlTags(project.Metadata.About))</p>
                                                 }
                                             }
                                             else
@@ -184,11 +206,19 @@ else
                                             }
                                         </div>
                                         <hr class="horizontal light m-only">
-                                        <div role="button" class="btn btn-view vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                            <div class="d-flex align-items-center justify-content-center">
-                                                <span>View Project</span>
+ 
+                                            <div role="button" class="d-flex align-items-center btn btn-border vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                                <span class="user-select-none">
+                                                    <Icon IconName="view-project" Height="24" Width="24"></Icon>
+                                                </span>
+                                                <div class="h-100 mt-3">
+                                                    <span class="mb-0 font-weight-bolder">
+                                                        View Project
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
+
+                                       
                                     </div>
                                 }
                             </div>
@@ -232,9 +262,6 @@ else
 
         if (projects.Any())
         {
-            // Projects exist, initialize the search focus
-            await JS.InvokeVoidAsync("angor.initSearchFocus", "searchQuery");
-
             // Check for indexer and relay availability in the background
             _ = CheckIndexerAndRelayAvailability();
         }
@@ -467,4 +494,33 @@ else
     {
         searchQuery = e.Value.ToString();
     }
+
+    public string StripHtmlTags(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return string.Empty;
+        }
+        string[] blockTags = { "h1", "h2", "h3", "h4", "h5", "h6", "p", "div", "section", "article", "footer", "header", "main" };
+
+        foreach (var tag in blockTags)
+        {
+            input = Regex.Replace(input, $@"<\/?{tag}[^>]*>", $"<br />", RegexOptions.IgnoreCase);
+        }
+
+        input = Regex.Replace(input, @"<((?!br\s*/?)[^>]+)>", string.Empty);
+        input = Regex.Replace(input, @"(\r?\n){2,}", "\n");
+        input = Regex.Replace(input, @"(<br />\s*){2,}", "<br />");
+        input = Regex.Replace(input, @"^\s*<br />\s*|\s*<br />\s*$", string.Empty);
+        input = Regex.Replace(input, @"\s*(<br />)\s*", "$1");
+
+        return input;
+    }
+
+    public MarkupString ConvertToMarkupString(string input)
+    {
+        return new MarkupString(input);
+    }
+
+
 }
