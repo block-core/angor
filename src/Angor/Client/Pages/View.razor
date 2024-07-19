@@ -16,6 +16,7 @@
 @inject IIndexerService _IndexerService
 @inject IRelayService _RelayService
 @inject ISerializer serializer
+@inject IJSRuntime Js;
 
 @inherits BaseComponent
 <NotificationComponent @ref="notificationComponent" />
@@ -245,7 +246,7 @@
 
                     <div class="mb-3">
                         <!-- Buttons Spend Funds and Approve Signature next to each other -->
-                        <NavLink href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border me-2">Spend Funds</NavLink>
+                        <NavLink href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-secondary me-2">Spend Funds</NavLink>
                         <NavLink href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border">Approve signature</NavLink>
                     </div>
                 </div>
@@ -270,7 +271,7 @@
                     <p class="mt-4">
                         Seize the opportunity to invest in this project.
                     </p>
-                    <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON" @onclick="InvestInProject">Invest Now</button>
+                    <button class="btn btn-secondary mb-3" data-cy="INVEST_BUTTON" @onclick="InvestInProject">Invest Now</button>
                 </div>
             }
         </div>
@@ -291,12 +292,19 @@
             @if (project.ProjectInfo.NostrPubKey != null)
             {
                 <div class="mb-4 mt-4">
+
                     <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
-                    <InputText id="NostrPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
+                    <div class="input-group">
+                        <InputText id="NostrPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
+                        <button @onclick="OpenInBrowseAsync" class="btn btn-border">
+                            <Icon IconName="link"></Icon>
+                        </button>
+                    </div>
+
 
                     @if (founder)
                     {
-                        <button @onclick="ShowNsecAsync" class="btn btn-success mt-4">Show NSec</button>
+                        <button @onclick="ShowNsecAsync" class="btn btn-success mt-4">Show private key</button>
 
                         @if (isGeneratingNsec)
                         {
@@ -314,7 +322,9 @@
 
                         @if (!string.IsNullOrEmpty(NostrSecKey))
                         {
-                            <div class="input-group mt-4">
+                            <br />
+                            <label for="NostrSecKey" class="form-label mt-4">Project NOSTR private key (hex)</label>
+                            <div class="input-group">
                                 <InputText id="NostrSecKey" @bind-Value="NostrSecKey" class="form-control nsec-box" readonly />
                                 <button @onclick="CopyNsecToClipboardAsync" class="btn btn-border">
                                     <Icon IconName="copy"></Icon>
@@ -329,8 +339,11 @@
             <h6>Relays</h6>
             @foreach (var relay in NostrClients)
             {
-                <a href="@relay" target="_blank" class="d-block mb-2">
-                    <i class="bi bi-globe"></i> @relay
+                <a href="@relay" target="_blank">
+                    <div class="form-control mt-2 d-flex align-items-center">
+                        <Icon IconName="menu_open"></Icon>
+                        <p class="card-text ms-2">@relay</p>
+                    </div>
                 </a>
             }
         </div>
@@ -553,6 +566,7 @@
         if (!string.IsNullOrEmpty(NostrSecKey))
         {
             await _clipboardService.WriteTextAsync(NostrSecKey);
+            notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
         }
     }
 
@@ -575,5 +589,24 @@
             await GenerateNsec();
         });
     }
+    private async void OpenInBrowseAsync()
+    {
+        var pubkey = project.ProjectInfo.NostrPubKey;
+
+        if (!string.IsNullOrEmpty(pubkey))
+        {
+            // Construct the URL with the pubkey
+            var url = $"https://browse.angor.io/projects/{pubkey}";
+
+            // Open the URL in a new tab
+            await Js.InvokeVoidAsync("window.open", url, "_blank");
+        }
+        else
+        {
+            // Handle the case where pubkey is null or empty
+            notificationComponent.ShowNotificationMessage("Public key is not available.", 3);
+        }
+    }
+
 
 }
