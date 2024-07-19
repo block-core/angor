@@ -34,7 +34,19 @@
         }
         else
         {
-            <p><em>project not found...</em></p>
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="row mt-4">
+                    <div class="card card-body angor-alert-info pt-2 pb-2">
+                        <div class="d-flex align-items-center">
+                            <span class="me-3 user-select-none">
+                                <Icon IconName="info" Width="40" Height="40" Color="var(--bs-primary-btn-icon)" />
+                            </span>
+                            <span class="text-white">@error</span>
+                        </div>
+                    </div>
+                </div>
+            }
         }
     }
     else
@@ -364,6 +376,8 @@
     private string NostrSecKey { get; set; } = string.Empty;
     private bool isGeneratingNsec = false;
     private string errorMessage = string.Empty;
+    
+    private string error;
 
     private List<(string Hash, int Amount)> SelectedSeeders = new List<(string hash, int amount)>
     {
@@ -407,7 +421,7 @@
 
         if (project is InvestorProject findProject)
         {
-            invested = findProject.InvestedInProject(); // TODO need to scan for the invested projects when opening on a new browsers
+            invested = findProject.InvestedInProject(); // TODO: need to scan for the invested projects when opening on a new browser
             myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{findProject.TransactionId}";
         }
         else
@@ -450,11 +464,24 @@
                         }, () =>
                         {
                             findInProgress = false;
-                            if (project.ProjectInfo != null)
+                            if (project?.ProjectInfo != null)
+                            {
                                 SessionStorage.StoreProject(project);
+                            }
+                            else
+                            {
+                                // Handle case where project info is not available
+                                error = "Project not found...";
+                            }
                             StateHasChanged();
                         },
                         new[] { projectIndexerData.NostrPubKey });
+                    }
+                    else
+                    {
+                        findInProgress = false;
+                        error = "Project not found...";
+                        StateHasChanged();
                     }
                 }
             }
@@ -463,7 +490,6 @@
         if (project?.CreationTransactionId != null)
         {
             projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
-
             await RefreshBalance();
         }
     }
