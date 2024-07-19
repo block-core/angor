@@ -33,15 +33,15 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-2Flcd24WHosa6GzxXq1fOHv9CA1G9gMtZHR4E7MFJto=",
+      "hash": "sha256-Y0h85DPXkHrsYBmSg4IIgmb9Wj7a003ppiHSJTttppk=",
       "url": "_framework\/blazor.boot.json"
     },
     {
-      "hash": "sha256-WGk65t3MOVAI5ZAFU4+4C6wLI0V+ITGrq++G6DKzumk=",
+      "hash": "sha256-CPUwhfeH\/AvnLZ9nINupT3RYdnAZtP3g3O8qq33tmcU=",
       "url": "_framework\/Angor.Client.wasm"
     },
     {
-      "hash": "sha256-cirKuLnvACFBu9uL4KsI9gKrOL9h3JpcBdVgzSxfP5A=",
+      "hash": "sha256-KWOmuNCA0lWxhfwipRKl+HHvpeWxJYMhK4umvW0jJBY=",
       "url": "_framework\/Angor.Shared.wasm"
     },
     {
@@ -645,6 +645,10 @@
       "url": "assets\/icons\/network.svg"
     },
     {
+      "hash": "sha256-tPapV1HsgDklrCP5JZF22uDSODycthhagBhGhqj4yFc=",
+      "url": "assets\/icons\/paste.svg"
+    },
+    {
       "hash": "sha256-rYOtJXL5tuqhrykMV6\/mOSZE4nl1ZWOPP5PLqzlTX1I=",
       "url": "assets\/icons\/plus.svg"
     },
@@ -837,5 +841,5 @@
       "url": "ServiceWorkerRegister.js"
     }
   ],
-  "version": "HAkE+oNy"
+  "version": "ksH7QP62"
 };
