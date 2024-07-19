@@ -19,6 +19,7 @@
 @inject IDerivationOperations _derivationOperations
 @inject NavMenuState NavMenuState
 @inject IEncryptionService _encryptionService
+@inject IClipboardService ClipboardService
 
 
 @inherits BaseComponent
@@ -226,7 +227,7 @@ else
                             </div>
                         </div>
 
-                     </div>
+                    </div>
                     @if (network.NetworkType != NetworkType.Mainnet && accountBalanceInfo.TotalUnconfirmedBalance <= 0 & accountBalanceInfo.TotalBalance <= 0)
                     {
                         <div class="d-flex flex-wrap align-items-center">
@@ -406,37 +407,50 @@ else
                     <div class="row mt-4">
 
                         <form>
-                            <div class="mb-3">
-                                <label for="sendToAddress" class="form-label">Send to Address</label>
-                                <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
-                            </div>
+                            <form>
+                                <div class="mb-3">
+                                    <label for="sendToAddress" class="form-label">Send to Address</label>
+                                    <div class="input-group">
+                                        <span role="button" class="btn btn-border" @onclick="PasteFromClipboard">
+                                            <Icon IconName="paste" />
+                                        </span> 
+                                        
+                                        <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
+                                                 
+                                  
+                                      
+                                        <span role="button" class="btn btn-border" @onclick="ClearAddress">
+                                            <Icon IconName="remove" />
+                                        </span>
+                                    </div>
+                                </div>
 
-                            <div class="mb-3">
-                                <label for="sendAmount" class="form-label">Amount</label>
-                                <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
-                            </div>
+                                <div class="mb-3">
+                                    <label for="sendAmount" class="form-label">Amount</label>
+                                    <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
+                                </div>
+                                <button type="button" class="btn btn-border mb-3" @onclick="() => coinControlModal = true">
+                                    Coin Control
+                                    @if (_sendInfo.SendUtxos.Any())
+                                    {
+                                        <span class="badge text-bg-warning">@_sendInfo.SendUtxos.Count</span>
+                                    }
+                                </button>
 
-                            <button type="button" class="btn btn-border mb-3" @onclick="() => coinControlModal = true">
-                                Coin Control
-                                @if (_sendInfo.SendUtxos.Any())
-                                {
-                                    <span class="badge text-bg-warning">@_sendInfo.SendUtxos.Count</span>
-                                }
-                            </button>
+                                <!-- New Send button that triggers a confirmation dialog -->
+                                <button type="button" class="btn btn-border mb-3" data-cy="send-button" @onclick="AskPassword" disabled="@sendLoadSpinner">
+                                    @if (sendLoadSpinner)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>Sending...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Send</span>
+                                    }
+                                </button>
 
-                            <!-- New Send button that triggers a confirmation dialog -->
-                            <button type="button" class="btn btn-border mb-3" data-cy="send-button" @onclick="AskPassword" disabled="@sendLoadSpinner">
-                                @if (sendLoadSpinner)
-                                {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    <span>Sending...</span>
-                                }
-                                else
-                                {
-                                    <span>Send</span>
-                                }
-                            </button>
-
+                            </form>
                         </form>
 
                     </div>
@@ -814,13 +828,13 @@ else
             notificationComponent.ShowErrorMessage("New wallet words are null or empty");
             return;
         }
+
         if (string.IsNullOrEmpty(newWalletPassword))
         {
             walletWordsCreateModal = false;
             notificationComponent.ShowErrorMessage("New wallet password is null or empty");
             return;
         }
-
         if (!backupConfirmation)
         {
             showBackupConfirmationError = true;
@@ -1199,11 +1213,11 @@ else
             testCoinsSpinner = false;
         }
     }
+
     void SetActiveTab(int tab)
     {
         activeTab = tab;
     }
-
 
     bool IsExpanded(string address)
     {
@@ -1216,6 +1230,25 @@ else
             collapseStates[address] = !collapseStates[address];
         else
             collapseStates[address] = true;
+    }
+
+    private async Task PasteFromClipboard()
+    {
+        try
+        {
+            var text = await ClipboardService.ReadTextAsync();
+            _sendInfo.SendToAddress = text;
+            StateHasChanged(); // Refresh the UI to reflect the updated value
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to read clipboard contents: {ex}");
+        }
+    }
+
+    private void ClearAddress()
+    {
+        _sendInfo.SendToAddress = string.Empty;
     }
 
     private void ShowExtraWord(MouseEventArgs e)
