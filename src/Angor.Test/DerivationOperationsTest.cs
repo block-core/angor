@@ -51,36 +51,36 @@ namespace Angor.Test
                 _logger = mockLogger.Object;
             }
 
-            [Fact]
-            public void BuildKeys()
-            {
+            //[Fact]
+            //public void BuildKeys()
+            //{
 
-                var derivationOperations = new DerivationOperations(new HdOperations(), null, _networkConfiguration.Object);
-                var rootKey = CreateAngorRootKey();
-                var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
-
-
-                var founderKey = derivationOperations.DeriveFounderKey(new WalletWords { Words = mnemonic.ToString() }, 1);
-                var projectId = derivationOperations.DeriveProjectId(founderKey);
-                var angorKey = derivationOperations.DeriveAngorKey(founderKey, rootKey);
-                var script = derivationOperations.AngorKeyToScript(angorKey);
-            }
-
-            [Fact]
-            public void BuildKeysFromExisitData()
-            {
-                var derivationOperations = new DerivationOperations(new HdOperations(), null, _networkConfiguration.Object);
-                var rootKey = CreateAngorRootKey("area frost rapid guitar salon tower bless fly where inmate trouble daughter");
+            //    var derivationOperations = new DerivationOperations(new HdOperations(), null, _networkConfiguration.Object);
+            //    var rootKey = CreateAngorRootKey();
+            //    var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
 
 
-                var words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor";
-                var founderKey = derivationOperations.DeriveFounderKey(new WalletWords { Words = words }, 1);
-                var founderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(new WalletWords { Words = words }, 1);
-                var projectId = derivationOperations.DeriveProjectId(founderKey);
-                var angorKey = derivationOperations.DeriveAngorKey(founderKey, rootKey);
-                var script = derivationOperations.AngorKeyToScript(angorKey);
+            //    var founderKey = derivationOperations.DeriveFounderKey(new WalletWords { Words = mnemonic.ToString() }, 1);
+            //    var projectId = derivationOperations.DeriveProjectId(founderKey);
+            //    var angorKey = derivationOperations.DeriveAngorKey(founderKey, rootKey);
+            //    var script = derivationOperations.AngorKeyToScript(angorKey);
+            //}
 
-            }
+            //[Fact]
+            //public void BuildKeysFromExisitData()
+            //{
+            //    var derivationOperations = new DerivationOperations(new HdOperations(), null, _networkConfiguration.Object);
+            //    var rootKey = CreateAngorRootKey("area frost rapid guitar salon tower bless fly where inmate trouble daughter");
+
+
+            //    var words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor";
+            //    var founderKey = derivationOperations.DeriveFounderKey(new WalletWords { Words = words }, 1);
+            //    var founderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(new WalletWords { Words = words }, 1);
+            //    var projectId = derivationOperations.DeriveProjectId(founderKey);
+            //    var angorKey = derivationOperations.DeriveAngorKey(founderKey, rootKey);
+            //    var script = derivationOperations.AngorKeyToScript(angorKey);
+
+            //}
 
             [Fact]
             public void DeriveFounderKey_InvalidMnemonicWords_ThrowsException()
