@@ -41,9 +41,9 @@
     </div>
 </div>
 
-    @if (founderProjects.Count == 0)
-    {
-     <div class="row mt-4">
+@if (founderProjects.Count == 0)
+{
+    <div class="row mt-4">
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center align-items-center">
                 <span class="me-3 user-select-none">
@@ -53,28 +53,31 @@
             </div>
         </div>
     </div>
-        <div class="row">
-            <div class="col">
-     
-                <div class="d-flex justify-content-center mt-4">
-                    <button class="btn btn-border my-3" @onclick="LookupProjectKeysOnIndexerAsync">
-                        <i class="@(scanningForProjects ? "rotate-icon" : "")">
-                            <Icon IconName="refresh"></Icon>
-                        </i>
-                        <span class="nav-link-text ms-1">Scan for founder projects</span>
-                    </button>
-                </div>
+    <div class="row">
+        <div class="col">
 
+            <div class="d-flex justify-content-center mt-4">
+                <button class="btn btn-border my-3" @onclick="LookupProjectKeysOnIndexerAsync">
+                    <i class="@(scanningForProjects ? "rotate-icon" : "")">
+                        <Icon IconName="refresh"></Icon>
+                    </i>
+                    <span class="nav-link-text ms-1">Scan for founder projects</span>
+                </button>
             </div>
+
         </div>
-    }
-    else
-    {
-        foreach (var project in founderProjects)
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper" data-cy="project-grid">
+        @foreach (var project in founderProjects)
         {
             <FounderProjectItem FounderProject="@project"></FounderProjectItem>
         }
-    }
+    </div>
+
+}
 
 @code {
     private string founderKey;
