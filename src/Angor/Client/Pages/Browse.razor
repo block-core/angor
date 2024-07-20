@@ -460,7 +460,7 @@ else
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(ex, $"error parsing the result from relay, ProjectIdentifier = {projectIndexerData?.ProjectIdentifier}, event = {NostrKind.Metadata}");
+                        Logger.LogError(ex, $"error parsing the result of kind {NostrKind.Metadata} from relay, ProjectIdentifier = {projectIndexerData?.ProjectIdentifier}");
                     }
 
                     break;
@@ -479,7 +479,7 @@ else
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(ex, $"error parsing the result from relay, ProjectIdentifier = {projectIndexerData?.ProjectIdentifier}, event = {NostrKind.ApplicationSpecificData}");
+                        Logger.LogError(ex, $"error parsing the result of kind {NostrKind.ApplicationSpecificData} from relay, ProjectIdentifier = {projectIndexerData?.ProjectIdentifier}");
                     }
 
                     break;
