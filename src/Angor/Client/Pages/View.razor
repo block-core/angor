@@ -6,6 +6,7 @@
 @using Angor.Shared.Services
 @using Angor.Client.Models
 @using Nostr.Client.Messages
+@using System.Text.RegularExpressions
 
 @inject IDerivationOperations _derivationOperations
 @inject IClientStorage storage;
@@ -34,7 +35,19 @@
         }
         else
         {
-            <p><em>project not found...</em></p>
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="row mt-4">
+                    <div class="card card-body angor-alert-info pt-2 pb-2">
+                        <div class="d-flex align-items-center">
+                            <span class="me-3 user-select-none">
+                                <Icon IconName="info" Width="40" Height="40" Color="var(--bs-primary-btn-icon)" />
+                            </span>
+                            <span class="text-white">@error</span>
+                        </div>
+                    </div>
+                </div>
+            }
         }
     }
     else
@@ -364,6 +377,8 @@
     private string NostrSecKey { get; set; } = string.Empty;
     private bool isGeneratingNsec = false;
     private string errorMessage = string.Empty;
+    
+    private string error;
 
     private List<(string Hash, int Amount)> SelectedSeeders = new List<(string hash, int amount)>
     {
@@ -407,7 +422,7 @@
 
         if (project is InvestorProject findProject)
         {
-            invested = findProject.InvestedInProject(); // TODO need to scan for the invested projects when opening on a new browsers
+            invested = findProject.InvestedInProject(); // TODO: need to scan for the invested projects when opening on a new browser
             myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{findProject.TransactionId}";
         }
         else
@@ -450,11 +465,24 @@
                         }, () =>
                         {
                             findInProgress = false;
-                            if (project.ProjectInfo != null)
+                            if (project?.ProjectInfo != null)
+                            {
                                 SessionStorage.StoreProject(project);
+                            }
+                            else
+                            {
+                                // Handle case where project info is not available
+                                error = "Project not found...";
+                            }
                             StateHasChanged();
                         },
                         new[] { projectIndexerData.NostrPubKey });
+                    }
+                    else
+                    {
+                        findInProgress = false;
+                        error = "Project not found...";
+                        StateHasChanged();
                     }
                 }
             }
@@ -463,7 +491,6 @@
         if (project?.CreationTransactionId != null)
         {
             projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
-
             await RefreshBalance();
         }
     }
@@ -583,30 +610,60 @@
 
         // Reopen password prompt
         passwordComponent.ShowPassword(async () =>
-        {
-            isGeneratingNsec = true;
-            StateHasChanged();
-            await GenerateNsec();
-        });
+     {
+     isGeneratingNsec = true;
+     StateHasChanged();
+     await GenerateNsec();
+     });
     }
+
     private async void OpenInBrowseAsync()
     {
         var pubkey = project.ProjectInfo.NostrPubKey;
 
         if (!string.IsNullOrEmpty(pubkey))
         {
-            // Construct the URL with the pubkey
             var url = $"https://browse.angor.io/projects/{pubkey}";
 
-            // Open the URL in a new tab
             await Js.InvokeVoidAsync("window.open", url, "_blank");
         }
         else
         {
-            // Handle the case where pubkey is null or empty
             notificationComponent.ShowNotificationMessage("Public key is not available.", 3);
         }
     }
 
+    public string StripHtmlTags(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return string.Empty;
+        }
 
+        input = Regex.Replace(input, @"<script.*?>.*?</script>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        input = Regex.Replace(input, @"<style.*?>.*?</style>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        input = Regex.Replace(input, @"<([a-zA-Z][^\s>]*)(\s+[^>]*)?>", match =>
+     {
+     string tag = match.Groups[1].Value;
+     string attributes = match.Groups[2].Value;
+
+     attributes = Regex.Replace(attributes, @"\s+(style|class)\s*=\s*""[^""]*""", string.Empty, RegexOptions.IgnoreCase);
+
+     return $"<{tag}{attributes}>";
+     }, RegexOptions.IgnoreCase);
+
+        string allowedTagsPattern = @"<(?!\/?(br|p|a|ul|ol|li|strong|em|b|i|u|hr|blockquote|img|div|span|table|thead|tbody|tr|td|th)\b)[^>]+>";
+        input = Regex.Replace(input, allowedTagsPattern, string.Empty, RegexOptions.IgnoreCase);
+
+
+        return input;
+    }
+
+    public MarkupString ConvertToMarkupString(string input)
+    {
+        string sanitizedInput = StripHtmlTags(input);
+        return new MarkupString(sanitizedInput);
+    }
 }
