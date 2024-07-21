@@ -21,18 +21,33 @@
 @inject ILogger<Create> _Logger;
 
 @inject IFounderTransactionActions _founderTransactionActions
+<NotificationComponent @ref="notificationComponent" />
+<PasswordComponent @ref="passwordComponent" />
 
 @if (!hasWallet)
 {
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
+<div class="row">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex col-auto my-auto align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="add" Height="64" Width="64" />
+                </span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Create New Project
+                    </h5>
 
-<div class="container mt-4">
-    <h1 class="mb-4">Create New Project</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <NotificationComponent @ref="notificationComponent"/>
-    <PasswordComponent @ref="passwordComponent" />
+<div class="card card-body mt-4">
 
     <ul class="nav nav-tabs">
         <li class="nav-item">
@@ -51,8 +66,8 @@
             </button>
         </li>
     </ul>
-    
-    <br/>
+
+    <br />
 
     @if (activeTab == 1)
     {
@@ -239,7 +254,7 @@
                         <p class="mb-1"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
                         <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
                         <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
-                        
+
                         <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                         <p class="mb-1"><strong>Angor fee:</strong> @signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
@@ -298,17 +313,17 @@
     private FeeData feeData = new();
 
     private FounderProject project = new()
-    {
-        ProjectInfo = new ProjectInfo
         {
-            StartDate = DateTime.UtcNow.AddHours(2),
-            PenaltyDays = 90,
-            ExpiryDate = DateTime.UtcNow.AddDays(120),
-            TargetAmount = 50,
-        },
-        Metadata = new(),
-        CreationTransactionId = null,
-    };
+            ProjectInfo = new ProjectInfo
+            {
+                StartDate = DateTime.UtcNow.AddHours(2),
+                PenaltyDays = 90,
+                ExpiryDate = DateTime.UtcNow.AddDays(120),
+                TargetAmount = 50,
+            },
+            Metadata = new(),
+            CreationTransactionId = null,
+        };
 
     private int activeTab = 1;
 
@@ -394,7 +409,7 @@
     {
         if (nostrMetadataCreated)
         {
-            notificationComponent.ShowErrorMessage("Nostr profile already created"); 
+            notificationComponent.ShowErrorMessage("Nostr profile already created");
             return;
         }
 
@@ -435,7 +450,7 @@
                     }
 
                     activeTab = 2;
-                    
+
                     StateHasChanged();
                 });
 
@@ -565,9 +580,9 @@
                         nostrApplicationSpecificDataCreated = true;
                         storage.UpdateFounderProject(project);
                     }
-                    
+
                     activeTab = 3;
-                    
+
                     StateHasChanged();
 
                 });
@@ -588,7 +603,7 @@
         finally
         {
             // nothing to do the spinner will be disabled in the call back
-        }      
+        }
     }
 
     private async Task CreatProjectTransactionAnCheckPassword()
@@ -634,7 +649,7 @@
         finally
         {
             creatProjectSpinner = false;
-        }      
+        }
 
         StateHasChanged();
     }
