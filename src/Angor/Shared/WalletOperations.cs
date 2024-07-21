@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Blockcore.Consensus.ScriptInfo;
@@ -318,7 +320,11 @@ public class WalletOperations : IWalletOperations
 
     private async Task UpdateAddressInfoUtxoData(AddressInfo addressInfo)
     {
-        if (!addressInfo.UtxoData.Any() && addressInfo.HasHistory) return;
+        if (!addressInfo.UtxoData.Any() && addressInfo.HasHistory)
+        {
+            _logger.LogInformation($"{addressInfo.Address} has history but no utxo was found");
+            return;
+        }
 
         var (address, utxoList) = await FetchUtxoForAddressAsync(addressInfo.Address);
         
@@ -326,20 +332,34 @@ public class WalletOperations : IWalletOperations
             || addressInfo.UtxoData.Any(_ => _.blockIndex == 0) 
             || utxoList.Where((_, i) => _.outpoint.transactionId != addressInfo.UtxoData[i].outpoint.transactionId).Any())
         {
+            _logger.LogInformation($"{addressInfo.Address} new utxos found");
+
             CopyPendingSpentUtxos(addressInfo.UtxoData, utxoList);
             addressInfo.UtxoData.Clear();
             addressInfo.UtxoData.AddRange(utxoList);
+        }
+        else
+        {
+            _logger.LogInformation($"{addressInfo.Address} no new utxo found");
         }
     }
 
     private void CopyPendingSpentUtxos(List<UtxoData> from, List<UtxoData> to)
     {
-        foreach (var utxoFrom in from.Where(x => x.PendingSpent))
+        foreach (var utxoFrom in from)
         {
-            var newUtxo = to.FirstOrDefault(x => x.outpoint.ToString() == utxoFrom.outpoint.ToString());
-            if (newUtxo != null)
+            _logger.LogInformation($"{utxoFrom.address} new utxo {utxoFrom.outpoint.ToString()}");
+
+            if (utxoFrom.PendingSpent)
             {
-                newUtxo.PendingSpent = true;
+                _logger.LogInformation($"{utxoFrom.address} searching for pending spent utxo for address");
+
+                var newUtxo = to.FirstOrDefault(x => x.outpoint.ToString() == utxoFrom.outpoint.ToString());
+                if (newUtxo != null)
+                {
+                    _logger.LogInformation($"{utxoFrom.address} copying pending spent utxo for address for utxo {newUtxo.outpoint.ToString()}.");
+                    newUtxo.PendingSpent = true;
+                }
             }
         }
     }
@@ -397,9 +417,11 @@ public class WalletOperations : IWalletOperations
         AddressBalance[] addressesNotEmpty;
         do
         {
+            _logger.LogInformation($"fetching balance for account = {accountExtPubKey.ToString(network)} start index = {scanIndex} isChange = {isChange} gap = {gap}");
+
             var newAddressesToCheck = Enumerable.Range(0, gap)
                 .Select(_ => GenerateAddressFromPubKey(scanIndex + _, network, isChange, accountExtPubKey))
-                .ToList();
+            .ToList();
 
             //check all new addresses for balance or a history
             addressesNotEmpty = await _indexerService.GetAdressBalancesAsync(newAddressesToCheck, true);
@@ -407,9 +429,19 @@ public class WalletOperations : IWalletOperations
             if (addressesNotEmpty.Length < newAddressesToCheck.Count)
                 newEmptyAddress = newAddressesToCheck[addressesNotEmpty.Length];
 
+            foreach (var addressInfo in newAddressesToCheck)
+            {
+                // just for logging
+                var foundBalance = addressesNotEmpty.FirstOrDefault(f => f.address == addressInfo.Address);
+                _logger.LogInformation($"{addressInfo.Address} balance = {foundBalance?.balance} pending = {foundBalance?.pendingReceived} ");
+            }
+
             if (!addressesNotEmpty.Any())
+            {
+                _logger.LogInformation($"no new address with balance found");
                 break; //No new data for the addresses checked
-            
+            }
+
             //Add the addresses with balance or a history to the returned list
             addressesInfo.AddRange(newAddressesToCheck
                 .Where(addressInfo => addressesNotEmpty
@@ -422,8 +454,11 @@ public class WalletOperations : IWalletOperations
             foreach (var (address, data) in lookupResults)
             {
                 var addressInfo = addressesInfo.First(_ => _.Address == address);
+
                 addressInfo.HasHistory = true;
                 addressInfo.UtxoData = data;
+
+                _logger.LogInformation($"{addressInfo.Address} added utxo data, utxo count = {addressInfo.UtxoData.Count}");
             }
 
             scanIndex += addressesNotEmpty.Length;
@@ -447,7 +482,7 @@ public class WalletOperations : IWalletOperations
 
     public async Task<(string address, List<UtxoData> data)> FetchUtxoForAddressAsync(string address)
     {
-        // cap utxo count to max 1000 items, this is
+        // cap utxo count to maxutxo items, this is
         // mainly to get miner wallets to work fine
         var maxutxo = 200; 
 
@@ -457,20 +492,30 @@ public class WalletOperations : IWalletOperations
         
         do
         {
+            _logger.LogInformation($"{address} fetching utxo offset = {offset} limit = {limit}");
+
             // this is inefficient look at headers to know when to stop
             var utxo = await _indexerService.FetchUtxoAsync(address, offset, limit);
 
             if (utxo == null || !utxo.Any())
+            {
+                _logger.LogInformation($"{address} no more utxos found");
                 break;
+            }
+
+            _logger.LogInformation($"{address} found {utxo.Count} utxos");
 
             allItems.AddRange(utxo);
 
             if (utxo.Count < limit)
+            {
+                _logger.LogInformation($"{address} utxo count {utxo.Count} is under limit {limit} no more utxos to fetch");
                 break;
+            }
 
             if (allItems.Count >= maxutxo)
             {
-                _logger.LogWarning($"utxo scan for address {address} was stopped after the limit of {maxutxo} was reached.");
+                _logger.LogInformation($"{address} total utxo count {allItems.Count} is greater then max of max {maxutxo} utxos, stopping to fetch utxos");
                 break;
             }
 
@@ -495,6 +540,8 @@ public class WalletOperations : IWalletOperations
 
             if (feeEstimations == null || (!feeEstimations.Fees?.Any() ?? true))
                 return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRate = 10000 / _});
+
+            _logger.LogInformation($"fee estimation is {string.Join(", ", feeEstimations.Fees.Select(f => f.Confirmations.ToString() + "-" + f.FeeRate))}");
 
             return feeEstimations.Fees!;
         }

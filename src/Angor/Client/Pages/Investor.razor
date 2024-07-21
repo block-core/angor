@@ -19,6 +19,7 @@
 @inject ISignService _SignService
 @inject ISerializer serializer
 @inject ISignService _SignService
+@inject IEncryptionService _encryptionService
 
 @inject IJSRuntime JS
 
@@ -30,58 +31,87 @@
     return;
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center">
-        <h1 class="mb-4">Invested Portfolio</h1>
-        <div>
-            <button class="btn btn-secondary" @onclick="GetProjectsAndUpdateAsync">
-                @if (RefreshBalanceTriggered)
-                {
-                <!-- If balanceSpinner is true, show spinner icon -->
-                <span class="spinner-border spinner-border-sm opacity-10 btn-content" role="status" aria-hidden="true"></span>
-                }
-                else
-                {
-                    <!-- If balanceSpinner is false, show 'history' icon -->
-                    <span>refresh</span>
-                }
-            </button>
-            <button class="btn btn-secondary" @onclick="NavigateToPenalties">View Penalties</button>
+
+<div class="row">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <div class="d-flex col-auto my-auto align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="portfolio" Height="64" Width="64" />
+                </span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Invested Portfolio
+                    </h5>
+                </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-end w-100 w-lg-auto mt-3 mt-lg-0">
+                <button class="btn btn-border w-100 w-lg-auto me-3 mb-lg-0" @onclick="GetProjectsAndUpdateAsync">
+                    <i class="@(RefreshBalanceTriggered ? "rotate-icon" : "")">
+                        <Icon IconName="refresh" Width="24" Height="24"></Icon>
+                    </i>
+                </button>
+
+                <button class="btn btn-border w-100 w-lg-auto" @onclick="NavigateToPenalties" data-toggle="tooltip" title="Penalties return control to investors but put Bitcoin on hold for a penalty duration.">
+                    <i>
+                        <Icon IconName="sad-circle" Width="24" Height="24"></Icon>
+                    </i>
+                    <span class="nav-link-text ms-1">Penalties</span>
+                </button>
+            </div>
         </div>
     </div>
+</div>
+
+
+
+<div class="mt-4">
+
     <NotificationComponent @ref="notificationComponent" />
     <PasswordComponent @ref="passwordComponent" />
 
     <!-- Summary Statistics -->
-    <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
-        <div class="col">
-            <div class="card text-white bg-gradient">
-                <div class="card-body">
-                    <h5 class="card-title">Funded Projects</h5>
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card text-white">
+                <div class="card-body text-center">
+                    <span class="user-select-none">
+                        <Icon IconName="founder" Height="64" Width="64" />
+                    </span>
+                    <h5 class="card-title mt-4">Funded Projects</h5>
                     <p class="card-text">@TotalFundedProjects</p>
                 </div>
             </div>
         </div>
-        <div class="col">
-            <div class="card text-white bg-gradient">
-                <div class="card-body">
-                    <h5 class="card-title">Total invested</h5>
-                    <p class="card-text"> @Money.Satoshis(TotalInvested).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card text-white">
+                <div class="card-body text-center">
+                    <span class="user-select-none">
+                        <Icon IconName="users" Height="64" Width="64" />
+                    </span>
+                    <h5 class="card-title mt-4">Total invested</h5>
+                    <p class="card-text">@Money.Satoshis(TotalInvested).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                 </div>
             </div>
         </div>
-        <div class="col">
-            <div class="card text-white bg-gradient">
-                <div class="card-body">
-                    <h5 class="card-title">Wallet</h5>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card text-white">
+                <div class="card-body text-center">
+                    <span class="user-select-none">
+                        <Icon IconName="wallet" Height="64" Width="64" />
+                    </span>
+                    <h5 class="card-title mt-4">Wallet</h5>
                     <p class="card-text">@Money.Satoshis(TotalWallet).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                 </div>
             </div>
         </div>
-        <div class="col">
-            <div class="card text-white bg-gradient">
-                <div class="card-body">
-                    <h5 class="card-title">In Recovery</h5>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card text-white">
+                <div class="card-body text-center">
+                    <span class="user-select-none">
+                        <Icon IconName="recovery" Height="64" Width="64" />
+                    </span>
+                    <h5 class="card-title mt-4">In Recovery</h5>
                     <p class="card-text">@Money.Satoshis(TotalInRecovery).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                 </div>
             </div>
@@ -89,13 +119,76 @@
     </div>
 
     <!-- List of Projects -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header pb-0 p-3">
-                    <div class="row">
-                        <div class="col-6 d-flex align-items-center">
-                            <h6 class="mb-0">Your Projects</h6>
+    @if (projects.Count > 0)
+    {
+        <div class="row mt-4">
+            <div class="col-md-12">
+            
+                    <div class="card card-body">
+
+                        <div class="d-flex align-items-center">
+                            <span class="user-select-none">
+                            <Icon IconName="project_explorer"></Icon>
+                            </span>
+                            <div class="h-100 ms-3">
+                                <h5 class="mb-0 font-weight-bolder">
+                                    Your Projects
+                                </h5>
+                            </div>
+                        </div>
+
+                    <div class="table-responsive form-control mt-4">
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Funding Target (@network.CoinTicker)</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Raised (@network.CoinTicker)</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Raised  (% Target)</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Project Status</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">My Investment (@network.CoinTicker)</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Spent by Founder</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Available to Founder</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">In Recovery</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                    @foreach (var project in projects)
+                                    {
+                                        Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
+
+                                        <tr>
+                                            <td>
+                                                <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}")>@project.Metadata?.Name</a>
+                                            </td>
+                                            <td>@project.ProjectInfo.TargetAmount @network.CoinTicker</td>
+                                            <td>@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
+                                            <td>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</td>
+                                            <td>
+                                                @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+                                                {
+                                                    <span class="text-info">Funding</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-success">Live</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                                @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
+                                                {
+                                                    <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link" data-toggle="tooltip" title="Pending"> <i class="oi oi-clock"></i></a>
+                                                }
+                                            </td>
+                                            <td>-</td>
+                                            <td>-</td>
+                                            <td>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -169,16 +262,17 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-    </div>
+        </div>
+    }
+
 
 </div>
 @code {
 
     bool RefreshBalanceTriggered;
     bool addedProjectsFromEvent;
-    
+
     private List<InvestorProject> projects = new();
 
     long TotalInvested = 0;
@@ -190,10 +284,8 @@
 
     public Dictionary<string, ProjectStats> Stats = new();
 
-    private IJSInProcessObjectReference? javascriptNostrToolsModule;
-
     private Investments scannedInvestments = new();
-    
+
     protected override async Task OnInitializedAsync()
     {
         hasWallet = _walletStorage.HasWallet();
@@ -220,37 +312,24 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (javascriptNostrToolsModule == null)
-        {
-            try
-            {
-                //TODO import the nostr tool module directly to c# class
-                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
-            }
-            catch (JSException e)
-            {
-                notificationComponent.ShowErrorMessage(e.Message);
-            }
-        }
-
         if (RefreshBalanceTriggered)
         {
             if (addedProjectsFromEvent)
             {
                 addedProjectsFromEvent = false;
-                
+
                 var tasks = scannedInvestments.ProjectIdentifiers.Select(GetInvestmentProjectDataAsync);
 
                 await Task.WhenAll(tasks);
 
                 scannedInvestments.ProjectIdentifiers = new();
-                
+
                 RefreshBalanceTriggered = false;
                 StateHasChanged();
             }
             else
             {
-                RefreshBalanceTriggered = false;   
+                RefreshBalanceTriggered = false;
             }
         }
 
@@ -258,7 +337,7 @@
         {
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = SessionStorage.GetUnconfirmedInboundFunds();
-            
+
             var abi = new AccountBalanceInfo();
             abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
 
@@ -269,7 +348,7 @@
 
             await RefreshBalance();
         }
-        
+
     }
     
     private async Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
@@ -314,11 +393,8 @@
         {
             Stats.Clear();
 
-            foreach (var project in projects)
-            {
-                var projectStats = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
-                Stats.Add(project.ProjectInfo.ProjectIdentifier, projectStats);
-            }
+            var tasks = projects.Select(x => AddProjectStats(x.ProjectInfo.ProjectIdentifier));
+            await Task.WhenAll(tasks);
         }
         catch (Exception ex)
         {
@@ -326,48 +402,45 @@
         }
     }
 
-    public string TrimString(string input)
+    private async Task AddProjectStats(string projectId)
     {
-        if (input.Length > 20)
-        {
-            return input.Substring(0, 10) + "..." + input.Substring(input.Length - 10);
-        }
-
-        return input;
+        var projectStats = await _IndexerService.GetProjectStatsAsync(projectId);
+        Stats.Add(projectId, projectStats);
     }
 
     private async Task GetProjectsAndUpdateAsync()
     {
+        RefreshBalanceTriggered = true;
+
         if (!passwordComponent.HasPassword())
         {
             passwordComponent.ShowPassword(GetProjectsAndUpdateAsync);
+            RefreshBalanceTriggered = false;
             return;
         }
      
         RefreshBalanceTriggered = true;
         var words = await passwordComponent.GetWalletAsync();
-        var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1); 
+        var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1);
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
         var NostrDMPubkey = _DerivationOperations.DeriveNostrPubKey(words, 1);
         
-        var rootNostrPubey = _DerivationOperations.DeriveNostrPubKey(words, 0);
 
         await checkSignatureFromFounder();
         
-        await _RelayService.LookupDirectMessagesForPubKeyAsync( NostrDMPubkey, null,1,
+        
+
+        var rootNostrPubKeyHex = _DerivationOperations.DeriveNostrPubKey(words, 0);
+
+
+        await _RelayService.LookupDirectMessagesForPubKeyAsync(NostrDMPrivateKey.PubKey.ToHex()[2..], null, 1,
             async x =>
             {
-                if (x.Pubkey != rootNostrPubey)
-                    return;
-
                 try
                 {
-                    var decryptedString = await javascriptNostrToolsModule.InvokeAsync<string>(
-                        "decryptNostr",
-                        NostrDMPrivateKeyHex,
-                        rootNostrPubey,
-                        x.Content);
-                
+                    var decryptedString = await _encryptionService.DecryptNostrContentAsync(
+                        NostrDMPrivateKeyHex, rootNostrPubKeyHex, x.Content);
+
                     var projectIdList = serializer.Deserialize<Investments>(decryptedString);
 
                     bool foundNewProjects = false;
@@ -380,7 +453,7 @@
                         scannedInvestments.ProjectIdentifiers.Add(investment);
                         foundNewProjects = true;
                     }
-                    
+
                     if (foundNewProjects)
                     {
                         addedProjectsFromEvent = true;
@@ -390,9 +463,9 @@
                 }
                 catch (Exception e)
                 {
-                    _Logger.LogError(e,"failed to get handle investment list event from relay");
+                    _Logger.LogError(e, "failed to get handle investment list event from relay");
                 }
-            });
+            }, rootNostrPubKeyHex);
     }
 
     private async Task GetInvestmentProjectDataAsync(InvestmentState investmentState)
@@ -401,10 +474,10 @@
 
         if (project == null)
             return;
-        
+
         var words = await passwordComponent.GetWalletAsync();
         var investmentPubKey = _DerivationOperations.DeriveInvestorKey(words, project.FounderKey);
-       
+
         var investments = await _IndexerService.GetInvestmentsAsync(investmentState.ProjectIdentifier);
         var investment = investments.SingleOrDefault(x => x.InvestorPublicKey == investmentPubKey);
 
@@ -413,12 +486,12 @@
 
         var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectIdentifier);
         var investorNostrPubKey = investorNostrPrivateKey.PubKey.ToHex()[2..];
-        
+
         var investorProject = new InvestorProject
-        {
-            TransactionId = investment.TransactionId,
-            AmountInvested = investment.TotalAmount,
-        };
+            {
+                TransactionId = investment.TransactionId,
+                AmountInvested = investment.TotalAmount,
+            };
 
         DateTime? createdAt = null;
         string? eventId = null;
@@ -458,8 +531,8 @@
                                 if (investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
                                     return;
 
-                                var signatureJson = await javascriptNostrToolsModule.InvokeAsync<string>(
-                                    "decryptNostr", Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes()), project.NostrPubKey, encryptedSignatures);
+                                var signatureJson = await _encryptionService.DecryptNostrContentAsync(
+                                    Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes()), project.NostrPubKey, encryptedSignatures);
 
                                 var res = serializer.Deserialize<SignatureInfo>(signatureJson);
 
@@ -481,7 +554,7 @@
             });
 
     }
-    
+
     private void NavigateToPenalties()
     {
         NavigationManager.NavigateTo("/penalties");

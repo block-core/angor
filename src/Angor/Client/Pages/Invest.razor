@@ -29,6 +29,7 @@
 @inject IInvestorTransactionActions _InvestorTransactionActions
 
 @inject ISerializer serializer
+@inject IEncryptionService encryption
 
 @if (!hasWallet)
 {
@@ -98,7 +99,7 @@
                         </div>
                     } *@
 
-                    <button type="submit" class="btn btn-primary mt-3" disabled="@buildSpinner">
+                    <button type="submit" class="btn btn-border mt-3" disabled="@buildSpinner">
                         @if (buildSpinner)
                         {
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -163,7 +164,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false" disabled="@investSpinner">Cancel</button>
-                            <button type="button" class="btn btn-primary" @onclick="Send" disabled="@investSpinner">
+                            <button type="button" class="btn btn-border" @onclick="Send" disabled="@investSpinner">
                                 @if (investSpinner)
                                 {
                                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -206,7 +207,7 @@
                     <h4>Waiting for the founder to approve</h4>
                     <div>
                         <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
-                        <button class="btn btn-primary" @onclick="RefreshSignatures" disabled="@refreshSpinner">
+                        <button class="btn btn-border" @onclick="RefreshSignatures" disabled="@refreshSpinner">
                             @if (refreshSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -293,8 +294,6 @@
 
     private FeeData feeData = new();
 
-    private IJSInProcessObjectReference? javascriptNostrToolsModule;
-
     protected override async Task OnInitializedAsync()
     {       
         if (!hasWallet)
@@ -337,20 +336,6 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (javascriptNostrToolsModule == null)
-        {
-            try
-            {
-                //TODO import the nostr tool module directly to c# class
-                javascriptNostrToolsModule = await JS.InvokeAsync<IJSInProcessObjectReference>("import", "./NostrToolsMethods.js?version=" + DateTime.UtcNow.Ticks);
-            }
-            catch (JSException e)
-            {
-                _Logger.LogError(e,"Failed to load the nostr tools module");
-                notificationComponent.ShowErrorMessage(e.Message);
-            }
-        }
-
         if (firstRender)
         {
             if (hasWallet)
@@ -618,10 +603,8 @@
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            var encryptedContent = await javascriptNostrToolsModule.InvokeAsync<string>(
-                "encryptNostr",
-                nostrPrivateKeyHex,
-                investorProject.ProjectInfo.NostrPubKey,
+            var encryptedContent = await encryption.EncryptNostrContentAsync(
+                nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey,
                 strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory));
 
             var investmentSigsRequest = _SignService.RequestInvestmentSigs(new SignRecoveryRequest
@@ -674,8 +657,8 @@
         if (project is not InvestorProject investorProject || investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
             return;
         
-        var signatureJson = await javascriptNostrToolsModule.InvokeAsync<string>(
-            "decryptNostr", nostrPrivateKeyHex, project.ProjectInfo.NostrPubKey, encryptedSignatures);
+        var signatureJson = await encryption.DecryptNostrContentAsync(
+             nostrPrivateKeyHex, project.ProjectInfo.NostrPubKey, encryptedSignatures);
         
         _Logger.LogInformation("signature : " + signatureJson);
 
@@ -801,11 +784,8 @@
                 .ToList()
         };
             
-        var encryptedProjectIdList = await javascriptNostrToolsModule.InvokeAsync<string>(
-            "encryptNostr",
-            rootNostrPrivateKeyHex,
-            nostrDMKey,
-            serializer.Serialize(investments));
+        var encryptedProjectIdList = await encryption.EncryptNostrContentAsync(
+            rootNostrPrivateKeyHex, nostrDMKey, serializer.Serialize(investments));
             
         _RelayService.SendDirectMessagesForPubKeyAsync(rootNostrPrivateKeyHex, nostrDMKey, encryptedProjectIdList, x =>
         {

@@ -7,6 +7,7 @@
 @using Angor.Shared.Services
 @using Angor.Client.Components
 @using Blockcore.Networks
+@using System.Text.Json
 
 @inject HttpClient _httpClient;
 @inject IClientStorage storage;
@@ -18,6 +19,7 @@
 @inject IDerivationOperations _derivationOperations
 @inject NavMenuState NavMenuState
 @inject IEncryptionService _encryptionService
+@inject IClipboardService ClipboardService
 
 
 @inherits BaseComponent
@@ -135,7 +137,7 @@
                                 </div>
                                 <div class="mb-2">
                                     <button class="btn btn-border w-100" @onclick="ShowExtraWord">
-                                            <span>Optional extra word</span>                         
+                                        <span>Optional extra word</span>
                                     </button>
                                 </div>
                                 @if (isShowExtraWord)
@@ -211,8 +213,20 @@ else
             <div class="d-flex align-items-center justify-content-between">
                 <div class="mt-2 mb-2 pb-2 d-flex flex-wrap align-items-center">
                     <div class="d-flex flex-wrap align-items-center">
-                        <span class="fs-4 me-2" data-cy="balance">Balance: </span>
-                        <span class="fs-3 me-2" data-cy="balance-amount"><strong> @Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong></span>
+
+                        <div class="d-flex align-items-center">
+                            <span class="user-select-none">
+                                <Icon IconName="balance"></Icon>
+                            </span>
+                            <div class="h-100 ms-3 d-flex align-items-center">
+                                <h5 class="mb-0 font-weight-bolder" data-cy="balance">
+                                    @* Balance *@
+                                </h5>
+                                <span class="fs-4 me-2" data-cy="balance-amount"><strong> @Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC)</strong>  @network.CoinTicker</span>
+
+                            </div>
+                        </div>
+
                     </div>
                     @if (network.NetworkType != NetworkType.Mainnet && accountBalanceInfo.TotalUnconfirmedBalance <= 0 & accountBalanceInfo.TotalBalance <= 0)
                     {
@@ -376,30 +390,46 @@ else
         {
             <!-- Section 3 -->
             <div class="col-md-12 mb-lg-0 mb-4">
-                <div class="card mt-4">
-                    <div class="card-header pb-0 p-3">
-                        <div class="row">
-                            <div class="col-6 d-flex align-items-center">
-                                <h6 class="mb-0">Send</h6>
-                            </div>
 
+                <div class="card card-body p-3 mt-4">
+
+                    <div class="d-flex align-items-center">
+                        <span class="user-select-none">
+                            <Icon IconName="send"></Icon>
+                        </span>
+                        <div class="h-100 ms-3">
+                            <h5 class="mb-0 font-weight-bolder">
+                                Send
+                            </h5>
                         </div>
                     </div>
-                    <div class="card-body p-3">
-                        <div class="row">
 
+                    <div class="row mt-4">
+
+                        <form>
                             <form>
                                 <div class="mb-3">
                                     <label for="sendToAddress" class="form-label">Send to Address</label>
-                                    <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
+                                    <div class="input-group">
+                                        <span role="button" class="btn btn-border" @onclick="PasteFromClipboard">
+                                            <Icon IconName="paste" />
+                                        </span> 
+                                        
+                                        <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
+                                                 
+                                  
+                                      
+                                        <span role="button" class="btn btn-border" @onclick="ClearAddress">
+                                            <Icon IconName="remove" />
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="sendAmount" class="form-label">Amount</label>
                                     <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
                                 </div>
-
-                                <button type="button" class="btn btn-primary mb-3" @onclick="() => coinControlModal = true">
+                                <button type="button" class="btn btn-border mb-3" @onclick="() => coinControlModal = true">
                                     Coin Control
                                     @if (_sendInfo.SendUtxos.Any())
                                     {
@@ -408,7 +438,7 @@ else
                                 </button>
 
                                 <!-- New Send button that triggers a confirmation dialog -->
-                                <button type="button" class="btn btn-primary mb-3" data-cy="send-button" @onclick="AskPassword" disabled="@sendLoadSpinner">
+                                <button type="button" class="btn btn-border mb-3" data-cy="send-button" @onclick="AskPassword" disabled="@sendLoadSpinner">
                                     @if (sendLoadSpinner)
                                     {
                                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -421,10 +451,11 @@ else
                                 </button>
 
                             </form>
+                        </form>
 
-                        </div>
                     </div>
                 </div>
+
                 @if (coinControlModal)
                 {
                     <!-- Coin Control Modal -->
@@ -450,7 +481,7 @@ else
                                                 bool isTicked = _sendInfo.SendUtxos.ContainsKey(addressUtxoItem.outpoint.ToString());
                                                 <input type="checkbox" id="@addressUtxoItem.outpoint.ToString()" @bind="@isTicked" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
                                                 <label class="fs-lable-s" for="@addressUtxoItem.outpoint.ToString()">
-                                                        @($"{addressUtxoItem.outpoint} - {Money.Satoshis(@addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} {@network.CoinTicker}")
+                                                    @($"{addressUtxoItem.outpoint} - {Money.Satoshis(@addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} {@network.CoinTicker}")
                                                 </label>
                                             }
                                         }
@@ -504,7 +535,7 @@ else
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner">Cancel</button>
-                                        <button type="button" class="btn btn-primary" @onclick="SendCoins" disabled="@sendConfirmSpinner">
+                                        <button type="button" class="btn btn-border" @onclick="SendCoins" disabled="@sendConfirmSpinner">
                                             @if (sendConfirmSpinner)
                                             {
                                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -526,32 +557,40 @@ else
         @if (activeTab == 2)
         {
             <div class="col-md-12 mb-lg-0 mb-4">
-                <div class="card mt-4">
-                    <div class="card-header pb-0 p-3">
-                        <div class="row">
-                            <div class="col-6 d-flex align-items-center">
-                                <h6 class="mb-0">Receive</h6>
+
+                <div class="card card-body p-3 mt-4">
+
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center">
+                            <span class="user-select-none">
+                                <Icon IconName="receive"></Icon>
+                            </span>
+                            <div class="h-100 ms-3">
+                                <h5 class="mb-0 font-weight-bolder">
+                                    Receive
+                                </h5>
                             </div>
-                            <ShowQrCode @ref="showQrCode" Data="@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()" />
 
                         </div>
+                        <ShowQrCode @ref="showQrCode" Data="@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()" />
+
                     </div>
-                    <div class="card-body p-3">
-                        <div class="row">
-                            <div class="col-md-12 mb-md-0 mb-4">
-                                <div class="card card-body border card-plain border-radius-lg d-flex align-items-center flex-row" data-cy="wallet-address">
-                                    <img class="address-image me-3 mb-0" src="/assets/img/bitcoin.svg" alt="Bitcoin">
-                                    <h6 class="address-text mb-0 overflow-x-auto">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</h6>
-                                    <i @onclick="CopyNextReceiveAddress" class="ms-auto cursor-pointer user-select-none" data-cy="SHOW_QR_CODE_WALLET">
-                                        <Icon IconName="copy"></Icon>
-                                    </i>
-                                </div>
-                            </div>
 
+                    <div class="row mt-4">
+                        <div class="col-md-12 mb-md-0 mb-4">
+                            <div class="card card-body form-control card-plain border-radius-lg d-flex align-items-center flex-row" data-cy="wallet-address">
+                                <img class="address-image me-3 mb-0" src="/assets/img/bitcoin.svg" alt="Bitcoin">
+                                <h6 class="address-text mb-0 overflow-x-auto">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</h6>
+                                <i @onclick="CopyNextReceiveAddress" class="ms-auto cursor-pointer user-select-none" data-cy="SHOW_QR_CODE_WALLET">
+                                    <Icon IconName="copy"></Icon>
+                                </i>
+                            </div>
                         </div>
+
                     </div>
                 </div>
             </div>
+
 
         }
     </div>
@@ -560,79 +599,81 @@ else
     <!-- Section 4 -->
     <div class="row mt-4">
         <div class="col-md-12">
-            <div class="card">
-                <div class="card-header pb-0 p-3">
-                    <div class="row">
-                        <div class="col-6 d-flex align-items-center">
-                            <h6 class="mb-0">Addresses and Amounts</h6>
-                        </div>
+            <div class="card card-body">
+                <div class="d-flex align-items-center">
+                    <span class="user-select-none">
+                        <Icon IconName="addresses"></Icon>
+                    </span>
+                    <div class="h-100 ms-3">
+                        <h5 class="mb-0 font-weight-bolder">
+                            Addresses and Amounts
+                        </h5>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive form-control">
-                        <table class="table align-items-center mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Address</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Amount</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Path</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">UTXO count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AllAddresses())
-                                {
-                                    var total = addressInfo.Balance;
-                                    var count = addressInfo.UtxoData.Count();
+                <div class="table-responsive form-control mt-4">
+                    <table class="table align-items-center mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Address</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Amount</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Path</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">UTXO count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AllAddresses())
+                            {
+                                var total = addressInfo.Balance;
+                                var count = addressInfo.UtxoData.Count();
 
-                                    if (total > 0)
+                                if (total > 0)
+                                {
+                                    <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
+                                        <td>@addressInfo.Address</td>
+                                        <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                        <td>@addressInfo.HdPath</td>
+                                        <td>@count</td>
+                                    </tr>
+                                    @if (IsExpanded(addressInfo.Address))
                                     {
-                                        <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
-                                            <td>@addressInfo.Address</td>
-                                            <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                            <td>@addressInfo.HdPath</td>
-                                            <td>@count</td>
-                                        </tr>
-                                        @if (IsExpanded(addressInfo.Address))
-                                        {
-                                            <tr>
-                                                <td colspan="4">
-                                                    <div class="collapse show" data-cy="expend-amount" id="@($"collapse-{addressInfo.Address}")">
-                                                        <div class="card card-body">
-                                                            <!-- Inner table goes here -->
-                                                            <div class="table-responsive form-control">
-                                                                <table class="table table-sm">
-                                                                    <thead>
+                                        <tr>
+                                            <td colspan="4">
+                                                <div class="collapse show" data-cy="expend-amount" id="@($"collapse-{addressInfo.Address}")">
+                                                    <div class="card card-body">
+                                                        <!-- Inner table goes here -->
+                                                        <div class="table-responsive form-control">
+                                                            <table class="table table-sm">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th scope="col">Coin</th>
+                                                                        <th scope="col">Amount</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                                                    {
                                                                         <tr>
-                                                                            <th scope="col">Coin</th>
-                                                                            <th scope="col">Amount</th>
+                                                                            <td>@($"{addressUtxoItem.outpoint}")</td>
+                                                                            <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
                                                                         </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        @foreach (var addressUtxoItem in addressInfo.UtxoData)
-                                                                        {
-                                                                            <tr>
-                                                                                <td>@($"{addressUtxoItem.outpoint}")</td>
-                                                                                <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                                                            </tr>
-                                                                        }
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
+                                                                    }
+                                                                </tbody>
+                                                            </table>
                                                         </div>
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        }
+                                                </div>
+                                            </td>
+                                        </tr>
                                     }
                                 }
-                            </tbody>
-                        </table>
-                    </div>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+
 }
 
 
@@ -726,6 +767,9 @@ else
 
                 storage.SetAccountInfo(network.Name, accountInfo);
 
+                // lets log the entire account class to see what has changed
+                Logger.LogInformation(System.Text.Json.JsonSerializer.Serialize(accountInfo, new JsonSerializerOptions { WriteIndented = true }));
+
                 var utxos = accountInfo.AllUtxos()
                     .Select(x => x.outpoint.ToString()).ToList();
 
@@ -784,13 +828,13 @@ else
             notificationComponent.ShowErrorMessage("New wallet words are null or empty");
             return;
         }
+
         if (string.IsNullOrEmpty(newWalletPassword))
         {
             walletWordsCreateModal = false;
             notificationComponent.ShowErrorMessage("New wallet password is null or empty");
             return;
         }
-
         if (!backupConfirmation)
         {
             showBackupConfirmationError = true;
@@ -1169,11 +1213,11 @@ else
             testCoinsSpinner = false;
         }
     }
+
     void SetActiveTab(int tab)
     {
         activeTab = tab;
     }
-
 
     bool IsExpanded(string address)
     {
@@ -1186,6 +1230,25 @@ else
             collapseStates[address] = !collapseStates[address];
         else
             collapseStates[address] = true;
+    }
+
+    private async Task PasteFromClipboard()
+    {
+        try
+        {
+            var text = await ClipboardService.ReadTextAsync();
+            _sendInfo.SendToAddress = text;
+            StateHasChanged(); // Refresh the UI to reflect the updated value
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to read clipboard contents: {ex}");
+        }
+    }
+
+    private void ClearAddress()
+    {
+        _sendInfo.SendToAddress = string.Empty;
     }
 
     private void ShowExtraWord(MouseEventArgs e)

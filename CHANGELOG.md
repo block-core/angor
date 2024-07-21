@@ -1,6 +1,37 @@
+## <small>0.0.30 (2024-07-20)</small>
+
+* Create check-circle.svg ([cf548ee](https://github.com/block-core/angor/commit/cf548ee))
+* Create sad-circle.svg ([f78fb55](https://github.com/block-core/angor/commit/f78fb55))
+* Display error message when project is not found in indexer ([0b798a6](https://github.com/block-core/angor/commit/0b798a6))
+* Enhance HTML sanitization: remove script/style tags, inline styles, and classes ([2e1f20f](https://github.com/block-core/angor/commit/2e1f20f))
+* hotfix bug where check box in founder spend funds was hidden (#126) ([5a0b0f3](https://github.com/block-core/angor/commit/5a0b0f3)), closes [#126](https://github.com/block-core/angor/issues/126)
+* Update Founder.razor ([dbb26ce](https://github.com/block-core/angor/commit/dbb26ce))
+* Update Founder.razor ([7039b17](https://github.com/block-core/angor/commit/7039b17))
+* Update FounderProjectItem.razor ([db900a8](https://github.com/block-core/angor/commit/db900a8))
+* Update FounderProjectItem.razor ([23a4fe9](https://github.com/block-core/angor/commit/23a4fe9))
+* Update Investor page UI ([0627a6d](https://github.com/block-core/angor/commit/0627a6d))
+
+
+
+## <small>0.0.29 (2024-07-19)</small>
+
+* Add more logs to the application  (#104) ([fd269b4](https://github.com/block-core/angor/commit/fd269b4)), closes [#104](https://github.com/block-core/angor/issues/104)
+* Adding a spinner on the single sig approval (#118) ([c5b42d6](https://github.com/block-core/angor/commit/c5b42d6)), closes [#118](https://github.com/block-core/angor/issues/118)
+* bump version ([3f34cb8](https://github.com/block-core/angor/commit/3f34cb8))
+* comment out failing tests ([5e39f07](https://github.com/block-core/angor/commit/5e39f07))
+* Improve spend funds data (#100) ([5b7a9bb](https://github.com/block-core/angor/commit/5b7a9bb)), closes [#100](https://github.com/block-core/angor/issues/100)
+* Improved the UI of the project view section (#123) ([7606c8c](https://github.com/block-core/angor/commit/7606c8c)), closes [#123](https://github.com/block-core/angor/issues/123)
+* Nostr wasm (#121) ([b0b59f2](https://github.com/block-core/angor/commit/b0b59f2)), closes [#121](https://github.com/block-core/angor/issues/121)
+* Nsec bug and UI UX (#122) ([291114b](https://github.com/block-core/angor/commit/291114b)), closes [#122](https://github.com/block-core/angor/issues/122)
+* Update pull-request.yml (#117) ([b7e9914](https://github.com/block-core/angor/commit/b7e9914)), closes [#117](https://github.com/block-core/angor/issues/117)
+* View project/UI (#114) ([75d9d31](https://github.com/block-core/angor/commit/75d9d31)), closes [#114](https://github.com/block-core/angor/issues/114)
+
+
+
 ## <small>0.0.28 (2024-06-28)</small>
 
 * Add  form-control to tables ([8aab634](https://github.com/block-core/angor/commit/8aab634))
+* bump version ([e62b403](https://github.com/block-core/angor/commit/e62b403))
 * Change Settings Icons ([0cd4019](https://github.com/block-core/angor/commit/0cd4019))
 * Change Settings Icons (#107) ([58dade4](https://github.com/block-core/angor/commit/58dade4)), closes [#107](https://github.com/block-core/angor/issues/107)
 * Change size of Refresh Balance icon ([dbeedad](https://github.com/block-core/angor/commit/dbeedad))

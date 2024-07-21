@@ -1,31 +1,78 @@
 @using Angor.Shared.Services
 @using Angor.Client.Models
 @using Angor.Client.Storage
+@using System.Text.RegularExpressions
 
-@inject IRelayService  RelayService;
+@inject IRelayService RelayService;
 @inject IClientStorage Storage;
 
-<div class="card mb-3">
-    @if (InvestmentRequests)
-    {
-    <div class="card-header bg-success">
-        <h4 class="d-flex justify-content-center align-items-center">Pending investment requests</h4>
+
+
+
+    <div class="col d-flex align-items-stretch">
+        <div class="card mt-4 w-100 project-card">
+            <a class="d-block">
+
+                <div class="banner-container">
+                    <img class="banner-image" src="@(FounderProject?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(@FounderProject?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                    <div class="profile-container">
+                        <img class="profile-image" src="@(FounderProject?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="@(FounderProject?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                    </div>
+                </div>
+
+            </a>
+
+            <div class="card-body pb-0">
+
+
+
+                <div class="d-flex align-items-center mb-4">
+                    <span class="user-select-none">
+                        <Icon IconName="view" Height="24" Width="24"></Icon>
+                    </span>
+                    <div class="h-100 ms-3">
+                        <h5 class="mb-0 font-weight-bolder">
+                            <a href="/view/@FounderProject.ProjectInfo.ProjectIdentifier"> @FounderProject.Metadata.Name</a>
+                        </h5>
+                    </div>
+                </div>
+                <p class="mb-0 line-clamp-3">@(ConvertToMarkupString(StripHtmlTags(FounderProject.Metadata.About)))</p>
+
+
+
+            </div>
+            <div class="card-footer pt-0">
+                <hr class="horizontal light mt-3">
+
+                <a role="button" class="d-flex align-items-center btn btn-border w-100-m" href=@($"/view/{FounderProject.ProjectInfo.ProjectIdentifier}")>
+                    <span class="user-select-none">
+                        <Icon IconName="view-project" Height="24" Width="24"></Icon>
+                    </span>
+                    <div class="h-100 ms-3">
+                        <span class="mb-0 font-weight-bolder text-primary">
+                            View Project
+                        </span>
+                    </div>
+                </a>
+                @if (InvestmentRequests)
+                {
+                    <hr class="horizontal light mt-3">
+                    <a role="button" class="d-flex align-items-center btn btn-secondary w-100-m" href=@($"/signatures/{FounderProject.ProjectInfo.ProjectIdentifier}")>
+                        <span class="user-select-none">
+                            <Icon IconName="check-circle" Height="24" Width="24"></Icon>
+                        </span>
+                        <div class="h-100 ms-3">
+                            <span class="mb-0 font-weight-bolder">
+                                Approve signatures
+                            </span>
+                        </div>
+                    </a>
+                }
+
+            </div>
+        </div>
     </div>
-    }
-    <div class="card-body">
-        <h3 class="card-title">@FounderProject.Metadata?.Name</h3>
-        <p class="card-subtitle">@FounderProject.Metadata?.About</p>
-        <p class="card-text">
-            Project ID: @FounderProject.ProjectInfo.ProjectIdentifier<br/>
-            Nostr ID:   <a href="/" target="_blank">@FounderProject.ProjectInfo.NostrPubKey</a>
-        </p>
-        <NavLink href=@($"/view/{FounderProject.ProjectInfo.ProjectIdentifier}") class="btn btn-primary">View Project</NavLink>
-        @if (InvestmentRequests)
-        {
-            <NavLink href=@($"/signatures/{FounderProject.ProjectInfo.ProjectIdentifier}") class="btn btn-success ml-2">Approve signatures</NavLink>
-        }
-    </div>
-</div>
+ 
 
 @code {
 
@@ -33,7 +80,7 @@
     public FounderProject FounderProject { get; set; }
 
     public bool InvestmentRequests { get; set; }
-    
+
     protected override async Task OnInitializedAsync()
     {
         await RelayService.LookupSignaturesDirectMessagesForPubKeyAsync(FounderProject.ProjectInfo.NostrPubKey, FounderProject.LastRequestForSignaturesTime?.AddSeconds(1), 1,
@@ -41,9 +88,57 @@
             {
                 if (InvestmentRequests)
                     return;
-                
+
                 InvestmentRequests = true;
                 StateHasChanged();
             });
+    }
+
+    public string StripHtmlTags(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return string.Empty;
+        }
+
+        input = Regex.Replace(input, @"<script.*?>.*?</script>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+
+        input = Regex.Replace(input, @"<style.*?>.*?</style>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        input = Regex.Replace(input, @"<([a-zA-Z][^\s>]*)(\s+[^>]*)?>", match =>
+    {
+    string tag = match.Groups[1].Value;
+    string attributes = match.Groups[2].Value;
+
+    attributes = Regex.Replace(attributes, @"\s+(style|class)\s*=\s*""[^""]*""", string.Empty, RegexOptions.IgnoreCase);
+
+    return $"<{tag}{attributes}>";
+    }, RegexOptions.IgnoreCase);
+
+        string allowedTagsPattern = @"<(?!\/?(br|p|a|ul|ol|li|strong|em|b|i|u|hr|blockquote|img|div|span|table|thead|tbody|tr|td|th)\b)[^>]+>";
+        input = Regex.Replace(input, allowedTagsPattern, string.Empty, RegexOptions.IgnoreCase);
+
+        string[] blockTags = { "h1", "h2", "h3", "h4", "h5", "h6", "p", "div", "section", "article", "footer", "header", "main" };
+
+        foreach (var tag in blockTags)
+        {
+            input = Regex.Replace(input, $@"<\/?{tag}[^>]*>", "<br />", RegexOptions.IgnoreCase);
+        }
+
+        input = Regex.Replace(input, @"<((?!br\s*/?)[^>]+)>", string.Empty);
+
+        input = Regex.Replace(input, @"(\r?\n){2,}", "\n");
+        input = Regex.Replace(input, @"(<br />\s*){2,}", "<br />");
+        input = Regex.Replace(input, @"^\s*<br />\s*|\s*<br />\s*$", string.Empty);
+        input = Regex.Replace(input, @"\s*(<br />)\s*", "$1");
+
+        return input;
+    }
+
+    public MarkupString ConvertToMarkupString(string input)
+    {
+        string sanitizedInput = StripHtmlTags(input);
+        return new MarkupString(sanitizedInput);
     }
 }
