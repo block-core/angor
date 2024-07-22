@@ -1,0 +1,39 @@
+name: Build and Release Docker Image
+on:
+  release:
+    types: [published, prereleased]
+
+jobs:
+  build:
+    name: Build and Push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: | 
+            8.0.x
+      - name: Log Variables
+        run: |
+          echo "action - ${{ github.event.action }}"
+          echo "url - ${{ github.event.release.url }}"
+          echo "assets_url - ${{ github.event.release.assets_url }}"
+          echo "id - ${{ github.event.release.id }}"
+          echo "tag_name - ${{ github.event.release.tag_name }}"
+          echo "assets - ${{ github.event.assets }}"
+          echo "assets[0] - ${{ github.event.assets[0] }}"
+      - uses: cschleiden/replace-tokens@v1
+        with:
+          files: '["**/Dockerfile.Release"]'
+        env:
+          VERSION: ${{ github.event.release.tag_name }}
+
+      - name: Build the Docker container image
+        run: docker build -f "./src/Angor/Server/Dockerfile.Release" -t blockcore/angor:latest -t blockcore/angor:${{ github.event.release.tag_name }} --label "unstable=true" "."
+
+      - name: Login and Push to Docker Registry
+        run: |
+          docker login -u "sondreb" -p "${{secrets.DOCKER_KEY}}"
+          docker push --all-tags blockcore/angor

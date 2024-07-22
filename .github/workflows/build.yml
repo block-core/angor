@@ -2,16 +2,12 @@ name: Build and create a Release
 
 on:
   push:
-    # branches:
-    #   - main
-      tags:
-        - 'v*.*.*'
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
-    # if the presence of '-release' exists in the tag abort
-    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-release')
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
@@ -64,43 +60,23 @@ jobs:
       - name: Unit Test
         run: dotnet test -v=normal -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
 
-      - name: Publish (Angor)
-        run: dotnet publish -c ${{env.BUILD_CONFIGURATION}} -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }} -v m -o ./src/${{ env.PROJECT_NAME }}/bin/publish ${{env.PROJECT_PATH}}
-
-      - name: Package Name
+      - name: Check for changes in Directory.Build.props
+        id: check_changes
         run: |
-          echo RELEASE_NAME=${{ env.PROJECT_NAME }}-${{ env.VERSION }}-${{ matrix.runtime }}${{ matrix.extension }} >> $GITHUB_ENV
-          echo RELEASE_PATH=${{ env.PROJECT_NAME }}-${{ env.VERSION }}-${{ matrix.runtime }}${{ matrix.extension }} >> $GITHUB_ENV
-        shell: bash
+          if git diff --name-only HEAD^ HEAD | grep -q '^Directory.Build.props$'; then
+            echo "File Directory.Build.props has changed."
+            echo "::set-output name=changed::true"
+          else
+            echo "File Directory.Build.props has not changed."
+            echo "::set-output name=changed::false"
+          fi
 
-      - name: Package (Linux)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Create tag
+        if: steps.check_changes.outputs.changed == 'true'
+        env:
+          TAG_NAME: "v${{env.VERSION}}"
         run: |
-          echo RELEASE_PATH=./src/${{env.PROJECT_NAME}}/bin/publish/${{env.RELEASE_NAME}} >> $GITHUB_ENV
-          cd ./src/${{env.PROJECT_NAME}}/bin/publish/
-          tar cvzf ${{env.RELEASE_NAME}} *
-      - name: Package (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          Compress-Archive -Path .\src\${{env.PROJECT_NAME}}\bin\publish\* -DestinationPath .\${{env.RELEASE_NAME}}
-      - name: Package (Mac)
-        if: matrix.os == 'macos-latest'
-        run: |
-          zip -r ${{env.RELEASE_NAME}} ./src/${{env.PROJECT_NAME}}/bin/publish/
-
-      - uses: actions/upload-artifact@v1
-        with:
-          name: api
-          path: "${{env.RELEASE_PATH}}"
-
-      - name: Release
-        uses: sondreb/action-release@main
-        with:
-          commit: "main"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: "${{env.RELEASE_PATH}}"
-          draft: true
-          prerelease: false
-          body: ""
-          name: "Angor (Release ${{env.VERSION}})"
-          tag: "v${{env.VERSION}}-release"
+          #git config --global user.name "${{ github.actor }}"
+          #git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
