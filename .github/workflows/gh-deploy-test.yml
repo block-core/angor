@@ -50,4 +50,4 @@ jobs:
           branch: main 
           folder: ${{env.OUTPUT_PATH}}/wwwroot
           repository-name: block-core/angor-test
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.ANGOR_DEPLOY_TOKEN }}
