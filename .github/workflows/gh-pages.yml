@@ -2,8 +2,9 @@ name: gh-pages
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*.*.*'
+      - '*-release'
 
 permissions:
   contents: write
