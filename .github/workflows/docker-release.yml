@@ -39,6 +39,9 @@ jobs:
         env:
           VERSION: ${{ env.MODIFIED_TAG_NAME }}
 
+      - name: Verify Dockerfile
+        run: cat src/Angor/Server/Dockerfile.Release
+
       - name: Build the Docker container image
         run: docker build -f "./src/Angor/Server/Dockerfile.Release" -t blockcore/angor:latest -t blockcore/angor:${{ env.MODIFIED_TAG_NAME }} --label "unstable=true" "."
 
