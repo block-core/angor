@@ -61,6 +61,7 @@ jobs:
         run: dotnet test -v=normal -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
 
       - name: Check for changes in Directory.Build.props
+        if: matrix.os == 'ubuntu-latest'
         id: check_changes
         run: |
           if git diff --name-only HEAD^ HEAD | grep -q '^Directory.Build.props$'; then
