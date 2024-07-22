@@ -41,6 +41,7 @@ jobs:
         with:
           dotnet-version: |
             8.0.x
+
       - name: Setup Node.js (${{ matrix.node_version }})
         uses: actions/setup-node@v1
         with:
@@ -72,12 +73,22 @@ jobs:
             echo "::set-output name=changed::false"
           fi
 
-        # we must use  a custom token to trigger workflows ANGOR_DEPLOY_TOKEN
-        # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow
+  finalize:
+    runs-on: ubuntu-latest
+    needs: build
+    if: needs.build.outputs['check_changes.outputs.changed'] == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
       - name: Create tag
-        if: steps.check_changes.outputs.changed == 'true'
         env:
-          TAG_NAME: "v${{env.VERSION}}"
+          TAG_NAME: "v${{ needs.build.outputs['check_changes.outputs.changed'] }}"
         run: |
           sleep 10
           git tag $TAG_NAME
