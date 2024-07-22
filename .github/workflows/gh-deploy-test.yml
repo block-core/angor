@@ -1,0 +1,62 @@
+name: Deploy Release to Github Pages
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    concurrency: ci-${{ github.ref }} 
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_PATH: "src/Angor/Server/Angor.Server.csproj"
+      OUTPUT_PATH: "Output"
+      BUILD_CONFIGURATION: "Release"
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 8.0.x
+    
+    - name: Publish (Angor)
+      run: dotnet publish ${{env.PROJECT_PATH}} -f net8.0 --configuration ${{env.BUILD_CONFIGURATION}} --output ${{env.OUTPUT_PATH}}
+   
+    - name: Copy index.html to 404.html
+      run: cp ${{env.OUTPUT_PATH}}/wwwroot/index.html ${{env.OUTPUT_PATH}}/wwwroot/404.html
+      
+    - name: Add .nojekyll file
+      run: touch ${{env.OUTPUT_PATH}}/wwwroot/.nojekyll
+
+    - name: Minify and replace JS files
+      run: |
+        npm install uglify-js -g
+        find ${{env.OUTPUT_PATH}}/wwwroot/assets/js -type f -name '*.js' -exec uglifyjs {} -o {} --compress --mangle \;
+
+    - name: Minify and replace CSS files
+      run: |
+        npm install csso-cli -g
+        find ${{env.OUTPUT_PATH}}/wwwroot/assets/css -type f -name '*.css' -exec csso {} -o {} \;
+
+    # - name: Deploy to Github Pages
+    #   uses: JamesIves/github-pages-deploy-action@v4
+    #   with:
+    #       branch: gh-pages 
+    #       folder: ${{env.OUTPUT_PATH}}/wwwroot
+
+    - name: Deploy Test Github Pages
+      run: |
+        git config --global user.name "${{ github.actor }}"
+        git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+        git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/block-core/angor-test.git angor-test
+        rsync -av --delete Output/wwwroot/ angor-test/
+        cd angor-test
+        git add .
+        git commit -m "Deploy to secondary GitHub Pages site"
+        git push origin gh-pages
