@@ -72,6 +72,8 @@ jobs:
             echo "::set-output name=changed::false"
           fi
 
+        # we must use  a custom token to trigger workflows ANGOR_DEPLOY_TOKEN
+        # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow
       - name: Create tag
         if: steps.check_changes.outputs.changed == 'true'
         env:

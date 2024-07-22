@@ -3,7 +3,6 @@ name: Deploy Release to Github Pages
 on:
   push:
     tags:
-      - 'v*.*.*'
       - '*-release'
 
 permissions:
