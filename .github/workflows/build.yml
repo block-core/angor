@@ -1,4 +1,4 @@
-name: Build and create a Release
+name: Build and create version tag
 
 on:
   push:
