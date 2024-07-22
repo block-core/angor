@@ -64,7 +64,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         id: check_changes
         run: |
-          if git diff --name-only HEAD^ HEAD | grep -q '^Directory.Build.props$'; then
+          if git diff --name-only HEAD^ HEAD | grep -q '^src/Directory.Build.props$'; then
             echo "File Directory.Build.props has changed."
             echo "::set-output name=changed::true"
           else
