@@ -79,4 +79,4 @@ jobs:
         run: |
           sleep 10
           git tag $TAG_NAME
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} $TAG_NAME
+          git push https://x-access-token:${{ secrets.ANGOR_DEPLOY_TOKEN }}@github.com/${{ github.repository }} $TAG_NAME
