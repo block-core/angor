@@ -2,9 +2,8 @@ name: Build and create a Release
 
 on:
   push:
-      tags:
-        - 'v*.*.*'
-  workflow_dispatch:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   build:
