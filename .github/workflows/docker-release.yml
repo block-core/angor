@@ -38,6 +38,7 @@ jobs:
           files: '["**/Dockerfile.Release"]'
         env:
           VERSION: ${{ env.MODIFIED_TAG_NAME }}
+          VERSIONTAG: ${{ github.event.release.tag_name }}
 
       - name: Verify Dockerfile
         run: cat src/Angor/Server/Dockerfile.Release
