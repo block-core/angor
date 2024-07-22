@@ -44,16 +44,10 @@ jobs:
         npm install csso-cli -g
         find ${{env.OUTPUT_PATH}}/wwwroot/assets/css -type f -name '*.css' -exec csso {} -o {} \;
 
-    # - name: Deploy to Github Pages
-    #   uses: JamesIves/github-pages-deploy-action@v4
-    #   with:
-    #       branch: gh-pages 
-    #       folder: ${{env.OUTPUT_PATH}}/wwwroot
-    
-    - name: Deploy
-      uses: peaceiris/actions-gh-pages@v4
+    - name: Deploy to Github Pages
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        deploy_key: ${{ secrets.GITHUB_TOKEN }}
-        external_repository: block-core/angor-test
-        publish_branch: main  # default: gh-pages
-        publish_dir: ./public
+          branch: main 
+          folder: ${{env.OUTPUT_PATH}}/wwwroot
+          repository-name: block-core/angor-test
+          token: ${{ secrets.GITHUB_TOKEN }}
