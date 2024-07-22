@@ -1,4 +1,4 @@
-name: Deploy Release to Github Pages
+name: Deploy Test to Github Pages
 
 on:
   push:
@@ -49,14 +49,11 @@ jobs:
     #   with:
     #       branch: gh-pages 
     #       folder: ${{env.OUTPUT_PATH}}/wwwroot
-
-    - name: Deploy Test Github Pages
-      run: |
-        git config --global user.name "${{ github.actor }}"
-        git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-        git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/block-core/angor-test.git angor-test
-        rsync -av --delete Output/wwwroot/ angor-test/
-        cd angor-test
-        git add .
-        git commit -m "Deploy to secondary GitHub Pages site"
-        git push origin gh-pages
+    
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        deploy_key: ${{ secrets.GITHUB_TOKEN }}
+        external_repository: block-core/angor-test
+        publish_branch: main  # default: gh-pages
+        publish_dir: ./public
