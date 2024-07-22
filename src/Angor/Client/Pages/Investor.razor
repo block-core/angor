@@ -313,12 +313,8 @@
         foreach (var project in projects)
         {
             investmentRequestsMap[project.ProjectInfo.NostrPubKey] = false;
-
-            // var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
-            //
-            // var investorNostrPubKey = investorNostrPrivateKey.PubKey.ToHex()[2..]; 
+            
             var investorProject = (InvestorProject)project;
-            // investorProject.ProjectInfo.NostrPubKey;
             var test = storage.GetNostrPublicKeyPerProject(project.ProjectInfo.ProjectIdentifier);
 
             _SignService.LookupSignatureForInvestmentRequest(
@@ -333,8 +329,6 @@
 
 
     
-    
-
     private async Task RefreshBalance()
     {
         try
@@ -373,11 +367,8 @@
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
         var NostrDMPubkey = _DerivationOperations.DeriveNostrPubKey(words, 1);
         
-
         await checkSignatureFromFounder();
         
-        
-
         var rootNostrPubKeyHex = _DerivationOperations.DeriveNostrPubKey(words, 0);
 
 
