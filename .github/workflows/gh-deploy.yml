@@ -1,4 +1,4 @@
-name: Deploy Release to Github Pages
+name: Deploy to Github Pages Mainnet
 
 on:
   push:

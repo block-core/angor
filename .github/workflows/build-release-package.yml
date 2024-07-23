@@ -1,4 +1,4 @@
-name: Build and create a Release
+name: Build Release Package
 
 on:
   push:
@@ -76,10 +76,12 @@ jobs:
           echo RELEASE_PATH=./src/${{env.PROJECT_NAME}}/bin/publish/${{env.RELEASE_NAME}} >> $GITHUB_ENV
           cd ./src/${{env.PROJECT_NAME}}/bin/publish/
           tar cvzf ${{env.RELEASE_NAME}} *
+    
       - name: Package (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           Compress-Archive -Path .\src\${{env.PROJECT_NAME}}\bin\publish\* -DestinationPath .\${{env.RELEASE_NAME}}
+      
       - name: Package (Mac)
         if: matrix.os == 'macos-latest'
         run: |

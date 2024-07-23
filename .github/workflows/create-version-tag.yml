@@ -1,4 +1,4 @@
-name: Build and create version tag
+name: Create Version Tag
 
 on:
   push:
@@ -60,6 +60,10 @@ jobs:
       - name: Unit Test
         run: dotnet test -v=normal -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
 
+      # this will check if the file 'Directory.Build.props' has changed,
+      # and if yes it creates a version tag which will trigger a 
+      # deployment processes of 3 steps:
+      #    version creation -> draft release package -> deployment mainet/testnet/signet
       - name: Check for changes in Directory.Build.props
         if: matrix.os == 'ubuntu-latest'
         id: check_changes
