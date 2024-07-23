@@ -1542,3 +1542,20 @@ img, a {
         position: absolute;
         z-index: 1;
     }
+.disabled {
+    pointer-events: none;
+    opacity: 0.5; 
+}
+
+ .g-4 {
+    --bs-gutter-x: 1.5rem;  
+    --bs-gutter-y: 1.5rem; 
+    margin-right: calc(var(--bs-gutter-x) / -2);
+    margin-left: calc(var(--bs-gutter-x) / -2);
+}
+
+    .g-4 > .col,
+    .g-4 > [class^="col-"] {
+        padding-right: calc(var(--bs-gutter-x) / 2);
+        padding-left: calc(var(--bs-gutter-x) / 2);
+    }
