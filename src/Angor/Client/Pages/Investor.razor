@@ -315,10 +315,10 @@
             investmentRequestsMap[project.ProjectInfo.NostrPubKey] = false;
             
             var investorProject = (InvestorProject)project;
-            var test = storage.GetNostrPublicKeyPerProject(project.ProjectInfo.ProjectIdentifier);
+            var investorNostrPubKey = storage.GetNostrPublicKeyPerProject(project.ProjectInfo.ProjectIdentifier);
 
             _SignService.LookupSignatureForInvestmentRequest(
-                test,
+                investorNostrPubKey,
                 project.ProjectInfo.NostrPubKey,
                 project.SignaturesInfo.TimeOfSignatureRequest.Value,
                 project.SignaturesInfo.SignatureRequestEventId,
@@ -326,7 +326,6 @@
             );
         }
     }
-
 
     
     private async Task RefreshBalance()
