@@ -1,9 +1,9 @@
-name: gh-pages
+name: Deploy to Github Pages Test
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*.*.*'
 
 permissions:
   contents: write
@@ -44,8 +44,17 @@ jobs:
         npm install csso-cli -g
         find ${{env.OUTPUT_PATH}}/wwwroot/assets/css -type f -name '*.css' -exec csso {} -o {} \;
 
+    
+    # - name: Deploy to Github Pages
+    #   uses: JamesIves/github-pages-deploy-action@v4
+    #   with:
+    #       branch: gh-pages 
+    #       folder: ${{env.OUTPUT_PATH}}/wwwroot
+
     - name: Deploy to Github Pages
       uses: JamesIves/github-pages-deploy-action@v4
       with:
-          branch: gh-pages 
+          branch: main 
           folder: ${{env.OUTPUT_PATH}}/wwwroot
+          repository-name: block-core/angor-test
+          token: ${{ secrets.ANGOR_DEPLOY_TOKEN }}
