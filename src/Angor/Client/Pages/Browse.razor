@@ -10,8 +10,8 @@
 @inject IRelayService _RelayService
 @inject IIndexerService _IndexerService
 @inject INetworkService _NetworkService
-@inject IJSRuntime JS
 @inject ISerializer serializer
+@inject ILogger<Browse> Logger;
 
 <NotificationComponent @ref="notificationComponent" />
 
@@ -119,7 +119,7 @@ else
                                                 </h5>
                                             </div>
                                         </div>
-                                        <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle">@(ConvertToMarkupString(StripHtmlTags(project.Metadata.About)))</p>
+                                        <p class="mb-0 line-clamp-3" data-cy="searchedSubTitle">@(ConvertToMarkupString(project.Metadata.About))</p>
                                     }
                                 }
                                 else
@@ -444,27 +444,44 @@ else
             switch (e)
             {
                 case { Kind: NostrKind.Metadata }:
-                    var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
-                    if (projectIndexerData != null)
-                    {
-                        var project = SessionStorage.GetProjectById(projectIndexerData.ProjectIdentifier);
-                        if (project != null)
-                        {
-                            project.Metadata = nostrMetadata;
-                            SessionStorage.StoreProject(project);
-                        }
-                    }
-                    break;
 
-                case { Kind: NostrKind.ApplicationSpecificData }:
-                    var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
-                    if (projectInfo != null && projectIndexerData != null)
+                    try
                     {
-                        if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
+                        var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
+                        if (projectIndexerData != null)
                         {
-                            SessionStorage.StoreProject(new Project { ProjectInfo = projectInfo, CreationTransactionId = projectIndexerData.TrxId });
+                            var project = SessionStorage.GetProjectById(projectIndexerData.ProjectIdentifier);
+                            if (project != null)
+                            {
+                                project.Metadata = nostrMetadata;
+                                SessionStorage.StoreProject(project);
+                            }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(ex, $"error parsing the result of kind {NostrKind.Metadata} from relay, ProjectIdentifier = {projectIndexerData?.ProjectIdentifier}");
+                    }
+
+                    break;
+                case { Kind: NostrKind.ApplicationSpecificData }:
+
+                    try
+                    {
+                        var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
+                        if (projectInfo != null && projectIndexerData != null)
+                        {
+                            if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
+                            {
+                                SessionStorage.StoreProject(new Project { ProjectInfo = projectInfo, CreationTransactionId = projectIndexerData.TrxId });
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(ex, $"error parsing the result of kind {NostrKind.ApplicationSpecificData} from relay, ProjectIdentifier = {projectIndexerData?.ProjectIdentifier}");
+                    }
+
                     break;
             }
         };
@@ -508,14 +525,14 @@ else
         input = Regex.Replace(input, @"<style.*?>.*?</style>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         input = Regex.Replace(input, @"<([a-zA-Z][^\s>]*)(\s+[^>]*)?>", match =>
-     {
-     string tag = match.Groups[1].Value;
-     string attributes = match.Groups[2].Value;
+        {
+            string tag = match.Groups[1].Value;
+            string attributes = match.Groups[2].Value;
 
-     attributes = Regex.Replace(attributes, @"\s+(style|class)\s*=\s*""[^""]*""", string.Empty, RegexOptions.IgnoreCase);
+            attributes = Regex.Replace(attributes, @"\s+(style|class)\s*=\s*""[^""]*""", string.Empty, RegexOptions.IgnoreCase);
 
-     return $"<{tag}{attributes}>";
-     }, RegexOptions.IgnoreCase);
+            return $"<{tag}{attributes}>";
+        }, RegexOptions.IgnoreCase);
 
         string allowedTagsPattern = @"<(?!\/?(br|p|a|ul|ol|li|strong|em|b|i|u|hr|blockquote|img|div|span|table|thead|tbody|tr|td|th)\b)[^>]+>";
         input = Regex.Replace(input, allowedTagsPattern, string.Empty, RegexOptions.IgnoreCase);
@@ -543,6 +560,4 @@ else
         string sanitizedInput = StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
     }
-
-
 }

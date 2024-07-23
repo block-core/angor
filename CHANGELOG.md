@@ -1,5 +1,13 @@
+## <small>0.0.31 (2024-07-22)</small>
+
+* Browse - Catch exception on each result coming from the relay (#127) ([b7f6387](https://github.com/block-core/angor/commit/b7f6387)), closes [#127](https://github.com/block-core/angor/issues/127)
+* bump version ([b06ccaa](https://github.com/block-core/angor/commit/b06ccaa))
+
+
+
 ## <small>0.0.30 (2024-07-20)</small>
 
+* bump version ([99ef6b4](https://github.com/block-core/angor/commit/99ef6b4))
 * Create check-circle.svg ([cf548ee](https://github.com/block-core/angor/commit/cf548ee))
 * Create sad-circle.svg ([f78fb55](https://github.com/block-core/angor/commit/f78fb55))
 * Display error message when project is not found in indexer ([0b798a6](https://github.com/block-core/angor/commit/0b798a6))

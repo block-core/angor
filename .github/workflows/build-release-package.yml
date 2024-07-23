@@ -1,13 +1,14 @@
-name: Build and Release
+name: Build Release Package
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   build:
+    # if the presence of '-release' exists in the tag abort
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-release')
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
@@ -75,10 +76,12 @@ jobs:
           echo RELEASE_PATH=./src/${{env.PROJECT_NAME}}/bin/publish/${{env.RELEASE_NAME}} >> $GITHUB_ENV
           cd ./src/${{env.PROJECT_NAME}}/bin/publish/
           tar cvzf ${{env.RELEASE_NAME}} *
+    
       - name: Package (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           Compress-Archive -Path .\src\${{env.PROJECT_NAME}}\bin\publish\* -DestinationPath .\${{env.RELEASE_NAME}}
+      
       - name: Package (Mac)
         if: matrix.os == 'macos-latest'
         run: |
@@ -99,4 +102,4 @@ jobs:
           prerelease: false
           body: ""
           name: "Angor (Release ${{env.VERSION}})"
-          tag: ${{env.VERSION}}
+          tag: "v${{env.VERSION}}-release"
