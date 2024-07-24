@@ -528,13 +528,15 @@
         }
         finally
         {
+            CalculateTotalValues();
+            
             if (selected.ContainsKey(selectedStageId))
             {
-                selected[selectedStageId].Clear();
+                selected.Clear();
             }
             stage.StagePinner = false;
         }
-
+        
         StateHasChanged();
     }
 
@@ -628,6 +630,7 @@
     private void Expand(int stageId)
     {
         expandedStageId = expandedStageId == stageId ? null : stageId;
+        selected.Clear();
     }
 
     private void HandleCheckboxChange(string trxId, int stageId)
