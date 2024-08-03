@@ -647,19 +647,19 @@ else
                                                         <div class="table-responsive form-control">
                                                             <table class="table table-sm">
                                                                 <thead>
-                                                                <tr>
-                                                                    <th scope="col">Coin</th>
-                                                                    <th scope="col">Amount</th>
-                                                                </tr>
+                                                                    <tr>
+                                                                        <th scope="col">Coin</th>
+                                                                        <th scope="col">Amount</th>
+                                                                    </tr>
                                                                 </thead>
                                                                 <tbody>
-                                                                @foreach (var addressUtxoItem in addressInfo.UtxoData)
-                                                                {
-                                                                    <tr>
-                                                                        <td>@($"{addressUtxoItem.outpoint}")</td>
-                                                                        <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                                                    </tr>
-                                                                }
+                                                                    @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                                                    {
+                                                                        <tr>
+                                                                            <td>@($"{addressUtxoItem.outpoint}")</td>
+                                                                            <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                                                        </tr>
+                                                                    }
                                                                 </tbody>
                                                             </table>
                                                         </div>
