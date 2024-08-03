@@ -58,7 +58,13 @@
 <div class="container py-3">
     <h1 class="mb-4">Investment Page</h1>
     <p>Here is a small explanation of the project. You can <a href="view/@ProjectId">view more details about the project here</a>.</p>
-    
+    <p>To invest in this project, the founder must sign a recovery agreement.
+    <br>
+    This agreement ensures that in the event the project does not succeed, you will be able to recover your funds.
+    <br>
+    This provides a safety net for your investment, giving you peace of mind that your financial contribution is protected.</p>
+
+
     <p>ProjectId: @ProjectId</p>
     <p>Target amount: @project.ProjectInfo.TargetAmount BTC</p>
     <p>Starting in: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy")</p>
@@ -230,7 +236,7 @@
                         <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
                     </div>
                     <div class="card-body">
-                        <p class="modal-title">The founder has signed the recovery transaction, you may now invest.</p>
+                        <p class="modal-title">The founder has signed a transaction agreement ensuring that you can recover your funds if the project does not succeed, you may now invest.</p>
                         <br/>
                         <button type="button" class="btn btn-success" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
                             @if (publishSpinner)
@@ -613,6 +619,7 @@
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
 
             storage.AddInvestmentProject(investorProject);
+            storage.SetNostrPublicKeyPerProject(project.ProjectInfo.ProjectIdentifier, nostrPrivateKey.PubKey.ToHex()[2..]);
             
              
 
