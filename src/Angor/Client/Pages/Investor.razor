@@ -194,12 +194,9 @@
                                         <td>
                                             @if (hasInvestmentRequests)
                                             {
-                                            <a href="@($"/invest/{project.ProjectInfo.ProjectIdentifier}")" class="text-success">Approved</a>
+                                                <a href="@($"/invest/{project.ProjectInfo.ProjectIdentifier}")" class="text-info">Approved</a>
                                             }
-                                            else
-                                            {
-                                            <a href="@($"/invest/{project.ProjectInfo.ProjectIdentifier}")" class="text-danger">Pending</a>
-                                            }
+                                          
                                         </td>
                                     </tr>
                                 }
@@ -314,16 +311,18 @@
         {
             investmentRequestsMap[project.ProjectInfo.NostrPubKey] = false;
             
-            var investorProject = (InvestorProject)project;
             var investorNostrPubKey = storage.GetNostrPublicKeyPerProject(project.ProjectInfo.ProjectIdentifier);
 
-            _SignService.LookupSignatureForInvestmentRequest(
-                investorNostrPubKey,
-                project.ProjectInfo.NostrPubKey,
-                project.SignaturesInfo.TimeOfSignatureRequest.Value,
-                project.SignaturesInfo.SignatureRequestEventId,
-                async signatureContent => await HandleSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
-            );
+            if (!string.IsNullOrEmpty(investorNostrPubKey))
+            {
+                _SignService.LookupSignatureForInvestmentRequest(
+                    investorNostrPubKey,
+                    project.ProjectInfo.NostrPubKey,
+                    project.SignaturesInfo.TimeOfSignatureRequest.Value,
+                    project.SignaturesInfo.SignatureRequestEventId,
+                    async signatureContent => await HandleSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
+                    );
+            }
         }
     }
 
@@ -483,6 +482,10 @@
                                 {
                                     projects.Add(investorProject);
                                     storage.AddInvestmentProject(investorProject);
+                                    
+                                    // todo: David to check this, not sure this is correct.
+                                    // storage.SetNostrPublicKeyPerProject(investorProject.ProjectInfo.ProjectIdentifier, investorNostrPrivateKey.PubKey.ToHex()[2..]);
+
                                     RefreshBalanceTriggered = false;
                                     StateHasChanged();
                                 }
