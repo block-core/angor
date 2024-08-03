@@ -621,52 +621,55 @@ else
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AllAddresses())
-                            {
-                                var total = addressInfo.Balance;
-                                var count = addressInfo.UtxoData.Count();
+                        @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AllAddresses())
+                        {
+                            var total = addressInfo.Balance;
+                            var count = addressInfo.UtxoData.Count();
 
-                                if (total > 0)
+                            if (total > 0)
+                            {
+                                <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
+                                    <td>@addressInfo.Address</td>
+                                    <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                    <td>@addressInfo.HdPath</td>
+                                    <td>@count</td>
+                                    <td>
+                                        <button class="btn btn-border" @onclick="() => ShowRawTransactionJson(addressInfo)">Show Raw</button>
+                                    </td>
+                                </tr>
+                                @if (IsExpanded(addressInfo.Address))
                                 {
-                                    <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
-                                        <td>@addressInfo.Address</td>
-                                        <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                        <td>@addressInfo.HdPath</td>
-                                        <td>@count</td>
-                                    </tr>
-                                    @if (IsExpanded(addressInfo.Address))
-                                    {
-                                        <tr>
-                                            <td colspan="4">
-                                                <div class="collapse show" data-cy="expend-amount" id="@($"collapse-{addressInfo.Address}")">
-                                                    <div class="card card-body">
-                                                        <!-- Inner table goes here -->
-                                                        <div class="table-responsive form-control">
-                                                            <table class="table table-sm">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th scope="col">Coin</th>
-                                                                        <th scope="col">Amount</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    @foreach (var addressUtxoItem in addressInfo.UtxoData)
-                                                                    {
-                                                                        <tr>
-                                                                            <td>@($"{addressUtxoItem.outpoint}")</td>
-                                                                            <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                                                        </tr>
-                                                                    }
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
+                                    <tr>
+                                        <td colspan="5">
+                                            <div class="collapse show" data-cy="expend-amount" id="@($"collapse-{addressInfo.Address}")">
+                                                <div class="card card-body">
+                                                    <!-- Inner table goes here -->
+                                                    <div class="table-responsive form-control">
+                                                        <table class="table table-sm">
+                                                            <thead>
+                                                            <tr>
+                                                                <th scope="col">Coin</th>
+                                                                <th scope="col">Amount</th>
+                                                            </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                                            {
+                                                                <tr>
+                                                                    <td>@($"{addressUtxoItem.outpoint}")</td>
+                                                                    <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                                                </tr>
+                                                            }
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    }
+                                            </div>
+                                        </td>
+                                    </tr>
                                 }
                             }
+                        }
                         </tbody>
                     </table>
                 </div>
@@ -713,6 +716,9 @@ else
     private bool showBackupConfirmationError = false;
 
     private int activeTab = 1;
+    
+    private bool showRawTransactionModal = false;
+    private string rawTransactionJson = string.Empty;
 
 
     private int feeRange = 0;
@@ -1255,4 +1261,48 @@ else
     {
         isShowExtraWord = !isShowExtraWord;
     }
+    
+    
+
+    private void ShowRawTransactionJson(AddressInfo addressInfo)
+    {
+        rawTransactionJson = GetRawTransactionJson(addressInfo);
+        showRawTransactionModal = true;
+    }
+
+    
+    private string GetRawTransactionJson(AddressInfo addressInfo)
+    {
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
+        return JsonSerializer.Serialize(addressInfo, options);
+    }
+
 }
+
+@if (showRawTransactionModal)
+{
+<div class="modal-wrapper">
+    <div class="modal fade show d-block">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Raw Transaction JSON</h5>
+                    <span type="button" @onclick="() => showRawTransactionModal = false" aria-label="Close">
+                            <Icon IconName="close-circle" />
+                        </span>
+                </div>
+                <div class="modal-body">
+                    <pre>@rawTransactionJson</pre>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => showRawTransactionModal = false">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
