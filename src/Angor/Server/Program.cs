@@ -39,6 +39,16 @@ builder.Services.AddSingleton<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>
 builder.Services.AddSingleton<ITaprootScriptBuilder, TaprootScriptBuilder>();
 builder.Services.AddSingleton<ITestNostrSigningFromRelay, TestNostrSigningFromRelay>(); //TODO change this from a test class when the flow is complete
 
+
+// Add CORS services
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder => builder.WithOrigins("https://test.angor.io")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -61,6 +71,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Use the CORS policy
+app.UseCors("AllowSpecificOrigin");
 
 app.MapRazorPages();
 app.MapControllers();
