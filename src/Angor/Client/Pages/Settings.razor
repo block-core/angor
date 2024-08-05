@@ -305,6 +305,30 @@
 
 </div>
 
+@* Currency Display Settings *@
+<div class="row mt-4">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="currency" Height="64" Width="64"></Icon>
+                </span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Currency Display
+                    </h5>
+                </div>
+            </div>
+            <div>
+                <select class="form-select" @bind="currencyDisplaySetting">
+                    <option value="BTC">BTC</option>
+                    <option value="USD">USD</option> @* TODO add more options *@ 
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
 @* Wipe Storage *@
 <div class="row mt-4">
     <div class="card card-body border-danger border-3">
@@ -392,10 +416,12 @@
     private bool confirmWipe = false;
     private bool showConfirmWipeMessage = false;
     private string selectedNetwork = "testnet"; // Default to "testnet"
+    
+    private string currencyDisplaySetting = "BTC"; // Default to BTC
 
     private SettingsInfo settingsInfo;
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         _networkService.AddSettingsIfNotExist();
 
@@ -405,10 +431,14 @@
 
         _networkService.OnStatusChanged += UpdateUI;
 
+        // Await the asynchronous operation
+        currencyDisplaySetting =  _clientStorage.GetCurrencyDisplaySetting();
+
         if (!networkType.ToLower().Contains("test"))
             selectedNetwork = "mainnet";
 
-        return base.OnInitializedAsync();
+        // Use await for the base method call
+        await base.OnInitializedAsync();
     }
 
     private void UpdateUI()
@@ -648,6 +678,13 @@
         StateHasChanged();
 
         NavMenuState.NotifyStateChanged();
+    }
+    
+    private async Task OnCurrencyDisplaySettingChanged(ChangeEventArgs e)
+    {
+        currencyDisplaySetting = e.Value.ToString();
+        _clientStorage.SetCurrencyDisplaySetting(currencyDisplaySetting);
+        StateHasChanged();
     }
 
 }

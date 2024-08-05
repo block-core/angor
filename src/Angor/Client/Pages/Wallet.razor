@@ -8,6 +8,9 @@
 @using Angor.Client.Components
 @using Blockcore.Networks
 @using System.Text.Json
+@using System.Globalization
+
+
 
 @inject HttpClient _httpClient;
 @inject IClientStorage storage;
@@ -223,7 +226,7 @@ else
                                     @* Balance *@
                                 </h5>
                                 <span class="fs-4 me-2" data-cy="balance-amount"><strong> @Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC)</strong>  @network.CoinTicker</span>
-
+                                <h6>@btcBalanceInUsd</h6>
                             </div>
                         </div>
 
@@ -263,6 +266,7 @@ else
                     <div class="mb-4 me-4">
                         <p class="text-sm opacity-8 mb-0" data-cy="confirmed-balance">Unconfirmed balance</p>
                         <h6 class="mb-0">@Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
+                        <h6>@btcBalanceInUsd</h6>
                     </div>
                 }
                 @if (accountBalanceInfo.TotalBalanceReserved > 0)
@@ -270,6 +274,7 @@ else
                     <div class="mb-4 me-4">
                         <p class="text-sm opacity-8 mb-0">Reserved balance</p>
                         <h6 class="mb-0">@Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
+                        <h6>@btcBalanceInUsd</h6>
                     </div>
                 }
             </div>
@@ -732,7 +737,7 @@ else
     ShowQrCode showQrCode;
 
     Dictionary<string, bool> collapseStates = new Dictionary<string, bool>();
-
+    private string btcBalanceInUsd;
 
     protected override async Task OnInitializedAsync()
     {
@@ -742,8 +747,8 @@ else
         {
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
-
             accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
+            btcBalanceInUsd = await GetBtcValueInUsd(Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC));
         }
 
         await base.OnInitializedAsync();
@@ -1254,5 +1259,28 @@ else
     private void ShowExtraWord(MouseEventArgs e)
     {
         isShowExtraWord = !isShowExtraWord;
+    }
+    
+    private static async Task<string> GetBtcValueInUsd(decimal btcBalance)
+    {
+        var rate = await GetBtcToUsdRate();
+        var usdValue = btcBalance * rate;
+        return usdValue.ToString("C2", CultureInfo.CreateSpecificCulture("en-US")); // Converts to currency format
+    }
+
+    private static async Task<decimal> GetBtcToUsdRate()
+    {
+        using (var client = new HttpClient())
+        {
+            client.BaseAddress = new Uri("https://api.coingecko.com/api/v3/");
+            var response = await client.GetAsync("simple/price?ids=bitcoin&vs_currencies=usd");
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var data = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, decimal>>>(jsonString);
+                return data["bitcoin"]["usd"];
+            }
+            throw new Exception("Could not fetch BTC to USD rate");
+        }
     }
 }
