@@ -18,6 +18,7 @@
 @inject IRelayService _RelayService
 @inject ISignService _SignService
 @inject ISerializer serializer
+@inject ISignService _SignService
 @inject IEncryptionService _encryptionService
 
 @inject IJSRuntime JS
@@ -136,61 +137,75 @@
                             </div>
                         </div>
 
-                    <div class="table-responsive form-control mt-4">
-                            <table class="table align-items-center mb-0">
-                                <thead>
+                    
+                
+                <div class="card-body">
+                    <div class="table-responsive form-control">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Funding Target (@network.CoinTicker)</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Raised (@network.CoinTicker)</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Raised  (% Target)</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Project Status</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">My Investment (@network.CoinTicker)</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Spent by Founder</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Available to Founder</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">In Recovery</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Founder Approval</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                @foreach (var project in projects)
+                                {
+                                    Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
+                                    var nostrPubKey = project.ProjectInfo.NostrPubKey;
+                                    investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
+
                                     <tr>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Funding Target (@network.CoinTicker)</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Raised (@network.CoinTicker)</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Raised  (% Target)</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Project Status</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">My Investment (@network.CoinTicker)</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Spent by Founder</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Available to Founder</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">In Recovery</th>
+                                        <td>
+                                             <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}")>@project.Metadata?.Name</a>
+                                        </td>
+                                        <td>@project.ProjectInfo.TargetAmount @network.CoinTicker</td>
+                                        <td>@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
+                                        <td>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</td>
+                                        <td>
+                                            @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+                                            {
+                                                <p class="text-info">Funding</p>
+                                            }
+                                            else
+                                            {
+                                                <p class="text-success">Live</p>
+                                            }
+                                        </td>
+                                        <td>
+                                            @Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                            @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
+                                            {
+                                                <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link" data-toggle="tooltip" title="Pending"> <i class="oi oi-clock"></i></a>
+                                            }
+                                        </td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                        <td>
+                                            @if (hasInvestmentRequests)
+                                            {
+                                                <a href="@($"/invest/{project.ProjectInfo.ProjectIdentifier}")" class="text-info">Approved</a>
+                                            }
+                                          
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-
-                                    @foreach (var project in projects)
-                                    {
-                                        Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
-
-                                        <tr>
-                                            <td>
-                                                <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}")>@project.Metadata?.Name</a>
-                                            </td>
-                                            <td>@project.ProjectInfo.TargetAmount @network.CoinTicker</td>
-                                            <td>@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker </td>
-                                            <td>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</td>
-                                            <td>
-                                                @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
-                                                {
-                                                    <span class="text-info">Funding</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-success">Live</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                @Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                                @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
-                                                {
-                                                    <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link" data-toggle="tooltip" title="Pending"> <i class="oi oi-clock"></i></a>
-                                                }
-                                            </td>
-                                            <td>-</td>
-                                            <td>-</td>
-                                            <td>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                                }
+                            </tbody>
+                        </table>
                     </div>
-          
+                </div>
+            </div>
+
             </div>
 
         </div>
@@ -209,6 +224,8 @@
     long TotalWallet = 0;
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
+    
+    private Dictionary<string, bool> investmentRequestsMap = new Dictionary<string, bool>();
 
     public Dictionary<string, ProjectStats> Stats = new();
 
@@ -234,6 +251,7 @@
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
 
             await RefreshBalance();
+            await checkSignatureFromFounder();
         }
     }
 
@@ -277,9 +295,38 @@
         }
 
     }
+    
+    private async Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
+    {
+        if (investmentRequestsMap.ContainsKey(nostrPubKey))
+        {
+            investmentRequestsMap[nostrPubKey] = true;
+            StateHasChanged();
+        }
+    }
+    
+    private async Task checkSignatureFromFounder()
+    {
+        foreach (var project in projects)
+        {
+            investmentRequestsMap[project.ProjectInfo.NostrPubKey] = false;
+            
+            var investorNostrPubKey = storage.GetNostrPublicKeyPerProject(project.ProjectInfo.ProjectIdentifier);
 
+            if (!string.IsNullOrEmpty(investorNostrPubKey))
+            {
+                _SignService.LookupSignatureForInvestmentRequest(
+                    investorNostrPubKey,
+                    project.ProjectInfo.NostrPubKey,
+                    project.SignaturesInfo.TimeOfSignatureRequest.Value,
+                    project.SignaturesInfo.SignatureRequestEventId,
+                    async signatureContent => await HandleSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
+                    );
+            }
+        }
+    }
 
-
+    
     private async Task RefreshBalance()
     {
         try
@@ -311,11 +358,15 @@
             RefreshBalanceTriggered = false;
             return;
         }
-
+     
+        RefreshBalanceTriggered = true;
         var words = await passwordComponent.GetWalletAsync();
         var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1);
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
-
+        var NostrDMPubkey = _DerivationOperations.DeriveNostrPubKey(words, 1);
+        
+        await checkSignatureFromFounder();
+        
         var rootNostrPubKeyHex = _DerivationOperations.DeriveNostrPubKey(words, 0);
 
 
@@ -431,6 +482,10 @@
                                 {
                                     projects.Add(investorProject);
                                     storage.AddInvestmentProject(investorProject);
+                                    
+                                    // todo: David to check this, not sure this is correct.
+                                    // storage.SetNostrPublicKeyPerProject(investorProject.ProjectInfo.ProjectIdentifier, investorNostrPrivateKey.PubKey.ToHex()[2..]);
+
                                     RefreshBalanceTriggered = false;
                                     StateHasChanged();
                                 }

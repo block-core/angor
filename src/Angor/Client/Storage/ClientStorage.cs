@@ -214,4 +214,14 @@ public class ClientStorage : IClientStorage, INetworkStorage
     {
         return _storage.GetItem<string>("network");
     }
+    
+    public void SetNostrPublicKeyPerProject(string projectId,string nostrPubKey)
+    {
+        _storage.SetItem($"project:{projectId}:nostrKey", nostrPubKey);
+    }
+    
+    public string GetNostrPublicKeyPerProject(string projectId)
+    {
+        return _storage.GetItem<string>($"project:{projectId}:nostrKey");
+    }
 }
