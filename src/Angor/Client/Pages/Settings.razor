@@ -317,12 +317,17 @@
                     <h5 class="mb-0 font-weight-bolder">
                         Currency Display
                     </h5>
+                    <h5 class="mb-0 font-weight-bolder">
+                        Current: @_clientStorage.GetCurrencyDisplaySetting()
+                    </h5>
                 </div>
             </div>
             <div>
-                <select class="form-select" @bind="currencyDisplaySetting">
+                <select class="form-select" @onchange="OnCurrencyDisplaySettingChanged">
                     <option value="BTC">BTC</option>
-                    <option value="USD">USD</option> @* TODO add more options *@ 
+                    <option value="USD">USD</option>
+                    <option value="GBP">GBP</option>
+                    <!-- Add more options here if needed -->
                 </select>
             </div>
         </div>
