@@ -1108,7 +1108,7 @@ tr[style*="cursor: pointer;"] {
 
 .card-img-top-view {
     height: 330px !important;
- }
+}
 
 .z-index-4 {
     z-index: 1000001 !important;
@@ -1278,6 +1278,7 @@ input[type="checkbox"] {
         background-color: #bfb;
         border-color: #bfb;
     }
+
 @keyframes heartbeat {
     0%, 100% {
         transform: scale(1);
@@ -1299,6 +1300,7 @@ input[type="checkbox"] {
 .card.active .card-body {
     animation: heartbeat 1.5s ease-in-out 1;
 }
+
 @keyframes drawLogo {
     from {
         stroke-dasharray: 1000;
@@ -1392,7 +1394,7 @@ input[type="checkbox"] {
 
 .profile-container {
     position: absolute;
-    bottom: 10px;  
+    bottom: 10px;
     left: 10px;
     width: 80px;
     height: 80px;
@@ -1408,7 +1410,7 @@ input[type="checkbox"] {
     border-radius: 50%;
     object-fit: cover;
     position: absolute;
-    bottom: 0;  
+    bottom: 0;
     left: 0;
 }
 
@@ -1470,7 +1472,7 @@ img, a {
     gap: 20px;
     justify-content: center;
     align-items: center;
-    margin:10px;
+    margin: 10px;
 }
 
 [role="progressbar"] {
@@ -1509,7 +1511,7 @@ img, a {
         background: conic-gradient(var(--primary) calc(var(--percentage) * 1%), var(--secondary) 0);
         mask-image: radial-gradient(circle, transparent 60%, white 61%);
         filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.25));
-     }
+    }
 
 
     [role="progressbar"][data-type="percent"]::after {
@@ -1530,14 +1532,15 @@ img, a {
         position: absolute;
         z-index: 1;
     }
+
 .disabled {
     pointer-events: none;
-    opacity: 0.5; 
+    opacity: 0.5;
 }
 
- .g-4 {
-    --bs-gutter-x: 1.5rem;  
-    --bs-gutter-y: 1.5rem; 
+.g-4 {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 1.5rem;
     margin-right: calc(var(--bs-gutter-x) / -2);
     margin-left: calc(var(--bs-gutter-x) / -2);
 }
@@ -1550,30 +1553,35 @@ img, a {
 
 
 input.form-control, textarea.form-control {
-    border: 2px solid #007bff; 
-    border-radius: 8px; 
+    border: 2px solid #007bff;
+    border-radius: 8px;
     padding: 12px 15px;
-    font-size: 16px; 
+    font-size: 16px;
     transition: all 0.3s ease;
 }
 
 
     input.form-control:focus, textarea.form-control:focus {
-        border-color: #0056b3; 
-        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); 
+        border-color: #0056b3;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
         outline: none;
     }
 
     input.form-control:disabled, textarea.form-control:disabled {
-        background-color: #e9ecef; 
-        border-color: #ced4da; 
+        background-color: #e9ecef;
+        border-color: #ced4da;
     }
 
     input.form-control:hover, textarea.form-control:hover {
-        border-color: #0056b3; 
+        border-color: #0056b3;
     }
 
 textarea.form-control {
-    resize: vertical; 
-    min-height: 150px; 
+    resize: vertical;
+    min-height: 150px;
+}
+
+a, a p {
+    color: var(--bs-secondary) !important;
+    font-weight:600 !important;
 }
