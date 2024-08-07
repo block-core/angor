@@ -618,6 +618,7 @@ else
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Amount</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Path</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">UTXO count</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">View Raw Json</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -634,7 +635,7 @@ else
                                         <td>@addressInfo.HdPath</td>
                                         <td>@count</td>
                                         <td>
-                                            <button class="btn btn-border" @onclick="() => ShowRawTransactionJson(addressInfo)">Show Raw</button>
+                                            <button class="btn btn-border" @onclick="() => ShowRawTransactionJson(addressInfo)">Show</button>
                                         </td>
                                     </tr>
                                     @if (IsExpanded(addressInfo.Address))
@@ -923,6 +924,13 @@ else
 
         await _clipboardService.WriteTextAsync(showWalletWords);
         ClearWalletWords();
+        StateHasChanged();
+    }
+    
+    private async Task CopyStringToClipboard(string msg)
+    {
+        await _clipboardService.WriteTextAsync(msg);
+        notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
         StateHasChanged();
     }
 
@@ -1291,14 +1299,14 @@ else
                 <div class="modal-header">
                     <h5 class="modal-title">Raw Transaction JSON</h5>
                     <span type="button" @onclick="() => showRawTransactionModal = false" aria-label="Close">
-                            <Icon IconName="close-circle" />
+                        <Icon IconName="close-circle" />
+                         <i @onclick="@(async () => await CopyStringToClipboard(rawTransactionJson))" class="ms-auto cursor-pointer user-select-none">
+                            <Icon IconName="copy"></Icon>
+                         </i>
                         </span>
                 </div>
                 <div class="modal-body">
                     <pre>@rawTransactionJson</pre>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="() => showRawTransactionModal = false">Close</button>
                 </div>
             </div>
         </div>
