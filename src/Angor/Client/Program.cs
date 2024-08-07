@@ -33,6 +33,7 @@ builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
 builder.Services.AddScoped<NavMenuState>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 
 builder.Services.AddScoped<IIndexerService, IndexerService>();
 builder.Services.AddScoped<INetworkService, NetworkService>();

@@ -19,6 +19,7 @@
 @inject ILogger<Wallet> Logger;
 @inject IWalletOperations _walletOperations
 @inject IClipboardService _clipboardService
+@inject ICurrencyService _currencyService
 @inject IDerivationOperations _derivationOperations
 @inject NavMenuState NavMenuState
 @inject IEncryptionService _encryptionService
@@ -1261,57 +1262,8 @@ else
         isShowExtraWord = !isShowExtraWord;
     }
     
-    private async Task<decimal> GetBtcToPreferredCurrencyRate()
+    public async Task<string> GetBtcValueInPreferredCurrency(decimal btcBalance)
     {
-        using (var client = new HttpClient())
-        {
-            string preferredCurrency = storage.GetCurrencyDisplaySetting().ToLower();
-            client.BaseAddress = new Uri("https://api.coingecko.com/api/v3/");
-            var response = await client.GetAsync($"simple/price?ids=bitcoin&vs_currencies={preferredCurrency}");
-            if (response.IsSuccessStatusCode)
-            {
-                var jsonString = await response.Content.ReadAsStringAsync();
-
-                // Log the API response for debugging
-                Logger.LogInformation($"API Response: {jsonString}");
-
-                var data = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, decimal>>>(jsonString);
-
-                if (data.ContainsKey("bitcoin") && data["bitcoin"].TryGetValue(preferredCurrency, out var rate))
-                {
-                    return rate;
-                }
-                throw new Exception($"Currency '{preferredCurrency}' not found in the API response.");
-            }
-            throw new Exception("Failed to fetch BTC rate from the API.");
-        }
+        return await _currencyService.GetBtcValueInPreferredCurrency(btcBalance);
     }
-
-    private async Task<string> GetBtcValueInPreferredCurrency(decimal btcBalance)
-    {
-        try
-        {
-            var rate = await GetBtcToPreferredCurrencyRate();
-            var currencySymbol = GetCurrencySymbol(storage.GetCurrencyDisplaySetting());
-            var value = btcBalance * rate;
-            return value.ToString("C2", CultureInfo.CreateSpecificCulture("en-US")).Replace("$", currencySymbol); // Converts to currency format with appropriate symbol
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError($"Error getting BTC value in preferred currency: {ex.Message}");
-            return "Error fetching value";
-        }
-    }
-
-    private string GetCurrencySymbol(string currencyCode)
-    {
-        return currencyCode.ToUpper() switch
-        {
-            "USD" => "$",
-            "GBP" => "£",
-            "EUR" => "€",
-            _ => currencyCode
-        };
-    }
-
 }
