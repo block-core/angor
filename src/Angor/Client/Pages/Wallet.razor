@@ -8,6 +8,7 @@
 @using Angor.Client.Components
 @using Blockcore.Networks
 @using System.Text.Json
+@using System.Globalization
 
 @inject HttpClient _httpClient;
 @inject IClientStorage storage;
@@ -16,6 +17,7 @@
 @inject ILogger<Wallet> Logger;
 @inject IWalletOperations _walletOperations
 @inject IClipboardService _clipboardService
+@inject ICurrencyService _currencyService
 @inject IDerivationOperations _derivationOperations
 @inject NavMenuState NavMenuState
 @inject IEncryptionService _encryptionService
@@ -223,7 +225,7 @@ else
                                     @* Balance *@
                                 </h5>
                                 <span class="fs-4 me-2" data-cy="balance-amount"><strong> @Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC)</strong>  @network.CoinTicker</span>
-
+                                <h6>@btcBalanceInUsd</h6>
                             </div>
                         </div>
 
@@ -732,7 +734,7 @@ else
     ShowQrCode showQrCode;
 
     Dictionary<string, bool> collapseStates = new Dictionary<string, bool>();
-
+    private string btcBalanceInUsd;
 
     protected override async Task OnInitializedAsync()
     {
@@ -742,8 +744,8 @@ else
         {
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
-
             accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
+            btcBalanceInUsd = await GetBtcValueInPreferredCurrency(Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC));
         }
 
         await base.OnInitializedAsync();
@@ -1254,5 +1256,10 @@ else
     private void ShowExtraWord(MouseEventArgs e)
     {
         isShowExtraWord = !isShowExtraWord;
+    }
+    
+    public async Task<string> GetBtcValueInPreferredCurrency(decimal btcBalance)
+    {
+        return await _currencyService.GetBtcValueInPreferredCurrency(btcBalance);
     }
 }

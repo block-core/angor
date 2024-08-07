@@ -16,6 +16,7 @@
     <PackageReference Include="NBitcoin" Version="7.0.25" />
     <PackageReference Include="Nostr.Client" Version="2.0.0" />
     <PackageReference Include="QRCoder" Version="1.4.3" />
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
   </ItemGroup>
 
   <ItemGroup>
