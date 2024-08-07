@@ -327,7 +327,7 @@
                     <option value="BTC">BTC</option>
                     <option value="USD">USD</option>
                     <option value="GBP">GBP</option>
-                    <!-- Add more options here if needed -->
+                    <!-- more fiat options -->
                 </select>
             </div>
         </div>
@@ -426,7 +426,7 @@
 
     private SettingsInfo settingsInfo;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
         _networkService.AddSettingsIfNotExist();
 
@@ -435,15 +435,13 @@
         networkType = _networkConfiguration.GetNetwork().Name;
 
         _networkService.OnStatusChanged += UpdateUI;
-
-        // Await the asynchronous operation
+        
         currencyDisplaySetting =  _clientStorage.GetCurrencyDisplaySetting();
 
         if (!networkType.ToLower().Contains("test"))
             selectedNetwork = "mainnet";
-
-        // Use await for the base method call
-        await base.OnInitializedAsync();
+        
+        return base.OnInitializedAsync();
     }
 
     private void UpdateUI()
