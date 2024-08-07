@@ -117,6 +117,32 @@
                         <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" />
                     </div>
 
+                    @*<div class="mb-3">
+                <label for="NostrMetadataNip05" class="form-label">Nip 05</label>
+                <InputText id="NostrMetadataNip05" @bind-Value="project.Metadata.Nip05" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                <label for="NostrMetadataNip57" class="form-label">Nip 57 (zaps)</label>
+                <InputText id="NostrMetadataNip57" @bind-Value="project.Metadata.Nip57" class="form-control" />
+                </div> *@
+
+                    <div class="card card-body mt-4">
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-success" disabled="@(createProfileSpinner || nostrMetadataCreated)">
+                                @if (createProfileSpinner)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span>Next...</span>
+                                }
+                                else
+                                {
+                                    <span>Next</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+
                 </EditForm>
 
 
@@ -196,19 +222,7 @@
 
             </div>
 
-            <div class="mt-4">
-                <button type="submit" class="btn btn-success" disabled="@(createProfileSpinner || nostrMetadataCreated)">
-                    @if (createProfileSpinner)
-                    {
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span>Next...</span>
-                    }
-                    else
-                    {
-                        <span>Next</span>
-                    }
-                </button>
-            </div>
+
         </div>
 
 
@@ -271,18 +285,27 @@
             <button type="button" class="btn btn-border mb-3" @onclick="AddStage" disabled="@nostrApplicationSpecificDataCreated">Add Stage</button>
 
             <!-- Save & Publish Buttons -->
-            <div class="mb-3">
-                <button type="submit" class="btn btn-success" disabled="@(createProfileSpinner || nostrApplicationSpecificDataCreated)">
-                    @if (createApplicationDataSpinner)
-                    {
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span>Next...</span>
-                    }
-                    else
-                    {
-                        <span>Next</span>
-                    }
-                </button>
+
+            <div class="card card-body mt-4">
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-success" @onclick="() => activeTab = 1">
+
+                        <span>Previous</span>
+
+                    </button>
+
+                    <button type="submit" class="btn btn-success" disabled="@(createProfileSpinner || nostrApplicationSpecificDataCreated)">
+                        @if (createApplicationDataSpinner)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span>Next...</span>
+                        }
+                        else
+                        {
+                            <span>Next</span>
+                        }
+                    </button>
+                </div>
             </div>
 
         </EditForm>
@@ -310,18 +333,28 @@
                 <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts </p>
             </div>
         }
+        <div class="card card-body mt-4">
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-success" @onclick="() => activeTab = 2">
 
-        <button type="button" class="btn btn-success mb-3" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@creatProjectSpinner">
-            @if (creatProjectSpinner)
-            {
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                <span>Next...</span>
-            }
-            else
-            {
-                <span>Next</span>
-            }
-        </button>
+                    <span>Previous</span>
+
+                </button>
+                <button type="button" class="btn btn-success" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@creatProjectSpinner">
+                    @if (creatProjectSpinner)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span>Next...</span>
+                    }
+                    else
+                    {
+                        <span>Next</span>
+                    }
+                </button>
+            </div>
+
+        </div>
+
     }
 
 
@@ -391,6 +424,8 @@
 
     }
 </div>
+
+
 
 @code {
 

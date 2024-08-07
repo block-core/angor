@@ -1578,10 +1578,9 @@ input.form-control, textarea.form-control {
 
 textarea.form-control {
     resize: vertical;
-    min-height: 150px;
+    min-height: 50px;
 }
 
 a, a p {
     color: var(--bs-secondary) !important;
-    font-weight:600 !important;
 }
