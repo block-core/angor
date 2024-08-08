@@ -68,6 +68,9 @@
                                         <h6 class="mb-0">Signatures</h6>
                                     </div>
                                     <div class="col-6 d-flex justify-content-end">
+                                        <button class="btn btn-primary" @onclick="ToggleAutoApprove">
+                                            @(isAutoApproveActive ? "Stop Auto Approve" : "Start Auto Approve")
+                                        </button>
                                         <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">Approve All</button>
                                         <button class="btn btn-sm btn-secondary ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
                                             @if (refreshButtonSpinner)
@@ -77,7 +80,7 @@
                                             }
                                             else
                                             {
-                                                 <span>Refresh</span>
+                                                <span>Refresh</span>
                                             }
                                         </button>
                                     </div>
@@ -160,6 +163,10 @@
     private bool refreshButtonSpinner = false;
     private int numOfSignatureToSign = 0;
     private int numOfSignaturesSigned = 0;
+    
+    private bool isAutoApproveActive = false;
+    private Timer autoApproveTimer;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -539,4 +546,94 @@
 
         public string EventId { get; set; }
     }
+    
+
+    private void ToggleAutoApprove()
+    {
+        if (isAutoApproveActive)
+        {
+            StopAutoApprove();
+        }
+        else
+        {
+            
+            passwordComponent.ShowPassword(async () =>
+            {
+                 StartAutoApproveWithPassword();
+            });
+        }
+    }
+
+    private async void StartAutoApproveWithPassword()
+    {
+        var walletWords = await passwordComponent.GetWalletAsync();
+        if (walletWords != null)
+        {
+            StartAutoApprove(walletWords);
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage("Failed to retrieve wallet words.");
+        }
+    }
+
+    private void StartAutoApprove(WalletWords walletWords)
+    {
+        isAutoApproveActive = true;
+        autoApproveTimer = new Timer(async _ => await AutoApproveSignatures(walletWords), null, 0, 30000); // 30 seconds
+    }
+
+    private void StopAutoApprove()
+    {
+        isAutoApproveActive = false;
+        autoApproveTimer?.Dispose();
+    }
+
+    private async Task AutoApproveSignatures(WalletWords walletWords)
+    {
+        await InvokeAsync(async () =>
+        {
+            if (walletWords == null)
+            {
+                notificationComponent.ShowErrorMessage("Wallet words are missing or have expired. Please re-enter your password.");
+                StopAutoApprove();
+                return;
+            }
+
+            await FetchPendingSignatures(FounderProject);
+            //await ProcessSignaturesWithoutPassword(walletWords);
+        });
+    }
+
+    private async Task ProcessSignaturesWithoutPassword(WalletWords words)
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var pendingSignatures = signaturesRequests.Where(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null).ToList();
+            numOfSignatureToSign = pendingSignatures.Count;
+            numOfSignaturesSigned = 0;
+
+            foreach (var signature in pendingSignatures)
+            {
+                await PerformSignatureApproval(signature, words);
+                numOfSignaturesSigned++;
+                StateHasChanged();
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, e.Message);
+            notificationComponent.ShowErrorMessage(e.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+
+        StateHasChanged();
+    }
+
 }
