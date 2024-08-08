@@ -21527,20 +21527,6 @@ fieldset:disabled .btn {
         background: #083b46 !important;
     }
 
-    .dark .dropdown .dropdown-menu:before {
-        color: #202940;
-    }
-
-    .dark .dropdown .dropdown-menu .dropdown-item:hover,
-    .dark .dropdown .dropdown-menu .dropdown-item:focus {
-        background-color: #1a2035 !important;
-    }
-
-    .dark .dropdown .dropdown-menu .dropdown-item i,
-    .dark .dropdown .dropdown-menu .dropdown-item .material-icons {
-        color: #fff;
-    }
-
     .dark .card,
     .dark .swal2-popup,
     .dark .dropdown .dropdown-menu,
@@ -21556,14 +21542,7 @@ fieldset:disabled .btn {
             background: #083b46;
         }
 
-        .dark .card p,
-        .dark .swal2-popup p,
-        .dark .dropdown .dropdown-menu p,
-        .dark .kanban-board p {
-            color: #fff !important;
-            opacity: .6;
-        }
-
+     
     .dark .kanban-item {
         background: transparent !important;
         border: 1px solid;
@@ -21572,30 +21551,6 @@ fieldset:disabled .btn {
     .dark .swal2-html-container {
         color: #fff !important;
         opacity: .6;
-    }
-
-    .dark h1,
-    .dark .h1,
-    .dark .h1,
-    .dark h2,
-    .dark .h2,
-    .dark .h2,
-    .dark h3,
-    .dark .h3,
-    .dark .h3,
-    .dark h4,
-    .dark .h4,
-    .dark .h4,
-    .dark h5,
-    .dark .h5,
-    .dark .h5,
-    .dark h6,
-    .dark .h6,
-    .dark .h6,
-    .dark a:not(.dropdown-item):not(.choices__item):not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out):not(.btn):not(.nav-link):not(.fixed-plugin-button),
-    .dark .table thead tr th,
-    .dark .kanban-title-board {
-        color: #e7fbff !important;
     }
 
     .dark .input-group.input-group-dynamic .form-control,
