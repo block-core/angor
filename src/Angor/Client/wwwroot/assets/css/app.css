@@ -1553,28 +1553,21 @@ img, a {
 
 
 input.form-control, textarea.form-control {
-    border: 2px solid #007bff;
     border-radius: 8px;
     padding: 12px 15px;
     font-size: 16px;
     transition: all 0.3s ease;
 }
 
-
     input.form-control:focus, textarea.form-control:focus {
-        border-color: #0056b3;
         box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
         outline: none;
     }
 
     input.form-control:disabled, textarea.form-control:disabled {
         background-color: #e9ecef;
-        border-color: #ced4da;
     }
 
-    input.form-control:hover, textarea.form-control:hover {
-        border-color: #0056b3;
-    }
 
 textarea.form-control {
     resize: vertical;
