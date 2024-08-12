@@ -97,7 +97,7 @@
 
 @if (project == null)
 {
-    <div class="row">
+    <div class="row mt-4">
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center align-items-center">
                 <span class="me-3 user-select-none">
@@ -185,7 +185,9 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Confirmation</h5>
-                        <button type="button" class="btn-close" @onclick="() => showCreateModal = false" disabled="@investSpinner"></button>
+                        <span type="button" data-cy="close-show-wallet-words" @onclick="() => showCreateModal = false" aria-label="Close">
+                            <Icon IconName="close-circle" />
+                        </span>
                     </div>
                     <div class="modal-body modal-body-scroll">
                         <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier</p>
@@ -226,7 +228,6 @@
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false" disabled="@investSpinner">Cancel</button>
                         <button type="button" class="btn btn-border" @onclick="Send" disabled="@investSpinner">
                             @if (investSpinner)
                             {
@@ -273,7 +274,7 @@ else
 {
     if (investorProject.WaitingForFounderResponse())
     {
-        <div class="card mt-3 text-center">
+        <div class="card mt-4 text-center">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4>Waiting for the founder to approve</h4>
                 <div>
@@ -301,7 +302,7 @@ else
     {
         @if (investorProject.ReceivedFounderSignatures() && !investorProject.InvestedInProject())
         {
-            <div class="card mt-3">
+            <div class="card mt-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>Founder has signed</h4>
                     <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
