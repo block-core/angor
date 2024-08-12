@@ -391,10 +391,15 @@
         <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
             <div class="modal-dialog">
                 <div class="modal-content">
+ 
                     <div class="modal-header">
                         <h5 class="modal-title">Confirmation</h5>
-                        <button type="button" class="btn-close" @onclick="() => showCreateModal = false" disabled="@publishProjectSpinner"></button>
+                        <span type="button" data-cy="close-show-wallet-words" @onclick="() => showCreateModal = false" aria-label="Close">
+                            <Icon IconName="close-circle" />
+                        </span>
                     </div>
+
+
                     <div class="modal-body modal-body-scroll">
                         <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier</p>
                         <p class="mb-1"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
@@ -432,8 +437,7 @@
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false" disabled="@publishProjectSpinner">Cancel</button>
-                        <button type="button" class="btn btn-border" @onclick="Send" disabled="@publishProjectSpinner">
+                         <button type="button" class="btn btn-border" @onclick="Send" disabled="@publishProjectSpinner">
                             @if (publishProjectSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
