@@ -166,6 +166,9 @@
     
     private bool isAutoApproveActive = false;
     private Timer autoApproveTimer;
+    private WalletWords walletWords;
+    private string founderSigningPrivateKey;
+    private string projectNostrPrivateKeyHex;
 
 
     protected override async Task OnInitializedAsync()
@@ -547,93 +550,160 @@
         public string EventId { get; set; }
     }
     
+    
 
-    private void ToggleAutoApprove()
+private async void ToggleAutoApprove()
+{
+    if (isAutoApproveActive)
     {
-        if (isAutoApproveActive)
-        {
-            StopAutoApprove();
-        }
-        else
-        {
-            
-            passwordComponent.ShowPassword(async () =>
+        StopAutoApprove();
+    }
+    else
+    {
+        await StartAutoApproveWithPassword();
+    }
+}
+
+private async Task StartAutoApproveWithPassword()
+{
+    walletWords = await passwordComponent.GetWalletAsync();
+    if (walletWords != null)
+    {
+        // Derive and store all necessary keys and cryptographic materials upfront
+        founderSigningPrivateKey = Encoders.Hex.EncodeData(DerivationOperations.DeriveFounderRecoveryPrivateKey(walletWords, FounderProject.ProjectIndex).ToBytes());
+        var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(walletWords, FounderProject.ProjectIndex);
+        projectNostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+
+        // Start the auto-approval process
+        StartAutoApprove();
+    }
+    else
+    {
+        notificationComponent.ShowErrorMessage("Failed to retrieve wallet words.");
+    }
+}
+
+private void StartAutoApprove()
+{
+    isAutoApproveActive = true;
+    autoApproveTimer = new Timer(async _ => await AutoApproveAndFetchSignatures(), null, 0, 5000); // Check every 5 seconds
+}
+
+private void StopAutoApprove()
+{
+    isAutoApproveActive = false;
+    autoApproveTimer?.Dispose();
+    walletWords = null;
+    founderSigningPrivateKey = null;
+    projectNostrPrivateKeyHex = null;
+}
+
+private async Task AutoApproveAndFetchSignatures()
+{
+    if (!isAutoApproveActive)
+    {
+        return;
+    }
+
+    // Fetch new signatures if possible (might require a password)
+    bool signaturesFetched = await TryFetchPendingSignatures();
+
+    // Attempt to approve signatures with the pre-captured data
+    if (signaturesFetched)
+    {
+        await TryApproveSignatures();
+    }
+}
+
+private async Task<bool> TryFetchPendingSignatures()
+{
+    try
+    {
+        // Attempt to fetch pending signatures
+        await SignService.LookupInvestmentRequestsAsync(FounderProject.ProjectInfo.NostrPubKey, null,
+            (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
             {
-                 StartAutoApproveWithPassword();
+                var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
+
+                if (sigReq != null)
+                {
+                    if (sigReq.TimeArrived < timeArrived)
+                    {
+                        signaturesRequests.Remove(sigReq); // Replace with a newer request
+                    }
+                    else
+                    {
+                        return; // Ignore if it's an older request
+                    }
+                }
+
+                var signatureRequest = new SignatureRequest
+                {
+                    investorNostrPubKey = investorNostrPubKey,
+                    TimeArrived = timeArrived,
+                    TransactionHex = encryptedMessage,
+                    EventId = eventId
+                };
+
+                signaturesRequests.Add(signatureRequest);
+            },
+            () =>
+            {
+                StateHasChanged(); // Trigger UI update if necessary
             });
-        }
+        return true;
     }
-
-    private async void StartAutoApproveWithPassword()
+    catch (Exception ex)
     {
-        var walletWords = await passwordComponent.GetWalletAsync();
-        if (walletWords != null)
-        {
-            StartAutoApprove(walletWords);
-        }
-        else
-        {
-            notificationComponent.ShowErrorMessage("Failed to retrieve wallet words.");
-        }
+        Logger.LogError("Error fetching signatures: " + ex.Message);
+        return false;
     }
+}
 
-    private void StartAutoApprove(WalletWords walletWords)
+private async Task TryApproveSignatures()
+{
+    var pendingSignatures = signaturesRequests
+        .Where(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null)
+        .ToList();
+
+    foreach (var signature in pendingSignatures)
     {
-        isAutoApproveActive = true;
-        autoApproveTimer = new Timer(async _ => await AutoApproveSignatures(walletWords), null, 0, 30000); // 30 seconds
-    }
-
-    private void StopAutoApprove()
-    {
-        isAutoApproveActive = false;
-        autoApproveTimer?.Dispose();
-    }
-
-    private async Task AutoApproveSignatures(WalletWords walletWords)
-    {
-        await InvokeAsync(async () =>
+        var result = await PerformSignatureApproval(signature);
+        if (!result.Success)
         {
-            if (walletWords == null)
-            {
-                notificationComponent.ShowErrorMessage("Wallet words are missing or have expired. Please re-enter your password.");
-                StopAutoApprove();
-                return;
-            }
-
-            await FetchPendingSignatures(FounderProject);
-            //await ProcessSignaturesWithoutPassword(walletWords);
-        });
-    }
-
-    private async Task ProcessSignaturesWithoutPassword(WalletWords words)
-    {
-        isLoading = true;
-        StateHasChanged();
-
-        try
-        {
-            var pendingSignatures = signaturesRequests.Where(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null).ToList();
-            numOfSignatureToSign = pendingSignatures.Count;
-            numOfSignaturesSigned = 0;
-
-            foreach (var signature in pendingSignatures)
-            {
-                await PerformSignatureApproval(signature, words);
-                numOfSignaturesSigned++;
-                StateHasChanged();
-            }
+            Logger.LogWarning(result.Message);
+            // Skip this signature but continue attempting others
         }
-        catch (Exception e)
-        {
-            Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
-        }
-        finally
-        {
-            isLoading = false;
-        }
-
-        StateHasChanged();
     }
+}
+
+private async Task<OperationResult> PerformSignatureApproval(SignatureRequest signature)
+{
+    try
+    {
+        var signatureInfo = signProject(signature.TransactionHex, FounderProject.ProjectInfo, founderSigningPrivateKey);
+        var sigJson = serializer.Serialize(signatureInfo);
+
+        var encryptedContent = await encryption.EncryptNostrContentAsync(
+            projectNostrPrivateKeyHex, signature.investorNostrPubKey, sigJson);
+
+        FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, projectNostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
+
+        Storage.UpdateFounderProject(FounderProject);
+
+        signaturesRequests.Single(_ => _.investorNostrPubKey == signature.investorNostrPubKey && _.TimeApproved is null)
+            .TimeApproved = FounderProject.LastRequestForSignaturesTime;
+
+        return new OperationResult { Success = true };
+    }
+    catch (Exception ex)
+    {
+        return new OperationResult { Success = false, Message = $"An error occurred: {ex.Message}" };
+    }
+}
+
+
+
+
 
 }
