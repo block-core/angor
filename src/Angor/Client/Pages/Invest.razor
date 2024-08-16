@@ -71,8 +71,24 @@
 
     <NotificationComponent @ref="notificationComponent" />
     <PasswordComponent @ref="passwordComponent" />
-
-    @if(project is not InvestorProject investorProject)
+    @if (@project.ProjectInfo.StartDate < DateTime.UtcNow) //TODO: what should the order be here? if an investor has a signed trx that he has not invested yet, and the project has started, could he invest?
+    {
+        <div class="alert alert-warning">
+            <h4>Investing Period is Over</h4>
+            <p>The investing period for this project ended on @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy").</p>
+            <p>You can no longer invest in this project.</p>
+            <p>Here are some details:</p>
+            <ul>
+                <li><strong>Project ID:</strong> @project.ProjectInfo.ProjectIdentifier</li>
+                <li><strong>Target Amount:</strong> @project.ProjectInfo.TargetAmount BTC</li>
+                <li><strong>Start Date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy")</li>
+                <li><strong>End Date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")</li>
+                <li><strong>Total Stages:</strong> @project.ProjectInfo.Stages.Count</li>
+            </ul>
+            <p>If you are already invested, you will continue to receive updates on the project's progress.</p>
+        </div>
+    }
+    else if(project is not InvestorProject investorProject)
     {
         <div class="card">
             <div class="card-body">

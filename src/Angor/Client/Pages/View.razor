@@ -114,7 +114,7 @@
                         <div class="col-12 col-md-12 col-lg-4 order-1 order-md-1 d-flex justify-content-center align-items-center mt-4">
                             <div class="w-100">
                                 @{
-                                    int startsInDays = (project.ProjectInfo.StartDate - DateTime.Now).Days;
+                                    int startsInDays = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
 
                                     if (startsInDays > 0)
                                     {
@@ -165,7 +165,16 @@
                                 @* <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>*@
                                 <div class="form-control mt-1 d-flex align-items-center">
                                     <Icon IconName="calendar"></Icon>
-                                    <p class="card-text ms-2">Time Left for Investing: @projectStats.TimeLeft days</p>
+                                    <p class="card-text ms-2">
+                                        @if (projectStats.TimeLeft > 0)
+                                        {
+                                        <span>Time Left for Investing: @projectStats.TimeLeft days</span>
+                                        }
+                                        else
+                                        {
+                                        <span>The investing period is over</span>
+                                        }
+                                    </p>
                                 </div>
                             }
                         </div>
@@ -284,8 +293,21 @@
                     <p class="mt-4">
                         Seize the opportunity to invest in this project.
                     </p>
-                    <button class="btn btn-secondary mb-3" data-cy="INVEST_BUTTON" @onclick="InvestInProject">Invest Now</button>
+                    <button class="btn btn-secondary mb-3" data-cy="INVEST_BUTTON"
+                            @onclick="InvestInProject"
+                            disabled="@(projectStats.TimeLeft == 0 ? "disabled" : null)"
+                            title="@(projectStats.TimeLeft == 0 ? "The investing period is over" : null)">
+                        @if (projectStats.TimeLeft > 0)
+                        {
+                            <text>Invest Now</text>
+                        }
+                        else
+                        {
+                            <text>The investing period is over</text>
+                        }
+                    </button>
                 </div>
+
             }
         </div>
 
@@ -510,7 +532,7 @@
                     projectStats.TotalInvestors = (int)data.InvestorCount;
                     projectStats.TotalRaised = data.AmountInvested;
 
-                    projectStats.TimeLeft = (project.ProjectInfo.ExpiryDate - DateTime.UtcNow).Days;
+                    projectStats.TimeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
                     if (projectStats.TimeLeft < 0)
                         projectStats.TimeLeft = 0;
 
