@@ -110,7 +110,6 @@ namespace Angor.Shared.Services
             {
                 P = new[] { nostrPubKey },
                 Kinds = new[] { NostrKind.EncryptedDm },
-                A = new []{ NostrCoordinatesIdentifierTag(nostrPubKey)},
                 Since = since,
                 Limit = limit
             }));
@@ -176,11 +175,6 @@ namespace Angor.Shared.Services
             return signed.Id!;
         }
 
-        private string NostrCoordinatesIdentifierTag(string nostrPubKey)
-        {
-            return $"{(int)NostrKind.ApplicationSpecificData}:{nostrPubKey}:AngorApp";
-        }
-
         public void CloseConnection()
         {
             _subscriptionsHandling.Dispose();
@@ -207,7 +201,7 @@ namespace Angor.Shared.Services
             return Task.FromResult(signed.Id);
         }
 
-        public Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string hexPrivateKey,Action<NostrOkResponse> action)
+        public Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string hexPrivateKey, Action<NostrOkResponse> action)
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
@@ -217,11 +211,7 @@ namespace Angor.Shared.Services
                 {
                     Kind = NostrKind.Metadata,
                     CreatedAt = DateTime.UtcNow,
-                    Content = content,
-                    Tags = new NostrEventTags( //TODO need to find the correct tags for the event
-                        new NostrEventTag("d", "AngorApp", "Create a new project event"),
-                        new NostrEventTag("L", "#projectInfo"),
-                        new NostrEventTag("l", "ProjectDeclaration", "#projectInfo"))
+                    Content = content
                 }.Sign(key);
 
             _subscriptionsHandling.TryAddOKAction(signed.Id,action);
@@ -257,11 +247,7 @@ namespace Angor.Shared.Services
             {
                 Kind = NostrKind.ApplicationSpecificData,
                 CreatedAt = DateTime.UtcNow,
-                Content = content,
-                Tags = new NostrEventTags( //TODO need to find the correct tags for the event
-                    new NostrEventTag("d", "AngorApp", "Create a new project event"),
-                    new NostrEventTag("L", "#projectInfo"),
-                    new NostrEventTag("l", "ProjectDeclaration", "#projectInfo"))
+                Content = content
             };
             return ev;
         }

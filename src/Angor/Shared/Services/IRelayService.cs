@@ -8,7 +8,8 @@ namespace Angor.Shared.Services;
 public interface IRelayService
 {
     Task<string> AddProjectAsync(ProjectInfo project, string nsec,Action<NostrOkResponse> action);
-    Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string nsec,Action<NostrOkResponse> action);
+    Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string nsec,
+        Action<NostrOkResponse> action);
     Task<string> DeleteProjectAsync(string eventId, string hexPrivateKey);
     void LookupProjectsInfoByPubKeys<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,
         params string[] nostrPubKey);

@@ -30,8 +30,8 @@ namespace Angor.Client.Services
                 CreatedAt = DateTime.UtcNow,
                 Content = signRecoveryRequest.EncryptedContent,
                 Tags = new NostrEventTags(
-                    NostrEventTag.Profile(signRecoveryRequest.NostrPubKey), 
-                    new NostrEventTag(NostrEventTag.CoordinatesIdentifier, NostrCoordinatesIdentifierTag(signRecoveryRequest.NostrPubKey)))
+                    NostrEventTag.Profile(signRecoveryRequest.NostrPubKey),
+                    new NostrEventTag("subject","Investment offer"))
             };
 
             // Blazor does not support AES so it needs to be done manually in javascript
@@ -68,7 +68,6 @@ namespace Angor.Client.Services
                 Kinds = new[] { NostrKind.EncryptedDm },
                 Since = sigRequestSentTime,
                 E = new [] { sigRequestEventId },
-                //A = new[] { NostrCoordinatesIdentifierTag(projectNostrPubKey) }, //Only signature requests
                 Limit = 1,
             }));
         }
@@ -97,7 +96,6 @@ namespace Angor.Client.Services
             {
                 P = new[] { nostrPubKey }, //To founder
                 Kinds = new[] { NostrKind.EncryptedDm },
-                A = new []{ NostrCoordinatesIdentifierTag(nostrPubKey)}, //Only signature requests
                 Since = since
             }));
 
@@ -127,8 +125,7 @@ namespace Angor.Client.Services
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 Authors = new[] { nostrPubKey }, //From founder
-                Kinds = new[] { NostrKind.EncryptedDm },
-                A = new[] { NostrCoordinatesIdentifierTag(nostrPubKey) } //Only signature requests
+                Kinds = new[] { NostrKind.EncryptedDm }
             }));
         }
 
@@ -144,8 +141,8 @@ namespace Angor.Client.Services
                 Tags = new NostrEventTags(new []
                 {
                     NostrEventTag.Profile(investorNostrPubKey),
-                    new NostrEventTag(NostrEventTag.CoordinatesIdentifier,NostrCoordinatesIdentifierTag(nostrPrivateKey.DerivePublicKey().Hex)),
-                    NostrEventTag.Event(eventId)
+                    NostrEventTag.Event(eventId),
+                    new NostrEventTag("subject","Re:Investment offer"), 
                 })
             };
 
@@ -160,11 +157,6 @@ namespace Angor.Client.Services
         public void CloseConnection()
         {
             _subscriptionsHanding.Dispose();
-        }
-
-        private string NostrCoordinatesIdentifierTag(string nostrPubKey)
-        {
-            return $"{(int)NostrKind.ApplicationSpecificData}:{nostrPubKey}:AngorApp";
         }
     }
 }
