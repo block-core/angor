@@ -546,7 +546,8 @@
 
         public string EventId { get; set; }
     }
-    
+    private WalletWords cachedWalletWords;
+
 
     private void ToggleAutoApprove()
     {
@@ -566,10 +567,13 @@
 
     private async void StartAutoApproveWithPassword()
     {
-        var walletWords = await passwordComponent.GetWalletAsync();
-        if (walletWords != null)
+        if (cachedWalletWords == null)
         {
-            StartAutoApprove(walletWords);
+            cachedWalletWords = await passwordComponent.GetWalletAsync();
+        }
+        if (cachedWalletWords != null)
+        {
+            StartAutoApprove(cachedWalletWords);
         }
         else
         {
@@ -600,8 +604,13 @@
                 return;
             }
 
-            await FetchPendingSignaturesTest(FounderProject);
-            await ProcessSignaturesWithoutPassword(walletWords);
+            bool newSignaturesFetched = await FetchPendingSignaturesTest(FounderProject);
+
+            if (newSignaturesFetched)
+            {
+                await ProcessSignaturesWithoutPassword(walletWords);
+                StateHasChanged(); // Only update UI if new signatures were fetched and processed
+            }
         });
     }
 
@@ -623,9 +632,11 @@
         }
     }
     
-    private async Task FetchPendingSignaturesTest(FounderProject project)
+    private async Task<bool> FetchPendingSignaturesTest(FounderProject project)
     {
-        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,// project.LastRequestForSignaturesTime , async
+        bool newSignaturesAdded = false;
+    
+        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,
             (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
             {
                 Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
@@ -643,7 +654,7 @@
                     }
                     else
                     {
-                        return; //multiple relays could mean the same massage multiple times
+                        return; //multiple relays could mean the same message multiple times
                     }
                 }
 
@@ -660,17 +671,16 @@
                 };
 
                 signaturesRequests.Add(signatureRequest);
+                newSignaturesAdded = true;
                 Logger.LogDebug($"Added to pendingSignatures");
             },
             () =>
             {
                 Logger.LogDebug($"End of messages");
-
-                if (!messagesReceived)
-                    return;
-
-                Logger.LogDebug($"Calling StateHasChanged in EOSE");
             });
+
+        return newSignaturesAdded;
     }
+    
 
 }
