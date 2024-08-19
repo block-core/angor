@@ -1,0 +1,22 @@
+@using Angor.Shared.Models
+@code {
+    [Parameter]
+    public List<SignatureRequest> SignaturesRequests { get; set; }
+
+    [Parameter]
+    public EventCallback<SignatureRequest> OnApproveSignature { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public bool CanApproveAllSignatures { get; set; }
+
+    [Parameter]
+    public EventCallback OnApproveAllSignatures { get; set; }
+
+    public void TriggerUpdate()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+}
