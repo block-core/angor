@@ -11,6 +11,7 @@
 @inject ILogger<Penalties> Logger;
 
 @inherits BaseComponent
+<NotificationComponent @ref="notificationComponent" />
 
 @if (!hasWallet)
 {
@@ -18,98 +19,108 @@
     return;
 }
 
-<div class="container mt-4">
-    <h1>View Penalties</h1>
 
-    <NotificationComponent @ref="notificationComponent" />
-    
-    @if (firstTimeRefreshSpinner && refreshSpinner)
-    {
-        <div class="d-flex justify-content-center">
-            <div class="loader"></div>
-        </div>
-    }
-    else
-    {
-        <div>
-            <button class="btn btn-primary" @onclick="RefreshPenalties" disabled="@refreshSpinner">
-                @if (refreshSpinner)
-                {
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    <span>Refresh...</span>
-                }
-                else
-                {
-                    <span>Refresh</span>
-                }
-            </button>
-        </div>
-    }
 
-    @if (!penaltyProjects.Any())
-    {
-        <p><em>No penalties found...</em></p>
-    }
-    else
-    {
-        <!-- Penalties Details Section -->
-        <div class="row mt-4">
 
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header pb-0 p-3">
-                        <div class="row">
-                            <div class="col-6 d-flex align-items-center">
-                                <h6 class="mb-0">Penalties Details</h6>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive form-control">
-                            <table class="table align-items-center mb-0">
-                                <thead>
-                                    <tr>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Project ID</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Amount in Penalty</th>
-                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Days Left</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var penalty in penaltyProjects)
-                                    {
-                                        <tr>
-                                            <td>@penalty.ProjectIdentifier</td>
-                                            <td>@penalty.Amount @network.CoinTicker</td>
-                                            <td>
-                                                @if (penalty.IsExpired)
-                                                {
-                                                    if (penalty.IsReleased)
-                                                    {
-                                                        <button disabled class="btn btn-secondary">Penalty Released</button>
-                                                    }
-                                                    else
-                                                    {
-                                                        <button class="btn btn-info" @onclick="() => ClaimPenalty(penalty.ProjectIdentifier)">Claim Penalty</button>
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    <button disabled class="btn btn-warning">Penalty Release in @penalty.DaysLeftForPenalty days</button>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+<div class="row">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex col-auto my-auto align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="sad-circle" Height="42" Width="42" />
+                </span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        View Penalties
+                    </h5>
+
                 </div>
             </div>
-
-
+            <button class="btn btn-border" @onclick="RefreshPenalties" disabled="@refreshSpinner">
+                <i class="@(refreshSpinner ? "rotate-icon" : "")">
+                    <Icon IconName="refresh"></Icon>
+                </i>
+                <span class="nav-link-text ms-1">Refresh</span>
+            </button>
         </div>
-    }
+    </div>
 </div>
+
+
+
+
+@if (!penaltyProjects.Any())
+{
+    <div class="row mt-4">
+        <div class="card card-body angor-alert-info pt-2 pb-2">
+            <div class="d-flex align-items-center align-items-center">
+                <span class="me-3 user-select-none">
+                    <Icon IconName="info" Width="40" Height="40" Color="var(--bs-primary-btn-icon)" />
+                </span>
+                <span class="text-white">No penalties found</span>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+<!-- Penalties Details Section -->
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card card-body">
+            <div class="d-flex align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="sad-circle"></Icon>
+                </span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Penalties Details
+                    </h5>
+                </div>
+            </div>
+            <div class="table-responsive form-control mt-4">
+                <table class="table align-items-center mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Project ID</th>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Amount in Penalty</th>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Days Left</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var penalty in penaltyProjects)
+                        {
+                            <tr>
+                                <td>@penalty.ProjectIdentifier</td>
+                                <td>@penalty.Amount @network.CoinTicker</td>
+                                <td>
+                                    @if (penalty.IsExpired)
+                                    {
+                                        if (penalty.IsReleased)
+                                        {
+                                            <button disabled class="btn btn-secondary">Penalty Released</button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-info" @onclick="() => ClaimPenalty(penalty.ProjectIdentifier)">Claim Penalty</button>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <button disabled class="btn btn-warning">Penalty Release in @penalty.DaysLeftForPenalty days</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+}
 
 @code {
     private List<PenaltiesData> penaltyProjects = new(); // Assuming this is the model name
