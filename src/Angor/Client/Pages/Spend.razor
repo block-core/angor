@@ -23,6 +23,9 @@
 
 @inherits BaseComponent
 
+<NotificationComponent @ref="notificationComponent" />
+<PasswordComponent @ref="passwordComponent" />
+
 
 @if (!hasWallet)
 {
@@ -30,12 +33,34 @@
     return;
 }
 
-<div class="container my-4">
-    <h1>Founder Stage Claim</h1>
-    <h5 class="card-title">Project Identifier: @project.ProjectIdentifier</h5>
+<div class="row mb-4">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex col-auto my-auto align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="spend" Height="42" Width="42" />
+                </span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Founder Stage Claim
+                    </h5>
+                </div>
+            </div>
+            <button class="btn btn-border mb-2" @onclick="RefreshBalance" disabled="@refreshSpinner">
 
-    <NotificationComponent @ref="notificationComponent" />
-    <PasswordComponent @ref="passwordComponent" />
+                <i class="@(refreshSpinner ? "rotate-icon" : "")">
+                    <Icon IconName="refresh" Width="24" Height="24"></Icon>
+                </i>
+                <span class="nav-link-text ms-1">Refresh</span>
+            </button>
+        </div>
+        <p class="mb-0 font-weight-normal text-sm text-truncate mt-4">
+            Project Identifier: @project.ProjectIdentifier
+        </p>
+    </div>
+</div>
+
+
 
     @if (firstTimeRefreshSpinner && refreshSpinner)
     {
@@ -43,22 +68,7 @@
             <div class="loader"></div>
         </div>
     }
-    else
-    {
-        <div class="d-flex justify-content-end">
-            <button class="btn btn-border mb-2" @onclick="RefreshBalance" disabled="@refreshSpinner">
-                @if (refreshSpinner)
-                {
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    <span>Refresh...</span>
-                }
-                else
-                {
-                    <span>Refresh</span>
-                }
-            </button>
-        </div>
-    }
+
 
     @foreach (var stage in stageDatas)
     {
@@ -68,8 +78,8 @@
         bool noCoinsToClaim = investedCount == 0 || stage.StagePinner == true;
 
 
-        <div class="card mb-3">
-            <div class="card-body">
+        <div class="mb-4">
+            <div class="card card-body">
                 <div class="d-flex justify-content-between">
                     <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
                     @if (stageisActive)
@@ -143,7 +153,9 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Confirmation</h5>
-                        <button type="button" class="btn-close" @onclick="() => showCreateModal = false" disabled="@spendSpinner"></button>
+                         <span type="button" @onclick="() => showCreateModal = false">
+                            <Icon IconName="close-circle" />
+                        </span>
                     </div>
                     <div class="modal-body modal-body-scroll">
 
@@ -181,8 +193,7 @@
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="() => showCreateModal = false" disabled="@spendSpinner">Cancel</button>
-                        <button type="button" class="btn btn-border" @onclick="Send" disabled="@spendSpinner">
+                         <button type="button" class="btn btn-border" @onclick="Send" disabled="@spendSpinner">
                             @if (spendSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -202,36 +213,29 @@
     }
 
 
-    <div class="container my-4">
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h5 class="card-title">Project Statistics</h5>
-                </div>
-                <p class="card-subtitle text-muted mb-2">Total Invested Amount (Spent + Unspent): @(totalAvailableInvestedAmount + totalSpentAmount) @network.CoinTicker</p>
-                <p class="card-subtitle text-muted mb-2">Total Unspent Invested Amount: @totalAvailableInvestedAmount @network.CoinTicker</p>
-                <p class="card-subtitle text-muted mb-2">Total Withdrawable Amount: @currentWithdrawableAmount @network.CoinTicker</p>
-                <p class="card-subtitle text-muted mb-2">Total Transactions: @totalInvestedTransactions</p>
-                <p class="card-subtitle text-muted mb-2">Total Unspent Transactions: @(totalInvestedTransactions - totalSpentTransactions) </p>
-                <p class="card-subtitle text-muted mb-2">Total Spent Amount: @totalSpentAmount @network.CoinTicker</p>
-                <p class="card-subtitle text-muted mb-2">Total Spent Transactions: @totalSpentTransactions</p>
-                <p class="card-subtitle text-muted mb-2">Total Stages: @totalStages</p>
-                @if (timeUntilNextStage.HasValue)
-                {
-                    <p class="card-subtitle text-muted mb-2">Time until next stage: @timeUntilNextStage.Value.Days days, @timeUntilNextStage.Value.Hours hours, @timeUntilNextStage.Value.Minutes minutes</p>
-                }
-                else
-                {
-                    <p class="card-subtitle text-muted mb-2">No upcoming stages.</p>
-                }
+    <div class="mt-4">
+        <div class="card card-body">
+            <div class="d-flex justify-content-between">
+                <h5 class="card-title">Project Statistics</h5>
             </div>
+            <p class="card-subtitle text-muted mb-2">Total Invested Amount (Spent + Unspent): @(totalAvailableInvestedAmount + totalSpentAmount) @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Unspent Invested Amount: @totalAvailableInvestedAmount @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Withdrawable Amount: @currentWithdrawableAmount @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Transactions: @totalInvestedTransactions</p>
+            <p class="card-subtitle text-muted mb-2">Total Unspent Transactions: @(totalInvestedTransactions - totalSpentTransactions) </p>
+            <p class="card-subtitle text-muted mb-2">Total Spent Amount: @totalSpentAmount @network.CoinTicker</p>
+            <p class="card-subtitle text-muted mb-2">Total Spent Transactions: @totalSpentTransactions</p>
+            <p class="card-subtitle text-muted mb-2">Total Stages: @totalStages</p>
+            @if (timeUntilNextStage.HasValue)
+            {
+                <p class="card-subtitle text-muted mb-2">Time until next stage: @timeUntilNextStage.Value.Days days, @timeUntilNextStage.Value.Hours hours, @timeUntilNextStage.Value.Minutes minutes</p>
+            }
+            else
+            {
+                <p class="card-subtitle text-muted mb-2">No upcoming stages.</p>
+            }
         </div>
     </div>
-
-
-
-
-</div>
 
 
 @code {

@@ -18,6 +18,7 @@
 @inject IRelayService _RelayService
 @inject ISignService _SignService
 @inject ISerializer serializer
+@inject ISignService _SignService
 @inject IEncryptionService _encryptionService
 
 @inject IJSRuntime JS
@@ -36,7 +37,7 @@
         <div class="d-flex align-items-center justify-content-between flex-wrap">
             <div class="d-flex col-auto my-auto align-items-center">
                 <span class="user-select-none">
-                    <Icon IconName="portfolio" Height="64" Width="64" />
+                    <Icon IconName="portfolio" Height="42" Width="42" />
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
@@ -75,7 +76,7 @@
             <div class="card text-white">
                 <div class="card-body text-center">
                     <span class="user-select-none">
-                        <Icon IconName="founder" Height="64" Width="64" />
+                        <Icon IconName="founder" Height="42" Width="42" />
                     </span>
                     <h5 class="card-title mt-4">Funded Projects</h5>
                     <p class="card-text">@TotalFundedProjects</p>
@@ -86,7 +87,7 @@
             <div class="card text-white">
                 <div class="card-body text-center">
                     <span class="user-select-none">
-                        <Icon IconName="users" Height="64" Width="64" />
+                        <Icon IconName="btc" Height="42" Width="42" />
                     </span>
                     <h5 class="card-title mt-4">Total invested</h5>
                     <p class="card-text">@Money.Satoshis(TotalInvested).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -97,7 +98,7 @@
             <div class="card text-white">
                 <div class="card-body text-center">
                     <span class="user-select-none">
-                        <Icon IconName="wallet" Height="64" Width="64" />
+                        <Icon IconName="wallet" Height="42" Width="42" />
                     </span>
                     <h5 class="card-title mt-4">Wallet</h5>
                     <p class="card-text">@Money.Satoshis(TotalWallet).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -108,7 +109,7 @@
             <div class="card text-white">
                 <div class="card-body text-center">
                     <span class="user-select-none">
-                        <Icon IconName="recovery" Height="64" Width="64" />
+                        <Icon IconName="recovery" Height="42" Width="42" />
                     </span>
                     <h5 class="card-title mt-4">In Recovery</h5>
                     <p class="card-text">@Money.Satoshis(TotalInRecovery).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -122,21 +123,24 @@
     {
         <div class="row mt-4">
             <div class="col-md-12">
-            
-                    <div class="card card-body">
 
-                        <div class="d-flex align-items-center">
-                            <span class="user-select-none">
+                <div class="card card-body">
+
+                    <div class="d-flex align-items-center">
+                        <span class="user-select-none">
                             <Icon IconName="project_explorer"></Icon>
-                            </span>
-                            <div class="h-100 ms-3">
-                                <h5 class="mb-0 font-weight-bolder">
-                                    Your Projects
-                                </h5>
-                            </div>
+                        </span>
+                        <div class="h-100 ms-3">
+                            <h5 class="mb-0 font-weight-bolder">
+                                Your Projects
+                            </h5>
                         </div>
+                    </div>
 
-                    <div class="table-responsive form-control mt-4">
+
+
+                    <div class="card-body">
+                        <div class="table-responsive form-control">
                             <table class="table align-items-center mb-0">
                                 <thead>
                                     <tr>
@@ -149,6 +153,7 @@
                                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Spent by Founder</th>
                                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Available to Founder</th>
                                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7">In Recovery</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Founder Approval</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -156,6 +161,8 @@
                                     @foreach (var project in projects)
                                     {
                                         Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
+                                        var nostrPubKey = project.ProjectInfo.NostrPubKey;
+                                        investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
 
                                         <tr>
                                             <td>
@@ -184,13 +191,21 @@
                                             <td>-</td>
                                             <td>-</td>
                                             <td>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                            <td>
+                                                @if (hasInvestmentRequests)
+                                                {
+                                                    <a href="@($"/invest/{project.ProjectInfo.ProjectIdentifier}")" class="text-info">Approved</a>
+                                                }
+
+                                            </td>
                                         </tr>
                                     }
                                 </tbody>
                             </table>
                         </div>
                     </div>
-          
+                </div>
+
             </div>
 
         </div>
@@ -209,6 +224,8 @@
     long TotalWallet = 0;
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
+
+    private Dictionary<string, bool> investmentRequestsMap = new Dictionary<string, bool>();
 
     public Dictionary<string, ProjectStats> Stats = new();
 
@@ -234,6 +251,7 @@
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
 
             await RefreshBalance();
+            await checkSignatureFromFounder();
         }
     }
 
@@ -278,6 +296,35 @@
 
     }
 
+    private async Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
+    {
+        if (investmentRequestsMap.ContainsKey(nostrPubKey))
+        {
+            investmentRequestsMap[nostrPubKey] = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task checkSignatureFromFounder()
+    {
+        foreach (var project in projects)
+        {
+            investmentRequestsMap[project.ProjectInfo.NostrPubKey] = false;
+
+            var investorNostrPubKey = storage.GetNostrPublicKeyPerProject(project.ProjectInfo.ProjectIdentifier);
+
+            if (!string.IsNullOrEmpty(investorNostrPubKey))
+            {
+                _SignService.LookupSignatureForInvestmentRequest(
+                    investorNostrPubKey,
+                    project.ProjectInfo.NostrPubKey,
+                    project.SignaturesInfo.TimeOfSignatureRequest.Value,
+                    project.SignaturesInfo.SignatureRequestEventId,
+                    async signatureContent => await HandleSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
+                    );
+            }
+        }
+    }
 
 
     private async Task RefreshBalance()
@@ -312,9 +359,13 @@
             return;
         }
 
+        RefreshBalanceTriggered = true;
         var words = await passwordComponent.GetWalletAsync();
         var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1);
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
+        var NostrDMPubkey = _DerivationOperations.DeriveNostrPubKey(words, 1);
+
+        await checkSignatureFromFounder();
 
         var rootNostrPubKeyHex = _DerivationOperations.DeriveNostrPubKey(words, 0);
 
@@ -431,6 +482,10 @@
                                 {
                                     projects.Add(investorProject);
                                     storage.AddInvestmentProject(investorProject);
+
+                                    // todo: David to check this, not sure this is correct.
+                                    // storage.SetNostrPublicKeyPerProject(investorProject.ProjectInfo.ProjectIdentifier, investorNostrPrivateKey.PubKey.ToHex()[2..]);
+
                                     RefreshBalanceTriggered = false;
                                     StateHasChanged();
                                 }
