@@ -112,22 +112,22 @@
                     <div class="mt-3">
                         @foreach (var transaction in stage.Items)
                         {
-                            bool isTicked = selected.TryGetValue(stage.StageIndex, out var trxIds) && trxIds.Contains(transaction.Trxid);
-                            string statusClass = transaction.IsSpent ? "bg-warning text-dark" : "bg-success text-light";
-                            string statusText = transaction.IsSpent ? "Spent" : "Unspent";
-
-                            <div class="d-flex mb-2">
-                                <input id="@transaction.Trxid" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid, stage.StageIndex)" />
-                                <label for="@transaction.Trxid">
-                                    @transaction.Amount @network.CoinTicker - utxo :
-                                    <span style="cursor: pointer; text-decoration: underline;" @onclick="() => CopyTRXToClipboard(transaction.Trxid)">@transaction.Trxid</span> -@transaction.Outputindex
-                                    <span class="p-1 rounded @statusClass">
-                                        @statusText
-                                    </span>
-                                </label>
-                            </div>
-
+                        bool isTicked = IsUtxoSelected(transaction.Trxid, transaction.Outputindex);
+                        string statusClass = transaction.IsSpent ? "bg-warning text-dark" : "bg-success text-light";
+                        string statusText = transaction.IsSpent ? "Spent" : "Unspent";
+                        
+                        <div class="d-flex mb-2">
+                            <input id="@transaction.Trxid" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" checked="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid, transaction.Outputindex)" />
+                            <label for="@transaction.Trxid">
+                                @transaction.Amount @network.CoinTicker - utxo :
+                                <span style="cursor: pointer; text-decoration: underline;" @onclick="() => CopyTRXToClipboard(transaction.Trxid)">@transaction.Trxid</span> -@transaction.Outputindex
+                                <span class="p-1 rounded @statusClass">
+                                    @statusText
+                                </span>
+                            </label>
+                        </div>
                         }
+
                     </div>
                 }
             </div>
@@ -162,10 +162,18 @@
                         <hr>
 
                         <h6 class="mt-3 mb-2">Stages</h6>
-                        @foreach (var item in selected)
+                        @foreach (var utxo in selectedUtxos)
                         {
-                            <p style="font-size: 0.7em;" class="mb-1">@item.Key</p>
+                            if (utxo.Value) // check if the UTXO is selected
+                            {
+                                var utxoKey = utxo.Key;
+                                
+                                var stageIndex = GetStageIndexForUtxo(utxoKey);
+
+                                <p style="font-size: 0.7em;" class="mb-1">Stage: @stageIndex, Transaction: @utxoKey.Trxid, Output Index: @utxoKey.Outputindex</p>
+                            }
                         }
+
 
                         <hr>
 
@@ -251,7 +259,7 @@
 
     List<(Transaction Transaction, string TrxId)> transactions = new();
 
-    Dictionary<int, HashSet<string>> selected = new();
+    Dictionary<UtxoKey, bool> selectedUtxos = new Dictionary<UtxoKey, bool>();
 
     public class StageData
     {
@@ -502,12 +510,14 @@
 
             founderContext = new FounderContext { ProjectInfo = project, ProjectSeeders = new ProjectSeeders() };
 
-            foreach (var trxId in selected.GetValueOrDefault(stageId, new HashSet<string>()))
+            foreach (var utxo in selectedUtxos.Where(kv => GetStageIndexForUtxo(kv.Key) == stageId && kv.Value))
             {
+                var trxId = utxo.Key.Trxid;
                 var trx = transactions.First(f => f.TrxId == trxId);
 
                 founderContext.InvestmentTrasnactionsHex.Add(trx.Transaction.ToHex(network.Consensus.ConsensusFactory));
             }
+
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var address = accountInfo.GetNextReceiveAddress();
@@ -530,9 +540,9 @@
         {
             CalculateTotalValues();
             
-            if (selected.ContainsKey(selectedStageId))
+            if (selectedUtxos.Keys.Any(utxoKey => GetStageIndexForUtxo(utxoKey) == selectedStageId))
             {
-                selected.Clear();
+                selectedUtxos.Clear();
             }
             stage.StagePinner = false;
         }
@@ -630,31 +640,39 @@
     private void Expand(int stageId)
     {
         expandedStageId = expandedStageId == stageId ? null : stageId;
-        selected.Clear();
+        selectedUtxos.Clear();
     }
 
-    private void HandleCheckboxChange(string trxId, int stageId)
+    private void HandleCheckboxChange(string trxId, int outputIndex)
     {
-        if (!selected.ContainsKey(stageId))
-        {
-            selected[stageId] = new HashSet<string>();
-        }
+        var key = new UtxoKey(trxId, outputIndex);
 
-        var stageSelections = selected[stageId];
-        if (stageSelections.Contains(trxId))
+        if (selectedUtxos.ContainsKey(key))
         {
-            stageSelections.Remove(trxId);
+            selectedUtxos.Remove(key);
         }
         else
         {
-            stageSelections.Add(trxId);
+            selectedUtxos[key] = true;
         }
     }
+    
+    private bool IsUtxoSelected(string trxId, int outputIndex)
+    {
+        return selectedUtxos.ContainsKey(new UtxoKey(trxId, outputIndex));
+    }
+
+    private int GetStageIndexForUtxo(UtxoKey utxoKey)
+    {
+        return stageDatas.First(stage => stage.Items.Any(item => item.Trxid == utxoKey.Trxid && item.Outputindex == utxoKey.Outputindex)).StageIndex;
+    }
+
 
     private bool IsCheckboxSelectedForStage(int stageIndex)
     {
-        return selected.TryGetValue(stageIndex, out var trxIds) && trxIds.Any();
+        return selectedUtxos.Any(utxo => GetStageIndexForUtxo(utxo.Key) == stageIndex && utxo.Value);
     }
+
 
     private async Task CopyTRXToClipboard(string trxData)
     {
@@ -666,4 +684,31 @@
         await _clipboardService.WriteTextAsync(trxData);
         StateHasChanged();
     }
+    
+    public struct UtxoKey
+    {
+        public string Trxid { get; set; }
+        public int Outputindex { get; set; }
+
+        public UtxoKey(string trxid, int outputindex)
+        {
+            Trxid = trxid;
+            Outputindex = outputindex;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is UtxoKey))
+                return false;
+
+            var key = (UtxoKey)obj;
+            return Trxid == key.Trxid && Outputindex == key.Outputindex;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Trxid, Outputindex);
+        }
+    }
+
 }
