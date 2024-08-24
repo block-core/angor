@@ -140,21 +140,22 @@
 
 
                     <div class="card-body">
-                        <div class="table-responsive form-control">
-                            <table class="table table-sm table-striped align-items-center mb-0">
+                        <div class="table-responsive form-control" style="overflow-x: hidden;">
+                            <table class="table table-sm table-striped align-items-center mb-0" style="table-layout: fixed; width: 100%;">
                                 <thead>
                                 <tr>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end">Funding Target (@network.CoinTicker)</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end">Raised (@network.CoinTicker)</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end">Raised (% Target)</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Project Status</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end">My Investment (@network.CoinTicker)</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end">Spent by Founder</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end">Available to Founder</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end">In Recovery</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Founder Approval</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" style="padding: 4px;">Name</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">Funding Target (@network.CoinTicker)</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">Raised (@network.CoinTicker)</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">Raised (% Target)</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" style="padding: 4px;">Project Status</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">My Investment (@network.CoinTicker)</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">Spent by Founder</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">Available to Founder</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">In Recovery</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" style="padding: 4px;">Founder Approval</th>
                                 </tr>
+                                
                                 </thead>
                                 <tbody>
                                 @foreach (var project in projects)
