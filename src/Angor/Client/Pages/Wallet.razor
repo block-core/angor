@@ -220,13 +220,13 @@ else
                             <span class="user-select-none">
                                 <Icon IconName="balance"></Icon>
                             </span>
-                            <div class="h-100 ms-3 d-flex align-items-center">
-                                <h5 class="mb-0 font-weight-bolder" data-cy="balance">
-                                    @* Balance *@
-                                </h5>
-                                <span class="fs-4 me-2" data-cy="balance-amount"><strong> @Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC)</strong>  @network.CoinTicker</span>
-                                <h6>@btcBalanceInUsd</h6>
-                            </div>
+                                <div>
+                                    <BalanceDisplay BtcBalance="@Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC)"
+                                                    BtcBalanceInFiat="@btcBalanceInUsd"
+                                                    PreferredCurrency="@storage.GetCurrencyDisplaySetting()"
+                                                    ShowFiatInline="true" />
+                                </div>
+
                         </div>
 
                     </div>
@@ -632,7 +632,12 @@ else
                                 {
                                     <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
                                         <td>@addressInfo.Address</td>
-                                        <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                        <td>
+                                            <BalanceDisplay BtcBalance="@Money.Satoshis(total).ToUnit(MoneyUnit.BTC)"
+                                                            BtcBalanceInFiat="@btcBalanceInUsd"
+                                                            PreferredCurrency="@storage.GetCurrencyDisplaySetting()"
+                                                            ShowFiatInline="false" />
+                                        </td>
                                         <td>@addressInfo.HdPath</td>
                                         <td>@count</td>
                                     </tr>
