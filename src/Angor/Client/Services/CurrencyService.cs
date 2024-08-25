@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Angor.Client.Storage;
 using System.Text.Json;
+using System.Collections.Generic;
 
 public class CurrencyService : ICurrencyService
 {
@@ -40,21 +41,20 @@ public class CurrencyService : ICurrencyService
     {
         using (var client = new HttpClient())
         {
-            string preferredCurrency = _storage.GetCurrencyDisplaySetting().ToLower();
-            client.BaseAddress = new Uri("https://api.coingecko.com/api/v3/");
-            var response = await client.GetAsync($"simple/price?ids=bitcoin&vs_currencies={preferredCurrency}");
+            string preferredCurrency = _storage.GetCurrencyDisplaySetting().ToUpper();
+            client.BaseAddress = new Uri("https://mempool.space/");
+            var response = await client.GetAsync("api/v1/prices");
             if (response.IsSuccessStatusCode)
             {
                 var jsonString = await response.Content.ReadAsStringAsync();
-
-                // Log the API response for debugging
+                
                 _logger.LogInformation($"API Response: {jsonString}");
 
-                var data = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, decimal>>>(jsonString);
+                var data = JsonSerializer.Deserialize<Dictionary<string, decimal>>(jsonString);
 
-                if (data.ContainsKey("bitcoin") && data["bitcoin"].TryGetValue(preferredCurrency, out var rate))
+                if (data != null && data.ContainsKey(preferredCurrency))
                 {
-                    return rate;
+                    return data[preferredCurrency];
                 }
                 throw new Exception($"Currency '{preferredCurrency}' not found in the API response.");
             }
@@ -69,6 +69,10 @@ public class CurrencyService : ICurrencyService
             "USD" => "$",
             "GBP" => "£",
             "EUR" => "€",
+            "CAD" => "C$",
+            "CHF" => "CHF",
+            "AUD" => "A$",
+            "JPY" => "¥",
             _ => currencyCode
         };
     }
@@ -79,8 +83,12 @@ public class CurrencyService : ICurrencyService
         {
             "USD" => "en-US",
             "GBP" => "en-GB",
-            "EUR" => "fr-FR", 
-            _ => "en-US" 
+            "EUR" => "fr-FR",
+            "CAD" => "en-CA",
+            "CHF" => "de-CH",
+            "AUD" => "en-AU",
+            "JPY" => "ja-JP",
+            _ => "en-US"
         };
     }
 }
