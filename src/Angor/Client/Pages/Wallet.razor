@@ -630,18 +630,30 @@ else
 
                                 if (total > 0)
                                 {
-                                    <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
+                                         <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
                                         <td>@addressInfo.Address</td>
                                         <td>
+                                            @{
+                                            // Attempt to get the fiat value from the dictionary
+                                            if (fiatValues.TryGetValue(addressInfo.Address, out var fiatValue))
+                                            {
                                             <BalanceDisplay BtcBalance="@Money.Satoshis(total).ToUnit(MoneyUnit.BTC)"
-                                                            BtcBalanceInFiat="@btcBalanceInUsd"
+                                                            BtcBalanceInFiat="@fiatValue"
                                                             PreferredCurrency="@storage.GetCurrencyDisplaySetting()"
                                                             ShowFiatInline="false" />
+                                            }
+                                            else
+                                            {
+                                            // Handle missing fiat value
+                                            <span>Loading...</span>
+                                            }
+                                            }
                                         </td>
                                         <td>@addressInfo.HdPath</td>
-                                        <td>@count</td>
-                                    </tr>
-                                    @if (IsExpanded(addressInfo.Address))
+                                         <td>@count</td>
+                                         </tr>
+
+                                @if (IsExpanded(addressInfo.Address))
                                     {
                                         <tr>
                                             <td colspan="4">
@@ -740,6 +752,7 @@ else
 
     Dictionary<string, bool> collapseStates = new Dictionary<string, bool>();
     private string btcBalanceInUsd;
+    private Dictionary<string, string> fiatValues = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -751,6 +764,7 @@ else
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
             accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
             btcBalanceInUsd = await GetBtcValueInPreferredCurrency(Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC));
+            await PrecomputeFiatValues();
         }
 
         await base.OnInitializedAsync();
@@ -1266,5 +1280,18 @@ else
     public async Task<string> GetBtcValueInPreferredCurrency(decimal btcBalance)
     {
         return await _currencyService.GetBtcValueInPreferredCurrency(btcBalance);
+    }
+    
+    private async Task PrecomputeFiatValues()
+    {
+        fiatValues.Clear();
+        var addresses = accountBalanceInfo.AccountInfo.AllAddresses();
+
+        foreach (var addressInfo in addresses)
+        {
+            var total = Money.Satoshis(addressInfo.Balance).ToUnit(MoneyUnit.BTC);
+            var fiatValue = await _currencyService.GetBtcValueInPreferredCurrency(total);
+            fiatValues[addressInfo.Address] = fiatValue;
+        }
     }
 }

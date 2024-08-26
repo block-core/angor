@@ -14,7 +14,8 @@
 
 <div class="d-flex flex-column align-items-start" title="@GetTooltip()">
     <span class="fs-4">
-        <strong>@BtcBalance</strong> BTC
+        <strong>@BtcBalance</strong> TBTC 
+        @* should fix the tbtc for depending of server like david said *@
     </span>
     @if (ShowFiatInline && PreferredCurrency != "BTC" && !string.IsNullOrEmpty(BtcBalanceInFiat))
     {
