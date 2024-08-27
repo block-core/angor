@@ -75,7 +75,7 @@
         bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
         var investedCount = stage.Items.Count(c => c.IsSpent == false);
         var investedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
-        bool noCoinsToClaim = investedCount == 0 || stage.StagePinner == true;
+        bool noCoinsToClaim = investedCount == 0 || stage.StageSpinner == true;
 
 
         <div class="mb-4">
@@ -86,7 +86,7 @@
                     {
 
                         <button class="btn @((noCoinsToClaim) ? "btn-light" : "btn-success")" disabled="@((noCoinsToClaim || !IsCheckboxSelectedForStage(stage.StageIndex)))" @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
-                            @if (stage.StagePinner)
+                            @if (stage.StageSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 <span>Building trx...</span>
@@ -122,20 +122,20 @@
                     <div class="mt-3">
                         @foreach (var transaction in stage.Items)
                         {
-                        bool isTicked = IsUtxoSelected(transaction.Trxid, transaction.Outputindex);
-                        string statusClass = transaction.IsSpent ? "bg-warning text-dark" : "bg-success text-light";
-                        string statusText = transaction.IsSpent ? "Spent" : "Unspent";
-                        
-                        <div class="d-flex mb-2">
-                            <input id="@transaction.Trxid" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" checked="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid, transaction.Outputindex)" />
-                            <label for="@transaction.Trxid">
-                                @transaction.Amount @network.CoinTicker - utxo :
-                                <span style="cursor: pointer; text-decoration: underline;" @onclick="() => CopyTRXToClipboard(transaction.Trxid)">@transaction.Trxid</span> -@transaction.Outputindex
-                                <span class="p-1 rounded @statusClass">
-                                    @statusText
-                                </span>
-                            </label>
-                        </div>
+                            bool isTicked = IsUtxoSelected(transaction.Trxid, transaction.Outputindex);
+                            string statusClass = transaction.IsSpent ? "bg-warning text-dark" : "bg-success text-light";
+                            string statusText = transaction.IsSpent ? "Spent" : "Unspent";
+
+                            <div class="d-flex mb-2">
+                                <input id="@transaction.Trxid" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" checked="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid, transaction.Outputindex)"/>
+                                <label for="@transaction.Trxid">
+                                    @transaction.Amount @network.CoinTicker - utxo :
+                                    <span style="cursor: pointer; text-decoration: underline;" @onclick="() => CopyTRXToClipboard(transaction.Trxid)">@transaction.Trxid</span> -@transaction.Outputindex
+                                    <span class="p-1 rounded @statusClass">
+                                        @statusText
+                                    </span>
+                                </label>
+                            </div>
                         }
 
                     </div>
@@ -270,7 +270,7 @@
         public int StageIndex;
         public Stage Stage;
         public List<StageDataTrx> Items = new();
-        public bool StagePinner = false;
+        public bool StageSpinner = false;
     }
 
     public class StageDataTrx
@@ -433,8 +433,6 @@
         }
     }
 
-
-
     private async Task CheckSpentFund()
     {
         List<QueryTransaction> trxs = new();
@@ -496,7 +494,7 @@
     private async Task ClaimCoins(int stageId)
     {
         var stage = stageDatas.First(s => s.StageIndex == stageId);
-        stage.StagePinner = true;
+        stage.StageSpinner = true;
 
         StateHasChanged();
         await Task.Delay(10);
@@ -548,7 +546,7 @@
             {
                 selectedUtxos.Clear();
             }
-            stage.StagePinner = false;
+            stage.StageSpinner = false;
         }
         
         StateHasChanged();
