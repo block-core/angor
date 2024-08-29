@@ -1281,6 +1281,7 @@ else
     {
         return await _currencyService.GetBtcValueInPreferredCurrency(btcBalance);
     }
+
     
     private async Task PrecomputeFiatValues()
     {
@@ -1290,8 +1291,9 @@ else
         foreach (var addressInfo in addresses)
         {
             var total = Money.Satoshis(addressInfo.Balance).ToUnit(MoneyUnit.BTC);
-            var fiatValue = await _currencyService.GetBtcValueInPreferredCurrency(total);
+            var fiatValue = await _currencyService.GetBtcValueInPreferredCurrency(total);  // Calls the method from ICurrencyService
             fiatValues[addressInfo.Address] = fiatValue;
         }
     }
+
 }
