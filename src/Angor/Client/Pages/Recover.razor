@@ -23,20 +23,37 @@
 
 @inherits BaseComponent
 
+<NotificationComponent @ref="notificationComponent" />
+<PasswordComponent @ref="passwordComponent" />
+
+
 @if (!hasWallet)
 {
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-
+<div class="row">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex col-auto my-auto align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="recovery" Height="42" Width="42" />
+                </span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Recover funds
+                    </h5>
+                    <p class="mb-0 font-weight-normal text-sm">
+                        Project ID: <span id="transactionID">@ProjectId</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="container my-4">
-    <h1>Recover funds</h1>
-    <NotificationComponent @ref="notificationComponent" />
-    <PasswordComponent @ref="passwordComponent" />
-
-    <p style="margin-bottom: 20px;">
-        Project ID: <span id="transactionID">@ProjectId</span>
-    </p>
+  
+ 
 
     <p style="margin-bottom: 20px;">
         Transaction ID: <span id="transactionID">@StageInfo.Trxid</span> | 

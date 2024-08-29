@@ -21,12 +21,32 @@
 @inject ISeederTransactionActions SeederTransactionActions;
 @inject IFounderTransactionActions FounderTransactionActions;
 
-<div class="container mt-4">
-    <h1 class="mb-4">Dashboard</h1>
-    
-    <button type="button" class="btn btn-light" @onclick="CreateInvestmentTransaction">Load transaction</button>
-    
+<div class="row">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex col-auto my-auto align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="addresses" Height="42" Width="42" />
+                </span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Dashboard
+                    </h5>
+ 
+                </div>
+            </div>
+            <button class="btn btn-border w-100 w-lg-auto me-3 mb-lg-0" @onclick="CreateInvestmentTransaction">
+                <i>
+                    <Icon IconName="refresh" Width="24" Height="24"></Icon>
+                </i>
+                <span class="nav-link-text ms-1">Load transaction</span>
+
+            </button>
+        </div>
+    </div>
 </div>
+
+ 
         
 @if (transactionInfo == null)
 {
