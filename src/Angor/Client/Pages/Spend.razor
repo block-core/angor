@@ -75,7 +75,7 @@
         bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
         var investedCount = stage.Items.Count(c => c.IsSpent == false);
         var investedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
-        bool noCoinsToClaim = investedCount == 0 || stage.StagePinner == true;
+        bool noCoinsToClaim = investedCount == 0 || stage.StageSpinner == true;
 
 
         <div class="mb-4">
@@ -85,8 +85,8 @@
                     @if (stageisActive)
                     {
 
-                        <button class="btn @((noCoinsToClaim) ? "btn-light" : "btn-success")" disabled="@noCoinsToClaim" @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
-                            @if (stage.StagePinner)
+                        <button class="btn @((noCoinsToClaim) ? "btn-light" : "btn-success")" disabled="@((noCoinsToClaim || !IsCheckboxSelectedForStage(stage.StageIndex)))" @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
+                            @if (stage.StageSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 <span>Building trx...</span>
@@ -122,12 +122,12 @@
                     <div class="mt-3">
                         @foreach (var transaction in stage.Items)
                         {
-                            bool isTicked = selected.ContainsKey(transaction.Trxid);
+                            bool isTicked = IsUtxoSelected(transaction.Trxid, transaction.Outputindex);
                             string statusClass = transaction.IsSpent ? "bg-warning text-dark" : "bg-success text-light";
                             string statusText = transaction.IsSpent ? "Spent" : "Unspent";
 
                             <div class="d-flex mb-2">
-                                <input id="@transaction.Trxid" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" value="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid)" />
+                                <input id="@transaction.Trxid" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" checked="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid, transaction.Outputindex)"/>
                                 <label for="@transaction.Trxid">
                                     @transaction.Amount @network.CoinTicker - utxo :
                                     <span style="cursor: pointer; text-decoration: underline;" @onclick="() => CopyTRXToClipboard(transaction.Trxid)">@transaction.Trxid</span> -@transaction.Outputindex
@@ -136,8 +136,8 @@
                                     </span>
                                 </label>
                             </div>
-
                         }
+
                     </div>
                 }
             </div>
@@ -174,10 +174,18 @@
                         <hr>
 
                         <h6 class="mt-3 mb-2">Stages</h6>
-                        @foreach (var item in selected)
+                        @foreach (var utxo in selectedUtxos)
                         {
-                            <p style="font-size: 0.7em;" class="mb-1">@item.Key</p>
+                            if (utxo.Value) // check if the UTXO is selected
+                            {
+                                var utxoKey = utxo.Key;
+                                
+                                var stageIndex = GetStageIndexForUtxo(utxoKey);
+
+                                <p style="font-size: 0.7em;" class="mb-1">Stage: @stageIndex, Transaction: @utxoKey.Trxid, Output Index: @utxoKey.Outputindex</p>
+                            }
                         }
+
 
                         <hr>
 
@@ -255,14 +263,14 @@
 
     List<(Transaction Transaction, string TrxId)> transactions = new();
 
-    Dictionary<string, string> selected = new();
+    Dictionary<UtxoKey, bool> selectedUtxos = new Dictionary<UtxoKey, bool>();
 
     public class StageData
     {
         public int StageIndex;
         public Stage Stage;
         public List<StageDataTrx> Items = new();
-        public bool StagePinner = false;
+        public bool StageSpinner = false;
     }
 
     public class StageDataTrx
@@ -425,8 +433,6 @@
         }
     }
 
-
-
     private async Task CheckSpentFund()
     {
         List<QueryTransaction> trxs = new();
@@ -480,7 +486,7 @@
         {
             passwordComponent.ShowPassword(async () =>
             {
-                await ClaimCoins(stageId); ;
+                await ClaimCoins(stageId);
             });
         }
     }
@@ -488,8 +494,7 @@
     private async Task ClaimCoins(int stageId)
     {
         var stage = stageDatas.First(s => s.StageIndex == stageId);
-
-        stage.StagePinner = true;
+        stage.StageSpinner = true;
 
         StateHasChanged();
         await Task.Delay(10);
@@ -507,12 +512,14 @@
 
             founderContext = new FounderContext { ProjectInfo = project, ProjectSeeders = new ProjectSeeders() };
 
-            foreach (var item in selected)
+            foreach (var utxo in selectedUtxos.Where(kv => GetStageIndexForUtxo(kv.Key) == stageId && kv.Value))
             {
-                var trx = transactions.First(f => f.TrxId == item.Key);
+                var trxId = utxo.Key.Trxid;
+                var trx = transactions.First(f => f.TrxId == trxId);
 
                 founderContext.InvestmentTrasnactionsHex.Add(trx.Transaction.ToHex(network.Consensus.ConsensusFactory));
             }
+
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var address = accountInfo.GetNextReceiveAddress();
@@ -533,11 +540,18 @@
         }
         finally
         {
-            stage.StagePinner = false;
+            CalculateTotalValues();
+            
+            if (selectedUtxos.Keys.Any(utxoKey => GetStageIndexForUtxo(utxoKey) == selectedStageId))
+            {
+                selectedUtxos.Clear();
+            }
+            stage.StageSpinner = false;
         }
-
+        
         StateHasChanged();
     }
+
 
     private async Task FeeRangeChanged(ChangeEventArgs e)
     {
@@ -628,20 +642,39 @@
     private void Expand(int stageId)
     {
         expandedStageId = expandedStageId == stageId ? null : stageId;
+        selectedUtxos.Clear();
     }
 
-    private void HandleCheckboxChange(string trxId)
+    private void HandleCheckboxChange(string trxId, int outputIndex)
     {
+        var key = new UtxoKey(trxId, outputIndex);
 
-        if (selected.ContainsKey(trxId))
+        if (selectedUtxos.ContainsKey(key))
         {
-            selected.Remove(trxId);
+            selectedUtxos.Remove(key);
         }
         else
         {
-            selected.Add(trxId, null);
+            selectedUtxos[key] = true;
         }
     }
+    
+    private bool IsUtxoSelected(string trxId, int outputIndex)
+    {
+        return selectedUtxos.ContainsKey(new UtxoKey(trxId, outputIndex));
+    }
+
+    private int GetStageIndexForUtxo(UtxoKey utxoKey)
+    {
+        return stageDatas.First(stage => stage.Items.Any(item => item.Trxid == utxoKey.Trxid && item.Outputindex == utxoKey.Outputindex)).StageIndex;
+    }
+
+
+    private bool IsCheckboxSelectedForStage(int stageIndex)
+    {
+        return selectedUtxos.Any(utxo => GetStageIndexForUtxo(utxo.Key) == stageIndex && utxo.Value);
+    }
+
 
     private async Task CopyTRXToClipboard(string trxData)
     {
@@ -653,4 +686,31 @@
         await _clipboardService.WriteTextAsync(trxData);
         StateHasChanged();
     }
+    
+    public struct UtxoKey
+    {
+        public string Trxid { get; set; }
+        public int Outputindex { get; set; }
+
+        public UtxoKey(string trxid, int outputindex)
+        {
+            Trxid = trxid;
+            Outputindex = outputindex;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is UtxoKey))
+                return false;
+
+            var key = (UtxoKey)obj;
+            return Trxid == key.Trxid && Outputindex == key.Outputindex;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Trxid, Outputindex);
+        }
+    }
+
 }
