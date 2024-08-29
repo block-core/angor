@@ -15,6 +15,13 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 
     public Script GetInvestorPenaltyTransactionScript(string investorKey, int punishmentLockDays)
     {
+        if (punishmentLockDays > 388)
+        {
+            // the actual number is 65535*512 seconds (388 days) 
+            // https://en.bitcoin.it/wiki/Timelock
+            throw new Exception($"Invalid CSV value {punishmentLockDays}");
+        }
+        
         var sequence = new Sequence(TimeSpan.FromDays(punishmentLockDays));
 
         return new(new List<Op>
