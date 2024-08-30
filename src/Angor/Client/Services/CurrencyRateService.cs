@@ -1,53 +1,126 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Angor.Client.Storage;
+using Microsoft.JSInterop;
 
-public class CurrencyRateService : ICurrencyRateService
+public class CurrencyRateService : ICurrencyRateService, IAsyncDisposable
 {
-    private readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(10); // Cache duration of 10 minutes
-    private readonly HttpClient _httpClient;
+    private readonly DotNetObjectReference<CurrencyRateService> _dotNetRef;
+    private readonly IJSRuntime _jsRuntime;
     private readonly ILogger<CurrencyRateService> _logger;
-    private readonly ConcurrentDictionary<string, (decimal rate, DateTime timestamp)> _rateCache = new();
+    private readonly ConcurrentDictionary<string, decimal> _rateCache = new(); // Cache for storing currency rates
+    private readonly IClientStorage _storage;
 
-    public CurrencyRateService(HttpClient httpClient, ILogger<CurrencyRateService> logger)
+    public CurrencyRateService(IClientStorage storage, ILogger<CurrencyRateService> logger, IJSRuntime jsRuntime)
     {
-        _httpClient = httpClient;
+        _storage = storage;
         _logger = logger;
+        _jsRuntime = jsRuntime;
+        _dotNetRef = DotNetObjectReference.Create(this);
+        InitializeWebSocketConnection();
     }
 
-    public async Task<decimal> GetBtcToCurrencyRate(string currencyCode)
+    public async ValueTask DisposeAsync()
     {
-        // Normalize currency code
-        var preferredCurrency = currencyCode.ToUpper();
+        if (_dotNetRef != null) _dotNetRef.Dispose();
 
-        // Check if we have a recent rate in the cache
-        if (_rateCache.ContainsKey(preferredCurrency) &&
-            DateTime.UtcNow - _rateCache[preferredCurrency].timestamp < _cacheDuration)
-        {
-            _logger.LogInformation($"Using cached rate for {preferredCurrency}");
-            return _rateCache[preferredCurrency].rate;
-        }
-
-        // Fetch new rate if not cached or cache is stale
-        var apiUrl = "https://mempool.space/api/v1/prices";
-        var response = await _httpClient.GetAsync(apiUrl);
-        if (response.IsSuccessStatusCode)
-        {
-            var jsonString = await response.Content.ReadAsStringAsync();
-            _logger.LogInformation($"API Response: {jsonString}");
-
-            var data = JsonSerializer.Deserialize<Dictionary<string, decimal>>(jsonString);
-
-            if (data != null && data.ContainsKey(preferredCurrency))
-            {
-                var rate = data[preferredCurrency];
-                // Update the cache
-                _rateCache[preferredCurrency] = (rate, DateTime.UtcNow);
-                return rate;
-            }
-
-            throw new Exception($"Currency '{preferredCurrency}' not found in the API response.");
-        }
-
-        throw new Exception("Failed to fetch BTC rate from the API.");
+        await _jsRuntime.InvokeVoidAsync("webSocketInterop.disconnect");
     }
+
+    public string WebSocketStatus { get; private set; } = "Disconnected";
+
+    public Task<decimal> GetBtcToCurrencyRate(string currencyCode)
+    {
+        if (_rateCache.TryGetValue(currencyCode.ToUpper(), out var rate)) return Task.FromResult(rate);
+
+        _logger.LogWarning($"Rate for currency '{currencyCode}' not found.");
+        throw new Exception($"Rate for currency '{currencyCode}' not found.");
+    }
+
+    private void InitializeWebSocketConnection()
+    {
+        var proxyWebSocketUrl = "ws://localhost:5063/api/WebSocketProxy/binance"; // Use your backend proxy URL
+
+        _jsRuntime.InvokeVoidAsync("webSocketInterop.connect", proxyWebSocketUrl, _dotNetRef);
+        WebSocketStatus = "Connecting";
+        _logger.LogInformation($"Connecting to WebSocket: {proxyWebSocketUrl}");
+    }
+
+    [JSInvokable]
+    public void OnWebSocketMessage(string message)
+    {
+        _logger.LogInformation($"Received WebSocket message: {message}");
+
+        try
+        {
+            // Deserialize the incoming message to extract rates
+            var data = JsonSerializer.Deserialize<Dictionary<string, string>>(message);
+
+            if (data != null)
+                foreach (var entry in data)
+                    if (decimal.TryParse(entry.Value, out var rate))
+                    {
+                        _rateCache[entry.Key] = rate; // Update the cache with the parsed rate
+                        _logger.LogInformation($"Updated rate for {entry.Key}: {rate}");
+                    }
+                    else
+                    {
+                        _logger.LogError($"Failed to parse rate for {entry.Key}: {entry.Value}");
+                    }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to handle WebSocket message: {ex.Message}");
+        }
+    }
+
+
+    [JSInvokable("OnWebSocketError")] // Explicitly specify a unique name
+    public void OnWebSocketError(string errorMessage)
+    {
+        WebSocketStatus = "Error";
+        _logger.LogError($"WebSocket error: {errorMessage}");
+    }
+
+    [JSInvokable("OnWebSocketClose")] // Explicitly specify a unique name
+    public void OnWebSocketClose()
+    {
+        WebSocketStatus = "Disconnected";
+        _logger.LogInformation("WebSocket connection closed.");
+    }
+}
+
+// Custom JsonConverter for decimal to handle possible conversion issues
+public class DecimalConverter : JsonConverter<decimal>
+{
+    public override decimal Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var stringValue = reader.GetString();
+            if (decimal.TryParse(stringValue, out var value)) return value;
+            throw new JsonException($"Unable to parse '{stringValue}' to a decimal.");
+        }
+
+        return reader.GetDecimal();
+    }
+
+    public override void Write(Utf8JsonWriter writer, decimal value, JsonSerializerOptions options)
+    {
+        writer.WriteNumberValue(value);
+    }
+}
+
+public class TradeMessage
+{
+    public string e { get; set; } // Event type
+    public long E { get; set; } // Event time
+    public string s { get; set; } // Symbol
+    public long t { get; set; } // Trade ID
+    public decimal p { get; set; } // Price
+    public decimal q { get; set; } // Quantity
+    public long T { get; set; } // Trade time
+    public bool m { get; set; } // Is the buyer the market maker?
+    public bool M { get; set; } // Ignore
 }

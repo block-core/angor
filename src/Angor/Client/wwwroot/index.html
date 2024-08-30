@@ -2,51 +2,55 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
     <title>Angor</title>
-    <base href="/" />
-    <link rel="icon" type="image/svg+xml" href="/assets/img/angor-icon.svg" />
-    <link rel="icon" type="image/png" href="/assets/img/favicon.png" />
-    <link href="manifest.json" rel="manifest" />
-    <link rel="apple-touch-icon" sizes="512x512" href="/assets/img/icon-512.png" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/assets/img/icon-192.png" />
-    <link href="Angor.Client.styles.css" rel="stylesheet" />
-    <link href="/assets/css/dashboard.css" rel="stylesheet" />
-    <link href="/assets/css/app.css" rel="stylesheet" />
-    <meta name="description" content="Angor is a decentralized crowdfunding platform built on Bitcoin, incorporating Nostr for enhanced security and transparency. It allows investors to maintain control over their funds and supports direct communication between investors and founders.">
-    <meta name="keywords" content="Angor, blockchain, crowdfunding, smart contracts, blockchain technology, bitcoin, nostr, decentralized applications, dApps, development, easy to use, secure">
-    <meta name="author" content="Angor Team">
-    <meta name="robots" content="index, follow">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#ffffff">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Angor">
-    <meta name="application-name" content="Angor">
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-TileImage" content="/assets/img/icon-512.png">
-    <meta name="msapplication-config" content="/manifest.json">
+    <base href="/"/>
+    <link href="/assets/img/angor-icon.svg" rel="icon" type="image/svg+xml"/>
+    <link href="/assets/img/favicon.png" rel="icon" type="image/png"/>
+    <link href="manifest.json" rel="manifest"/>
+    <link href="/assets/img/icon-512.png" rel="apple-touch-icon" sizes="512x512"/>
+    <link href="/assets/img/icon-192.png" rel="apple-touch-icon" sizes="192x192"/>
+    <link href="Angor.Client.styles.css" rel="stylesheet"/>
+    <link href="/assets/css/dashboard.css" rel="stylesheet"/>
+    <link href="/assets/css/app.css" rel="stylesheet"/>
+    <meta content="Angor is a decentralized crowdfunding platform built on Bitcoin, incorporating Nostr for enhanced security and transparency. It allows investors to maintain control over their funds and supports direct communication between investors and founders."
+          name="description">
+    <meta content="Angor, blockchain, crowdfunding, smart contracts, blockchain technology, bitcoin, nostr, decentralized applications, dApps, development, easy to use, secure"
+          name="keywords">
+    <meta content="Angor Team" name="author">
+    <meta content="index, follow" name="robots">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="#ffffff" name="theme-color">
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="default" name="apple-mobile-web-app-status-bar-style">
+    <meta content="Angor" name="apple-mobile-web-app-title">
+    <meta content="Angor" name="application-name">
+    <meta content="#ffffff" name="msapplication-TileColor">
+    <meta content="/assets/img/icon-512.png" name="msapplication-TileImage">
+    <meta content="/manifest.json" name="msapplication-config">
 </head>
 
 <body>
-    <div id="app">
-        <div class="loader-wrapper">
-            <div class="loader"></div>
-        </div>
+<div id="app">
+    <div class="loader-wrapper">
+        <div class="loader"></div>
     </div>
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
-    </div>
-    <script src="_framework/blazor.webassembly.js"></script>
-    <script>navigator.serviceWorker.register('service-worker.js');</script>
-    <script type="module" src="service-crypto.js"></script>
-    <script src="/ServiceWorkerRegister.js"></script>
-    <script src="nostr-tools-methods.js" type="module"></script>
-    <script src="/assets/js/appUpdate.js"></script>
-    <script src="/assets/js/app.js"></script>
+</div>
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a class="reload" href="">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+<script src="_framework/blazor.webassembly.js"></script>
+<script>navigator.serviceWorker.register('service-worker.js');</script>
+<script src="service-crypto.js" type="module"></script>
+<script src="/ServiceWorkerRegister.js"></script>
+<script src="nostr-tools-methods.js" type="module"></script>
+<script src="/assets/js/appUpdate.js"></script>
+<script src="/assets/js/app.js"></script>
+<script src="/assets/js/websocket.js"></script>
+
 </body>
 
 </html>
