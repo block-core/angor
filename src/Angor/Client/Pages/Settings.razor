@@ -1,9 +1,4 @@
 ﻿@page "/settings"
-@using Angor.Client.Storage;
-@using Angor.Shared
-@using Angor.Shared.Models;
-@using Angor.Client.Services
-@using Angor.Shared.Services
 
 @inject INetworkConfiguration _networkConfiguration
 @inject INetworkService _networkService
@@ -13,9 +8,12 @@
 @inject NavMenuState NavMenuState
 @inject ILogger<Settings> Logger;
 @inject NavigationManager _navManager
-
+@using Angor.Client.Storage
+@using Angor.Shared
+@using Angor.Shared.Models
+@using Angor.Shared.Services
 @inherits BaseComponent
-<NotificationComponent @ref="notificationComponent" />
+<NotificationComponent @ref="notificationComponent"/>
 
 @* Settings *@
 <div class="row">
@@ -23,7 +21,7 @@
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex col-auto my-auto align-items-center">
                 <span class="user-select-none">
-                    <Icon IconName="settings" Height="42" Width="42" />
+                    <Icon IconName="settings" Height="42" Width="42"/>
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
@@ -70,7 +68,7 @@
                                     <div class="modal-header">
                                         <h5 class="modal-title" id="coinControlModalLabel">Change Network</h5>
                                         <span type="button" data-bs-dismiss="modal" @onclick="() => showChangeNetworkModal = false" aria-label="Close">
-                                            <Icon IconName="close-circle" />
+                                            <Icon IconName="close-circle"/>
                                         </span>
                                     </div>
                                     <div class="modal-body modal-body-scroll">
@@ -117,7 +115,7 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button class="btn btn-danger" @onclick="ChangeNetwork">Change Network</button>
-                                     </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -188,40 +186,42 @@
         <div class="table-responsive form-control">
             <table class="table align-items-center mb-0">
                 <thead>
-                    <tr>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
-                    </tr>
+                <tr>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
+                </tr>
                 </thead>
                 <tbody>
-                    @foreach (var indexer in settingsInfo.Indexers)
-                    {
-                        <tr>
-                            <td><a href="@indexer.Url" target="_blank">@indexer.Url</a></td>
-                            <td style="color: @(indexer.Status == UrlStatus.Online ? "green" : indexer.Status == UrlStatus.NotReady ? "yellow" :  "red");">@indexer.Status.ToString()</td>
-                            <td>
-                                @if (indexer.IsPrimary)
-                                {
-                                    <span role="button">
-                                        <Icon IconName="primary" Height="24" Width="24"></Icon>
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span @onclick="() => SetPrimaryIndexer(indexer)" role="button">
-                                        <Icon IconName="set" Height="24" Width="24"></Icon>
-                                    </span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">
-                                    <Icon IconName="remove" Height="20" Width="20" Color="var(--bs-primary-btn-icon)"></Icon>
-                                </button>
-                            </td>
-                        </tr>
-                    }
+                @foreach (var indexer in settingsInfo.Indexers)
+                {
+                    <tr>
+                        <td>
+                            <a href="@indexer.Url" target="_blank">@indexer.Url</a>
+                        </td>
+                        <td style="color: @(indexer.Status == UrlStatus.Online ? "green" : indexer.Status == UrlStatus.NotReady ? "yellow" : "red");">@indexer.Status.ToString()</td>
+                        <td>
+                            @if (indexer.IsPrimary)
+                            {
+                                <span role="button">
+                                    <Icon IconName="primary" Height="24" Width="24"></Icon>
+                                </span>
+                            }
+                            else
+                            {
+                                <span @onclick="() => SetPrimaryIndexer(indexer)" role="button">
+                                    <Icon IconName="set" Height="24" Width="24"></Icon>
+                                </span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">
+                                <Icon IconName="remove" Height="20" Width="20" Color="var(--bs-primary-btn-icon)"></Icon>
+                            </button>
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>
@@ -260,44 +260,46 @@
         <div class="table-responsive form-control">
             <table class="table align-items-center mb-0">
                 <thead>
-                    <tr>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
-                    </tr>
+                <tr>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
+                </tr>
                 </thead>
                 <tbody>
-                    @foreach (var relay in settingsInfo.Relays)
-                    {
-                        <tr>
-                            <td><a href="@relay.Url" target="_blank">@relay.Url</a></td>
-                            <td>@relay.Name</td>
-                            <td class="@((relay.Status == UrlStatus.Online) ? "text-success" : (relay.Status == UrlStatus.NotReady) ? "text-warning" : "text-danger")">
-                                @relay.Status.ToString()
-                            </td>
-                            <td>
-                                @if (relay.IsPrimary)
-                                {
-                                    <span role="button">
-                                        <Icon IconName="primary" Height="24" Width="24"></Icon>
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span @onclick="() => SetPrimaryRelay(relay)" role="button">
-                                        <Icon IconName="set" Height="24" Width="24"></Icon>
-                                    </span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">
-                                    <Icon IconName="remove" Height="20" Width="20" Color="var(--bs-primary-btn-icon)"></Icon>
-                                </button>
-                            </td>
-                        </tr>
-                    }
+                @foreach (var relay in settingsInfo.Relays)
+                {
+                    <tr>
+                        <td>
+                            <a href="@relay.Url" target="_blank">@relay.Url</a>
+                        </td>
+                        <td>@relay.Name</td>
+                        <td class="@(relay.Status == UrlStatus.Online ? "text-success" : relay.Status == UrlStatus.NotReady ? "text-warning" : "text-danger")">
+                            @relay.Status.ToString()
+                        </td>
+                        <td>
+                            @if (relay.IsPrimary)
+                            {
+                                <span role="button">
+                                    <Icon IconName="primary" Height="24" Width="24"></Icon>
+                                </span>
+                            }
+                            else
+                            {
+                                <span @onclick="() => SetPrimaryRelay(relay)" role="button">
+                                    <Icon IconName="set" Height="24" Width="24"></Icon>
+                                </span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">
+                                <Icon IconName="remove" Height="20" Width="20" Color="var(--bs-primary-btn-icon)"></Icon>
+                            </button>
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>
@@ -338,6 +340,39 @@
     </div>
 </div>
 
+<!-- WebSocket Options Selection -->
+<div class="row mt-4">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="relay" Height="42" Width="42"></Icon>
+                </span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        WebSocket Services
+                    </h5>
+                    <p>Select a WebSocket service for real-time cryptocurrency updates.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Use @bind to bind the selected WebSocket URL directly -->
+        <select class="form-select" @bind="selectedWebSocketUrl" @bind:after="SaveSelectedWebSocketUrl">
+            @foreach (var option in settingsInfo.WebSocketOptions)
+            {
+                <option value="@option.Url">@option.Name</option>
+            }
+        </select>
+
+        <!-- Display the currently selected WebSocket URL -->
+        <div class="mt-3">
+            <h6>Currently Selected WebSocket Service:</h6>
+            <p>@selectedWebSocketUrl</p>
+        </div>
+    </div>
+</div>
+
 
 @* Wipe Storage *@
 <div class="row mt-4">
@@ -369,7 +404,7 @@
                                     <div class="modal-header">
                                         <h5 class="modal-title" id="coinControlModalLabel">Wipe Storage</h5>
                                         <span type="button" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false" aria-label="Close">
-                                            <Icon IconName="close-circle" />
+                                            <Icon IconName="close-circle"/>
                                         </span>
                                     </div>
                                     <div class="modal-body modal-body-scroll">
@@ -417,17 +452,19 @@
     private string newRelayLink;
 
     private string networkType;
-    private bool refreshSpinner = false;
+    private bool refreshSpinner;
 
-    private bool showWipeallModal = false;
-    private bool showChangeNetworkModal = false;
+    private bool showWipeallModal;
+    private bool showChangeNetworkModal;
 
 
-    private bool confirmWipe = false;
-    private bool showConfirmWipeMessage = false;
+    private bool confirmWipe;
+    private bool showConfirmWipeMessage;
     private string selectedNetwork = "testnet"; // Default to "testnet"
-    
+
     private string currencyDisplaySetting = "BTC"; // Default to BTC
+
+    private string selectedWebSocketUrl;
 
     private SettingsInfo settingsInfo;
 
@@ -440,12 +477,14 @@
         networkType = _networkConfiguration.GetNetwork().Name;
 
         _networkService.OnStatusChanged += UpdateUI;
-        
-        currencyDisplaySetting =  _clientStorage.GetCurrencyDisplaySetting();
+
+        currencyDisplaySetting = _clientStorage.GetCurrencyDisplaySetting();
+
+        selectedWebSocketUrl = settingsInfo.SelectedWebSocketUrl;
 
         if (!networkType.ToLower().Contains("test"))
             selectedNetwork = "mainnet";
-        
+
         return base.OnInitializedAsync();
     }
 
@@ -472,7 +511,7 @@
     {
         if (!string.IsNullOrWhiteSpace(newIndexerLink))
         {
-            if (!Uri.TryCreate(newIndexerLink, UriKind.Absolute, out Uri? uri))
+            if (!Uri.TryCreate(newIndexerLink, UriKind.Absolute, out var uri))
             {
                 notificationComponent.ShowErrorMessage($"invalid url {newIndexerLink}");
                 return;
@@ -504,7 +543,7 @@
     {
         if (!string.IsNullOrWhiteSpace(newRelayLink))
         {
-            if (!Uri.TryCreate(newRelayLink, UriKind.Absolute, out Uri? uri))
+            if (!Uri.TryCreate(newRelayLink, UriKind.Absolute, out var uri))
             {
                 notificationComponent.ShowErrorMessage($"invalid url {newRelayLink}");
                 return;
@@ -546,7 +585,6 @@
             }
 
             _clientStorage.SetSettingsInfo(settingsInfo);
-
         }
     }
 
@@ -687,12 +725,25 @@
 
         NavMenuState.NotifyStateChanged();
     }
-    
+
     private async Task OnCurrencyDisplaySettingChanged(ChangeEventArgs e)
     {
         currencyDisplaySetting = e.Value.ToString();
         _clientStorage.SetCurrencyDisplaySetting(currencyDisplaySetting);
         StateHasChanged();
     }
+
+    private void OnWebSocketUrlChanged()
+    {
+        settingsInfo.SelectedWebSocketUrl = selectedWebSocketUrl;
+        _clientStorage.SetSettingsInfo(settingsInfo);
+    }
+
+    private void SaveSelectedWebSocketUrl()
+    {
+        settingsInfo.SelectedWebSocketUrl = selectedWebSocketUrl;
+        _clientStorage.SetSettingsInfo(settingsInfo);
+    }
+
 
 }
