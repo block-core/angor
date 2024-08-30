@@ -54,20 +54,22 @@ public class CurrencyRateService : ICurrencyRateService, IAsyncDisposable
 
         try
         {
-            // Deserialize the incoming message to extract rates
-            var data = JsonSerializer.Deserialize<Dictionary<string, string>>(message);
+            // Deserialize the incoming message into a TradeMessage object with specific number handling options
+            var options = new JsonSerializerOptions
+            {
+                NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString
+            };
 
-            if (data != null)
-                foreach (var entry in data)
-                    if (decimal.TryParse(entry.Value, out var rate))
-                    {
-                        _rateCache[entry.Key] = rate; // Update the cache with the parsed rate
-                        _logger.LogInformation($"Updated rate for {entry.Key}: {rate}");
-                    }
-                    else
-                    {
-                        _logger.LogError($"Failed to parse rate for {entry.Key}: {entry.Value}");
-                    }
+            var tradeMessage = JsonSerializer.Deserialize<TradeMessage>(message, options);
+
+            if (tradeMessage != null)
+            {
+                var rateKey = tradeMessage.s; // Use the symbol (s) as the key
+                var rateValue = tradeMessage.p; // Use the price (p) as the rate
+
+                _rateCache[rateKey] = rateValue; // Update the cache with the parsed rate
+                _logger.LogInformation($"Updated rate for {rateKey}: {rateValue}");
+            }
         }
         catch (Exception ex)
         {
