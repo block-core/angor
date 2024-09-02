@@ -1,7 +1,5 @@
-using System.Threading.Tasks;
-
 public interface ICurrencyService
 {
-    Task<string> GetBtcValueInPreferredCurrency(decimal btcBalance);
+    Task<IReadOnlyList<string>> GetBtcValuesInPreferredCurrency(params decimal[] btcBalances);
     string GetCurrencySymbol(string currencyCode);
 }
