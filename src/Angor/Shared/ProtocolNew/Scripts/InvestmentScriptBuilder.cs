@@ -19,7 +19,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         {
             // the actual number is 65535*512 seconds (388 days) 
             // https://en.bitcoin.it/wiki/Timelock
-            throw new Exception($"Invalid CSV value {punishmentLockDays}");
+            throw new ArgumentOutOfRangeException(nameof(punishmentLockDays), $"Invalid CSV value {punishmentLockDays}");
         }
         
         var sequence = new Sequence(TimeSpan.FromDays(punishmentLockDays));
