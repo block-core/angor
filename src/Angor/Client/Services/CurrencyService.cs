@@ -1,18 +1,21 @@
 using System.Globalization;
 using Angor.Client.Storage;
+using Angor.Shared;
 
 public class CurrencyService : ICurrencyService
 {
     private readonly ICurrencyRateService _currencyRateService;
     private readonly ILogger<CurrencyService> _logger;
+    private readonly INetworkConfiguration _NetworkConfiguration;
     private readonly IClientStorage _storage;
 
     public CurrencyService(ICurrencyRateService currencyRateService, IClientStorage storage,
-        ILogger<CurrencyService> logger)
+        ILogger<CurrencyService> logger, INetworkConfiguration network)
     {
         _currencyRateService = currencyRateService;
         _storage = storage;
         _logger = logger;
+        _NetworkConfiguration = network;
     }
 
     public string GetCurrencySymbol(string currencyCode)
@@ -38,39 +41,47 @@ public class CurrencyService : ICurrencyService
             return new List<string> { "No balances provided" };
         }
 
-        string currencyCode;
-        decimal rate;
-        string currencySymbol;
-        CultureInfo cultureInfo;
+        // only return conversion if btc 
+        if (_NetworkConfiguration.GetNetwork().CoinTicker.Equals("BTC", StringComparison.OrdinalIgnoreCase))
+        {
+            string currencyCode;
+            decimal rate;
+            string currencySymbol;
+            CultureInfo cultureInfo;
 
-        try
-        {
-            currencyCode = _storage.GetCurrencyDisplaySetting();
-            if (currencyCode.Equals("btc", StringComparison.OrdinalIgnoreCase))
-                return btcBalances.Select(_ => string.Empty)
-                    .ToList(); // Return a list of empty strings with the same count as btcBalances
-            rate = await _currencyRateService.GetBtcToCurrencyRate(currencyCode);
-            currencySymbol = GetCurrencySymbol(currencyCode);
-            cultureInfo = new CultureInfo(GetCultureCode(currencyCode));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Error fetching currency settings or rates: {ex.Message}");
-            return new List<string> { "Error fetching settings or rates" };
+            try
+            {
+                currencyCode = _storage.GetCurrencyDisplaySetting();
+                if (currencyCode.Equals("btc", StringComparison.OrdinalIgnoreCase))
+                    return btcBalances.Select(_ => string.Empty)
+                        .ToList(); // Return a list of empty strings with the same count as btcBalances
+                rate = await _currencyRateService.GetBtcToCurrencyRate(currencyCode);
+                currencySymbol = GetCurrencySymbol(currencyCode);
+                cultureInfo = new CultureInfo(GetCultureCode(currencyCode));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error fetching currency settings or rates: {ex.Message}");
+                return new List<string> { "Error fetching settings or rates" };
+            }
+
+            try
+            {
+                return btcBalances
+                    .AsParallel()
+                    .Select(btcBalance => CalculateFormattedValue(btcBalance, rate, currencySymbol, cultureInfo))
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error calculating BTC values: {ex.Message}");
+                return new List<string> { "Error calculating values" };
+            }
         }
 
-        try
-        {
-            return btcBalances
-                .AsParallel()
-                .Select(btcBalance => CalculateFormattedValue(btcBalance, rate, currencySymbol, cultureInfo))
-                .ToList();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Error calculating BTC values: {ex.Message}");
-            return new List<string> { "Error calculating values" };
-        }
+        // if its not btc then return a list of empty strings with the same count as btcBalances
+        return btcBalances.Select(_ => string.Empty)
+            .ToList();
     }
 
     private string CalculateFormattedValue(decimal btcBalance, decimal rate, string currencySymbol,
