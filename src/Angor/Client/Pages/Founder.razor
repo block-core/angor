@@ -25,19 +25,25 @@
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex col-auto my-auto align-items-center">
                 <span class="user-select-none">
-                    <Icon IconName="founder" Height="64" Width="64" />
+                    <Icon IconName="founder" Height="42" Width="42" />
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
                         Founder
                     </h5>
-                    @*<p class="mb-0 font-weight-normal text-sm">
-                    To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required.
-                    </p> *@
+         
                 </div>
             </div>
-            <button class="btn btn-secondary" @onclick="NavigateToCreateProject">Create Project</button>
-        </div>
+            <button class="btn btn-border" @onclick="NavigateToCreateProject">
+                <i>
+                    <Icon IconName="add"></Icon>
+                </i>
+                <span class="nav-link-text ms-1">Create Project</span>
+            </button>
+        </div> 
+        <p class="mb-0 font-weight-normal text-sm mt-4">
+        To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required.
+        </p> 
     </div>
 </div>
 
