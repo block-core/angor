@@ -247,6 +247,17 @@
             <InputNumber id="targetAmount" @bind-Value="project.ProjectInfo.TargetAmount" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated"/>
         </div>
 
+        <!-- Presets for Stages -->
+        <div class="mb-3">
+            <label for="stagePreset" class="form-label">Select Stage Preset</label>
+            <select id="stagePreset" class="form-select" @onchange="OnStagePresetChange">
+                <option value="">Select a preset...</option>
+                <option value="preset1">Preset 1: 3 Stages (10%, 30%, 60%)</option>
+                <option value="preset2">Preset 2: 4 Stages (25%, 25%, 25%, 25%)</option>
+                <option value="preset3">Preset 3: 2 Stages (50%, 50%)</option>
+            </select>
+        </div>
+
         <!-- Stages -->
         <h3 class="mb-3">Stages</h3>
         @foreach (var stage in project.ProjectInfo.Stages)
@@ -989,6 +1000,45 @@
     {
         activeTab = tabNumber;
         StateHasChanged();
+    }
+    
+    private void OnStagePresetChange(ChangeEventArgs e)
+    {
+        var selectedPreset = e.Value?.ToString();
+
+        if (selectedPreset == "preset1")
+        {
+            // Preset 1: 3 Stages (10%, 30%, 60%)
+            project.ProjectInfo.Stages = new List<Stage>
+            {
+                new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(10) },
+                new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
+                new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) }
+            };
+        }
+        else if (selectedPreset == "preset2")
+        {
+            // Preset 2: 4 Stages (25%, 25%, 25%, 25%)
+            project.ProjectInfo.Stages = new List<Stage>
+            {
+                new Stage { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(10) },
+                new Stage { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(20) },
+                new Stage { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(30) },
+                new Stage { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(40) }
+            };
+        }
+        else if (selectedPreset == "preset3")
+        {
+            // Preset 3: 2 Stages (60%, 20%, 20%)
+            project.ProjectInfo.Stages = new List<Stage>
+            {
+                new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(15) },
+                new Stage { AmountToRelease = 20, ReleaseDate = DateTime.UtcNow.AddDays(15) },
+                new Stage { AmountToRelease = 20, ReleaseDate = DateTime.UtcNow.AddDays(30) }
+            };
+        }
+
+        StateHasChanged(); 
     }
 
 
