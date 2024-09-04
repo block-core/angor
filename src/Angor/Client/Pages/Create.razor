@@ -254,7 +254,7 @@
                 <option value="">Select a preset...</option>
                 <option value="preset1">Preset 1: 3 Stages (10%, 30%, 60%)</option>
                 <option value="preset2">Preset 2: 4 Stages (25%, 25%, 25%, 25%)</option>
-                <option value="preset3">Preset 3: 2 Stages (50%, 50%)</option>
+                <option value="preset3">Preset 3: 2 Stages (60%, 20%, 20%)</option>
             </select>
         </div>
 
@@ -273,6 +273,20 @@
         }
 
         <button type="button" class="btn btn-border mb-3" @onclick="AddStage" disabled="@nostrApplicationSpecificDataCreated">Add Stage</button>
+
+        <div class="card card-body mt-4">
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-success" @onclick="() => ChangeTab(1)">
+
+                    <span>Previous</span>
+
+                </button>
+
+                <button type="submit" class="btn btn-success" @onclick="() => ChangeTab(3)">
+                    <span>Next</span>
+                </button>
+            </div>
+        </div>
     </EditForm>
 }
 
@@ -539,33 +553,17 @@
             {
                 project = fromStorage;
 
-                nostrMetadataCreated = fromStorage.NostrMetadataCreated();
+                nostrMetadataCreated = fromStorage.NostrMetadataCreated(); // Set the correct initial state
                 nostrApplicationSpecificDataCreated = fromStorage.NostrApplicationSpecificDataCreated();
             }
             else
             {
-                project = new FounderProject
-                {
-                    ProjectInfo = new ProjectInfo
-                    {
-                        StartDate = DateTime.UtcNow.AddHours(2),
-                        PenaltyDays = 90,
-                        ExpiryDate = DateTime.UtcNow.AddDays(120),
-                        TargetAmount = 50,
-                        FounderKey = projectsKeys.FounderKey,
-                        FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
-                        ProjectIdentifier = projectsKeys.ProjectIdentifier,
-                        NostrPubKey = projectsKeys.NostrPubKey
-                    },
-                    Metadata = new ProjectMetadata(),
-                    CreationTransactionId = null,
-                    ProjectIndex = projectsKeys.Index
-                };
+                project.ProjectIndex = projectsKeys.Index;
+                project.ProjectInfo.FounderKey = projectsKeys.FounderKey;
+                project.ProjectInfo.FounderRecoveryKey = projectsKeys.FounderRecoveryKey;
+                project.ProjectInfo.ProjectIdentifier = projectsKeys.ProjectIdentifier;
+                project.ProjectInfo.NostrPubKey = projectsKeys.NostrPubKey;
             }
-        }
-        else
-        {
-            project = new FounderProject();
         }
     }
 
@@ -620,13 +618,19 @@
 
     private async void FinalizeNostrProfileCreation()
     {
+        if (nostrMetadataCreated)
+        {
+            notificationComponent.ShowErrorMessage("Nostr profile already created");
+            return;
+        }
+
         createProfileSpinner = true;
         StateHasChanged();
 
         try
         {
             await CreatNostrProfileAnCheckPassword();
-            nostrMetadataCreated = true; // Disable actions in Tab 1
+            nostrMetadataCreated = true; // Set to true only after successful creation
         }
         catch (Exception e)
         {
@@ -636,12 +640,10 @@
         finally
         {
             createProfileSpinner = false;
-            StateHasChanged(); // Ensure the state is refreshed after the operation
+            StateHasChanged();
         }
-
-        // Debugging output to check states
-        _Logger.LogInformation($"createProfileSpinner: {createProfileSpinner}, nostrMetadataCreated: {nostrMetadataCreated}");
     }
+
 
     private async void FinalizeProjectInfoCreation()
     {
@@ -697,7 +699,7 @@
 
         if (string.IsNullOrEmpty(project.Metadata.Name))
         {
-            notificationComponent.ShowErrorMessage("Nostr profile name be filled");
+            notificationComponent.ShowErrorMessage("Nostr profile name must be filled");
             return;
         }
 
@@ -717,23 +719,21 @@
                     createProfileSpinner = false;
 
                     if (!_.Accepted)
-                        notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
-
-                    if (nostrMetadataCreated == false)
+                    {
+                        notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!");
+                    }
+                    else
                     {
                         nostrMetadataCreated = true;
                         storage.AddFounderProject(project);
                     }
 
-                    activeTab = 2;
-
                     StateHasChanged();
                 });
 
-            // todo: do we actually need this? does it actualy work to delete?
             if (string.IsNullOrEmpty(resultId))
             {
-                createApplicationDataSpinner = false;
+                createProfileSpinner = false;
                 notificationComponent.ShowErrorMessage("Failed to create nostr profile");
             }
         }
@@ -742,9 +742,8 @@
             _Logger.LogError(e, e.Message);
             notificationComponent.ShowErrorMessage(e.Message);
         }
-
-        StateHasChanged();
     }
+
 
     private async Task CreatProjectInfoOnNostrAnCheckPassword()
     {
@@ -1001,7 +1000,7 @@
         activeTab = tabNumber;
         StateHasChanged();
     }
-    
+
     private void OnStagePresetChange(ChangeEventArgs e)
     {
         var selectedPreset = e.Value?.ToString();
@@ -1011,9 +1010,9 @@
             // Preset 1: 3 Stages (10%, 30%, 60%)
             project.ProjectInfo.Stages = new List<Stage>
             {
-                new Stage { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(10) },
-                new Stage { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
-                new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) }
+                new() { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow.AddDays(10) },
+                new() { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
+                new() { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) }
             };
         }
         else if (selectedPreset == "preset2")
@@ -1021,10 +1020,10 @@
             // Preset 2: 4 Stages (25%, 25%, 25%, 25%)
             project.ProjectInfo.Stages = new List<Stage>
             {
-                new Stage { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(10) },
-                new Stage { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(20) },
-                new Stage { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(30) },
-                new Stage { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(40) }
+                new() { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(10) },
+                new() { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(20) },
+                new() { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(30) },
+                new() { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(40) }
             };
         }
         else if (selectedPreset == "preset3")
@@ -1032,13 +1031,13 @@
             // Preset 3: 2 Stages (60%, 20%, 20%)
             project.ProjectInfo.Stages = new List<Stage>
             {
-                new Stage { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(15) },
-                new Stage { AmountToRelease = 20, ReleaseDate = DateTime.UtcNow.AddDays(15) },
-                new Stage { AmountToRelease = 20, ReleaseDate = DateTime.UtcNow.AddDays(30) }
+                new() { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(15) },
+                new() { AmountToRelease = 20, ReleaseDate = DateTime.UtcNow.AddDays(15) },
+                new() { AmountToRelease = 20, ReleaseDate = DateTime.UtcNow.AddDays(30) }
             };
         }
 
-        StateHasChanged(); 
+        StateHasChanged();
     }
 
 
