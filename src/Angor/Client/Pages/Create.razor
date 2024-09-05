@@ -592,13 +592,37 @@
 
     private void ConfirmFinalizeNostrProfileCreation()
     {
+        if (nostrMetadataCreated)
+        {
+            notificationComponent.ShowErrorMessage("Nostr profile already created");
+            return;
+        }
+
+        if (project.Metadata is null)
+        {
+            notificationComponent.ShowErrorMessage("Nostr profile must be filled");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(project.Metadata.Name))
+        {
+            notificationComponent.ShowErrorMessage("Nostr profile name must be filled");
+            return;
+        }
+
         confirmationMessage = "Are you sure you want to finalize the Nostr Profile creation? Once done, changes can only be made on Nostr.";
         finalizeAction = FinalizeNostrProfileCreation;
         showConfirmationModal = true;
     }
 
-    private void ConfirmFinalizeProjectInfoCreation()
+    private async void ConfirmFinalizeProjectInfoCreation()
     {
+        if (!await ProjectInfoMetaDataTestInput())
+        {
+            // If validation fails, return early
+            return;
+        }
+
         confirmationMessage = "Are you sure you want to finalize the Project Info creation? Once done, changes can only be made on Nostr.";
         finalizeAction = FinalizeProjectInfoCreation;
         showConfirmationModal = true;
@@ -618,12 +642,6 @@
 
     private async void FinalizeNostrProfileCreation()
     {
-        if (nostrMetadataCreated)
-        {
-            notificationComponent.ShowErrorMessage("Nostr profile already created 2");
-            return;
-        }
-
         createProfileSpinner = true;
         StateHasChanged();
 
@@ -685,24 +703,6 @@
 
     private async Task CreatNostrProfile()
     {
-        // if (nostrMetadataCreated) // todo check nostrMetadataCreated logic
-        // {
-        //     notificationComponent.ShowErrorMessage("Nostr profile already created 3");
-        //     return;
-        // }
-
-        if (project.Metadata is null)
-        {
-            notificationComponent.ShowErrorMessage("Nostr profile must be filled");
-            return;
-        }
-
-        if (string.IsNullOrEmpty(project.Metadata.Name))
-        {
-            notificationComponent.ShowErrorMessage("Nostr profile name must be filled");
-            return;
-        }
-
         createProfileSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
@@ -759,54 +759,6 @@
 
     private async Task CreatProjectInfoOnNostr()
     {
-        if (nostrApplicationSpecificDataCreated)
-        {
-            notificationComponent.ShowErrorMessage("Nostr project already created");
-            return;
-        }
-
-        if (project.ProjectInfo.TargetAmount < (decimal)0.1)
-        {
-            notificationComponent.ShowErrorMessage("Project target amount must be higher then 0.1 BTC");
-            return;
-        }
-
-        if (project.ProjectInfo.StartDate < DateTime.UtcNow)
-        {
-            notificationComponent.ShowErrorMessage("Project must start in the future");
-            return;
-        }
-
-        if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.StartDate)
-        {
-            notificationComponent.ShowErrorMessage("Project must expire after start date");
-            return;
-        }
-
-        if (project.ProjectInfo.Stages.Any() && project.ProjectInfo.ExpiryDate < project.ProjectInfo.Stages.Last().ReleaseDate)
-        {
-            notificationComponent.ShowErrorMessage("Project expire date must be after the last stage date");
-            return;
-        }
-
-        if (project.ProjectInfo.PenaltyDays < 10)
-        {
-            notificationComponent.ShowErrorMessage("Project penalty must be higher then 10 days");
-            return;
-        }
-
-        if (project.ProjectInfo.Stages.Count() < 3)
-        {
-            notificationComponent.ShowErrorMessage("There must be at least 3 stages");
-            return;
-        }
-
-        if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
-        {
-            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
-            return;
-        }
-
         var projects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
 
         if (projects.Any(a => project.ProjectInfo.ProjectIdentifier == a.ProjectInfo.ProjectIdentifier))
@@ -1038,6 +990,60 @@
         }
 
         StateHasChanged();
+    }
+
+    private async Task<bool> ProjectInfoMetaDataTestInput()
+    {
+        if (nostrApplicationSpecificDataCreated)
+        {
+            notificationComponent.ShowErrorMessage("Nostr project already created");
+            return false;
+        }
+
+        if (project.ProjectInfo.TargetAmount < (decimal)0.1)
+        {
+            notificationComponent.ShowErrorMessage("Project target amount must be higher than 0.1 BTC");
+            return false;
+        }
+
+        if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+        {
+            notificationComponent.ShowErrorMessage("Project must start in the future");
+            return false;
+        }
+
+        if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.StartDate)
+        {
+            notificationComponent.ShowErrorMessage("Project must expire after the start date");
+            return false;
+        }
+
+        if (project.ProjectInfo.Stages.Any() && project.ProjectInfo.ExpiryDate < project.ProjectInfo.Stages.Last().ReleaseDate)
+        {
+            notificationComponent.ShowErrorMessage("Project expiry date must be after the last stage date");
+            return false;
+        }
+
+        if (project.ProjectInfo.PenaltyDays < 10)
+        {
+            notificationComponent.ShowErrorMessage("Project penalty must be higher than 10 days");
+            return false;
+        }
+
+        if (project.ProjectInfo.Stages.Count() < 3)
+        {
+            notificationComponent.ShowErrorMessage("There must be at least 3 stages");
+            return false;
+        }
+
+        if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
+        {
+            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
+            return false;
+        }
+
+        // If all checks pass, return true
+        return true;
     }
 
 
