@@ -620,7 +620,7 @@
     {
         if (nostrMetadataCreated)
         {
-            notificationComponent.ShowErrorMessage("Nostr profile already created");
+            notificationComponent.ShowErrorMessage("Nostr profile already created 2");
             return;
         }
 
@@ -685,11 +685,11 @@
 
     private async Task CreatNostrProfile()
     {
-        if (nostrMetadataCreated)
-        {
-            notificationComponent.ShowErrorMessage("Nostr profile already created");
-            return;
-        }
+        // if (nostrMetadataCreated) // todo check nostrMetadataCreated logic
+        // {
+        //     notificationComponent.ShowErrorMessage("Nostr profile already created 3");
+        //     return;
+        // }
 
         if (project.Metadata is null)
         {
