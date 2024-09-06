@@ -6,16 +6,19 @@ public class CurrencyService : ICurrencyService
 {
     private readonly ICurrencyRateService _currencyRateService;
     private readonly ILogger<CurrencyService> _logger;
-    private readonly INetworkConfiguration _NetworkConfiguration;
+    private readonly INetworkConfiguration _networkConfiguration;
     private readonly IClientStorage _storage;
 
-    public CurrencyService(ICurrencyRateService currencyRateService, IClientStorage storage,
-        ILogger<CurrencyService> logger, INetworkConfiguration network)
+    public CurrencyService(
+        ICurrencyRateService currencyRateService,
+        IClientStorage storage,
+        ILogger<CurrencyService> logger,
+        INetworkConfiguration network)
     {
-        _currencyRateService = currencyRateService;
-        _storage = storage;
-        _logger = logger;
-        _NetworkConfiguration = network;
+        _currencyRateService = currencyRateService ?? throw new ArgumentNullException(nameof(currencyRateService));
+        _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _networkConfiguration = network ?? throw new ArgumentNullException(nameof(network));
     }
 
     public string GetCurrencySymbol(string currencyCode)
@@ -29,7 +32,7 @@ public class CurrencyService : ICurrencyService
             "CHF" => "CHF",
             "AUD" => "A$",
             "JPY" => "¥",
-            _ => currencyCode
+            _ => currencyCode.ToUpper() // Return code if no symbol found
         };
     }
 
@@ -41,51 +44,53 @@ public class CurrencyService : ICurrencyService
             return new List<string> { "No balances provided" };
         }
 
-        // only return conversion if btc 
-        if (_NetworkConfiguration.GetNetwork().CoinTicker.Equals("BTC", StringComparison.OrdinalIgnoreCase))
+        // Check if the current network is Bitcoin (BTC)
+        if (!_networkConfiguration.GetNetwork().CoinTicker.Equals("BTC", StringComparison.OrdinalIgnoreCase))
         {
-            string currencyCode;
-            decimal rate;
-            string currencySymbol;
-            CultureInfo cultureInfo;
-
-            try
-            {
-                currencyCode = _storage.GetCurrencyDisplaySetting();
-                if (currencyCode.Equals("btc", StringComparison.OrdinalIgnoreCase))
-                    return btcBalances.Select(_ => string.Empty)
-                        .ToList(); // Return a list of empty strings with the same count as btcBalances
-                rate = await _currencyRateService.GetBtcToCurrencyRate(currencyCode);
-                currencySymbol = GetCurrencySymbol(currencyCode);
-                cultureInfo = new CultureInfo(GetCultureCode(currencyCode));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error fetching currency settings or rates: {ex.Message}");
-                return new List<string> { "Error fetching settings or rates" };
-            }
-
-            try
-            {
-                return btcBalances
-                    .AsParallel()
-                    .Select(btcBalance => CalculateFormattedValue(btcBalance, rate, currencySymbol, cultureInfo))
-                    .ToList();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error calculating BTC values: {ex.Message}");
-                return new List<string> { "Error calculating values" };
-            }
+            return GenerateEmptyStringList(btcBalances.Length);
         }
 
-        // if its not btc then return a list of empty strings with the same count as btcBalances
-        return btcBalances.Select(_ => string.Empty)
-            .ToList();
+        string currencyCode;
+        decimal rate;
+        string currencySymbol;
+        CultureInfo cultureInfo;
+
+        try
+        {
+            currencyCode = _storage.GetCurrencyDisplaySetting();
+
+            // If preferred currency is BTC, return empty strings
+            if (currencyCode.Equals("BTC", StringComparison.OrdinalIgnoreCase))
+            {
+                return GenerateEmptyStringList(btcBalances.Length);
+            }
+
+            // Get exchange rate, symbol, and culture info
+            rate = await _currencyRateService.GetBtcToCurrencyRate(currencyCode);
+            currencySymbol = GetCurrencySymbol(currencyCode);
+            cultureInfo = new CultureInfo(GetCultureCode(currencyCode));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error fetching currency settings or rates: {ex.Message}");
+            return new List<string> { "Error fetching settings or rates" };
+        }
+
+        try
+        {
+            return btcBalances
+                .AsParallel()
+                .Select(btcBalance => CalculateFormattedValue(btcBalance, rate, currencySymbol, cultureInfo))
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error calculating BTC values: {ex.Message}");
+            return new List<string> { "Error calculating values" };
+        }
     }
 
-    private string CalculateFormattedValue(decimal btcBalance, decimal rate, string currencySymbol,
-        CultureInfo cultureInfo)
+    private string CalculateFormattedValue(decimal btcBalance, decimal rate, string currencySymbol, CultureInfo cultureInfo)
     {
         var value = btcBalance * rate;
         return value.ToString("C2", cultureInfo).Replace(cultureInfo.NumberFormat.CurrencySymbol, currencySymbol);
@@ -102,7 +107,12 @@ public class CurrencyService : ICurrencyService
             "CHF" => "de-CH",
             "AUD" => "en-AU",
             "JPY" => "ja-JP",
-            _ => "en-US"
+            _ => "en-US" // Default to US culture if no match found
         };
+    }
+
+    private static List<string> GenerateEmptyStringList(int length)
+    {
+        return Enumerable.Repeat(string.Empty, length).ToList();
     }
 }

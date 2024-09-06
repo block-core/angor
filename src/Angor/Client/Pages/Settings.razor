@@ -311,19 +311,20 @@
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
                 <span class="user-select-none">
-                    <Icon IconName="currency" Height="64" Width="64"></Icon>
+                    <Icon IconName="currency" Height="42" Width="42"></Icon>
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
                         Currency Display
                     </h5>
-                    <h5 class="mb-0 font-weight-bolder">
-                        Current: @_clientStorage.GetCurrencyDisplaySetting()
-                    </h5>
+                    <p class="mb-0 mt-2 font-weight-normal text-sm">
+                        <span>Current: <strong>@selectedCurrency</strong></span>
+                    </p>
                 </div>
             </div>
             <div>
-                <select class="form-select" @onchange="OnCurrencyDisplaySettingChanged">
+                <label for="networkSelection">Select Currency:</label>
+                <select class="form-control mt-2" value="@selectedCurrency" @onchange="OnCurrencyChanged">
                     <option value="BTC">BTC</option>
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
@@ -427,7 +428,7 @@
     private bool showConfirmWipeMessage = false;
     private string selectedNetwork = "testnet"; // Default to "testnet"
     
-    private string currencyDisplaySetting = "BTC"; // Default to BTC
+    private string selectedCurrency = "BTC"; // Default to BTC
 
     private SettingsInfo settingsInfo;
 
@@ -441,7 +442,7 @@
 
         _networkService.OnStatusChanged += UpdateUI;
         
-        currencyDisplaySetting =  _clientStorage.GetCurrencyDisplaySetting();
+        selectedCurrency = _clientStorage.GetCurrencyDisplaySetting();
 
         if (!networkType.ToLower().Contains("test"))
             selectedNetwork = "mainnet";
@@ -687,12 +688,12 @@
 
         NavMenuState.NotifyStateChanged();
     }
-    
-    private async Task OnCurrencyDisplaySettingChanged(ChangeEventArgs e)
+
+
+    private void OnCurrencyChanged(ChangeEventArgs e)
     {
-        currencyDisplaySetting = e.Value.ToString();
-        _clientStorage.SetCurrencyDisplaySetting(currencyDisplaySetting);
+        selectedCurrency = e.Value.ToString();
+        _clientStorage.SetCurrencyDisplaySetting(selectedCurrency);
         StateHasChanged();
     }
-
 }

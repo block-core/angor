@@ -1,30 +1,11 @@
 ﻿@using Angor.Shared
 @using Blockcore.Networks
-@inject INetworkConfiguration _NetworkConfiguration
+@inject INetworkConfiguration NetworkConfiguration
 
-@code {
-    [Parameter] public decimal BtcBalance { get; set; }
-
-    [Parameter] public string BtcBalanceInFiat { get; set; }
-
-    [Parameter] public string PreferredCurrency { get; set; }
-
-    [Parameter] public bool ShowFiatInline { get; set; } = false; 
-
-    private Network network;
-
-    protected override void OnInitialized()
-    {
-        network = _NetworkConfiguration.GetNetwork();
-        base.OnInitialized();
-    }
-
-}
 
 <div class="d-flex flex-column align-items-start" title="@GetTooltip()">
     <span class="fs-4">
-        <strong>@BtcBalance</strong> @network.CoinTicker
-        @* should fix the tbtc for depending of server like david said from INetworkConfiguration*@
+        <strong>@BtcBalance</strong> @_network.CoinTicker
     </span>
     @if (ShowFiatInline && PreferredCurrency != "BTC" && !string.IsNullOrEmpty(BtcBalanceInFiat))
     {
@@ -33,12 +14,29 @@
 </div>
 
 @code {
+    [Parameter]
+    public decimal BtcBalance { get; set; }
 
-    private string GetTooltip()
+    [Parameter]
+    public string BtcBalanceInFiat { get; set; }
+
+    [Parameter]
+    public string PreferredCurrency { get; set; }
+
+    [Parameter]
+    public bool ShowFiatInline { get; set; } = false;
+
+    private Network _network;
+
+    protected override void OnInitialized()
     {
-        return PreferredCurrency != "BTC" && !string.IsNullOrEmpty(BtcBalanceInFiat) && !ShowFiatInline
-            ? $"Equivalent: {BtcBalanceInFiat}"
-            : string.Empty;
+        _network = NetworkConfiguration.GetNetwork();
+        base.OnInitialized();
     }
 
+    private string GetTooltip() =>
+        PreferredCurrency != "BTC" && !string.IsNullOrEmpty(BtcBalanceInFiat) && !ShowFiatInline
+            ? $"Equivalent: {BtcBalanceInFiat}"
+            : string.Empty;
 }
+
