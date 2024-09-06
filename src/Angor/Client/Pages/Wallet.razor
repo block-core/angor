@@ -224,7 +224,7 @@ else
                     @if (network.NetworkType != NetworkType.Mainnet && (accountBalanceInfo.TotalUnconfirmedBalance <= 0) & (accountBalanceInfo.TotalBalance <= 0))
                     {
                         <div class="d-flex flex-wrap align-items-center">
-                            <button class="btn btn-secondary" data-cy="get-test-coins" @onclick="GetTestCoins" disabled="@testCoinsSpinner">
+                            <button class="btn btn-secondary ms-2" data-cy="get-test-coins" @onclick="GetTestCoins" disabled="@testCoinsSpinner">
                                 @if (testCoinsSpinner)
                                 {
                                     <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status" aria-hidden="true"></span>
