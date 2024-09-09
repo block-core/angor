@@ -646,6 +646,7 @@ tr[style*="cursor: pointer;"] {
     align-items: center;
     z-index: 9999;
     flex-direction: column;
+    background-color: #e5eef0;
 }
 
 .loader {
@@ -800,14 +801,14 @@ tr[style*="cursor: pointer;"] {
     border-radius: 5px;
     box-sizing: border-box;
     font-size: 16px;
-    background-color: #fefefd;
+    background-color: #f5fdff;
 }
 
     .form-control:focus {
         outline: none;
         border-color: #007bff;
         box-shadow: 0 0 5px #007bff;
-        background-color: #fefefd;
+        background-color: #f5fdff;
     }
 
 .dark .form-label {
@@ -1136,7 +1137,7 @@ tr[style*="cursor: pointer;"] {
 }
 
 .navbar-main {
-    background: #fefefd !important;
+    background: #f5fdff !important;
 }
 
 .dark .navbar-main {

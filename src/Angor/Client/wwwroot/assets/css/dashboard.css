@@ -10703,7 +10703,7 @@ fieldset:disabled .btn {
 }
 
 .bg-gray-100 {
-    background-color: #f4f1ec !important
+    background-color: #e5eef0 !important
 }
 
 .bg-gray-200 {
@@ -20252,7 +20252,7 @@ fieldset:disabled .btn {
 }
 
 .alert-info {
-    background-image: linear-gradient(195deg, #fefefd 0%, #fefefd 100%);
+    background-image: linear-gradient(195deg, #f5fdff 0%, #f5fdff 100%);
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12) !important;
 }
 
@@ -21458,7 +21458,7 @@ fieldset:disabled .btn {
 }
 
 .sidenav {
-    background: #fefefd !important;
+    background: #f5fdff !important;
     color: #1f5d6a !important;
 }
 
