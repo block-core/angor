@@ -17,7 +17,7 @@ window.angor = {
     },
 
     addLightBackground: function () {
-        document.body.style.backgroundColor = "#e5eef0";
+        document.body.style.backgroundColor = "#cbdde1";
     },
 
  };
