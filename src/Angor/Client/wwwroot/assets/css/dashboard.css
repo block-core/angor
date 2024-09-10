@@ -5207,7 +5207,7 @@ fieldset:disabled .btn {
     --bs-card-cap-padding-x: 1rem;
     --bs-card-cap-bg: #fff;
     --bs-card-color: #1f5d6a;
-    --bs-card-bg: rgba(255, 255, 255, 0.9);
+    --bs-card-bg: rgba(245, 253, 255, 0.9);
     --bs-card-img-overlay-padding: 1rem;
     --bs-card-group-margin: 0.75rem;
     position: relative;
@@ -24400,7 +24400,7 @@ body:not(.dark) .sidenav.bg-transparent .collapse .nav-item .nav-link.active.tex
         }
 
 .navbar-main {
-    --bs-card-bg: rgba(255, 255, 255, 0.9);
+    --bs-card-bg: rgba(245, 253, 255, 0.9);
 }
 
     .navbar-main.fixed-top {
