@@ -1275,30 +1275,19 @@ else
     {
         fiatValues.Clear();
 
-        var addresses = accountBalanceInfo.AccountInfo.AllAddresses().ToList();
-        
-        if (addresses.Count == 0)
+        var btcBalance = Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC);
+
+        var fiatValuesList = await _currencyService.GetBtcValuesInPreferredCurrency(btcBalance);
+
+        if (fiatValuesList == null || !fiatValuesList.Any())
         {
-            Logger.LogWarning("No addresses available for processing.");
+            Logger.LogError("Failed to fetch the fiat value for the total balance.");
             return;
         }
 
-        var btcBalances = addresses
-            .Select(addressInfo => Money.Satoshis(addressInfo.Balance).ToUnit(MoneyUnit.BTC))
-            .ToArray();
-        
-        var fiatValuesList = await _currencyService.GetBtcValuesInPreferredCurrency(btcBalances);
-        if (fiatValuesList.Count != addresses.Count)
-        {
-            Logger.LogError("Mismatch in the number of addresses and fiat values received.");
-            return;
-        }
+        fiatValues["TotalBalance"] = fiatValuesList.First();
 
-        for (var i = 0; i < addresses.Count; i++)
-        {
-            var addressInfo = addresses[i];
-            fiatValues[addressInfo.Address] = fiatValuesList[i];
-        }
+        Logger.LogInformation($"Fiat value for total balance: {fiatValuesList.First()}");
     }
 
 
