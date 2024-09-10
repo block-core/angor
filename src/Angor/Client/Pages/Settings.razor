@@ -305,6 +305,41 @@
 
 </div>
 
+@* Currency Display Settings *@
+<div class="row mt-4">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="currency" Height="42" Width="42"></Icon>
+                </span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Currency Display
+                    </h5>
+                    <p class="mb-0 mt-2 font-weight-normal text-sm">
+                        <span>Current: <strong>@selectedCurrency</strong></span>
+                    </p>
+                </div>
+            </div>
+            <div>
+                <label for="networkSelection">Select Currency:</label>
+                <select class="form-control mt-2" value="@selectedCurrency" @onchange="OnCurrencyChanged">
+                    <option value="BTC">BTC</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="CAD">CAD</option>
+                    <option value="CHF">CHF</option>
+                    <option value="AUD">AUD</option>
+                    <option value="JPY">JPY</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 @* Wipe Storage *@
 <div class="row mt-4">
     <div class="card card-body border-danger border-3">
@@ -392,6 +427,8 @@
     private bool confirmWipe = false;
     private bool showConfirmWipeMessage = false;
     private string selectedNetwork = "testnet"; // Default to "testnet"
+    
+    private string selectedCurrency = "BTC"; // Default to BTC
 
     private SettingsInfo settingsInfo;
 
@@ -404,10 +441,12 @@
         networkType = _networkConfiguration.GetNetwork().Name;
 
         _networkService.OnStatusChanged += UpdateUI;
+        
+        selectedCurrency = _clientStorage.GetCurrencyDisplaySetting();
 
         if (!networkType.ToLower().Contains("test"))
             selectedNetwork = "mainnet";
-
+        
         return base.OnInitializedAsync();
     }
 
@@ -650,4 +689,11 @@
         NavMenuState.NotifyStateChanged();
     }
 
+
+    private void OnCurrencyChanged(ChangeEventArgs e)
+    {
+        selectedCurrency = e.Value.ToString();
+        _clientStorage.SetCurrencyDisplaySetting(selectedCurrency);
+        StateHasChanged();
+    }
 }
