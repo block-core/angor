@@ -13,11 +13,11 @@ window.angor = {
     },
 
     addDarkBackground: function () {
-        document.body.style.backgroundColor = "#022229";
+         document.body.classList.add('dark');
     },
 
     addLightBackground: function () {
-        document.body.style.backgroundColor = "#cbdde1";
-    },
+        document.body.classList.remove('dark');
+     },
 
- };
+};
