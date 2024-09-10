@@ -18,5 +18,7 @@ public interface ICacheStorage
     void SetUnconfirmedInboundFunds(List<UtxoData> unconfirmedInfo);
     void SetUnconfirmedOutboundFunds(List<Outpoint> unconfirmedInfo);
     void DeleteUnconfirmedInfo();
+    void SetCurrencyRate(string currencyCode, RateCacheEntry rateCacheEntry);
+    RateCacheEntry? GetCurrencyRate(string currencyCode);
     void WipeSession();
 }
