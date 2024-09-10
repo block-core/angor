@@ -1,6 +1,4 @@
 ﻿@page "/"
-@inject ICurrencyService _currencyService
-
 <PageTitle>Angor</PageTitle>
 <div class="card">
     <div class="row g-0">
@@ -26,28 +24,3 @@
         </div>
     </div>
 </div>
-
-
-@code{
-    private string btcBalanceInUsd;
- 
-    protected override async Task OnInitializedAsync()
-    {
-                btcBalanceInUsd = await GetBtcValueInPreferredCurrency(1);
-    
-       
-
-        await base.OnInitializedAsync();
-    }
-
-    public async Task<IReadOnlyList<string>> GetBtcValuesInPreferredCurrency(params decimal[] btcBalances)
-    {
-        return await _currencyService.GetBtcValuesInPreferredCurrency(btcBalances);
-    }
-
-    public async Task<string> GetBtcValueInPreferredCurrency(decimal btcBalance)
-    {
-        var results = await GetBtcValuesInPreferredCurrency(btcBalance);
-        return results.FirstOrDefault() ?? "Error fetching value";
-    }
-}
