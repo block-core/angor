@@ -59,7 +59,7 @@
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center align-items-center">
                 <span class="me-3 user-select-none">
-                    <Icon IconName="info" Width="40" Height="40" Color="var(--bs-primary-btn-icon)"/>
+                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary-btn-icon)"/>
                 </span>
                 <span class="text-white">No Wallet Found</span>
             </div>
@@ -118,7 +118,7 @@
                                         <button class="btn btn-secondary w-100" @onclick="GenerateNewWalletWords">
                                             <div class="d-flex align-items-center justify-content-center">
                                                 <span class="me-1" data-cy="generate-wallet-words">
-                                                    <Icon IconName="plus" Height="24" Width="24" Color="var(--bs-primary-btn-icon)"></Icon>
+                                                    <Icon IconName="plus" Height="24" Width="24" Color="var(--angor-primary-btn-icon)"></Icon>
                                                 </span>
                                                 <span> Generate New Wallet Words</span>
                                             </div>
@@ -464,18 +464,30 @@ else
                                         <!-- The tick boxes and amounts will go here -->
 
                                         <p>Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-
                                         @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AddressesInfo.Union(accountBalanceInfo.AccountInfo.ChangeAddressesInfo))
                                         {
-                                            @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                            foreach (var addressUtxoItem in addressInfo.UtxoData)
                                             {
-                                                var isTicked = _sendInfo.SendUtxos.ContainsKey(addressUtxoItem.outpoint.ToString());
-                                                <input type="checkbox" id="@addressUtxoItem.outpoint.ToString()" @bind="@isTicked" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
-                                                <label class="fs-lable-s" for="@addressUtxoItem.outpoint.ToString()">
-                                                    @($"{addressUtxoItem.outpoint} - {Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC)} {network.CoinTicker}")
+                                                var outpointStr = addressUtxoItem.outpoint.ToString();
+                                                var outpointLength = outpointStr.Length;
+                                                var shortenedOutpoint = outpointLength > 20
+                                                ? $"{outpointStr.Substring(0, 10)} ... {outpointStr.Substring(outpointLength - 10)}"
+                                                : outpointStr; 
+
+                                                var valueInBTC = Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC);
+                                                var coinTicker = network.CoinTicker;
+                                                var isTicked = _sendInfo.SendUtxos.ContainsKey(outpointStr);
+
+                                                <input type="checkbox" id="@outpointStr" @bind="@isTicked" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
+                                                <label class="fs-lable-s" for="@outpointStr">
+                                                    @($"{shortenedOutpoint} - {valueInBTC} {coinTicker}")
                                                 </label>
                                             }
                                         }
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button class="btn btn-warning" @onclick="() => coinControlModal = false" >Submit</button>
                                     </div>
                                 </div>
                             </div>
@@ -620,21 +632,7 @@ else
                                 <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
                                     <td>@addressInfo.Address</td>
                                     <td>
-                                        @{
-                                            // Attempt to get the fiat value from the dictionary
-                                            if (fiatValues.TryGetValue(addressInfo.Address, out var fiatValue))
-                                            {
-                                                <BalanceDisplay BtcBalance="@Money.Satoshis(total).ToUnit(MoneyUnit.BTC)"
-                                                                BtcBalanceInFiat="@fiatValue"
-                                                                PreferredCurrency="@storage.GetCurrencyDisplaySetting()"
-                                                                ShowFiatInline="false"/>
-                                            }
-                                            else
-                                            {
-                                                // Handle missing fiat value
-                                                <span>Loading...</span>
-                                            }
-                                        }
+                                            @Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker
                                     </td>
                                     <td>@addressInfo.HdPath</td>
                                     <td>@count</td>
