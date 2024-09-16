@@ -1243,7 +1243,7 @@ else
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Failed to read clipboard contents: {ex}");
+            Logger.LogError(ex, $"Failed to read clipboard contents");
         }
     }
 
