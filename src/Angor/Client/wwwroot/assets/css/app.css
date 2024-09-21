@@ -1613,3 +1613,101 @@ textarea.form-control {
 a, a p {
     color: var(--angor-secondary) !important;
 }
+
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+.project-card {
+    background-color: var(--angor-body-bg);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+    .project-header h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--angor-primary);
+    }
+
+    .project-header .project-link {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--angor-primary);
+        text-decoration: none;
+    }
+
+.project-header .project-link:hover {
+    text-decoration: underline;
+}
+
+.project-body {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.project-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.project-info span {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+    .project-info strong {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--angor-primary);
+    }
+
+.status {
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: white;
+}
+
+.status.funding {
+    background-color: #ffc107;
+}
+
+.status.live {
+    background-color: #28a745;
+}
+
+.status.approved {
+    background-color: #007bff;
+}
+
+.status.pending {
+    background-color: #dc3545;
+}
+
+.btn-link {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
+}
