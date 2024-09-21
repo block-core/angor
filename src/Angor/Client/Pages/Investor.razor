@@ -135,89 +135,109 @@
                             </h5>
                         </div>
                     </div>
+                </div>
 
-                    <div class="card-container">
-                        @foreach (var project in projects)
-                        {
-                            Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
-                            var nostrPubKey = project.ProjectInfo.NostrPubKey;
-                            investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
+                <div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-2 g-4 card-container mt-0">
+                    @foreach (var project in projects)
+                    {
+                        Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
+                        var nostrPubKey = project.ProjectInfo.NostrPubKey;
+                        investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
 
-                            <div class="project-card">
-                                <div class="project-header">
-                                    <h3>@project.Metadata?.Name</h3>
-                                    <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="project-link">View Details</a>
+                        <div class="col">
+
+          
+
+                            <div class="card card-body">
+                                <div class="d-flex align-items-center">
+                                    <span class="user-select-none">
+                                        <Icon IconName="project_explorer"></Icon>
+                                    </span>
+                                    <div class="h-100 ms-3">
+                                        <h5 class="mb-0 font-weight-bolder">
+                                            @project.Metadata?.Name
+                                        </h5>
+                                    </div>
                                 </div>
 
-                                <div class="project-body">
-                                    <div class="project-info">
-                                        <span>Funding Target:</span>
-                                        <strong>@project.ProjectInfo.TargetAmount @network.CoinTicker</strong>
-                                    </div>
+                                <div class="mb-3 mt-4 d-flex justify-content-between">
+                                    <span>Funding Target:</span>
+                                    <strong>@project.ProjectInfo.TargetAmount @network.CoinTicker</strong>
+                                </div>
 
-                                    <div class="project-info">
-                                        <span>Raised:</span>
-                                        <strong>@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
-                                    </div>
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Raised:</span>
+                                    <strong>@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
+                                </div>
 
-                                    <div class="project-info">
-                                        <span>Raised (% Target):</span>
-                                        <strong>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</strong>
-                                    </div>
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Raised (% Target):</span>
+                                    <strong>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</strong>
+                                </div>
 
-                                    <div class="project-info">
-                                        <span>Status:</span>
-                                        @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
-                                        {
-                                            <strong class="status funding">Funding</strong>
-                                        }
-                                        else
-                                        {
-                                            <strong class="status live">Live</strong>
-                                        }
-                                    </div>
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Status:</span>
+                                    @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+                                    {
+                                        <strong class="text-warning">Funding</strong>
+                                    }
+                                    else
+                                    {
+                                        <strong class="text-success">Live</strong>
+                                    }
+                                </div>
 
-                                    <div class="project-info">
-                                        <span>My Investment:</span>
-                                        <strong>@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
-                                        @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
-                                        {
-                                            <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn-link" title="Pending"> <i class="oi oi-clock"></i></a>
-                                        }
-                                    </div>
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>My Investment:</span>
+                                    <strong>@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
+                                    @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
+                                    {
+                                        <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-sm btn-outline-warning ms-2" title="Pending">
+                                            <i class="oi oi-clock"></i>
+                                        </a>
+                                    }
+                                </div>
 
-                                    <div class="project-info">
-                                        <span>Spent by Founder:</span>
-                                        <strong>-</strong>
-                                    </div>
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Spent by Founder:</span>
+                                    <strong>-</strong>
+                                </div>
 
-                                    <div class="project-info">
-                                        <span>Available to Founder:</span>
-                                        <strong>-</strong>
-                                    </div>
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Available to Founder:</span>
+                                    <strong>-</strong>
+                                </div>
 
-                                    <div class="project-info">
-                                        <span>In Recovery:</span>
-                                        <strong>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
-                                    </div>
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>In Recovery:</span>
+                                    <strong>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
+                                </div>
 
-                                    <div class="project-info">
-                                        <span>Founder Approval:</span>
-                                        @if (hasInvestmentRequests)
-                                        {
-                                            <strong class="status approved">Approved</strong>
-                                        }
-                                        else
-                                        {
-                                            <strong class="status pending">Pending</strong>
-                                        }
-                                    </div>
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Founder Approval:</span>
+                                    @if (hasInvestmentRequests)
+                                    {
+                                        <strong class="text-primary">Approved</strong>
+                                    }
+                                    else
+                                    {
+                                        <strong class="text-danger">Pending</strong>
+                                    }
+                                </div>
+                                <div class="card-footer">
+                                    <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border w-100">
+                                        View Project
+                                    </a>
                                 </div>
                             </div>
-                        }
-                    </div>
 
+            
+
+                        </div>
+                    }
                 </div>
+
+
 
             </div>
 

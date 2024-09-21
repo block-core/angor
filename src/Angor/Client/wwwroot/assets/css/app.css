@@ -171,6 +171,7 @@
     --angor-modal-footer-border-color: #dee2e6;
     --angor-modal-footer-border-color-dark: #046479;
     --angor-modal-footer-border-width: 1px;
+    --angor-btn-hover-bg: #fb8c00;
 }
 
 .dark {
@@ -326,7 +327,7 @@
 .btn-outline-primary {
     --angor-btn-color: var(--angor-primary);
     --angor-btn-border-color: var(--angor-primary);
-    --angor-btn-hover-bg: var(--angor-primary);
+    --angor-btn-hover-bg: var(--angor-btn-primary-hover-bg);
     --angor-btn-hover-border-color: var(--angor-primary);
     --angor-btn-focus-shadow-rgb: var(--angor-primary-rgb);
     --angor-btn-active-bg: var(--angor-primary);
@@ -339,7 +340,7 @@
 .btn-outline-secondary {
     --angor-btn-color: var(--angor-secondary);
     --angor-btn-border-color: var(--angor-secondary);
-    --angor-btn-hover-bg: var(--angor-secondary);
+    --angor-btn-hover-bg: var(--angor-btn-secondary-hover-bg);
     --angor-btn-hover-border-color: var(--angor-secondary);
     --angor-btn-focus-shadow-rgb: var(--angor-secondary-rgb);
     --angor-btn-active-bg: var(--angor-secondary);
@@ -1419,15 +1420,9 @@ input[type="checkbox"] {
     height: 100%;
     display: block;
     object-fit: cover;
-    filter: blur(2px);
-    transition: filter 0.3s, opacity 0.3s;
-}
+ }
 
-.banner-container:hover .banner-image, .banner-container-list:hover .banner-image {
-    filter: none;
-    opacity: 0.8;
-}
-
+ 
 .profile-container {
     position: absolute;
     bottom: 10px;
@@ -1454,6 +1449,7 @@ input[type="checkbox"] {
     width: 100px;
     height: 100px;
     position: absolute;
+    object-fit: cover;
     bottom: 20px;
     left: 20px;
     border: 3px solid white;
@@ -1614,100 +1610,3 @@ a, a p {
     color: var(--angor-secondary) !important;
 }
 
-.card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    padding: 2rem;
-}
-
-.project-card {
-    background-color: var(--angor-body-bg);
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 1.5rem;
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-}
-
-.project-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.project-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-    .project-header h3 {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--angor-primary);
-    }
-
-    .project-header .project-link {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--angor-primary);
-        text-decoration: none;
-    }
-
-.project-header .project-link:hover {
-    text-decoration: underline;
-}
-
-.project-body {
-    display: grid;
-    gap: 0.5rem;
-}
-
-.project-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.project-info span {
-    font-size: 0.875rem;
-    color: #6c757d;
-}
-
-    .project-info strong {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--angor-primary);
-    }
-
-.status {
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    color: white;
-}
-
-.status.funding {
-    background-color: #ffc107;
-}
-
-.status.live {
-    background-color: #28a745;
-}
-
-.status.approved {
-    background-color: #007bff;
-}
-
-.status.pending {
-    background-color: #dc3545;
-}
-
-.btn-link {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.btn-link:hover {
-    text-decoration: underline;
-}
