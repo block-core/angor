@@ -171,6 +171,7 @@
     --angor-modal-footer-border-color: #dee2e6;
     --angor-modal-footer-border-color-dark: #046479;
     --angor-modal-footer-border-width: 1px;
+    --angor-btn-hover-bg: #fb8c00;
 }
 
 .dark {
@@ -326,7 +327,7 @@
 .btn-outline-primary {
     --angor-btn-color: var(--angor-primary);
     --angor-btn-border-color: var(--angor-primary);
-    --angor-btn-hover-bg: var(--angor-primary);
+    --angor-btn-hover-bg: var(--angor-btn-primary-hover-bg);
     --angor-btn-hover-border-color: var(--angor-primary);
     --angor-btn-focus-shadow-rgb: var(--angor-primary-rgb);
     --angor-btn-active-bg: var(--angor-primary);
@@ -339,7 +340,7 @@
 .btn-outline-secondary {
     --angor-btn-color: var(--angor-secondary);
     --angor-btn-border-color: var(--angor-secondary);
-    --angor-btn-hover-bg: var(--angor-secondary);
+    --angor-btn-hover-bg: var(--angor-btn-secondary-hover-bg);
     --angor-btn-hover-border-color: var(--angor-secondary);
     --angor-btn-focus-shadow-rgb: var(--angor-secondary-rgb);
     --angor-btn-active-bg: var(--angor-secondary);
@@ -1419,15 +1420,9 @@ input[type="checkbox"] {
     height: 100%;
     display: block;
     object-fit: cover;
-    filter: blur(2px);
-    transition: filter 0.3s, opacity 0.3s;
-}
+ }
 
-.banner-container:hover .banner-image, .banner-container-list:hover .banner-image {
-    filter: none;
-    opacity: 0.8;
-}
-
+ 
 .profile-container {
     position: absolute;
     bottom: 10px;
@@ -1454,6 +1449,7 @@ input[type="checkbox"] {
     width: 100px;
     height: 100px;
     position: absolute;
+    object-fit: cover;
     bottom: 20px;
     left: 20px;
     border: 3px solid white;
@@ -1613,3 +1609,4 @@ textarea.form-control {
 a, a p {
     color: var(--angor-secondary) !important;
 }
+
