@@ -189,13 +189,19 @@
 
                                 <div class="mb-3 d-flex justify-content-between">
                                     <span>My Investment:</span>
-                                    <strong>@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
-                                    @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
-                                    {
-                                        <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-sm btn-outline-warning ms-2" title="Pending">
-                                            <i class="oi oi-clock"></i>
-                                        </a>
-                                    }
+                                    <div>
+                                        @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
+                                        {
+                                            <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-sm btn-border ms-2" title="Pending">
+                                                <i class="oi oi-clock">
+                                                    <Icon IconName="clock-square" Width="24" Height="24"></Icon>
+                                                </i>
+                                            </a>
+                                         }     
+                                        <strong>@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
+
+                                    </div>
+           
                                 </div>
 
                                 <div class="mb-3 d-flex justify-content-between">
