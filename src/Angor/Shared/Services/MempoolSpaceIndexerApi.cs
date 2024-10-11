@@ -15,6 +15,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
     private readonly HttpClient _httpClient;
     private readonly INetworkService _networkService;
 
+    private const string AngorApiRoute = "/api/V1/query/Angor";
+
     public MempoolSpaceIndexerApi(ILogger<MempoolSpaceIndexerApi> logger, INetworkConfiguration networkConfiguration, HttpClient httpClient, INetworkService networkService)
     {
         _logger = logger;
@@ -26,7 +28,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
     {
         var indexer = _networkService.GetPrimaryIndexer();
-        var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects?offset={offset}&limit={limit}");
+        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects?offset={offset}&limit={limit}");
         _networkService.CheckAndHandleError(response);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>() ?? new List<ProjectIndexerData>();
@@ -45,7 +47,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         }
 
         var indexer = _networkService.GetPrimaryIndexer();
-        var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}");
+        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects/{projectId}");
         _networkService.CheckAndHandleError(response);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
@@ -64,7 +66,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         }
 
         var indexer = _networkService.GetPrimaryIndexer();
-        var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/stats");
+        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects/{projectId}/stats");
         _networkService.CheckAndHandleError(response);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
@@ -78,7 +80,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)
     {
         var indexer = _networkService.GetPrimaryIndexer();
-        var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/investments");
+        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects/{projectId}/investments");
         _networkService.CheckAndHandleError(response);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
@@ -120,7 +122,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     
     public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false)
     {
-        var urlBalance = $"api/address/";
+        var urlBalance = $"/api/address/";
 
         var tasks = data.Select(x =>
         {
@@ -130,18 +132,18 @@ public class MempoolSpaceIndexerApi : IIndexerService
             return _httpClient.GetAsync(indexer.Url + urlBalance + x.Address);
         });
 
-        await Task.WhenAll(tasks);
+        var results = await Task.WhenAll(tasks);
 
         var response = new List<AddressBalance>();
         
-        foreach (var task in tasks)
+        foreach (var apiResponse in results)
         {
-            _networkService.CheckAndHandleError(task.Result);
+            _networkService.CheckAndHandleError(apiResponse);
 
-            if (!task.Result.IsSuccessStatusCode)
-                throw new InvalidOperationException(task.Result.ReasonPhrase);
+            if (!apiResponse.IsSuccessStatusCode)
+                throw new InvalidOperationException(apiResponse.ReasonPhrase);
 
-            var addressResponse = await task.Result.Content.ReadFromJsonAsync<AddressResponse>(new JsonSerializerOptions()
+            var addressResponse = await apiResponse.Content.ReadFromJsonAsync<AddressResponse>(new JsonSerializerOptions()
                 { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
             if (addressResponse  != null && addressResponse.ChainStats.FundedTxoSum > addressResponse?.ChainStats.SpentTxoSum)
