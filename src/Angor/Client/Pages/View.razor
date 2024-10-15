@@ -58,12 +58,10 @@
             {
                 var metadata = project.Metadata;
 
-
                 <div class="card-header p-0 overflow-hidden position-relative">
                     <img class="card-img-top card-img-top-view" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                     <img class="profile-image-view rounded-circle" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                 </div>
-
 
                 <div class="p-4">
                     <div class="d-flex align-items-center justify-content-between mb-4">
@@ -168,11 +166,11 @@
                                     <p class="card-text ms-2">
                                         @if (projectStats.TimeLeft > 0)
                                         {
-                                        <span>Time Left for Investing: @projectStats.TimeLeft days</span>
+                                            <span>Time Left for Investing: @projectStats.TimeLeft days</span>
                                         }
                                         else
                                         {
-                                        <span>The investing period is over</span>
+                                            <span>The investing period is over</span>
                                         }
                                     </p>
                                 </div>

@@ -60,6 +60,7 @@
         </div>
     </div>
 }
+
 @if (founderProjects.Count > 0)
 {
     <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper" data-cy="project-grid">
@@ -69,6 +70,7 @@
         }
     </div>
 }
+
 <div class="row">
     <div class="col">
         <div class="d-flex justify-content-center mt-4">
@@ -106,16 +108,15 @@
     {
         scanningForProjects = true;
 
-        // Clear the existing projects before rescan
-        founderProjects.Clear();
-        storage.ClearFounderProjects();
-
         var keys = _walletStorage.GetFounderKeys();
 
         var founderProjectsToLookup = new Dictionary<string, ProjectIndexerData>();
 
         foreach (var key in keys.Keys)
         {
+            if (founderProjects.Exists(_ => _.ProjectInfo.ProjectIdentifier == key.ProjectIdentifier))
+                continue;
+
             var indexerProject = await _IndexerService.GetProjectByIdAsync(key.ProjectIdentifier);
 
             if (indexerProject == null)
@@ -139,7 +140,7 @@
 
                         case { Kind: NostrKind.ApplicationSpecificData }:
                             var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
-                            if (founderProjects.All(_ => _.ProjectInfo.NostrPubKey != e.Pubkey))
+                            if (founderProjects.All(_ => _.ProjectInfo.NostrPubKey != e.Pubkey))  // Getting events from multiple relays
                                 founderProjects.Add(new FounderProject
                                 {
                                     ProjectInfo = projectInfo,
