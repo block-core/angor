@@ -623,7 +623,7 @@
 
         if (!string.IsNullOrEmpty(pubkey))
         {
-            var url = $"https://browse.angor.io/projects/{pubkey}";
+            var url = $"https://hub.angor.io/profile/{pubkey}";
 
             await Js.InvokeVoidAsync("window.open", url, "_blank");
         }
