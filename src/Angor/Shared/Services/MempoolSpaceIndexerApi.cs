@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Angor.Shared.Models;
 using Blockcore.Consensus.TransactionInfo;
+using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.Services;
@@ -28,7 +29,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
     {
         var indexer = _networkService.GetPrimaryIndexer();
-        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects?offset={offset}&limit={limit}");
+        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects?offset={offset ?? 0}&limit={limit}");
         _networkService.CheckAndHandleError(response);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>() ?? new List<ProjectIndexerData>();
@@ -122,7 +123,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     
     public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false)
     {
-        var urlBalance = $"/api/address/";
+        var urlBalance = $"/api/v1/address/";
 
         var tasks = data.Select(x =>
         {
@@ -146,12 +147,13 @@ public class MempoolSpaceIndexerApi : IIndexerService
             var addressResponse = await apiResponse.Content.ReadFromJsonAsync<AddressResponse>(new JsonSerializerOptions()
                 { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
-            if (addressResponse  != null && addressResponse.ChainStats.FundedTxoSum > addressResponse?.ChainStats.SpentTxoSum)
+            if (addressResponse is { ChainStats.TxCount: > 0 })
             {
                 response.Add(new AddressBalance
                 {
                     address = addressResponse.Address,
-                    balance = addressResponse.ChainStats.FundedTxoSum - addressResponse.ChainStats.SpentTxoSum
+                    balance = addressResponse.ChainStats.FundedTxoSum - addressResponse.ChainStats.SpentTxoSum,
+                    pendingReceived = addressResponse.MempoolStats.FundedTxoSum - addressResponse.MempoolStats.SpentTxoSum 
                 });
             }
         }
@@ -184,16 +186,80 @@ public class MempoolSpaceIndexerApi : IIndexerService
         public int MinimumFee { get; set; }
     }
     
-    private class MempoolTransaction : Transaction
+    private class Vin
     {
+        public bool IsCoinbase { get; set; }
+        public PrevOut Prevout { get; set; }
+        public string Scriptsig { get; set; }
+        public string Asm { get; set; }
+        public long Sequence { get; set; }
+        public string Txid { get; set; }
+        public int Vout { get; set; }
+        public List<string> Witness { get; set; }
+        public string InnserRedeemscriptAsm { get; set; }
+        public string InnerWitnessscriptAsm { get; set; }
+    }
+    private class PrevOut
+    {
+        public long Value { get; set; }
+        public string Scriptpubkey { get; set; }
+        public string ScriptpubkeyAddress { get; set; }
+        public string ScriptpubkeyAsm { get; set; }
+        public string ScriptpubkeyType { get; set; }
+    }
+
+    private class MempoolTransaction
+    {
+        public string Txid { get; set; }
+
+        public int Version { get; set; }
+
+        public int Locktime { get; set; }
+        public int Size { get; set; }
+        public int Weight { get; set; }
+        public int Fee { get; set; }
+        public List<Vin> Vin { get; set; }
+        public List<PrevOut> Vout { get; set; }
         public UtxoStatus Status { get; set; }
+    }
+
+    //To use if the UTXO endpoint works on the mempool indexer
+    // public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset)
+    // {
+    //     var indexer = _networkService.GetPrimaryIndexer();
+    //
+    //     var url = $"/api/v1/address/{address}/utxo";
+    //
+    //     var response = await _httpClient.GetAsync(indexer.Url + url);
+    //     _networkService.CheckAndHandleError(response);
+    //
+    //     if (!response.IsSuccessStatusCode)
+    //         throw new InvalidOperationException(response.ReasonPhrase);
+    //
+    //     var utxo = await response.Content.ReadFromJsonAsync<List<AddressUtxo>>(new JsonSerializerOptions()
+    //         { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+    //
+    //     return utxo.Select(x => new UtxoData
+    //     {
+    //         address = address,
+    //         scriptHex = null, //TODO!!
+    //         blockIndex = x.Status.BlockHeight,
+    //         outpoint = new Outpoint(x.Txid,x.Vout),
+    //         value = x.Value,
+    //         PendingSpent = !x.Status.Confirmed
+    //     }).ToList();
+    // }
+    
+    private class Outspent
+    {
+        public bool Spent { get; set; }
     }
     
     public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset)
     {
         var indexer = _networkService.GetPrimaryIndexer();
 
-        var url = $"/api/address/{address}/utxo";
+        var url = $"/api/v1/address/{address}/txs";
 
         var response = await _httpClient.GetAsync(indexer.Url + url);
         _networkService.CheckAndHandleError(response);
@@ -201,18 +267,39 @@ public class MempoolSpaceIndexerApi : IIndexerService
         if (!response.IsSuccessStatusCode)
             throw new InvalidOperationException(response.ReasonPhrase);
 
-        var utxo = await response.Content.ReadFromJsonAsync<List<AddressUtxo>>(new JsonSerializerOptions()
+        var trx = await response.Content.ReadFromJsonAsync<List<MempoolTransaction>>(new JsonSerializerOptions()
             { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
-        return utxo.Select(x => new UtxoData
+        var utxoDataList = new List<UtxoData>();
+        
+        foreach (var mempoolTransaction in trx)
         {
-            address = address,
-            scriptHex = null, //TODO!!
-            blockIndex = x.Status.BlockHeight,
-            outpoint = new Outpoint(x.Txid,x.Vout),
-            value = x.Value,
-            PendingSpent = !x.Status.Confirmed
-        }).ToList();
+            var resultsOutputs =
+                await _httpClient.GetAsync(indexer.Url + "/api/v1/tx/" + mempoolTransaction.Txid + "/outspends");
+        
+            var spentOutputsStatus = await resultsOutputs.Content.ReadFromJsonAsync<List<Outspent>>();
+        
+            utxoDataList.AddRange(
+                mempoolTransaction.Vout.Select(
+                        (vout, i) =>
+                        {
+                            if (spentOutputsStatus[i].Spent || vout.ScriptpubkeyAddress != address)
+                                return null;
+                            
+                            return new UtxoData
+                            {
+                                address = address,
+                                scriptHex = vout.Scriptpubkey,
+                                blockIndex = mempoolTransaction.Status.BlockHeight,
+                                outpoint = new Outpoint(mempoolTransaction.Txid, i),
+                                value = vout.Value,
+                                PendingSpent = !mempoolTransaction.Status.Confirmed
+                            };
+                        }).Where(x => x != null)
+                    .ToArray()
+            );
+        }
+        return utxoDataList;
     }
 
     public async Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations)
@@ -281,21 +368,22 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
         return new QueryTransaction
         {
-            TransactionId = trx.GetHash().ToString(),
+            TransactionId = trx.Txid,
             Timestamp = trx.Status.BlockTime,
-            Inputs = trx.Inputs.Select((x, i) => new QueryTransactionInput
+            Inputs = trx.Vin.Select((x, i) => new QueryTransactionInput
             {
                 InputIndex = i,
-                InputTransactionId = x.PrevOut.Hash.ToString(),
-                WitScript = x.WitScript.ToString()
+                InputTransactionId = x.Txid,
+                WitScript = new WitScript(x.Witness.Select(s => Encoders.Hex.DecodeData(s)).ToArray()).ToString() 
             }),
-            Outputs = trx.Outputs.Select((x, i) => new QueryTransactionOutput
+            Outputs = trx.Vout
+                .Select((x, i) => new QueryTransactionOutput
             {
-                Address = x.ScriptPubKey.PaymentScript.ToHex(), //TODO check that this is correct
+                Address = x.ScriptpubkeyAddress, //TODO check that this is correct
                 Balance = x.Value,
                 Index = i,
-                ScriptPubKey = x.ScriptPubKey.ToHex(),
-                SpentInTransaction = trx.GetHash().ToString()
+                ScriptPubKey = x.Scriptpubkey,
+                SpentInTransaction = trx.Txid
             })
         };
     }
