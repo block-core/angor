@@ -419,8 +419,6 @@
     private string NostrNsecSecKey { get; set; } = string.Empty;
     private string NostrHexSecKey { get; set; } = string.Empty;
 
-    private string Npub => NostrConversionHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey)!;
-
 
     private bool isGeneratingNsec = false;
     private string errorMessage = string.Empty;
