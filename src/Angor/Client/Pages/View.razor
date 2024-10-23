@@ -419,6 +419,8 @@
     private string NostrNsecSecKey { get; set; } = string.Empty;
     private string NostrHexSecKey { get; set; } = string.Empty;
 
+    private string Npub => NostrConversionHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey)!;
+
 
     private bool isGeneratingNsec = false;
     private string errorMessage = string.Empty;
@@ -616,11 +618,9 @@
             {
                 var words = await passwordComponent.GetWalletAsync();
                 var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, founderProject.ProjectIndex);
-                var hex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
-                NostrHexSecKey = hex;
-                var nsec = NostrConversionHelper.ConvertHexToNsec(hex);
-                NostrNsecSecKey = nsec!;
-
+                NostrHexSecKey = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
+                NostrNsecSecKey = NostrConversionHelper.ConvertHexToNsec(NostrHexSecKey)!;
+ 
                 StateHasChanged();
             }
         }
