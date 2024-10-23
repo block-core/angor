@@ -89,7 +89,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: api-${{ matrix.runs-on }}
+          name: api-${{ matrix.runtime }}
           path: "${{env.RELEASE_PATH}}"
 
       - name: Release
