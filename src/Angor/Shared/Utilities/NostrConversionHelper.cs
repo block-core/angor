@@ -1,14 +1,19 @@
-﻿using Nostr.Client.Utils;  
+﻿using Microsoft.Extensions.Logging;
+using Nostr.Client.Utils;
 using System;
 
 namespace Angor.Shared.Utilities
 {
-    public static class NostrConversionHelper
+    public class NostrConversionHelper
     {
-        /// <summary>
-        /// Convert Bech32 key to hex
-        /// </summary>
-        public static string? ConvertBech32ToHex(string bech32Key)
+        private readonly ILogger<NostrConversionHelper> _logger;
+
+        public NostrConversionHelper(ILogger<NostrConversionHelper> logger)
+        {
+            _logger = logger;
+        }
+
+        public string? ConvertBech32ToHex(string bech32Key)
         {
             try
             {
@@ -17,15 +22,12 @@ namespace Angor.Shared.Utilities
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error converting Bech32 to hex: {ex.Message}");
+                _logger.LogError(ex, $"Error converting Bech32 to hex: {ex.Message}");
                 return null;
             }
         }
 
-        /// <summary>
-        /// Convert hex key to Bech32 with a specified prefix
-        /// </summary>
-        public static string? ConvertHexToBech32(string hexKey, string prefix)
+        public string? ConvertHexToBech32(string hexKey, string prefix)
         {
             try
             {
@@ -33,39 +35,27 @@ namespace Angor.Shared.Utilities
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error converting hex to Bech32: {ex.Message}");
+                _logger.LogError(ex, $"Error converting hex to Bech32: {ex.Message}");
                 return null;
             }
         }
 
-        /// <summary>
-        /// Check if the given hex key is valid
-        /// </summary>
-        public static bool IsHexValid(string hexKey)
+        public bool IsHexValid(string hexKey)
         {
             return NostrConverter.IsHex(hexKey);
         }
 
-        /// <summary>
-        /// Convert hex key to npub (Bech32 format)
-        /// </summary>
-        public static string? ConvertHexToNpub(string hexKey)
+        public string? ConvertHexToNpub(string hexKey)
         {
             return NostrConverter.ToNpub(hexKey);
         }
 
-        /// <summary>
-        /// Convert hex key to nsec (Bech32 format)
-        /// </summary>
-        public static string? ConvertHexToNsec(string hexKey)
+        public string? ConvertHexToNsec(string hexKey)
         {
             return NostrConverter.ToNsec(hexKey);
         }
 
-        /// <summary>
-        /// Convert hex key to note (Bech32 format)
-        /// </summary>
-        public static string? ConvertHexToNote(string hexKey)
+        public string? ConvertHexToNote(string hexKey)
         {
             return NostrConverter.ToNote(hexKey);
         }

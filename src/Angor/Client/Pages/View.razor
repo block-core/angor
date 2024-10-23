@@ -19,6 +19,9 @@
 @inject IRelayService _RelayService
 @inject ISerializer serializer
 @inject IJSRuntime Js;
+@inject ILogger<Browse> Logger;
+
+@inject Angor.Shared.Utilities.NostrConversionHelper NostrHelper
 
 @inherits BaseComponent
 <NotificationComponent @ref="notificationComponent" />
@@ -328,7 +331,7 @@
                 <div class="mb-4 mt-4">
 
                     @{
-                        var Npub = NostrConversionHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey);
+                        var Npub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey);
                     }
                     <label for="NostrNpubPublicKey" class="form-label">Project NOSTR public key (npub)</label>
 
@@ -617,15 +620,20 @@
                 var words = await passwordComponent.GetWalletAsync();
                 var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, founderProject.ProjectIndex);
                 NostrHexSecKey = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
-                NostrNsecSecKey = NostrConversionHelper.ConvertHexToNsec(NostrHexSecKey)!;
- 
+                NostrNsecSecKey = NostrHelper.ConvertHexToNsec(NostrHexSecKey)!;
+
                 StateHasChanged();
             }
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
-            // Handle password error and reset loading state
             HandlePasswordError();
+            Logger.LogWarning(ex, "InvalidOperationException occurred during NSEC generation.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "An unexpected error occurred during NSEC generation.");
+            errorMessage = "An unexpected error occurred. Please try again later.";
         }
         finally
         {
@@ -633,6 +641,7 @@
             StateHasChanged();
         }
     }
+
 
 
     private async Task CopyNsecSecKeyToClipboardAsync()
