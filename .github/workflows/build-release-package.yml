@@ -66,9 +66,8 @@ jobs:
 
       - name: Package Name
         run: |
-          UNIQUE_SUFFIX=$(date +%s)
-          echo RELEASE_NAME=${{ env.PROJECT_NAME }}-${{ env.VERSION }}-${{ matrix.runtime }}${{ matrix.extension }}-${UNIQUE_SUFFIX} >> $GITHUB_ENV
-          echo RELEASE_PATH=./src/${{env.PROJECT_NAME}}/bin/publish/${{env.RELEASE_NAME}} >> $GITHUB_ENV
+          echo RELEASE_NAME=${{ env.PROJECT_NAME }}-${{ env.VERSION }}-${{ matrix.runtime }}${{ matrix.extension }} >> $GITHUB_ENV
+          echo RELEASE_PATH=${{ env.PROJECT_NAME }}-${{ env.VERSION }}-${{ matrix.runtime }}${{ matrix.extension }} >> $GITHUB_ENV
         shell: bash
 
       - name: Package (Linux)
@@ -90,7 +89,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: api
+          name: api-${{ matrix.runs-on }}
           path: "${{env.RELEASE_PATH}}"
 
       - name: Release
