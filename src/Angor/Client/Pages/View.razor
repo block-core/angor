@@ -2,6 +2,7 @@
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
+@using Angor.Shared.Utilities
 @using Blockcore.NBitcoin
 @using Angor.Shared.Services
 @using Angor.Client.Models
@@ -326,9 +327,21 @@
             {
                 <div class="mb-4 mt-4">
 
-                    <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
+                    @{
+                        var Npub = NostrConversionHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey);
+                    }
+                    <label for="NostrNpubPublicKey" class="form-label">Project NOSTR public key (npub)</label>
+
                     <div class="input-group">
-                        <InputText id="NostrPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
+                        <InputText id="NostrNpubPublicKey" @bind-Value="@Npub" class="form-control" placeholder="@Npub" readonly />
+                        <button @onclick="OpenInBrowseAsync" class="btn btn-border">
+                            <Icon IconName="link"></Icon>
+                        </button>
+                    </div>
+                    <br />
+                    <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
+                    <div class="input-group">
+                        <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
                         <button @onclick="OpenInBrowseAsync" class="btn btn-border">
                             <Icon IconName="link"></Icon>
                         </button>
@@ -353,13 +366,22 @@
                             </div>
                         }
 
-                        @if (!string.IsNullOrEmpty(NostrSecKey))
+                        @if (!string.IsNullOrEmpty(NostrHexSecKey) || !string.IsNullOrEmpty(NostrNsecSecKey))
                         {
                             <br />
-                            <label for="NostrSecKey" class="form-label mt-4">Project NOSTR private key (hex)</label>
+                            <label for="NostrNsecSecKey" class="form-label mt-4">Project NOSTR private key (nsec)</label>
                             <div class="input-group">
-                                <InputText id="NostrSecKey" @bind-Value="NostrSecKey" class="form-control nsec-box" readonly />
-                                <button @onclick="CopyNsecToClipboardAsync" class="btn btn-border">
+                                <InputText id="NostrNsecSecKey" @bind-Value="NostrNsecSecKey" class="form-control nsec-box" readonly />
+                                <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border">
+                                    <Icon IconName="copy"></Icon>
+                                </button>
+                            </div>
+
+                            <br />
+                            <label for="NostrHexSecKey" class="form-label mt-4">Project NOSTR private key (hex)</label>
+                            <div class="input-group">
+                                <InputText id="NostrHexSecKey" @bind-Value="NostrHexSecKey" class="form-control nsec-box" readonly />
+                                <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border">
                                     <Icon IconName="copy"></Icon>
                                 </button>
                             </div>
@@ -394,10 +416,13 @@
     string myProjectExplorerLink;
     string projectExplorerLink;
 
-    private string NostrSecKey { get; set; } = string.Empty;
+    private string NostrNsecSecKey { get; set; } = string.Empty;
+    private string NostrHexSecKey { get; set; } = string.Empty;
+
+
     private bool isGeneratingNsec = false;
     private string errorMessage = string.Empty;
-    
+
     private string error;
 
     private List<(string Hash, int Amount)> SelectedSeeders = new List<(string hash, int amount)>
@@ -591,8 +616,11 @@
             {
                 var words = await passwordComponent.GetWalletAsync();
                 var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, founderProject.ProjectIndex);
-                var nsec = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
-                NostrSecKey = nsec;
+                var hex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
+                NostrHexSecKey = hex;
+                var nsec = NostrConversionHelper.ConvertHexToNsec(hex);
+                NostrNsecSecKey = nsec!;
+
                 StateHasChanged();
             }
         }
@@ -608,11 +636,21 @@
         }
     }
 
-    private async Task CopyNsecToClipboardAsync()
+
+    private async Task CopyNsecSecKeyToClipboardAsync()
     {
-        if (!string.IsNullOrEmpty(NostrSecKey))
+        if (!string.IsNullOrEmpty(NostrNsecSecKey))
         {
-            await _clipboardService.WriteTextAsync(NostrSecKey);
+            await _clipboardService.WriteTextAsync(NostrNsecSecKey);
+            notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
+        }
+    }
+
+    private async Task CopyHexSecKeyToClipboardAsync()
+    {
+        if (!string.IsNullOrEmpty(NostrHexSecKey))
+        {
+            await _clipboardService.WriteTextAsync(NostrHexSecKey);
             notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
         }
     }
