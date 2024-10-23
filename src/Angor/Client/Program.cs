@@ -7,6 +7,7 @@ using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
 using Blazored.LocalStorage;
 using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components.Web;
@@ -55,6 +56,7 @@ builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 builder.Services.AddSingleton<INostrCommunicationFactory, NostrCommunicationFactory>();
 builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
 builder.Services.AddSingleton<IPasswordCacheService, PasswordCacheService>();
+builder.Services.AddScoped<NostrConversionHelper>();
 
 builder.Services.AddScoped<IconService>();
 
