@@ -1,3 +1,231 @@
+## <small>0.0.69 (2024-10-23)</small>
+
+* Deploy v 0.69 (test) ([dda45bd](https://github.com/block-core/angor/commit/dda45bd))
+* Update build-release-package.yml ([256b738](https://github.com/block-core/angor/commit/256b738))
+
+
+
+## <small>0.0.68 (2024-10-23)</small>
+
+* Deploy v 0.68 (test) ([7711e0f](https://github.com/block-core/angor/commit/7711e0f))
+* Update build-release-package.yml ([2089709](https://github.com/block-core/angor/commit/2089709))
+
+
+
+## <small>0.0.67 (2024-10-23)</small>
+
+* Deploy v 0.67 (test) ([e8dc1d6](https://github.com/block-core/angor/commit/e8dc1d6))
+* Deploy version 0.66 (test) ([6305306](https://github.com/block-core/angor/commit/6305306))
+* Update build-release-package.yml ([e00afcd](https://github.com/block-core/angor/commit/e00afcd))
+
+
+
+## <small>0.0.65 (2024-10-23)</small>
+
+* Deploy 0.65 (test) ([f45d182](https://github.com/block-core/angor/commit/f45d182))
+* Update build-release-package.yml ([ac8309b](https://github.com/block-core/angor/commit/ac8309b))
+
+
+
+## <small>0.0.64 (2024-10-23)</small>
+
+* Change browse to hub (#157) ([69804d8](https://github.com/block-core/angor/commit/69804d8)), closes [#157](https://github.com/block-core/angor/issues/157)
+* Change the NOSTR client Address (#155) ([d724517](https://github.com/block-core/angor/commit/d724517)), closes [#155](https://github.com/block-core/angor/issues/155)
+* Deploy version 0.64 ([06d51a8](https://github.com/block-core/angor/commit/06d51a8))
+* Fixes for issue 103 and 132 (#136) ([8b908d9](https://github.com/block-core/angor/commit/8b908d9)), closes [#136](https://github.com/block-core/angor/issues/136)
+* Update logo (#156) ([fd37690](https://github.com/block-core/angor/commit/fd37690)), closes [#156](https://github.com/block-core/angor/issues/156)
+
+
+
+## <small>0.0.63 (2024-09-30)</small>
+
+* Deploy 0.63 ([d0415bc](https://github.com/block-core/angor/commit/d0415bc))
+* Fixed a small mess in the UI (#154) ([4cd38f8](https://github.com/block-core/angor/commit/4cd38f8)), closes [#154](https://github.com/block-core/angor/issues/154)
+
+
+
+## <small>0.0.62 (2024-09-30)</small>
+
+* Bump version and Deploy ([0b53510](https://github.com/block-core/angor/commit/0b53510))
+* Merge pull request #141 ([aac267f](https://github.com/block-core/angor/commit/aac267f)), closes [#141](https://github.com/block-core/angor/issues/141)
+* Merge pull request #152 ([484ce4b](https://github.com/block-core/angor/commit/484ce4b)), closes [#152](https://github.com/block-core/angor/issues/152)
+* Refactor CSS variables to use existing color variables for consistency and maintainability across ro ([ae82912](https://github.com/block-core/angor/commit/ae82912)), closes [#150](https://github.com/block-core/angor/issues/150)
+* Updated project display layout from table format to card-based design (#153) ([c1b06fd](https://github.com/block-core/angor/commit/c1b06fd)), closes [#153](https://github.com/block-core/angor/issues/153)
+
+
+
+## <small>0.0.61 (2024-09-10)</small>
+
+* Btc to fiat rest api (#147) ([24853a5](https://github.com/block-core/angor/commit/24853a5)), closes [#147](https://github.com/block-core/angor/issues/147)
+* Deploy version 0.60 ([6266cc4](https://github.com/block-core/angor/commit/6266cc4))
+* Deploy version 0.61 ([ef426a3](https://github.com/block-core/angor/commit/ef426a3))
+* Refactor UI and State Management for Checkbox and Button Handling (#130) ([21f0296](https://github.com/block-core/angor/commit/21f0296)), closes [#130](https://github.com/block-core/angor/issues/130)
+* Removed nostr tags that are not right (#140) ([6059d8b](https://github.com/block-core/angor/commit/6059d8b)), closes [#140](https://github.com/block-core/angor/issues/140)
+* Update some colors (#149) ([67ecf25](https://github.com/block-core/angor/commit/67ecf25)), closes [#149](https://github.com/block-core/angor/issues/149)
+
+
+
+## <small>0.0.59 (2024-08-22)</small>
+
+* Bump Version 0.59 ([ccb062c](https://github.com/block-core/angor/commit/ccb062c))
+* Improve UI of create project (#128) ([9d5f596](https://github.com/block-core/angor/commit/9d5f596)), closes [#128](https://github.com/block-core/angor/issues/128)
+
+
+
+## <small>0.0.58-release (2024-08-05)</small>
+
+* Allow cores on the server ([9edff62](https://github.com/block-core/angor/commit/9edff62))
+
+
+
+## <small>0.0.57 (2024-08-03)</small>
+
+* Deploy version 0.57 ([fd01369](https://github.com/block-core/angor/commit/fd01369))
+* Notify investor signature signed (#129) ([1c56f0d](https://github.com/block-core/angor/commit/1c56f0d)), closes [#129](https://github.com/block-core/angor/issues/129)
+
+
+
+## <small>0.0.56 (2024-08-02)</small>
+
+* Deploy version 0.56 ([c7381a2](https://github.com/block-core/angor/commit/c7381a2))
+* fix the faucet url ([95d1f07](https://github.com/block-core/angor/commit/95d1f07))
+* only trigger gh test if release is not present ([6449dda](https://github.com/block-core/angor/commit/6449dda))
+
+
+
+## <small>0.0.55-release (2024-07-23)</small>
+
+* Deploy Version 0.55 ([9df2520](https://github.com/block-core/angor/commit/9df2520))
+* rename some of the yml files and add comments ([eae502e](https://github.com/block-core/angor/commit/eae502e))
+
+
+
+## <small>0.0.54 (2024-07-22)</small>
+
+* bump version 0.54 ([5822c49](https://github.com/block-core/angor/commit/5822c49))
+
+
+
+## <small>0.0.53 (2024-07-22)</small>
+
+* bump version ([6c163f3](https://github.com/block-core/angor/commit/6c163f3))
+
+
+
+## <small>0.0.52 (2024-07-22)</small>
+
+* bump version ([9c876c2](https://github.com/block-core/angor/commit/9c876c2))
+
+
+
+## <small>0.0.51 (2024-07-22)</small>
+
+* bump version ([8c4df27](https://github.com/block-core/angor/commit/8c4df27))
+* try to use a different tool to deploy ([84a57c8](https://github.com/block-core/angor/commit/84a57c8))
+
+
+
+## <small>0.0.50 (2024-07-22)</small>
+
+* bump version ([386f709](https://github.com/block-core/angor/commit/386f709))
+* Release Version 0.48 ([53ae64b](https://github.com/block-core/angor/commit/53ae64b))
+* Release Version 0.49 ([51aad4f](https://github.com/block-core/angor/commit/51aad4f))
+* try to deploy to angor-test ([9527310](https://github.com/block-core/angor/commit/9527310))
+* try to only trigger the tag creation when all the hobs have completed ([b68bb07](https://github.com/block-core/angor/commit/b68bb07))
+* Try to use a detection file ([59a8b06](https://github.com/block-core/angor/commit/59a8b06))
+
+
+
+## <small>0.0.47-release (2024-07-22)</small>
+
+* Bump Release version ([5f236d3](https://github.com/block-core/angor/commit/5f236d3))
+* try to get the release download path right ([ce61cb5](https://github.com/block-core/angor/commit/ce61cb5))
+
+
+
+## <small>0.0.46-release (2024-07-22)</small>
+
+* add some logs to teh ynl ([c9d1ca7](https://github.com/block-core/angor/commit/c9d1ca7))
+* Bump Version ([7a62c61](https://github.com/block-core/angor/commit/7a62c61))
+
+
+
+## <small>0.0.45-release (2024-07-22)</small>
+
+* bump version ([504c9c7](https://github.com/block-core/angor/commit/504c9c7))
+* modify the tag name to remove the v and release in the name ([ed7b560](https://github.com/block-core/angor/commit/ed7b560))
+
+
+
+## <small>0.0.44-release (2024-07-22)</small>
+
+* deploy gh page only on release tag ([03637b8](https://github.com/block-core/angor/commit/03637b8))
+* trigger a release ([4c55283](https://github.com/block-core/angor/commit/4c55283))
+
+
+
+## <small>0.0.43 (2024-07-22)</small>
+
+* also package ([072725e](https://github.com/block-core/angor/commit/072725e))
+* trigger again ([cdf9b27](https://github.com/block-core/angor/commit/cdf9b27))
+* trigger build ([80b961b](https://github.com/block-core/angor/commit/80b961b))
+* trigger workflow ([82665e2](https://github.com/block-core/angor/commit/82665e2))
+* use a personal token for tags to trigger a workflow ([67aa679](https://github.com/block-core/angor/commit/67aa679))
+
+
+
+## <small>0.0.40 (2024-07-22)</small>
+
+* remove the congif set ([81866a6](https://github.com/block-core/angor/commit/81866a6))
+* trigger build ([0d1de8f](https://github.com/block-core/angor/commit/0d1de8f))
+
+
+
+## <small>0.0.39 (2024-07-22)</small>
+
+* trigger deploy v0.38 ([56d900e](https://github.com/block-core/angor/commit/56d900e))
+* trigger v0.39 ([1dd932c](https://github.com/block-core/angor/commit/1dd932c))
+
+
+
+## <small>0.0.38 (2024-07-22)</small>
+
+* fix the yml ([a4c4ac7](https://github.com/block-core/angor/commit/a4c4ac7))
+* trigger version tag ([e55340f](https://github.com/block-core/angor/commit/e55340f))
+
+
+
+## <small>0.0.36 (2024-07-22)</small>
+
+* add a comment to the release flow ([3ea9d48](https://github.com/block-core/angor/commit/3ea9d48))
+* add authentication to the tag ([afa0fd9](https://github.com/block-core/angor/commit/afa0fd9))
+* don't trigger a release if the release tag is present ([923b9a9](https://github.com/block-core/angor/commit/923b9a9))
+* fix file location ([3cf3ca4](https://github.com/block-core/angor/commit/3cf3ca4))
+* only trigger tag for ubuntu ([7ccba0a](https://github.com/block-core/angor/commit/7ccba0a))
+* Push a workflow that will trigger on version file change ([e7e6385](https://github.com/block-core/angor/commit/e7e6385))
+* rename ([883de12](https://github.com/block-core/angor/commit/883de12))
+* trigger build ([5bfb22e](https://github.com/block-core/angor/commit/5bfb22e))
+* trigger build ([2b750da](https://github.com/block-core/angor/commit/2b750da))
+* trigger build with tag ([dc69682](https://github.com/block-core/angor/commit/dc69682))
+* trigger build with version change ([2062cba](https://github.com/block-core/angor/commit/2062cba))
+
+
+
+## <small>0.0.32-release (2024-07-22)</small>
+
+* change the default tag on the release package ([a1540fd](https://github.com/block-core/angor/commit/a1540fd))
+* release is only created when a version is created ([560bd8f](https://github.com/block-core/angor/commit/560bd8f))
+* rename the workflow ([6cc3b8a](https://github.com/block-core/angor/commit/6cc3b8a))
+
+
+
+## <small>0.0.31-release (2024-07-22)</small>
+
+* bump version ([d7cf58c](https://github.com/block-core/angor/commit/d7cf58c))
+* trigger deploy to github page on add tag event ([7c91caf](https://github.com/block-core/angor/commit/7c91caf))
+
+
+
 ## <small>0.0.31 (2024-07-22)</small>
 
 * Browse - Catch exception on each result coming from the relay (#127) ([b7f6387](https://github.com/block-core/angor/commit/b7f6387)), closes [#127](https://github.com/block-core/angor/issues/127)
