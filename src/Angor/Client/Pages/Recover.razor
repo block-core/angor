@@ -7,10 +7,16 @@
 @using Angor.Shared.ProtocolNew
 @using Angor.Shared.Services
 @using Angor.Shared.Utilities
-@using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 @using Angor.Client.Models
+@using Blockcore.Consensus.ScriptInfo
+@using Money = Blockcore.NBitcoin.Money
+@using MoneyUnit = Blockcore.NBitcoin.MoneyUnit
+@using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
+@using TxIn = Blockcore.Consensus.TransactionInfo.TxIn
+@using TxOut = Blockcore.Consensus.TransactionInfo.TxOut
+@using Utils = Blockcore.NBitcoin.Utils
 
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
@@ -734,9 +740,12 @@
                 notificationComponent.ShowErrorMessage(response.Message);
                 return;
             }
+    
+            // the last output is the change so no penalty on that output
+            var totalsats = recoveryTransaction.Transaction.Outputs.SkipLast(1).Sum(s => s.Value.Satoshi); 
 
             project.RecoveryTransactionId = recoveryTransaction.Transaction.GetHash().ToString();
-            project.AmountInRecovery = recoveryTransaction.Transaction.TotalOut;
+            project.AmountInRecovery = totalsats;
 
             storage.UpdateInvestmentProject(project);
 
