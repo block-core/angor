@@ -17,6 +17,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     private readonly INetworkService _networkService;
 
     private const string AngorApiRoute = "/api/V1/query/Angor";
+    private const string MempoolApiRoute = "/api/V1";
 
     public MempoolSpaceIndexerApi(ILogger<MempoolSpaceIndexerApi> logger, INetworkConfiguration networkConfiguration, HttpClient httpClient, INetworkService networkService)
     {
@@ -26,6 +27,88 @@ public class MempoolSpaceIndexerApi : IIndexerService
         _networkService = networkService;
     }
 
+    private class AddressStats
+    {
+        public int FundedTxCount { get; set; }
+        public long FundedTxoSum { get; set; }
+        public int SpentTxocount { get; set; }
+        public long SpentTxoSum { get; set; }
+        public int TxCount { get; set; }
+    }
+    private class AddressResponse
+    {
+        public string Address { get; set; }
+        public AddressStats ChainStats { get; set; }
+        public AddressStats MempoolStats { get; set; }
+    }
+    
+    private class AddressUtxo
+    {
+        public string Txid { get; set; }
+        public int Vout { get; set; }
+        public UtxoStatus Status { get; set; }
+        public long Value { get; set; }
+    }
+    
+    private class UtxoStatus
+    {
+        public bool Confirmed { get; set; }
+        public int BlockHeight { get; set; }
+        public string BlockHash { get; set; }
+        public long BlockTime { get; set; }
+    }
+    
+    private class RecommendedFees
+    {
+        public int FastestFee { get; set; }
+        public int HalfHourFee { get; set; }
+        public int HourFee { get; set; }
+        public int EconomyFee { get; set; }
+        public int MinimumFee { get; set; }
+    }
+    
+    private class Vin
+    {
+        public bool IsCoinbase { get; set; }
+        public PrevOut Prevout { get; set; }
+        public string Scriptsig { get; set; }
+        public string Asm { get; set; }
+        public long Sequence { get; set; }
+        public string Txid { get; set; }
+        public int Vout { get; set; }
+        public List<string> Witness { get; set; }
+        public string InnserRedeemscriptAsm { get; set; }
+        public string InnerWitnessscriptAsm { get; set; }
+    }
+    private class PrevOut
+    {
+        public long Value { get; set; }
+        public string Scriptpubkey { get; set; }
+        public string ScriptpubkeyAddress { get; set; }
+        public string ScriptpubkeyAsm { get; set; }
+        public string ScriptpubkeyType { get; set; }
+    }
+
+    private class MempoolTransaction
+    {
+        public string Txid { get; set; }
+
+        public int Version { get; set; }
+
+        public int Locktime { get; set; }
+        public int Size { get; set; }
+        public int Weight { get; set; }
+        public int Fee { get; set; }
+        public List<Vin> Vin { get; set; }
+        public List<PrevOut> Vout { get; set; }
+        public UtxoStatus Status { get; set; }
+    }
+    
+    private class Outspent
+    {
+        public bool Spent { get; set; }
+    }
+    
     public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
     {
         var indexer = _networkService.GetPrimaryIndexer();
@@ -106,24 +189,11 @@ public class MempoolSpaceIndexerApi : IIndexerService
         return response.ReasonPhrase + content;
     }
 
-    private class AddressStats
-    {
-        public int FundedTxCount { get; set; }
-        public long FundedTxoSum { get; set; }
-        public int SpentTxocount { get; set; }
-        public long SpentTxoSum { get; set; }
-        public int TxCount { get; set; }
-    }
-    private class AddressResponse
-    {
-        public string Address { get; set; }
-        public AddressStats ChainStats { get; set; }
-        public AddressStats MempoolStats { get; set; }
-    }
+    
     
     public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false)
     {
-        var urlBalance = $"/api/v1/address/";
+        var urlBalance = $"{MempoolApiRoute}/address/";
 
         var tasks = data.Select(x =>
         {
@@ -161,67 +231,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         return response.ToArray();
     }
 
-    private class AddressUtxo
-    {
-        public string Txid { get; set; }
-        public int Vout { get; set; }
-        public UtxoStatus Status { get; set; }
-        public long Value { get; set; }
-    }
     
-    private class UtxoStatus
-    {
-        public bool Confirmed { get; set; }
-        public int BlockHeight { get; set; }
-        public string BlockHash { get; set; }
-        public long BlockTime { get; set; }
-    }
-    
-    private class RecommendedFees
-    {
-        public int FastestFee { get; set; }
-        public int HalfHourFee { get; set; }
-        public int HourFee { get; set; }
-        public int EconomyFee { get; set; }
-        public int MinimumFee { get; set; }
-    }
-    
-    private class Vin
-    {
-        public bool IsCoinbase { get; set; }
-        public PrevOut Prevout { get; set; }
-        public string Scriptsig { get; set; }
-        public string Asm { get; set; }
-        public long Sequence { get; set; }
-        public string Txid { get; set; }
-        public int Vout { get; set; }
-        public List<string> Witness { get; set; }
-        public string InnserRedeemscriptAsm { get; set; }
-        public string InnerWitnessscriptAsm { get; set; }
-    }
-    private class PrevOut
-    {
-        public long Value { get; set; }
-        public string Scriptpubkey { get; set; }
-        public string ScriptpubkeyAddress { get; set; }
-        public string ScriptpubkeyAsm { get; set; }
-        public string ScriptpubkeyType { get; set; }
-    }
-
-    private class MempoolTransaction
-    {
-        public string Txid { get; set; }
-
-        public int Version { get; set; }
-
-        public int Locktime { get; set; }
-        public int Size { get; set; }
-        public int Weight { get; set; }
-        public int Fee { get; set; }
-        public List<Vin> Vin { get; set; }
-        public List<PrevOut> Vout { get; set; }
-        public UtxoStatus Status { get; set; }
-    }
 
     //To use if the UTXO endpoint works on the mempool indexer
     // public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset)
@@ -250,16 +260,11 @@ public class MempoolSpaceIndexerApi : IIndexerService
     //     }).ToList();
     // }
     
-    private class Outspent
-    {
-        public bool Spent { get; set; }
-    }
-    
     public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset)
     {
         var indexer = _networkService.GetPrimaryIndexer();
 
-        var url = $"/api/v1/address/{address}/txs";
+        var url = $"{MempoolApiRoute}/address/{address}/txs";
 
         var response = await _httpClient.GetAsync(indexer.Url + url);
         _networkService.CheckAndHandleError(response);
@@ -275,7 +280,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         foreach (var mempoolTransaction in trx)
         {
             var resultsOutputs =
-                await _httpClient.GetAsync(indexer.Url + "/api/v1/tx/" + mempoolTransaction.Txid + "/outspends");
+                await _httpClient.GetAsync(indexer.Url + $"{MempoolApiRoute}/tx/" + mempoolTransaction.Txid + "/outspends");
         
             var spentOutputsStatus = await resultsOutputs.Content.ReadFromJsonAsync<List<Outspent>>();
         
@@ -306,7 +311,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     {
         var indexer = _networkService.GetPrimaryIndexer();
 
-        var url = "/api/v1/fees/recommended";
+        var url = $"{MempoolApiRoute}/fees/recommended";
 
         var response = await _httpClient.GetAsync(indexer.Url + url);
         _networkService.CheckAndHandleError(response);
@@ -338,7 +343,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     {
         var indexer = _networkService.GetPrimaryIndexer();
 
-        var url = $"/api/tx/{transactionId}/hex";
+        var url = $"{MempoolApiRoute}/tx/{transactionId}/hex";
             
         var response = await _httpClient.GetAsync(indexer.Url + url);
         _networkService.CheckAndHandleError(response);
@@ -353,7 +358,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     {
         var indexer = _networkService.GetPrimaryIndexer();
 
-        var url = $"/api/tx/{transactionId}/hex";
+        var url = $"{MempoolApiRoute}/tx/{transactionId}/hex";
             
         var response = await _httpClient.GetAsync(indexer.Url + url);
         _networkService.CheckAndHandleError(response);
