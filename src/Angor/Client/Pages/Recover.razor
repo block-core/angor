@@ -7,16 +7,10 @@
 @using Angor.Shared.ProtocolNew
 @using Angor.Shared.Services
 @using Angor.Shared.Utilities
+@using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 @using Angor.Client.Models
-@using Blockcore.Consensus.ScriptInfo
-@using Money = Blockcore.NBitcoin.Money
-@using MoneyUnit = Blockcore.NBitcoin.MoneyUnit
-@using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
-@using TxIn = Blockcore.Consensus.TransactionInfo.TxIn
-@using TxOut = Blockcore.Consensus.TransactionInfo.TxOut
-@using Utils = Blockcore.NBitcoin.Utils
 
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
