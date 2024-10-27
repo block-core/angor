@@ -1,0 +1,17 @@
+{
+  "debug.internalConsoleOptions": "neverOpen",
+  "[csharp]": {
+    // "editor.codeLensFontSize": 9,
+    "editor.formatOnType": true,
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "editor.autoIndent": "advanced",
+    "editor.wordBasedSuggestions": "off",
+    "editor.semanticHighlighting.enabled": true,
+  },
+  "omnisharp.enableEditorConfigSupport": true,
+  "omnisharp.enableRoslynAnalyzers": true,
+  "csharp.semanticHighlighting.enabled": true,
+  "csharp.suppressHiddenDiagnostics": false,
+  "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+}

@@ -1,0 +1,11 @@
+@namespace Angor.Client.Components
+
+<div class="relative text-[16px] leading-[22px]">
+<button class="group max-w-min select-none focus:outline-none" @onclick="switchTheme">
+    <div class="flex px-[2px] h-[24px] w-[48px] bg-[rgb(75,85,99)] rounded-full">
+        <div class="group opacity-0 dark:opacity-100">🌜</div>
+        <div class="group opacity-100 dark:opacity-0">🌞</div>
+    </div>
+    <div class="group absolute theme-knob dark:translate-x-[24px]"></div>
+</button>
+</div>

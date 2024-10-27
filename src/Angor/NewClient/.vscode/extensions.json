@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "bradlc.vscode-tailwindcss",
+    "ms-dotnettools.blazorwasm-companion",
+    "ms-dotnettools.csharp"
+  ]
+}

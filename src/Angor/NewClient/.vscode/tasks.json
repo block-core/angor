@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "watch tailwind",
+      "type": "shell",
+      // npm scripts depend on dotnet build output
+      "command": "dotnet build && npm run watch",
+      "isBackground": true,
+      "presentation": {
+        "echo": false,
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": {
+        "owner": "external",
+        "fileLocation": "absolute",
+        "background": {
+          // thanks niktek ! https://github.com/McNerdius/TailBlazor-Templates/issues/14
+          "activeOnStart": true,
+          "beginsPattern": "Rebuilding\\.\\.\\.$",
+          "endsPattern": "Done in \\d+ms\\.$"
+        },
+        "pattern": {
+          // idk if this is correct, see above issue
+          "regexp": "([A-Z]:[^:]*):(\\d+):(\\d+):(.*)|(\\/[^:]*):(\\d+):(\\d+):(.*)",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4
+        }
+      },
+    },
+    {
+      "label": "stop watching",
+      "command": "echo ${input:terminate}",
+      "type": "shell"
+    },
+  ],
+  "inputs": [
+    {
+      "id": "terminate",
+      "type": "command",
+      "command": "workbench.action.tasks.terminate",
+      "args": "watch tailwind"
+    }
+  ]
+}

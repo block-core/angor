@@ -1,0 +1,12 @@
+.theme-knob {
+  @apply h-[20px] w-[20px] rounded-full top-[2px] left-[2px];
+  @apply bg-[rgb(229,231,235)] dark:bg-[rgb(17,24,39)];
+
+  @apply transition-transform duration-200 ease-linear;
+
+  /* @apply ring-[color:rgb(37,99,235/0.95)]; */
+  @apply ring-[color:rgb(37_99_235/0.95)];
+
+  @apply group-hover:ring-2 group-hover:scale-110;
+  @apply group-focus:ring-2 group-focus:scale-110;
+}

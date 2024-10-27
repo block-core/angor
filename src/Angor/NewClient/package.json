@@ -1,0 +1,24 @@
+{
+  "name": "angor.client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "watch": "npx tailwindcss --watch --postcss postcss.config.js --config tailwind.config.js -i Angor.Client.css -o ./wwwroot/css/Angor.Client.min.css",
+    "build": "npx tailwindcss --postcss postcss.config.js --config tailwind.config.js -i Angor.Client.css -o ./wwwroot/css/Angor.Client.min.css",
+    "publish": "npx tailwindcss --postcss postcss.config.js --minify --config tailwind.config.js -i Angor.Client.css -o ./wwwroot/css/Angor.Client.min.css"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "0BSD",
+  "devDependencies": {
+    "postcss-import": "^16.1.0",
+    "tailwindcss": "^3.4.14"
+  },
+  "optionalDependencies": {
+    "fsevents": "^2.3.3"
+  },
+  "dependencies": {
+    "tailwindcss-debug-screens": "^2.2.1"
+  }
+}

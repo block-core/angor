@@ -1,0 +1,46 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Watch",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "dotnet",
+      "console": "integratedTerminal",
+      "args": [
+        "watch",
+      ],
+      "cwd": "${workspaceFolder}/",
+      "preLaunchTask": "watch tailwind",
+      "postDebugTask": "stop watching",
+      "presentation": {
+        "close": true,
+      }
+    },
+    {
+      "type": "blazorwasm",
+      "name": "Debug (no watch!)", // see 'compounds', below
+      "request": "launch",
+      "cwd": "${workspaceFolder}/",
+      "presentation": {
+        "close": true,
+      },
+      // "browser": "edge"
+    }
+  ],
+  // This "works" in that it launches the prelaunchtask,
+  //     which requires a compound task when using 'blazorwasm' launch type.
+  // But it's useless as Hot Reload doesn't function while debugging... yet ?
+  // Leaving it here for future uncommenting... maybe.
+  // Any info open an issue at https://github.com/McNerdius/TailBlazor-Templates
+  // "compounds": [
+  //   {
+  //     "name": "Debug",
+  //     "configurations": [
+  //       "Debug (no watch!)",
+  //     ],
+  //     "preLaunchTask": "watch tailwind",
+  //     "postDebugTask": "stop watching",
+  //   }
+  // ],
+}

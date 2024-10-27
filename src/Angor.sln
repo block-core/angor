@@ -20,6 +20,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "New", "New", "{17C1A90C-C153-4999-ACA2-C0B09A887ECE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Angor.Client", "Angor\NewClient\Angor.Client.csproj", "{68EBEA8C-0996-4740-9233-982AF6ECC38B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,9 +46,16 @@ Global
 		{B70832F0-D887-4447-BC78-C8240E7EB540}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B70832F0-D887-4447-BC78-C8240E7EB540}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B70832F0-D887-4447-BC78-C8240E7EB540}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68EBEA8C-0996-4740-9233-982AF6ECC38B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68EBEA8C-0996-4740-9233-982AF6ECC38B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68EBEA8C-0996-4740-9233-982AF6ECC38B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68EBEA8C-0996-4740-9233-982AF6ECC38B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{68EBEA8C-0996-4740-9233-982AF6ECC38B} = {17C1A90C-C153-4999-ACA2-C0B09A887ECE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {05FB90E5-928C-42F2-AFEF-2EA35C89A686}
