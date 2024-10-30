@@ -2,6 +2,7 @@
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
+@using Angor.Shared.Utilities
 @using Blockcore.NBitcoin
 @using Angor.Shared.Services
 @using Angor.Client.Models
@@ -18,6 +19,9 @@
 @inject IRelayService _RelayService
 @inject ISerializer serializer
 @inject IJSRuntime Js;
+@inject ILogger<Browse> Logger;
+
+@inject Angor.Shared.Utilities.NostrConversionHelper NostrHelper
 
 @inherits BaseComponent
 <NotificationComponent @ref="notificationComponent" />
@@ -41,7 +45,7 @@
                     <div class="card card-body angor-alert-info pt-2 pb-2">
                         <div class="d-flex align-items-center">
                             <span class="me-3 user-select-none">
-                                <Icon IconName="info" Width="40" Height="40" Color="var(--bs-primary-btn-icon)" />
+                                <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
                             </span>
                             <span class="text-white">@error</span>
                         </div>
@@ -58,12 +62,10 @@
             {
                 var metadata = project.Metadata;
 
-
                 <div class="card-header p-0 overflow-hidden position-relative">
                     <img class="card-img-top card-img-top-view" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                     <img class="profile-image-view rounded-circle" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                 </div>
-
 
                 <div class="p-4">
                     <div class="d-flex align-items-center justify-content-between mb-4">
@@ -114,7 +116,7 @@
                         <div class="col-12 col-md-12 col-lg-4 order-1 order-md-1 d-flex justify-content-center align-items-center mt-4">
                             <div class="w-100">
                                 @{
-                                    int startsInDays = (project.ProjectInfo.StartDate - DateTime.Now).Days;
+                                    int startsInDays = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
 
                                     if (startsInDays > 0)
                                     {
@@ -165,7 +167,16 @@
                                 @* <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>*@
                                 <div class="form-control mt-1 d-flex align-items-center">
                                     <Icon IconName="calendar"></Icon>
-                                    <p class="card-text ms-2">Time Left for Investing: @projectStats.TimeLeft days</p>
+                                    <p class="card-text ms-2">
+                                        @if (projectStats.TimeLeft > 0)
+                                        {
+                                            <span>Time Left for Investing: @projectStats.TimeLeft days</span>
+                                        }
+                                        else
+                                        {
+                                            <span>The investing period is over</span>
+                                        }
+                                    </p>
                                 </div>
                             }
                         </div>
@@ -259,8 +270,8 @@
 
                     <div class="mb-3">
                         <!-- Buttons Spend Funds and Approve Signature next to each other -->
-                        <NavLink href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-secondary text-white me-2">Spend Funds</NavLink>
-                        <NavLink href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border">Approve signature</NavLink>
+                        <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border text-white me-2">Spend Funds</a>
+                        <a href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border">Approve signature</a>
                     </div>
                 </div>
             }
@@ -274,7 +285,7 @@
                         <a href="@myProjectExplorerLink" target="_blank">Track your transaction on the explorer.</a>
                     </p>
 
-                    <button class="btn btn-danger mb-3" @onclick="RecoverFunds">Recover</button>
+                    <button class="btn btn-border mb-3" @onclick="RecoverFunds">Recover</button>
                 </div>
             }
             else
@@ -284,8 +295,21 @@
                     <p class="mt-4">
                         Seize the opportunity to invest in this project.
                     </p>
-                    <button class="btn btn-secondary mb-3" data-cy="INVEST_BUTTON" @onclick="InvestInProject">Invest Now</button>
+                    <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON"
+                            @onclick="InvestInProject"
+                            disabled="@(projectStats.TimeLeft == 0 ? "disabled" : null)"
+                            title="@(projectStats.TimeLeft == 0 ? "The investing period is over" : null)">
+                        @if (projectStats.TimeLeft > 0)
+                        {
+                            <text>Invest Now</text>
+                        }
+                        else
+                        {
+                            <text>The investing period is over</text>
+                        }
+                    </button>
                 </div>
+
             }
         </div>
 
@@ -306,9 +330,21 @@
             {
                 <div class="mb-4 mt-4">
 
-                    <label for="NostrPublicKey" class="form-label">Project NOSTR public key (hex)</label>
+                    @{
+                        var Npub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey);
+                    }
+                    <label for="NostrNpubPublicKey" class="form-label">Project NOSTR public key (npub)</label>
+
                     <div class="input-group">
-                        <InputText id="NostrPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
+                        <InputText id="NostrNpubPublicKey" @bind-Value="@Npub" class="form-control" placeholder="@Npub" readonly />
+                        <button @onclick="OpenInBrowseAsync" class="btn btn-border">
+                            <Icon IconName="link"></Icon>
+                        </button>
+                    </div>
+                    <br />
+                    <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
+                    <div class="input-group">
+                        <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
                         <button @onclick="OpenInBrowseAsync" class="btn btn-border">
                             <Icon IconName="link"></Icon>
                         </button>
@@ -317,7 +353,7 @@
 
                     @if (founder)
                     {
-                        <button @onclick="ShowNsecAsync" class="btn btn-success mt-4">Show private key</button>
+                        <button @onclick="ShowNsecAsync" class="btn btn-border mt-4">Show private key</button>
 
                         @if (isGeneratingNsec)
                         {
@@ -333,13 +369,22 @@
                             </div>
                         }
 
-                        @if (!string.IsNullOrEmpty(NostrSecKey))
+                        @if (!string.IsNullOrEmpty(NostrHexSecKey) || !string.IsNullOrEmpty(NostrNsecSecKey))
                         {
                             <br />
-                            <label for="NostrSecKey" class="form-label mt-4">Project NOSTR private key (hex)</label>
+                            <label for="NostrNsecSecKey" class="form-label mt-4">Project NOSTR private key (nsec)</label>
                             <div class="input-group">
-                                <InputText id="NostrSecKey" @bind-Value="NostrSecKey" class="form-control nsec-box" readonly />
-                                <button @onclick="CopyNsecToClipboardAsync" class="btn btn-border">
+                                <InputText id="NostrNsecSecKey" @bind-Value="NostrNsecSecKey" class="form-control nsec-box" readonly />
+                                <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border">
+                                    <Icon IconName="copy"></Icon>
+                                </button>
+                            </div>
+
+                            <br />
+                            <label for="NostrHexSecKey" class="form-label mt-4">Project NOSTR private key (hex)</label>
+                            <div class="input-group">
+                                <InputText id="NostrHexSecKey" @bind-Value="NostrHexSecKey" class="form-control nsec-box" readonly />
+                                <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border">
                                     <Icon IconName="copy"></Icon>
                                 </button>
                             </div>
@@ -374,10 +419,13 @@
     string myProjectExplorerLink;
     string projectExplorerLink;
 
-    private string NostrSecKey { get; set; } = string.Empty;
+    private string NostrNsecSecKey { get; set; } = string.Empty;
+    private string NostrHexSecKey { get; set; } = string.Empty;
+
+
     private bool isGeneratingNsec = false;
     private string errorMessage = string.Empty;
-    
+
     private string error;
 
     private List<(string Hash, int Amount)> SelectedSeeders = new List<(string hash, int amount)>
@@ -510,7 +558,7 @@
                     projectStats.TotalInvestors = (int)data.InvestorCount;
                     projectStats.TotalRaised = data.AmountInvested;
 
-                    projectStats.TimeLeft = (project.ProjectInfo.ExpiryDate - DateTime.UtcNow).Days;
+                    projectStats.TimeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
                     if (projectStats.TimeLeft < 0)
                         projectStats.TimeLeft = 0;
 
@@ -571,15 +619,21 @@
             {
                 var words = await passwordComponent.GetWalletAsync();
                 var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, founderProject.ProjectIndex);
-                var nsec = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
-                NostrSecKey = nsec;
+                NostrHexSecKey = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
+                NostrNsecSecKey = NostrHelper.ConvertHexToNsec(NostrHexSecKey)!;
+
                 StateHasChanged();
             }
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
-            // Handle password error and reset loading state
             HandlePasswordError();
+            Logger.LogWarning(ex, "InvalidOperationException occurred during NSEC generation.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "An unexpected error occurred during NSEC generation.");
+            errorMessage = "An unexpected error occurred. Please try again later.";
         }
         finally
         {
@@ -588,11 +642,22 @@
         }
     }
 
-    private async Task CopyNsecToClipboardAsync()
+
+
+    private async Task CopyNsecSecKeyToClipboardAsync()
     {
-        if (!string.IsNullOrEmpty(NostrSecKey))
+        if (!string.IsNullOrEmpty(NostrNsecSecKey))
         {
-            await _clipboardService.WriteTextAsync(NostrSecKey);
+            await _clipboardService.WriteTextAsync(NostrNsecSecKey);
+            notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
+        }
+    }
+
+    private async Task CopyHexSecKeyToClipboardAsync()
+    {
+        if (!string.IsNullOrEmpty(NostrHexSecKey))
+        {
+            await _clipboardService.WriteTextAsync(NostrHexSecKey);
             notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
         }
     }
@@ -623,7 +688,7 @@
 
         if (!string.IsNullOrEmpty(pubkey))
         {
-            var url = $"https://browse.angor.io/projects/{pubkey}";
+            var url = $"https://hub.angor.io/profile/{pubkey}";
 
             await Js.InvokeVoidAsync("window.open", url, "_blank");
         }

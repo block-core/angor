@@ -33,5 +33,8 @@ namespace Angor.Client.Storage
         SettingsInfo GetSettingsInfo();
         void SetSettingsInfo(SettingsInfo settingsInfo);
         void WipeStorage();
+
+        string GetCurrencyDisplaySetting();
+        void SetCurrencyDisplaySetting(string setting);
     }
 }

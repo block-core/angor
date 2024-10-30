@@ -1,6 +1,8 @@
+
 <p align="center">
-    <img src="https://github.com/miwahn/angor/raw/patch-1/src/Angor/Client/wwwroot/angor-logo.svg" height="100" alt="Angor" />
+    <img src="https://github.com/user-attachments/assets/fe8c48ab-3479-4312-8e09-7dedce6850f5" height="100" alt="Angor" />
 </p>
+
 <h3 align="center">
     Bitcoin Crowdfunding Platform
 </h3>

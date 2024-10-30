@@ -1,0 +1,42 @@
+﻿@using Angor.Shared
+@using Blockcore.Networks
+@inject INetworkConfiguration NetworkConfiguration
+
+
+<div class="d-flex flex-column align-items-start" title="@GetTooltip()">
+    <span class="fs-4">
+        <strong>@BtcBalance</strong> @_network.CoinTicker
+    </span>
+    @if (ShowFiatInline && PreferredCurrency != "BTC" && !string.IsNullOrEmpty(BtcBalanceInFiat))
+    {
+        <h6 class="text-muted">@BtcBalanceInFiat</h6>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public decimal BtcBalance { get; set; }
+
+    [Parameter]
+    public string BtcBalanceInFiat { get; set; }
+
+    [Parameter]
+    public string PreferredCurrency { get; set; }
+
+    [Parameter]
+    public bool ShowFiatInline { get; set; } = false;
+
+    private Network _network;
+
+    protected override void OnInitialized()
+    {
+        _network = NetworkConfiguration.GetNetwork();
+        base.OnInitialized();
+    }
+
+    private string GetTooltip() =>
+        PreferredCurrency != "BTC" && !string.IsNullOrEmpty(BtcBalanceInFiat) && !ShowFiatInline
+            ? $"Equivalent: {BtcBalanceInFiat}"
+            : string.Empty;
+}
+

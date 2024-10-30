@@ -87,9 +87,9 @@ jobs:
         run: |
           zip -r ${{env.RELEASE_NAME}} ./src/${{env.PROJECT_NAME}}/bin/publish/
 
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v4
         with:
-          name: api
+          name: api-${{ matrix.runtime }}
           path: "${{env.RELEASE_PATH}}"
 
       - name: Release
