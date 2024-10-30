@@ -734,9 +734,12 @@
                 notificationComponent.ShowErrorMessage(response.Message);
                 return;
             }
+    
+            // the last output is the change so no penalty on that output
+            var totalsats = recoveryTransaction.Transaction.Outputs.SkipLast(1).Sum(s => s.Value.Satoshi); 
 
             project.RecoveryTransactionId = recoveryTransaction.Transaction.GetHash().ToString();
-            project.AmountInRecovery = recoveryTransaction.Transaction.TotalOut;
+            project.AmountInRecovery = totalsats;
 
             storage.UpdateInvestmentProject(project);
 
