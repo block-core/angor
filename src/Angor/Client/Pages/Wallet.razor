@@ -1,12 +1,5 @@
 @page "/wallet"
 
-@using System.Text.Json
-@using Angor.Client.Storage
-@using Angor.Shared
-@using Angor.Shared.Models
-@using Blockcore.NBitcoin
-@using Blockcore.Networks
-
 @inject HttpClient _httpClient;
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
@@ -19,6 +12,12 @@
 @inject NavMenuState NavMenuState
 @inject IEncryptionService _encryptionService
 @inject IClipboardService ClipboardService
+@using System.Text.Json
+@using Angor.Client.Storage
+@using Angor.Shared
+@using Angor.Shared.Models
+@using Blockcore.NBitcoin
+@using Blockcore.Networks
 @inherits BaseComponent
 
 <PageTitle>Wallet and balances</PageTitle>
@@ -471,8 +470,8 @@ else
                                                 var outpointStr = addressUtxoItem.outpoint.ToString();
                                                 var outpointLength = outpointStr.Length;
                                                 var shortenedOutpoint = outpointLength > 20
-                                                ? $"{outpointStr.Substring(0, 10)} ... {outpointStr.Substring(outpointLength - 10)}"
-                                                : outpointStr; 
+                                                    ? $"{outpointStr.Substring(0, 10)} ... {outpointStr.Substring(outpointLength - 10)}"
+                                                    : outpointStr;
 
                                                 var valueInBTC = Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC);
                                                 var coinTicker = network.CoinTicker;
@@ -487,7 +486,7 @@ else
 
                                     </div>
                                     <div class="modal-footer">
-                                        <button class="btn btn-warning" @onclick="() => coinControlModal = false" >Submit</button>
+                                        <button class="btn btn-warning" @onclick="() => coinControlModal = false">Submit</button>
                                     </div>
                                 </div>
                             </div>
@@ -614,13 +613,13 @@ else
                 <div class="table-responsive form-control mt-4">
                     <table class="table align-items-center mb-0">
                         <thead>
-                            <tr>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Address</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Amount</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Path</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">UTXO count</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">View Raw Json</th>
-                            </tr>
+                        <tr>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Address</th>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Amount</th>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Path</th>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">UTXO count</th>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">View Raw Json</th>
+                        </tr>
                         </thead>
                         <tbody>
                         @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AllAddresses())
@@ -628,50 +627,50 @@ else
                             var total = addressInfo.Balance;
                             var count = addressInfo.UtxoData.Count();
 
-                                if (total > 0)
+                            if (total > 0)
+                            {
+                                <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
+                                    <td>@addressInfo.Address</td>
+                                    <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                    <td>@addressInfo.HdPath</td>
+                                    <td>@count</td>
+                                    <td>
+                                        <button class="btn btn-border" @onclick="() => ShowRawTransactionJson(addressInfo)">Show</button>
+                                    </td>
+                                </tr>
+                                @if (IsExpanded(addressInfo.Address))
                                 {
-                                    <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
-                                        <td>@addressInfo.Address</td>
-                                        <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                        <td>@addressInfo.HdPath</td>
-                                        <td>@count</td>
-                                        <td>
-                                            <button class="btn btn-border" @onclick="() => ShowRawTransactionJson(addressInfo)">Show</button>
-                                        </td>
-                                    </tr>
-                                    @if (IsExpanded(addressInfo.Address))
-                                    {
-                                        <tr>
-                                            <td colspan="5">
-                                                <div class="collapse show" data-cy="expend-amount" id="@($"collapse-{addressInfo.Address}")">
-                                                    <div class="card card-body">
-                                                        <!-- Inner table goes here -->
-                                                        <div class="table-responsive form-control">
-                                                            <table class="table table-sm">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th scope="col">Coin</th>
-                                                                        <th scope="col">Amount</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    @foreach (var addressUtxoItem in addressInfo.UtxoData)
-                                                                    {
-                                                                        <tr>
-                                                                            <td>@($"{addressUtxoItem.outpoint}")</td>
-                                                                            <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                                                        </tr>
-                                                                    }
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
+                                    <tr>
+                                        <td colspan="5">
+                                            <div class="collapse show" data-cy="expend-amount" id="@($"collapse-{addressInfo.Address}")">
+                                                <div class="card card-body">
+                                                    <!-- Inner table goes here -->
+                                                    <div class="table-responsive form-control">
+                                                        <table class="table table-sm">
+                                                            <thead>
+                                                            <tr>
+                                                                <th scope="col">Coin</th>
+                                                                <th scope="col">Amount</th>
+                                                            </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                                            {
+                                                                <tr>
+                                                                    <td>@($"{addressUtxoItem.outpoint}")</td>
+                                                                    <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                                                </tr>
+                                                            }
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    }
+                                            </div>
+                                        </td>
+                                    </tr>
                                 }
                             }
+                        }
                         </tbody>
                     </table>
                 </div>
@@ -721,6 +720,9 @@ else
     private int feeRange = 0;
     private int FeePosition = 1;
     private SendInfo _sendInfo = new();
+
+    private bool showRawTransactionModal;
+    private string rawTransactionJson = string.Empty;
 
     private readonly AccountBalanceInfo accountBalanceInfo = new();
 
@@ -1244,7 +1246,7 @@ else
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, $"Failed to read clipboard contents");
+            Logger.LogError(ex, "Failed to read clipboard contents");
         }
     }
 
@@ -1283,8 +1285,12 @@ else
             Logger.LogError("Failed to fetch the fiat value for the total balance.");
             return;
         }
-    
-    
+
+        fiatValues["TotalBalance"] = fiatValuesList.First();
+
+        Logger.LogInformation($"Fiat value for total balance: {fiatValuesList.First()}");
+    }
+
 
     private void ShowRawTransactionJson(AddressInfo addressInfo)
     {
@@ -1292,7 +1298,6 @@ else
         showRawTransactionModal = true;
     }
 
-    
     private string GetRawTransactionJson(AddressInfo addressInfo)
     {
         var options = new JsonSerializerOptions
@@ -1302,37 +1307,37 @@ else
         return JsonSerializer.Serialize(addressInfo, options);
     }
 
+    private async Task CopyStringToClipboard(string msg)
+    {
+        await _clipboardService.WriteTextAsync(msg);
+        notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
+        StateHasChanged();
+    }
+
+
 }
+
 
 @if (showRawTransactionModal)
 {
-<div class="modal-wrapper">
-    <div class="modal fade show d-block">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Raw Transaction JSON</h5>
-                    <span type="button" @onclick="() => showRawTransactionModal = false" aria-label="Close">
-                        <Icon IconName="close-circle" />
-                         <i @onclick="@(async () => await CopyStringToClipboard(rawTransactionJson))" class="ms-auto cursor-pointer user-select-none">
-                            <Icon IconName="copy"></Icon>
-                         </i>
+    <div class="modal-wrapper">
+        <div class="modal fade show d-block">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Raw Transaction JSON</h5>
+                        <span type="button" @onclick="() => showRawTransactionModal = false" aria-label="Close">
+                            <Icon IconName="close-circle"/>
+                            <i @onclick="@(async () => await CopyStringToClipboard(rawTransactionJson))" class="ms-auto cursor-pointer user-select-none">
+                                <Icon IconName="copy"></Icon>
+                            </i>
                         </span>
-                </div>
-                <div class="modal-body">
-                    <pre>@rawTransactionJson</pre>
+                    </div>
+                    <div class="modal-body">
+                        <pre>@rawTransactionJson</pre>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-}
-
-
-        fiatValues["TotalBalance"] = fiatValuesList.First();
-
-        Logger.LogInformation($"Fiat value for total balance: {fiatValuesList.First()}");
-    }
-
-
 }
