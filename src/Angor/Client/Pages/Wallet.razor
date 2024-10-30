@@ -1,5 +1,13 @@
 @page "/wallet"
 
+
+@using System.Text.Json
+@using Angor.Client.Storage
+@using Angor.Shared
+@using Angor.Shared.Models
+@using Blockcore.NBitcoin
+@using Blockcore.Networks
+@inherits BaseComponent
 @inject HttpClient _httpClient;
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
@@ -12,13 +20,7 @@
 @inject NavMenuState NavMenuState
 @inject IEncryptionService _encryptionService
 @inject IClipboardService ClipboardService
-@using System.Text.Json
-@using Angor.Client.Storage
-@using Angor.Shared
-@using Angor.Shared.Models
-@using Blockcore.NBitcoin
-@using Blockcore.Networks
-@inherits BaseComponent
+
 
 <PageTitle>Wallet and balances</PageTitle>
 <NotificationComponent @ref="notificationComponent"/>
