@@ -59,7 +59,7 @@
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center align-items-center">
                 <span class="me-3 user-select-none">
-                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary-btn-icon)"/>
+                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)"/>
                 </span>
                 <span class="text-white">No Wallet Found</span>
             </div>
@@ -115,10 +115,10 @@
                                 @if (isNewWallet)
                                 {
                                     <div class="mb-2">
-                                        <button class="btn btn-secondary w-100" @onclick="GenerateNewWalletWords">
+                                        <button class="btn btn-border w-100" @onclick="GenerateNewWalletWords">
                                             <div class="d-flex align-items-center justify-content-center">
                                                 <span class="me-1" data-cy="generate-wallet-words">
-                                                    <Icon IconName="plus" Height="24" Width="24" Color="var(--angor-primary-btn-icon)"></Icon>
+                                                    <Icon IconName="plus" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
                                                 </span>
                                                 <span> Generate New Wallet Words</span>
                                             </div>
@@ -225,7 +225,7 @@ else
                     @if (network.NetworkType != NetworkType.Mainnet && (accountBalanceInfo.TotalUnconfirmedBalance <= 0) & (accountBalanceInfo.TotalBalance <= 0))
                     {
                         <div class="d-flex flex-wrap align-items-center">
-                            <button class="btn btn-secondary ms-2" data-cy="get-test-coins" @onclick="GetTestCoins" disabled="@testCoinsSpinner">
+                            <button class="btn btn-border ms-2" data-cy="get-test-coins" @onclick="GetTestCoins" disabled="@testCoinsSpinner">
                                 @if (testCoinsSpinner)
                                 {
                                     <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status" aria-hidden="true"></span>
@@ -537,7 +537,7 @@ else
 
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner">Cancel</button>
+                                        <button type="button" class="btn btn-border" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner">Cancel</button>
                                         <button type="button" class="btn btn-border" @onclick="SendCoins" disabled="@sendConfirmSpinner">
                                             @if (sendConfirmSpinner)
                                             {

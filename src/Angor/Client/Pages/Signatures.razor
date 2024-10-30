@@ -59,7 +59,7 @@
             <div class="card card-body angor-alert-info pt-2 pb-2">
                 <div class="d-flex align-items-center">
                     <span class="me-3 user-select-none">
-                        <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary-btn-icon)" />
+                        <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
                     </span>
                     <span class="text-white" data-cy="projectsGrid">No pending signatures yet...</span>
                 </div>
@@ -95,7 +95,7 @@
                                     </div>
                                     <div class="col-6 d-flex justify-content-end">
                                         <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">Approve All</button>
-                                        <button class="btn btn-sm btn-secondary ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
+                                        <button class="btn btn-sm btn-border ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
                                             @if (refreshButtonSpinner)
                                             {
                                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
