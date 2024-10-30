@@ -135,79 +135,115 @@
                             </h5>
                         </div>
                     </div>
-
-
-
-                    <div class="card-body">
-                        <div class="table-responsive form-control" style="overflow-x: hidden;">
-                            <table class="table table-sm table-striped align-items-center mb-0" style="table-layout: fixed; width: 100%;">
-                                <thead>
-                                <tr>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" style="padding: 4px;">Name</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">Funding Target (@network.CoinTicker)</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">Raised (@network.CoinTicker)</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">Raised (% Target)</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" style="padding: 4px;">Project Status</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">My Investment (@network.CoinTicker)</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">Spent by Founder</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">Available to Founder</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-end" style="padding: 4px;">In Recovery</th>
-                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7" style="padding: 4px;">Founder Approval</th>
-                                </tr>
-
-                                </thead>
-                                <tbody>
-                                @foreach (var project in projects)
-                                {
-                                    Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
-                                    var nostrPubKey = project.ProjectInfo.NostrPubKey;
-                                    investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
-
-                                    <tr>
-                                        <td>
-                                            <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="text-truncate">@project.Metadata?.Name</a>
-                                        </td>
-                                        <td class="text-end">@project.ProjectInfo.TargetAmount @network.CoinTicker</td>
-                                        <td class="text-end">@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                        <td class="text-end">@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</td>
-                                        <td>
-                                            @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
-                                            {
-                                                <span class="text-info">Funding</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-success">Live</span>
-                                            }
-                                        </td>
-                                        <td class="text-end">
-                                            @Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                            @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
-                                            {
-                                                <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-link p-0" data-toggle="tooltip" title="Pending"> <i class="oi oi-clock"></i></a>
-                                            }
-                                        </td>
-                                        <td class="text-end">-</td>
-                                        <td class="text-end">-</td>
-                                        <td class="text-end">@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                        <td>
-                                            @if (hasInvestmentRequests)
-                                            {
-                                                <a href="@($"/invest/{project.ProjectInfo.ProjectIdentifier}")" class="text-info">Approved</a>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-warning">Pending</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
                 </div>
+
+                <div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-2 g-4 card-container mt-0">
+                    @foreach (var project in projects)
+                    {
+                        Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
+                        var nostrPubKey = project.ProjectInfo.NostrPubKey;
+                        investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
+
+                        <div class="col">
+
+          
+
+                            <div class="card card-body">
+                                <div class="d-flex align-items-center">
+                                    <span class="user-select-none">
+                                        <Icon IconName="project_explorer"></Icon>
+                                    </span>
+                                    <div class="h-100 ms-3">
+                                        <h5 class="mb-0 font-weight-bolder">
+                                            @project.Metadata?.Name
+                                        </h5>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 mt-4 d-flex justify-content-between">
+                                    <span>Funding Target:</span>
+                                    <strong>@project.ProjectInfo.TargetAmount @network.CoinTicker</strong>
+                                </div>
+
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Raised:</span>
+                                    <strong>@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
+                                </div>
+
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Raised (% Target):</span>
+                                    <strong>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</strong>
+                                </div>
+
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Status:</span>
+                                    @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+                                    {
+                                        <strong class="text-warning">Funding</strong>
+                                    }
+                                    else
+                                    {
+                                        <strong class="text-success">Live</strong>
+                                    }
+                                </div>
+
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>My Investment:</span>
+                                    <div>
+                                        @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
+                                        {
+                                            <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-sm btn-border ms-2" title="Pending">
+                                                <i class="oi oi-clock">
+                                                    <Icon IconName="clock-square" Width="24" Height="24"></Icon>
+                                                </i>
+                                            </a>
+                                         }     
+                                        <strong>@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
+
+                                    </div>
+           
+                                </div>
+
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Spent by Founder:</span>
+                                    <strong>-</strong>
+                                </div>
+
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Available to Founder:</span>
+                                    <strong>-</strong>
+                                </div>
+
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>In Recovery:</span>
+                                    <strong>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
+                                </div>
+
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Founder Approval:</span>
+                                    @if (hasInvestmentRequests)
+                                    {
+                                        <strong class="text-primary">Approved</strong>
+                                    }
+                                    else
+                                    {
+                                        <strong class="text-danger">Pending</strong>
+                                    }
+                                </div>
+                                <div class="card-footer">
+                                    <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border w-100">
+                                        View Project
+                                    </a>
+                                </div>
+                            </div>
+
+            
+
+                        </div>
+                    }
+                </div>
+
+
 
             </div>
 

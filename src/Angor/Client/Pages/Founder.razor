@@ -1,8 +1,8 @@
 ﻿@page "/founder"
+@using Angor.Client.Models
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Angor.Shared.Services
-@using Angor.Client.Models
 @using Nostr.Client.Messages
 
 @inject NavigationManager NavigationManager
@@ -12,11 +12,11 @@
 @inject IIndexerService _IndexerService
 @inject ISerializer serializer
 
-<NotificationComponent @ref="notificationComponent" />
+<NotificationComponent @ref="notificationComponent"/>
 
 @if (!hasWallet)
 {
-    NavigationManager.NavigateTo($"/wallet");
+    NavigationManager.NavigateTo("/wallet");
     return;
 }
 
@@ -25,13 +25,13 @@
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex col-auto my-auto align-items-center">
                 <span class="user-select-none">
-                    <Icon IconName="founder" Height="42" Width="42" />
+                    <Icon IconName="founder" Height="42" Width="42"/>
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
                         Founder
                     </h5>
-         
+
                 </div>
             </div>
             <button class="btn btn-border" @onclick="NavigateToCreateProject">
@@ -40,10 +40,10 @@
                 </i>
                 <span class="nav-link-text ms-1">Create Project</span>
             </button>
-        </div> 
+        </div>
         <p class="mb-0 font-weight-normal text-sm mt-4">
-        To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required.
-        </p> 
+            To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required.
+        </p>
     </div>
 </div>
 
@@ -53,28 +53,15 @@
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center align-items-center">
                 <span class="me-3 user-select-none">
-                    <Icon IconName="info" Width="40" Height="40" Color="var(--bs-primary-btn-icon)" />
+                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
                 </span>
                 <span class="text-white">No projects found.</span>
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col">
-
-            <div class="d-flex justify-content-center mt-4">
-                <button class="btn btn-border my-3" @onclick="LookupProjectKeysOnIndexerAsync">
-                    <i class="@(scanningForProjects ? "rotate-icon" : "")">
-                        <Icon IconName="refresh"></Icon>
-                    </i>
-                    <span class="nav-link-text ms-1">Scan for founder projects</span>
-                </button>
-            </div>
-
-        </div>
-    </div>
 }
-else
+
+@if (founderProjects.Count > 0)
 {
     <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper" data-cy="project-grid">
         @foreach (var project in founderProjects)
@@ -82,8 +69,20 @@ else
             <FounderProjectItem FounderProject="@project"></FounderProjectItem>
         }
     </div>
-
 }
+
+<div class="row">
+    <div class="col">
+        <div class="d-flex justify-content-center mt-4">
+            <button class="btn btn-border my-3" @onclick="LookupProjectKeysOnIndexerAsync">
+                <i class="@(scanningForProjects ? "rotate-icon" : "")">
+                    <Icon IconName="refresh"></Icon>
+                </i>
+                <span class="nav-link-text ms-1">@(founderProjects.Count == 0 ? "Scan for founder projects" : "Rescan founder projects")</span>
+            </button>
+        </div>
+    </div>
+</div>
 
 @code {
     private string founderKey;
@@ -93,8 +92,6 @@ else
     bool scanningForProjects;
 
     private NotificationComponent notificationComponent;
-
-
 
 
     protected override async Task OnInitializedAsync()
@@ -129,30 +126,30 @@ else
         }
 
         if (founderProjectsToLookup.Any())
+        {
             RelayService.RequestProjectCreateEventsByPubKey(e =>
-            {
-                switch (e)
                 {
-                    case { Kind: NostrKind.Metadata }:
-                        var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
-                        var founderProject = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
-                        if (founderProject != null && founderProject.Metadata is null)
-                            founderProject.Metadata = nostrMetadata;
-                        // else
-                        //     notificationComponent.ShowNotificationMessage($"Couldn't find the project details for the project {nostrMetadata.Name} try adding the missing relay."); //TODO
-                        break;
-                    case { Kind: NostrKind.ApplicationSpecificData }:
-                        var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
-                        if (founderProjects.All(_ => _.ProjectInfo.NostrPubKey != e.Pubkey)) //Getting events from multiple relays
-                            founderProjects.Add(new FounderProject
+                    switch (e)
+                    {
+                        case { Kind: NostrKind.Metadata }:
+                            var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
+                            var founderProject = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
+                            if (founderProject != null && founderProject.Metadata is null)
+                                founderProject.Metadata = nostrMetadata;
+                            break;
+
+                        case { Kind: NostrKind.ApplicationSpecificData }:
+                            var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
+                            if (founderProjects.All(_ => _.ProjectInfo.NostrPubKey != e.Pubkey))  // Getting events from multiple relays
+                                founderProjects.Add(new FounderProject
                                 {
                                     ProjectInfo = projectInfo,
                                     ProjectIndex = founderProjectsToLookup.Keys.ToList().IndexOf(e.Pubkey) + 1,
                                     CreationTransactionId = founderProjectsToLookup[e.Pubkey].TrxId
                                 });
-                        break;
-                }
-            },
+                            break;
+                    }
+                },
                 () =>
                 {
                     scanningForProjects = false;
@@ -160,12 +157,16 @@ else
                     StateHasChanged();
                 },
                 founderProjectsToLookup.Keys.ToArray());
+        }
         else
+        {
             scanningForProjects = false;
+        }
     }
 
     private void NavigateToCreateProject()
     {
         NavigationManager.NavigateTo("/create");
     }
+
 }

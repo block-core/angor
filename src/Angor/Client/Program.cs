@@ -7,6 +7,7 @@ using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
 using Blazored.LocalStorage;
 using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components.Web;
@@ -24,15 +25,17 @@ builder.Services.AddBlazoredSessionStorage();
 builder.Services.AddSingleton<ISerializer, Serializer>();
 builder.Services.AddSingleton<INetworkConfiguration, NetworkConfiguration>();
 builder.Services.AddTransient<IHdOperations, HdOperations>();
-builder.Services.AddTransient <IClientStorage, ClientStorage>();
+builder.Services.AddTransient<IClientStorage, ClientStorage>();
 builder.Services.AddTransient<INetworkStorage, ClientStorage>();
-builder.Services.AddTransient <IWalletStorage, WalletStorage>();
+builder.Services.AddTransient<IWalletStorage, WalletStorage>();
 builder.Services.AddScoped<ICacheStorage, LocalSessionStorage>();
 builder.Services.AddTransient<IWalletOperations, WalletOperations>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
 builder.Services.AddScoped<NavMenuState>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+builder.Services.AddScoped<ICurrencyRateService, CurrencyRateService>();
 
 builder.Services.AddScoped<IIndexerService, IndexerService>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
@@ -50,9 +53,10 @@ builder.Services.AddTransient<IInvestmentTransactionBuilder, InvestmentTransacti
 builder.Services.AddTransient<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
 builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 
-builder.Services.AddSingleton<INostrCommunicationFactory,NostrCommunicationFactory>();
+builder.Services.AddSingleton<INostrCommunicationFactory, NostrCommunicationFactory>();
 builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
 builder.Services.AddSingleton<IPasswordCacheService, PasswordCacheService>();
+builder.Services.AddScoped<NostrConversionHelper>();
 
 builder.Services.AddScoped<IconService>();
 

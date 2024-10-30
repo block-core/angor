@@ -10,6 +10,8 @@ public class ClientStorage : IClientStorage, INetworkStorage
 {
     private readonly ISyncLocalStorageService _storage;
     
+    private const string CurrencyDisplaySettingKey = "currencyDisplaySetting";
+    
     private const string utxoKey = "utxo:{0}";
     public ClientStorage(ISyncLocalStorageService storage)
     {
@@ -93,7 +95,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         _storage.SetItem("founder-projects", ret.OrderBy(_ => _.ProjectIndex));
     }
-
+    
     public List<FounderProject> GetFounderProjects()
     {
         var ret = _storage.GetItem<List<FounderProject>>("founder-projects");
@@ -223,5 +225,15 @@ public class ClientStorage : IClientStorage, INetworkStorage
     public string GetNostrPublicKeyPerProject(string projectId)
     {
         return _storage.GetItem<string>($"project:{projectId}:nostrKey");
+    }
+    
+    public string GetCurrencyDisplaySetting()
+    {
+        return _storage.GetItem<string>(CurrencyDisplaySettingKey) ?? "BTC";
+    }
+
+    public void SetCurrencyDisplaySetting(string setting)
+    {
+        _storage.SetItem(CurrencyDisplaySettingKey, setting);
     }
 }
