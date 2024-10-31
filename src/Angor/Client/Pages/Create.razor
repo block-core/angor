@@ -911,6 +911,13 @@
         {
             showCreateModal = false;
 
+            // Step 1: Refresh UTXOs for the latest balance info
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            await _WalletOperations.UpdateDataForExistingAddressesAsync(accountInfo); // Updates UTXO for current addresses
+            await _WalletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo); // Updates UTXO for new addresses
+            storage.SetAccountInfo(network.Name, accountInfo); // Save updated account info
+
+            // Step 2: Publish the transaction
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
 
             if (!response.Success)
@@ -919,8 +926,8 @@
                 return;
             }
 
+            // Step 3: Update the project with the transaction ID
             project.CreationTransactionId = signedTransaction.Transaction.GetHash().ToString();
-
             storage.UpdateFounderProject(project);
         }
         catch (Exception e)
@@ -936,6 +943,7 @@
 
         NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
     }
+
 
     private void AddStage()
     {
