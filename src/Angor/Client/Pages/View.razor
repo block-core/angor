@@ -153,11 +153,9 @@ else
                         @if (projectStats.Loading)
                         {
                             <div class="loader"></div>
-                            @project?.CreationTransactionId
                         }
                         else
                         {
-                            @project?.CreationTransactionId
                             <div class="form-control mt-1 d-flex align-items-center">
                                 <Icon IconName="calculator"></Icon>
                                 <p class="card-text ms-2">Total Raised: @Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -170,14 +168,19 @@ else
                             <div class="form-control mt-1 d-flex align-items-center">
                                 <Icon IconName="calendar"></Icon>
                                 <p class="card-text ms-2">
-                                    @if (projectStats.TimeLeft > 0)
+                                    @{
+                                        var daysLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
+                                    }
+
+                                    @if (daysLeft >= 0)
                                     {
-                                        <span>Time Left for Investing: @projectStats.TimeLeft days</span>
+                                        <span>Time Left for Investing: @daysLeft days</span>
                                     }
                                     else
                                     {
                                         <span>The investing period is over</span>
                                     }
+
                                 </p>
                             </div>
                         }
@@ -297,11 +300,14 @@ else
                 <p class="mt-4">
                     Seize the opportunity to invest in this project.
                 </p>
+                @{
+                    var timeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
+                }
                 <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON"
                         @onclick="InvestInProject"
-                        disabled="@(projectStats.TimeLeft == 0 ? "disabled" : null)"
-                        title="@(projectStats.TimeLeft == 0 ? "The investing period is over" : null)">
-                    @if (projectStats.TimeLeft > 0)
+                        disabled="@(timeLeft <= 0 ? "disabled" : null)"
+                        title="@(timeLeft <= 0 ? "The investing period is over" : null)">
+                    @if (timeLeft > 0)
                     {
                         <text>Invest Now</text>
                     }
@@ -463,99 +469,111 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // Set up default Nostr clients
-        NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
+        projectStats.Loading = true;
+        findInProgress = false;
+        error = string.Empty;
 
-        // Check for the project in local storage first
-        project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
-
-        if (project != null)
+        try
         {
-            founder = true;
-            projectStats.Loading = false; // Stop loading spinner as data is found locally
+            NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
 
-            // Check if CreationTransactionId is set; if not, notify the user
-            if (!string.IsNullOrEmpty(project.CreationTransactionId))
+            project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+            if (project != null)
             {
-                projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
-            }
-            else
-            {
-                error = "Project created; awaiting confirmation. Check back shortly.";
+                founder = true;
+                projectStats.Loading = false;
+                SetProjectLinksAndRefreshBalance();
+                return;
             }
 
-            await RefreshBalance(); // Optionally refresh balance
-            StateHasChanged();
-            return; // Data is ready; no need to proceed further
-        }
+            project = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+            if (project is InvestorProject investorProject)
+            {
+                invested = investorProject.InvestedInProject();
+                myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investorProject.TransactionId}";
+                projectStats.Loading = false;
+                SetProjectLinksAndRefreshBalance();
+                return;
+            }
 
-        // Check for an investor project if not found as a founder project
-        project = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+            project = SessionStorage.GetProjectById(ProjectId);
+            if (project != null)
+            {
+                projectStats.Loading = false;
+                StateHasChanged();
+                return;
+            }
 
-        if (project is InvestorProject findProject)
-        {
-            invested = findProject.InvestedInProject();
-            myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{findProject.TransactionId}";
-            projectStats.Loading = false; // Stop loading spinner as data is found
-            await RefreshBalance();
-            StateHasChanged();
-            return;
-        }
-
-        // If project is not found in local storage, proceed with session storage and indexer fallback
-        project = SessionStorage.GetProjectById(ProjectId);
-
-        if (project == null)
-        {
             findInProgress = true;
-
-            // Attempt to retrieve project data from the indexer
             var projectIndexerData = await _IndexerService.GetProjectByIdAsync(ProjectId);
 
             if (projectIndexerData != null)
             {
                 project = new Project { CreationTransactionId = projectIndexerData.TrxId };
-                _RelayService.RequestProjectCreateEventsByPubKey(e =>
-                {
-                    if (project != null)
+
+                _RelayService.RequestProjectCreateEventsByPubKey(
+                    e =>
                     {
-                        switch (e)
+                        if (project != null)
                         {
-                            case { Kind: NostrKind.Metadata }:
-                                var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
-                                project.Metadata ??= nostrMetadata;
-                                break;
-                            case { Kind: NostrKind.ApplicationSpecificData }:
-                                var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
-                                project.ProjectInfo ??= projectInfo;
-                                break;
+                            switch (e)
+                            {
+                                case { Kind: NostrKind.Metadata }:
+                                    project.Metadata ??= serializer.Deserialize<ProjectMetadata>(e.Content);
+                                    break;
+                                case { Kind: NostrKind.ApplicationSpecificData }:
+                                    project.ProjectInfo ??= serializer.Deserialize<ProjectInfo>(e.Content);
+                                    break;
+                            }
                         }
-                    }
-                }, () =>
-                {
-                    findInProgress = false;
-                    projectStats.Loading = false; // Stop loading spinner once data is available
-
-                    if (project?.ProjectInfo != null)
+                    },
+                    () =>
                     {
-                        SessionStorage.StoreProject(project);
-                    }
-                    else
-                    {
-                        error = "Project not found...";
-                    }
+                        findInProgress = false;
+                        projectStats.Loading = false;
 
-                    StateHasChanged();
-                }, projectIndexerData.NostrPubKey);
+                        if (project?.ProjectInfo != null)
+                        {
+                            SessionStorage.StoreProject(project);
+                        }
+                        else
+                        {
+                            error = "Project not found...";
+                        }
+
+                        StateHasChanged();
+                    },
+                    projectIndexerData.NostrPubKey);
             }
             else
             {
                 findInProgress = false;
+                projectStats.Loading = false;
                 error = "Project not found...";
-                projectStats.Loading = false; // Stop loading spinner as no data is found
                 StateHasChanged();
             }
         }
+        catch (Exception ex)
+        {
+            error = $"An error occurred: {ex.Message}";
+            projectStats.Loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SetProjectLinksAndRefreshBalance()
+    {
+        if (!string.IsNullOrEmpty(project?.CreationTransactionId))
+        {
+            projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
+        }
+        else
+        {
+            error = "Project created; awaiting confirmation. Check back shortly.";
+        }
+
+        await RefreshBalance();
+        StateHasChanged();
     }
 
 
@@ -574,10 +592,19 @@ else
                     projectStats.TotalInvestors = (int)data.InvestorCount;
                     projectStats.TotalRaised = data.AmountInvested;
 
-                    projectStats.TimeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
-                    if (projectStats.TimeLeft < 0)
-                        projectStats.TimeLeft = 0;
+                    // Calculate time left based on the project start and expiry dates
+                    if (DateTime.UtcNow < project.ProjectInfo.StartDate)
+                    {
+                        // Project has not started yet, so time left is until the start date
+                        projectStats.TimeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
+                    }
+                    else
+                    {
+                        // Project has expired
+                        projectStats.TimeLeft = 0; // Ensure no negative time left
+                    }
 
+                    // Calculate funding progress as a percentage of the target amount
                     var targetSat = Money.Coins(project.ProjectInfo.TargetAmount).Satoshi;
                     projectStats.FundingProgressPercent = (int)(projectStats.TotalRaised * 100 / targetSat);
                 }
@@ -590,6 +617,7 @@ else
         finally
         {
             projectStats.Loading = false;
+            StateHasChanged();
         }
     }
 
