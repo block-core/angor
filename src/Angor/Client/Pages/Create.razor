@@ -27,6 +27,8 @@
     NavigationManager.NavigateTo("/wallet");
     return;
 }
+
+
 <div class="row">
     <div class="card card-body">
         <div class="d-flex align-items-center justify-content-between">
@@ -44,7 +46,6 @@
         </div>
     </div>
 </div>
-
 <div class="row mt-4">
     <div class="row d-flex justify-content-center text-center align-items-center">
         <div class="col-lg-3 col-sm-6 mt-lg-0 mt-sm-4">
@@ -350,6 +351,12 @@
         </div>
     }
 
+    <div class="mb-4">
+        <h5>Current Step</h5>
+        <div class="text-center">
+            @GetProgressMessage()
+        </div>
+    </div>
     <button class="btn btn-success mt-4 me-3" @onclick="ConfirmFinalizeNostrProfileCreation" disabled="@nostrMetadataCreated">
         @if (createProfileSpinner)
         {
@@ -362,7 +369,7 @@
         }
     </button>
 
-    <button class="btn btn-primary mt-4" @onclick="ConfirmFinalizeProjectInfoCreation" disabled="@nostrApplicationSpecificDataCreated">
+    <button class="btn btn-primary mt-4" @onclick="ConfirmFinalizeProjectInfoCreation" disabled="@(!nostrMetadataCreated || nostrApplicationSpecificDataCreated)">
         @if (createApplicationDataSpinner)
         {
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -373,13 +380,12 @@
             <span>Create Project Info</span>
         }
     </button>
-
     <div class="card card-body mt-4">
         <div class="d-flex justify-content-between">
             <button type="button" class="btn btn-success" @onclick="() => ChangeTab(2)">
                 <span>Previous</span>
             </button>
-            <button type="button" class="btn btn-success" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@creatProjectSpinner">
+            <button type="button" class="btn btn-success" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
                 @if (creatProjectSpinner)
                 {
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -492,6 +498,7 @@
         </div>
     </div>
 }
+
 </div>
 
 
@@ -960,6 +967,22 @@
         activeTab = tabNumber;
         StateHasChanged();
     }
+
+    private string GetProgressMessage()
+    {
+        if (!nostrMetadataCreated)
+        {
+            return "Step 1: Create Nostr Profile";
+        }
+
+        if (!nostrApplicationSpecificDataCreated)
+        {
+            return "Step 2: Enter Project Info";
+        }
+
+        return "Step 3: Finalize Project Creation";
+    }
+
 
     private void OnStagePresetChange(ChangeEventArgs e)
     {
