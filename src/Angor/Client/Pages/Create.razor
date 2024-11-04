@@ -911,13 +911,11 @@
         {
             showCreateModal = false;
 
-            // Step 1: Refresh UTXOs for the latest balance info
             var accountInfo = storage.GetAccountInfo(network.Name);
-            await _WalletOperations.UpdateDataForExistingAddressesAsync(accountInfo); // Updates UTXO for current addresses
-            await _WalletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo); // Updates UTXO for new addresses
-            storage.SetAccountInfo(network.Name, accountInfo); // Save updated account info
+            await _WalletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
+            await _WalletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            storage.SetAccountInfo(network.Name, accountInfo);
 
-            // Step 2: Publish the transaction
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
 
             if (!response.Success)
@@ -926,9 +924,12 @@
                 return;
             }
 
-            // Step 3: Update the project with the transaction ID
+            // Set and save CreationTransactionId locally
             project.CreationTransactionId = signedTransaction.Transaction.GetHash().ToString();
-            storage.UpdateFounderProject(project);
+            storage.UpdateFounderProject(project); // Ensure the ID is saved in local storage
+
+            // Navigate to the view page immediately
+            NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}", true);
         }
         catch (Exception e)
         {
@@ -939,9 +940,8 @@
         {
             publishProjectSpinner = false;
             passwordComponent.ClearPassword();
+            StateHasChanged(); // Ensure UI updates after processing
         }
-
-        NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
     }
 
 

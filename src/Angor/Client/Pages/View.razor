@@ -153,9 +153,11 @@ else
                         @if (projectStats.Loading)
                         {
                             <div class="loader"></div>
+                            @project?.CreationTransactionId
                         }
                         else
                         {
+                            @project?.CreationTransactionId
                             <div class="form-control mt-1 d-flex align-items-center">
                                 <Icon IconName="calculator"></Icon>
                                 <p class="card-text ms-2">Total Raised: @Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -461,84 +463,101 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // Set up default Nostr clients
         NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
 
+        // Check for the project in local storage first
+        project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+
+        if (project != null)
+        {
+            founder = true;
+            projectStats.Loading = false; // Stop loading spinner as data is found locally
+
+            // Check if CreationTransactionId is set; if not, notify the user
+            if (!string.IsNullOrEmpty(project.CreationTransactionId))
+            {
+                projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
+            }
+            else
+            {
+                error = "Project created; awaiting confirmation. Check back shortly.";
+            }
+
+            await RefreshBalance(); // Optionally refresh balance
+            StateHasChanged();
+            return; // Data is ready; no need to proceed further
+        }
+
+        // Check for an investor project if not found as a founder project
         project = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
         if (project is InvestorProject findProject)
         {
-            invested = findProject.InvestedInProject(); // TODO: need to scan for the invested projects when opening on a new browser
+            invested = findProject.InvestedInProject();
             myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{findProject.TransactionId}";
+            projectStats.Loading = false; // Stop loading spinner as data is found
+            await RefreshBalance();
+            StateHasChanged();
+            return;
         }
-        else
+
+        // If project is not found in local storage, proceed with session storage and indexer fallback
+        project = SessionStorage.GetProjectById(ProjectId);
+
+        if (project == null)
         {
-            project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+            findInProgress = true;
 
-            if (project != null)
-            {
-                founder = true;
-            }
-            else
-            {
-                project = SessionStorage.GetProjectById(ProjectId);
+            // Attempt to retrieve project data from the indexer
+            var projectIndexerData = await _IndexerService.GetProjectByIdAsync(ProjectId);
 
-                if (project == null)
+            if (projectIndexerData != null)
+            {
+                project = new Project { CreationTransactionId = projectIndexerData.TrxId };
+                _RelayService.RequestProjectCreateEventsByPubKey(e =>
                 {
-                    findInProgress = true;
-
-                    var projectIndexerData = await _IndexerService.GetProjectByIdAsync(ProjectId);
-
-                    if (projectIndexerData != null)
+                    if (project != null)
                     {
-                        project = new Project { CreationTransactionId = projectIndexerData.TrxId };
-                        _RelayService.RequestProjectCreateEventsByPubKey(e =>
+                        switch (e)
                         {
-                            if (project != null)
-                            {
-                                switch (e)
-                                {
-                                    case { Kind: NostrKind.Metadata }:
-                                        var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
-                                        project.Metadata ??= nostrMetadata;
-                                        break;
-                                    case { Kind: NostrKind.ApplicationSpecificData }:
-                                        var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
-                                        project.ProjectInfo ??= projectInfo;
-                                        break;
-                                }
-                            }
-                        }, () =>
-                        {
-                            findInProgress = false;
-                            if (project?.ProjectInfo != null)
-                            {
-                                SessionStorage.StoreProject(project);
-                            }
-                            else
-                            {
-                                // Handle case where project info is not available
-                                error = "Project not found...";
-                            }
+                            case { Kind: NostrKind.Metadata }:
+                                var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
+                                project.Metadata ??= nostrMetadata;
+                                break;
+                            case { Kind: NostrKind.ApplicationSpecificData }:
+                                var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
+                                project.ProjectInfo ??= projectInfo;
+                                break;
+                        }
+                    }
+                }, () =>
+                {
+                    findInProgress = false;
+                    projectStats.Loading = false; // Stop loading spinner once data is available
 
-                            StateHasChanged();
-                        }, projectIndexerData.NostrPubKey);
+                    if (project?.ProjectInfo != null)
+                    {
+                        SessionStorage.StoreProject(project);
                     }
                     else
                     {
-                        findInProgress = false;
                         error = "Project not found...";
-                        StateHasChanged();
                     }
-                }
+
+                    StateHasChanged();
+                }, projectIndexerData.NostrPubKey);
+            }
+            else
+            {
+                findInProgress = false;
+                error = "Project not found...";
+                projectStats.Loading = false; // Stop loading spinner as no data is found
+                StateHasChanged();
             }
         }
-
-        if (project?.CreationTransactionId != null)
-        {
-            projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
-            await RefreshBalance();
-        }
     }
+
 
     private async Task RefreshBalance()
     {
