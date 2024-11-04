@@ -28,21 +28,22 @@ namespace Angor.Shared.Services
         public void CheckAndSetNetwork(string url, string? setNetwork = null)
         {
             string networkName = _networkStorage.GetNetwork();
+
             if (string.IsNullOrEmpty(networkName))
             {
                 Network network = null;
 
                 if (setNetwork != null)
                 {
-                    network = setNetwork.Contains("test") ? new BitcoinTest() : new BitcoinMain();
+                    network = setNetwork.Contains("test") ? new Angornet() : new BitcoinMain();
 
                 } else if (url.Contains("test"))
                 {
-                    network = new BitcoinTest();
+                    network = new Angornet();
                 }
                 else if (url.Contains("localhost"))
                 {
-                    network = new BitcoinTest();
+                    network = new Angornet();
                 }
                 else
                 {
@@ -59,9 +60,9 @@ namespace Angor.Shared.Services
                     _networkConfiguration.SetNetwork(new BitcoinMain());
                 }
 
-                if (networkName == NetworkType.Testnet.ToString())
+                if (networkName == "Angornet")
                 {
-                    _networkConfiguration.SetNetwork(new BitcoinTest());
+                    _networkConfiguration.SetNetwork(new Angornet());
                 }
             }
         }

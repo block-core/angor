@@ -88,7 +88,6 @@ namespace Angor.Shared.Networks
             this.Bech32Encoders = new Bech32Encoder[2];
             this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
             this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = encoder;
-            this.Bech32Encoders[(int)2] = encoder; //WITNESS_SCRIPT_ADDRESS until we add taproot to blockcore
 
             this.SeedNodes = new List<NetworkAddress>();
 

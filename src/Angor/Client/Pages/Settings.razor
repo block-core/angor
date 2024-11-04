@@ -109,8 +109,12 @@
                                         <div class="card card-body mb-3 mt-4">
                                             <label for="networkSelection">Select Network:</label>
                                             <select class="form-control mt-2" id="networkSelection" @bind="selectedNetwork">
+                                                <option value="testnet" selected>Angornet</option>
+                                                <option value="testnet" selected>Testnet4</option>
+                                                <option value="testnet" selected>Signet</option>
                                                 <option value="testnet" selected>Testnet</option>
                                                 <option value="mainnet">Mainnet</option>
+                                                <option value="mainnet" disabled="">Liquid</option>
                                             </select>
                                         </div>
 
