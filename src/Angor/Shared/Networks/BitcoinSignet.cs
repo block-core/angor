@@ -92,7 +92,7 @@ namespace Angor.Shared.Networks
                 // this.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC] = new byte[] { 0x01, 0x42 };
                 // this.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_EC] = new byte[] { 0x01, 0x43 };
                 this.Base58Prefixes[(int)Base58Type.EXT_PUBLIC_KEY] = new byte[] { 0x04, 0x35, 0x87, 0xCF };
-                this.Base58Prefixes[(int)Base58Type.EXT_SECRET_KEY] = new byte[] { (0x04), (0x88), (0xAD), (0xE4) };
+                this.Base58Prefixes[(int)Base58Type.EXT_SECRET_KEY] = new byte[] { (0x04), (0x35), (0x83), (0x94) };
                 this.Base58Prefixes[(int)Base58Type.PASSPHRASE_CODE] =
                     new byte[] { 0x2C, 0xE9, 0xB3, 0xE1, 0xFF, 0x39, 0xE2 };
                 this.Base58Prefixes[(int)Base58Type.CONFIRMATION_CODE] = new byte[] { 0x04, 0x35, 0x83, 0x94 };
@@ -102,6 +102,7 @@ namespace Angor.Shared.Networks
                 this.Bech32Encoders = new Bech32Encoder[2];
                 this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
                 this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = encoder;
+                this.Bech32Encoders[(int)2] = encoder; //WITNESS_SCRIPT_ADDRESS until we add taproot to blockcore
 
                 this.StandardScriptsRegistry = new BitcoinStandardScriptsRegistry();
             }
