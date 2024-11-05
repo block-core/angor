@@ -919,9 +919,30 @@
             showCreateModal = false;
 
             var accountInfo = storage.GetAccountInfo(network.Name);
+
+            // refresh UTXOs
             await _WalletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
             await _WalletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
             storage.SetAccountInfo(network.Name, accountInfo);
+
+            var walletWords = await passwordComponent.GetWalletAsync();
+
+            // is this the correct way to get the address @dangershony @davidgershony
+            var changeAddress = accountInfo.ChangeAddressesInfo.FirstOrDefault(addr => !addr.UtxoData.Any())?.Address;
+            if (string.IsNullOrEmpty(changeAddress))
+            {
+                notificationComponent.ShowErrorMessage("No available change address found.");
+                return;
+            }
+
+            // reconstruct the transaction using refreshed UTXO data
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                changeAddress,
+                new Transaction(),
+                walletWords,
+                accountInfo,
+                feeData.SelectedFeeEstimation
+            );
 
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
 
@@ -931,11 +952,9 @@
                 return;
             }
 
-            // Set and save CreationTransactionId locally
             project.CreationTransactionId = signedTransaction.Transaction.GetHash().ToString();
-            storage.UpdateFounderProject(project); // Ensure the ID is saved in local storage
+            storage.UpdateFounderProject(project);
 
-            // Navigate to the view page immediately
             NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}", true);
         }
         catch (Exception e)
@@ -947,7 +966,7 @@
         {
             publishProjectSpinner = false;
             passwordComponent.ClearPassword();
-            StateHasChanged(); // Ensure UI updates after processing
+            StateHasChanged();
         }
     }
 
