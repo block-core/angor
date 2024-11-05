@@ -1,4 +1,14 @@
 ﻿@page "/view/{ProjectId}"
+@using System.Text.RegularExpressions
+@using Angor.Client.Models
+@using Angor.Client.Storage
+@using Angor.Shared
+@using Angor.Shared.Models
+@using Angor.Shared.Services
+@using Angor.Shared.Utilities
+@using Blockcore.NBitcoin
+@using NBitcoin.DataEncoders
+@using Nostr.Client.Messages
 
 @inject IDerivationOperations _derivationOperations
 @inject IClientStorage storage;
@@ -13,16 +23,8 @@
 @inject ILogger<Browse> Logger;
 
 @inject NostrConversionHelper NostrHelper
-@using System.Text.RegularExpressions
-@using Angor.Client.Models
-@using Angor.Client.Storage
-@using Angor.Shared
-@using Angor.Shared.Models
-@using Angor.Shared.Services
-@using Angor.Shared.Utilities
-@using Blockcore.NBitcoin
-@using NBitcoin.DataEncoders
-@using Nostr.Client.Messages
+
+
 @inherits BaseComponent
 <NotificationComponent @ref="notificationComponent"/>
 <PasswordComponent @ref="passwordComponent"/>
