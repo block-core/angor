@@ -539,8 +539,8 @@ else
     {
         if (Investment.IsSeeder)
         {
-            var minSeederAmount = 2;
-            var maxSeederAmount = 5;
+            var minSeederAmount = 0.01m;
+            var maxSeederAmount = 0.1m;
             if (Investment.InvestmentAmount < minSeederAmount)
             {
                 notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minSeederAmount} BTC was not reached");
