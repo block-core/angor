@@ -372,7 +372,7 @@ else
     private bool showCreateModal;
     TransactionInfo? signedTransaction;
     Transaction unSignedTransaction;
-
+    
 
     private FeeData feeData = new();
 
@@ -540,9 +540,16 @@ else
         if (Investment.IsSeeder)
         {
             var minSeederAmount = 2;
+            var maxSeederAmount = 5;
             if (Investment.InvestmentAmount < minSeederAmount)
             {
                 notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minSeederAmount} BTC was not reached");
+                return;
+            }
+            
+            if (Investment.InvestmentAmount > maxSeederAmount)
+            {
+                notificationComponent.ShowErrorMessage($"Maximum investment amount of {maxSeederAmount} BTC exceeded");
                 return;
             }
         }
