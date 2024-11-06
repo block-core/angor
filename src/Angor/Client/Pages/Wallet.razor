@@ -499,6 +499,7 @@ else
                 @if (sendConfirmModal)
                 {
                     <!-- Send Confirmation Modal -->
+                    
                     <div class="modal-wrapper">
                         <div class="modal fade show d-block">
                             <div class="modal-dialog">
@@ -510,13 +511,8 @@ else
                                         </span>
                                     </div>
                                     <div class="modal-body modal-body-scroll">
-                                        Are you sure you want to send <strong>@_sendInfo.SendAmount @network.CoinTicker</strong> to <strong> @_sendInfo.SendToAddress?</strong>
-
-                                        <br/>
-
-                                        The fee for this transaction will be <strong>@_sendInfo.SendFee</strong>
-
-                                        <hr>
+                                        <p>Are you sure you want to send @_sendInfo.SendAmount to @_sendInfo.SendToAddress?</p>
+                                        <p>Fees: @_sendInfo.SendFee</p>
 
                                         <div class="mb-3">
                                             <label for="feeRange" class="form-label">Feerate for @_sendInfo.FeeBlockCount blocks is @_sendInfo.FeeRate sats</label>
@@ -549,6 +545,9 @@ else
                                             {
                                                 <span>Confirm</span>
                                             }
+                                        </button>
+                                        <button class="btn btn-outline-primary" @onclick="ShowTransactionJson">
+                                            View Transaction Details
                                         </button>
                                     </div>
                                 </div>
@@ -678,6 +677,9 @@ else
                 </div>
             </div>
         </div>
+        <RawTransactionModal RawTransactionJson="@rawTransactionJson" IsVisible="@showRawTransactionModal" IsVisibleChanged="HandleModalVisibility" />
+        <RawTransactionModal RawTransactionJson="@transactionJson" IsVisible="@showTransactionJsonModal" IsVisibleChanged="HandleTransactionJsonModalVisibility" />
+
     </div>
 }
 
@@ -725,6 +727,8 @@ else
 
     private bool showRawTransactionModal;
     private string rawTransactionJson = string.Empty;
+    private string transactionJson;
+    private bool showTransactionJsonModal = false;
 
     private readonly AccountBalanceInfo accountBalanceInfo = new();
 
@@ -1300,12 +1304,14 @@ else
         showRawTransactionModal = true;
     }
 
+    private void HandleModalVisibility(bool isVisible)
+    {
+        showRawTransactionModal = isVisible;
+    }
+
     private string GetRawTransactionJson(AddressInfo addressInfo)
     {
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true
-        };
+        var options = new JsonSerializerOptions { WriteIndented = true };
         return JsonSerializer.Serialize(addressInfo, options);
     }
 
@@ -1315,31 +1321,41 @@ else
         notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
         StateHasChanged();
     }
+    
+    private async Task PrepareTransactionJson()
+    {
+        var transactionDetails = new
+        {
+            Amount = _sendInfo.SendAmount,
+            ToAddress = _sendInfo.SendToAddress,
+            Fee = _sendInfo.SendFee,
+            FeeRate = $"{_sendInfo.FeeRate} sats per byte for {_sendInfo.FeeBlockCount} block confirmations",
+            ChangeAddress = _sendInfo.ChangeAddress,
+            Inputs = _sendInfo.SendUtxos.Select(u => new 
+            {
+                Address = u.Value.UtxoData.address,
+                Amount = Money.Satoshis(u.Value.UtxoData.value).ToUnit(MoneyUnit.BTC),
+                Outpoint = u.Key,
+                CoinTicker = network.CoinTicker
+            })
+        };
+
+        transactionJson = JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions { WriteIndented = true });
+    }
+    
+    
+    private async Task ShowTransactionJson()
+    {
+        await PrepareTransactionJson();
+        showTransactionJsonModal = true;
+    }
+
+    private void HandleTransactionJsonModalVisibility(bool isVisible)
+    {
+        showTransactionJsonModal = isVisible;
+    }
 
 
-}
 
 
-@if (showRawTransactionModal)
-{
-    <div class="modal-wrapper">
-        <div class="modal fade show d-block">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Raw Transaction JSON</h5>
-                        <span type="button" @onclick="() => showRawTransactionModal = false" aria-label="Close">
-                            <Icon IconName="close-circle"/>
-                            <i @onclick="@(async () => await CopyStringToClipboard(rawTransactionJson))" class="ms-auto cursor-pointer user-select-none">
-                                <Icon IconName="copy"></Icon>
-                            </i>
-                        </span>
-                    </div>
-                    <div class="modal-body">
-                        <pre>@rawTransactionJson</pre>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 }
