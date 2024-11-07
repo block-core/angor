@@ -107,6 +107,9 @@
     private async Task LookupProjectKeysOnIndexerAsync()
     {
         scanningForProjects = true;
+        // Clear the existing projects before rescan
+        founderProjects.Clear();
+        storage.ClearFounderProjects();
 
         var keys = _walletStorage.GetFounderKeys();
 
