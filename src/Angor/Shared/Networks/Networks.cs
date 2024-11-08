@@ -59,5 +59,20 @@ namespace Angor.Shared.Networks
 
         public Func<Network> LiquidNet { get; }
 
+
+        public static Network NetworkByName(string networkName)
+        {
+            if (networkName == "Angornet")
+            {
+                return new Angornet();
+            }
+
+            if (networkName == "Main")
+            {
+                return new BitcoinMain();
+            }
+
+            throw new ApplicationException($"The network '{networkName}' is not recognized");
+        }
     }
 }

@@ -109,12 +109,12 @@
                                         <div class="card card-body mb-3 mt-4">
                                             <label for="networkSelection">Select Network:</label>
                                             <select class="form-control mt-2" id="networkSelection" @bind="selectedNetwork">
-                                                <option value="testnet" selected>Angornet</option>
-                                                <option value="testnet" selected>Testnet4</option>
-                                                <option value="testnet" selected>Signet</option>
-                                                <option value="testnet" selected>Testnet</option>
-                                                <option value="mainnet">Mainnet</option>
-                                                <option value="mainnet" disabled="">Liquid</option>
+                                                <option value="Angornet" selected>Angornet</option>
+                                                <option value="TestNet4" disabled selected>Testnet4</option>
+                                                <option value="Signet" disabled selected>Signet</option>
+                                                <option value="TestNet" disabled selected>Testnet</option>
+                                                <option value="Main">Mainnet</option>
+                                                <option value="Liquid" disabled>Liquid</option>
                                             </select>
                                         </div>
 
@@ -430,7 +430,7 @@
 
     private bool confirmWipe = false;
     private bool showConfirmWipeMessage = false;
-    private string selectedNetwork = "testnet"; // Default to "testnet"
+    private string selectedNetwork = "Main"; // Default to "testnet"
     
     private string selectedCurrency = "BTC"; // Default to BTC
 
@@ -448,8 +448,7 @@
         
         selectedCurrency = _clientStorage.GetCurrencyDisplaySetting();
 
-        if (!networkType.ToLower().Contains("test"))
-            selectedNetwork = "mainnet";
+        selectedNetwork = networkType;
         
         return base.OnInitializedAsync();
     }
@@ -650,9 +649,6 @@
         showWipeallModal = false;
         showConfirmWipeMessage = false;
         confirmWipe = false;
-
-        if (!networkType.ToLower().Contains("test"))
-            selectedNetwork = "mainnet";
 
         _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
         _networkService.AddSettingsIfNotExist();

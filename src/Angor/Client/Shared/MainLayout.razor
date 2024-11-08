@@ -26,7 +26,7 @@
                 <nav>
                     <div class="mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                         <div class="text-sm">
-                            <h6 class="font-weight-bolder" title="Alpha app - only use test wallets.">Only use test wallets. @networkText</h6>
+                            <h6 class="font-weight-bolder" title="Alpha app - only use test wallets.">Network - @networkText</h6>
                         </div>
                     </div>
                 </nav>
@@ -104,15 +104,12 @@
         if (version != null)
             _softwareVersion = version.ToString();
     }
- 
-
-
 
     private void InitializeNetworkConfiguration()
     {
         string networkName = _networkStorage.GetNetwork();
 
-        if (networkName.ToLower() == "testnet")
+        if (networkName?.ToLower() == "testnet")
         {
             // we will probably not support bitcoins classic testnet for a while
             // so any testnet is assumed to be angornet, in an attempt to support
@@ -134,10 +131,14 @@
 
     private void SetNetworkText()
     {
-        if (_networkConfiguration.GetNetwork().NetworkType != NetworkType.Mainnet)
-            networkText = "(testnet)";
-        else
-            networkText = "(mainnet)";
+        var network = _networkConfiguration.GetNetwork();
+        
+        networkText = network.Name;
+
+        if (network.Name == "Angornet")
+        {
+            networkText += " (testnet)";
+        }
     }
 
     private void NavMenuStateOnOnChange()
