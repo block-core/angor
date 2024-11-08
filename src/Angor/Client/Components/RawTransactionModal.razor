@@ -1,0 +1,42 @@
+﻿@using Angor.Shared.Models
+@inject IClipboardService ClipboardService
+
+@if (IsVisible)
+{
+    <div class="modal-wrapper">
+        <div class="modal fade show d-block">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Raw Transaction JSON</h5>
+                        <span type="button" @onclick="CloseModal" aria-label="Close">
+                            <Icon IconName="close-circle"/>
+                            <i @onclick="CopyToClipboard" class="ms-auto cursor-pointer user-select-none">
+                                <Icon IconName="copy"></Icon>
+                            </i>
+                        </span>
+                    </div>
+                    <div class="modal-body">
+                        <pre>@RawTransactionJson</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string RawTransactionJson { get; set; }
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    private async Task CloseModal()
+    {
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await ClipboardService.WriteTextAsync(RawTransactionJson);
+    }
+}
