@@ -3,7 +3,6 @@
     --angor-secondary: #086c81;
     --angor-accent: #cbdde1;
     --angor-link: #ff9900;
-    
     --angor-light: #cbdde1;
     --angor-dark: #022229;
     --angor-primary-rgb: 2, 34, 41;
@@ -967,6 +966,7 @@ tr[style*="cursor: pointer;"] {
     background-color: rgba(31, 93, 106, 0.2);
     color: var(--angor-primary) !important;
 }
+
     .btn-border:hover {
         color: var(--angor-accent);
         background-color: rgba(31, 93, 106, 0.6);
@@ -1312,17 +1312,18 @@ textarea.form-control {
 a, a p {
     color: var(--angor-link) !important;
 }
+
 .nav-item span[role="button"] {
     position: relative;
     display: inline-block;
 }
 
     .nav-item span[role="button"]::before {
-        content: attr(data-tooltip); 
+        content: attr(data-tooltip);
         position: absolute;
-        bottom: -140%; 
+        bottom: -140%;
         right: 10%;
-        background-color: rgba(0, 0, 0, 0.9);
+        background-color: rgba(2, 34, 41,0.5);
         color: #ffffff;
         padding: 10px 15px;
         border-radius: 8px;
@@ -1332,7 +1333,7 @@ a, a p {
         box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
         opacity: 0;
         visibility: hidden;
-        transform: translateY(10px); 
+        transform: translateY(10px);
         transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
         z-index: 10;
         pointer-events: none;
@@ -1341,5 +1342,5 @@ a, a p {
     .nav-item span[role="button"]:hover::before {
         opacity: 1;
         visibility: visible;
-        transform: translateY(0); 
+        transform: translateY(0);
     }
