@@ -58,7 +58,7 @@
             <div>
 
                 <button class="btn btn-warning" @onclick="() => showChangeNetworkModal = true">
-                    <Icon IconName="change" Height="24" Width="24" Color="var(--angor-primary-btn-icon)"></Icon>
+                    <Icon IconName="change" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
                 </button>
 
                 @if (showChangeNetworkModal)
@@ -147,7 +147,7 @@
             </div>
             <div>
                 <a class="btn btn-success" href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">
-                    <Icon IconName="link" Height="24" Width="24" Color="var(--angor-primary-btn-icon)"></Icon>
+                    <Icon IconName="link" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
                 </a>
             </div>
         </div>
@@ -173,7 +173,7 @@
             </div>
             <button class="btn btn-success" @onclick="Refresh" disabled="@refreshSpinner">
                 <span role="status" aria-hidden="true" class="@(refreshSpinner ? "rotate-icon" : "")">
-                    <Icon IconName="refresh" Height="24" Width="24" Color="var(--angor-primary-btn-icon)"></Icon>
+                    <Icon IconName="refresh" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
                 </span>
             </button>
         </div>
@@ -217,7 +217,7 @@
                             </td>
                             <td class="text-end">
                                 <button class="btn btn-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">
-                                    <Icon IconName="remove" Height="20" Width="20" Color="var(--angor-primary-btn-icon)"></Icon>
+                                    <Icon IconName="remove" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
                                 </button>
                             </td>
                         </tr>
@@ -245,7 +245,7 @@
             </div>
             <button class="btn btn-success" @onclick="Refresh" disabled="@refreshSpinner">
                 <span role="status" aria-hidden="true" class="@(refreshSpinner ? "rotate-icon" : "")">
-                    <Icon IconName="refresh" Height="24" Width="24" Color="var(--angor-primary-btn-icon)"></Icon>
+                    <Icon IconName="refresh" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
                 </span>
             </button>
         </div>
@@ -293,7 +293,7 @@
                             </td>
                             <td class="text-end">
                                 <button class="btn btn-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">
-                                    <Icon IconName="remove" Height="20" Width="20" Color="var(--angor-primary-btn-icon)"></Icon>
+                                    <Icon IconName="remove" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
                                 </button>
                             </td>
                         </tr>
@@ -359,7 +359,7 @@
             </div>
             <div>
                 <button class="btn btn-danger" @onclick="() => showWipeallModal = true">
-                    <Icon IconName="remove" Height="24" Width="24" Color="var(--angor-primary-btn-icon)"></Icon>
+                    <Icon IconName="remove" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
                 </button>
                 @if (showWipeallModal)
                 {

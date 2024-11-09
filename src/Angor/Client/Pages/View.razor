@@ -45,7 +45,7 @@
                     <div class="card card-body angor-alert-info pt-2 pb-2">
                         <div class="d-flex align-items-center">
                             <span class="me-3 user-select-none">
-                                <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary-btn-icon)" />
+                                <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
                             </span>
                             <span class="text-white">@error</span>
                         </div>
@@ -270,8 +270,8 @@
 
                     <div class="mb-3">
                         <!-- Buttons Spend Funds and Approve Signature next to each other -->
-                        <NavLink href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-secondary text-white me-2">Spend Funds</NavLink>
-                        <NavLink href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border">Approve signature</NavLink>
+                        <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border text-white me-2">Spend Funds</a>
+                        <a href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border">Approve signature</a>
                     </div>
                 </div>
             }
@@ -285,7 +285,7 @@
                         <a href="@myProjectExplorerLink" target="_blank">Track your transaction on the explorer.</a>
                     </p>
 
-                    <button class="btn btn-danger mb-3" @onclick="RecoverFunds">Recover</button>
+                    <button class="btn btn-border mb-3" @onclick="RecoverFunds">Recover</button>
                 </div>
             }
             else
@@ -295,7 +295,7 @@
                     <p class="mt-4">
                         Seize the opportunity to invest in this project.
                     </p>
-                    <button class="btn btn-secondary mb-3" data-cy="INVEST_BUTTON"
+                    <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON"
                             @onclick="InvestInProject"
                             disabled="@(projectStats.TimeLeft == 0 ? "disabled" : null)"
                             title="@(projectStats.TimeLeft == 0 ? "The investing period is over" : null)">
@@ -353,7 +353,7 @@
 
                     @if (founder)
                     {
-                        <button @onclick="ShowNsecAsync" class="btn btn-success mt-4">Show private key</button>
+                        <button @onclick="ShowNsecAsync" class="btn btn-border mt-4">Show private key</button>
 
                         @if (isGeneratingNsec)
                         {
