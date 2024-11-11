@@ -2,8 +2,8 @@ using Angor.Server;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.ProtocolNew;
-using Blockcore.Consensus.TransactionInfo;
 using Microsoft.AspNetCore.Mvc;
+using ProjectInvestment = Angor.Server.ProjectInvestment;
 
 namespace Blockcore.AtomicSwaps.Server.Controllers
 {

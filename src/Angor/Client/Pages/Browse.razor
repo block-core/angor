@@ -380,7 +380,7 @@ else
 
             if (findProject != null)
             {
-                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), StateHasChanged, new[] { findProject.NostrPubKey });
+                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), StateHasChanged, new[] { findProject.NostrEventId });
                 projects = new List<ProjectIndexerData> { findProject };
             }
             else
@@ -412,19 +412,49 @@ else
             SessionStorage.SetProjectIndexerData(projects);
 
             var projectsForLookup = projectsNotInList
-                .Where(_ => _.NostrPubKey != null)
-                .Select(_ => _.NostrPubKey)
+                .Where(_ => !string.IsNullOrEmpty(_.NostrEventId))
+                .Select(_ => _.NostrEventId)
                 .ToArray();
 
             nostrSearchInProgress = true;
 
-            if (projectsForLookup.Any())
-                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), () =>
-                {
-                    nostrSearchInProgress = false;
-                    StateHasChanged();
-                }, projectsForLookup);
 
+
+            if (projectsForLookup.Any())
+            {
+                var projectNpubsForLookup = new Dictionary<string, string>();
+
+                _RelayService.LookupProjectsInfoByEventIds<ProjectInfo>(x =>
+                    {
+                        if (SessionStorage.IsProjectInStorageById(x.ProjectIdentifier))
+                            return;
+
+                        var projectIndexerData = projectsNotInList.First(p => p.ProjectIdentifier == x.ProjectIdentifier);
+
+                        SessionStorage.StoreProject(new Project { ProjectInfo = x, CreationTransactionId = projectIndexerData.TrxId });
+
+                        projectNpubsForLookup.Add(x.NostrPubKey, projectIndexerData.ProjectIdentifier);
+
+                    }, () =>
+                        _RelayService.LookupNostrProfileForNPub((npub, nostrMetadata) =>
+                            {
+                                var project = SessionStorage.GetProjectById(projectNpubsForLookup[npub]);
+                                if (project == null)
+                                {
+                                    throw new ArgumentOutOfRangeException("Unable to find the project in storage for requested metadata" + npub);
+                                }
+                                
+                                project.Metadata = nostrMetadata;
+                                SessionStorage.StoreProject(project);
+                            }, () =>
+                            {
+                                nostrSearchInProgress = false;
+                                StateHasChanged();
+                            },
+                            projectNpubsForLookup.Keys.ToArray()),
+                    projectsForLookup);
+            }
+            
             StateHasChanged();
         }
 
@@ -435,9 +465,9 @@ else
     {
         return e =>
         {
-            var projectIndexerData = projects.FirstOrDefault(x => x.NostrPubKey == e.Pubkey);
+            var projectIndexerData = projects.FirstOrDefault(x => x.NostrEventId == e.Pubkey);
 
-            if (projectIndexerData == null && findProject?.NostrPubKey == e.Pubkey)
+            if (projectIndexerData == null && findProject?.NostrEventId == e.Pubkey)
             {
                 projectIndexerData = findProject;
             }
@@ -448,16 +478,7 @@ else
 
                     try
                     {
-                        var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
-                        if (projectIndexerData != null)
-                        {
-                            var project = SessionStorage.GetProjectById(projectIndexerData.ProjectIdentifier);
-                            if (project != null)
-                            {
-                                project.Metadata = nostrMetadata;
-                                SessionStorage.StoreProject(project);
-                            }
-                        }
+                        
                     }
                     catch (Exception ex)
                     {

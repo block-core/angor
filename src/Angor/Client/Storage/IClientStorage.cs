@@ -23,13 +23,6 @@ namespace Angor.Client.Storage
         void DeleteFounderProjects();
         
         
-        // void AddOrUpdateSignatures(SignatureInfo signatureInfo);
-        // void RemoveSignatures(SignatureInfo signatureInfo);
-        // List<SignatureInfo> GetSignatures();
-        // void DeleteSignatures();
-        void SetNostrPublicKeyPerProject(string projectId, string nostrPubKey);
-        string GetNostrPublicKeyPerProject(string projectId);
-        
         SettingsInfo GetSettingsInfo();
         void SetSettingsInfo(SettingsInfo settingsInfo);
         void WipeStorage();

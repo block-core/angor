@@ -27,7 +27,8 @@ namespace Angor.Shared.Services
             _serializer = serializer;
         }
 
-        public void LookupProjectsInfoByPubKeys<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,params string[] nostrPubKeys)
+        public void LookupProjectsInfoByEventIds<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,
+            params string[] nostrEventIds)
         {
             const string subscriptionName = "ProjectInfoLookups";
             
@@ -35,12 +36,6 @@ namespace Angor.Shared.Services
             
             if (nostrClient == null) 
                 throw new InvalidOperationException("The nostr client is null");
-
-            var request = new NostrRequest(subscriptionName, new NostrFilter
-            {
-                Authors = nostrPubKeys,
-                Kinds = new[] { NostrKind.ApplicationSpecificData }
-            });
 
             if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionName))
             {
@@ -57,10 +52,16 @@ namespace Angor.Shared.Services
                 _subscriptionsHandling.TryAddEoseAction(subscriptionName, OnEndOfStreamAction);
             }
             
+            var request = new NostrRequest(subscriptionName, new NostrFilter
+            {
+                Ids = nostrEventIds,
+                Kinds = [NostrKind.ApplicationSpecificData]
+            });
+            
             nostrClient.Send(request);
         }
 
-        public void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,params string[] nostrPubKeys)
+        public void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,params string[] nPubs)
         {
             var subscriptionKey = Guid.NewGuid().ToString().Replace("-","");
             
@@ -84,8 +85,8 @@ namespace Angor.Shared.Services
             
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
-                Authors = nostrPubKeys,
-                Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata},
+                Authors = nPubs,
+                Kinds = [NostrKind.ApplicationSpecificData, NostrKind.Metadata],
             }));
         }
 
@@ -178,6 +179,30 @@ namespace Angor.Shared.Services
         public void CloseConnection()
         {
             _subscriptionsHandling.Dispose();
+        }
+
+        public void LookupNostrProfileForNPub(Action<string,ProjectMetadata> onResponse, Action onEndOfStream, params string[] npubs)
+        {
+            var client = _communicationFactory.GetOrCreateClient(_networkService);
+            
+            var subscriptionKey = new Guid().ToString().Replace("-","");
+            
+            if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = client.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event is not null)
+                    .Select(_ => _.Event as NostrMetadataEvent)
+                    .Subscribe(@event => onResponse(@event.Pubkey,ProjectMetadata.Parse(@event.Metadata)));
+
+                _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            client.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                Authors = npubs,
+                Kinds = [NostrKind.Metadata],
+            }));
         }
 
         public Task<string> AddProjectAsync(ProjectInfo project, string hexPrivateKey, Action<NostrOkResponse> action)
