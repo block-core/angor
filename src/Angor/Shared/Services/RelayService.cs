@@ -185,7 +185,7 @@ namespace Angor.Shared.Services
         {
             var client = _communicationFactory.GetOrCreateClient(_networkService);
             
-            var subscriptionKey = new Guid().ToString().Replace("-","");
+            var subscriptionKey = Guid.NewGuid().ToString().Replace("-","");
             
             if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionKey))
             {
@@ -193,9 +193,14 @@ namespace Angor.Shared.Services
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event is not null)
                     .Select(_ => _.Event as NostrMetadataEvent)
-                    .Subscribe(@event => onResponse(@event.Pubkey,ProjectMetadata.Parse(@event.Metadata)));
+                    .Subscribe(@event => onResponse(@event.Pubkey, ProjectMetadata.Parse(_serializer.Deserialize<NostrMetadata>(@event.Content))));
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+            
+            if (onEndOfStream != null)
+            {
+                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, onEndOfStream);   
             }
 
             client.Send(new NostrRequest(subscriptionKey, new NostrFilter

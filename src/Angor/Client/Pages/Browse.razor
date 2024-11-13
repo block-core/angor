@@ -443,6 +443,9 @@ else
                                 {
                                     throw new ArgumentOutOfRangeException("Unable to find the project in storage for requested metadata" + npub);
                                 }
+
+                                if (project.Metadata != null)
+                                    return;
                                 
                                 project.Metadata = nostrMetadata;
                                 SessionStorage.StoreProject(project);
