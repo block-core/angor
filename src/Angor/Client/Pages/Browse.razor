@@ -1,7 +1,6 @@
 ﻿@page "/browse"
 @using Angor.Shared.Models
 @using Angor.Shared.Services
-@using HtmlAgilityPack
 @using Nostr.Client.Messages
 @using Angor.Client.Models
 @using Angor.Client.Storage
@@ -199,7 +198,7 @@ else
                                                         </div>
                                                     </div>
 
-                                                    <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@ConvertToMarkupString(HtmlStripperService.StripHtmlTags(project.Metadata.About))</p>
+                                                    <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@ConvertToMarkupString(project.Metadata.About)</p>
                                                 }
                                             }
                                             else

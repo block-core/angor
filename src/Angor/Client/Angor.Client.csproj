@@ -11,7 +11,6 @@
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
     <PackageReference Include="Blockcore.Core" Version="1.1.41" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.71" />
     <PackageReference Include="NBitcoin" Version="7.0.25" />
     <PackageReference Include="Nostr.Client" Version="2.0.0" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
