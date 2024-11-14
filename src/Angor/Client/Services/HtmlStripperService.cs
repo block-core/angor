@@ -1,9 +1,12 @@
-﻿using System.Text.RegularExpressions;
+﻿using HtmlAgilityPack;
+using System.Text;
 
 namespace Angor.Client.Services
 {
     public class HtmlStripperService : IHtmlStripperService
     {
+        private readonly string[] blockTags = { "br", "h1", "h2", "h3", "h4", "h5", "h6", "p", "div", "section", "article", "footer", "header", "main" };
+
         public string StripHtmlTags(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -11,40 +14,62 @@ namespace Angor.Client.Services
                 return string.Empty;
             }
 
-            input = Regex.Replace(input, @"<script.*?>.*?</script>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            var doc = new HtmlDocument();
+            doc.LoadHtml(input);
 
-            input = Regex.Replace(input, @"<style.*?>.*?</style>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            // Use a StringBuilder to build the cleaned text
+            var cleanedText = new StringBuilder();
 
-            input = Regex.Replace(input, @"<([a-zA-Z][^\s>]*)(\s+[^>]*)?>", match =>
+            foreach (var node in doc.DocumentNode.ChildNodes)
             {
-                string tag = match.Groups[1].Value;
-                string attributes = match.Groups[2].Value;
-
-                attributes = Regex.Replace(attributes, @"\s+(style|class)\s*=\s*""[^""]*""", string.Empty, RegexOptions.IgnoreCase);
-
-                return $"<{tag}{attributes}>";
-            }, RegexOptions.IgnoreCase);
-
-            string allowedTagsPattern = @"<(?!\/?(br|p|a|ul|ol|li|strong|em|b|i|u|hr|blockquote|img|div|span|table|thead|tbody|tr|td|th)\b)[^>]+>";
-            input = Regex.Replace(input, allowedTagsPattern, string.Empty, RegexOptions.IgnoreCase);
-
-            string[] blockTags = { "h1", "h2", "h3", "h4", "h5", "h6", "p", "div", "section", "article", "footer", "header", "main" };
-
-            foreach (var tag in blockTags)
-            {
-                input = Regex.Replace(input, $@"<\/?{tag}[^>]*>", "<br />", RegexOptions.IgnoreCase);
+                ProcessNode(node, cleanedText);
             }
 
-            input = Regex.Replace(input, @"<((?!br\s*/?)[^>]+)>", string.Empty);
+            // Replace multiple consecutive <br> tags with a single one
+            var result = cleanedText.ToString();
+            result = System.Text.RegularExpressions.Regex.Replace(result, @"(<br>\s*){2,}", "<br>");
 
-            input = Regex.Replace(input, @"(\r?\n){2,}", "\n");
-            input = Regex.Replace(input, @"(<br />\s*){2,}", "<br />");
-            input = Regex.Replace(input, @"^\s*<br />\s*|\s*<br />\s*$", string.Empty);
-            input = Regex.Replace(input, @"\s*(<br />)\s*", "$1");
-
-            return input;
+            return result;
         }
 
-    }
+        private void ProcessNode(HtmlNode node, StringBuilder output)
+        {
+            if (node.NodeType == HtmlNodeType.Text)
+            {
+                // Append the text content of the node
+                AppendText(node.InnerText, output);
+            }
+            else if (node.NodeType == HtmlNodeType.Element)
+            {
+                if (blockTags.Contains(node.Name.ToLower()))
+                {
+                    // Add a line break before processing the content of block tags
+                    output.Append("<br>");
+                    foreach (var child in node.ChildNodes)
+                    {
+                        ProcessNode(child, output);
+                    }
+                    output.Append("<br>");
+                }
+                else
+                {
+                    // Recursively process other element nodes
+                    foreach (var child in node.ChildNodes)
+                    {
+                        ProcessNode(child, output);
+                    }
+                }
+            }
+        }
 
+        private void AppendText(string text, StringBuilder output)
+        {
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                // Clean up and normalize the text
+                var normalizedText = text;
+                output.Append(normalizedText);
+            }
+        }
+    }
 }
