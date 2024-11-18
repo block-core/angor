@@ -256,8 +256,9 @@
                 <option value="">Select a preset...</option>
                 <option value="preset1">Preset 1: 3 Stages (10%, 30%, 60%)</option>
                 <option value="preset2">Preset 2: 4 Stages (25%, 25%, 25%, 25%)</option>
-                <option value="preset3">Preset 3: 2 Stages (60%, 20%, 20%)</option>
+                <option value="preset3">Preset 3: 3 Stages (60%, 20%, 20%)</option>
             </select>
+
             <div class="mb-3">
                 <label for="seeoptionbetween" class="form-label">Automatic Creation: </label>
 
@@ -276,22 +277,21 @@
         <h3 class="mb-3">Stages</h3>
         @foreach (var stage in project.ProjectInfo.Stages)
         {
-            <div class="mb-3">
-                <label class="form-label">The amount in % to allocate for stage @(project.ProjectInfo.Stages.IndexOf(stage) + 1)</label>
-                <div class="input-group">
-                    <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1" disabled="@nostrApplicationSpecificDataCreated" />
-                    <InputDate @bind-Value="stage.ReleaseDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
-                    <button type="button" class="btn btn-danger" @onclick="() => RemoveStage(stage)" disabled="@nostrApplicationSpecificDataCreated">Remove</button>
-                </div>
-                @if (project.ProjectInfo.Stages.IndexOf(stage) > 0)
-                {
-                    <p class="text-muted">
-                        Days since last stage: 
-                        @(stage.ReleaseDate - project.ProjectInfo.Stages[project.ProjectInfo.Stages.IndexOf(stage) - 1].ReleaseDate).Days days
-                    </p>
-                }
+        <div class="mb-3">
+            <label class="form-label">The amount in % to allocate for stage @(project.ProjectInfo.Stages.IndexOf(stage) + 1)</label>
+            <div class="input-group">
+                <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1" disabled="@nostrApplicationSpecificDataCreated" />
+                <InputDate @bind-Value="stage.ReleaseDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
             </div>
+            @if (project.ProjectInfo.Stages.IndexOf(stage) > 0)
+            {
+            var previousStage = project.ProjectInfo.Stages[project.ProjectInfo.Stages.IndexOf(stage) - 1];
+            var daysBetween = (stage.ReleaseDate - previousStage.ReleaseDate).Days;
+            <p class="text-muted">Days since last stage: @daysBetween days</p>
+            }
+        </div>
         }
+        
 
 
         <button type="button" class="btn btn-border mb-3" @onclick="AddStage" disabled="@nostrApplicationSpecificDataCreated">Add Stage</button>
@@ -587,6 +587,14 @@
         Metadata = new ProjectMetadata(),
         CreationTransactionId = null
     };
+    
+    private readonly Dictionary<string, (int[] Percentages, int IntervalDays)> presets = new()
+    {
+        { "preset1", (new[] { 10, 30, 60 }, 10) },
+        { "preset2", (new[] { 25, 25, 25, 25 }, 10) },
+        { "preset3", (new[] { 60, 20, 20 }, 15) }
+    };
+    
 
     private int activeTab = 1;
     
@@ -1054,41 +1062,27 @@
 
     private void OnStagePresetChange(ChangeEventArgs e)
     {
-        totalDuration = 0;
-        numberOfStages = 0;
-
         var selectedPreset = e.Value?.ToString();
-        if (selectedPreset == "preset1")
+
+        if (selectedPreset != null && presets.TryGetValue(selectedPreset, out var preset))
         {
-            project.ProjectInfo.Stages = new List<Stage>
-            {
-                new() { AmountToRelease = 10, ReleaseDate = project.ProjectInfo.StartDate.AddDays(10) },
-                new() { AmountToRelease = 30, ReleaseDate = project.ProjectInfo.StartDate.AddDays(20) },
-                new() { AmountToRelease = 60, ReleaseDate = project.ProjectInfo.StartDate.AddDays(30) }
-            };
-        }
-        else if (selectedPreset == "preset2")
+            // Clear existing stages to prevent duplication
+            project.ProjectInfo.Stages.Clear();
+
+            // Generate and assign new stages
+            project.ProjectInfo.Stages = GenerateStages(preset.Percentages, preset.IntervalDays);
+
+            }
+        else
         {
-            project.ProjectInfo.Stages = new List<Stage>
-            {
-                new() { AmountToRelease = 25, ReleaseDate = project.ProjectInfo.StartDate.AddDays(10) },
-                new() { AmountToRelease = 25, ReleaseDate = project.ProjectInfo.StartDate.AddDays(20) },
-                new() { AmountToRelease = 25, ReleaseDate = project.ProjectInfo.StartDate.AddDays(30) },
-                new() { AmountToRelease = 25, ReleaseDate = project.ProjectInfo.StartDate.AddDays(40) }
-            };
-        }
-        else if (selectedPreset == "preset3")
-        {
-            project.ProjectInfo.Stages = new List<Stage>
-            {
-                new() { AmountToRelease = 60, ReleaseDate = project.ProjectInfo.StartDate.AddDays(15) },
-                new() { AmountToRelease = 20, ReleaseDate = project.ProjectInfo.StartDate.AddDays(30) },
-                new() { AmountToRelease = 20, ReleaseDate = project.ProjectInfo.StartDate.AddDays(45) }
-            };
+            notificationComponent.ShowErrorMessage("Invalid preset selected.");
+            project.ProjectInfo.Stages.Clear();
         }
 
         StateHasChanged();
     }
+
+
 
 
     private async Task<bool> ProjectInfoMetaDataTestInput()
@@ -1201,6 +1195,33 @@
 
         CloseResetConfirmation();
     }
+    
+    private List<Stage> GenerateStages(int[] percentages, int intervalDays)
+    {
+        var stages = new List<Stage>();
+        var currentDate = project.ProjectInfo.StartDate;
+
+        for (int i = 0; i < percentages.Length; i++)
+        {
+            stages.Add(new Stage
+            {
+                AmountToRelease = percentages[i],
+                ReleaseDate = currentDate
+            });
+
+            if (i > 0)
+            {
+                var daysBetween = (currentDate - stages[i - 1].ReleaseDate).Days;
+                _Logger.LogInformation($"Days between stage {i} and {i + 1}: {daysBetween} days");
+            }
+
+            currentDate = currentDate.AddDays(intervalDays);
+        }
+
+        return stages;
+    }
+
+
     
     private void GenerateSmartStages()
     {
