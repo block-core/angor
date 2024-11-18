@@ -43,8 +43,10 @@ window.updateAvailable = new Promise(function (resolve, reject) {
 window.updateAvailable
     .then(isAvailable => {
         if (isAvailable) {
-            if (confirm("New update is available. Would you like to refresh?")) {
-                notifyNewVersion();
+            window.isUpdateAvailable = true;
+            const updateButton = document.getElementById('updateButton');
+            if (updateButton) {
+                updateButton.classList.remove('d-none');
             }
         }
     });

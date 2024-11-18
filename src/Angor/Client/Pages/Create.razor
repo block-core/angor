@@ -17,6 +17,7 @@
 @inject IWalletOperations _WalletOperations
 @inject IRelayService _RelayService
 @inject ILogger<Create> _Logger;
+@inject IHtmlStripperService HtmlStripperService;
 
 @inject IFounderTransactionActions _founderTransactionActions
 <NotificationComponent @ref="notificationComponent"/>
@@ -179,14 +180,14 @@
                             </div>
                         </div>
 
-                        @if (string.IsNullOrEmpty(project.Metadata?.About))
-                        {
-                            <p class="mb-0 line-clamp-3">About</p>
-                        }
-                        else
-                        {
-                            <p class="mb-0 line-clamp-3">@project.Metadata.About</p>
-                        }
+                            @if (string.IsNullOrEmpty(project.Metadata?.About))
+                            {
+                                <p class="mb-0 line-clamp-3">About</p>
+                            }
+                            else
+                            {
+                                <p class="mb-0 line-clamp-3">@ConvertToMarkupString(project.Metadata.About)</p>
+                            }
 
                     </div>
                     <div class="card-footer pt-0">
@@ -1023,6 +1024,12 @@
         project.ProjectInfo.Stages.Remove(stage);
     }
 
+    public MarkupString ConvertToMarkupString(string input)
+    {
+        string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
+        return new MarkupString(sanitizedInput);
+    }
+
     private void ChangeTab(int tabNumber)
     {
         activeTab = tabNumber;
@@ -1083,6 +1090,7 @@
         StateHasChanged();
     }
 
+}
 
     private async Task<bool> ProjectInfoMetaDataTestInput()
     {

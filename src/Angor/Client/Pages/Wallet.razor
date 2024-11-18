@@ -1,12 +1,13 @@
 @page "/wallet"
 
+
 @using System.Text.Json
 @using Angor.Client.Storage
 @using Angor.Shared
 @using Angor.Shared.Models
 @using Blockcore.NBitcoin
 @using Blockcore.Networks
-
+@inherits BaseComponent
 @inject HttpClient _httpClient;
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
@@ -19,7 +20,7 @@
 @inject NavMenuState NavMenuState
 @inject IEncryptionService _encryptionService
 @inject IClipboardService ClipboardService
-@inherits BaseComponent
+
 
 <PageTitle>Wallet and balances</PageTitle>
 <NotificationComponent @ref="notificationComponent"/>
@@ -471,8 +472,8 @@ else
                                                 var outpointStr = addressUtxoItem.outpoint.ToString();
                                                 var outpointLength = outpointStr.Length;
                                                 var shortenedOutpoint = outpointLength > 20
-                                                ? $"{outpointStr.Substring(0, 10)} ... {outpointStr.Substring(outpointLength - 10)}"
-                                                : outpointStr; 
+                                                    ? $"{outpointStr.Substring(0, 10)} ... {outpointStr.Substring(outpointLength - 10)}"
+                                                    : outpointStr;
 
                                                 var valueInBTC = Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC);
                                                 var coinTicker = network.CoinTicker;
@@ -487,7 +488,7 @@ else
 
                                     </div>
                                     <div class="modal-footer">
-                                        <button class="btn btn-warning" @onclick="() => coinControlModal = false" >Submit</button>
+                                        <button class="btn btn-warning" @onclick="() => coinControlModal = false">Submit</button>
                                     </div>
                                 </div>
                             </div>
@@ -498,6 +499,7 @@ else
                 @if (sendConfirmModal)
                 {
                     <!-- Send Confirmation Modal -->
+                    
                     <div class="modal-wrapper">
                         <div class="modal fade show d-block">
                             <div class="modal-dialog">
@@ -509,13 +511,8 @@ else
                                         </span>
                                     </div>
                                     <div class="modal-body modal-body-scroll">
-                                        Are you sure you want to send <strong>@_sendInfo.SendAmount @network.CoinTicker</strong> to <strong> @_sendInfo.SendToAddress?</strong>
-
-                                        <br/>
-
-                                        The fee for this transaction will be <strong>@_sendInfo.SendFee</strong>
-
-                                        <hr>
+                                        <p>Are you sure you want to send @_sendInfo.SendAmount to @_sendInfo.SendToAddress?</p>
+                                        <p>Fees: @_sendInfo.SendFee</p>
 
                                         <div class="mb-3">
                                             <label for="feeRange" class="form-label">Feerate for @_sendInfo.FeeBlockCount blocks is @_sendInfo.FeeRate sats</label>
@@ -548,6 +545,9 @@ else
                                             {
                                                 <span>Confirm</span>
                                             }
+                                        </button>
+                                        <button class="btn btn-outline-primary" @onclick="ShowTransactionJson">
+                                            View Transaction Details
                                         </button>
                                     </div>
                                 </div>
@@ -619,6 +619,7 @@ else
                             <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Amount</th>
                             <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Path</th>
                             <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">UTXO count</th>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">View Raw Json</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -631,17 +632,17 @@ else
                             {
                                 <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
                                     <td>@addressInfo.Address</td>
-                                    <td>
-                                            @Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                    </td>
+                                    <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
                                     <td>@addressInfo.HdPath</td>
                                     <td>@count</td>
+                                    <td>
+                                        <button class="btn btn-border" @onclick="() => ShowRawTransactionJson(addressInfo)">Show</button>
+                                    </td>
                                 </tr>
-
                                 @if (IsExpanded(addressInfo.Address))
                                 {
                                     <tr>
-                                        <td colspan="4">
+                                        <td colspan="5">
                                             <div class="collapse show" data-cy="expend-amount" id="@($"collapse-{addressInfo.Address}")">
                                                 <div class="card card-body">
                                                     <!-- Inner table goes here -->
@@ -676,6 +677,9 @@ else
                 </div>
             </div>
         </div>
+        <RawTransactionModal RawTransactionJson="@rawTransactionJson" IsVisible="@showRawTransactionModal" IsVisibleChanged="HandleModalVisibility" />
+        <RawTransactionModal RawTransactionJson="@transactionJson" IsVisible="@showTransactionJsonModal" IsVisibleChanged="HandleTransactionJsonModalVisibility" />
+
     </div>
 }
 
@@ -720,6 +724,11 @@ else
     private int feeRange = 0;
     private int FeePosition = 1;
     private SendInfo _sendInfo = new();
+
+    private bool showRawTransactionModal;
+    private string rawTransactionJson = string.Empty;
+    private string transactionJson;
+    private bool showTransactionJsonModal = false;
 
     private readonly AccountBalanceInfo accountBalanceInfo = new();
 
@@ -1243,7 +1252,7 @@ else
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, $"Failed to read clipboard contents");
+            Logger.LogError(ex, "Failed to read clipboard contents");
         }
     }
 
@@ -1287,6 +1296,66 @@ else
 
         Logger.LogInformation($"Fiat value for total balance: {fiatValuesList.First()}");
     }
+
+
+    private void ShowRawTransactionJson(AddressInfo addressInfo)
+    {
+        rawTransactionJson = GetRawTransactionJson(addressInfo);
+        showRawTransactionModal = true;
+    }
+
+    private void HandleModalVisibility(bool isVisible)
+    {
+        showRawTransactionModal = isVisible;
+    }
+
+    private string GetRawTransactionJson(AddressInfo addressInfo)
+    {
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        return JsonSerializer.Serialize(addressInfo, options);
+    }
+
+    private async Task CopyStringToClipboard(string msg)
+    {
+        await _clipboardService.WriteTextAsync(msg);
+        notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
+        StateHasChanged();
+    }
+    
+    private async Task PrepareTransactionJson()
+    {
+        var transactionDetails = new
+        {
+            Amount = _sendInfo.SendAmount,
+            ToAddress = _sendInfo.SendToAddress,
+            Fee = _sendInfo.SendFee,
+            FeeRate = $"{_sendInfo.FeeRate} sats per byte for {_sendInfo.FeeBlockCount} block confirmations",
+            ChangeAddress = _sendInfo.ChangeAddress,
+            Inputs = _sendInfo.SendUtxos.Select(u => new 
+            {
+                Address = u.Value.UtxoData.address,
+                Amount = Money.Satoshis(u.Value.UtxoData.value).ToUnit(MoneyUnit.BTC),
+                Outpoint = u.Key,
+                CoinTicker = network.CoinTicker
+            })
+        };
+
+        transactionJson = JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions { WriteIndented = true });
+    }
+    
+    
+    private async Task ShowTransactionJson()
+    {
+        await PrepareTransactionJson();
+        showTransactionJsonModal = true;
+    }
+
+    private void HandleTransactionJsonModalVisibility(bool isVisible)
+    {
+        showTransactionJsonModal = isVisible;
+    }
+
+
 
 
 }

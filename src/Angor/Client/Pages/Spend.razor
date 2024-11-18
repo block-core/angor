@@ -10,6 +10,8 @@
 @using Blockcore.NBitcoin.DataEncoders
 @using Angor.Shared.Utilities
 @using ITransactionSignature = NBitcoin.ITransactionSignature
+@using System.Text.Json
+
 
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
@@ -25,6 +27,7 @@
 
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
+<RawTransactionModal RawTransactionJson="@rawTransactionJson" IsVisible="@showRawTransactionModal" IsVisibleChanged="HandleRawTransactionModalVisibility"/>
 
 
 @if (!hasWallet)
@@ -193,7 +196,7 @@
 
                     </div>
                     <div class="modal-footer">
-                         <button type="button" class="btn btn-border" @onclick="Send" disabled="@spendSpinner">
+                        <button type="button" class="btn btn-border" @onclick="Send" disabled="@spendSpinner">
                             @if (spendSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -203,6 +206,9 @@
                             {
                                 <span>Confirm</span>
                             }
+                        </button>
+                        <button class="btn btn-primary" @onclick="ShowTransactionJsonModal">
+                            Show Transaction Details
                         </button>
                     </div>
                 </div>
@@ -244,6 +250,9 @@
 
     private int? expandedStageId;
     private bool showCreateModal;
+    
+    private bool showRawTransactionModal = false;
+    private string rawTransactionJson;
 
     private bool refreshSpinner = false;
     private bool firstTimeRefreshSpinner = false;
@@ -713,4 +722,34 @@
         }
     }
 
+    private async Task ShowTransactionJsonModal()
+    {
+        rawTransactionJson = PrepareTransactionDetails();
+        showRawTransactionModal = true;
+    }
+
+    private string PrepareTransactionDetails()
+    {
+        var transactionDetails = new
+        {
+            ProjectIdentifier = project.ProjectIdentifier,
+            TotalSpent = signedTransaction.Transaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)),
+            MinerFee = Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC),
+            FeeRate = feeData.SelectedFeeEstimation.FeeRate,
+            Confirmations = feeData.SelectedFeeEstimation.Confirmations,
+            Utxos = selectedUtxos.Select(utxo => new
+            {
+                Stage = GetStageIndexForUtxo(utxo.Key),
+                TransactionId = utxo.Key.Trxid,
+                OutputIndex = utxo.Key.Outputindex
+            }).ToList()
+        };
+
+        return JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    private void HandleRawTransactionModalVisibility(bool isVisible)
+    {
+        showRawTransactionModal = isVisible;
+    }
 }

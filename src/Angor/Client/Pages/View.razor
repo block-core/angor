@@ -21,6 +21,7 @@
 @inject ISerializer serializer
 @inject IJSRuntime Js;
 @inject ILogger<Browse> Logger;
+@inject IHtmlStripperService HtmlStripperService;
 
 @inject NostrConversionHelper NostrHelper
 
@@ -738,38 +739,10 @@ else
             notificationComponent.ShowNotificationMessage("Public key is not available.", 3);
         }
     }
-
-    public string StripHtmlTags(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            return string.Empty;
-        }
-
-        input = Regex.Replace(input, @"<script.*?>.*?</script>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-        input = Regex.Replace(input, @"<style.*?>.*?</style>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-        input = Regex.Replace(input, @"<([a-zA-Z][^\s>]*)(\s+[^>]*)?>", match =>
-        {
-            var tag = match.Groups[1].Value;
-            var attributes = match.Groups[2].Value;
-
-            attributes = Regex.Replace(attributes, @"\s+(style|class)\s*=\s*""[^""]*""", string.Empty, RegexOptions.IgnoreCase);
-
-            return $"<{tag}{attributes}>";
-        }, RegexOptions.IgnoreCase);
-
-        var allowedTagsPattern = @"<(?!\/?(br|p|a|ul|ol|li|strong|em|b|i|u|hr|blockquote|img|div|span|table|thead|tbody|tr|td|th)\b)[^>]+>";
-        input = Regex.Replace(input, allowedTagsPattern, string.Empty, RegexOptions.IgnoreCase);
-
-
-        return input;
-    }
-
+ 
     public MarkupString ConvertToMarkupString(string input)
     {
-        var sanitizedInput = StripHtmlTags(input);
+        string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
     }
 
