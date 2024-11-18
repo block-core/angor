@@ -35,17 +35,22 @@
                     </div>
                     <ul class="navbar-nav justify-content-end user-select-none">
                         <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
-                            <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="iconNavbarSidenav" @onclick="ToggleSidenav">
+                            <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="iconNavbarSidenav" @onclick="ToggleSidenav" data-tooltip="Open menu">
                                 <Icon IconName="hamburger-menu" />
                             </span>
                         </li>
+                        <li class="nav-item ps-3 d-flex align-items-center d-none" id="updateButton">
+                            <span @onclick="UpdateApp" role="button" data-tooltip="Get latest version">
+                                <Icon IconName="update" />
+                            </span>
+                        </li>
                         <li class="nav-item ps-3 d-flex align-items-center" id="dark" @onclick="ToggleTheme">
-                            <span role="button" id="theme-icon">
+                            <span role="button" id="theme-icon" data-tooltip="Toggle theme">
                                 <Icon IconName=@themeIcon />
                             </span>
                         </li>
                         <li class="nav-item ps-3 d-flex align-items-center d-none" id="installButton">
-                            <span @onclick="InstallApp" role="button">
+                            <span @onclick="InstallApp" role="button" data-tooltip="Install app">
                                 <Icon IconName="install" />
                             </span>
                         </li>
@@ -127,6 +132,11 @@
         _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower());
 
         SetNetworkText();
+    }
+
+    private async Task UpdateApp()
+    {
+        await Js.InvokeVoidAsync("location.reload");
     }
 
     private void SetNetworkText()

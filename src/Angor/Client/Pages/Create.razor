@@ -19,6 +19,7 @@
 @inject IWalletOperations _WalletOperations
 @inject IRelayService _RelayService
 @inject ILogger<Create> _Logger;
+@inject IHtmlStripperService HtmlStripperService;
 
 @inject IFounderTransactionActions _founderTransactionActions
 <NotificationComponent @ref="notificationComponent" />
@@ -200,7 +201,7 @@
                             }
                             else
                             {
-                                <p class="mb-0 line-clamp-3">@project.Metadata.About</p>
+                                <p class="mb-0 line-clamp-3">@ConvertToMarkupString(project.Metadata.About)</p>
                             }
 
                         </div>
@@ -885,4 +886,11 @@
     {
         project.ProjectInfo.Stages.Remove(stage);
     }
+
+    public MarkupString ConvertToMarkupString(string input)
+    {
+        string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
+        return new MarkupString(sanitizedInput);
+    }
+
 }
