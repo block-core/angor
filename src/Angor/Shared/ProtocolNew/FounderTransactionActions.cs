@@ -139,7 +139,7 @@ public class FounderTransactionActions : IFounderTransactionActions
         return new TransactionInfo {Transaction = finalTrx, TransactionFee = totalFee};
     }
 
-    public Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, string nostrPubKey)
+    public Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, short keyType,  string nostrPubKey)
     {
         var projectStartTransaction = _networkConfiguration.GetNetwork()
             .Consensus.ConsensusFactory.CreateTransaction();
@@ -153,7 +153,7 @@ public class FounderTransactionActions : IFounderTransactionActions
         // todo: here we should add the hash of the project data as opreturn
 
         // create the output and script of the investor pubkey script opreturn
-        var angorFeeOutputScript = _projectScriptsBuilder.BuildFounderInfoScript(founderKey, nostrPubKey);
+        var angorFeeOutputScript = _projectScriptsBuilder.BuildFounderInfoScript(founderKey, keyType, nostrPubKey);
         var founderOPReturnOutput = new Blockcore.Consensus.TransactionInfo.TxOut(
             new Blockcore.NBitcoin.Money(0), angorFeeOutputScript);
         projectStartTransaction.AddOutput(founderOPReturnOutput);
