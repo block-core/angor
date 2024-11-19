@@ -40,7 +40,25 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
-    <script>navigator.serviceWorker.register('service-worker.js');</script>
+    <script>
+        let newWorker;
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js').then((registration) => {
+                registration.onupdatefound = () => {
+                    newWorker = registration.installing;
+                    newWorker.onstatechange = () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            if (confirm('New version available. Refresh to update?')) {
+                                newWorker.postMessage('skipWaiting');
+                            }
+                        }
+                    };
+                };
+            });
+        }
+    </script>
+
     <script type="module" src="service-crypto.js"></script>
     <script src="/ServiceWorkerRegister.js"></script>
     <script src="nostr-tools-methods.js" type="module"></script>
