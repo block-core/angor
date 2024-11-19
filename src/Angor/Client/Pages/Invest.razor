@@ -900,4 +900,41 @@ else
         public DateTime StageDateTime { get; set; }
         public int DaysFromStartDate { get; set; }
     }
+    
+    private async Task PrepareInvestmentTransactionJson()
+    {
+        var transactionDetails = new
+        {
+            ProjectIdentifier = project.ProjectInfo.ProjectIdentifier,
+            FounderKey = project.ProjectInfo.FounderKey.Substring(0, 10) + "...",
+            TargetAmount = $"{project.ProjectInfo.TargetAmount} {network.CoinTicker}",
+            StartDate = project.ProjectInfo.StartDate.ToString("dd/MM/yyyy"),
+            ExpiryDate = project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy"),
+            PenaltyDays = project.ProjectInfo.PenaltyDays,
+            MinerFee = Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC),
+            AngorFee = signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) ?? 0,
+            FeeRate = $"{feeData.SelectedFeeEstimation.FeeRate} sats",
+            Confirmations = feeData.SelectedFeeEstimation.Confirmations,
+            Stages = project.ProjectInfo.Stages.Select((stage, index) => new
+            {
+                StageAmount = $"{StagesBreakdown[index].Amount} BTC - {stage.AmountToRelease}%",
+                StageDate = stage.ReleaseDate.ToString("dd/MM/yyyy"),
+                DaysAfterStart = (stage.ReleaseDate - project.ProjectInfo.StartDate).Days
+            }).ToList()
+        };
+
+        transactionJson = JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    
+    private async Task ShowTransactionJsonModal()
+    {
+        await PrepareInvestmentTransactionJson();
+        showTransactionJsonModal = true;
+    }
+
+    private void HandleTransactionJsonModalVisibility(bool isVisible)
+    {
+        showTransactionJsonModal = isVisible;
+    }
 }
