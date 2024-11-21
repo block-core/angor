@@ -7,6 +7,7 @@
 
 @inject INetworkConfiguration _networkConfiguration
 @inject INetworkService _networkService
+@inject IIndexerService _indexerService;
 @inject IClientStorage _clientStorage
 @inject ICacheStorage _cacheStorage;
 @inject IWalletStorage _walletStorage;
@@ -471,20 +472,20 @@
             await Refresh(false);
         }
     }
-
+    
     private async Task AddIndexer()
     {
         if (!string.IsNullOrWhiteSpace(newIndexerLink))
         {
             if (!Uri.TryCreate(newIndexerLink, UriKind.Absolute, out Uri? uri))
             {
-                notificationComponent.ShowErrorMessage($"invalid url {newIndexerLink}");
+                notificationComponent.ShowErrorMessage($"Invalid URL: {newIndexerLink}");
                 return;
             }
 
             if (uri.Scheme is not ("http" or "https"))
             {
-                notificationComponent.ShowErrorMessage($"invalid url {newIndexerLink} schema must be http or https");
+                notificationComponent.ShowErrorMessage($"Invalid URL schema: {newIndexerLink}. Must be HTTP or HTTPS.");
                 return;
             }
 
@@ -492,17 +493,35 @@
 
             if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
             {
-                notificationComponent.ShowErrorMessage($"url exists {newIndexerLink}");
+                notificationComponent.ShowErrorMessage($"URL already exists: {newIndexerLink}");
                 return;
             }
 
+            // fetch the genesis block hash from the indexer
+            var fetchedHash = await _indexerService.GetGenesisBlockHashAsync(newIndexerLink);
+
+            // get the expected hash for the current network
+            var expectedHash = _networkConfiguration.GetGenesisBlockHash();
+
+            // validate the fetched hash against the expected hash
+            if (string.IsNullOrEmpty(fetchedHash) || !_indexerService.ValidateGenesisBlockHash(fetchedHash, expectedHash))
+            {
+                notificationComponent.ShowErrorMessage("The indexer is not compatible with the selected network.");
+                return;
+            }
+
+            // add the validated indexer
             settingsInfo.Indexers.Add(new SettingsUrl { Url = newIndexerLink, IsPrimary = !settingsInfo.Indexers.Any() });
             _clientStorage.SetSettingsInfo(settingsInfo);
-            newIndexerLink = string.Empty;
-        }
 
-        await Refresh(false);
+            notificationComponent.ShowNotificationMessage("Indexer added successfully.");
+            newIndexerLink = string.Empty;
+
+            await Refresh(false);
+        }
     }
+
+    
 
     private async Task AddRelay()
     {

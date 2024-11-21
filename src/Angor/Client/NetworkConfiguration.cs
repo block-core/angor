@@ -198,5 +198,18 @@ public class NetworkConfiguration : INetworkConfiguration
 
         throw new ApplicationException("Network not set");
     }
+    
+    public string GetGenesisBlockHash()
+    {
+        return GetNetwork().Name switch
+        {
+            "Main" => "000000000019d6689c085ae165831e93",
+            "TestNet" => "000000000933ea01ad0ee984209779ba",
+            "Signet" => "0000000bba4bfa8b8cecead6c98c8e54",
+            "Liquid" => "db7e60a9a3db3c4ff85e55f799ea4c74",
+            _ => string.Empty
+        };
+    }
+
 
 }

@@ -15,6 +15,10 @@ namespace Angor.Shared.Services
         Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false);
         Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset);
         Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations);
+        Task<string> GetGenesisBlockHashAsync(string indexerUrl);
+        bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash);
+        Task<bool> CheckIndexerStatusAsync(string indexerUrl);
+
 
         Task<string> GetTransactionHexByIdAsync(string transactionId);
 
@@ -58,7 +62,8 @@ namespace Angor.Shared.Services
         private readonly HttpClient _httpClient;
         private readonly INetworkService _networkService;
 
-        public IndexerService(INetworkConfiguration networkConfiguration, HttpClient httpClient, INetworkService networkService)
+        public IndexerService(INetworkConfiguration networkConfiguration, HttpClient httpClient,
+            INetworkService networkService)
         {
             _networkConfiguration = networkConfiguration;
             _httpClient = httpClient;
@@ -68,7 +73,8 @@ namespace Angor.Shared.Services
         public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
         {
             var indexer = _networkService.GetPrimaryIndexer();
-            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects?offset={offset}&limit={limit}");
+            var response =
+                await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects?offset={offset}&limit={limit}");
             _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>();
@@ -94,7 +100,7 @@ namespace Angor.Shared.Services
             {
                 return null;
             }
-            
+
             return await response.Content.ReadFromJsonAsync<ProjectIndexerData>();
         }
 
@@ -120,7 +126,8 @@ namespace Angor.Shared.Services
         public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)
         {
             var indexer = _networkService.GetPrimaryIndexer();
-            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/investments");
+            var response =
+                await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/investments");
             _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
@@ -132,7 +139,7 @@ namespace Angor.Shared.Services
 
             var response = await _httpClient.PostAsync($"{indexer.Url}/api/command/send", new StringContent(trxHex));
             _networkService.CheckAndHandleError(response);
-            
+
             if (response.IsSuccessStatusCode)
                 return string.Empty;
 
@@ -141,7 +148,8 @@ namespace Angor.Shared.Services
             return response.ReasonPhrase + content;
         }
 
-        public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false)
+        public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data,
+            bool includeUnconfirmed = false)
         {
             //check all new addresses for balance or a history
             var urlBalance = $"/api/query/addresses/balance?includeUnconfirmed={includeUnconfirmed}";
@@ -153,16 +161,18 @@ namespace Angor.Shared.Services
             if (!response.IsSuccessStatusCode)
                 throw new InvalidOperationException(response.ReasonPhrase);
 
-            var addressesNotEmpty = (await response.Content.ReadFromJsonAsync<AddressBalance[]>())?.ToArray() ?? Array.Empty<AddressBalance>();
+            var addressesNotEmpty = (await response.Content.ReadFromJsonAsync<AddressBalance[]>())?.ToArray() ??
+                                    Array.Empty<AddressBalance>();
 
             return addressesNotEmpty;
         }
 
-        public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int offset , int limit)
+        public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int offset, int limit)
         {
             var indexer = _networkService.GetPrimaryIndexer();
 
-            var url = $"/api/query/address/{address}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
+            var url =
+                $"/api/query/address/{address}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
 
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
@@ -179,7 +189,8 @@ namespace Angor.Shared.Services
         {
             var indexer = _networkService.GetPrimaryIndexer();
 
-            var url = confirmations.Aggregate("/api/stats/fee?", (current, block) => current + $@"confirmations={block}&");
+            var url = confirmations.Aggregate("/api/stats/fee?",
+                (current, block) => current + $@"confirmations={block}&");
 
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
@@ -199,7 +210,7 @@ namespace Angor.Shared.Services
             var indexer = _networkService.GetPrimaryIndexer();
 
             var url = $"/api/query/transaction/{transactionId}/hex";
-            
+
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
 
@@ -214,7 +225,7 @@ namespace Angor.Shared.Services
             var indexer = _networkService.GetPrimaryIndexer();
 
             var url = $"/api/query/transaction/{transactionId}";
-            
+
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
 
@@ -224,6 +235,44 @@ namespace Angor.Shared.Services
             var info = await response.Content.ReadFromJsonAsync<QueryTransaction>();
 
             return info;
+        }
+
+        public async Task<string> GetGenesisBlockHashAsync(string indexerUrl)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                var response = await httpClient.GetAsync($"{indexerUrl}/api/block-height/0");
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadAsStringAsync(); // Full block hash
+            }
+            catch (Exception ex)
+            {
+                return string.Empty;
+            }
+        }
+
+
+        public bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash)
+        {
+            // Compare the first 64 characters (32 bytes in hex) of the fetched hash to the expected hash
+            return fetchedHash.StartsWith(expectedHash, StringComparison.OrdinalIgnoreCase);
+        }
+
+
+        public async Task<bool> CheckIndexerStatusAsync(string indexerUrl)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                var response = await httpClient.GetAsync($"{indexerUrl}/status");
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
     }
 }

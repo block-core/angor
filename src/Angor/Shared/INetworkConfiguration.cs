@@ -7,6 +7,7 @@ public interface INetworkConfiguration
 {
     Network GetNetwork();
     void SetNetwork(Network network);
+    String GetGenesisBlockHash();
     SettingsUrl GetIndexerUrl();
     SettingsUrl GetExplorerUrl();
     List<SettingsUrl> GetDefaultIndexerUrls();
