@@ -19,8 +19,8 @@ Angor is a Bitcoin funding platform with two unique features:
 
 For more details:
 * Specifications: [bcip-0005](https://github.com/block-core/bcips/blob/main/bcip-0005.md)
-* FAQ: [https://angor.io/faq](https://angor.io/faq)
-
+* FAQ: [https://angor.io/faq](https://angor.io/#FAQ)
+  
 ## How to Use Angor?
 
 Angor is a browser-based platform that can be installed as a PWA (Progressive Web App).
