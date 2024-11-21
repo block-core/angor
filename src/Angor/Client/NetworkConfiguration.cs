@@ -201,13 +201,14 @@ public class NetworkConfiguration : INetworkConfiguration
     
     public string GetGenesisBlockHash()
     {
-        return GetNetwork().Name switch
+        // Determine the correct genesis block hash based on the network type
+        return currentNetwork.NetworkType.ToString() switch
         {
-            "Main" => "000000000019d6689c085ae165831e93",
-            "TestNet" => "000000000933ea01ad0ee984209779ba",
-            "Signet" => "0000000bba4bfa8b8cecead6c98c8e54",
-            "Liquid" => "db7e60a9a3db3c4ff85e55f799ea4c74",
-            _ => string.Empty
+            "Mainnet" => "000000000019d6689c085ae165831e93",
+            "Testnet" => "000000000933ea01ad0ee984209779ba",
+            "Signet" => "00000000020f01e33f91b6c7c5d3a3f8",
+            "Regtest" => "0f9195cbdb894feda6ee07798e0d597d",
+            _ => throw new NotSupportedException($"Network type {currentNetwork.NetworkType.ToString()} is not supported")
         };
     }
 

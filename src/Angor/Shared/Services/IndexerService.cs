@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using Angor.Shared.Models;
+using System.Text.Json;
 
 namespace Angor.Shared.Services
 {
@@ -241,18 +242,20 @@ namespace Angor.Shared.Services
         {
             try
             {
-                using var httpClient = new HttpClient();
-                var response = await httpClient.GetAsync($"{indexerUrl}/api/block-height/0");
+                var response = await _httpClient.GetAsync(indexerUrl);
                 response.EnsureSuccessStatusCode();
+                
+                var responseContent = await response.Content.ReadAsStringAsync();
+                return responseContent.Trim();
 
-                return await response.Content.ReadAsStringAsync(); // Full block hash
+
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error fetching genesis block hash: {ex.Message}");
                 return string.Empty;
             }
         }
-
 
         public bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash)
         {
@@ -266,13 +269,18 @@ namespace Angor.Shared.Services
             try
             {
                 using var httpClient = new HttpClient();
-                var response = await httpClient.GetAsync($"{indexerUrl}/status");
+
+                // Check if the full URL responds
+                var response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, indexerUrl));
+
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
                 return false;
             }
+        
         }
+
     }
 }

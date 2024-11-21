@@ -483,13 +483,9 @@
                 return;
             }
 
-            if (uri.Scheme is not ("http" or "https"))
-            {
-                notificationComponent.ShowErrorMessage($"Invalid URL schema: {newIndexerLink}. Must be HTTP or HTTPS.");
-                return;
-            }
+            newIndexerLink = uri.AbsoluteUri.TrimEnd('/'); // Preserve the full URL
 
-            newIndexerLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
+            Logger.LogInformation($"Normalized URL: {newIndexerLink}");
 
             if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
             {
@@ -497,20 +493,23 @@
                 return;
             }
 
-            // fetch the genesis block hash from the indexer
-            var fetchedHash = await _indexerService.GetGenesisBlockHashAsync(newIndexerLink);
+            // Temporarily skip online check
+            // var isOnline = await _indexerService.CheckIndexerStatusAsync(newIndexerLink);
+            // if (!isOnline)
+            // {
+            //     notificationComponent.ShowErrorMessage("The indexer is offline or unreachable.");
+            //     return;
+            // }
 
-            // get the expected hash for the current network
+            var fetchedHash = await _indexerService.GetGenesisBlockHashAsync(newIndexerLink);
             var expectedHash = _networkConfiguration.GetGenesisBlockHash();
 
-            // validate the fetched hash against the expected hash
-            if (string.IsNullOrEmpty(fetchedHash) || !_indexerService.ValidateGenesisBlockHash(fetchedHash, expectedHash))
+                if (string.IsNullOrEmpty(fetchedHash) || !_indexerService.ValidateGenesisBlockHash(fetchedHash, expectedHash))
             {
                 notificationComponent.ShowErrorMessage("The indexer is not compatible with the selected network.");
                 return;
             }
 
-            // add the validated indexer
             settingsInfo.Indexers.Add(new SettingsUrl { Url = newIndexerLink, IsPrimary = !settingsInfo.Indexers.Any() });
             _clientStorage.SetSettingsInfo(settingsInfo);
 
