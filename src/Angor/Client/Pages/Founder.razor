@@ -38,7 +38,7 @@
                 <i>
                     <Icon IconName="add"></Icon>
                 </i>
-                    <span class="nav-link-text ms-1">
+                <span class="nav-link-text ms-1">
                     @(scanningForProjects ? "Scanning..." : "Create Project")
                 </span>
             </button>
@@ -56,7 +56,7 @@
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center align-items-center">
                 <span class="me-3 user-select-none">
-                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
+                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)"/>
                 </span>
                 <span class="text-white">No projects found.</span>
             </div>
@@ -109,7 +109,7 @@
 
     private async Task LookupProjectKeysOnIndexerAsync()
     {
-        scanningForProjects = true; 
+        scanningForProjects = true;
 
         var keys = _walletStorage.GetFounderKeys();
         var founderProjectsToLookup = new Dictionary<string, ProjectIndexerData>();
@@ -155,6 +155,7 @@
                                 ProjectInfo = new ProjectInfo { NostrPubKey = e.Pubkey }
                             });
                         }
+
                         break;
 
                     case { Kind: NostrKind.ApplicationSpecificData }:
@@ -177,6 +178,7 @@
                                 CreationTransactionId = trxId
                             });
                         }
+
                         break;
                 }
             },
@@ -207,7 +209,7 @@
     {
         // perform a rescan before creating a project (to update the keys)
         await LookupProjectKeysOnIndexerAsync();
-        
+
         NavigationManager.NavigateTo("/create");
     }
 
