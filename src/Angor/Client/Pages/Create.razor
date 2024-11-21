@@ -250,6 +250,24 @@
         </div>
 
         <!-- Presets for Stages -->
+        <!-- Toggle Button -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <button class="btn btn-primary" @onclick="ToggleStageMode">
+                @if (isPresetMode)
+                {
+                <span>Switch to Automatic</span>
+                }
+                else
+                {
+                <span>Switch to Presets</span>
+                }
+            </button>
+        </div>
+
+        <!-- Conditionally Render Presets or Automatic Inputs -->
+        @if (isPresetMode)
+        {
+        <!-- Preset Selection -->
         <div class="mb-3">
             <label for="stagePreset" class="form-label">Select Stage Preset</label>
             <select id="stagePreset" class="form-select" @onchange="OnStagePresetChange">
@@ -258,20 +276,21 @@
                 <option value="preset2">Preset 2: 4 Stages (25%, 25%, 25%, 25%)</option>
                 <option value="preset3">Preset 3: 3 Stages (60%, 20%, 20%)</option>
             </select>
-
-            <div class="mb-3">
-                <label for="seeoptionbetween" class="form-label">Automatic Creation: </label>
-
-                <label for="totalDuration" class="form-label">Total Project Duration (in days)</label>
-                <InputNumber id="totalDuration" @bind-Value="totalDuration" class="form-control" placeholder="Enter total duration in days" />
-            </div>
-            <div class="mb-3">
-                <label for="numberOfStages" class="form-label">Number of Stages</label>
-                <InputNumber id="numberOfStages" @bind-Value="numberOfStages" class="form-control" placeholder="Enter number of stages" />
-            </div>
-            <button type="button" class="btn btn-border mb-3" @onclick="GenerateSmartStages">Generate Stages</button>
-
         </div>
+        }
+        else
+        {
+        <!-- Automatic Generation Inputs -->
+        <div class="mb-3">
+            <label for="totalDuration" class="form-label">Total Project Duration (in days)</label>
+            <InputNumber id="totalDuration" @bind-Value="totalDuration" class="form-control" placeholder="Enter total duration in days" />
+        </div>
+        <div class="mb-3">
+            <label for="numberOfStages" class="form-label">Number of Stages</label>
+            <InputNumber id="numberOfStages" @bind-Value="numberOfStages" class="form-control" placeholder="Enter number of stages" />
+        </div>
+        <button type="button" class="btn btn-border mb-3" @onclick="GenerateSmartStages">Generate Stages</button>
+        }
 
         <!-- Stages -->
         <h3 class="mb-3">Stages</h3>
@@ -553,8 +572,8 @@
             </div>
         </div>
     </div>
-}
 
+} 
 
 </div>
 
@@ -563,6 +582,7 @@
 
     private bool sendConfirmModal;
     private bool showCreateModal;
+    private bool isPresetMode = true;
     private bool showConfirmationModal;
     private string confirmationMessage;
     private Action finalizeAction;
@@ -1066,13 +1086,9 @@
 
         if (selectedPreset != null && presets.TryGetValue(selectedPreset, out var preset))
         {
-            // Clear existing stages to prevent duplication
             project.ProjectInfo.Stages.Clear();
-
-            // Generate and assign new stages
             project.ProjectInfo.Stages = GenerateStages(preset.Percentages, preset.IntervalDays);
-
-            }
+        }
         else
         {
             notificationComponent.ShowErrorMessage("Invalid preset selected.");
@@ -1081,7 +1097,6 @@
 
         StateHasChanged();
     }
-
 
 
 
@@ -1246,6 +1261,13 @@
         }
 
         StateHasChanged();
+    }
+    
+
+    private void ToggleStageMode()
+    {
+        isPresetMode = !isPresetMode; // Toggle between Presets and Automatic
+        StateHasChanged(); // Update the UI
     }
 
 }
