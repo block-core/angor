@@ -34,12 +34,15 @@
 
                 </div>
             </div>
-            <button class="btn btn-border" @onclick="NavigateToCreateProject">
+            <button class="btn btn-border" @onclick="NavigateToCreateProject" disabled="@scanningForProjects">
                 <i>
                     <Icon IconName="add"></Icon>
                 </i>
-                <span class="nav-link-text ms-1">Create Project</span>
+                    <span class="nav-link-text ms-1">
+                    @(scanningForProjects ? "Scanning..." : "Create Project")
+                </span>
             </button>
+
         </div>
         <p class="mb-0 font-weight-normal text-sm mt-4">
             To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required.
@@ -104,110 +107,107 @@
         }
     }
 
-private async Task LookupProjectKeysOnIndexerAsync()
-{
-    scanningForProjects = true; 
-
-    var keys = _walletStorage.GetFounderKeys();
-    var founderProjectsToLookup = new Dictionary<string, ProjectIndexerData>();
-
-    // Gather projects to lookup, excluding already loaded projects
-    foreach (var key in keys.Keys)
+    private async Task LookupProjectKeysOnIndexerAsync()
     {
-        if (founderProjects.Any(_ => _.ProjectInfo.ProjectIdentifier == key.ProjectIdentifier))
-            continue;
+        scanningForProjects = true; 
 
-        var indexerProject = await _IndexerService.GetProjectByIdAsync(key.ProjectIdentifier);
+        var keys = _walletStorage.GetFounderKeys();
+        var founderProjectsToLookup = new Dictionary<string, ProjectIndexerData>();
 
-        if (indexerProject != null)
+        foreach (var key in keys.Keys)
         {
-            founderProjectsToLookup.Add(key.NostrPubKey, indexerProject);
-        }
-    }
+            if (founderProjects.Any(_ => _.ProjectInfo.ProjectIdentifier == key.ProjectIdentifier))
+                continue;
 
-    if (!founderProjectsToLookup.Any())
-    {
-        scanningForProjects = false;
-        return;
-    }
+            var indexerProject = await _IndexerService.GetProjectByIdAsync(key.ProjectIdentifier);
 
-    // Request projects from relay
-    RelayService.RequestProjectCreateEventsByPubKey(
-        e =>
-        {
-            switch (e)
+            if (indexerProject != null)
             {
-                case { Kind: NostrKind.Metadata }:
-                    var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
-                    var existingProject = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
-
-                    if (existingProject != null)
-                    {
-                        // Update metadata if it's not already set
-                        if (existingProject.Metadata is null)
-                            existingProject.Metadata = nostrMetadata;
-                    }
-                    else
-                    {
-                        // If project doesn't exist, create a new entry
-                        founderProjects.Add(new FounderProject
-                        {
-                            Metadata = nostrMetadata,
-                            ProjectInfo = new ProjectInfo { NostrPubKey = e.Pubkey }
-                        });
-                    }
-                    break;
-
-                case { Kind: NostrKind.ApplicationSpecificData }:
-                    var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
-                    var project = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
-
-                    if (project != null)
-                    {
-                        // Update existing project's information
-                        project.ProjectInfo = projectInfo;
-                    }
-                    else
-                    {
-                        // Add new project with project info
-                        var projectIndex = founderProjectsToLookup.Keys.ToList().IndexOf(e.Pubkey) + 1;
-                        var trxId = founderProjectsToLookup[e.Pubkey].TrxId;
-
-                        founderProjects.Add(new FounderProject
-                        {
-                            ProjectInfo = projectInfo,
-                            ProjectIndex = projectIndex,
-                            CreationTransactionId = trxId
-                        });
-                    }
-                    break;
+                founderProjectsToLookup.Add(key.NostrPubKey, indexerProject);
             }
-        },
-        () =>
+        }
+
+        if (!founderProjectsToLookup.Any())
         {
             scanningForProjects = false;
+            return;
+        }
 
-            // Merge or update projects in storage
-            foreach (var project in founderProjects)
+        RelayService.RequestProjectCreateEventsByPubKey(
+            e =>
             {
-                var existing = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
-                if (existing == null)
+                switch (e)
                 {
-                    storage.AddFounderProject(new[] { project });
+                    case { Kind: NostrKind.Metadata }:
+                        var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
+                        var existingProject = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
+
+                        if (existingProject != null)
+                        {
+                            if (existingProject.Metadata is null)
+                                existingProject.Metadata = nostrMetadata;
+                        }
+                        else
+                        {
+                            founderProjects.Add(new FounderProject
+                            {
+                                Metadata = nostrMetadata,
+                                ProjectInfo = new ProjectInfo { NostrPubKey = e.Pubkey }
+                            });
+                        }
+                        break;
+
+                    case { Kind: NostrKind.ApplicationSpecificData }:
+                        var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
+                        var project = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
+
+                        if (project != null)
+                        {
+                            project.ProjectInfo = projectInfo;
+                        }
+                        else
+                        {
+                            var projectIndex = founderProjectsToLookup.Keys.ToList().IndexOf(e.Pubkey) + 1;
+                            var trxId = founderProjectsToLookup[e.Pubkey].TrxId;
+
+                            founderProjects.Add(new FounderProject
+                            {
+                                ProjectInfo = projectInfo,
+                                ProjectIndex = projectIndex,
+                                CreationTransactionId = trxId
+                            });
+                        }
+                        break;
                 }
-                else
+            },
+            () =>
+            {
+                scanningForProjects = false;
+
+                // Merge or update projects in storage
+                foreach (var project in founderProjects)
                 {
-                    storage.UpdateFounderProject(project);
+                    var existing = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
+                    if (existing == null)
+                    {
+                        storage.AddFounderProject(new[] { project });
+                    }
+                    else
+                    {
+                        storage.UpdateFounderProject(project);
+                    }
                 }
-            }
 
-            StateHasChanged();
-        },
-        founderProjectsToLookup.Keys.ToArray());
-}
+                StateHasChanged();
+            },
+            founderProjectsToLookup.Keys.ToArray());
+    }
 
-    private void NavigateToCreateProject()
+    private async Task NavigateToCreateProject()
     {
+        // perform a rescan before creating a project (to update the keys)
+        await LookupProjectKeysOnIndexerAsync();
+        
         NavigationManager.NavigateTo("/create");
     }
 
