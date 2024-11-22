@@ -47,14 +47,32 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public SettingsUrl GetIndexerUrl()
     {
-        if (currentNetwork.NetworkType == NetworkType.Testnet)
-        {
-            return new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io/api" };
-        }
-
         if (currentNetwork.NetworkType == NetworkType.Mainnet)
         {
             return new SettingsUrl { Name = "", Url = "https://btc.indexer.angor.io/api" };
+        }
+
+        if (currentNetwork.NetworkType == NetworkType.Testnet)
+        {
+            if (currentNetwork.Name == "Angornet")
+            {
+                return new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io/api" };
+            }
+
+            if (currentNetwork.Name == "Testnet")
+            {
+                // todo find indexer url
+            }
+
+            if (currentNetwork.Name == "Testnet4")
+            {
+                // todo find indexer url
+            }
+
+            if (currentNetwork.Name == "Signet")
+            {
+                // todo find indexer url
+            }
         }
 
         throw new ApplicationException("Network not set");
@@ -62,14 +80,32 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public SettingsUrl GetExplorerUrl()
     {
-        if (currentNetwork.NetworkType == NetworkType.Testnet)
-        {
-            return new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer" };
-        }
-
         if (currentNetwork.NetworkType == NetworkType.Mainnet)
         {
             return new SettingsUrl { Name = "", Url = "https://explorer.angor.io/btc/explorer" };
+        }
+
+        if (currentNetwork.NetworkType == NetworkType.Testnet)
+        {
+            if (currentNetwork.Name == "Angornet")
+            {
+                return new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer" };
+            }
+
+            if (currentNetwork.Name == "Testnet")
+            {
+                // todo find explorer url
+            }
+
+            if (currentNetwork.Name == "Testnet4")
+            {
+                // todo find explorer url
+            }
+
+            if (currentNetwork.Name == "Signet")
+            {
+                // todo find explorer url
+            }
         }
 
         throw new ApplicationException("Network not set");
@@ -77,20 +113,38 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public List<SettingsUrl> GetDefaultIndexerUrls()
     {
-        if (currentNetwork.NetworkType == NetworkType.Testnet)
-        {
-            return new List<SettingsUrl>
-            {
-                new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io", IsPrimary = true },
-            };
-        }
-
         if (currentNetwork.NetworkType == NetworkType.Mainnet)
         {
             return new List<SettingsUrl>
             {
                 new SettingsUrl { Name = "", Url = "https://btc.indexer.angor.io", IsPrimary = true },
             };
+        }
+
+        if (currentNetwork.NetworkType == NetworkType.Testnet)
+        {
+            if (currentNetwork.Name == "Angornet")
+            {
+                return new List<SettingsUrl>
+                {
+                    new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io", IsPrimary = true },
+                };
+            }
+
+            if (currentNetwork.Name == "Testnet")
+            {
+                // todo find indexer url
+            }
+
+            if (currentNetwork.Name == "Testnet4")
+            {
+                // todo find indexer url
+            }
+
+            if (currentNetwork.Name == "Signet")
+            {
+                // todo find indexer url
+            }
         }
 
         throw new ApplicationException("Network not set");
@@ -103,26 +157,43 @@ public class NetworkConfiguration : INetworkConfiguration
         {
             new SettingsUrl { Name = "", Url = "wss://relay.angor.io", IsPrimary = true },
             new SettingsUrl { Name = "", Url = "wss://relay2.angor.io", IsPrimary = true },
-
         };
     }
 
     public List<SettingsUrl> GetDefaultExplorerUrl()
     {
-        if (currentNetwork.NetworkType == NetworkType.Testnet)
-        {
-            return new List<SettingsUrl>
-            {
-                new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer", IsPrimary = true },
-            };
-        }
-
         if (currentNetwork.NetworkType == NetworkType.Mainnet)
         {
             return new List<SettingsUrl>
             {
                 new SettingsUrl { Name = "", Url = "https://explorer.angor.io/btc/explorer", IsPrimary = true },
             };
+        }
+
+        if (currentNetwork.NetworkType == NetworkType.Testnet)
+        {
+            if (currentNetwork.Name == "Angornet")
+            {
+                return new List<SettingsUrl>
+                {
+                    new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer", IsPrimary = true },
+                };
+            }
+
+            if (currentNetwork.Name == "Testnet")
+            {
+                // todo find explorer url
+            }
+
+            if (currentNetwork.Name == "Testnet4")
+            {
+                // todo find explorer url
+            }
+
+            if (currentNetwork.Name == "Signet")
+            {
+                // todo find explorer url
+            }
         }
 
         throw new ApplicationException("Network not set");
