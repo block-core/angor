@@ -101,17 +101,25 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
     public void UpdateFounderProject(FounderProject project)
     {
-        var projects = _storage.GetItem<List<FounderProject>>("founder-projects");
+        var projects = _storage.GetItem<List<FounderProject>>("founder-projects") ?? new List<FounderProject>();
 
-        var item = projects.FirstOrDefault(
-            f => f.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
+        var existingIndex = projects.FindIndex(p =>
+            p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier &&
+            p.ProjectIndex == project.ProjectIndex);
 
-        if (item != null) projects.Remove(item);
+        if (existingIndex >= 0)
+        {
+            projects[existingIndex] = project;
+        }
+        else
+        {
+            projects.Add(project);
+        }
 
-        projects.Add(project);
-
-        _storage.SetItem("founder-projects", projects.OrderBy(_ => _.ProjectIndex));
+        _storage.SetItem("founder-projects", projects.OrderBy(p => p.ProjectIndex).ToList());
     }
+
+
 
     public void DeleteFounderProjects()
     {
