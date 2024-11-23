@@ -437,17 +437,7 @@
                 }
             </button>
 
-            <button class="btn btn-danger ms-3"
-                    @onclick="@(() => ShowResetConfirmation("nostrMetadataCreated"))"
-                    title="Reset the Nostr Profile creation status to allow re-creation.">
-                Reset Nostr Profile Status
-            </button>
-
-            <button class="btn btn-danger ms-3"
-                    @onclick="@(() => ShowResetConfirmation("nostrApplicationSpecificDataCreated"))"
-                    title="Reset the Project Info creation status to allow re-creation.">
-                Reset Project Info Status
-            </button>
+            
         </div>
     </div>
 }
@@ -553,27 +543,7 @@
     </div>
 }
 
-@if (showResetConfirmation)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirm Reset</h5>
-                    <button type="button" class="btn-close" @onclick="CloseResetConfirmation" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>@confirmationMessage</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CloseResetConfirmation">Cancel</button>
-                    <button type="button" class="btn btn-danger" @onclick="ConfirmReset">Confirm Reset</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-} 
 
 </div>
 
@@ -1194,42 +1164,7 @@
         return true;
     }
 
-    private void ShowResetConfirmation(string target)
-    {
-        resetTarget = target;
-        confirmationMessage = target switch
-        {
-            "nostrMetadataCreated" => "Are you sure you want to reset the Nostr Profile creation status? This will allow you to re-attempt the profile creation.",
-            "nostrApplicationSpecificDataCreated" => "Are you sure you want to reset the Project Info creation status? This will allow you to re-attempt the project info creation.",
-            _ => ""
-        };
-        showResetConfirmation = true;
-        StateHasChanged();
-    }
 
-    private void CloseResetConfirmation()
-    {
-        showResetConfirmation = false;
-        resetTarget = string.Empty;
-        confirmationMessage = string.Empty;
-        StateHasChanged();
-    }
-
-    private void ConfirmReset()
-    {
-        if (resetTarget == "nostrMetadataCreated")
-        {
-            nostrMetadataCreated = false;
-        }
-        else if (resetTarget == "nostrApplicationSpecificDataCreated")
-        {
-            nostrApplicationSpecificDataCreated = false;
-        }
-
-        storage.UpdateFounderProject(project);
-
-        CloseResetConfirmation();
-    }
     
     private List<Stage> GenerateStages(int[] percentages, int intervalDays)
     {
