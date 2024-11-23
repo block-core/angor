@@ -923,17 +923,31 @@
         {
             var words = await passwordComponent.GetWalletAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
-            var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
+            // Create unsigned transaction
+            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(
+                project.ProjectInfo.FounderKey,
+                _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier),
+                NetworkConfiguration.AngorCreateFeeSats,
+                project.ProjectInfo.NostrPubKey
+            );
+
+            // Fetch the fee estimation
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
-            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First(); // Select default fee estimation
 
-            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), NetworkConfiguration.AngorCreateFeeSats, project.ProjectInfo.NostrPubKey);
+            // Add inputs, calculate fee, and sign transaction
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                accountInfo.GetNextChangeReceiveAddress(),
+                unsignedTransaction,
+                words,
+                accountInfo,
+                feeData.SelectedFeeEstimation
+            );
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
-
+            // Proceed to broadcast or show modal
             showCreateModal = true;
         }
         catch (Exception e)
@@ -944,11 +958,11 @@
         finally
         {
             creatProjectSpinner = false;
+            StateHasChanged();
         }
-
-        StateHasChanged();
     }
 
+    
     private async Task FeeRangeChanged(ChangeEventArgs e)
     {
         var selected = e.Value?.ToString();
@@ -989,32 +1003,6 @@
         {
             showCreateModal = false;
 
-            var accountInfo = storage.GetAccountInfo(network.Name);
-
-            // refresh UTXOs
-            await _WalletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
-            await _WalletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
-            storage.SetAccountInfo(network.Name, accountInfo);
-
-            var walletWords = await passwordComponent.GetWalletAsync();
-
-            // is this the correct way to get the address @dangershony @davidgershony
-            var changeAddress = accountInfo.ChangeAddressesInfo.FirstOrDefault(addr => !addr.UtxoData.Any())?.Address;
-            if (string.IsNullOrEmpty(changeAddress))
-            {
-                notificationComponent.ShowErrorMessage("No available change address found.");
-                return;
-            }
-
-            // reconstruct the transaction using refreshed UTXO data
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
-                changeAddress,
-                new Transaction(),
-                walletWords,
-                accountInfo,
-                feeData.SelectedFeeEstimation
-            );
-
             var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
 
             if (!response.Success)
@@ -1023,10 +1011,18 @@
                 return;
             }
 
-            project.CreationTransactionId = signedTransaction.Transaction.GetHash().ToString();
-            storage.UpdateFounderProject(project);
+            // Validate transaction ID
+            var transactionId = signedTransaction.Transaction.GetHash().ToString();
+            if (string.IsNullOrEmpty(transactionId))
+            {
+                notificationComponent.ShowErrorMessage("Transaction ID is missing. Cannot store the project.");
+                return;
+            }
 
-            NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}", true);
+            project.CreationTransactionId = transactionId;
+
+            // Store project only after successful transaction publication
+            storage.UpdateFounderProject(project);
         }
         catch (Exception e)
         {
@@ -1039,6 +1035,8 @@
             passwordComponent.ClearPassword();
             StateHasChanged();
         }
+
+        NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
     }
 
 
@@ -1269,5 +1267,25 @@
         isPresetMode = !isPresetMode; // Toggle between Presets and Automatic
         StateHasChanged(); // Update the UI
     }
+    
+    private bool ValidateTransactionOutputs(Transaction transaction)
+    {
+        // Ensure OP_RETURN output is present
+        if (!transaction.Outputs.Any(output => output.ScriptPubKey.ToString().Contains("OP_RETURN")))
+        {
+            _Logger.LogError("Missing OP_RETURN output in transaction.");
+            return false;
+        }
+
+        // Ensure Angor address output is present
+        if (!transaction.Outputs.Any(output => output.ScriptPubKey == _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier)))
+        {
+            _Logger.LogError("Missing Angor address output in transaction.");
+            return false;
+        }
+
+        return true;
+    }
+
 
 }
