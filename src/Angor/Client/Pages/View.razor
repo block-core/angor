@@ -530,14 +530,18 @@ else
                             }
                         }
                     },
-                    () =>
+                    async () =>
                     {
                         findInProgress = false;
                         projectStats.Loading = false;
 
                         if (project?.ProjectInfo != null)
                         {
+                            // Store the project in session storage
                             SessionStorage.StoreProject(project);
+
+                            // Ensure the explorer link is set and balance is refreshed
+                            await SetProjectLinksAndRefreshBalance();
                         }
                         else
                         {
@@ -547,6 +551,7 @@ else
                         StateHasChanged();
                     },
                     projectIndexerData.NostrPubKey);
+
             }
             else
             {
