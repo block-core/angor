@@ -483,7 +483,13 @@
                 return;
             }
 
-            newIndexerLink = uri.AbsoluteUri.TrimEnd('/'); // Preserve the full URL
+            if (uri.Scheme is not ("http" or "https"))
+            {
+                notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
+                return;
+            }
+
+            newIndexerLink = $"{uri.Scheme}://{uri.Host}".TrimEnd('/');
 
             Logger.LogInformation($"Normalized URL: {newIndexerLink}");
 
@@ -493,25 +499,42 @@
                 return;
             }
 
-            // Temporarily skip online check
-            // var isOnline = await _indexerService.CheckIndexerStatusAsync(newIndexerLink);
-            // if (!isOnline)
-            // {
-            //     notificationComponent.ShowErrorMessage("The indexer is offline or unreachable.");
-            //     return;
-            // }
-
-            var fetchedHash = await _indexerService.GetGenesisBlockHashAsync(newIndexerLink);
-            var expectedHash = _networkConfiguration.GetGenesisBlockHash();
-
-                if (string.IsNullOrEmpty(fetchedHash) || !_indexerService.ValidateGenesisBlockHash(fetchedHash, expectedHash))
+            // Add the new indexer temporarily
+            settingsInfo.Indexers.Add(new SettingsUrl
             {
-                notificationComponent.ShowErrorMessage("The indexer is not compatible with the selected network.");
+                Url = newIndexerLink,
+                LastCheck = DateTime.MinValue, 
+                Status = UrlStatus.NotReady
+            });
+
+            _clientStorage.SetSettingsInfo(settingsInfo);
+
+            await _networkService.CheckServices(force: true);
+
+            settingsInfo = _clientStorage.GetSettingsInfo();
+
+            // Check if the newly added indexer is online
+            var addedIndexer = settingsInfo.Indexers.FirstOrDefault(i => i.Url == newIndexerLink);
+            if (addedIndexer?.Status != UrlStatus.Online)
+            {
+                notificationComponent.ShowErrorMessage("The indexer is offline or unreachable.");
+                // Remove the indexer if it's not online
+                settingsInfo.Indexers.Remove(addedIndexer);
+                _clientStorage.SetSettingsInfo(settingsInfo);
                 return;
             }
 
-            settingsInfo.Indexers.Add(new SettingsUrl { Url = newIndexerLink, IsPrimary = !settingsInfo.Indexers.Any() });
-            _clientStorage.SetSettingsInfo(settingsInfo);
+            // Validate genesis block hash if the indexer is online
+            var fetchedHash = await _indexerService.GetGenesisBlockHashAsync(newIndexerLink);
+            var expectedHash = _networkConfiguration.GetGenesisBlockHash();
+
+            if (string.IsNullOrEmpty(fetchedHash) || !_indexerService.ValidateGenesisBlockHash(fetchedHash, expectedHash))
+            {
+                notificationComponent.ShowErrorMessage("The indexer is not compatible with the selected network.");
+                settingsInfo.Indexers.Remove(addedIndexer);
+                _clientStorage.SetSettingsInfo(settingsInfo);
+                return;
+            }
 
             notificationComponent.ShowNotificationMessage("Indexer added successfully.");
             newIndexerLink = string.Empty;
@@ -520,7 +543,7 @@
         }
     }
 
-    
+        
 
     private async Task AddRelay()
     {

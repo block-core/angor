@@ -2,6 +2,8 @@
 using System.Net.Http.Json;
 using Angor.Shared.Models;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
+
 
 namespace Angor.Shared.Services
 {
@@ -18,7 +20,6 @@ namespace Angor.Shared.Services
         Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations);
         Task<string> GetGenesisBlockHashAsync(string indexerUrl);
         bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash);
-        Task<bool> CheckIndexerStatusAsync(string indexerUrl);
 
 
         Task<string> GetTransactionHexByIdAsync(string transactionId);
@@ -62,6 +63,8 @@ namespace Angor.Shared.Services
         private readonly INetworkConfiguration _networkConfiguration;
         private readonly HttpClient _httpClient;
         private readonly INetworkService _networkService;
+        private readonly ILogger<IndexerService> _logger;
+
 
         public IndexerService(INetworkConfiguration networkConfiguration, HttpClient httpClient,
             INetworkService networkService)
@@ -74,8 +77,7 @@ namespace Angor.Shared.Services
         public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
         {
             var indexer = _networkService.GetPrimaryIndexer();
-            var response =
-                await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects?offset={offset}&limit={limit}");
+            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects?offset={offset}&limit={limit}");
             _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>();
@@ -242,17 +244,26 @@ namespace Angor.Shared.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync(indexerUrl);
+                var fullUrl = $"{indexerUrl.TrimEnd('/')}/api/query/block/index/0";
+
+                var response = await _httpClient.GetAsync(fullUrl);
                 response.EnsureSuccessStatusCode();
-                
+
                 var responseContent = await response.Content.ReadAsStringAsync();
-                return responseContent.Trim();
 
+                // Parse the JSON response to extract the blockHash property
+                var blockData = JsonSerializer.Deserialize<JsonElement>(responseContent);
+                if (blockData.TryGetProperty("blockHash", out JsonElement blockHashElement))
+                {
+                    return blockHashElement.GetString() ?? string.Empty;
+                }
 
+                _logger.LogWarning("blockHash not found in the response.");
+                return string.Empty;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching genesis block hash: {ex.Message}");
+                _logger.LogError(ex, $"Error fetching genesis block hash: {ex.Message}");
                 return string.Empty;
             }
         }
@@ -262,25 +273,6 @@ namespace Angor.Shared.Services
             // Compare the first 64 characters (32 bytes in hex) of the fetched hash to the expected hash
             return fetchedHash.StartsWith(expectedHash, StringComparison.OrdinalIgnoreCase);
         }
-
-
-        public async Task<bool> CheckIndexerStatusAsync(string indexerUrl)
-        {
-            try
-            {
-                using var httpClient = new HttpClient();
-
-                // Check if the full URL responds
-                var response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, indexerUrl));
-
-                return response.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
         
-        }
-
     }
 }
