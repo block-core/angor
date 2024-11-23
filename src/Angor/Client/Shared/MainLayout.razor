@@ -11,7 +11,9 @@
 @inject INetworkService _networkService
 @inject NavigationManager _navManager
 @inject NavMenuState NavMenuState;
- 
+@inject INetworkStorage _networkStorage
+@inject IClientStorage storage;
+
 <div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show @sidenavClass ">
     <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 b-shadow overflow-x-hidden" id="sidenav-main">
         <NavMenu ToggleSidenavCallback="ToggleSidenavMobile" ToggleSidenavTextCallback="ToggleSidenav" ToggleleLockMenuCallback="ToggleLockMenu" />
@@ -24,7 +26,7 @@
                 <nav>
                     <div class="mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                         <div class="text-sm">
-                            <h6 class="font-weight-bolder" title="Alpha app - only use test wallets.">Only use test wallets. @networkText</h6>
+                            <h6 class="font-weight-bolder" title="Alpha app - only use test wallets.">Network - @networkText</h6>
                         </div>
                     </div>
                 </nav>
@@ -107,27 +109,46 @@
         if (version != null)
             _softwareVersion = version.ToString();
     }
- 
 
+    private void InitializeNetworkConfiguration()
+    {
+        string networkName = _networkStorage.GetNetwork();
+
+        if (networkName?.ToLower() == "testnet")
+        {
+            // we will probably not support bitcoins classic testnet for a while
+            // so any testnet is assumed to be angornet, in an attempt to support
+            // backwards compatibility we just set the network to angornet
+
+            var oldName = networkName;
+            networkName = "Angornet";
+
+            _networkStorage.SetNetwork(networkName);
+            var accountInfo = storage.GetAccountInfo(oldName);
+            storage.SetAccountInfo(networkName, accountInfo);
+            storage.DeleteAccountInfo(oldName);
+        }
+
+        _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower());
+
+        SetNetworkText();
+    }
 
     private async Task UpdateApp()
     {
         await Js.InvokeVoidAsync("location.reload");
     }
 
-    private void InitializeNetworkConfiguration()
-    {
-        _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower());
-
-        SetNetworkText();
-    }
-
     private void SetNetworkText()
     {
-        if (_networkConfiguration.GetNetwork().NetworkType != NetworkType.Mainnet)
-            networkText = "(testnet)";
-        else
-            networkText = "(mainnet)";
+        var network = _networkConfiguration.GetNetwork();
+        
+        networkText = network.Name;
+
+        if (network.Name == "Angornet")
+        {
+            networkText += " (testnet)";
+        }
     }
 
     private void NavMenuStateOnOnChange()

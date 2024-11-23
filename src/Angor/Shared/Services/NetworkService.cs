@@ -25,44 +25,48 @@ namespace Angor.Shared.Services
             _networkConfiguration = networkConfiguration;
         }
 
+        /// <summary>
+        /// This method will read the current network from storage and set it in config
+        /// If no network found in storage it will look at the property 'setNetwork' to determine what network to set in config and in storage
+        /// If the 'setNetwork' is null then we look at the url for hints as to what network to initiate.
+        /// </summary>
         public void CheckAndSetNetwork(string url, string? setNetwork = null)
         {
             string networkName = _networkStorage.GetNetwork();
-            if (string.IsNullOrEmpty(networkName))
+
+            if (!string.IsNullOrEmpty(networkName))
             {
+                // if the network is specified in storage
+                // we create set it in the configuration
+
+                _networkConfiguration.SetNetwork(AngorNetworksSelector.NetworkByName(networkName));
+            }
+            else
+            {
+                // no network found ether this is a first
+                // time user visits the site or the network was wiped
+
                 Network network = null;
 
                 if (setNetwork != null)
                 {
-                    network = setNetwork.Contains("test") ? new BitcoinTest() : new BitcoinMain();
-
-                } else if (url.Contains("test"))
+                    network = AngorNetworksSelector.NetworkByName(setNetwork);
+                } 
+                else if (url.Contains("test"))
                 {
-                    network = new BitcoinTest();
+                    network = new Angornet();
                 }
                 else if (url.Contains("localhost"))
                 {
-                    network = new BitcoinTest();
+                    network = new Angornet();
                 }
                 else
                 {
                     network = new BitcoinMain();
                 }
 
-                _networkStorage.SetNetwork(network.NetworkType.ToString());
+                _networkStorage.SetNetwork(network.Name);
                 _networkConfiguration.SetNetwork(network);
-            }
-            else
-            {
-                if (networkName == NetworkType.Mainnet.ToString())
-                {
-                    _networkConfiguration.SetNetwork(new BitcoinMain());
-                }
-
-                if (networkName == NetworkType.Testnet.ToString())
-                {
-                    _networkConfiguration.SetNetwork(new BitcoinTest());
-                }
             }
         }
 
