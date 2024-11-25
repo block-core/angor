@@ -530,8 +530,10 @@
 
             if (string.IsNullOrEmpty(fetchedHash) || !_indexerService.ValidateGenesisBlockHash(fetchedHash, expectedHash))
             {
-                notificationComponent.ShowErrorMessage("The indexer is not compatible with the selected network.");
-                settingsInfo.Indexers.Remove(addedIndexer);
+                var expectedNetworkName = _networkConfiguration.GetNetwork().Name;
+                var fetchedNetworkName = _networkConfiguration.GetNetworkNameFromGenesisBlockHash(fetchedHash);
+                notificationComponent.ShowErrorMessage($"The indexer is not compatible with the selected network. " +
+                                                       $"Expected: {expectedNetworkName}, Provided: {fetchedNetworkName ?? "Unknown"}");                settingsInfo.Indexers.Remove(addedIndexer);
                 _clientStorage.SetSettingsInfo(settingsInfo);
                 return;
             }
