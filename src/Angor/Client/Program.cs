@@ -37,7 +37,8 @@ builder.Services.AddScoped<NavMenuState>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ICurrencyRateService, CurrencyRateService>();
 
-builder.Services.AddScoped<IIndexerService, IndexerService>();
+//builder.Services.AddScoped<IIndexerService, IndexerService>();
+builder.Services.AddScoped<IIndexerService, MempoolSpaceIndexerApi>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
 
 builder.Services.AddTransient<IRelayService, RelayService>();
