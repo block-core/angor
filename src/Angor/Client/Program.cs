@@ -34,7 +34,8 @@ builder.Services.AddScoped<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
 builder.Services.AddScoped<NavMenuState>();
 
-builder.Services.AddScoped<IIndexerService, IndexerService>();
+//builder.Services.AddScoped<IIndexerService, IndexerService>();
+builder.Services.AddScoped<IIndexerService, MempoolSpaceIndexerApi>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
 
 builder.Services.AddTransient<IRelayService, RelayService>();
