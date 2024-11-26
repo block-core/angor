@@ -10,6 +10,15 @@ using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.BIP39;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
+using NBitcoinPSBT = NBitcoin.PSBT;
+using NBitcoinTransaction = NBitcoin.Transaction;
+using NBitcoinNetwork = NBitcoin.Network;
+using NBitcoinCoin = NBitcoin.Coin;
+
+
+
+
+
 
 namespace Angor.Shared;
 
@@ -39,42 +48,50 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
     
-    public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
+    public TransactionInfo AddInputsAndSignTransaction(string changeAddress, NBitcoinTransaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
     {
-        Network network = _networkConfiguration.GetNetwork();
-
+        var network = NBitcoinNetwork.TestNet; // temp
+        // Find UTXOs for the transaction
         var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
-        var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+        var coinsAndKeys = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
-        if (coins.coins == null)
-            throw new ApplicationException("No coins found");
-
-        var builder = new TransactionBuilder(network)
-            .AddCoins(coins.coins)
-            .AddKeys(coins.keys.ToArray())
-            .SetChange(BitcoinAddress.Create(changeAddress, network))
-            .ContinueToBuild(transaction)
-            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate.FeeRate)))
-            .CoverTheRest();
-
-        var signTransaction = builder.BuildTransaction(true);
-
-        // find the coins used
-        long totaInInputs = 0;
-        long totaInOutputs = signTransaction.Outputs.Select(s => s.Value.Satoshi).Sum();
-
-        foreach (var input in signTransaction.Inputs)
+        if (coinsAndKeys.coins == null || !coinsAndKeys.coins.Any())
         {
-            var foundInput = coins.coins.First(c => c.Outpoint.ToString() == input.PrevOut.ToString());
-
-            totaInInputs += foundInput.Amount.Satoshi;
+            throw new ApplicationException("No coins found for the transaction.");
         }
 
-        var minerFee = totaInInputs - totaInOutputs;
+        // Create a PSBT
+        var psbt = NBitcoinPSBT.FromTransaction(transaction, network);
 
-        return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
+        // Add UTXOs to the PSBT
+        foreach (var coin in coinsAndKeys.coins)
+        {
+            var coint = new NBitcoinCoin(uint256.Parse("txId"), 0, Money.Satoshis(1000), Script.FromHex("0014..."));
+            psbt.AddCoins(coint);
+        }
+
+        // Add keys to the PSBT
+        psbt = psbt.SignWithKeys(coinsAndKeys.keys.ToArray());
+
+        // Finalize the PSBT
+        psbt.Finalize();
+
+        // Build the signed transaction from the PSBT
+        var signedTransaction = psbt.ExtractTransaction();
+
+        // Calculate transaction fees
+        var totalInputs = coinsAndKeys.coins.Sum(coin => coin.Amount.Satoshi);
+        var totalOutputs = signedTransaction.Outputs.Sum(output => output.Value.Satoshi);
+        var minerFee = totalInputs - totalOutputs;
+
+        return new TransactionInfo
+        {
+            Transaction = signedTransaction,
+            TransactionFee = minerFee
+        };
     }
+
 
     public TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
