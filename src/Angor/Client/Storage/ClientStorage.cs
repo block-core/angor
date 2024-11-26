@@ -103,13 +103,13 @@ public class ClientStorage : IClientStorage, INetworkStorage
     {
         var projects = _storage.GetItem<List<FounderProject>>("founder-projects") ?? new List<FounderProject>();
 
-        var existingIndex = projects.FindIndex(p =>
-            p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier &&
-            p.ProjectIndex == project.ProjectIndex);
+        var existingProject = projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
 
-        if (existingIndex >= 0)
+        if (existingProject != null)
         {
-            projects[existingIndex] = project;
+            existingProject.Metadata = project.Metadata;
+            existingProject.ProjectInfo = project.ProjectInfo;
+            existingProject.ProjectIndex = project.ProjectIndex;
         }
         else
         {
