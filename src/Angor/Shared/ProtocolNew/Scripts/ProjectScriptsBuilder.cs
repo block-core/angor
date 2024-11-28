@@ -28,7 +28,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
     {
         return new Script(OpcodeType.OP_RETURN,
             Op.GetPushOp(new PubKey(founderKey).ToBytes()),
-            Op.GetPushOp(keyType),
+            Op.GetPushOp(BitConverter.GetBytes(keyType)),
             Op.GetPushOp(Encoders.Hex.DecodeData(nostrPuKey)));
     }
 
