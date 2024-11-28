@@ -380,7 +380,34 @@ else
 
             if (findProject != null)
             {
-                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), StateHasChanged, new[] { findProject.NostrEventId });
+
+                var projectNpub = string.Empty;
+                _RelayService.LookupProjectsInfoByEventIds<ProjectInfo>(p =>
+                    {
+                        if (SessionStorage.IsProjectInStorageById(p.ProjectIdentifier)) 
+                            return;
+                        SessionStorage.StoreProject(new Project { ProjectInfo = p, CreationTransactionId = findProject.TrxId });
+                        projectNpub = p.NostrPubKey;
+                    },
+                    () =>
+                    {
+                        _RelayService.LookupNostrProfileForNPub((npub, nostrMetadata) =>
+                            {
+                                var project = SessionStorage.GetProjectById(findProject.ProjectIdentifier);
+
+                                if (project!.Metadata != null)
+                                    return;
+
+                                project.Metadata = nostrMetadata;
+                                SessionStorage.StoreProject(project);
+                            }, () =>
+                            {
+                                searchInProgress = false;
+                                StateHasChanged();
+                            },
+                            projectNpub);
+                    },
+                    findProject.NostrEventId);
                 projects = new List<ProjectIndexerData> { findProject };
             }
             else
@@ -418,8 +445,6 @@ else
 
             nostrSearchInProgress = true;
 
-
-
             if (projectsForLookup.Any())
             {
                 var projectNpubsForLookup = new Dictionary<string, string>();
@@ -446,7 +471,7 @@ else
 
                                 if (project.Metadata != null)
                                     return;
-                                
+
                                 project.Metadata = nostrMetadata;
                                 SessionStorage.StoreProject(project);
                             }, () =>
@@ -457,59 +482,11 @@ else
                             projectNpubsForLookup.Keys.ToArray()),
                     projectsForLookup);
             }
-            
+
             StateHasChanged();
         }
 
         searchInProgress = false;
-    }
-
-    private Action<NostrEvent> HandleProjectEvents()
-    {
-        return e =>
-        {
-            var projectIndexerData = projects.FirstOrDefault(x => x.NostrEventId == e.Pubkey);
-
-            if (projectIndexerData == null && findProject?.NostrEventId == e.Pubkey)
-            {
-                projectIndexerData = findProject;
-            }
-
-            switch (e)
-            {
-                case { Kind: NostrKind.Metadata }:
-
-                    try
-                    {
-                        
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError(ex, $"error parsing the result of kind {NostrKind.Metadata} from relay, ProjectIdentifier = {projectIndexerData?.ProjectIdentifier}");
-                    }
-
-                    break;
-                case { Kind: NostrKind.ApplicationSpecificData }:
-
-                    try
-                    {
-                        var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
-                        if (projectInfo != null && projectIndexerData != null)
-                        {
-                            if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
-                            {
-                                SessionStorage.StoreProject(new Project { ProjectInfo = projectInfo, CreationTransactionId = projectIndexerData.TrxId });
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError(ex, $"error parsing the result of kind {NostrKind.ApplicationSpecificData} from relay, ProjectIdentifier = {projectIndexerData?.ProjectIdentifier}");
-                    }
-
-                    break;
-            }
-        };
     }
 
     private void ViewProjectDetails(string projectIdentifier)

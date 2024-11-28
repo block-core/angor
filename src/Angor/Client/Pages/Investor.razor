@@ -440,6 +440,8 @@
             }, rootNostrPubKeyHex);
     }
 
+    
+    //TODO David check if we should replace the logic to get all projects first and then get signatures for them?
     private void FetchProjectsData(params string[] eventIds)
     {
         _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(x =>
@@ -480,7 +482,6 @@
             return;
 
         var words = await passwordComponent.GetWalletAsync();
-        // var investmentPubKey = _DerivationOperations.DeriveInvestorKey(words, projectIndexerData.FounderKey); //TODO move this into NOSTR object returned?
 
         var investment = await _IndexerService.GetInvestmentAsync(investmentState.ProjectIdentifier, investmentState.investorPubKey);
 

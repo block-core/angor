@@ -9,7 +9,7 @@ public class NetworkConfiguration : INetworkConfiguration
     public static string AngorTestKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
     public static string AngorMainKey = "xpub661MyMwAqRbcGNxKe9aFkPisf3h32gHLJm8f9XAqx8FB1Nk6KngCY8hkhGqxFr2Gyb6yfUaQVbodxLoC1f3K5HU9LM1CXE59gkEXSGCCZ1B";
 
-    public static long AngorCreateFeeSats = 10001; // version of script :)
+    public static long AngorCreateFeeSats = 10001; // versioning :)
     public static int AngorInvestFeePercentage = 1;
     public static short NostrEventIdKeyType = 1; //TODO David use an enum for this?
 
