@@ -495,37 +495,36 @@
                     if (projectIndexerData != null)
                     {
                         project = new Project { CreationTransactionId = projectIndexerData.TrxId };
-                        _RelayService.RequestProjectCreateEventsByPubKey(e =>
-                        {
-                            if (project != null)
+                       
+                        _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(x =>
                             {
-                                switch (e)
-                                {
-                                    case { Kind: NostrKind.Metadata }:
-                                        var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
-                                        project.Metadata ??= nostrMetadata;
-                                        break;
-                                    case { Kind: NostrKind.ApplicationSpecificData }:
-                                        var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
-                                        project.ProjectInfo ??= projectInfo;
-                                        break;
-                                }
-                            }
-                        }, () =>
-                        {
-                            findInProgress = false;
-                            if (project?.ProjectInfo != null)
+                                if (project is { ProjectInfo : null })
+                                    project.ProjectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
+                                                          throw new Exception("The project info must be in the application specific data event");
+                            },
+                            () =>
                             {
-                                SessionStorage.StoreProject(project);
-                            }
-                            else
-                            {
-                                // Handle case where project info is not available
-                                error = "Project not found...";
-                            }
-                            StateHasChanged();
-                        },
-                        new[] { projectIndexerData.NostrPubKey });
+                                _RelayService.LookupNostrProfileForNPub(
+                                    (projectNpub, metadata) =>
+                                    {
+                                        if (project is { Metadata: null }) { project.Metadata = metadata; }
+                                    }, 
+                                    () =>
+                                    {
+                                        findInProgress = false;
+                                        if (project?.ProjectInfo != null)
+                                        {
+                                            SessionStorage.StoreProject(project);
+                                        }
+                                        else
+                                        {
+                                            // Handle case where project info is not available
+                                            error = "Project not found...";
+                                        }
+                                        StateHasChanged();
+                                    },
+                                    project.ProjectInfo.NostrPubKey);
+                            },projectIndexerData.NostrEventId);
                     }
                     else
                     {
@@ -543,7 +542,8 @@
             await RefreshBalance();
         }
     }
-
+    
+    
     private async Task RefreshBalance()
     {
         try

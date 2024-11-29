@@ -372,7 +372,8 @@ else
     private bool showCreateModal;
     TransactionInfo? signedTransaction;
     Transaction unSignedTransaction;
-    
+    string InvestorPubKey;
+
 
     private FeeData feeData = new();
 
@@ -465,9 +466,11 @@ else
                 var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
                 _SignService.LookupSignatureForInvestmentRequest(
-                    NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex
-                    , project.ProjectInfo.NostrPubKey, investmentProject.SignaturesInfo!.TimeOfSignatureRequest!.Value, investmentProject.SignaturesInfo!.SignatureRequestEventId!,
-                    async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
+                    investmentProject.InvestorNPub, 
+                    project.ProjectInfo.NostrPubKey, 
+                    investmentProject.SignaturesInfo!.TimeOfSignatureRequest!.Value, 
+                    investmentProject.SignaturesInfo!.SignatureRequestEventId!,
+                    signatures => HandleSignatureReceivedAsync(nostrPrivateKeyHex, signatures));
             }
             catch (Exception e)
             {
@@ -589,14 +592,14 @@ else
 
             var words = await passwordComponent.GetWalletAsync();
 
-            var investorKey = _derivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
+            InvestorPubKey = _derivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
 
             if (Investment.IsSeeder)
             {
                 var seederHash = _derivationOperations.DeriveSeederSecretHash(words, project.ProjectInfo.FounderKey);
             }
 
-            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, investorKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
+            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
@@ -639,7 +642,7 @@ else
                     var accountInfo = storage.GetAccountInfo(network.Name);
 
                     signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
-
+                    
                     StateHasChanged();
                 }
             }
@@ -670,7 +673,8 @@ else
                     Metadata = project.Metadata,
                     SignedTransactionHex = signedTransaction!.Transaction!.ToHex(),
                     CreationTransactionId = project.CreationTransactionId,
-                    AmountInvested = new Money(Investment.InvestmentAmount, MoneyUnit.BTC).Satoshi
+                    AmountInvested = new Money(Investment.InvestmentAmount, MoneyUnit.BTC).Satoshi,
+                    InvestorPublicKey = InvestorPubKey ?? throw new ArgumentNullException("The investor pub key is not populated")
                 };
 
             var investorProject = (InvestorProject)project;
@@ -706,11 +710,9 @@ else
 
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
-
+            investorProject.InvestorNPub = NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex;
+            
             storage.AddInvestmentProject(investorProject);
-            storage.SetNostrPublicKeyPerProject(project.ProjectInfo.ProjectIdentifier, nostrPrivateKey.PubKey.ToHex()[2..]);
-
-
 
             foreach (var input in strippedInvestmentTransaction.Inputs)
                 accountInfo.UtxoReservedForInvestment.Add(input.PrevOut.ToString());
@@ -718,11 +720,11 @@ else
             storage.SetAccountInfo(network.Name, accountInfo);
 
             _SignService.LookupSignatureForInvestmentRequest(
-                NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex,
+                investorProject.InvestorNPub,
                 investorProject.ProjectInfo.NostrPubKey,
                 investorProject.SignaturesInfo.TimeOfSignatureRequest.Value,
                 investorProject.SignaturesInfo.SignatureRequestEventId,
-                async _ => await HandleSignatureReceivedAsync(nostrPrivateKeyHex, _));
+                signatures => HandleSignatureReceivedAsync(nostrPrivateKeyHex, signatures));
 
             notificationComponent.ShowNotificationMessage("Signature request sent", 5);
         }
@@ -869,7 +871,7 @@ else
             {
                 ProjectIdentifiers = storage.GetInvestmentProjects()
                         .Where(x => x.InvestedInProject())
-                        .Select(x => new InvestmentState { ProjectIdentifier = x.ProjectInfo.ProjectIdentifier })
+                        .Select(x => new InvestmentState { ProjectIdentifier = x.ProjectInfo.ProjectIdentifier, investorPubKey = x.InvestorPublicKey, InvestmentTransactionHash = x.TransactionId})
                         .ToList()
             };
 

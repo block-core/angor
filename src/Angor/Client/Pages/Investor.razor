@@ -287,8 +287,9 @@
             TotalWallet = abi.TotalBalance;
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
 
-            await RefreshBalance();
-            await checkSignatureFromFounder();
+            var refreshTask = RefreshBalance();
+            CheckSignatureFromFounder();
+            await refreshTask;
         }
     }
 
@@ -333,33 +334,30 @@
 
     }
 
-    private async Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
+    private Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
     {
         if (investmentRequestsMap.ContainsKey(nostrPubKey))
         {
             investmentRequestsMap[nostrPubKey] = true;
             StateHasChanged();
         }
+
+        return Task.CompletedTask;
     }
 
-    private async Task checkSignatureFromFounder()
+    private void CheckSignatureFromFounder()
     {
         foreach (var project in projects)
         {
             investmentRequestsMap[project.ProjectInfo.NostrPubKey] = false;
 
-            var investorNostrPubKey = storage.GetNostrPublicKeyPerProject(project.ProjectInfo.ProjectIdentifier);
-
-            if (!string.IsNullOrEmpty(investorNostrPubKey))
-            {
-                _SignService.LookupSignatureForInvestmentRequest(
-                    investorNostrPubKey,
-                    project.ProjectInfo.NostrPubKey,
-                    project.SignaturesInfo.TimeOfSignatureRequest.Value,
-                    project.SignaturesInfo.SignatureRequestEventId,
-                    async signatureContent => await HandleSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
-                    );
-            }
+            _SignService.LookupSignatureForInvestmentRequest(
+                project.InvestorNPub,
+                project.ProjectInfo.NostrPubKey,
+                project.SignaturesInfo.TimeOfSignatureRequest.Value,
+                project.SignaturesInfo.SignatureRequestEventId,
+                signatureContent => HandleSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
+            );
         }
     }
 
@@ -402,7 +400,7 @@
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
         var NostrDMPubkey = _DerivationOperations.DeriveNostrPubKey(words, 1);
 
-        await checkSignatureFromFounder();
+        CheckSignatureFromFounder();
 
         var rootNostrPubKeyHex = _DerivationOperations.DeriveNostrPubKey(words, 0);
 
@@ -442,95 +440,122 @@
             }, rootNostrPubKeyHex);
     }
 
+    
+    //TODO David check if we should replace the logic to get all projects first and then get signatures for them?
+    private void FetchProjectsData(params string[] eventIds)
+    {
+        _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(x =>
+            {
+                var projectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
+                                  throw new Exception("The project info must be in the application specific data event");
+
+                if (projects.Any(x => x.ProjectInfo.ProjectIdentifier == projectInfo.ProjectIdentifier))
+                    return;
+
+                projects.Add(new InvestorProject { ProjectInfo = projectInfo });
+            },
+            () =>
+            {
+                _RelayService.LookupNostrProfileForNPub(
+                    (projectNpub, metadata) =>
+                    {
+                        var project = projects.FirstOrDefault(x => x.ProjectInfo.NostrPubKey == projectNpub);
+                        if (project is { Metadata: null }) { project.Metadata = metadata; }
+                    }, 
+                    () =>
+                    {
+                        if (eventIds.Length != projects.Count)
+                        {
+                            notificationComponent.ShowErrorMessage("Unable to pull the information for all projects invested (try adding relays)");
+                        }
+                        StateHasChanged();
+                    },
+                    projects.Select(x => x.ProjectInfo.NostrPubKey).ToArray());
+            },eventIds);
+    }
+    
     private async Task GetInvestmentProjectDataAsync(InvestmentState investmentState)
     {
-        var project = await _IndexerService.GetProjectByIdAsync(investmentState.ProjectIdentifier);
+        var projectIndexerData = await _IndexerService.GetProjectByIdAsync(investmentState.ProjectIdentifier);
 
-        if (project == null)
+        if (projectIndexerData == null)
             return;
 
         var words = await passwordComponent.GetWalletAsync();
-        var investmentPubKey = _DerivationOperations.DeriveInvestorKey(words, project.FounderKey);
 
-        var investments = await _IndexerService.GetInvestmentsAsync(investmentState.ProjectIdentifier);
-        var investment = investments.SingleOrDefault(x => x.InvestorPublicKey == investmentPubKey);
+        var investment = await _IndexerService.GetInvestmentAsync(investmentState.ProjectIdentifier, investmentState.investorPubKey);
 
         if (investment == null)
             return;
 
-        var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectIdentifier);
-        var investorNostrPubKey = investorNostrPrivateKey.PubKey.ToHex()[2..];
+        var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, projectIndexerData.ProjectIdentifier);
 
         var investorProject = new InvestorProject
-            {
-                TransactionId = investment.TransactionId,
-                AmountInvested = investment.TotalAmount,
-            };
+        {
+            TransactionId = investment.TransactionId,
+            AmountInvested = investment.TotalAmount,
+            InvestorNPub = investorNostrPrivateKey.PubKey.ToHex()[2..]
+        };
 
         DateTime? createdAt = null;
         string? eventId = null;
 
-        await _SignService.LookupInvestmentRequestsAsync(project.NostrPubKey, null,
-            (id, publisherPubKey, content, eventTime) =>
+        _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(
+            x =>
             {
-                if ((createdAt == null || createdAt < eventTime) && publisherPubKey == investorNostrPubKey)
+                if (investorProject.ProjectInfo == null)
                 {
-                    createdAt = eventTime;
-                    eventId = id;
+                    investorProject.ProjectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
+                                                  throw new Exception("The project info must be in the application specific data event");
                 }
-            }, () =>
+            },
+            () =>
             {
-                _RelayService.RequestProjectCreateEventsByPubKey(x =>
+                _RelayService.LookupNostrProfileForNPub(
+                    (_, metadata) => { investorProject.Metadata ??= metadata; },
+                    () =>
                     {
-                        switch (x.Kind)
-                        {
-                            case NostrKind.Metadata:
-                                investorProject.Metadata ??=
-                                    serializer.Deserialize<ProjectMetadata>(x.Content!);
-                                break;
-                            case NostrKind.ApplicationSpecificData:
-                                investorProject.ProjectInfo ??= serializer.Deserialize<ProjectInfo>(x.Content!) ??
-                                                                throw new Exception("The project info must be in the application specific data event");
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException($"{x.Kind}");
-                        }
-                    }, () =>
-                    {
-                        _SignService.LookupSignatureForInvestmentRequest(investorNostrPubKey, project.NostrPubKey,
-                            createdAt!.Value, eventId!, async encryptedSignatures =>
+                        _SignService.LookupInvestmentRequestsAsync(investorProject.ProjectInfo.NostrPubKey, investorProject.InvestorNPub, null,
+                            (id, publisherPubKey, content, eventTime) =>
                             {
-                                //TODO decrypt the signatures and add to project
-
-                                if (investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
-                                    return;
-
-                                var signatureJson = await _encryptionService.DecryptNostrContentAsync(
-                                    Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes()), project.NostrPubKey, encryptedSignatures);
-
-                                var res = serializer.Deserialize<SignatureInfo>(signatureJson);
-
-                                if (res.ProjectIdentifier == investorProject.ProjectInfo.ProjectIdentifier)
+                                if (createdAt == null || createdAt < eventTime)
                                 {
-                                    investorProject.SignaturesInfo = res;
+                                    createdAt = eventTime;
+                                    eventId = id;
                                 }
+                            }, () =>
+                            {
+                                _SignService.LookupSignatureForInvestmentRequest(investorProject.InvestorNPub, investorProject.ProjectInfo.NostrPubKey,
+                                    createdAt!.Value, eventId!,
+                                    async encryptedSignatures =>
+                                    {
+                                        if (investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
+                                            return;
 
-                                if (projects.All(x => x.ProjectInfo.ProjectIdentifier != investorProject.ProjectInfo.ProjectIdentifier))
-                                {
-                                    projects.Add(investorProject);
-                                    storage.AddInvestmentProject(investorProject);
+                                        var signatureJson = await _encryptionService.DecryptNostrContentAsync(
+                                            Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes()), investorProject.ProjectInfo.NostrPubKey, encryptedSignatures);
 
-                                    // todo: David to check this, not sure this is correct.
-                                    // storage.SetNostrPublicKeyPerProject(investorProject.ProjectInfo.ProjectIdentifier, investorNostrPrivateKey.PubKey.ToHex()[2..]);
+                                        var res = serializer.Deserialize<SignatureInfo>(signatureJson);
 
-                                    RefreshBalanceTriggered = false;
-                                    StateHasChanged();
-                                }
-                            });
+                                        if (res.ProjectIdentifier == investorProject.ProjectInfo.ProjectIdentifier)
+                                        {
+                                            investorProject.SignaturesInfo = res;
+                                        }
+
+                                        if (projects.All(x => x.ProjectInfo.ProjectIdentifier != investorProject.ProjectInfo.ProjectIdentifier))
+                                        {
+                                            projects.Add(investorProject);
+                                            storage.AddInvestmentProject(investorProject);
+
+                                            RefreshBalanceTriggered = false;
+                                            StateHasChanged();
+                                        }
+                                    });
+                            }).GetAwaiter().GetResult();
                     },
-                    project.NostrPubKey);
-            });
-
+                    investorProject.ProjectInfo.NostrPubKey);
+            },
+            projectIndexerData.NostrEventId);
     }
 
     private void NavigateToPenalties()
