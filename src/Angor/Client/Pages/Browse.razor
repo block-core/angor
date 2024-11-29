@@ -466,7 +466,7 @@ else
                                 var project = SessionStorage.GetProjectById(projectNpubsForLookup[npub]);
                                 if (project == null)
                                 {
-                                    throw new ArgumentOutOfRangeException("Unable to find the project in storage for requested metadata" + npub);
+                                    throw new ArgumentOutOfRangeException("Unable to find the project in storage for requested metadata " + npub);
                                 }
 
                                 if (project.Metadata != null)
