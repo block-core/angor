@@ -1,7 +1,7 @@
 {
   "name": "Angor",
   "short_name": "Angor",
-  "description": "Stay in control of your investments with Angor",
+  "description": "non custodial crowdfunding with Angor",
   "lang": "en",
   "start_url": "./",
   "display": "standalone",
@@ -21,12 +21,12 @@
   "related_applications": [
     {
       "platform": "windows",
-      "url": "https://app.angor.io",
+      "url": "https://beta.angor.io",
       "id": "io.AngorApp"
     },
     {
       "platform": "play",
-      "url": "https://app.angor.io"
+      "url": "https://beta.angor.io"
     }
   ],
   "shortcuts": [

@@ -36,28 +36,31 @@ const onAppUpdating = () => {
 
 async function onActivate(event) {
     console.info('Service worker: Activate');
+    self.skipWaiting(); 
 
-    // Delete unused caches
     const cacheKeys = await caches.keys();
-    await Promise.all(cacheKeys
-        .filter(key => key.startsWith(cacheNamePrefix) && key !== cacheName)
-        .map(key => caches.delete(key)));
+    await Promise.all(
+        cacheKeys
+            .filter(key => key.startsWith(cacheNamePrefix) && key !== cacheName)
+            .map(key => caches.delete(key))
+    );
 }
+
 
 async function onFetch(event) {
-    let cachedResponse = null;
-    if (event.request.method === 'GET') {
-        // For all navigation requests, try to serve index.html from cache
-        // If you need some URLs to be server-rendered, edit the following check to exclude those URLs
-        if (!event.request.url.includes('/swagger/') && !event.request.url.includes('/jobs') && !event.request.url.includes('/api/') && !event.request.url.includes('/Files/')) {
-            const shouldServeIndexHtml = event.request.mode === 'navigate';
+    if (event.request.method === 'GET' && !event.request.url.includes('/api/')) {
+        const cache = await caches.open(cacheName);
+        const cachedResponse = await cache.match(event.request);
 
-            const request = shouldServeIndexHtml ? 'index.html' : event.request;
-            const cache = await caches.open(cacheName);
-            cachedResponse = await cache.match(request);
-        }
+        const networkFetch = fetch(event.request).then(networkResponse => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+        });
+
+        return cachedResponse || networkFetch;
     }
 
-    return cachedResponse || fetch(event.request);
+    return fetch(event.request);
 }
-/* Manifest version: BnuaboqW */
+
+/* Manifest version: w3ruuUz1 */
