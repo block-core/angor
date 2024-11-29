@@ -637,56 +637,88 @@
 
     private void WipeAllData()
     {
-        if (!confirmWipe)
+        try
         {
-            showConfirmWipeMessage = true;
-            return;
+            if (!confirmWipe)
+            {
+                showConfirmWipeMessage = true;
+                return;
+            }
+
+            // Perform data wiping
+            _clientStorage.WipeStorage();
+            _cacheStorage.WipeSession();
+
+            // Reset states
+            showWipeallModal = false;
+            showConfirmWipeMessage = false;
+            confirmWipe = false;
+
+            // Update network settings
+            _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
+            _networkService.AddSettingsIfNotExist();
+
+            // Refresh UI data
+            networkType = _networkConfiguration.GetNetwork().Name;
+            settingsInfo = _clientStorage.GetSettingsInfo();
+
+            hasWallet = _walletStorage.HasWallet();
+            StateHasChanged();
+
+            // Show success message
+            notificationComponent.ShowNotificationMessage("Data has been successfully wiped.");
+
+            // Notify other components of state change
+            NavMenuState.NotifyStateChanged();
         }
-
-        _clientStorage.WipeStorage();
-        _cacheStorage.WipeSession();
-
-        showWipeallModal = false;
-        showConfirmWipeMessage = false;
-        confirmWipe = false;
-
-        _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
-        _networkService.AddSettingsIfNotExist();
-
-        networkType = _networkConfiguration.GetNetwork().Name;
-        settingsInfo = _clientStorage.GetSettingsInfo();
-
-        hasWallet = _walletStorage.HasWallet();
-        StateHasChanged();
-
-        NavMenuState.NotifyStateChanged();
+        catch (Exception e)
+        {
+            Logger.LogError(e, $"Error during data wipe: {e.Message}");
+            notificationComponent.ShowErrorMessage("Failed to wipe data: " + e.Message);
+        }
     }
 
     private void ChangeNetwork()
     {
-        if (!confirmWipe)
+        try
         {
-            showConfirmWipeMessage = true;
-            return;
+            if (!confirmWipe)
+            {
+                showConfirmWipeMessage = true;
+                return;
+            }
+
+            // Perform data wiping before changing the network
+            _clientStorage.WipeStorage();
+            _cacheStorage.WipeSession();
+
+            // Reset states
+            showChangeNetworkModal = false;
+            showConfirmWipeMessage = false;
+            confirmWipe = false;
+
+            // Update network settings
+            _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
+            _networkService.AddSettingsIfNotExist();
+
+            // Refresh UI data
+            networkType = _networkConfiguration.GetNetwork().Name;
+            settingsInfo = _clientStorage.GetSettingsInfo();
+
+            hasWallet = _walletStorage.HasWallet();
+            StateHasChanged();
+
+            // Notify user of successful network change
+            notificationComponent.ShowNotificationMessage("Network has been successfully changed.");
+
+            // Notify other components of state change
+            NavMenuState.NotifyStateChanged();
         }
-
-        _clientStorage.WipeStorage();
-        _cacheStorage.WipeSession();
-
-        showChangeNetworkModal = false;
-        showConfirmWipeMessage = false;
-        confirmWipe = false;
-
-        _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
-        _networkService.AddSettingsIfNotExist();
-
-        networkType = _networkConfiguration.GetNetwork().Name;
-        settingsInfo = _clientStorage.GetSettingsInfo();
-
-        hasWallet = _walletStorage.HasWallet();
-        StateHasChanged();
-
-        NavMenuState.NotifyStateChanged();
+        catch (Exception e)
+        {
+            Logger.LogError(e, $"Error during network change: {e.Message}");
+            notificationComponent.ShowErrorMessage("Failed to change network: " + e.Message);
+        }
     }
 
 
