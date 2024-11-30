@@ -421,24 +421,22 @@
                 <span>Create Project Info</span>
             }
         </button>
+        <button type="button" class="btn btn-success" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
+            @if (creatProjectSpinner)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span>Create Project...</span>
+            }
+            else
+            {
+                <span>Create Project</span>
+            }
+        </button>
         <div class="card card-body mt-4">
             <div class="d-flex justify-content-between">
                 <button type="button" class="btn btn-success" @onclick="() => ChangeTab(2)">
                     <span>Previous</span>
                 </button>
-                <button type="button" class="btn btn-success" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
-                    @if (creatProjectSpinner)
-                    {
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span>Create Project...</span>
-                    }
-                    else
-                    {
-                        <span>Create Project</span>
-                    }
-                </button>
-
-                
             </div>
         </div>
     }
@@ -624,32 +622,28 @@
         var nextProjectIndex = (latestProject?.ProjectIndex ?? 0) + 1;
         var projectsKeys = _derivationOperations.GetProjectKey(keys, nextProjectIndex);
 
-        var existingProject = projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier);
+        project = projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier)
+                  ?? new FounderProject
+                  {
+                      ProjectIndex = nextProjectIndex,
+                      Metadata = new ProjectMetadata(),
+                      ProjectInfo = new ProjectInfo
+                      {
+                          FounderKey = projectsKeys.FounderKey,
+                          FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
+                          ProjectIdentifier = projectsKeys.ProjectIdentifier,
+                          NostrPubKey = projectsKeys.NostrPubKey,
+                          StartDate = DateTime.UtcNow.AddHours(2),
+                          PenaltyDays = 90,
+                          ExpiryDate = DateTime.UtcNow.AddDays(120),
+                          TargetAmount = 50
+                      }
+                  };
 
-        if (existingProject != null)
+        // save project to storage immediately if new
+        if (!projects.Any(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier))
         {
-            project = existingProject;
-            nostrMetadataCreated = project.NostrMetadataCreated();
-            nostrApplicationSpecificDataCreated = project.NostrApplicationSpecificDataCreated();
-        }
-        else
-        {
-            project = new FounderProject
-            {
-                ProjectIndex = nextProjectIndex,
-                Metadata = new ProjectMetadata(),
-                ProjectInfo = new ProjectInfo
-                {
-                    FounderKey = projectsKeys.FounderKey,
-                    FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
-                    ProjectIdentifier = projectsKeys.ProjectIdentifier,
-                    NostrPubKey = projectsKeys.NostrPubKey,
-                    StartDate = DateTime.UtcNow.AddHours(2),
-                    PenaltyDays = 90,
-                    ExpiryDate = DateTime.UtcNow.AddDays(120),
-                    TargetAmount = 50
-                }
-            };
+            storage.AddFounderProject(project);
         }
     }
 
@@ -733,13 +727,24 @@
 
         try
         {
-            await CreatNostrProfileAnCheckPassword();
-            nostrMetadataCreated = true; // Set to true only after successful creation
+            // Attempt profile creation and capture success state
+            bool isSuccessful = await CreatNostrProfileAnCheckPassword();
+
+            if (isSuccessful)
+            {
+                nostrMetadataCreated = true; // Set flag only if successful
+                _Logger.LogInformation("Nostr profile successfully created.");
+            }
+            else
+            {
+                _Logger.LogWarning("Profile creation was unsuccessful without throwing an exception.");
+                notificationComponent.ShowErrorMessage("Profile creation failed. Please try again.");
+            }
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            _Logger.LogError(e, "Error during Nostr profile creation.");
+            notificationComponent.ShowErrorMessage($"An error occurred: {e.Message}");
         }
         finally
         {
@@ -775,19 +780,19 @@
     }
 
 
-    private async Task CreatNostrProfileAnCheckPassword()
+    private async Task<bool> CreatNostrProfileAnCheckPassword()
     {
         if (!passwordComponent.HasPassword())
         {
             passwordComponent.ShowPassword(CreatNostrProfile);
+            return false;
         }
-        else
-        {
-            await CreatNostrProfile();
-        }
+
+        return await CreatNostrProfile();
     }
 
-    private async Task CreatNostrProfile()
+
+    private async Task<bool> CreatNostrProfile()
     {
         createProfileSpinner = true;
         StateHasChanged();
@@ -807,7 +812,7 @@
 
                     if (!_.Accepted)
                     {
-                        notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!");
+                        notificationComponent.ShowErrorMessage("Failed to store project information on the relay.");
                     }
                     else
                     {
@@ -818,16 +823,23 @@
                     StateHasChanged();
                 });
 
-            if (string.IsNullOrEmpty(resultId))
+            if (!string.IsNullOrEmpty(resultId))
             {
-                createProfileSpinner = false;
-                notificationComponent.ShowErrorMessage("Failed to create nostr profile");
+                return true; // Profile created successfully
             }
+
+            notificationComponent.ShowErrorMessage("Failed to create nostr profile.");
+            return false;
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
+            _Logger.LogError(e, "Error creating nostr profile.");
             notificationComponent.ShowErrorMessage(e.Message);
+            return false;
+        }
+        finally
+        {
+            createProfileSpinner = false;
         }
     }
 
@@ -1041,8 +1053,14 @@
 
     private void ChangeTab(int tabNumber)
     {
+        SaveProjectToStorage(); // Save the project before switching tabs
         activeTab = tabNumber;
         StateHasChanged();
+    }
+
+    private void SaveProjectToStorage()
+    {
+        storage.UpdateFounderProject(project);
     }
 
     private string GetProgressMessage()
@@ -1216,24 +1234,5 @@
         StateHasChanged(); // Update the UI
     }
     
-    private bool ValidateTransactionOutputs(Transaction transaction)
-    {
-        // Ensure OP_RETURN output is present
-        if (!transaction.Outputs.Any(output => output.ScriptPubKey.ToString().Contains("OP_RETURN")))
-        {
-            _Logger.LogError("Missing OP_RETURN output in transaction.");
-            return false;
-        }
-
-        // Ensure Angor address output is present
-        if (!transaction.Outputs.Any(output => output.ScriptPubKey == _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier)))
-        {
-            _Logger.LogError("Missing Angor address output in transaction.");
-            return false;
-        }
-
-        return true;
-    }
-
 
 }
