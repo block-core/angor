@@ -18,7 +18,7 @@ namespace Angor.Shared.Services
         Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false);
         Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset);
         Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations);
-        Task<string> GetGenesisBlockHashAsync(string indexerUrl);
+        Task<(bool IsOnline, string? GenesisHash)> CheckIndexerNetwork(string indexerUrl);
         bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash);
 
 
@@ -66,8 +66,7 @@ namespace Angor.Shared.Services
         private readonly ILogger<IndexerService> _logger;
 
 
-        public IndexerService(INetworkConfiguration networkConfiguration, HttpClient httpClient,
-            INetworkService networkService)
+        public IndexerService(INetworkConfiguration networkConfiguration, HttpClient httpClient, INetworkService networkService)
         {
             _networkConfiguration = networkConfiguration;
             _httpClient = httpClient;
@@ -129,8 +128,7 @@ namespace Angor.Shared.Services
         public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)
         {
             var indexer = _networkService.GetPrimaryIndexer();
-            var response =
-                await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/investments");
+            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/investments");
             _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
@@ -151,8 +149,7 @@ namespace Angor.Shared.Services
             return response.ReasonPhrase + content;
         }
 
-        public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data,
-            bool includeUnconfirmed = false)
+        public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false)
         {
             //check all new addresses for balance or a history
             var urlBalance = $"/api/query/addresses/balance?includeUnconfirmed={includeUnconfirmed}";
@@ -164,8 +161,7 @@ namespace Angor.Shared.Services
             if (!response.IsSuccessStatusCode)
                 throw new InvalidOperationException(response.ReasonPhrase);
 
-            var addressesNotEmpty = (await response.Content.ReadFromJsonAsync<AddressBalance[]>())?.ToArray() ??
-                                    Array.Empty<AddressBalance>();
+            var addressesNotEmpty = (await response.Content.ReadFromJsonAsync<AddressBalance[]>())?.ToArray() ?? Array.Empty<AddressBalance>();
 
             return addressesNotEmpty;
         }
@@ -174,8 +170,7 @@ namespace Angor.Shared.Services
         {
             var indexer = _networkService.GetPrimaryIndexer();
 
-            var url =
-                $"/api/query/address/{address}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
+            var url = $"/api/query/address/{address}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
 
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
@@ -192,8 +187,7 @@ namespace Angor.Shared.Services
         {
             var indexer = _networkService.GetPrimaryIndexer();
 
-            var url = confirmations.Aggregate("/api/stats/fee?",
-                (current, block) => current + $@"confirmations={block}&");
+            var url = confirmations.Aggregate("/api/stats/fee?", (current, block) => current + $@"confirmations={block}&");
 
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
@@ -240,38 +234,45 @@ namespace Angor.Shared.Services
             return info;
         }
 
-        public async Task<string> GetGenesisBlockHashAsync(string indexerUrl)
+        
+        public async Task<(bool IsOnline, string? GenesisHash)> CheckIndexerNetwork(string indexerUrl)
         {
             try
             {
-                var fullUrl = $"{indexerUrl.TrimEnd('/')}/api/query/block/index/0";
-
-                var response = await _httpClient.GetAsync(fullUrl);
-                response.EnsureSuccessStatusCode();
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-
-                // Parse the JSON response to extract the blockHash property
+                // fetch block 0 (Genesis Block)
+                var blockUrl = $"{indexerUrl.TrimEnd('/')}/api/query/block/index/0";
+        
+                var blockResponse = await _httpClient.GetAsync(blockUrl);
+        
+                if (!blockResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning($"Failed to fetch genesis block from: {blockUrl}");
+                    return (false, null);
+                }
+        
+                var responseContent = await blockResponse.Content.ReadAsStringAsync();
                 var blockData = JsonSerializer.Deserialize<JsonElement>(responseContent);
+        
                 if (blockData.TryGetProperty("blockHash", out JsonElement blockHashElement))
                 {
-                    return blockHashElement.GetString() ?? string.Empty;
+                    return (true, blockHashElement.GetString());
                 }
-
-                _logger.LogWarning("blockHash not found in the response.");
-                return string.Empty;
+        
+                _logger.LogWarning("blockHash not found in the block response.");
+                return (true, null); // Indexer is online, but no valid block hash
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error fetching genesis block hash: {ex.Message}");
-                return string.Empty;
+                _logger.LogError(ex, $"Error during indexer network check: {ex.Message}");
+                return (false, null);
             }
         }
 
+        
         public bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash)
         {
             // Compare the first 64 characters (32 bytes in hex) of the fetched hash to the expected hash
-            return fetchedHash.StartsWith(expectedHash, StringComparison.OrdinalIgnoreCase);
+            return fetchedHash.StartsWith(expectedHash, StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(fetchedHash);
         }
         
     }
