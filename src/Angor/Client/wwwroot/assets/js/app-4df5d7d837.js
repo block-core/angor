@@ -1,4 +1,5 @@
-﻿'use strict';
+/* Timestamp: 1732981221782 */
+'use strict';
 
 window.angor = {
     installApp: function () {
