@@ -81,15 +81,27 @@
             StateHasChanged(); // This will cause Blazor to re-render the component
         });
     }
-
-    public void ShowErrorMessage(string? message)
+    
+    public void ShowErrorMessage(string message, Exception exception = null)
     {
-        if (!string.IsNullOrEmpty(message))
+        if (string.IsNullOrEmpty(message) && exception == null)
         {
-            errorMessage = message;
-            StateHasChanged();
+            return; // No error to handle
         }
+
+        // Log the error with or without an exception
+        if (exception != null)
+        {
+            Logger.LogError(exception, "An error occurred: {Message}", message ?? exception.Message);
+        }
+        else
+        {
+            Logger.LogError("An error occurred: {Message}", message);
+        }
+        errorMessage = message ?? exception?.Message ?? "An unexpected error occurred.";
+        StateHasChanged();
     }
+
 
     private void ClearErrorMessage()
     {
