@@ -796,7 +796,7 @@ else
             }
             catch (Exception e)
             {
-                notificationComponent.ShowErrorMessage(e.Message,ex);
+                notificationComponent.ShowErrorMessage(e.Message,e);
             }
             finally
             {
@@ -882,7 +882,7 @@ else
         catch (Exception e)
         {
             walletWordsCreateModal = false;
-            notificationComponent.ShowErrorMessage(e.Message,ex);
+            notificationComponent.ShowErrorMessage(e.Message,e);
         }
         finally
         {
