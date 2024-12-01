@@ -7,57 +7,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.Services
 {
-    public interface IIndexerService
-    {
-        Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit);
-        Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId);
-        Task<ProjectStats?> GetProjectStatsAsync(string projectId);
-
-        Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId);
-        Task<string> PublishTransactionAsync(string trxHex);
-        Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false);
-        Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset);
-        Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations);
-        Task<(bool IsOnline, string? GenesisHash)> CheckIndexerNetwork(string indexerUrl);
-        bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash);
-
-
-        Task<string> GetTransactionHexByIdAsync(string transactionId);
-
-        Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId);
-    }
-    public class ProjectIndexerData
-    {
-        public string FounderKey { get; set; }
-        public string ProjectIdentifier { get; set; }
-        public long CreatedOnBlock { get; set; }
-        public string NostrPubKey { get; set; }
-
-        public string TrxId { get; set; }
-        public long? TotalInvestmentsCount { get; set; }
-    }
-
-    public class ProjectInvestment
-    {
-        public string TransactionId { get; set; }
-        
-        public string InvestorPublicKey { get; set; }
-        
-        public long TotalAmount { get; set; }
-        
-        public string HashOfSecret { get; set; }
-
-        public bool IsSeeder { get; set; }
-    }
-
-    public class ProjectStats
-    {
-        public long InvestorCount { get; set; }
-        public long AmountInvested { get; set; }
-        public long AmountInPenalties { get; set; }
-        public long CountInPenalties { get; set; }
-    }
-
     public class IndexerService : IIndexerService
     {
         private readonly INetworkConfiguration _networkConfiguration;
