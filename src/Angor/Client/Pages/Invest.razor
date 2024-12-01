@@ -12,6 +12,7 @@
 @using Nostr.Client.Keys
 @using System.Diagnostics
 @using Angor.Client.Models
+@using Blockcore.Networks
 @using System.Text.Json
 
 
@@ -542,17 +543,18 @@ else
     {
         if (Investment.IsSeeder)
         {
-            var minSeederAmount = 0.01m;
-            var maxSeederAmount = 0.1m;
-            if (Investment.InvestmentAmount < minSeederAmount)
+            bool isTestnet = network.NetworkType == NetworkType.Testnet;
+            decimal maxInvestmentAmount = isTestnet ? decimal.MaxValue : 0.1m; // 0.1 BTC for mainnet, unlimited for testnet
+            decimal minInvestmentAmount = 0.001m; // Minimum investment for all networks
+            if (Investment.InvestmentAmount < minInvestmentAmount)
             {
-                notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minSeederAmount} BTC was not reached");
+                notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minInvestmentAmount} BTC was not reached");
                 return;
             }
             
-            if (Investment.InvestmentAmount > maxSeederAmount)
+            if (Investment.InvestmentAmount > maxInvestmentAmount)
             {
-                notificationComponent.ShowErrorMessage($"Maximum investment amount of {maxSeederAmount} BTC exceeded");
+                notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentAmount} BTC on the mainnet");
                 return;
             }
         }
