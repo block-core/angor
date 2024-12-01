@@ -13,5 +13,6 @@ public interface IFounderTransactionActions
         int stageNumber, Script founderRecieveAddress, string founderPrivateKey,
         FeeEstimation fee);
 
-    Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, string nostrPubKey);
+    Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, short keyType,
+        string nostrPubKey);
 }

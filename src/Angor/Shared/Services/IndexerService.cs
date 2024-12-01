@@ -134,6 +134,16 @@ namespace Angor.Shared.Services
             return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
         }
 
+        public async Task<ProjectInvestment?> GetInvestmentAsync(string projectId, string investorPubKey)
+        {
+            var indexer = _networkService.GetPrimaryIndexer();
+            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/investments/{investorPubKey}");
+            _networkService.CheckAndHandleError(response);
+            return response.IsSuccessStatusCode 
+                ? await response.Content.ReadFromJsonAsync<ProjectInvestment>() 
+                : null;
+        }
+
         public async Task<string> PublishTransactionAsync(string trxHex)
         {
             var indexer = _networkService.GetPrimaryIndexer();

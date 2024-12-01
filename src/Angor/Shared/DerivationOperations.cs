@@ -245,25 +245,20 @@ public class DerivationOperations : IDerivationOperations
     public uint DeriveProjectId(string founderKey)
     {
         ExtKey.UseBCForHMACSHA512 = true;
-        Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
-        Network network = _networkConfiguration.GetNetwork();
+        Hashes.UseBCForHMACSHA512 = true;
 
         var key = new PubKey(founderKey);
 
         var hashOfid = Hashes.Hash256(key.ToBytes());
 
-        var projectid = hashOfid.GetLow32();
-
-        var ret = projectid / 2; // the max size of bip32 derivation range is 2,147,483,648 (2^31) the max number of uint is 4,294,967,295 so we must divide by two
-
-        _logger.LogInformation($"DeriveProjectId - founderKey = {founderKey}, hashOfFounderKey = {hashOfid}, hashOfFounderKeyCastToInt = {projectid}, hashOfFounderKeyCastToIntDivided = {ret}");
-
-
-        if (ret >= 2_147_483_648)
+        var projectId = (uint)(hashOfid.GetLow64() & int.MaxValue);
+        
+        _logger.LogInformation($"DeriveProjectId - founderKey = {founderKey}, hashOfFounderKey = {hashOfid}, hashOfFounderKeyCastToInt = {projectId}");
+        
+        if (projectId >= 2_147_483_648)
             throw new Exception();
-
-        return ret;
+        
+        return projectId;
     }
 
     public string DeriveAngorKey(string founderKey, string angorRootKey)

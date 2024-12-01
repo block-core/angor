@@ -96,6 +96,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem("founder-projects", ret.OrderBy(_ => _.ProjectIndex));
     }
     
+    
     public List<FounderProject> GetFounderProjects()
     {
         var ret = _storage.GetItem<List<FounderProject>>("founder-projects");
@@ -215,16 +216,6 @@ public class ClientStorage : IClientStorage, INetworkStorage
     public string GetNetwork()
     {
         return _storage.GetItem<string>("network");
-    }
-    
-    public void SetNostrPublicKeyPerProject(string projectId,string nostrPubKey)
-    {
-        _storage.SetItem($"project:{projectId}:nostrKey", nostrPubKey);
-    }
-    
-    public string GetNostrPublicKeyPerProject(string projectId)
-    {
-        return _storage.GetItem<string>($"project:{projectId}:nostrKey");
     }
     
     public string GetCurrencyDisplaySetting()
