@@ -1202,7 +1202,7 @@ else
         {
             var receiveAddress = accountBalanceInfo.AccountInfo.GetNextReceiveAddress();
 
-            var res = await _httpClient.GetAsync($"https://faucet.angor.io/api/faucet/send/{receiveAddress}");
+            var res = await _httpClient.GetAsync($"https://faucettmp.angor.io/api/faucet/send/{receiveAddress}");
 
             res.EnsureSuccessStatusCode();
 
