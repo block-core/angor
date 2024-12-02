@@ -1,15 +1,17 @@
+// Alias namespaces to avoid conflicts
+using NBitcoin; // For default NBitcoin usage
+using BC = Blockcore.NBitcoin; // Alias for Blockcore.NBitcoin
+
+// Other required namespaces
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.NBitcoin.BIP39;
-using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
+
+
 
 namespace Angor.Shared;
 
@@ -39,10 +41,27 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
     
+    
+    public static NBitcoin.Network ConvertToNBitcoinNetwork(Blockcore.Networks.Network blockcoreNetwork)
+    {
+        // Map the network name, if the name matches between Blockcore and NBitcoin
+        var nbitcoinNetwork = NBitcoin.Network.GetNetwork(blockcoreNetwork.Name);
+
+        if (nbitcoinNetwork != null)
+        {
+            return nbitcoinNetwork;
+        }
+
+        // If a direct match is not found, you can reconstruct a similar NBitcoin network.
+        throw new InvalidOperationException($"No matching NBitcoin.Network for Blockcore network: {blockcoreNetwork.Name}");
+    }
+
+
+    
     public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        Network network =ConvertToNBitcoinNetwork(_networkConfiguration.GetNetwork()); 
 
         var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
