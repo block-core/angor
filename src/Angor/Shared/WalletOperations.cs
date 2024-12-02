@@ -8,7 +8,6 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.BIP39;
-using NBitcoin;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 
@@ -40,58 +39,42 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
     
-    public TransactionInfo AddInputsAndSignTransaction(
-        string changeAddress,
-        Transaction transaction,
-        WalletWords walletWords,
-        AccountInfo accountInfo,
-        FeeEstimation feeRate)
+    public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
+        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
-        // Create PSBT
         var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
-        if (coins.coins == null || !coins.coins.Any())
+        if (coins.coins == null)
             throw new ApplicationException("No coins found");
 
         var builder = new TransactionBuilder(network)
             .AddCoins(coins.coins)
+            .AddKeys(coins.keys.ToArray())
             .SetChange(BitcoinAddress.Create(changeAddress, network))
             .ContinueToBuild(transaction)
             .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate.FeeRate)))
             .CoverTheRest();
 
-        var psbt = builder.BuildPSBT(false); // Create unsigned PSBT
+        var signTransaction = builder.BuildTransaction(true);
 
-        // Sign PSBT with available keys
-        foreach (var key in coins.keys)
+        // find the coins used
+        long totaInInputs = 0;
+        long totaInOutputs = signTransaction.Outputs.Select(s => s.Value.Satoshi).Sum();
+
+        foreach (var input in signTransaction.Inputs)
         {
-            psbt = psbt.Sign(key);
+            var foundInput = coins.coins.First(c => c.Outpoint.ToString() == input.PrevOut.ToString());
+
+            totaInInputs += foundInput.Amount.Satoshi;
         }
 
-        // Finalize PSBT
-        if (!psbt.IsAllFinalized())
-        {
-            psbt.Finalize();
-        }
+        var minerFee = totaInInputs - totaInOutputs;
 
-        var signedTransaction = psbt.ExtractTransaction(); // Extract finalized transaction
-
-        // Calculate fee
-        long totalInput = coins.coins.Sum(c => c.Amount.Satoshi);
-        long totalOutput = signedTransaction.Outputs.Sum(o => o.Value.Satoshi);
-        long minerFee = totalInput - totalOutput;
-
-        return new TransactionInfo
-        {
-            Transaction = signedTransaction,
-            TransactionFee = minerFee
-        };
+        return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
     }
-
-
 
     public TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
@@ -137,7 +120,7 @@ public class WalletOperations : IWalletOperations
         return new TransactionInfo { Transaction = clonedTransaction, TransactionFee = fee };
     }
 
-    public async Task<OperationResult<PSBT>> CreatePSBTForSendAmount(WalletWords walletWords, SendInfo sendInfo)
+    public async Task<OperationResult<Transaction>> SendAmountToAddress(WalletWords walletWords, SendInfo sendInfo) //TODO change the passing of wallet words as parameter after refactoring is complete
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -145,46 +128,26 @@ public class WalletOperations : IWalletOperations
         {
             throw new ApplicationException("not enough funds");
         }
-
-        var (coins, keys) = GetUnspentOutputsForTransaction(walletWords, sendInfo.SendUtxos.Values.ToList());
-
+        
+        var (coins, keys) =
+            GetUnspentOutputsForTransaction(walletWords,sendInfo.SendUtxos.Values.ToList());
+        
         if (coins == null)
         {
-            return new OperationResult<PSBT> { Success = false, Message = "not enough funds" };
+            return new OperationResult<Transaction> { Success = false, Message = "not enough funds" };
         }
 
         var builder = new TransactionBuilder(network)
             .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), Money.Coins(sendInfo.SendAmount))
             .AddCoins(coins)
+            .AddKeys(keys.ToArray())
             .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network))
             .SendEstimatedFees(new FeeRate(Money.Coins(sendInfo.FeeRate)));
 
-        var psbt = builder.BuildPSBT(false); // false: PSBT is unsigned
-        return new OperationResult<PSBT> { Success = true, Data = psbt };
+        var signedTransaction = builder.BuildTransaction(true);
+
+        return await PublishTransactionAsync(network, signedTransaction);
     }
-    
-    public Transaction FinalizePSBT(string psbtBase64, WalletWords walletWords)
-    {
-        Network network = _networkConfiguration.GetNetwork();
-        var psbt = PSBT.Parse(psbtBase64, network);
-
-        var utxoDataWithPaths = FindOutputsForTransaction((long)psbt.GetBalance(Script.Empty), null);
-        var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
-
-        foreach (var key in coins.keys)
-        {
-            psbt = psbt.Sign(key);
-        }
-
-        if (!psbt.IsAllFinalized())
-        {
-            throw new InvalidOperationException("PSBT could not be finalized.");
-        }
-
-        return psbt.ExtractTransaction();
-    }
-
-
 
     public List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction)
     {
@@ -225,17 +188,49 @@ public class WalletOperations : IWalletOperations
         return list;
     }
 
-    public async Task<OperationResult<Transaction>> PublishTransactionAsync(Network network, Transaction transaction)
+    public async Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,Transaction signedTransaction)
     {
-        var hex = transaction.ToHex(network.Consensus.ConsensusFactory);
+        var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
+
         var res = await _indexerService.PublishTransactionAsync(hex);
 
         if (string.IsNullOrEmpty(res))
-            return new OperationResult<Transaction> { Success = true, Data = transaction };
+            return new OperationResult<Transaction> { Success = true, Data = signedTransaction };
 
         return new OperationResult<Transaction> { Success = false, Message = res };
     }
 
+    public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
+    {
+        var utxosToSpend = new List<UtxoDataWithPath>();
+
+        long total = 0;
+        foreach (var utxoData in accountInfo.AllAddresses().SelectMany(_ => _.UtxoData
+                         .Where(utxow => utxow.PendingSpent == false)
+                         .Select(u => new { path = _.HdPath, utxo = u }))
+                     .OrderBy(o => o.utxo.blockIndex)
+                     .ThenByDescending(o => o.utxo.value))
+        {
+            if (accountInfo.UtxoReservedForInvestment.Contains(utxoData.utxo.outpoint.ToString()))
+                continue;
+
+            utxosToSpend.Add(new UtxoDataWithPath { HdPath = utxoData.path, UtxoData = utxoData.utxo });
+
+            total += utxoData.utxo.value;
+
+            if (total > sendAmountat)
+            {
+                break;
+            }
+        }
+
+        if (total < sendAmountat)
+        {
+            throw new ApplicationException($"Not enough funds, expected {Money.Satoshis(sendAmountat)} BTC, found {Money.Satoshis(total)} BTC");
+        }
+
+        return utxosToSpend;
+    }
 
     public (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords , List<UtxoDataWithPath> utxoDataWithPaths)
     {
