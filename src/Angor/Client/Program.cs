@@ -52,6 +52,8 @@ builder.Services.AddTransient<ISpendingTransactionBuilder, SpendingTransactionBu
 builder.Services.AddTransient<IInvestmentTransactionBuilder, InvestmentTransactionBuilder>();
 builder.Services.AddTransient<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
 builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
+builder.Services.AddScoped<INBitcoinService, NBitcoinService>();
+
 
 builder.Services.AddSingleton<INostrCommunicationFactory, NostrCommunicationFactory>();
 builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();

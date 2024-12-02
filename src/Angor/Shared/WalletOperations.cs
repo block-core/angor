@@ -10,7 +10,7 @@ using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.BIP39;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
-using NBitcoinPSBT = NBitcoin.PSBT;
+// using NBitcoinPSBT = NBitcoin.PSBT;
 using NBitcoinTransaction = NBitcoin.Transaction;
 using NBitcoinNetwork = NBitcoin.Network;
 using NBitcoinCoin = NBitcoin.Coin;
@@ -28,16 +28,20 @@ public class WalletOperations : IWalletOperations
     private readonly ILogger<WalletOperations> _logger;
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly IIndexerService _indexerService;
+    private readonly INBitcoinService _nBitcoinService;
+
 
     private const int AccountIndex = 0; // for now only account 0
     private const int Purpose = 84; // for now only legacy
 
-    public WalletOperations(IIndexerService indexerService, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration)
+    public WalletOperations(IIndexerService indexerService, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration, INBitcoinService nBitcoinService)
     {
         _hdOperations = hdOperations;
         _logger = logger;
         _networkConfiguration = networkConfiguration;
         _indexerService = indexerService;
+        _nBitcoinService = nBitcoinService;
+
     }
 
     public string GenerateWalletWords()
@@ -48,40 +52,35 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
     
-    public TransactionInfo AddInputsAndSignTransaction(string changeAddress, NBitcoinTransaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
+    public TransactionInfo AddInputsAndSignTransaction(
+        string changeAddress,
+        NBitcoinTransaction transaction,
+        WalletWords walletWords,
+        AccountInfo accountInfo,
+        FeeEstimation feeRate)
     {
-        var network = NBitcoinNetwork.TestNet; // temp
-        // Find UTXOs for the transaction
-        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
-        var coinsAndKeys = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+        var network = NBitcoinNetwork.TestNet;
 
-        if (coinsAndKeys.coins == null || !coinsAndKeys.coins.Any())
+        // Step 1: Find UTXOs
+        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(o => o.Value), accountInfo);
+        var (coins, keys) = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+
+        if (!coins.Any())
         {
             throw new ApplicationException("No coins found for the transaction.");
         }
 
-        // Create a PSBT
-        var psbt = NBitcoinPSBT.FromTransaction(transaction, network);
-
-        // Add UTXOs to the PSBT
-        foreach (var coin in coinsAndKeys.coins)
-        {
-            var coint = new NBitcoinCoin(uint256.Parse("txId"), 0, Money.Satoshis(1000), Script.FromHex("0014..."));
-            psbt.AddCoins(coint);
-        }
-
-        // Add keys to the PSBT
-        psbt = psbt.SignWithKeys(coinsAndKeys.keys.ToArray());
-
-        // Finalize the PSBT
+        // Step 2: Create PSBT and Add Coins/Keys
+        var psbt = NBitcoin.PSBT.FromTransaction(transaction, network);
+        psbt.AddCoins(coins.ToArray());
+        psbt = psbt.SignWithKeys(keys.ToArray());
         psbt.Finalize();
 
-        // Build the signed transaction from the PSBT
+        // Step 3: Extract Signed Transaction
         var signedTransaction = psbt.ExtractTransaction();
 
-        // Calculate transaction fees
-        var totalInputs = coinsAndKeys.coins.Sum(coin => coin.Amount.Satoshi);
+        // Step 4: Calculate Fees
+        var totalInputs = coins.Sum(coin => coin.Amount.Satoshi);
         var totalOutputs = signedTransaction.Outputs.Sum(output => output.Value.Satoshi);
         var minerFee = totalInputs - totalOutputs;
 
@@ -249,40 +248,34 @@ public class WalletOperations : IWalletOperations
         return utxosToSpend;
     }
 
-    public (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords , List<UtxoDataWithPath> utxoDataWithPaths)
+    public (List<NBitcoin.Coin> coins, List<NBitcoin.Key> keys) GetUnspentOutputsForTransaction(
+        WalletWords walletWords, 
+        List<UtxoDataWithPath> utxoDataWithPaths)
     {
-        ExtKey extendedKey;
-        try
-        {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase); //TODO change this to be the extended key 
-        }
-        catch (NotSupportedException ex)
-        {
-            Console.WriteLine("Exception occurred: {0}", ex);
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
-            throw;
-        }
-
-        var coins = new List<Coin>();
-        var keys = new List<Key>();
+        var extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        var coins = new List<NBitcoin.Coin>();
+        var keys = new List<NBitcoin.Key>();
 
         foreach (var utxoDataWithPath in utxoDataWithPaths)
         {
             var utxo = utxoDataWithPath.UtxoData;
 
-            coins.Add(new Coin(uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
-                Money.Satoshis(utxo.value), Script.FromHex(utxo.scriptHex)));
+            coins.Add(new NBitcoin.Coin(
+                new NBitcoin.OutPoint(
+                    NBitcoin.uint256.Parse(utxo.outpoint.transactionId),
+                    (uint)utxo.outpoint.outputIndex
+                ),
+                new NBitcoin.TxOut(
+                    new NBitcoin.Money(utxo.value),
+                    NBitcoin.Script.FromHex(utxo.scriptHex)
+                )
+            ));
 
-            // derive the private key
-            var extKey = extendedKey.Derive(new KeyPath(utxoDataWithPath.HdPath));
-            Key privateKey = extKey.PrivateKey;
-            keys.Add(privateKey);
+            var derivedKey = extendedKey.Derive(new KeyPath(utxoDataWithPath.HdPath));
+            keys.Add(derivedKey.PrivateKey);
         }
 
-        return (coins,keys);
+        return (coins, keys);
     }
 
 
@@ -595,4 +588,14 @@ public class WalletOperations : IWalletOperations
 
         return builder.EstimateFees(new FeeRate(Money.Satoshis(feeRate))).ToUnit(MoneyUnit.BTC);
     }
+    
+    public static Blockcore.Consensus.TransactionInfo.OutPoint ConvertToBlockcoreOutPoint(NBitcoin.OutPoint nBitcoinOutPoint)
+    {
+        return new Blockcore.Consensus.TransactionInfo.OutPoint
+        {
+            TransactionId = nBitcoinOutPoint.Hash.ToString(),
+            OutputIndex = (int)nBitcoinOutPoint.N
+        };
+    }
+
 }
