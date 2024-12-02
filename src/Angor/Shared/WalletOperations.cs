@@ -1,8 +1,6 @@
-// Alias namespaces to avoid conflicts
 using NBitcoin; // For default NBitcoin usage
-using BC = Blockcore.NBitcoin; // Alias for Blockcore.NBitcoin
+using BC = Blockcore.NBitcoin; 
 
-// Other required namespaces
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
