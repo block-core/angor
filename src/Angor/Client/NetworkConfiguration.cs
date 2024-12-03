@@ -197,5 +197,34 @@ public class NetworkConfiguration : INetworkConfiguration
 
         throw new ApplicationException("Network not set");
     }
+    
+    public string GetGenesisBlockHash()
+    {
+        // Determine the correct genesis block hash based on the network type
+        return currentNetwork.Name switch
+        {
+            "Mainnet" => "000000000019d6689c085ae165831e93",
+            "Testnet" => "000000000933ea01ad0ee984209779ba",
+            "Signet" => "00000000020f01e33f91b6c7c5d3a3f8",
+            "Regtest" => "0f9195cbdb894feda6ee07798e0d597d",
+            "Angornet" => "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+            _ => throw new NotSupportedException($"Network type {currentNetwork.NetworkType.ToString()} is not supported")
+        };
+    }
+    
+    public string GetNetworkNameFromGenesisBlockHash(string genesisBlockHash)
+    {
+        return genesisBlockHash switch
+        {
+            "000000000019d6689c085ae165831e93" => "Mainnet",
+            "000000000933ea01ad0ee984209779ba" => "Testnet",
+            "00000000020f01e33f91b6c7c5d3a3f8" => "Signet",
+            "0f9195cbdb894feda6ee07798e0d597d" => "Regtest",
+            "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6" => "Angornet",
+            _ => "Unknown"
+        };
+    }
+
+
 
 }

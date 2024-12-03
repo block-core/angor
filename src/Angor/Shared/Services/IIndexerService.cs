@@ -19,4 +19,6 @@ public interface IIndexerService
     Task<string> GetTransactionHexByIdAsync(string transactionId);
 
     Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId);
+    Task<(bool IsOnline, string? GenesisHash)> CheckIndexerNetwork(string indexerUrl);
+    bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash);
 }

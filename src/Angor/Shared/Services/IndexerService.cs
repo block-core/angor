@@ -1,6 +1,9 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using Angor.Shared.Models;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
+
 
 namespace Angor.Shared.Services
 {
@@ -9,6 +12,8 @@ namespace Angor.Shared.Services
         private readonly INetworkConfiguration _networkConfiguration;
         private readonly HttpClient _httpClient;
         private readonly INetworkService _networkService;
+        private readonly ILogger<IndexerService> _logger;
+
 
         public IndexerService(INetworkConfiguration networkConfiguration, HttpClient httpClient, INetworkService networkService)
         {
@@ -46,7 +51,7 @@ namespace Angor.Shared.Services
             {
                 return null;
             }
-            
+
             return await response.Content.ReadFromJsonAsync<ProjectIndexerData>();
         }
 
@@ -94,7 +99,7 @@ namespace Angor.Shared.Services
 
             var response = await _httpClient.PostAsync($"{indexer.Url}/api/command/send", new StringContent(trxHex));
             _networkService.CheckAndHandleError(response);
-            
+
             if (response.IsSuccessStatusCode)
                 return string.Empty;
 
@@ -120,7 +125,7 @@ namespace Angor.Shared.Services
             return addressesNotEmpty;
         }
 
-        public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int offset , int limit)
+        public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int offset, int limit)
         {
             var indexer = _networkService.GetPrimaryIndexer();
 
@@ -161,7 +166,7 @@ namespace Angor.Shared.Services
             var indexer = _networkService.GetPrimaryIndexer();
 
             var url = $"/api/query/transaction/{transactionId}/hex";
-            
+
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
 
@@ -176,7 +181,7 @@ namespace Angor.Shared.Services
             var indexer = _networkService.GetPrimaryIndexer();
 
             var url = $"/api/query/transaction/{transactionId}";
-            
+
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
 
@@ -187,5 +192,47 @@ namespace Angor.Shared.Services
 
             return info;
         }
+
+        
+        public async Task<(bool IsOnline, string? GenesisHash)> CheckIndexerNetwork(string indexerUrl)
+        {
+            try
+            {
+                // fetch block 0 (Genesis Block)
+                var blockUrl = $"{indexerUrl.TrimEnd('/')}/api/query/block/index/0";
+        
+                var blockResponse = await _httpClient.GetAsync(blockUrl);
+        
+                if (!blockResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning($"Failed to fetch genesis block from: {blockUrl}");
+                    return (false, null);
+                }
+        
+                var responseContent = await blockResponse.Content.ReadAsStringAsync();
+                var blockData = JsonSerializer.Deserialize<JsonElement>(responseContent);
+        
+                if (blockData.TryGetProperty("blockHash", out JsonElement blockHashElement))
+                {
+                    return (true, blockHashElement.GetString());
+                }
+        
+                _logger.LogWarning("blockHash not found in the block response.");
+                return (true, null); // Indexer is online, but no valid block hash
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error during indexer network check: {ex.Message}");
+                return (false, null);
+            }
+        }
+
+        
+        public bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash)
+        {
+            // Compare the first 64 characters (32 bytes in hex) of the fetched hash to the expected hash
+            return fetchedHash.StartsWith(expectedHash, StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(fetchedHash);
+        }
+        
     }
 }
