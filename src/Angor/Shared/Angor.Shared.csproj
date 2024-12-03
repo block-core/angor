@@ -8,6 +8,7 @@
 
   <PropertyGroup>
     <DefineConstants>HAS_SPAN</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
