@@ -112,26 +112,26 @@ jobs:
       #     latest: true
 
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: true
-          prerelease: false
+      # - name: Create Release
+      #   id: create_release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: ${{ github.ref }}
+      #     release_name: Release ${{ github.ref }}
+      #     draft: true
+      #     prerelease: false
 
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        # if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            src-tauri/target/release/bundle/macos/*.app
-            src-tauri/target/release/bundle/deb/*.deb
-            src-tauri/target/release/bundle/appimage/*.AppImage
-            src-tauri/target/release/bundle/msi/*.msi
+      # - name: Release
+      #   uses: softprops/action-gh-release@v2
+      #   # if: startsWith(github.ref, 'refs/tags/')
+      #   with:
+      #     files: |
+      #       src-tauri/target/release/bundle/macos/*.app
+      #       src-tauri/target/release/bundle/deb/*.deb
+      #       src-tauri/target/release/bundle/appimage/*.AppImage
+      #       src-tauri/target/release/bundle/msi/*.msi
       # - name: Create/Update Draft Release
       #   uses: sondreb/action-release@main
       #   with:
