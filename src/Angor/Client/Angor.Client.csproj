@@ -11,12 +11,12 @@
     <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
     <PackageReference Include="Blockcore.Core" Version="1.1.41" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.71" />
-    <PackageReference Include="NBitcoin" Version="7.0.25" />
+    <PackageReference Include="NBitcoin" Version="7.0.46" />
     <PackageReference Include="Nostr.Client" Version="2.0.0" />
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.10" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.10" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.0" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

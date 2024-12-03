@@ -24,7 +24,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 9.0.x
     
     - name: Publish (Angor)
       run: dotnet publish ${{env.PROJECT_PATH}} -f net8.0 --configuration ${{env.BUILD_CONFIGURATION}} --output ${{env.OUTPUT_PATH}}

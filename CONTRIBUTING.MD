@@ -14,7 +14,7 @@
 
 ## Installation
 
-To run Angor locally, you need to download .NET 8.0.4 or higher. You can download it from [here](https://dotnet.microsoft.com/en-us/download/dotnet/8.0).
+To run Angor locally, you need to download .NET 9 or higher. You can download it from [here](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
 
 ### Steps:
 1. Clone the repository:
