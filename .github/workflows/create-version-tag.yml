@@ -80,6 +80,7 @@ jobs:
         # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow
       - name: Create tag
         if: steps.check_changes.outputs.changed == 'true'
+        continue-on-error: true
         env:
           TAG_NAME: "v${{env.VERSION}}"
         run: |
