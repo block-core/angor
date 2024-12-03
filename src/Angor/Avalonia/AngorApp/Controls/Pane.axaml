@@ -1,13 +1,14 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:AngorApp.Views">
+        xmlns:controls="using:AngorApp.Views"
+        xmlns:controls1="clr-namespace:AngorApp.Controls">
     <Design.PreviewWith>
-        <controls:Pane Width="100" Height="200" Margin="10" ClipToBounds="False">
+        <controls1:Pane Width="100" Height="200" Margin="10" ClipToBounds="False">
             Salud
-        </controls:Pane>
+        </controls1:Pane>
     </Design.PreviewWith>
 
-    <ControlTheme x:Key="{x:Type controls:Pane}" TargetType="controls:Pane">
+    <ControlTheme x:Key="{x:Type controls1:Pane}" TargetType="controls1:Pane">
         <Setter Property="ClipToBounds" Value="False" />
         <Setter Property="Template">
             <ControlTemplate>

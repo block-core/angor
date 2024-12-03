@@ -23,9 +23,29 @@
     <PackageReference Include="Avalonia.Xaml.Behaviors" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" />
+    <PackageReference Include="ReactiveUI" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageVersion Update="Avalonia.Svg.Skia" Version="11.2.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Sections\Wallet\WalletView.axaml.cs">
+      <DependentUpon>WalletView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Controls\IconButton.axaml.cs">
+      <DependentUpon>IconButton.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Controls\Pane.axaml.cs">
+      <DependentUpon>Pane.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Controls\Sidebar.axaml.cs">
+      <DependentUpon>Sidebar.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 </Project>

@@ -4,6 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:AngorApp.ViewModels"
              xmlns:c="clr-namespace:AngorApp.Views"
+             xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
+             xmlns:controls="clr-namespace:AngorApp.Controls"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Views.MainView"
              x:DataType="vm:MainViewModel">
@@ -13,9 +15,9 @@
     </Design.DataContext>
 
     <DockPanel>
-        <c:Sidebar Margin="20" />
+        <controls:Sidebar Margin="20" />
         <ScrollViewer>
-            <c:WalletView  />
+            <wallet:WalletView  />
         </ScrollViewer>
     </DockPanel>
 </UserControl>

@@ -1,8 +1,6 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
-namespace AngorApp.Views;
+namespace AngorApp.Sections.Wallet;
 
 public partial class WalletView : UserControl
 {

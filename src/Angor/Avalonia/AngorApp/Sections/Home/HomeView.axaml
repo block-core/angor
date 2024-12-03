@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:AngorApp.Views"
+             xmlns:controls="clr-namespace:AngorApp.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Home.HomeView">
+    
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Svg">
+            <Setter Property="Height" Value="100" />
+        </Style>
+    </UserControl.Styles>
+    
+    <controls:Pane Margin="50">
+        <StackPanel Spacing="10">
+            <Svg Path="/Assets/angor-icon.svg" />
+            <TextBlock Classes="PaneTitle" FontWeight="Bold">Welcome to Angor</TextBlock>
+            <TextBlock Classes="Regular">A decentralized crowdfunding protocol built on Bitcoin and Nostr</TextBlock>
+        </StackPanel>
+    </controls:Pane>
+</UserControl>

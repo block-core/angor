@@ -11,24 +11,17 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="Styles.axaml" />
     </Application.Styles>
              
     <Application.Resources>
         <ResourceDictionary>
             
             <ResourceDictionary.MergedDictionaries>
-                <MergeResourceInclude Source="Views/Pane.axaml" />
-                <MergeResourceInclude Source="Views/IconButton.axaml" />
+                <MergeResourceInclude Source="Controls/Pane.axaml" />
+                <MergeResourceInclude Source="Controls/IconButton.axaml" />
             </ResourceDictionary.MergedDictionaries>
             
-            <Color x:Key="Level1">#F5FDFF</Color>
-            <Color x:Key="Level2">#F1FAFC</Color>
-            <Color x:Key="Level3">#C7DBDF</Color>
-            <Color x:Key="Level4">#1F5D6A</Color>
-            <Color x:Key="Level5">#022229</Color>
-            <SolidColorBrush x:Key="SystemRegionBrush" Color="{StaticResource Level3}" />
-            <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource Level3}" />
-            <SolidColorBrush x:Key="PanelBackground" Color="{StaticResource Level2}" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

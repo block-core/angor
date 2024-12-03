@@ -2,18 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:c="clr-namespace:AngorApp.Views"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:controls="clr-namespace:AngorApp.Controls"
              mc:Ignorable="d" d:DesignWidth="800"
-             x:Class="AngorApp.Views.WalletView">
+             x:Class="AngorApp.Sections.Wallet.WalletView">
 
     <UserControl.Styles>
-
-        <Style Selector="TextBlock.PaneTitle">
-            <Setter Property="FontSize" Value="16" />
-            <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{StaticResource Level4}" />
-        </Style>
         
         <Style Selector="TextBox">
             <Setter Property="BorderThickness" Value="1" />
@@ -39,15 +33,15 @@
     <DockPanel>
 
         <!-- Header -->
-        <c:Pane Grid.Row="0" Margin="20 20 20 0" DockPanel.Dock="Top">
+        <controls:Pane Margin="20 20 20 0" DockPanel.Dock="Top">
             <TextBlock Text="Network - Angornet (testnet)" DockPanel.Dock="Left" />
-        </c:Pane>
+        </controls:Pane>
 
         <!-- Main Content Area -->
         <StackPanel Spacing="20" Margin="20">
 
             <!-- Wallet Section -->
-            <c:Pane Padding="15" CornerRadius="5">
+            <controls:Pane Padding="15" CornerRadius="5">
                 <DockPanel>
                     <i:Icon Value="fa-wallet" Margin="10" />
                     <Button Content="Wallet Words" DockPanel.Dock="Right" />
@@ -56,9 +50,9 @@
                         <TextBlock Classes="PaneTitle" Text="Wallet and balances" FontWeight="Regular" VerticalAlignment="Center" FontSize="14" />
                     </StackPanel>
                 </DockPanel>
-            </c:Pane>
+            </controls:Pane>
 
-            <c:Pane>
+            <controls:Pane>
                 <DockPanel>
                     <i:Icon Value="fa-database" Margin="10"></i:Icon>
                     <Button DockPanel.Dock="Right" i:Attached.Icon="fa-rotate" />
@@ -67,31 +61,31 @@
                         <Button Content="Get Some Test Coins" />
                     </StackPanel>
                 </DockPanel>
-            </c:Pane>
+            </controls:Pane>
 
             <!-- Actions (Send/Receive) -->
             <WrapPanel ItemWidth="200" HorizontalAlignment="Center">
-                <c:Pane Margin="10">
+                <controls:Pane Margin="10">
                     <Button HorizontalAlignment="Stretch" Background="Transparent">
                         <StackPanel>
                             <i:Icon Value="fa-sold fa-up-long"></i:Icon>
                             <TextBlock Text="Send" />
                         </StackPanel>
                     </Button>
-                </c:Pane>
-                <c:Pane Margin="10">
+                </controls:Pane>
+                <controls:Pane Margin="10">
                     <Button HorizontalAlignment="Stretch" Background="Transparent">
                         <StackPanel>
                             <i:Icon Value="fa-sold fa-down-long"></i:Icon>
                             <TextBlock Text="Receive" />
                         </StackPanel>
                     </Button>
-                </c:Pane>
+                </controls:Pane>
             </WrapPanel>
 
 
             <!-- Send Section -->
-            <c:Pane>
+            <controls:Pane>
                 <StackPanel Spacing="10">
                     <TextBlock Classes="PaneTitle" Text="Send" />
                     <StackPanel Spacing="10">
@@ -107,8 +101,8 @@
                         <Button Content="Send" />
                     </StackPanel>
                 </StackPanel>
-            </c:Pane>
-            <c:Pane>
+            </controls:Pane>
+            <controls:Pane>
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top">
                         <i:Icon Value="fa-solid fa-cube" Margin="10" />
@@ -132,7 +126,7 @@
                         </Grid>
                     </Border>
                 </DockPanel>
-            </c:Pane>
+            </controls:Pane>
         </StackPanel>
     </DockPanel>
 

@@ -1,8 +1,6 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
-namespace AngorApp.Views;
+namespace AngorApp.Controls;
 
 public partial class Sidebar : UserControl
 {
