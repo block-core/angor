@@ -22,7 +22,7 @@ jobs:
           - os: macos-latest
             runtime: "osx-x64"
             extension: ".zip"
-        node_version: [18]
+        node_version: [22]
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
