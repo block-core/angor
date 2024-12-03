@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
@@ -98,30 +101,61 @@ jobs:
           compression-level: 6  # Optimal compression level (0-9)
 
       # Add artifacts to latest draft release
-      - name: Get latest draft release
-        if: matrix.os == 'ubuntu-latest'
-        id: get_draft
-        uses: cardinalby/git-get-release-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          draft: true
-          latest: true
+      # - name: Get latest draft release
+      #   if: matrix.os == 'ubuntu-latest'
+      #   id: get_draft
+      #   uses: cardinalby/git-get-release-action@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     draft: true
+      #     latest: true
 
-      - name: Upload release artifacts
-        # if: steps.get_draft.outputs.release_id != ''
-        uses: actions/upload-release-asset@v1
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.get_draft.outputs.upload_url }}
-          asset_path: |
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: false
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        # if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
             src-tauri/target/release/bundle/macos/*.app
             src-tauri/target/release/bundle/deb/*.deb
             src-tauri/target/release/bundle/appimage/*.AppImage
             src-tauri/target/release/bundle/msi/*.msi
-          asset_name: ${{ env.PROJECT_NAME }}-${{ matrix.runtime }}${{ matrix.extension }}
-          asset_content_type: application/octet-stream
+      # - name: Create/Update Draft Release
+      #   uses: sondreb/action-release@main
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     files: "${{env.RELEASE_NAME_BLOCKCORE}};${{env.RELEASE_NAME_COINVAULT}};${{env.RELEASE_NAME_FREECITY}}"
+      #     draft: true
+      #     prerelease: false
+      #     name: "Blockcore Wallet (${{env.VERSION}})"
+      #     tag: ${{env.VERSION}}
+
+      # - name: Upload release artifacts
+      #   # if: steps.get_draft.outputs.release_id != ''
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.get_draft.outputs.upload_url }}
+      #     asset_path: |
+      #       src-tauri/target/release/bundle/macos/*.app
+      #       src-tauri/target/release/bundle/deb/*.deb
+      #       src-tauri/target/release/bundle/appimage/*.AppImage
+      #       src-tauri/target/release/bundle/msi/*.msi
+      #     asset_name: ${{ env.PROJECT_NAME }}-${{ matrix.runtime }}${{ matrix.extension }}
+      #     asset_content_type: application/octet-stream
 
       # ...existing code for checking Directory.Build.props and creating tag...
       - name: Check for changes in Directory.Build.props
