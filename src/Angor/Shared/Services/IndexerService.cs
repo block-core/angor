@@ -1,62 +1,19 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using Angor.Shared.Models;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
+
 
 namespace Angor.Shared.Services
 {
-    public interface IIndexerService
-    {
-        Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit);
-        Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId);
-        Task<ProjectStats?> GetProjectStatsAsync(string projectId);
-
-        Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId);
-        Task<string> PublishTransactionAsync(string trxHex);
-        Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false);
-        Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset);
-        Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations);
-
-        Task<string> GetTransactionHexByIdAsync(string transactionId);
-
-        Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId);
-    }
-    public class ProjectIndexerData
-    {
-        public string FounderKey { get; set; }
-        public string ProjectIdentifier { get; set; }
-        public long CreatedOnBlock { get; set; }
-        public string NostrPubKey { get; set; }
-
-        public string TrxId { get; set; }
-        public long? TotalInvestmentsCount { get; set; }
-    }
-
-    public class ProjectInvestment
-    {
-        public string TransactionId { get; set; }
-        
-        public string InvestorPublicKey { get; set; }
-        
-        public long TotalAmount { get; set; }
-        
-        public string HashOfSecret { get; set; }
-
-        public bool IsSeeder { get; set; }
-    }
-
-    public class ProjectStats
-    {
-        public long InvestorCount { get; set; }
-        public long AmountInvested { get; set; }
-        public long AmountInPenalties { get; set; }
-        public long CountInPenalties { get; set; }
-    }
-
     public class IndexerService : IIndexerService
     {
         private readonly INetworkConfiguration _networkConfiguration;
         private readonly HttpClient _httpClient;
         private readonly INetworkService _networkService;
+        private readonly ILogger<IndexerService> _logger;
+
 
         public IndexerService(INetworkConfiguration networkConfiguration, HttpClient httpClient, INetworkService networkService)
         {
@@ -94,7 +51,7 @@ namespace Angor.Shared.Services
             {
                 return null;
             }
-            
+
             return await response.Content.ReadFromJsonAsync<ProjectIndexerData>();
         }
 
@@ -126,13 +83,23 @@ namespace Angor.Shared.Services
             return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
         }
 
+        public async Task<ProjectInvestment?> GetInvestmentAsync(string projectId, string investorPubKey)
+        {
+            var indexer = _networkService.GetPrimaryIndexer();
+            var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/investments/{investorPubKey}");
+            _networkService.CheckAndHandleError(response);
+            return response.IsSuccessStatusCode 
+                ? await response.Content.ReadFromJsonAsync<ProjectInvestment>() 
+                : null;
+        }
+
         public async Task<string> PublishTransactionAsync(string trxHex)
         {
             var indexer = _networkService.GetPrimaryIndexer();
 
             var response = await _httpClient.PostAsync($"{indexer.Url}/api/command/send", new StringContent(trxHex));
             _networkService.CheckAndHandleError(response);
-            
+
             if (response.IsSuccessStatusCode)
                 return string.Empty;
 
@@ -158,7 +125,7 @@ namespace Angor.Shared.Services
             return addressesNotEmpty;
         }
 
-        public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int offset , int limit)
+        public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int offset, int limit)
         {
             var indexer = _networkService.GetPrimaryIndexer();
 
@@ -199,7 +166,7 @@ namespace Angor.Shared.Services
             var indexer = _networkService.GetPrimaryIndexer();
 
             var url = $"/api/query/transaction/{transactionId}/hex";
-            
+
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
 
@@ -214,7 +181,7 @@ namespace Angor.Shared.Services
             var indexer = _networkService.GetPrimaryIndexer();
 
             var url = $"/api/query/transaction/{transactionId}";
-            
+
             var response = await _httpClient.GetAsync(indexer.Url + url);
             _networkService.CheckAndHandleError(response);
 
@@ -225,5 +192,47 @@ namespace Angor.Shared.Services
 
             return info;
         }
+
+        
+        public async Task<(bool IsOnline, string? GenesisHash)> CheckIndexerNetwork(string indexerUrl)
+        {
+            try
+            {
+                // fetch block 0 (Genesis Block)
+                var blockUrl = $"{indexerUrl.TrimEnd('/')}/api/query/block/index/0";
+        
+                var blockResponse = await _httpClient.GetAsync(blockUrl);
+        
+                if (!blockResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning($"Failed to fetch genesis block from: {blockUrl}");
+                    return (false, null);
+                }
+        
+                var responseContent = await blockResponse.Content.ReadAsStringAsync();
+                var blockData = JsonSerializer.Deserialize<JsonElement>(responseContent);
+        
+                if (blockData.TryGetProperty("blockHash", out JsonElement blockHashElement))
+                {
+                    return (true, blockHashElement.GetString());
+                }
+        
+                _logger.LogWarning("blockHash not found in the block response.");
+                return (true, null); // Indexer is online, but no valid block hash
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error during indexer network check: {ex.Message}");
+                return (false, null);
+            }
+        }
+
+        
+        public bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash)
+        {
+            // Compare the first 64 characters (32 bytes in hex) of the fetched hash to the expected hash
+            return fetchedHash.StartsWith(expectedHash, StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(fetchedHash);
+        }
+        
     }
 }

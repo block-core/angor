@@ -380,7 +380,34 @@ else
 
             if (findProject != null)
             {
-                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), StateHasChanged, new[] { findProject.NostrPubKey });
+
+                var projectNpub = string.Empty;
+                _RelayService.LookupProjectsInfoByEventIds<ProjectInfo>(p =>
+                    {
+                        if (SessionStorage.IsProjectInStorageById(p.ProjectIdentifier)) 
+                            return;
+                        SessionStorage.StoreProject(new Project { ProjectInfo = p, CreationTransactionId = findProject.TrxId });
+                        projectNpub = p.NostrPubKey;
+                    },
+                    () =>
+                    {
+                        _RelayService.LookupNostrProfileForNPub((npub, nostrMetadata) =>
+                            {
+                                var project = SessionStorage.GetProjectById(findProject.ProjectIdentifier);
+
+                                if (project!.Metadata != null)
+                                    return;
+
+                                project.Metadata = nostrMetadata;
+                                SessionStorage.StoreProject(project);
+                            }, () =>
+                            {
+                                searchInProgress = false;
+                                StateHasChanged();
+                            },
+                            projectNpub);
+                    },
+                    findProject.NostrEventId);
                 projects = new List<ProjectIndexerData> { findProject };
             }
             else
@@ -412,80 +439,54 @@ else
             SessionStorage.SetProjectIndexerData(projects);
 
             var projectsForLookup = projectsNotInList
-                .Where(_ => _.NostrPubKey != null)
-                .Select(_ => _.NostrPubKey)
+                .Where(_ => !string.IsNullOrEmpty(_.NostrEventId))
+                .Select(_ => _.NostrEventId)
                 .ToArray();
 
             nostrSearchInProgress = true;
 
             if (projectsForLookup.Any())
-                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), () =>
-                {
-                    nostrSearchInProgress = false;
-                    StateHasChanged();
-                }, projectsForLookup);
+            {
+                var projectNpubsForLookup = new Dictionary<string, string>();
+
+                _RelayService.LookupProjectsInfoByEventIds<ProjectInfo>(x =>
+                    {
+                        if (SessionStorage.IsProjectInStorageById(x.ProjectIdentifier))
+                            return;
+
+                        var projectIndexerData = projectsNotInList.First(p => p.ProjectIdentifier == x.ProjectIdentifier);
+
+                        SessionStorage.StoreProject(new Project { ProjectInfo = x, CreationTransactionId = projectIndexerData.TrxId });
+
+                        projectNpubsForLookup.Add(x.NostrPubKey, projectIndexerData.ProjectIdentifier);
+
+                    }, () =>
+                        _RelayService.LookupNostrProfileForNPub((npub, nostrMetadata) =>
+                            {
+                                var project = SessionStorage.GetProjectById(projectNpubsForLookup[npub]);
+                                if (project == null)
+                                {
+                                    throw new ArgumentOutOfRangeException("Unable to find the project in storage for requested metadata " + npub);
+                                }
+
+                                if (project.Metadata != null)
+                                    return;
+
+                                project.Metadata = nostrMetadata;
+                                SessionStorage.StoreProject(project);
+                            }, () =>
+                            {
+                                nostrSearchInProgress = false;
+                                StateHasChanged();
+                            },
+                            projectNpubsForLookup.Keys.ToArray()),
+                    projectsForLookup);
+            }
 
             StateHasChanged();
         }
 
         searchInProgress = false;
-    }
-
-    private Action<NostrEvent> HandleProjectEvents()
-    {
-        return e =>
-        {
-            var projectIndexerData = projects.FirstOrDefault(x => x.NostrPubKey == e.Pubkey);
-
-            if (projectIndexerData == null && findProject?.NostrPubKey == e.Pubkey)
-            {
-                projectIndexerData = findProject;
-            }
-
-            switch (e)
-            {
-                case { Kind: NostrKind.Metadata }:
-
-                    try
-                    {
-                        var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
-                        if (projectIndexerData != null)
-                        {
-                            var project = SessionStorage.GetProjectById(projectIndexerData.ProjectIdentifier);
-                            if (project != null)
-                            {
-                                project.Metadata = nostrMetadata;
-                                SessionStorage.StoreProject(project);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError(ex, $"error parsing the result of kind {NostrKind.Metadata} from relay, ProjectIdentifier = {projectIndexerData?.ProjectIdentifier}");
-                    }
-
-                    break;
-                case { Kind: NostrKind.ApplicationSpecificData }:
-
-                    try
-                    {
-                        var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
-                        if (projectInfo != null && projectIndexerData != null)
-                        {
-                            if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
-                            {
-                                SessionStorage.StoreProject(new Project { ProjectInfo = projectInfo, CreationTransactionId = projectIndexerData.TrxId });
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError(ex, $"error parsing the result of kind {NostrKind.ApplicationSpecificData} from relay, ProjectIdentifier = {projectIndexerData?.ProjectIdentifier}");
-                    }
-
-                    break;
-            }
-        };
     }
 
     private void ViewProjectDetails(string projectIdentifier)

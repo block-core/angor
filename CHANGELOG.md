@@ -1,4 +1,23 @@
-## <small>0.0.69 (2024-10-23)</small>
+## <small>0.0.70 (2024-11-29)</small>
+
+* Add button to display raw transaction JSON for addresses and amounts (#131) ([9fc82a3](https://github.com/block-core/angor/commit/9fc82a3)), closes [#131](https://github.com/block-core/angor/issues/131)
+* Add cleanup on rescan (#169) ([ce85437](https://github.com/block-core/angor/commit/ce85437)), closes [#169](https://github.com/block-core/angor/issues/169)
+* Add RawTransactionModal for TRX processes  (#168) ([f6d3a0a](https://github.com/block-core/angor/commit/f6d3a0a)), closes [#168](https://github.com/block-core/angor/issues/168)
+* Add Striphtmltags service (#173) ([eaca619](https://github.com/block-core/angor/commit/eaca619)), closes [#173](https://github.com/block-core/angor/issues/173)
+* Add testnets for angornet, signet, testnet4 etc... (#167) ([f72052e](https://github.com/block-core/angor/commit/f72052e)), closes [#167](https://github.com/block-core/angor/issues/167)
+* Changing the npub on opreturn to event id (#177) ([be9b3e5](https://github.com/block-core/angor/commit/be9b3e5)), closes [#177](https://github.com/block-core/angor/issues/177)
+* Clean codes (#160) ([0c4939c](https://github.com/block-core/angor/commit/0c4939c)), closes [#160](https://github.com/block-core/angor/issues/160)
+* commit change logs ([8e2575d](https://github.com/block-core/angor/commit/8e2575d))
+* Display "Get Latest Version" Button When Update Is Available (#170) ([75ce103](https://github.com/block-core/angor/commit/75ce103)), closes [#170](https://github.com/block-core/angor/issues/170)
+* Fix total in penalty (#159) ([73c0da7](https://github.com/block-core/angor/commit/73c0da7)), closes [#159](https://github.com/block-core/angor/issues/159)
+* Remove the youtube video it was making many calls to google and we dont want that (#164) ([48f1881](https://github.com/block-core/angor/commit/48f1881)), closes [#164](https://github.com/block-core/angor/issues/164)
+* Update FAQ url (#180) ([9c4075c](https://github.com/block-core/angor/commit/9c4075c)), closes [#180](https://github.com/block-core/angor/issues/180)
+* Update LICENSE (#171) ([5211c37](https://github.com/block-core/angor/commit/5211c37)), closes [#171](https://github.com/block-core/angor/issues/171)
+* Update README.md (#174) ([a64c59d](https://github.com/block-core/angor/commit/a64c59d)), closes [#174](https://github.com/block-core/angor/issues/174)
+
+
+
+## <small>0.0.69-release (2024-10-23)</small>
 
 * Deploy v 0.69 (test) ([dda45bd](https://github.com/block-core/angor/commit/dda45bd))
 * Update build-release-package.yml ([256b738](https://github.com/block-core/angor/commit/256b738))

@@ -1344,3 +1344,17 @@ a, a p {
         visibility: visible;
         transform: translateY(0);
     }
+.angor-alert-success {
+    background-color: green;
+    color: white;
+}
+
+.angor-alert-info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.bg-danger {
+    background-color: red !important;
+    color: white;
+}

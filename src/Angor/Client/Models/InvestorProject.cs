@@ -15,6 +15,9 @@ public class InvestorProject : Project
     public long? AmountInvested { get; set; }
     public long? AmountInRecovery { get; set; }
 
+    public string InvestorPublicKey { get; set; }
+    public string InvestorNPub { get; set; }
+
     public bool WaitingForFounderResponse()
     {
         return ReceivedFounderSignatures() == false && SignaturesInfo?.TimeOfSignatureRequest != null;

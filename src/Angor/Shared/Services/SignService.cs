@@ -72,7 +72,8 @@ namespace Angor.Client.Services
             }));
         }
 
-        public Task LookupInvestmentRequestsAsync(string nostrPubKey, DateTime? since, Action<string, string, string,DateTime> action, Action onAllMessagesReceived)
+        public Task LookupInvestmentRequestsAsync(string nostrPubKey, string? senderNpub, DateTime? since,
+            Action<string, string, string, DateTime> action, Action onAllMessagesReceived)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
             var subscriptionKey = nostrPubKey + "sig_req";
@@ -91,13 +92,17 @@ namespace Angor.Client.Services
             }
 
             _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
-            
-            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+
+            var nostrFilter = new NostrFilter
             {
-                P = new[] { nostrPubKey }, //To founder
-                Kinds = new[] { NostrKind.EncryptedDm },
+                P = [nostrPubKey], //To founder,
+                Kinds = [NostrKind.EncryptedDm],
                 Since = since
-            }));
+            };
+
+            if (senderNpub != null)  nostrFilter.Authors = [senderNpub]; //From investor
+
+            nostrClient.Send(new NostrRequest(subscriptionKey, nostrFilter));
 
             return Task.CompletedTask;
         }

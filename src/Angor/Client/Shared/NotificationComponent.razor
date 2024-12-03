@@ -4,8 +4,6 @@
 @inject ILogger<NotificationComponent> Logger;
 @inject INetworkService networkService;
 
-
-
 @if (isLoading)
 {
     <div class="row">
@@ -21,16 +19,16 @@
 {
     <div class="row">
         <div class="col z-index-4">
-             <div class="row justify-content-center">
+            <div class="row justify-content-center">
                 <div class="col-lg-8 col-md-10">
-                    <div class="alert alert-info angor-alert-info fixed-bottom w-50 d-flex justify-content-between align-items-center alert-message" role="alert" data-cy="alert">
+                    <div class="alert alert-success angor-alert-success fixed-bottom w-50 d-flex justify-content-between align-items-center alert-message" role="alert" data-cy="alert">
                         @notificationMessage
                         <span type="button" data-bs-dismiss="alert" aria-label="Close" @onclick="closeAlert">
                             <Icon IconName="close-circle" />
                         </span>
                     </div>
                 </div>
-             </div>
+            </div>
         </div>
     </div>
 }
@@ -73,16 +71,16 @@
         Task.Run(async () =>
         {
             notificationMessage = message;
-            StateHasChanged(); // This will cause Blazor to re-render the component
+            StateHasChanged();
 
-            await Task.Delay(TimeSpan.FromSeconds(delaySeconds)); // Wait for 5 seconds
+            await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
 
             notificationMessage = null;
-            StateHasChanged(); // This will cause Blazor to re-render the component
+            StateHasChanged();
         });
     }
 
-    public void ShowErrorMessage(string? message)
+    public void ShowErrorMessage(string message)
     {
         if (!string.IsNullOrEmpty(message))
         {
@@ -96,11 +94,13 @@
         errorMessage = string.Empty;
         StateHasChanged();
     }
+
     private void closeAlert()
     {
         notificationMessage = string.Empty;
         StateHasChanged();
     }
+
     public void StopLoading()
     {
         isLoading = false;
@@ -109,8 +109,8 @@
 
     public async Task<OperationResult> LongOperation(Func<Task<OperationResult>> action)
     {
-        OperationResult? res = default(OperationResult);
-        Exception? failure = null;
+        OperationResult res = null;
+        Exception failure = null;
 
         try
         {
@@ -136,16 +136,12 @@
             ShowErrorMessage(failure.Message);
             networkService.HandleException(failure);
         }
-        else
+        else if (res != null && !res.Success)
         {
-            if (res is { Success: false })
-            {
-                Logger.LogError(res.Message);
-                ShowErrorMessage($"Error: {res.Message}");
-            }
+            Logger.LogError(res.Message);
+            ShowErrorMessage($"Error: {res.Message}");
         }
 
         return res ?? new OperationResult { Success = false };
     }
 }
-

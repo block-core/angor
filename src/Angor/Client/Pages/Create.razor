@@ -880,6 +880,7 @@
                     if (nostrApplicationSpecificDataCreated == false)
                     {
                         nostrApplicationSpecificDataCreated = true;
+                        project.ProjectInfoEventId = _.EventId;
                         storage.UpdateFounderProject(project);
                     }
 
@@ -944,6 +945,9 @@
                 accountInfo,
                 feeData.SelectedFeeEstimation
             );
+            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), NetworkConfiguration.AngorCreateFeeSats, NetworkConfiguration.NostrEventIdKeyType, project.ProjectInfoEventId);
+
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
             showCreateModal = true;
         }

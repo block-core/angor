@@ -84,7 +84,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         _storage.SetItem("founder-projects", ret.OrderBy(_ => _.ProjectIndex));
     }
-
+    
     public List<FounderProject> GetFounderProjects()
     {
         var ret = _storage.GetItem<List<FounderProject>>("founder-projects");
@@ -227,5 +227,54 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem($"recovery-signatures-{DateTime.UtcNow.Ticks}", sigs);
 
         _storage.RemoveItem("recovery-signatures");
+    }
+
+    public SettingsInfo GetSettingsInfo()
+    {
+        var ret = _storage.GetItem<SettingsInfo>("settings-info");
+
+        return ret ?? new SettingsInfo();
+
+    }
+
+    public void SetSettingsInfo(SettingsInfo settingsInfo)
+    {
+        _storage.SetItem("settings-info", settingsInfo);
+    }
+
+    public SettingsInfo GetSettings()
+    {
+        return GetSettingsInfo();
+    }
+
+    public void SetSettings(SettingsInfo settingsInfo)
+    {
+        SetSettingsInfo(settingsInfo);
+    }
+
+    public void WipeStorage()
+    {
+        _storage.Clear();
+    }
+
+    public void SetNetwork(string network)
+    {
+        _storage.SetItem("network", network);
+
+    }
+
+    public string GetNetwork()
+    {
+        return _storage.GetItem<string>("network");
+    }
+    
+    public string GetCurrencyDisplaySetting()
+    {
+        return _storage.GetItem<string>(CurrencyDisplaySettingKey) ?? "BTC";
+    }
+
+    public void SetCurrencyDisplaySetting(string setting)
+    {
+        _storage.SetItem(CurrencyDisplaySettingKey, setting);
     }
 }

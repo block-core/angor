@@ -313,33 +313,31 @@
 
     private async Task FetchPendingSignatures(FounderProject project)
     {
-        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,// project.LastRequestForSignaturesTime , async
+        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null, null,// project.LastRequestForSignaturesTime , async
             (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
-        {
-            Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
-
-            var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
-
-            if (sigReq != null)
             {
-                if (sigReq.TimeArrived < timeArrived)
+                Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
+
+                var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
+
+                if (sigReq != null)
                 {
+                    if (sigReq.TimeArrived >= timeArrived)
+                    {
+                        return; //multiple relays could mean the same massage multiple times
+                    }
+
                     Logger.LogDebug($"Sig request event received is replaced");
 
                     // this is a newer sig request so replace it
                     signaturesRequests.Remove(sigReq);
                 }
-                else
-                {
-                    return; //multiple relays could mean the same massage multiple times
-                }
-            }
 
-            Logger.LogDebug($"Sig request event received is new");
+                Logger.LogDebug($"Sig request event received is new");
 
-            messagesReceived = true;
+                messagesReceived = true;
 
-            var signatureRequest = new SignatureRequest
+                var signatureRequest = new SignatureRequest
                 {
                     investorNostrPubKey = investorNostrPubKey,
                     TimeArrived = timeArrived,
@@ -347,9 +345,9 @@
                     EventId = eventId
                 };
 
-            signaturesRequests.Add(signatureRequest);
-            Logger.LogDebug($"Added to pendingSignatures");
-        },
+                signaturesRequests.Add(signatureRequest);
+                Logger.LogDebug($"Added to pendingSignatures");
+            },
             () =>
             {
                 Logger.LogDebug($"End of messages");
