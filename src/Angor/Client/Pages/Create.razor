@@ -926,12 +926,8 @@
             var words = await passwordComponent.GetWalletAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(
-                project.ProjectInfo.FounderKey,
-                _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier),
-                NetworkConfiguration.AngorCreateFeeSats,
-                project.ProjectInfo.NostrPubKey
-            );
+            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), NetworkConfiguration.AngorCreateFeeSats, NetworkConfiguration.NostrEventIdKeyType, project.ProjectInfoEventId);
+
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
@@ -945,7 +941,6 @@
                 accountInfo,
                 feeData.SelectedFeeEstimation
             );
-            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), NetworkConfiguration.AngorCreateFeeSats, NetworkConfiguration.NostrEventIdKeyType, project.ProjectInfoEventId);
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
