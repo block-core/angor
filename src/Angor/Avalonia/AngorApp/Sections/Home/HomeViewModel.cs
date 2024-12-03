@@ -1,6 +1,8 @@
+using ReactiveUI;
+
 namespace AngorApp.Sections.Home;
 
-public class HomeViewModel
+public class HomeViewModel : ReactiveObject
 {
     
 }

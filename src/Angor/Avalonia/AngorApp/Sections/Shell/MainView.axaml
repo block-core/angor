@@ -2,22 +2,20 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:AngorApp.ViewModels"
-             xmlns:c="clr-namespace:AngorApp.Views"
-             xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
-             xmlns:controls="clr-namespace:AngorApp.Controls"
+             xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Views.MainView"
-             x:DataType="vm:MainViewModel">
+             x:DataType="shell:MainViewModel">
 
     <Design.DataContext>
-        <vm:MainViewModel />
+        <shell:MainViewModel />
     </Design.DataContext>
 
     <DockPanel>
-        <controls:Sidebar Margin="20" />
+        <shell:Sidebar Margin="20" />
+        <!-- <ListBox DisplayMemberBinding="{Binding Name}" ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}" /> -->
         <ScrollViewer>
-            <wallet:WalletView  />
+            <ContentControl Content="{Binding SelectedSection.ViewModel}" />
         </ScrollViewer>
     </DockPanel>
 </UserControl>
