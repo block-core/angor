@@ -86,7 +86,7 @@ jobs:
           npm run tauri build
 
       # Upload artifacts
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PROJECT_NAME }}-${{ matrix.runtime }}${{ matrix.extension }}
           path: |
@@ -95,6 +95,7 @@ jobs:
             src-tauri/target/release/bundle/appimage/*.AppImage
             src-tauri/target/release/bundle/msi/*.msi
           if-no-files-found: ignore
+          compression-level: 6  # Optimal compression level (0-9)
 
       # ...existing code for checking Directory.Build.props and creating tag...
       - name: Check for changes in Directory.Build.props
