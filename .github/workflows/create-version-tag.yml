@@ -83,7 +83,7 @@ jobs:
       - name: Install and build
         run: |
           npm install
-          npm run tauri build
+          npm run tauri:build
 
       # Upload artifacts
       - uses: actions/upload-artifact@v4
