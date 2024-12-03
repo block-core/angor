@@ -41,10 +41,24 @@ jobs:
         with:
           dotnet-version: |
             9.0.x
+
       - name: Setup Node.js (${{ matrix.node_version }})
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node_version }}
+
+      - name: Install Rust (Stable)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      # Install Linux dependencies
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Variables
         run: |
@@ -64,6 +78,25 @@ jobs:
       # and if yes it creates a version tag which will trigger a 
       # deployment processes of 3 steps:
       #    version creation -> draft release package -> deployment mainet/testnet/signet
+
+      # Install dependencies and build Tauri
+      - name: Install and build
+        run: |
+          npm install
+          npm run tauri build
+
+      # Upload artifacts
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.PROJECT_NAME }}-${{ matrix.runtime }}${{ matrix.extension }}
+          path: |
+            src-tauri/target/release/bundle/macos/*.app
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/appimage/*.AppImage
+            src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: ignore
+
+      # ...existing code for checking Directory.Build.props and creating tag...
       - name: Check for changes in Directory.Build.props
         if: matrix.os == 'ubuntu-latest'
         id: check_changes
