@@ -514,53 +514,45 @@ else
             {
                 project = new Project { CreationTransactionId = projectIndexerData.TrxId };
 
-                _RelayService.RequestProjectCreateEventsByPubKey(
-                    e =>
-                    {
-                        if (project != null)
-                        {
-                            switch (e)
+                _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(x =>
                             {
-                                case { Kind: NostrKind.Metadata }:
-                                    project.Metadata ??= serializer.Deserialize<ProjectMetadata>(e.Content);
-                                    break;
-                                case { Kind: NostrKind.ApplicationSpecificData }:
-                                    project.ProjectInfo ??= serializer.Deserialize<ProjectInfo>(e.Content);
-                                    break;
-                            }
-                        }
-                    },
-                    async () =>
+                                if (project is { ProjectInfo : null })
+                                    project.ProjectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
+                                                          throw new Exception("The project info must be in the application specific data event");
+                            },
+                            () =>
+                            {
+                                _RelayService.LookupNostrProfileForNPub(
+                                    (projectNpub, metadata) =>
+                                    {
+                                        if (project is { Metadata: null }) { project.Metadata = metadata; }
+                                    }, 
+                                    () =>
+                                    {
+                                        findInProgress = false;
+                                        if (project?.ProjectInfo != null)
+                                        {
+                                            SessionStorage.StoreProject(project);
+                                        }
+                                        else
+                                        {
+                                            // Handle case where project info is not available
+                                            error = "Project not found...";
+                                        }
+                                        StateHasChanged();
+                                    },
+                                    project.ProjectInfo.NostrPubKey);
+                            },projectIndexerData.NostrEventId);
+                    }
+                    else
                     {
                         findInProgress = false;
-                        projectStats.Loading = false;
-
-                        if (project?.ProjectInfo != null)
-                        {
-                            // Store the project in session storage
-                            SessionStorage.StoreProject(project);
-
-                            // Ensure the explorer link is set and balance is refreshed
-                            await SetProjectLinksAndRefreshBalance();
-                        }
-                        else
-                        {
-                            error = "Project not found...";
-                        }
-
+                        error = "Project not found...";
                         StateHasChanged();
-                    },
-                    projectIndexerData.NostrEventId); // @dan/david this used to be NostrPubKey ,  what should it be now?
-
-            }
-            else
-            {
-                findInProgress = false;
-                projectStats.Loading = false;
-                error = "Project not found...";
-                StateHasChanged();
-            }
-        }
+                    }
+                }
+            
+                
         catch (Exception ex)
         {
             error = $"An error occurred: {ex.Message}";
