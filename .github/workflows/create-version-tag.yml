@@ -58,7 +58,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev libjavascriptcoregtk-4.1-dev
 
       - name: Variables
         run: |
@@ -96,6 +96,32 @@ jobs:
             src-tauri/target/release/bundle/msi/*.msi
           if-no-files-found: ignore
           compression-level: 6  # Optimal compression level (0-9)
+
+      # Add artifacts to latest draft release
+      - name: Get latest draft release
+        if: matrix.os == 'ubuntu-latest'
+        id: get_draft
+        uses: cardinalby/git-get-release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: true
+          latest: true
+
+      - name: Upload release artifacts
+        # if: steps.get_draft.outputs.release_id != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_draft.outputs.upload_url }}
+          asset_path: |
+            src-tauri/target/release/bundle/macos/*.app
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/appimage/*.AppImage
+            src-tauri/target/release/bundle/msi/*.msi
+          asset_name: ${{ env.PROJECT_NAME }}-${{ matrix.runtime }}${{ matrix.extension }}
+          asset_content_type: application/octet-stream
 
       # ...existing code for checking Directory.Build.props and creating tag...
       - name: Check for changes in Directory.Build.props
