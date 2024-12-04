@@ -650,5 +650,89 @@ public class WalletOperations : IWalletOperations
             TransactionFee = minerFee
         };
     }
+    
+    public TransactionInfo AddFeeAndSignTransactionUsingPSBT(string changeAddress, Transaction transaction, WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
+    {
+        var blockcoreNetwork = _networkConfiguration.GetNetwork();
+        var nbitcoinNetwork = _converter.ConvertBlockcoreToNBitcoinNetwork(blockcoreNetwork);
+
+        // convert the Blockcore transaction to an NBitcoin transaction
+        var nbitcoinTransaction = _converter.ConvertBlockcoreToNBitcoinTransaction(transaction, blockcoreNetwork);
+
+        // create a PSBT from the converted transaction
+        var psbt = NBitcoin.PSBT.FromTransaction(nbitcoinTransaction, nbitcoinNetwork);
+
+        // Add a change output with an initial value of zero (it will be updated later)
+        var changeScript = NBitcoin.Script.FromHex(
+            BitcoinAddress.Create(changeAddress, blockcoreNetwork).ScriptPubKey.ToHex()
+        );
+        nbitcoinTransaction.Outputs.Add(NBitcoin.Money.Zero, changeScript);
+
+        // Estimate the fee based on virtual size
+        var virtualSize = nbitcoinTransaction.GetVirtualSize();
+        var estimatedFee = new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(feeRate.FeeRate)).GetFee(virtualSize);
+
+        // Find UTXOs to cover the fee
+        var utxoDataWithPaths = FindOutputsForTransaction((long)estimatedFee, accountInfo);
+        var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+
+        if (coins.coins == null || !coins.coins.Any())
+            throw new ApplicationException("No coins available for transaction");
+
+        // Add inputs to the PSBT
+        foreach (var blockcoreCoin in coins.coins)
+        {
+            var nbitcoinOutPoint = new NBitcoin.OutPoint(
+                new NBitcoin.uint256(blockcoreCoin.Outpoint.Hash.ToString()),
+                (int)blockcoreCoin.Outpoint.N
+            );
+
+            var nbitcoinTxOut = new NBitcoin.TxOut(
+                NBitcoin.Money.Satoshis(blockcoreCoin.Amount.Satoshi),
+                NBitcoin.Script.FromHex(blockcoreCoin.TxOut.ScriptPubKey.ToHex())
+            );
+
+            psbt.AddCoins(new NBitcoin.Coin(nbitcoinOutPoint, nbitcoinTxOut));
+        }
+
+        // Update the change output value
+        var totalInputValue = coins.coins.Sum(c => c.Amount.Satoshi);
+        var changeValue = totalInputValue - estimatedFee;
+        if (changeValue < 0)
+            throw new ApplicationException("Insufficient funds for the transaction fee");
+
+        nbitcoinTransaction.Outputs[nbitcoinTransaction.Outputs.Count - 1].Value = NBitcoin.Money.Satoshis(changeValue);
+
+        // Sign the PSBT with private keys
+        foreach (var blockcoreKey in coins.keys)
+        {
+            var privateKeyBytes = blockcoreKey.ToBytes();
+            var nbitcoinKey = new NBitcoin.Key(privateKeyBytes);
+            psbt = psbt.SignWithKeys(nbitcoinKey);
+        }
+
+        // Finalize and extract the signed transaction
+        if (!psbt.IsAllFinalized())
+            psbt.Finalize();
+
+        var signedTransaction = psbt.ExtractTransaction();
+
+        // Calculate fees
+        var totalOutputs = signedTransaction.Outputs.Sum(o => o.Value.Satoshi);
+        var minerFee = totalInputValue - totalOutputs;
+
+        if (minerFee < 0)
+            throw new ApplicationException("Invalid transaction: inputs are less than outputs");
+
+        // Convert back to Blockcore transaction
+        var blockcoreSignedTransaction = blockcoreNetwork.CreateTransaction(signedTransaction.ToHex());
+
+        return new TransactionInfo
+        {
+            Transaction = blockcoreSignedTransaction,
+            TransactionFee = minerFee
+        };
+    }
+
 
 }
