@@ -22,7 +22,7 @@ jobs:
           - os: macos-latest
             runtime: "osx-x64"
             extension: ".zip"
-        node_version: [18]
+        node_version: [22]
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
@@ -41,7 +41,7 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: |
-            8.0.x
+            9.0.x
       - name: Setup Node.js (${{ matrix.node_version }})
         uses: actions/setup-node@v1
         with:

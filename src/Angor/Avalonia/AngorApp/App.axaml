@@ -1,0 +1,34 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:AngorApp"
+             x:Class="AngorApp.App"
+             RequestedThemeVariant="Default">
+             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <Application.DataTemplates>
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+             
+    <Application.Resources>
+        <ResourceDictionary>
+            
+            <ResourceDictionary.MergedDictionaries>
+                <MergeResourceInclude Source="Views/Pane.axaml" />
+                <MergeResourceInclude Source="Views/IconButton.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            
+            <Color x:Key="Level1">#F5FDFF</Color>
+            <Color x:Key="Level2">#F1FAFC</Color>
+            <Color x:Key="Level3">#C7DBDF</Color>
+            <Color x:Key="Level4">#1F5D6A</Color>
+            <Color x:Key="Level5">#022229</Color>
+            <SolidColorBrush x:Key="SystemRegionBrush" Color="{StaticResource Level3}" />
+            <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource Level3}" />
+            <SolidColorBrush x:Key="PanelBackground" Color="{StaticResource Level2}" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

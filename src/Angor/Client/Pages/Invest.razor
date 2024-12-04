@@ -475,8 +475,7 @@ else
             }
             catch (Exception e)
             {
-                _Logger.LogError(e, e.Message);
-                notificationComponent.ShowErrorMessage(e.Message);
+                notificationComponent.ShowErrorMessage(e.Message,e);
             }
             finally
             {
@@ -609,8 +608,7 @@ else
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            notificationComponent.ShowErrorMessage(e.Message,e);
         }
         finally
         {
@@ -732,8 +730,7 @@ else
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            notificationComponent.ShowErrorMessage(e.Message,e);
         }
         finally
         {
@@ -852,8 +849,7 @@ else
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            notificationComponent.ShowErrorMessage(e.Message,e);
         }
         finally
         {
