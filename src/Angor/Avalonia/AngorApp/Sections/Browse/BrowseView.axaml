@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:AngorApp.Controls"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.Sections.Browse.BrowseView"
+             xmlns:ail="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:views="clr-namespace:AngorApp.Views"
+             x:DataType="angorApp:IBrowseViewModel" ClipToBounds="False">
+
+    <Design.DataContext>
+        <browse:BrowseViewModel />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+
+        <Style Selector="TextBox">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
+        </Style>
+
+        <Style Selector="i|Icon">
+            <Setter Property="FontSize" Value="25" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="TextBlock.FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource Level5}" />
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Spacing="20">
+
+        <controls:Pane Padding="15" CornerRadius="5">
+            <DockPanel>
+                <i:Icon Value="fa-magnifying-glass" Margin="10" />
+                <Button Content="Wallet Words" DockPanel.Dock="Right" />
+                <StackPanel Spacing="4" DockPanel.Dock="Left">
+                    <TextBlock Classes="PaneTitle" Text="Browse" FontWeight="Regular" FontSize="18" />
+                    <TextBlock Classes="PaneTitle" Text="Browse Projects" FontWeight="Regular" VerticalAlignment="Center" FontSize="14" />
+                </StackPanel>
+            </DockPanel>
+        </controls:Pane>
+
+        <controls:Pane>
+            <TextBox Watermark="Enter Angor project identifier">
+                <TextBox.InnerRightContent>
+                    <i:Icon Value="fa-magnifying-glass" Margin="10" />
+                </TextBox.InnerRightContent>
+            </TextBox>
+        </controls:Pane>
+
+        <!-- Actions (Send/Receive) -->
+        <ItemsControl ItemsSource="{Binding Projects}" Margin="-20 -20">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <controls:Pane Margin="20" Theme="{StaticResource ItemPane}">
+                        <DockPanel>
+                            <StackPanel VerticalAlignment="Center" DockPanel.Dock="Bottom" Margin="20">
+                                <StackPanel>
+                                    <TextBlock Foreground="Orange" FontSize="20" Text="{Binding Name}" />
+                                    <TextBlock Classes="Regular" Text="{Binding ShortDescription}" />
+                                </StackPanel>
+                                <Separator Margin="0 10" />
+                                <views:IconButton HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Grid.Row="3" Content="VIEW PROJECT">
+                                    <views:IconButton.Icon>
+                                        <i:Icon Value="fa-folder" />
+                                    </views:IconButton.Icon>
+                                </views:IconButton>
+                            </StackPanel>
+                            <Image Height="200" Stretch="UniformToFill" ail:ImageLoader.Source="{Binding Picture}" ClipToBounds="True" />
+                        </DockPanel>
+                    </controls:Pane>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel ItemWidth="400" ItemHeight="400" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+
+        <views:IconButton Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="ANGOR HUB">
+            <views:IconButton.Icon>
+                <i:Icon Value="fa-magnifying-glass" />
+            </views:IconButton.Icon>
+        </views:IconButton>
+
+    </StackPanel>
+</UserControl>

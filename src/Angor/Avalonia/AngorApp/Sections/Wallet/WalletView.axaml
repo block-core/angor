@@ -5,7 +5,7 @@
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:controls="clr-namespace:AngorApp.Controls"
              mc:Ignorable="d" d:DesignWidth="800"
-             x:Class="AngorApp.Sections.Wallet.WalletView">
+             x:Class="AngorApp.Sections.Wallet.WalletView" ClipToBounds="False">
 
     <UserControl.Styles>
         
@@ -31,14 +31,9 @@
     </UserControl.Styles>
 
     <DockPanel>
-
-        <!-- Header -->
-        <controls:Pane Margin="20 20 20 0" DockPanel.Dock="Top">
-            <TextBlock Text="Network - Angornet (testnet)" DockPanel.Dock="Left" />
-        </controls:Pane>
-
+        
         <!-- Main Content Area -->
-        <StackPanel Spacing="20" Margin="20">
+        <StackPanel Spacing="20">
 
             <!-- Wallet Section -->
             <controls:Pane Padding="15" CornerRadius="5">

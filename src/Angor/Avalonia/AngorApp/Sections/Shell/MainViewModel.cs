@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using AngorApp.Sections.Browse;
 using AngorApp.Sections.Home;
 using AngorApp.Sections.Wallet;
 using ReactiveUI;
@@ -18,7 +19,7 @@ public partial class MainViewModel : ReactiveObject
             new Section("Home", new HomeViewModel(), "svg:/Assets/angor-icon.svg"),
             new Separator(),
             new Section("Wallet", new WalletViewModel(), "fa-wallet"),
-            new Section("Browse", new WalletViewModel(), "fa-magnifying-glass"),
+            new Section("Browse", new BrowseViewModel(), "fa-magnifying-glass"),
             new Section("Portfolio", new WalletViewModel(), "fa-hand-holding-dollar"),
             new Section("Founder", new WalletViewModel(), "fa-money-bills"),
             new Separator(),
@@ -26,7 +27,7 @@ public partial class MainViewModel : ReactiveObject
             new Section("Angor Hub", new WalletViewModel(), "fa-magnifying-glass") { IsPrimary = false }
         ];
 
-        SelectedSection = Sections.OfType<Section>().First();
+        SelectedSection = Sections.OfType<Section>().Skip(1).First();
     }
 
     public IEnumerable<SectionBase> Sections { get; }

@@ -14,7 +14,7 @@
         <Color x:Key="Level5">#022229</Color>
         <SolidColorBrush x:Key="SystemRegionBrush" Color="{StaticResource Level3}" />
         <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource Level3}" />
-        <SolidColorBrush x:Key="PanelBackground" Color="{StaticResource Level2}" />
+        
     </Styles.Resources>
     
     <Style Selector="TextBlock.PaneTitle">

@@ -3,19 +3,20 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
-             mc:Ignorable="d" d:DesignWidth="800"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
              x:Class="AngorApp.Views.MainView"
              x:DataType="shell:MainViewModel">
 
     <Design.DataContext>
-        <shell:MainViewModel />
+        <shell:MainViewModel  />
     </Design.DataContext>
 
-    <DockPanel>
-        <shell:Sidebar Margin="20" />
+    <DockPanel Margin="10">
+        <shell:Sidebar Margin="10 20 10 20" />
+        <shell:Network DockPanel.Dock="Top" Margin="10 20 10 10" />
         <!-- <ListBox DisplayMemberBinding="{Binding Name}" ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}" /> -->
-        <ScrollViewer>
-            <ContentControl Content="{Binding SelectedSection.ViewModel}" />
+        <ScrollViewer Margin="0 0 0 10">
+            <ContentControl Margin="10 10 10 10" Content="{Binding SelectedSection.ViewModel}" ClipToBounds="False" />
         </ScrollViewer>
     </DockPanel>
 </UserControl>
