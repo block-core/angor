@@ -15,6 +15,7 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 using Blockcore.NBitcoin.BIP32;
+using Angor.Shared.Utilities;
 
 namespace Angor.Test;
 
@@ -26,12 +27,13 @@ public class WalletOperationsTest : AngorTestData
     private readonly InvestorTransactionActions _investorTransactionActions;
     private readonly FounderTransactionActions _founderTransactionActions;
     private readonly IHdOperations _hdOperations;
+    private readonly IBlockcoreNBitcoinConverter _converter;
 
     public WalletOperationsTest()
     {
         _indexerService = new Mock<IIndexerService>();
 
-        _sut = new WalletOperations(_indexerService.Object, new HdOperations(), new NullLogger<WalletOperations>(), _networkConfiguration.Object);
+        _sut = new WalletOperations(_indexerService.Object, new HdOperations(), new NullLogger<WalletOperations>(), _networkConfiguration.Object, new BlockcoreNBitcoinConverter());
 
         _investorTransactionActions = new InvestorTransactionActions(new NullLogger<InvestorTransactionActions>(),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
@@ -213,7 +215,7 @@ public class WalletOperationsTest : AngorTestData
     public void GenerateWalletWords_ReturnsCorrectFormat()
     {
         // Arrange
-        var walletOps = new WalletOperations(_indexerService.Object, _hdOperations, NullLogger<WalletOperations>.Instance, _networkConfiguration.Object);
+        var walletOps = new WalletOperations(_indexerService.Object, _hdOperations, NullLogger<WalletOperations>.Instance, _networkConfiguration.Object,_converter );
 
         // Act
         var result = walletOps.GenerateWalletWords();
@@ -236,7 +238,7 @@ public class WalletOperationsTest : AngorTestData
         mockNetworkConfiguration.Setup(x => x.GetNetwork()).Returns(network);
         mockIndexerService.Setup(x => x.PublishTransactionAsync(It.IsAny<string>())).ReturnsAsync(string.Empty);
 
-        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object);
+        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object,null);
 
         var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
         string address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
@@ -288,7 +290,9 @@ public class WalletOperationsTest : AngorTestData
         var expectedExtendedKey = new ExtKey();
         mockHdOperations.Setup(x => x.GetExtendedKey(It.IsAny<string>(), It.IsAny<string>())).Returns(expectedExtendedKey);
 
-        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object);
+
+        
+        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object,null);
 
         var words = new WalletWords { Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel", Passphrase = "" };
         string address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
@@ -353,7 +357,7 @@ public class WalletOperationsTest : AngorTestData
         var expectedExtKey = new ExtKey();
         mockHdOperations.Setup(x => x.GetExtendedKey(walletWords.Words, walletWords.Passphrase)).Returns(expectedExtKey);
 
-        var walletOperations = new WalletOperations(null, mockHdOperations.Object, null, null);
+        var walletOperations = new WalletOperations(null, mockHdOperations.Object, null, null,null);
 
         // Act
         var (coins, keys) = walletOperations.GetUnspentOutputsForTransaction(walletWords, utxos);
@@ -377,7 +381,7 @@ public class WalletOperationsTest : AngorTestData
         var network = _networkConfiguration.Object.GetNetwork();
         mockNetworkConfiguration.Setup(x => x.GetNetwork()).Returns(network);
 
-        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object);
+        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object,null);
 
         var words = new WalletWords { Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel", Passphrase = "" };
         var address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
@@ -445,6 +449,71 @@ public class WalletOperationsTest : AngorTestData
         // Act & Assert for insufficient funds
         var exception = Assert.Throws<Blockcore.Consensus.TransactionInfo.NotEnoughFundsException>(() => walletOperations.CalculateTransactionFee(sendInfoInsufficientFunds, accountInfo, feeRate));
         Assert.Equal("Not enough funds to cover the target with missing amount 9999.99999500", exception.Message);
+    }
+    
+    
+    // PSBT TESTS 
+    
+    [Fact]
+    public async Task SendAmountToAddressUsingPSBT_Succeeds_WithSufficientFunds()
+    {
+        // Arrange
+        var mockNetworkConfiguration = new Mock<INetworkConfiguration>();
+        var mockIndexerService = new Mock<IIndexerService>();
+        var mockHdOperations = new Mock<IHdOperations>();
+        var mockLogger = new Mock<ILogger<WalletOperations>>();
+        var mockConverter = new Mock<IBlockcoreNBitcoinConverter>();
+        mockConverter
+            .Setup(c => c.ConvertBlockcoreToNBitcoinNetwork(It.IsAny<Blockcore.Networks.Network>()))
+            .Returns(NBitcoin.Network.TestNet);
+
+        var network = _networkConfiguration.Object.GetNetwork();
+        mockNetworkConfiguration.Setup(x => x.GetNetwork()).Returns(network);
+
+        var expectedExtendedKey = new ExtKey(); // Generate a mock extended key
+        mockHdOperations.Setup(x => x.GetExtendedKey(It.IsAny<string>(), It.IsAny<string>())).Returns(expectedExtendedKey);
+
+        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object, mockConverter.Object);
+
+        var words = new WalletWords
+        {
+            Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel",
+            Passphrase = ""
+        };
+
+        var sendInfo = new SendInfo
+        {
+            SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
+            ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
+            SendAmount = 100000m, // Send amount in satoshis
+            SendUtxos = new Dictionary<string, UtxoDataWithPath>
+            {
+                {
+                    "key", new UtxoDataWithPath
+                    {
+                        UtxoData = new UtxoData
+                        {
+                            value = 150000, // Sufficient to cover send amount and fees
+                            address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679",
+                            scriptHex = "0014b7d165bb8b25f567f05c57d3b484159582ac2827",
+                            outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
+                            blockIndex = 1,
+                            PendingSpent = false
+                        },
+                        HdPath = "m/0/0"
+                    }
+                }
+            },
+            FeeRate = 10 // Fee rate in satoshis per byte
+        };
+
+        // Act
+        var operationResult = await walletOperations.SendAmountToAddressUsingPSBT(words, sendInfo);
+
+        // Assert
+        Assert.True(operationResult.Success, "Transaction should succeed with sufficient funds");
+        Assert.NotNull(operationResult.Data);
+        Assert.Equal(2, operationResult.Data.Outputs.Count); // Expecting two outputs (send and change)
     }
 
 }

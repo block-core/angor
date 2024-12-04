@@ -22,17 +22,18 @@ public class WalletOperations : IWalletOperations
     private readonly ILogger<WalletOperations> _logger;
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly IIndexerService _indexerService;
-    private readonly BlockcoreNBitcoinConverter _converter;
+    private readonly IBlockcoreNBitcoinConverter _converter;
 
     private const int AccountIndex = 0; // for now only account 0
     private const int Purpose = 84; // for now only legacy
 
-    public WalletOperations(IIndexerService indexerService, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration)
+    public WalletOperations(IIndexerService indexerService, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration,IBlockcoreNBitcoinConverter converter)
     {
         _hdOperations = hdOperations;
         _logger = logger;
         _networkConfiguration = networkConfiguration;
         _indexerService = indexerService;
+        _converter = converter;
     }
 
     public string GenerateWalletWords()

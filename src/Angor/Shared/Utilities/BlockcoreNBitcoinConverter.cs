@@ -5,7 +5,7 @@ using Blockcore.NBitcoin;
 
 namespace Angor.Shared.Utilities;
 
-public class BlockcoreNBitcoinConverter
+public class BlockcoreNBitcoinConverter : IBlockcoreNBitcoinConverter
 {
     //todo: add conversions here..
     
@@ -18,7 +18,7 @@ public class BlockcoreNBitcoinConverter
         return blockcoreNetwork.Name switch
         {
             "Mainnet" => NBitcoin.Network.Main,
-            "Testnet" => NBitcoin.Network.TestNet,
+            "TestNet" => NBitcoin.Network.TestNet,
             "Regtest" => NBitcoin.Network.RegTest,
             _ => throw new NotSupportedException($"Network {blockcoreNetwork.Name} is not supported.")
         };
@@ -29,4 +29,12 @@ public class BlockcoreNBitcoinConverter
         var nbitcoinNetwork = ConvertBlockcoreToNBitcoinNetwork(blockcoreNetwork);
         return NBitcoin.Transaction.Parse(blockcoreTransaction.ToHex(), nbitcoinNetwork);
     }
+    
+    public NBitcoin.BitcoinAddress ConvertBlockcoreAddressToNBitcoinAddress(Blockcore.Networks.Network blockcoreNetwork, string blockcoreAddress)
+    {
+        var nbitcoinNetwork = ConvertBlockcoreToNBitcoinNetwork(blockcoreNetwork);
+        return NBitcoin.BitcoinAddress.Create(blockcoreAddress, nbitcoinNetwork);
+    }
+    
+
 }
