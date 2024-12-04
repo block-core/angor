@@ -8,6 +8,7 @@
     <!-- Important: keep version in sync! -->
     <PackageVersion Include="AsyncImageLoader.Avalonia" Version="3.3.0" />
     <PackageVersion Include="Avalonia" Version="11.2.2" />
+    <PackageVersion Include="Avalonia.ReactiveUI" Version="11.2.2" />
     <PackageVersion Include="Avalonia.Svg" Version="11.2.0.2" />
     <PackageVersion Include="Avalonia.Svg.Skia" Version="11.2.0.2" />
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.2.2" />
@@ -23,5 +24,6 @@
     <PackageVersion Include="ReactiveUI" Version="20.1.63" />
     <PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.0.17" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.1" />
+    <PackageVersion Include="Zafiro.Avalonia" Version="12.0.21" />
   </ItemGroup>
 </Project>

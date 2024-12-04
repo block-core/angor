@@ -18,6 +18,8 @@
                     <Button
                         Padding="{TemplateBinding Padding}"
                         Margin="{TemplateBinding Margin}"
+                        Command="{TemplateBinding Command}"
+                        CommandParameter="{TemplateBinding CommandParameter}"
                         Background="{TemplateBinding Background}"
                         HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                         VerticalAlignment="{TemplateBinding VerticalAlignment}">

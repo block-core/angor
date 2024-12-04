@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using AngorApp.Sections.Browse;
-using AngorApp.Sections.Home;
-using AngorApp.Sections.Wallet;
+using System.Reactive;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 
@@ -12,23 +11,14 @@ public partial class MainViewModel : ReactiveObject
 {
     [Reactive] private Section selectedSection;
 
-    public MainViewModel()
+    public MainViewModel(IEnumerable<SectionBase> sections, UIServices uiServices)
     {
-        Sections =
-        [
-            new Section("Home", new HomeViewModel(), "svg:/Assets/angor-icon.svg"),
-            new Separator(),
-            new Section("Wallet", new WalletViewModel(), "fa-wallet"),
-            new Section("Browse", new BrowseViewModel(), "fa-magnifying-glass"),
-            new Section("Portfolio", new WalletViewModel(), "fa-hand-holding-dollar"),
-            new Section("Founder", new WalletViewModel(), "fa-money-bills"),
-            new Separator(),
-            new Section("Settings", new WalletViewModel(), "fa-gear"),
-            new Section("Angor Hub", new WalletViewModel(), "fa-magnifying-glass") { IsPrimary = false }
-        ];
-
+        Sections = sections;
         SelectedSection = Sections.OfType<Section>().Skip(1).First();
+        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.Launch(new Uri("https://www.angor.io")));
     }
+
+    public ReactiveCommand<Unit,Unit> OpenHub { get; set; }
 
     public IEnumerable<SectionBase> Sections { get; }
 }

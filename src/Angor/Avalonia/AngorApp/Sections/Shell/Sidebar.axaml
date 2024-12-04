@@ -98,56 +98,7 @@
                     <Setter Property="Background" Value="Transparent" />
                 </Style>
             </DockPanel.Styles>
-
-            <!-- <StackPanel DockPanel.Dock="Bottom"> -->
-            <!--     <Button i:Attached.Icon="fa-arrow-right-long" /> -->
-            <!--     <Separator /> -->
-            <!--     <views:IconButton> -->
-            <!--         <views:IconButton.Icon> -->
-            <!--             <i:Icon Value="fa-magnifying-glass" /> -->
-            <!--         </views:IconButton.Icon> -->
-            <!--         <TextBlock>Angor Hub</TextBlock> -->
-            <!--     </views:IconButton> -->
-            <!-- </StackPanel> -->
-            <!-- <StackPanel> -->
-            <!--     <views:IconButton Content="Angor App"> -->
-            <!--         <views:IconButton.Icon> -->
-            <!--             <Svg Height="28" Width="28" Path="/Assets/angor-icon.svg" /> -->
-            <!--         </views:IconButton.Icon> -->
-            <!--     </views:IconButton> -->
-            <!--     <Separator /> -->
-            <!--     <views:IconButton> -->
-            <!--         <views:IconButton.Icon> -->
-            <!--             <i:Icon Value="fa-wallet" /> -->
-            <!--         </views:IconButton.Icon> -->
-            <!--         <TextBlock>Wallet</TextBlock> -->
-            <!--     </views:IconButton> -->
-            <!--     <views:IconButton> -->
-            <!--         <views:IconButton.Icon> -->
-            <!--             <i:Icon Value="fa-magnifying-glass" /> -->
-            <!--         </views:IconButton.Icon> -->
-            <!--         <TextBlock>Portfolio</TextBlock> -->
-            <!--     </views:IconButton> -->
-            <!--     <views:IconButton> -->
-            <!--         <views:IconButton.Icon> -->
-            <!--             <i:Icon Value="fa-hand-holding-dollar" /> -->
-            <!--         </views:IconButton.Icon> -->
-            <!--         <TextBlock>Browse</TextBlock> -->
-            <!--     </views:IconButton> -->
-            <!--     <views:IconButton> -->
-            <!--         <views:IconButton.Icon> -->
-            <!--             <i:Icon Value="fa-money-bills" /> -->
-            <!--         </views:IconButton.Icon> -->
-            <!--         <TextBlock>Founder</TextBlock> -->
-            <!--     </views:IconButton> -->
-            <!--     <Separator /> -->
-            <!--     <views:IconButton> -->
-            <!--         <views:IconButton.Icon> -->
-            <!--             <i:Icon Value="fa-gear" /> -->
-            <!--         </views:IconButton.Icon> -->
-            <!--         <TextBlock>Settings</TextBlock> -->
-            <!--     </views:IconButton> -->
-            <!-- </StackPanel> -->
+            
         </DockPanel>
     </controls:Pane>
 

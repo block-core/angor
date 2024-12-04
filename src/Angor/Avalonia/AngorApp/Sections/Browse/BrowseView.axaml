@@ -13,7 +13,7 @@
              x:DataType="angorApp:IBrowseViewModel" ClipToBounds="False">
 
     <Design.DataContext>
-        <browse:BrowseViewModel />
+        <browse:BrowseViewModelDesign />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -71,7 +71,7 @@
                                     <TextBlock Classes="Regular" Text="{Binding ShortDescription}" />
                                 </StackPanel>
                                 <Separator Margin="0 10" />
-                                <views:IconButton HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Grid.Row="3" Content="VIEW PROJECT">
+                                <views:IconButton HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
                                     <views:IconButton.Icon>
                                         <i:Icon Value="fa-folder" />
                                     </views:IconButton.Icon>
@@ -89,7 +89,7 @@
             </ItemsControl.ItemsPanel>
         </ItemsControl>
 
-        <views:IconButton Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="ANGOR HUB">
+        <views:IconButton Command="{Binding OpenHub}" Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="ANGOR HUB">
             <views:IconButton.Icon>
                 <i:Icon Value="fa-magnifying-glass" />
             </views:IconButton.Icon>
