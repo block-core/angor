@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Net;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
@@ -10,6 +11,8 @@ using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.BIP39;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
+using NBitcoinPSBT = NBitcoin;
+
 
 namespace Angor.Shared;
 
@@ -19,6 +22,7 @@ public class WalletOperations : IWalletOperations
     private readonly ILogger<WalletOperations> _logger;
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly IIndexerService _indexerService;
+    private readonly BlockcoreNBitcoinConverter _converter;
 
     private const int AccountIndex = 0; // for now only account 0
     private const int Purpose = 84; // for now only legacy
@@ -578,4 +582,73 @@ public class WalletOperations : IWalletOperations
 
         return builder.EstimateFees(new FeeRate(Money.Satoshis(feeRate))).ToUnit(MoneyUnit.BTC);
     }
+    
+
+    public TransactionInfo AddInputsAndSignTransactionUsingPSBT(string changeAddress, Transaction transaction, WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
+    {
+        // get the networks
+        var blockcoreNetwork = _networkConfiguration.GetNetwork();
+        var nbitcoinNetwork = _converter.ConvertBlockcoreToNBitcoinNetwork(blockcoreNetwork);
+
+        // convert transaction
+        var nbitcoinTransaction = _converter.ConvertBlockcoreToNBitcoinTransaction(transaction, blockcoreNetwork);
+
+        // find utxos and keys
+        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
+        var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+
+        if (coins.coins == null || !coins.coins.Any())
+            throw new ApplicationException("no coins available for transaction");
+
+        // create psbt
+        var psbt = NBitcoin.PSBT.FromTransaction(nbitcoinTransaction, nbitcoinNetwork);
+
+        // add inputs and coins
+        foreach (var blockcoreCoin in coins.coins)
+        {
+            var nbitcoinOutPoint = new NBitcoin.OutPoint(
+                new NBitcoin.uint256(blockcoreCoin.Outpoint.Hash.ToString()),
+                (int)blockcoreCoin.Outpoint.N
+            );
+
+            var nbitcoinTxOut = new NBitcoin.TxOut(
+                NBitcoin.Money.Satoshis(blockcoreCoin.Amount.Satoshi),
+                NBitcoin.Script.FromHex(blockcoreCoin.TxOut.ScriptPubKey.ToHex())
+            );
+
+            psbt.AddCoins(new NBitcoin.Coin(nbitcoinOutPoint, nbitcoinTxOut));
+        }
+
+        // sign psbt
+        foreach (var blockcoreKey in coins.keys)
+        {
+            var privateKeyBytes = blockcoreKey.ToBytes();
+            var nbitcoinKey = new NBitcoin.Key(privateKeyBytes);
+            psbt = psbt.SignWithKeys(nbitcoinKey);
+        }
+
+        // finalize and extract signed transaction
+        if (!psbt.IsAllFinalized())
+            psbt.Finalize();
+
+        var signedTransaction = psbt.ExtractTransaction();
+
+        // calculate fees
+        long totalInputs = coins.coins.Sum(c => c.Amount.Satoshi);
+        long totalOutputs = signedTransaction.Outputs.Sum(o => o.Value.Satoshi);
+        long minerFee = totalInputs - totalOutputs;
+
+        if (minerFee < 0)
+            throw new ApplicationException("invalid transaction: inputs are less than outputs");
+
+        // convert back to blockcore transaction
+        var blockcoreSignedTransaction = blockcoreNetwork.CreateTransaction(signedTransaction.ToHex());
+
+        return new TransactionInfo
+        {
+            Transaction = blockcoreSignedTransaction,
+            TransactionFee = minerFee
+        };
+    }
+
 }
