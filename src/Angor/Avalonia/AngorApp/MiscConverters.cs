@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Projektanker.Icons.Avalonia;
+using Separator = AngorApp.Sections.Shell.Separator;
 
 namespace AngorApp;
 
@@ -31,7 +32,7 @@ public static class MiscConverters
         };
     });
 
-    public static readonly FuncValueConverter<SectionBase, bool> IsSection = new(sectionBase => sectionBase is Section);
+    public static readonly FuncValueConverter<SectionBase, bool> IsActivatable = new(sectionBase => sectionBase is not Separator);
 
     public static readonly FuncValueConverter<bool, Dock> IsPrimaryToDock = new(isPrimary => isPrimary ? Dock.Top : Dock.Bottom);
 }

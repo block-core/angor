@@ -7,7 +7,6 @@
              xmlns:angorApp="clr-namespace:AngorApp"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.FounderView"
-             xmlns:ail="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:views="clr-namespace:AngorApp.Views"
              xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
              x:DataType="angorApp:IBrowseViewModel" ClipToBounds="False">
@@ -21,6 +20,7 @@
         <Style Selector="TextBox">
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
 
         <Style Selector="i|Icon">
@@ -44,53 +44,19 @@
         <controls:Pane Padding="15" CornerRadius="5">
             <DockPanel>
                 <i:Icon Value="fa-magnifying-glass" Margin="10" />
-                <Button Content="Wallet Words" DockPanel.Dock="Right" />
+                <views:IconButton DockPanel.Dock="Right"  VerticalAlignment="Top">CREATE PROJECT
+                    <views:IconButton.Icon>
+                        <i:Icon Value="fa-plus" FontSize="20" />
+                    </views:IconButton.Icon>
+                </views:IconButton>
                 <StackPanel Spacing="4" DockPanel.Dock="Left">
-                    <TextBlock Classes="PaneTitle" Text="Browse" FontWeight="Regular" FontSize="18" />
-                    <TextBlock Classes="PaneTitle" Text="Browse Projects" FontWeight="Regular" VerticalAlignment="Center" FontSize="14" />
+                    <TextBlock Classes="PaneTitle" Text="Founder" FontWeight="Regular" FontSize="18" />
+                    <TextBlock TextWrapping="Wrap" Classes="PaneTitle" Text="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required" FontWeight="Regular" VerticalAlignment="Center" FontSize="14" />
                 </StackPanel>
             </DockPanel>
         </controls:Pane>
-
-        <controls:Pane>
-            <TextBox Watermark="Enter Angor project identifier">
-                <TextBox.InnerRightContent>
-                    <i:Icon Value="fa-magnifying-glass" Margin="10" />
-                </TextBox.InnerRightContent>
-            </TextBox>
-        </controls:Pane>
-
-        <!-- Actions (Send/Receive) -->
-        <ItemsControl ItemsSource="{Binding Projects}" Margin="-20 -20">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <controls:Pane Margin="20" Theme="{StaticResource ItemPane}">
-                        <DockPanel>
-                            <StackPanel VerticalAlignment="Center" DockPanel.Dock="Bottom" Margin="20">
-                                <StackPanel>
-                                    <TextBlock Foreground="Orange" FontSize="20" Text="{Binding Name}" />
-                                    <TextBlock Classes="Regular" Text="{Binding ShortDescription}" />
-                                </StackPanel>
-                                <Separator Margin="0 10" />
-                                <views:IconButton HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Grid.Row="3" Content="VIEW PROJECT">
-                                    <views:IconButton.Icon>
-                                        <i:Icon Value="fa-folder" />
-                                    </views:IconButton.Icon>
-                                </views:IconButton>
-                            </StackPanel>
-                            <Image Height="200" Stretch="UniformToFill" ail:ImageLoader.Source="{Binding Picture}" ClipToBounds="True" />
-                        </DockPanel>
-                    </controls:Pane>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapPanel ItemWidth="400" ItemHeight="400" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-        </ItemsControl>
-
-        <views:IconButton Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="ANGOR HUB">
+        
+        <views:IconButton Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="SCAN FOR FOUNDER PROJECTS">
             <views:IconButton.Icon>
                 <i:Icon Value="fa-magnifying-glass" />
             </views:IconButton.Icon>

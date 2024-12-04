@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AngorApp.Sections.Browse;
+using AngorApp.Sections.Founder;
 using AngorApp.Sections.Home;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
@@ -13,6 +14,7 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
+using ReactiveUI;
 using Zafiro.Avalonia.Mixins;
 using MainViewModel = AngorApp.Sections.Shell.MainViewModel;
 using Separator = AngorApp.Sections.Shell.Separator;
@@ -49,10 +51,10 @@ public partial class App : Application
             new Section("Wallet", new WalletViewModel(), "fa-wallet"),
             new Section("Browse", new BrowseViewModel(uiServices), "fa-magnifying-glass"),
             new Section("Portfolio", new WalletViewModel(), "fa-hand-holding-dollar"),
-            new Section("Founder", new WalletViewModel(), "fa-money-bills"),
+            new Section("Founder", new FounderViewModel(), "fa-money-bills"),
             new Separator(),
             new Section("Settings", new WalletViewModel(), "fa-gear"),
-            new Section("Angor Hub", new WalletViewModel(), "fa-magnifying-glass") { IsPrimary = false }
+            new CommandSection("Angor Hub", ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.Launch(new Uri("https://www.angor.io"))) , "fa-magnifying-glass") { IsPrimary = false }
         ];
         
         return new MainViewModel(sections, uiServices);
@@ -61,15 +63,28 @@ public partial class App : Application
 
 public class UIServices
 {
-    public LauncherService LauncherService { get; }
+    public ILauncherService LauncherService { get; }
 
-    public UIServices(LauncherService launcherService)
+    public UIServices(ILauncherService launcherService)
     {
         LauncherService = launcherService;
     }
 }
 
-public class LauncherService
+public interface ILauncherService
+{
+    Task Launch(Uri uri);
+}
+
+public class NoopLauncherService : ILauncherService
+{
+    public Task Launch(Uri uri)
+    {
+        return Task.CompletedTask;
+    }
+}
+
+public class LauncherService : ILauncherService
 {
     private readonly ILauncher launcher;
 

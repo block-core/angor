@@ -20,6 +20,7 @@
 
         <Style Selector="TextBox">
             <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
             <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
         </Style>
 
@@ -44,7 +45,6 @@
         <controls:Pane Padding="15" CornerRadius="5">
             <DockPanel>
                 <i:Icon Value="fa-magnifying-glass" Margin="10" />
-                <Button Content="Wallet Words" DockPanel.Dock="Right" />
                 <StackPanel Spacing="4" DockPanel.Dock="Left">
                     <TextBlock Classes="PaneTitle" Text="Browse" FontWeight="Regular" FontSize="18" />
                     <TextBlock Classes="PaneTitle" Text="Browse Projects" FontWeight="Regular" VerticalAlignment="Center" FontSize="14" />

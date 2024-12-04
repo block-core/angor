@@ -7,7 +7,7 @@ using ReactiveUI.SourceGenerators;
 
 namespace AngorApp.Sections.Shell;
 
-public partial class MainViewModel : ReactiveObject
+public partial class MainViewModel : ReactiveObject, IMainViewModel
 {
     [Reactive] private Section selectedSection;
 

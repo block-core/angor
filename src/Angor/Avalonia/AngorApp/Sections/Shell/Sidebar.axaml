@@ -6,11 +6,12 @@
              xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
              xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:views="clr-namespace:AngorApp.Views"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
-             x:Class="AngorApp.Sections.Shell.Sidebar" ClipToBounds="False" x:DataType="shell:MainViewModel">
+             x:Class="AngorApp.Sections.Shell.Sidebar" ClipToBounds="False" x:DataType="shell:IMainViewModel">
 
     <Design.DataContext>
-        <shell:MainViewModel />
+        <shell:MainViewModelDesign />
     </Design.DataContext>
 
     <UserControl.Resources>
@@ -60,27 +61,32 @@
 
     <controls:Pane>
 
-        <DockPanel>
+        <ListBox Background="Transparent" ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}">
 
-            <ListBox Background="Transparent" ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <DockPanel LastChildFill="False" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
 
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <DockPanel LastChildFill="False" />
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-
-                <ListBox.DataTemplates>
-                    <DataTemplate DataType="shell:Section">
-                        <DockPanel Margin="8">
-                            <ContentControl Margin="10 0 10 0" Content="{Binding Icon, Converter={x:Static angorApp:MiscConverters.StringToIcon}}" />
+            <ListBox.DataTemplates>
+                <DataTemplate DataType="shell:Section">
+                    <DockPanel Margin="8">
+                        <ContentControl Margin="10 0 10 0" Content="{Binding Icon, Converter={x:Static angorApp:MiscConverters.StringToIcon}}" />
+                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                    </DockPanel>
+                </DataTemplate>
+                <DataTemplate DataType="shell:CommandSection">
+                    <views:IconButton Command="{Binding Command}" Background="Transparent" HorizontalAlignment="Stretch" Icon="{Binding Icon, Converter={x:Static angorApp:MiscConverters.StringToIcon}}">
+                        <views:IconButton.Content>
                             <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                        </DockPanel>
-                    </DataTemplate>
-                    <DataTemplate DataType="shell:Separator">
-                        <Separator />
-                    </DataTemplate>
-                </ListBox.DataTemplates>
+                        </views:IconButton.Content>
+                    </views:IconButton>
+                </DataTemplate>
+                <DataTemplate DataType="shell:Separator">
+                    <Separator />
+                </DataTemplate>
+            </ListBox.DataTemplates>
 
                 <ListBox.ItemContainerTheme>
                     <ControlTheme x:DataType="shell:SectionBase" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
@@ -88,18 +94,11 @@
                         <Setter Property="Margin" Value="2" />
                         <Setter Property="Padding" Value="0" />
                         <Setter Property="DockPanel.Dock" Value="{Binding IsPrimary, Converter={x:Static angorApp:MiscConverters.IsPrimaryToDock}}" />
-                        <Setter Property="IsHitTestVisible" Value="{Binding Converter={x:Static angorApp:MiscConverters.IsSection}}" />
+                        <Setter Property="IsHitTestVisible" Value="{Binding Converter={x:Static angorApp:MiscConverters.IsActivatable}}" />
                     </ControlTheme>
                 </ListBox.ItemContainerTheme>
             </ListBox>
 
-            <DockPanel.Styles>
-                <Style Selector="Button">
-                    <Setter Property="Background" Value="Transparent" />
-                </Style>
-            </DockPanel.Styles>
-            
-        </DockPanel>
     </controls:Pane>
 
 </UserControl>
