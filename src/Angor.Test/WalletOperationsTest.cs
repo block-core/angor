@@ -493,7 +493,7 @@ public class WalletOperationsTest : AngorTestData
                     {
                         UtxoData = new UtxoData
                         {
-                            value = 150000, // Sufficient to cover send amount and fees
+                            value = 1500000000000000000, // Sufficient to cover send amount and fees
                             address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679",
                             scriptHex = "0014b7d165bb8b25f567f05c57d3b484159582ac2827",
                             outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
