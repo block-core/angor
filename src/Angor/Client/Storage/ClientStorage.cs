@@ -107,19 +107,13 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         if (existingProject != null)
         {
-            existingProject.Metadata = project.Metadata;
-            existingProject.ProjectInfo = project.ProjectInfo;
-            existingProject.ProjectIndex = project.ProjectIndex;
-        }
-        else
-        {
-            projects.Add(project);
+            projects.Remove(existingProject);
         }
 
+        projects.Add(project);
+        
         _storage.SetItem("founder-projects", projects.OrderBy(p => p.ProjectIndex).ToList());
     }
-
-
 
     public void DeleteFounderProjects()
     {
