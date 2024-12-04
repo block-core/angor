@@ -733,6 +733,98 @@ public class WalletOperations : IWalletOperations
             TransactionFee = minerFee
         };
     }
+    
+   public async Task<OperationResult<Transaction>> SendAmountToAddressUsingPSBT(WalletWords walletWords, SendInfo sendInfo)
+    {
+        // Get networks
+        var blockcoreNetwork = _networkConfiguration.GetNetwork();
+        var nbitcoinNetwork = _converter.ConvertBlockcoreToNBitcoinNetwork(blockcoreNetwork);
+
+        // Ensure sufficient funds
+        if (sendInfo.SendAmountSat > sendInfo.SendUtxos.Values.Sum(s => s.UtxoData.value))
+            throw new ApplicationException("Not enough funds");
+
+        // Find UTXOs and keys
+        var (coins, keys) = GetUnspentOutputsForTransaction(walletWords, sendInfo.SendUtxos.Values.ToList());
+        if (coins == null || !coins.Any())
+            return new OperationResult<Transaction> { Success = false, Message = "No coins found" };
+
+        // Convert Blockcore coins to NBitcoin coins
+        var nbitcoinCoins = coins.Select(blockcoreCoin =>
+        {
+            var nbitcoinOutPoint = new NBitcoin.OutPoint(
+                new NBitcoin.uint256(blockcoreCoin.Outpoint.Hash.ToString()),
+                (int)blockcoreCoin.Outpoint.N
+            );
+
+            var nbitcoinTxOut = new NBitcoin.TxOut(
+                NBitcoin.Money.Satoshis(blockcoreCoin.Amount.Satoshi),
+                NBitcoin.Script.FromHex(blockcoreCoin.TxOut.ScriptPubKey.ToHex())
+            );
+
+            return new NBitcoin.Coin(nbitcoinOutPoint, nbitcoinTxOut);
+        }).ToArray();
+
+        // Create NBitcoin transaction
+        var nbitcoinTransaction = NBitcoin.Transaction.Create(nbitcoinNetwork);
+
+        // Convert destination and change addresses to scripts
+        var destinationScript = NBitcoin.Script.FromHex(
+            BitcoinAddress.Create(sendInfo.SendToAddress, blockcoreNetwork).ScriptPubKey.ToHex()
+        );
+        var changeScript = NBitcoin.Script.FromHex(
+            BitcoinAddress.Create(sendInfo.ChangeAddress, blockcoreNetwork).ScriptPubKey.ToHex()
+        );
+
+        // Add outputs
+        nbitcoinTransaction.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(sendInfo.SendAmountSat), destinationScript));
+        nbitcoinTransaction.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Zero, changeScript)); // Change output
+
+        // Create PSBT
+        var psbt = NBitcoin.PSBT.FromTransaction(nbitcoinTransaction, nbitcoinNetwork);
+
+        // Add converted coins to the PSBT
+        psbt.AddCoins(nbitcoinCoins);
+
+        // Estimate fee
+        var psbtBytes = psbt.ToBytes();
+        var virtualSize = psbtBytes.Length;
+        var estimatedFee = new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(sendInfo.FeeRate)).GetFee(virtualSize);
+
+        // Adjust change output value
+        var totalInputValue = nbitcoinCoins.Sum(c => c.TxOut.Value.Satoshi);
+        var changeValue = totalInputValue - sendInfo.SendAmountSat - estimatedFee;
+        if (changeValue < 0)
+            throw new ApplicationException("Insufficient funds for transaction fee");
+
+        nbitcoinTransaction.Outputs.Last().Value = NBitcoin.Money.Satoshis(changeValue);
+
+        // Sign PSBT
+        foreach (var key in keys)
+        {
+            psbt = psbt.SignWithKeys(new NBitcoin.Key(key.ToBytes()));
+        }
+
+        // Finalize and extract the signed transaction
+        if (!psbt.IsAllFinalized())
+            psbt.Finalize();
+
+        var signedTransaction = psbt.ExtractTransaction();
+
+        // Convert NBitcoin transaction back to Blockcore
+        var blockcoreTransaction = blockcoreNetwork.CreateTransaction(signedTransaction.ToHex());
+
+        // Publish transaction
+        var result = await PublishTransactionAsync(blockcoreNetwork, blockcoreTransaction);
+
+        // Return result
+        return new OperationResult<Transaction>
+        {
+            Success = result.Success,
+            Message = result.Message,
+            Data = result.Data
+        };
+    }
 
 
 }
