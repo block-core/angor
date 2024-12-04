@@ -5,15 +5,15 @@
              xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:angorApp="clr-namespace:AngorApp"
-             xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
              mc:Ignorable="d" d:DesignWidth="800"
-             x:Class="AngorApp.Sections.Browse.BrowseView"
+             x:Class="AngorApp.Sections.Founder.FounderView"
              xmlns:ail="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:views="clr-namespace:AngorApp.Views"
+             xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
              x:DataType="angorApp:IBrowseViewModel" ClipToBounds="False">
 
     <Design.DataContext>
-        <browse:BrowseViewModel />
+        <founder:FounderViewModel />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -60,6 +60,7 @@
             </TextBox>
         </controls:Pane>
 
+        <!-- Actions (Send/Receive) -->
         <ItemsControl ItemsSource="{Binding Projects}" Margin="-20 -20">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -77,7 +78,7 @@
                                     </views:IconButton.Icon>
                                 </views:IconButton>
                             </StackPanel>
-                            <Image Height="200" VerticalAlignment="Top" Stretch="UniformToFill" ail:ImageLoader.Source="{Binding Picture}" ClipToBounds="True" />
+                            <Image Height="200" Stretch="UniformToFill" ail:ImageLoader.Source="{Binding Picture}" ClipToBounds="True" />
                         </DockPanel>
                     </controls:Pane>
                 </DataTemplate>

@@ -31,23 +31,4 @@
                 
     </ItemGroup>
 
-    <ItemGroup>
-      <Compile Update="Sections\Shell\Sidebar.axaml.cs">
-        <DependentUpon>Sidebar.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Sections\Browse\BrowseView.axaml.cs">
-        <DependentUpon>BrowseView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Sections\Browse\BrowseView.axaml.cs">
-        <DependentUpon>HomeView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-      <AdditionalFiles Include="Sections\Browse\BrowseView.axaml" />
-    </ItemGroup>
-
 </Project>
