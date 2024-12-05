@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using System.Reactive;
-using ReactiveUI;
-
 namespace AngorApp.Sections.Shell;
 
 public interface IMainViewModel

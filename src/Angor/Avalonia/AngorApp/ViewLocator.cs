@@ -1,8 +1,5 @@
-using System;
 using AngorApp.Sections;
-using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using ReactiveUI;
 
 namespace AngorApp;
 

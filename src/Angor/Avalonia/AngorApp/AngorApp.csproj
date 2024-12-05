@@ -33,4 +33,19 @@
                 
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Sections\Porfolio\PorfolioView.axaml.cs">
+        <DependentUpon>PorfolioView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Sections\Porfolio\PorfolioView.axaml.cs">
+        <DependentUpon>FounderView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Sections\Portfolio\PorfolioView.axaml" />
+    </ItemGroup>
+
 </Project>

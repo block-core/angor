@@ -9,7 +9,8 @@
              x:Class="AngorApp.Sections.Founder.FounderView"
              xmlns:views="clr-namespace:AngorApp.Views"
              xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
-             x:DataType="angorApp:IBrowseViewModel" ClipToBounds="False">
+             xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
+             x:DataType="browse:IBrowseViewModel" ClipToBounds="False">
 
     <Design.DataContext>
         <founder:FounderViewModel />
@@ -44,11 +45,11 @@
         <controls:Pane Padding="15" CornerRadius="5">
             <DockPanel>
                 <i:Icon Value="fa-magnifying-glass" Margin="10" />
-                <views:IconButton DockPanel.Dock="Right"  VerticalAlignment="Top">CREATE PROJECT
-                    <views:IconButton.Icon>
+                <controls:IconButton DockPanel.Dock="Right"  VerticalAlignment="Top">CREATE PROJECT
+                    <controls:IconButton.Icon>
                         <i:Icon Value="fa-plus" FontSize="20" />
-                    </views:IconButton.Icon>
-                </views:IconButton>
+                    </controls:IconButton.Icon>
+                </controls:IconButton>
                 <StackPanel Spacing="4" DockPanel.Dock="Left">
                     <TextBlock Classes="PaneTitle" Text="Founder" FontWeight="Regular" FontSize="18" />
                     <TextBlock TextWrapping="Wrap" Classes="PaneTitle" Text="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required" FontWeight="Regular" VerticalAlignment="Center" FontSize="14" />
@@ -56,11 +57,11 @@
             </DockPanel>
         </controls:Pane>
         
-        <views:IconButton Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="SCAN FOR FOUNDER PROJECTS">
-            <views:IconButton.Icon>
+        <controls:IconButton Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="SCAN FOR FOUNDER PROJECTS">
+            <controls:IconButton.Icon>
                 <i:Icon Value="fa-magnifying-glass" />
-            </views:IconButton.Icon>
-        </views:IconButton>
+            </controls:IconButton.Icon>
+        </controls:IconButton>
 
     </StackPanel>
 </UserControl>

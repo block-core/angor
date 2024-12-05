@@ -1,6 +1,4 @@
-using System;
-
-namespace AngorApp;
+namespace AngorApp.Sections.Browse;
 
 public class Project(string name)
 {

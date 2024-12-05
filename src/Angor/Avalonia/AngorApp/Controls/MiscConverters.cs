@@ -1,12 +1,10 @@
-using System;
 using AngorApp.Sections.Shell;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Projektanker.Icons.Avalonia;
 using Separator = AngorApp.Sections.Shell.Separator;
 
-namespace AngorApp;
+namespace AngorApp.Controls;
 
 public static class MiscConverters
 {

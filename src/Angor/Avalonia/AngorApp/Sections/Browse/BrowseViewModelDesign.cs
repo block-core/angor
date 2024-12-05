@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Reactive;
-using ReactiveUI;
-
 namespace AngorApp.Sections.Browse;
 
 public class BrowseViewModelDesign : IBrowseViewModel

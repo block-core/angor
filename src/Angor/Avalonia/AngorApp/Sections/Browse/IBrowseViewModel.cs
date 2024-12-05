@@ -1,8 +1,4 @@
-using System.Collections.Generic;
-using System.Reactive;
-using ReactiveUI;
-
-namespace AngorApp;
+namespace AngorApp.Sections.Browse;
 
 public interface IBrowseViewModel
 {

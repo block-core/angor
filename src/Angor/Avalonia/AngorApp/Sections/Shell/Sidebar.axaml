@@ -72,16 +72,16 @@
             <ListBox.DataTemplates>
                 <DataTemplate DataType="shell:Section">
                     <DockPanel Margin="8">
-                        <ContentControl Margin="10 0 10 0" Content="{Binding Icon, Converter={x:Static angorApp:MiscConverters.StringToIcon}}" />
+                        <ContentControl Margin="10 0 10 0" Content="{Binding Icon, Converter={x:Static controls:MiscConverters.StringToIcon}}" />
                         <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
                     </DockPanel>
                 </DataTemplate>
                 <DataTemplate DataType="shell:CommandSection">
-                    <views:IconButton Command="{Binding Command}" Background="Transparent" HorizontalAlignment="Stretch" Icon="{Binding Icon, Converter={x:Static angorApp:MiscConverters.StringToIcon}}">
-                        <views:IconButton.Content>
+                    <controls:IconButton Command="{Binding Command}" Background="Transparent" HorizontalAlignment="Stretch" Icon="{Binding Icon, Converter={x:Static controls:MiscConverters.StringToIcon}}">
+                        <controls:IconButton.Content>
                             <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                        </views:IconButton.Content>
-                    </views:IconButton>
+                        </controls:IconButton.Content>
+                    </controls:IconButton>
                 </DataTemplate>
                 <DataTemplate DataType="shell:Separator">
                     <Separator />
@@ -93,8 +93,8 @@
                         <Setter Property="CornerRadius" Value="10" />
                         <Setter Property="Margin" Value="2" />
                         <Setter Property="Padding" Value="0" />
-                        <Setter Property="DockPanel.Dock" Value="{Binding IsPrimary, Converter={x:Static angorApp:MiscConverters.IsPrimaryToDock}}" />
-                        <Setter Property="IsHitTestVisible" Value="{Binding Converter={x:Static angorApp:MiscConverters.IsActivatable}}" />
+                        <Setter Property="DockPanel.Dock" Value="{Binding IsPrimary, Converter={x:Static controls:MiscConverters.IsPrimaryToDock}}" />
+                        <Setter Property="IsHitTestVisible" Value="{Binding Converter={x:Static controls:MiscConverters.IsActivatable}}" />
                     </ControlTheme>
                 </ListBox.ItemContainerTheme>
             </ListBox>

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using ReactiveUI;
+﻿using System.Linq;
+using AngorApp.Services;
 using ReactiveUI.SourceGenerators;
 
 namespace AngorApp.Sections.Shell;
@@ -21,13 +18,4 @@ public partial class MainViewModel : ReactiveObject, IMainViewModel
     public ReactiveCommand<Unit,Unit> OpenHub { get; set; }
 
     public IEnumerable<SectionBase> Sections { get; }
-}
-
-public class Separator : SectionBase;
-
-public class Section(string name, object viewModel, object? icon = null) : SectionBase
-{
-    public string Name { get; } = name;
-    public object ViewModel { get; } = viewModel;
-    public object? Icon { get; } = icon;
 }

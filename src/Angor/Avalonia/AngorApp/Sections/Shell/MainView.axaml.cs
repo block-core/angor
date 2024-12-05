@@ -1,6 +1,4 @@
-using Avalonia.Controls;
-
-namespace AngorApp.Views;
+namespace AngorApp.Sections.Shell;
 
 public partial class MainView : UserControl
 {

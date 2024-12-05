@@ -10,7 +10,7 @@
              x:Class="AngorApp.Sections.Browse.BrowseView"
              xmlns:ail="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:views="clr-namespace:AngorApp.Views"
-             x:DataType="angorApp:IBrowseViewModel" ClipToBounds="False">
+             x:DataType="browse:IBrowseViewModel" ClipToBounds="False">
 
     <Design.DataContext>
         <browse:BrowseViewModelDesign />
@@ -71,11 +71,11 @@
                                     <TextBlock Classes="Regular" Text="{Binding ShortDescription}" />
                                 </StackPanel>
                                 <Separator Margin="0 10" />
-                                <views:IconButton HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
-                                    <views:IconButton.Icon>
+                                <controls:IconButton HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
+                                    <controls:IconButton.Icon>
                                         <i:Icon Value="fa-folder" />
-                                    </views:IconButton.Icon>
-                                </views:IconButton>
+                                    </controls:IconButton.Icon>
+                                </controls:IconButton>
                             </StackPanel>
 
                             <Panel>
@@ -105,11 +105,11 @@
             </ItemsControl.ItemsPanel>
         </ItemsControl>
 
-        <views:IconButton Command="{Binding OpenHub}" Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="ANGOR HUB">
-            <views:IconButton.Icon>
+        <controls:IconButton Command="{Binding OpenHub}" Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="ANGOR HUB">
+            <controls:IconButton.Icon>
                 <i:Icon Value="fa-magnifying-glass" />
-            </views:IconButton.Icon>
-        </views:IconButton>
+            </controls:IconButton.Icon>
+        </controls:IconButton>
 
     </StackPanel>
 </UserControl>

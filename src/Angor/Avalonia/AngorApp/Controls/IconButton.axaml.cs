@@ -1,7 +1,6 @@
 using Avalonia;
-using Avalonia.Controls;
 
-namespace AngorApp.Views;
+namespace AngorApp.Controls;
 
 public class IconButton : Button
 {

@@ -1,9 +1,7 @@
-using System.Collections.Generic;
-using System.Reactive;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Home;
 using AngorApp.Sections.Wallet;
-using ReactiveUI;
+using AngorApp.Services;
 
 namespace AngorApp.Sections.Shell;
 

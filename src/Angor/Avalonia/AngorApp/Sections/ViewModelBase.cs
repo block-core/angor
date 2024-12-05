@@ -1,6 +1,4 @@
-﻿using ReactiveUI;
-
-namespace AngorApp.Sections;
+﻿namespace AngorApp.Sections;
 
 public abstract class ViewModelBase : ReactiveObject
 {

@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using ReactiveUI;
+using AngorApp.Sections.Browse;
 
 namespace AngorApp.Sections.Founder;
 
