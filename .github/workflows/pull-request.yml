@@ -17,7 +17,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     
     env:
-      PROJECT_NAME: 'Blockcore.AtomicSwaps'
+      PROJECT_NAME: 'Angor'
       SOLUTION_PATH: 'src/Angor.sln'
       PROJECT_PATH: 'src/Angor/Server/Angor.Server.csproj'
       BUILD_CONFIGURATION: 'Release'
@@ -31,6 +31,7 @@ jobs:
       with:
         dotnet-version: | 
           9.0.x
+
     - name: Setup Node.js (${{ matrix.node_version }})
       uses: actions/setup-node@v1
       with:
@@ -50,22 +51,3 @@ jobs:
     - name: Unit Test
       run: |
        dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Release src/Angor.sln | grep -E '(Passed|Failed) .*ms'
-  
-
-#  cypress-run:
-#    runs-on: ubuntu-22.04
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#      - name: Print Working Directory
-#        run: pwd
-#      - name: Install Dependencies
-#        run: npm install
-#      - name: Cypress run
-#        uses: cypress-io/github-action@v6
-#        with:
-#          build: npm run build
-#          start: npm start
-#          browser: electron
-#          headless: true
-#          config-file: src/Testing/cypress.config.js      
