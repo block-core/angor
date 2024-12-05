@@ -7,6 +7,7 @@
 @using Angor.Shared.Services
 @using Angor.Shared.Utilities
 @using Blockcore.NBitcoin
+@using Blockcore.Networks
 @using NBitcoin.DataEncoders
 @using Nostr.Client.Messages
 
@@ -305,6 +306,12 @@ else
                 </p>
                 @{
                     var timeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
+
+                    if (timeLeft <= 0 && network.NetworkType == NetworkType.Testnet)
+                    {
+                        // on testnet we will not disable the ability to invest at all
+                        timeLeft = 1;
+                    }
                 }
                 <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON"
                         @onclick="InvestInProject"

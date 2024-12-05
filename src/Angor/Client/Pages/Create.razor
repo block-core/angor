@@ -7,6 +7,7 @@
 @using Angor.Shared.Services
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
+@using Blockcore.Networks
 @using NBitcoin.DataEncoders
 @inherits BaseComponent
 @inject IDerivationOperations _derivationOperations
@@ -117,16 +118,8 @@
                     <!-- Restore the form submit button -->
                     <div class="card card-body mt-4">
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-success" @onclick="() => ChangeTab(2)" disabled="@(createProfileSpinner || nostrMetadataCreated)">
-                                @if (createProfileSpinner)
-                                {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    <span>Next...</span>
-                                }
-                                else
-                                {
-                                    <span>Next</span>
-                                }
+                            <button type="submit" class="btn btn-success" @onclick="() => ChangeTab(2)">
+                                <span>Next</span>
                             </button>
                         </div>
                     </div>
@@ -319,11 +312,9 @@
             <div class="card card-body mt-4">
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-success" @onclick="() => ChangeTab(1)">
-
                         <span>Previous</span>
-
                     </button>
-
+                    
                     <button type="submit" class="btn btn-success" @onclick="() => ChangeTab(3)">
                         <span>Next</span>
                     </button>
@@ -421,7 +412,8 @@
                 <span>Create Project Info</span>
             }
         </button>
-        <button type="button" class="btn btn-success" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
+
+        <button type="button" class="btn btn-success mt-4" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
             @if (creatProjectSpinner)
             {
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -629,6 +621,10 @@
         {
             storage.AddFounderProject(project);
         }
+
+        // check if the project was already published to nostr
+        nostrMetadataCreated = project.NostrProfileCreated;
+        nostrApplicationSpecificDataCreated = !string.IsNullOrEmpty(project.ProjectInfoEventId);
     }
 
 
@@ -662,32 +658,26 @@
             return;
         }
 
-        if (project.Metadata is null)
+        if (!ValidateInputData())
         {
-            notificationComponent.ShowErrorMessage("Nostr profile must be filled");
+            // If validation fails, return early
             return;
         }
 
-        if (string.IsNullOrEmpty(project.Metadata.Name))
-        {
-            notificationComponent.ShowErrorMessage("Nostr profile name must be filled");
-            return;
-        }
-
-        confirmationMessage = "Are you sure you want to finalize the Nostr Profile creation? Once done, changes can only be made on Nostr.";
+        confirmationMessage = "Are you sure you want to create the Nostr Profile?";
         finalizeAction = FinalizeNostrProfileCreation;
         showConfirmationModal = true;
     }
 
     private async void ConfirmFinalizeProjectInfoCreation()
     {
-        if (!await ProjectInfoMetaDataTestInput())
+        if (nostrApplicationSpecificDataCreated)
         {
-            // If validation fails, return early
+            notificationComponent.ShowErrorMessage("Nostr project already created");
             return;
         }
 
-        confirmationMessage = "Are you sure you want to finalize the Project Info creation? Once done, changes can only be made on Nostr.";
+        confirmationMessage = "Are you sure you want to deploy the project info to Nostr?.";
         finalizeAction = FinalizeProjectInfoCreation;
         showConfirmationModal = true;
     }
@@ -720,8 +710,10 @@
         {
             passwordComponent.ShowPassword(CreatNostrProfile);
         }
-
-        await CreatNostrProfile();
+        else
+        {
+            await CreatNostrProfile();    
+        }
     }
 
     private async Task CreatNostrProfile()
@@ -750,10 +742,9 @@
                     if (nostrMetadataCreated == false)
                     {
                         nostrMetadataCreated = true;
+                        project.NostrProfileCreated = true;
                         storage.UpdateFounderProject(project);
                     }
-
-                    activeTab = 2;
 
                     StateHasChanged();
                 });
@@ -814,8 +805,6 @@
                         project.ProjectInfoEventId = _.EventId;
                         storage.UpdateFounderProject(project);
                     }
-
-                    activeTab = 3;
 
                     StateHasChanged();
                 });
@@ -959,12 +948,25 @@
 
     private void AddStage()
     {
+        if (nostrMetadataCreated)
+        {
+            notificationComponent.ShowErrorMessage("Changes not allowed after the profile was created.");
+            return;
+        }
+
         project.ProjectInfo.Stages.Add(new Stage { ReleaseDate = DateTime.UtcNow });
     }
 
     private void RemoveStage(Stage stage)
     {
+        if (nostrMetadataCreated)
+        {
+            notificationComponent.ShowErrorMessage("Changes not allowed after the profile was created.");
+            return;
+        }
+
         project.ProjectInfo.Stages.Remove(stage);
+
     }
 
     public MarkupString ConvertToMarkupString(string input)
@@ -975,14 +977,14 @@
 
     private void ChangeTab(int tabNumber)
     {
-        SaveProjectToStorage(); // Save the project before switching tabs
+        if (!nostrMetadataCreated)
+        {
+            // Save the project before switching tabs
+            storage.UpdateFounderProject(project);
+        }
+
         activeTab = tabNumber;
         StateHasChanged();
-    }
-
-    private void SaveProjectToStorage()
-    {
-        storage.UpdateFounderProject(project);
     }
 
     private string GetProgressMessage()
@@ -1003,6 +1005,12 @@
 
     private void OnStagePresetChange(ChangeEventArgs e)
     {
+        if (nostrMetadataCreated)
+        {
+            notificationComponent.ShowErrorMessage("Changes not allowed after the profile was created.");
+            return;
+        }
+
         var selectedPreset = e.Value?.ToString();
 
         if (selectedPreset != null && presets.TryGetValue(selectedPreset, out var preset))
@@ -1019,47 +1027,63 @@
         StateHasChanged();
     }
 
-    private async Task<bool> ProjectInfoMetaDataTestInput()
+    private bool ValidateInputData()
     {
-        if (nostrApplicationSpecificDataCreated)
+        var isTestnet = this.network.NetworkType == NetworkType.Testnet;
+
+        if (!isTestnet)
         {
-            notificationComponent.ShowErrorMessage("Nostr project already created");
+            // test that need to happen in production will go here
+
+            if (project.ProjectInfo.PenaltyDays < 10)
+            {
+                notificationComponent.ShowErrorMessage("Project penalty must be higher than 10 days");
+                return false;
+            }
+
+            if (project.ProjectInfo.Stages.Count() < 3)
+            {
+                notificationComponent.ShowErrorMessage("There must be at least 3 stages");
+                return false;
+            }
+
+            if (project.ProjectInfo.TargetAmount < (decimal)0.1)
+            {
+                // temporary limit to not allow users to put too much in an Angor contract
+    
+                notificationComponent.ShowErrorMessage("Project target amount must be higher than 0.1 BTC");
+                return false;
+            }
+
+            if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.StartDate)
+            {
+                notificationComponent.ShowErrorMessage("Project must expire after the start date");
+                return false;
+            }
+
+            if (project.ProjectInfo.Stages.Any() && project.ProjectInfo.ExpiryDate < project.ProjectInfo.Stages.Last().ReleaseDate)
+            {
+                notificationComponent.ShowErrorMessage("Project expiry date must be after the last stage date");
+                return false;
+            }
+
+            if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+            {
+                notificationComponent.ShowErrorMessage("Project must start in the future");
+                return false;
+            }
+        }
+
+
+        if (project.Metadata is null)
+        {
+            notificationComponent.ShowErrorMessage("Nostr profile must be filled");
             return false;
         }
 
-        if (project.ProjectInfo.TargetAmount < (decimal)0.1)
+        if (string.IsNullOrEmpty(project.Metadata.Name))
         {
-            notificationComponent.ShowErrorMessage("Project target amount must be higher than 0.1 BTC");
-            return false;
-        }
-
-        if (project.ProjectInfo.StartDate < DateTime.UtcNow)
-        {
-            notificationComponent.ShowErrorMessage("Project must start in the future");
-            return false;
-        }
-
-        if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.StartDate)
-        {
-            notificationComponent.ShowErrorMessage("Project must expire after the start date");
-            return false;
-        }
-
-        if (project.ProjectInfo.Stages.Any() && project.ProjectInfo.ExpiryDate < project.ProjectInfo.Stages.Last().ReleaseDate)
-        {
-            notificationComponent.ShowErrorMessage("Project expiry date must be after the last stage date");
-            return false;
-        }
-
-        if (project.ProjectInfo.PenaltyDays < 10)
-        {
-            notificationComponent.ShowErrorMessage("Project penalty must be higher than 10 days");
-            return false;
-        }
-
-        if (project.ProjectInfo.Stages.Count() < 3)
-        {
-            notificationComponent.ShowErrorMessage("There must be at least 3 stages");
+            notificationComponent.ShowErrorMessage("Nostr profile name must be filled");
             return false;
         }
 
