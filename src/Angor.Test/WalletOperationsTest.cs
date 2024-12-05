@@ -9,6 +9,7 @@ using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Angor.Shared.Services;
+using Blockcore.Consensus.ScriptInfo;
 using Money = Blockcore.NBitcoin.Money;
 using uint256 = Blockcore.NBitcoin.uint256;
 using Blockcore.Consensus.TransactionInfo;
@@ -570,6 +571,40 @@ public class WalletOperationsTest : AngorTestData
         Assert.NotNull(changeOutput); // Ensure change output exists
         // Assert.Equal(sendInfo.SendAmount, sentOutput.Value.Satoshi); // check why its diff
         Assert.True(changeOutput.Value.Satoshi > 0, "Change output should have remaining funds.");
+    }
+
+    
+    [Fact]
+    public void AddInputsAndSignTransactionUsingPSBT_BasicTest()
+    {
+        // Arrange
+        var walletWords = new WalletWords
+        {
+            Words = "test example sample adapt sister barely loud praise spray option oxygen hero"
+        };
+
+        // Build AccountInfo and add one UTXO
+        AccountInfo accountInfo = _sut.BuildAccountInfoForWalletWords(walletWords);
+        var network = _networkConfiguration.Object.GetNetwork();
+        var changeAddress = accountInfo.GetNextReceiveAddress();
+
+        // Add a single UTXO
+        AddCoins(accountInfo, 1, 50000000); // 0.5 BTC
+
+        // Create a transaction with a single output
+        var transaction = network.CreateTransaction();
+        transaction.Outputs.Add(new TxOut(Money.Coins(0.3m), BitcoinAddress.Create("tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr", network)));
+
+        // Fee estimation
+        var feeRate = new FeeEstimation { FeeRate = 10 };
+
+        // Act
+        var psbtTransactionInfo = _sut.AddInputsAndSignTransactionUsingPSBT(changeAddress, transaction, walletWords, accountInfo, feeRate);
+
+        // Assert
+        Assert.NotNull(psbtTransactionInfo.Transaction); // Ensure transaction is not null
+        Assert.True(psbtTransactionInfo.TransactionFee > 0); // Ensure fee is calculated
+        Assert.Equal(1, psbtTransactionInfo.Transaction.Outputs.Count); // Ensure outputs TODO should it be 1/2 
     }
 
 

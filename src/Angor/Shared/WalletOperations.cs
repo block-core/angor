@@ -767,11 +767,9 @@
         
        public async Task<OperationResult<Transaction>> SendAmountToAddressUsingPSBT(WalletWords walletWords, SendInfo sendInfo)
         {
-            // Get networks
             var blockcoreNetwork = _networkConfiguration.GetNetwork();
             var nbitcoinNetwork = _converter.ConvertBlockcoreToNBitcoinNetwork(blockcoreNetwork);
 
-            // Ensure sufficient funds
             if (sendInfo.SendAmountSat > sendInfo.SendUtxos.Values.Sum(s => s.UtxoData.value))
                 throw new ApplicationException("Not enough funds");
 
@@ -796,10 +794,8 @@
                 return new NBitcoin.Coin(nbitcoinOutPoint, nbitcoinTxOut);
             }).ToArray();
 
-            // Create NBitcoin transaction
             var nbitcoinTransaction = NBitcoin.Transaction.Create(nbitcoinNetwork);
 
-            // Convert destination and change addresses to scripts
             var destinationScript = NBitcoin.Script.FromHex(
                 BitcoinAddress.Create(sendInfo.SendToAddress, blockcoreNetwork).ScriptPubKey.ToHex()
             );
@@ -807,7 +803,6 @@
                 BitcoinAddress.Create(sendInfo.ChangeAddress, blockcoreNetwork).ScriptPubKey.ToHex()
             );
 
-            // Add outputs
             nbitcoinTransaction.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(sendInfo.SendAmountSat), destinationScript));
             nbitcoinTransaction.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Zero, changeScript)); // Change output
 
@@ -822,7 +817,6 @@
             var virtualSize = psbtBytes.Length;
             var estimatedFee = new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(sendInfo.FeeRate)).GetFee(virtualSize);
 
-            // Adjust change output value
             var totalInputValue = nbitcoinCoins.Sum(c => c.TxOut.Value.Satoshi);
             var changeValue = totalInputValue - sendInfo.SendAmountSat - estimatedFee;
             if (changeValue < 0)
@@ -836,7 +830,6 @@
                 psbt = psbt.SignWithKeys(new NBitcoin.Key(key.ToBytes()));
             }
 
-            // Finalize and extract the signed transaction
             if (!psbt.IsAllFinalized())
                 psbt.Finalize();
 
@@ -845,10 +838,8 @@
             // Convert NBitcoin transaction back to Blockcore
             var blockcoreTransaction = blockcoreNetwork.CreateTransaction(signedTransaction.ToHex());
 
-            // Publish transaction
             var result = await PublishTransactionAsync(blockcoreNetwork, blockcoreTransaction);
 
-            // Return result
             return new OperationResult<Transaction>
             {
                 Success = result.Success,
@@ -856,10 +847,4 @@
                 Data = result.Data
             };
         }
-       
-       
-       
-       
-
-
     }
