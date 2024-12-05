@@ -134,10 +134,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Download single file
-      run: |
-            curl -O https://raw.githubusercontent.com/sondreb/angor/main/package.json
-      shell: bash
+    - uses: actions/checkout@v3
 
     - name: Variables
       run: |
