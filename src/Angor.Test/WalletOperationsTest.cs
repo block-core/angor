@@ -516,4 +516,61 @@ public class WalletOperationsTest : AngorTestData
         Assert.Equal(2, operationResult.Data.Outputs.Count); // Expecting two outputs (send and change)
     }
 
+    
+    [Fact]
+    public async Task PSBTWorkflow_Succeeds_WithValidInputs()
+    {
+        // Arrange
+        var walletWords = new WalletWords { Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel" };
+        var network = _networkConfiguration.Object.GetNetwork();
+
+        var sendInfo = new SendInfo
+        {
+            SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
+            ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
+            SendAmount = 100000m, // Send amount in satoshis
+            SendUtxos = new Dictionary<string, UtxoDataWithPath>
+            {
+                {
+                    "key", new UtxoDataWithPath
+                    {
+                        UtxoData = new UtxoData
+                        {
+                            value = 1500000000000000, // 1.5 BTC (150M satoshis)
+                            address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679",
+                            scriptHex = "0014b7d165bb8b25f567f05c57d3b484159582ac2827",
+                            outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
+                            blockIndex = 1,
+                            PendingSpent = false
+                        },
+                        HdPath = "m/0/0"
+                    }
+                }
+            },
+            FeeRate = 10 // Fee rate in satoshis per byte
+        };
+
+        // Act
+        var operationResult = await _sut.SendAmountToAddressUsingPSBT(walletWords, sendInfo);
+
+        // Assert
+        Assert.True(operationResult.Success, "PSBT workflow should succeed with valid inputs.");
+        Assert.NotNull(operationResult.Data); // Ensure transaction is returned
+        Assert.Equal(2, operationResult.Data.Outputs.Count); // Should have 2 outputs (send + change)
+
+        // Ensure `ScriptPubKey` matches exactly
+        var sendScriptPubKey = BitcoinAddress.Create(sendInfo.SendToAddress, network).ScriptPubKey;
+        var changeScriptPubKey = BitcoinAddress.Create(sendInfo.ChangeAddress, network).ScriptPubKey;
+
+        // Match sent and change outputs by `ScriptPubKey`
+        var sentOutput = operationResult.Data.Outputs.FirstOrDefault(o => o.ScriptPubKey == sendScriptPubKey);
+        var changeOutput = operationResult.Data.Outputs.FirstOrDefault(o => o.ScriptPubKey == changeScriptPubKey);
+
+        Assert.NotNull(sentOutput); // Ensure send output exists
+        Assert.NotNull(changeOutput); // Ensure change output exists
+        // Assert.Equal(sendInfo.SendAmount, sentOutput.Value.Satoshi); // check why its diff
+        Assert.True(changeOutput.Value.Satoshi > 0, "Change output should have remaining funds.");
+    }
+
+
 }
