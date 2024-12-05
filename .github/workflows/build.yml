@@ -1,0 +1,216 @@
+name: Build and Publish
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    strategy:
+        matrix:
+          os: [windows-latest, ubuntu-latest, macos-latest]
+          include:
+            - os: windows-latest
+              extension: ".zip"
+              runtime: "win-x64"
+            - os: ubuntu-latest
+              extension: ".tar.gz"
+              runtime: "linux-x64"
+            - os: macos-latest
+              runtime: "osx-x64"
+              extension: ".zip"
+          node_version: [22]
+        fail-fast: false
+  
+    runs-on: ${{ matrix.os }}
+
+    env:
+        PROJECT_NAME: "Angor"
+        SOLUTION_PATH: "src/Angor.sln"
+        PROJECT_PATH: "src/Angor/Server/Angor.Server.csproj"
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Variables
+      run: |
+          echo VERSION=$(npm run version --silent) >> $GITHUB_ENV
+      shell: bash
+
+    - name: Publish
+      run: dotnet publish -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }}.${{ github.run_number }} -v m -o publish  ${{env.PROJECT_PATH}}
+      env:
+        matrix.runtime: ${{ matrix.os == 'windows-latest' && 'win-x64' || matrix.os == 'ubuntu-latest' && 'linux-x64' || 'osx-x64' }}
+
+    - name: Run Tests
+      continue-on-error: true
+      run: dotnet test --configuration Release -r ${{matrix.runtime}} --verbosity normal  ${{env.SOLUTION_PATH}} 
+      env:
+        matrix.runtime: ${{ matrix.os == 'windows-latest' && 'win-x64' || matrix.os == 'ubuntu-latest' && 'linux-x64' || 'osx-x64' }}
+
+    - name: Zip Release
+      run: |
+        cd publish
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          7z a -tzip "../angor-web-${{ env.VERSION }}-${{ matrix.runtime }}.zip" .
+        elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+          zip -r "../angor-web-${{ env.VERSION }}-${{ matrix.runtime }}.zip" .
+        else
+          zip -r "../angor-web-${{ env.VERSION }}-${{ matrix.runtime }}.zip" .
+        fi
+      shell: bash
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: angor-web-${{ env.VERSION }}-${{ matrix.runtime }}.zip
+        path: angor-web-${{ env.VERSION }}-${{ matrix.runtime }}.zip
+
+    - name: Install Rust (Stable)
+      uses: actions-rs/toolchain@v1
+      with:
+          toolchain: stable
+          override: true
+
+    - name: Install Linux dependencies
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+            sudo apt-get update
+            sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev webkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev libjavascriptcoregtk-4.1-dev
+
+    - name: Install and build
+      run: |
+        npm install
+        npm run tauri:build
+
+    - name: Rename Linux files
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        mv src-tauri/target/release/bundle/appimage/Angor_${{ env.VERSION }}_amd64.AppImage src-tauri/target/release/bundle/appimage/angor-desktop-${{ env.VERSION }}-linux-amd64.AppImage
+
+    - name: Rename Mac files
+      if: matrix.os == 'macos-latest'
+      run: |
+        mv src-tauri/target/release/bundle/dmg/Angor_${{ env.VERSION }}_aarch64.dmg src-tauri/target/release/bundle/dmg/angor-desktop-${{ env.VERSION }}-mac-aarch64.dmg
+
+    - name: Rename Mac files
+      if: matrix.os == 'windows-latest'
+      run: |
+        mv src-tauri/target/release/bundle/msi/Angor_${{ env.VERSION }}_x64_en-US.msi src-tauri/target/release/bundle/msi/angor-desktop-${{ env.VERSION }}-win-x64.msi
+
+    - uses: actions/upload-artifact@v4
+      name: Upload Linux
+      if: matrix.os == 'ubuntu-latest'
+      with:
+          name: angor-desktop-${{ env.VERSION }}-linux-amd64.AppImage
+          path: src-tauri/target/release/bundle/appimage/angor-desktop-${{ env.VERSION }}-linux-amd64.AppImage
+
+    - uses: actions/upload-artifact@v4
+      name: Upload Mac
+      if: matrix.os == 'macos-latest'
+      with:
+        name: angor-desktop-${{ env.VERSION }}-mac-aarch64.dmg
+        path: src-tauri/target/release/bundle/dmg/angor-desktop-${{ env.VERSION }}-mac-aarch64.dmg
+
+    - uses: actions/upload-artifact@v4
+      name: Upload Windows
+      if: matrix.os == 'windows-latest'
+      with:
+          name: angor-desktop-${{ env.VERSION }}-win-x64.msi
+          path: src-tauri\target\release\bundle\msi\angor-desktop-${{ env.VERSION }}-win-x64.msi
+
+  create-release:
+    name: Publish (Release)
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download single file
+      run: |
+            curl -O https://raw.githubusercontent.com/sondreb/angor/main/package.json
+      shell: bash
+
+    - name: Variables
+      run: |
+          echo VERSION=$(npm run version --silent) >> $GITHUB_ENV
+      shell: bash
+
+    - name: Download Artifacts 
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        merge-multiple: true
+    
+    - name: List Files
+      run: ls -R
+
+    - name: Create Release and Upload Assets
+      uses: softprops/action-gh-release@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+          tag_name: ${{ env.VERSION }}
+          name: Angor (${{ env.VERSION }})
+          draft: true
+          files: |
+            artifacts/*
+
+  deploy-release:
+    name: Deploy (Test)
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Variables
+      run: |
+          echo VERSION=$(npm run version --silent) >> $GITHUB_ENV
+      shell: bash
+
+    - name: Download Artifacts 
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        merge-multiple: true
+  
+    - name: List Files
+      run: ls -R
+
+    - name: Unzip Artifact
+      run: |
+        unzip artifacts/angor-web-${{ env.VERSION }}-linux-x64.zip -d dist
+      shell: bash
+
+    - name: Copy index.html to 404.html
+      run: cp dist/wwwroot/index.html dist/wwwroot/404.html
+      
+    - name: Add .nojekyll file
+      run: touch dist/wwwroot/.nojekyll
+
+    - name: Minify and replace JS files
+      run: |
+        npm install uglify-js -g
+        find dist/wwwroot/assets/js -type f -name '*.js' -exec uglifyjs {} -o {} --compress --mangle \;
+
+    - name: Minify and replace CSS files
+      run: |
+        npm install csso-cli -g
+        find dist/wwwroot/assets/css -type f -name '*.css' -exec csso {} -o {} \;
+
+    - name: Deploy to Github Pages
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+          branch: main 
+          folder: dist/wwwroot
+          repository-name: block-core/angor-test
+          token: ${{ secrets.ANGOR_DEPLOY_TOKEN }}

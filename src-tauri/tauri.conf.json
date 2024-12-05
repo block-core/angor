@@ -6,8 +6,8 @@
   "build": {
     "beforeDevCommand": "dotnet watch run --project src/Angor/Client/Angor.Client.csproj",
     "devUrl": "http://localhost:5062",
-    "beforeBuildCommand": "dotnet publish -c release src/Angor/Client/Angor.Client.csproj -o dist",
-    "frontendDist": "../dist/wwwroot"
+    "beforeBuildCommand": "",
+    "frontendDist": "../publish/wwwroot"
   },
   "app": {
     "withGlobalTauri": true,
@@ -24,7 +24,11 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": [
+      "msi", 
+      "appimage", 
+      "dmg"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
