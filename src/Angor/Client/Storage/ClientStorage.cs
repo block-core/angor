@@ -2,45 +2,41 @@ using Angor.Client.Models;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Blazored.LocalStorage;
-using Blazored.SessionStorage;
 
 namespace Angor.Client.Storage;
 
 public class ClientStorage : IClientStorage, INetworkStorage
 {
-    private readonly ISyncLocalStorageService _storage;
-    
     private const string CurrencyDisplaySettingKey = "currencyDisplaySetting";
-    
+
     private const string utxoKey = "utxo:{0}";
+    private readonly ISyncLocalStorageService _storage;
+
     public ClientStorage(ISyncLocalStorageService storage)
     {
         _storage = storage;
     }
-    
+
     public AccountInfo GetAccountInfo(string network)
     {
-        return _storage.GetItem<AccountInfo>(string.Format(utxoKey,network));
+        return _storage.GetItem<AccountInfo>(string.Format(utxoKey, network));
     }
-        
+
     public void SetAccountInfo(string network, AccountInfo items)
     {
-        _storage.SetItem(string.Format(utxoKey,network), items);
+        _storage.SetItem(string.Format(utxoKey, network), items);
     }
 
     public void DeleteAccountInfo(string network)
     {
-        _storage.RemoveItem(string.Format(utxoKey,network));
+        _storage.RemoveItem(string.Format(utxoKey, network));
     }
 
     public void AddInvestmentProject(InvestorProject project)
     {
         var ret = GetInvestmentProjects();
 
-        if (ret.Any(a => a.ProjectInfo?.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier))
-        {
-            return;
-        }
+        if (ret.Any(a => a.ProjectInfo?.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier)) return;
 
         ret.Add(project);
 
@@ -53,7 +49,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         var item = ret.First(_ => _.ProjectInfo?.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
 
-        if(!ret.Remove(item)) 
+        if (!ret.Remove(item))
             throw new InvalidOperationException();
 
         ret.Add(project);
@@ -61,8 +57,6 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem("projects", ret);
     }
 
-    
-    
 
     public void RemoveInvestmentProject(string projectId)
     {
@@ -75,14 +69,9 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem("projects", ret);
     }
 
-    public void DeleteInvestmentProjects()
-    {
-        _storage.RemoveItem("projects");
-    }
-
     public List<InvestorProject> GetInvestmentProjects()
     {
-        var ret =  _storage.GetItem<List<InvestorProject>>("projects");
+        var ret = _storage.GetItem<List<InvestorProject>>("projects");
 
         return ret ?? new List<InvestorProject>();
     }
@@ -95,7 +84,6 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         _storage.SetItem("founder-projects", ret.OrderBy(_ => _.ProjectIndex));
     }
-    
     
     public List<FounderProject> GetFounderProjects()
     {
@@ -113,23 +101,85 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
     public void UpdateFounderProject(FounderProject project)
     {
-        var projects = _storage.GetItem<List<FounderProject>>("founder-projects");
-        
-        var item = projects.FirstOrDefault(f => f.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
+        var projects = _storage.GetItem<List<FounderProject>>("founder-projects") ?? new List<FounderProject>();
 
-        if (item != null)
+        var existingProject = projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
+
+        if (existingProject != null)
         {
-            projects.Remove(item);   
+            projects.Remove(existingProject);
         }
-        
+
         projects.Add(project);
         
-        _storage.SetItem("founder-projects", projects.OrderBy(_ => _.ProjectIndex));
+        _storage.SetItem("founder-projects", projects.OrderBy(p => p.ProjectIndex).ToList());
     }
 
     public void DeleteFounderProjects()
     {
         _storage.RemoveItem("founder-projects");
+    }
+
+    public SettingsInfo GetSettingsInfo()
+    {
+        var ret = _storage.GetItem<SettingsInfo>("settings-info");
+
+        return ret ?? new SettingsInfo();
+    }
+
+    public void SetSettingsInfo(SettingsInfo settingsInfo)
+    {
+        _storage.SetItem("settings-info", settingsInfo);
+    }
+
+    public void WipeStorage()
+    {
+        _storage.Clear();
+    }
+
+    public void SetNostrPublicKeyPerProject(string projectId, string nostrPubKey)
+    {
+        _storage.SetItem($"project:{projectId}:nostrKey", nostrPubKey);
+    }
+
+    public string GetNostrPublicKeyPerProject(string projectId)
+    {
+        return _storage.GetItem<string>($"project:{projectId}:nostrKey");
+    }
+
+    public string GetCurrencyDisplaySetting()
+    {
+        return _storage.GetItem<string>(CurrencyDisplaySettingKey) ?? "BTC";
+    }
+
+    public void SetCurrencyDisplaySetting(string setting)
+    {
+        _storage.SetItem(CurrencyDisplaySettingKey, setting);
+    }
+
+    public SettingsInfo GetSettings()
+    {
+        return GetSettingsInfo();
+    }
+
+    public void SetSettings(SettingsInfo settingsInfo)
+    {
+        SetSettingsInfo(settingsInfo);
+    }
+
+    public void SetNetwork(string network)
+    {
+        _storage.SetItem("network", network);
+    }
+
+    public string GetNetwork()
+    {
+        return _storage.GetItem<string>("network");
+    }
+
+    public void DeleteInvestmentProjects()
+    {
+        _storage.RemoveItem("projects");
     }
 
     public void AddOrUpdateSignatures(SignatureInfo signatureInfo)
@@ -138,10 +188,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         var item = ret.FirstOrDefault(f => f.ProjectIdentifier == signatureInfo.ProjectIdentifier);
 
-        if (item != null)
-        {
-            ret.Remove(item);
-        }
+        if (item != null) ret.Remove(item);
 
         ret.Add(signatureInfo);
 
@@ -161,10 +208,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         var item = ret.FirstOrDefault(f => f.ProjectIdentifier == signatureInfo.ProjectIdentifier);
 
-        if (item != null)
-        {
-            ret.Remove(item);
-        }
+        if (item != null) ret.Remove(item);
 
         _storage.SetItem("recovery-signatures", ret);
     }
@@ -179,52 +223,5 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.RemoveItem("recovery-signatures");
     }
 
-    public SettingsInfo GetSettingsInfo()
-    {
-        var ret = _storage.GetItem<SettingsInfo>("settings-info");
-
-        return ret ?? new SettingsInfo();
-
-    }
-
-    public void SetSettingsInfo(SettingsInfo settingsInfo)
-    {
-        _storage.SetItem("settings-info", settingsInfo);
-    }
-
-    public SettingsInfo GetSettings()
-    {
-        return GetSettingsInfo();
-    }
-
-    public void SetSettings(SettingsInfo settingsInfo)
-    {
-        SetSettingsInfo(settingsInfo);
-    }
-
-    public void WipeStorage()
-    {
-        _storage.Clear();
-    }
-
-    public void SetNetwork(string network)
-    {
-        _storage.SetItem("network", network);
-
-    }
-
-    public string GetNetwork()
-    {
-        return _storage.GetItem<string>("network");
-    }
     
-    public string GetCurrencyDisplaySetting()
-    {
-        return _storage.GetItem<string>(CurrencyDisplaySettingKey) ?? "BTC";
-    }
-
-    public void SetCurrencyDisplaySetting(string setting)
-    {
-        _storage.SetItem(CurrencyDisplaySettingKey, setting);
-    }
 }

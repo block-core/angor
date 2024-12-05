@@ -8,6 +8,7 @@ public class FounderProject : Project
     public DateTime? LastRequestForSignaturesTime { get; set; }
 
     public string ProjectInfoEventId { get; set; }
+    public bool NostrProfileCreated { get; set; }
     
     public bool NostrMetadataCreated()
     {
