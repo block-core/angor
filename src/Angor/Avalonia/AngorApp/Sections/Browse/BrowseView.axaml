@@ -77,7 +77,23 @@
                                     </views:IconButton.Icon>
                                 </views:IconButton>
                             </StackPanel>
-                            <Image Height="200" VerticalAlignment="Top" Stretch="UniformToFill" ail:ImageLoader.Source="{Binding Picture}" ClipToBounds="True" />
+
+                            <Panel>
+                                <Image Height="200" VerticalAlignment="Top" Stretch="UniformToFill" ail:ImageLoader.Source="{Binding Picture}" ClipToBounds="True" />
+                                <Panel Height="100" Width="100" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10 20">
+                                    <Ellipse Fill="White" Width="100" Height="100"  />
+                                    <ail:AdvancedImage Stretch="UniformToFill" Source="{Binding Icon}">
+                                        <ail:AdvancedImage.Clip>
+                                            <EllipseGeometry Center="50,50" RadiusX="50" RadiusY="50" />
+                                        </ail:AdvancedImage.Clip>
+                                    </ail:AdvancedImage>
+                                    <Ellipse Stroke="White" StrokeThickness="5" Width="100" Height="100"  />
+                                    <Panel.Effect>
+                                        <DropShadowEffect Color="Black" BlurRadius="10" Opacity="0.4" OffsetX="2" OffsetY="2" />
+                                    </Panel.Effect>
+                                </Panel>
+                                
+                            </Panel>
                         </DockPanel>
                     </controls:Pane>
                 </DataTemplate>
