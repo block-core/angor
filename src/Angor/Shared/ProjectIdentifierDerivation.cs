@@ -25,7 +25,7 @@ public class ProjectIdentifierDerivation
 
     public static ECPrivKey ComputeSharedSecretPrivateKeyReceiver(ECPubKey A, ECPrivKey b)
     {
-        // Let p = b + hash(A·b)·G
+        // Let p = b + hash(A·b) : note that to get the P one must multiply p with G => p*G
 
         ECPubKey sharedSecret = new ECPubKey(A.GetSharedPubkey(b).Q, null);
         ECPrivKey hashedSharedSecret = ECPrivKey.Create(Hashes.SHA256(sharedSecret.ToBytes()));
