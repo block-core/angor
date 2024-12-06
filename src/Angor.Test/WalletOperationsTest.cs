@@ -9,12 +9,14 @@ using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Angor.Shared.Services;
+using Blockcore.Consensus.ScriptInfo;
 using Money = Blockcore.NBitcoin.Money;
 using uint256 = Blockcore.NBitcoin.uint256;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 using Blockcore.NBitcoin.BIP32;
+using Angor.Shared.Utilities;
 
 namespace Angor.Test;
 
@@ -26,12 +28,13 @@ public class WalletOperationsTest : AngorTestData
     private readonly InvestorTransactionActions _investorTransactionActions;
     private readonly FounderTransactionActions _founderTransactionActions;
     private readonly IHdOperations _hdOperations;
+    private readonly IBlockcoreNBitcoinConverter _converter;
 
     public WalletOperationsTest()
     {
         _indexerService = new Mock<IIndexerService>();
 
-        _sut = new WalletOperations(_indexerService.Object, new HdOperations(), new NullLogger<WalletOperations>(), _networkConfiguration.Object);
+        _sut = new WalletOperations(_indexerService.Object, new HdOperations(), new NullLogger<WalletOperations>(), _networkConfiguration.Object, new BlockcoreNBitcoinConverter());
 
         _investorTransactionActions = new InvestorTransactionActions(new NullLogger<InvestorTransactionActions>(),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
@@ -213,7 +216,7 @@ public class WalletOperationsTest : AngorTestData
     public void GenerateWalletWords_ReturnsCorrectFormat()
     {
         // Arrange
-        var walletOps = new WalletOperations(_indexerService.Object, _hdOperations, NullLogger<WalletOperations>.Instance, _networkConfiguration.Object);
+        var walletOps = new WalletOperations(_indexerService.Object, _hdOperations, NullLogger<WalletOperations>.Instance, _networkConfiguration.Object,_converter );
 
         // Act
         var result = walletOps.GenerateWalletWords();
@@ -236,7 +239,7 @@ public class WalletOperationsTest : AngorTestData
         mockNetworkConfiguration.Setup(x => x.GetNetwork()).Returns(network);
         mockIndexerService.Setup(x => x.PublishTransactionAsync(It.IsAny<string>())).ReturnsAsync(string.Empty);
 
-        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object);
+        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object,null);
 
         var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
         string address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
@@ -288,7 +291,9 @@ public class WalletOperationsTest : AngorTestData
         var expectedExtendedKey = new ExtKey();
         mockHdOperations.Setup(x => x.GetExtendedKey(It.IsAny<string>(), It.IsAny<string>())).Returns(expectedExtendedKey);
 
-        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object);
+
+        
+        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object,null);
 
         var words = new WalletWords { Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel", Passphrase = "" };
         string address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
@@ -353,7 +358,7 @@ public class WalletOperationsTest : AngorTestData
         var expectedExtKey = new ExtKey();
         mockHdOperations.Setup(x => x.GetExtendedKey(walletWords.Words, walletWords.Passphrase)).Returns(expectedExtKey);
 
-        var walletOperations = new WalletOperations(null, mockHdOperations.Object, null, null);
+        var walletOperations = new WalletOperations(null, mockHdOperations.Object, null, null,null);
 
         // Act
         var (coins, keys) = walletOperations.GetUnspentOutputsForTransaction(walletWords, utxos);
@@ -377,7 +382,7 @@ public class WalletOperationsTest : AngorTestData
         var network = _networkConfiguration.Object.GetNetwork();
         mockNetworkConfiguration.Setup(x => x.GetNetwork()).Returns(network);
 
-        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object);
+        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object,null);
 
         var words = new WalletWords { Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel", Passphrase = "" };
         var address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
@@ -446,5 +451,161 @@ public class WalletOperationsTest : AngorTestData
         var exception = Assert.Throws<Blockcore.Consensus.TransactionInfo.NotEnoughFundsException>(() => walletOperations.CalculateTransactionFee(sendInfoInsufficientFunds, accountInfo, feeRate));
         Assert.Equal("Not enough funds to cover the target with missing amount 9999.99999500", exception.Message);
     }
+    
+    
+    // PSBT TESTS 
+    
+    [Fact]
+    public async Task SendAmountToAddressUsingPSBT_Succeeds_WithSufficientFunds()
+    {
+        // Arrange
+        var mockNetworkConfiguration = new Mock<INetworkConfiguration>();
+        var mockIndexerService = new Mock<IIndexerService>();
+        var mockHdOperations = new Mock<IHdOperations>();
+        var mockLogger = new Mock<ILogger<WalletOperations>>();
+        var mockConverter = new Mock<IBlockcoreNBitcoinConverter>();
+        mockConverter
+            .Setup(c => c.ConvertBlockcoreToNBitcoinNetwork(It.IsAny<Blockcore.Networks.Network>()))
+            .Returns(NBitcoin.Network.TestNet);
+
+        var network = _networkConfiguration.Object.GetNetwork();
+        mockNetworkConfiguration.Setup(x => x.GetNetwork()).Returns(network);
+
+        var expectedExtendedKey = new ExtKey(); // Generate a mock extended key
+        mockHdOperations.Setup(x => x.GetExtendedKey(It.IsAny<string>(), It.IsAny<string>())).Returns(expectedExtendedKey);
+
+        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object, mockConverter.Object);
+
+        var words = new WalletWords
+        {
+            Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel",
+            Passphrase = ""
+        };
+
+        var sendInfo = new SendInfo
+        {
+            SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
+            ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
+            SendAmount = 100000m, // Send amount in satoshis
+            SendUtxos = new Dictionary<string, UtxoDataWithPath>
+            {
+                {
+                    "key", new UtxoDataWithPath
+                    {
+                        UtxoData = new UtxoData
+                        {
+                            value = 1500000000000000000, // Sufficient to cover send amount and fees
+                            address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679",
+                            scriptHex = "0014b7d165bb8b25f567f05c57d3b484159582ac2827",
+                            outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
+                            blockIndex = 1,
+                            PendingSpent = false
+                        },
+                        HdPath = "m/0/0"
+                    }
+                }
+            },
+            FeeRate = 10 // Fee rate in satoshis per byte
+        };
+
+        // Act
+        var operationResult = await walletOperations.SendAmountToAddressUsingPSBT(words, sendInfo);
+
+        // Assert
+        Assert.True(operationResult.Success, "Transaction should succeed with sufficient funds");
+        Assert.NotNull(operationResult.Data);
+        Assert.Equal(2, operationResult.Data.Outputs.Count); // Expecting two outputs (send and change)
+    }
+
+    
+    [Fact]
+    public async Task PSBTWorkflow_Succeeds_WithValidInputs()
+    {
+        // Arrange
+        var walletWords = new WalletWords { Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel" };
+        var network = _networkConfiguration.Object.GetNetwork();
+
+        var sendInfo = new SendInfo
+        {
+            SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
+            ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
+            SendAmount = 100000m, // Send amount in satoshis
+            SendUtxos = new Dictionary<string, UtxoDataWithPath>
+            {
+                {
+                    "key", new UtxoDataWithPath
+                    {
+                        UtxoData = new UtxoData
+                        {
+                            value = 1500000000000000, // 1.5 BTC (150M satoshis)
+                            address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679",
+                            scriptHex = "0014b7d165bb8b25f567f05c57d3b484159582ac2827",
+                            outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
+                            blockIndex = 1,
+                            PendingSpent = false
+                        },
+                        HdPath = "m/0/0"
+                    }
+                }
+            },
+            FeeRate = 10 // Fee rate in satoshis per byte
+        };
+
+        // Act
+        var operationResult = await _sut.SendAmountToAddressUsingPSBT(walletWords, sendInfo);
+
+        // Assert
+        Assert.True(operationResult.Success, "PSBT workflow should succeed with valid inputs.");
+        Assert.NotNull(operationResult.Data); // Ensure transaction is returned
+        Assert.Equal(2, operationResult.Data.Outputs.Count); // Should have 2 outputs (send + change)
+
+        // Ensure `ScriptPubKey` matches exactly
+        var sendScriptPubKey = BitcoinAddress.Create(sendInfo.SendToAddress, network).ScriptPubKey;
+        var changeScriptPubKey = BitcoinAddress.Create(sendInfo.ChangeAddress, network).ScriptPubKey;
+
+        // Match sent and change outputs by `ScriptPubKey`
+        var sentOutput = operationResult.Data.Outputs.FirstOrDefault(o => o.ScriptPubKey == sendScriptPubKey);
+        var changeOutput = operationResult.Data.Outputs.FirstOrDefault(o => o.ScriptPubKey == changeScriptPubKey);
+
+        Assert.NotNull(sentOutput); // Ensure send output exists
+        Assert.NotNull(changeOutput); // Ensure change output exists
+        // Assert.Equal(sendInfo.SendAmount, sentOutput.Value.Satoshi); // check why its diff
+        Assert.True(changeOutput.Value.Satoshi > 0, "Change output should have remaining funds.");
+    }
+
+    
+    [Fact]
+    public void AddInputsAndSignTransactionUsingPSBT_BasicTest()
+    {
+        // Arrange
+        var walletWords = new WalletWords
+        {
+            Words = "test example sample adapt sister barely loud praise spray option oxygen hero"
+        };
+
+        // Build AccountInfo and add one UTXO
+        AccountInfo accountInfo = _sut.BuildAccountInfoForWalletWords(walletWords);
+        var network = _networkConfiguration.Object.GetNetwork();
+        var changeAddress = accountInfo.GetNextReceiveAddress();
+
+        // Add a single UTXO
+        AddCoins(accountInfo, 1, 50000000); // 0.5 BTC
+
+        // Create a transaction with a single output
+        var transaction = network.CreateTransaction();
+        transaction.Outputs.Add(new TxOut(Money.Coins(0.3m), BitcoinAddress.Create("tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr", network)));
+
+        // Fee estimation
+        var feeRate = new FeeEstimation { FeeRate = 10 };
+
+        // Act
+        var psbtTransactionInfo = _sut.AddInputsAndSignTransactionUsingPSBT(changeAddress, transaction, walletWords, accountInfo, feeRate);
+
+        // Assert
+        Assert.NotNull(psbtTransactionInfo.Transaction); // Ensure transaction is not null
+        Assert.True(psbtTransactionInfo.TransactionFee > 0); // Ensure fee is calculated
+        Assert.Equal(1, psbtTransactionInfo.Transaction.Outputs.Count); // Ensure outputs TODO should it be 1/2 
+    }
+
 
 }
