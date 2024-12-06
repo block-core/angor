@@ -34,14 +34,19 @@
 
                 </div>
             </div>
-            <button class="btn btn-border" @onclick="NavigateToCreateProject" disabled="@scanningForProjects">
-                <i>
-                    <Icon IconName="add"></Icon>
-                </i>
-                <span class="nav-link-text ms-1">
-                    @(scanningForProjects ? "Scanning..." : "Create Project")
-                </span>
-            </button>
+            <div class="tooltip-container" data-bs-toggle="tooltip" title="@GetCreateButtonTooltip()">
+                <button
+                    class="btn btn-border"
+                    @onclick="NavigateToCreateProject"
+                    disabled="@scanningForProjects || @(founderProjects.Count >= 14)">
+                    <i>
+                        <Icon IconName="add"></Icon>
+                    </i>
+                    <span class="nav-link-text ms-1">
+                        @(scanningForProjects ? "Scanning..." : "Create Project")
+                    </span>
+                </button>
+            </div>
 
         </div>
         <p class="mb-0 font-weight-normal text-sm mt-4">
@@ -214,5 +219,14 @@
 
         NavigationManager.NavigateTo("/create");
     }
+    private string GetCreateButtonTooltip()
+    {
+        if (founderProjects.Count >= 15)
+            return "You have reached the maximum number of projects. Please manage your existing projects.";
+        if (scanningForProjects)
+            return "Scanning in progress...";
+        return "Create a new project.";
+    }
+
 
 }

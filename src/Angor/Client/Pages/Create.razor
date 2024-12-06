@@ -19,6 +19,8 @@
 @inject IRelayService _RelayService
 @inject ILogger<Create> _Logger;
 @inject IHtmlStripperService HtmlStripperService;
+@inject IFounderKeyService FounderKeyService
+
 
 @inject IFounderTransactionActions _founderTransactionActions
 <NotificationComponent @ref="notificationComponent"/>
@@ -847,6 +849,21 @@
 
         try
         {
+            // Check if the FounderKey is in use and get the total keys used
+            var keyCheckResult = await FounderKeyService.CheckFounderKeyAsync(project.ProjectInfo.FounderKey);
+
+            if (keyCheckResult.IsKeyInUse)
+            {
+                notificationComponent.ShowErrorMessage("The FounderKey is already in use. Please use a different key.");
+                return; 
+            }
+
+            if (keyCheckResult.TotalKeysInUse >= 14)
+            {
+                notificationComponent.ShowErrorMessage("You cannot create more than 15 projects.");
+                return; 
+            }
+            
             var words = await passwordComponent.GetWalletAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
 
@@ -863,7 +880,6 @@
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, e.Message);
             notificationComponent.ShowErrorMessage(e.Message,e);
         }
         finally
