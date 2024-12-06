@@ -1,1 +1,23 @@
-window.angor={installApp:function(){window.AngorAPP.installPWA()},showSnackbar:function(n,o){let a=document.getElementById("snackbar");a.innerHTML=n,a.classList.add("show"),setTimeout(function(){a.classList.remove("show")},1e3*o)},addDarkBackground:function(){document.body.classList.add("dark")},addLightBackground:function(){document.body.classList.remove("dark")}};
+﻿'use strict';
+
+window.angor = {
+    installApp: function () {
+        window.AngorAPP.installPWA();
+    },
+
+    showSnackbar: function (message, delaySeconds) {
+        const snackbar = document.getElementById('snackbar');
+        snackbar.innerHTML = message;
+        snackbar.classList.add('show');
+        setTimeout(function () { snackbar.classList.remove('show'); }, (delaySeconds * 1000));
+    },
+
+    addDarkBackground: function () {
+         document.body.classList.add('dark');
+    },
+
+    addLightBackground: function () {
+        document.body.classList.remove('dark');
+     },
+
+};
