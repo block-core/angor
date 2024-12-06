@@ -191,7 +191,7 @@ else
         catch (Exception e)
         {
             Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {

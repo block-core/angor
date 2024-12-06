@@ -20,13 +20,16 @@
     <meta name="robots" content="index, follow">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Angor">
     <meta name="application-name" content="Angor">
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="/assets/img/icon-512.png">
     <meta name="msapplication-config" content="/manifest.json">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 </head>
 
 <body>
@@ -40,13 +43,16 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
-    <script>navigator.serviceWorker.register('service-worker.js');</script>
-    <script type="module" src="service-crypto.js"></script>
-    <script src="/ServiceWorkerRegister.js"></script>
-    <script src="nostr-tools-methods.js" type="module"></script>
-    <script src="/assets/js/appUpdate.js"></script>
-    <script src="/assets/js/app.js"></script>
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        // Add timestamp to force reload of service worker
+        navigator.serviceWorker.register('service-worker.js?v=' + new Date().getTime());
+    </script>
+    <script type="module" src="service-crypto.js?v=1"></script>
+    <script src="/ServiceWorkerRegister.js?v=1"></script>
+    <script src="nostr-tools-methods.js?v=1" type="module"></script>
+    <script src="/assets/js/appUpdate.js?v=1"></script>
+    <script src="/assets/js/app.js?v=1"></script>
+    <script src="_framework/blazor.webassembly.js?v=1"></script>
 
 </body>
 

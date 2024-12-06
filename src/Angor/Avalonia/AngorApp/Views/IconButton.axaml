@@ -1,0 +1,29 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:AngorApp.Views"
+                    xmlns:avalonia="https://github.com/projektanker/icons.avalonia">
+    
+    <Design.PreviewWith>
+        <controls:IconButton Content="THIS IS A BUTTON">
+            <controls:IconButton.Icon>
+                <avalonia:Icon Value="fa-wallet" />
+            </controls:IconButton.Icon>
+        </controls:IconButton>
+    </Design.PreviewWith>
+    
+    <ControlTheme TargetType="controls:IconButton" x:Key="{x:Type controls:IconButton}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="controls:IconButton">
+                    <Button>
+                        <DockPanel>
+                            <ContentPresenter Margin="5 4 10 4" Content="{TemplateBinding Icon}" />
+                            <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Button>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </ControlTheme>
+    
+</ResourceDictionary>

@@ -1,13 +1,15 @@
 ﻿@page "/view/{ProjectId}"
-@using Angor.Shared
+@using System.Text.RegularExpressions
+@using Angor.Client.Models
 @using Angor.Client.Storage
+@using Angor.Shared
 @using Angor.Shared.Models
+@using Angor.Shared.Services
 @using Angor.Shared.Utilities
 @using Blockcore.NBitcoin
-@using Angor.Shared.Services
-@using Angor.Client.Models
+@using Blockcore.Networks
+@using NBitcoin.DataEncoders
 @using Nostr.Client.Messages
-@using System.Text.RegularExpressions
 
 @inject IDerivationOperations _derivationOperations
 @inject IClientStorage storage;
@@ -22,75 +24,76 @@
 @inject ILogger<Browse> Logger;
 @inject IHtmlStripperService HtmlStripperService;
 
-@inject Angor.Shared.Utilities.NostrConversionHelper NostrHelper
+@inject NostrConversionHelper NostrHelper
+
 
 @inherits BaseComponent
-<NotificationComponent @ref="notificationComponent" />
-<PasswordComponent @ref="passwordComponent" />
+<NotificationComponent @ref="notificationComponent"/>
+<PasswordComponent @ref="passwordComponent"/>
 
 <div class="row">
 
-    @if (project?.ProjectInfo == null)
+@if (project?.ProjectInfo == null)
+{
+    @if (findInProgress)
     {
-        @if (findInProgress)
-        {
-            <div class="d-flex justify-content-center">
-                <div class="loader"></div>
-            </div>
-        }
-        else
-        {
-            @if (!string.IsNullOrEmpty(error))
-            {
-                <div class="row mt-4">
-                    <div class="card card-body angor-alert-info pt-2 pb-2">
-                        <div class="d-flex align-items-center">
-                            <span class="me-3 user-select-none">
-                                <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
-                            </span>
-                            <span class="text-white">@error</span>
-                        </div>
-                    </div>
-                </div>
-            }
-        }
+        <div class="d-flex justify-content-center">
+            <div class="loader"></div>
+        </div>
     }
     else
     {
-        <!-- Project Details Section -->
-        <div class="card card-body p-0">
-            @if (project.ProjectInfo.NostrPubKey != null)
-            {
-                var metadata = project.Metadata;
-
-                <div class="card-header p-0 overflow-hidden position-relative">
-                    <img class="card-img-top card-img-top-view" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                    <img class="profile-image-view rounded-circle" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="row mt-4">
+                <div class="card card-body angor-alert-info pt-2 pb-2">
+                    <div class="d-flex align-items-center">
+                        <span class="me-3 user-select-none">
+                            <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)"/>
+                        </span>
+                        <span class="text-white">@error</span>
+                    </div>
                 </div>
+            </div>
+        }
+    }
+}
+else
+{
+    <!-- Project Details Section -->
+    <div class="card card-body p-0">
+        @if (project.ProjectInfo.NostrPubKey != null)
+        {
+            var metadata = project.Metadata;
 
-                <div class="p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
-                        <div class="d-flex align-items-center">
-                            <span class="user-select-none">
-                                <Icon IconName="view" Height="32" Width="32"></Icon>
-                            </span>
-                            <div class="h-100 ms-3">
-                                <h5 class="mb-0 font-weight-bolder">
-                                    <a href="/view/@project.ProjectInfo.ProjectIdentifier">@metadata?.Name</a>
-                                </h5>
-                            </div>
+            <div class="card-header p-0 overflow-hidden position-relative">
+                <img class="card-img-top card-img-top-view" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
+                <img class="profile-image-view rounded-circle" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
+            </div>
+
+            <div class="p-4">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center">
+                        <span class="user-select-none">
+                            <Icon IconName="view" Height="32" Width="32"></Icon>
+                        </span>
+                        <div class="h-100 ms-3">
+                            <h5 class="mb-0 font-weight-bolder">
+                                <a href="/view/@project.ProjectInfo.ProjectIdentifier">@metadata?.Name</a>
+                            </h5>
                         </div>
                     </div>
+                </div>
 
-                    <p class="card-subtitle">@((MarkupString)metadata?.About)</p>
+                <p class="card-subtitle">@((MarkupString)metadata?.About)</p>
 
-                    <div class="row align-items-center">
-                        <div class="col-12 col-md-12 col-lg-8 order-2 order-md-2 mt-4">
-                            <div class="form-control d-flex align-items-center">
-                                <Icon IconName="explorer"></Icon>
-                                <a class="ms-2" href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
-                            </div>
-                            @* <div class="form-control mt-1 d-flex align-items-center">
+                <div class="row align-items-center">
+                    <div class="col-12 col-md-12 col-lg-8 order-2 order-md-2 mt-4">
+                        <div class="form-control d-flex align-items-center">
+                            <Icon IconName="explorer"></Icon>
+                            <a class="ms-2" href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
+                        </div>
+                        @* <div class="form-control mt-1 d-flex align-items-center">
                     <Icon IconName="view"></Icon>
                     <p class="card-text ms-2">Project Identifier: @project.ProjectInfo.ProjectIdentifier</p>
                     </div>
@@ -98,152 +101,157 @@
                     <Icon IconName="key"></Icon>
                     <p class="card-text ms-2">Founder Key: @project.ProjectInfo.FounderKey</p>
                     </div> *@
-                            <div class="form-control mt-1 d-flex align-items-center">
-                                <Icon IconName="balance"></Icon>
-                                <p class="card-text ms-2">Target Amount: @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
-                            </div>
-                            <div class="form-control mt-1 d-flex align-items-center">
-                                <Icon IconName="calendar"></Icon>
-                                <p class="card-text ms-2">Penalty duration: @project.ProjectInfo.PenaltyDays days</p>
-                            </div>
-                            <div class="form-control mt-1 d-flex align-items-center">
-                                <Icon IconName="date"></Icon>
-                                <p class="card-text ms-2">
-                                    Project dates: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") - @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")
-                                </p>
-                            </div>
-
+                        <div class="form-control mt-1 d-flex align-items-center">
+                            <Icon IconName="balance"></Icon>
+                            <p class="card-text ms-2">Target Amount: @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
                         </div>
-                        <div class="col-12 col-md-12 col-lg-4 order-1 order-md-1 d-flex justify-content-center align-items-center mt-4">
-                            <div class="w-100">
-                                @{
-                                    int startsInDays = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
+                        <div class="form-control mt-1 d-flex align-items-center">
+                            <Icon IconName="calendar"></Icon>
+                            <p class="card-text ms-2">Penalty duration: @project.ProjectInfo.PenaltyDays days</p>
+                        </div>
+                        <div class="form-control mt-1 d-flex align-items-center">
+                            <Icon IconName="date"></Icon>
+                            <p class="card-text ms-2">
+                                Project dates: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") - @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")
+                            </p>
+                        </div>
 
-                                    if (startsInDays > 0)
-                                    {
-                                        <p class="card-text text-center">Starts in @startsInDays days</p>
-                                    }
-                                    else
-                                    {
-                                        int totalDays = (project.ProjectInfo.ExpiryDate - project.ProjectInfo.StartDate).Days;
-                                        int currentDays = (DateTime.Now - project.ProjectInfo.StartDate).Days;
-                                        currentDays = currentDays < 0 ? 0 : currentDays;
-                                        currentDays = currentDays > totalDays ? totalDays : currentDays;
+                    </div>
+                    <div class="col-12 col-md-12 col-lg-4 order-1 order-md-1 d-flex justify-content-center align-items-center mt-4">
+                        <div class="w-100">
+                            @{
+                                var startsInDays = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
 
-                                        if (totalDays > 0)
-                                        {
-                                            <div class="progress-container">
-                                                <div role="progressbar" data-type="days" aria-valuenow="@currentDays" aria-valuemin="0" aria-valuemax="@totalDays" style="--day: @currentDays; --total: @totalDays;" data-day="@currentDays" data-total="@totalDays"></div>
-                                            </div>
-                                        }
+                                if (startsInDays > 0)
+                                {
+                                    <p class="card-text text-center">Starts in @startsInDays days</p>
+                                }
+                                else
+                                {
+                                    var totalDays = (project.ProjectInfo.ExpiryDate - project.ProjectInfo.StartDate).Days;
+                                    var currentDays = (DateTime.Now - project.ProjectInfo.StartDate).Days;
+                                    currentDays = currentDays < 0 ? 0 : currentDays;
+                                    currentDays = currentDays > totalDays ? totalDays : currentDays;
+
+                                    if (totalDays > 0)
+                                    {
+                                        <div class="progress-container">
+                                            <div role="progressbar" data-type="days" aria-valuenow="@currentDays" aria-valuemin="0" aria-valuemax="@totalDays" style="--day: @currentDays; --total: @totalDays;" data-day="@currentDays" data-total="@totalDays"></div>
+                                        </div>
                                     }
                                 }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row align-items-center">
+                    <div class="col-12 col-lg-4 d-flex justify-content-center align-items-center mt-4 order-1 order-lg-1">
+                        <div class="w-100">
+                            <div class="progress-container">
+                                <div role="progressbar" data-type="percent" aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100" style="--value: @projectStats.FundingProgressPercent;"></div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="row align-items-center">
-                        <div class="col-12 col-lg-4 d-flex justify-content-center align-items-center mt-4 order-1 order-lg-1">
-                            <div class="w-100">
-                                <div class="progress-container">
-                                    <div role="progressbar" data-type="percent" aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100" style="--value: @projectStats.FundingProgressPercent;"></div>
-                                </div>
+                    <div class="col-12 col-lg-8 mt-4 order-2 order-lg-2">
+                        @if (projectStats.Loading)
+                        {
+                            <div class="loader"></div>
+                        }
+                        else
+                        {
+                            <div class="form-control mt-1 d-flex align-items-center">
+                                <Icon IconName="calculator"></Icon>
+                                <p class="card-text ms-2">Total Raised: @Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                             </div>
-                        </div>
-                        <div class="col-12 col-lg-8 mt-4 order-2 order-lg-2">
-                            @if (projectStats.Loading)
+                            <div class="form-control mt-1 d-flex align-items-center">
+                                <Icon IconName="users"></Icon>
+                                <p class="card-text ms-2">Total Investors: @projectStats.TotalInvestors</p>
+                            </div>
+                            @* <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>*@
+                            <div class="form-control mt-1 d-flex align-items-center">
+                                <Icon IconName="calendar"></Icon>
+                                <p class="card-text ms-2">
+                                    @{
+                                        var daysLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
+                                    }
+
+                                    @if (daysLeft >= 0)
+                                    {
+                                        <span>Time Left for Investing: @daysLeft days</span>
+                                    }
+                                    else
+                                    {
+                                        <span>The investing period is over</span>
+                                    }
+
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        }
+    </div>
+
+    <!-- Stages Section -->
+
+    <div class="card card-body mt-4">
+        <div class="d-flex align-items-center">
+            <span class="user-select-none">
+                <Icon IconName="stages"></Icon>
+            </span>
+            <div class="h-100 ms-3">
+                <h5 class="mb-0 font-weight-bolder">
+                    Stages
+                </h5>
+            </div>
+        </div>
+        <div class="table-responsive form-control mt-4">
+            <table class="table align-items-center mb-0">
+                <thead>
+                <tr>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage %</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Release Date</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Days Until Stage</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Amount Per Stage</th>
+                    <!-- Other headers -->
+                </tr>
+                </thead>
+                <tbody>
+                @for (var index = 0; index < project.ProjectInfo.Stages.Count; index++)
+                {
+                    var stage = project.ProjectInfo.Stages[index];
+                    var daysUntilStage = (stage.ReleaseDate - currentDate).Days;
+                    var amountInStage = Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) * stage.AmountToRelease / 100;
+                    <tr>
+                        <td>@(index + 1)</td>
+                        <td>@stage.AmountToRelease %</td>
+                        <td>@stage.ReleaseDate.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @if (daysUntilStage < 0)
                             {
-                                <div class="loader"></div>
+                                <span>Released</span>
                             }
                             else
                             {
-                                <div class="form-control mt-1 d-flex align-items-center">
-                                    <Icon IconName="calculator"></Icon>
-                                    <p class="card-text ms-2">Total Raised: @Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-                                </div>
-                                <div class="form-control mt-1 d-flex align-items-center">
-                                    <Icon IconName="users"></Icon>
-                                    <p class="card-text ms-2">Total Investors: @projectStats.TotalInvestors</p>
-                                </div>
-                                @* <p class="card-text mb-0">Total Seeders: @projectStats.TotalSeeders</p>*@
-                                <div class="form-control mt-1 d-flex align-items-center">
-                                    <Icon IconName="calendar"></Icon>
-                                    <p class="card-text ms-2">
-                                        @if (projectStats.TimeLeft > 0)
-                                        {
-                                            <span>Time Left for Investing: @projectStats.TimeLeft days</span>
-                                        }
-                                        else
-                                        {
-                                            <span>The investing period is over</span>
-                                        }
-                                    </p>
-                                </div>
+                                <span>@daysUntilStage days</span>
                             }
-                        </div>
-                    </div>
-
-                </div>
-            }
+                        </td>
+                        <td>@amountInStage @network.CoinTicker</td>
+                        <!-- Other stage details -->
+                    </tr>
+                }
+                </tbody>
+            </table>
         </div>
-
-        <!-- Stages Section -->
-
-        <div class="card card-body mt-4">
-            <div class="d-flex align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="stages"></Icon>
-                </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Stages
-                    </h5>
-                </div>
-            </div>
-            <div class="table-responsive form-control mt-4">
-                <table class="table align-items-center mb-0">
-                    <thead>
-                        <tr>
-                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage</th>
-                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage %</th>
-                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Release Date</th>
-                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Days Until Stage</th>
-                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Amount Per Stage</th>
-                            <!-- Other headers -->
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for (int index = 0; index < project.ProjectInfo.Stages.Count; index++)
-                        {
-                            var stage = project.ProjectInfo.Stages[index];
-                            var daysUntilStage = (stage.ReleaseDate - currentDate).Days;
-                            var amountInStage = (Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC)) * stage.AmountToRelease / 100;
-                            <tr>
-                                <td>@(index + 1)</td>
-                                <td>@stage.AmountToRelease %</td>
-                                <td>@stage.ReleaseDate.ToString("dd/MM/yyyy")</td>
-                                <td>
-                                    @if (daysUntilStage < 0)
-                                    {
-                                        <span>Released</span>
-                                    }
-                                    else
-                                    {
-                                        <span>@daysUntilStage days</span>
-                                    }
-                                </td>
-                                <td>@amountInStage @network.CoinTicker</td>
-                                <!-- Other stage details -->
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    </div>
 
 
-        <!-- Seeders Section -->
-        @*        <div class="card mb-3">
+    <!-- Seeders Section -->
+    @*        <div class="card mb-3">
     <div class="card-header">
     <h4>Selected Seeders</h4>
     </div>
@@ -259,159 +267,166 @@
     </div>
     </div>*@
 
-        <!-- Actions Section -->
+    <!-- Actions Section -->
 
-        <div class="card card-body mt-4">
-            @if (founder)
-            {
-                <div class="text-center justify-content-center">
-                    <Icon IconName="verified-check" Height="100" Width="100"></Icon>
-                    <p class="mt-4 text-success">Congratulations, you are the founder!</p>
-                    @* TODO Add stats here for pending signatures or unspent funds  *@
+    <div class="card card-body mt-4">
+        @if (founder)
+        {
+            <div class="text-center justify-content-center">
+                <Icon IconName="verified-check" Height="100" Width="100"></Icon>
+                <p class="mt-4 text-success">Congratulations, you are the founder!</p>
+                @* TODO Add stats here for pending signatures or unspent funds  *@
 
-                    <div class="mb-3">
-                        <!-- Buttons Spend Funds and Approve Signature next to each other -->
-                        <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border text-white me-2">Spend Funds</a>
-                        <a href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border">Approve signature</a>
-                    </div>
+                <div class="mb-3">
+                    <!-- Buttons Spend Funds and Approve Signature next to each other -->
+                    <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border text-white me-2">Spend Funds</a>
+                    <a href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border">Approve signature</a>
                 </div>
-            }
-            else if (invested)
-            {
-                <div class="text-center justify-content-center">
-                    <Icon IconName="cup" Height="100" Width="100"></Icon>
-                    <p class="mt-4">
-                        Thank you for your investment in this project!
+            </div>
+        }
+        else if (invested)
+        {
+            <div class="text-center justify-content-center">
+                <Icon IconName="cup" Height="100" Width="100"></Icon>
+                <p class="mt-4">
+                    Thank you for your investment in this project!
 
-                        <a href="@myProjectExplorerLink" target="_blank">Track your transaction on the explorer.</a>
-                    </p>
+                    <a href="@myProjectExplorerLink" target="_blank">Track your transaction on the explorer.</a>
+                </p>
 
-                    <button class="btn btn-border mb-3" @onclick="RecoverFunds">Recover</button>
+                <button class="btn btn-border mb-3" @onclick="RecoverFunds">Recover</button>
+            </div>
+        }
+        else
+        {
+            <div class="text-center justify-content-center mt-4">
+                <Icon IconName="shield-star" Height="100" Width="100"></Icon>
+                <p class="mt-4">
+                    Seize the opportunity to invest in this project.
+                </p>
+                @{
+                    var timeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
+
+                    if (timeLeft <= 0 && network.NetworkType == NetworkType.Testnet)
+                    {
+                        // on testnet we will not disable the ability to invest at all
+                        timeLeft = 1;
+                    }
+                }
+                <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON"
+                        @onclick="InvestInProject"
+                        disabled="@(timeLeft <= 0 ? "disabled" : null)"
+                        title="@(timeLeft <= 0 ? "The investing period is over" : null)">
+                    @if (timeLeft > 0)
+                    {
+                        <text>Invest Now</text>
+                    }
+                    else
+                    {
+                        <text>The investing period is over</text>
+                    }
+                </button>
+            </div>
+        }
+    </div>
+
+
+    <!-- Relays Section -->
+    <div class="card card-body mt-4">
+        <div class="d-flex align-items-center">
+            <span class="user-select-none">
+                <Icon IconName="relay"></Icon>
+            </span>
+            <div class="h-100 ms-3">
+                <h5 class="mb-0 font-weight-bolder">
+                    Nostr
+                </h5>
+            </div>
+        </div>
+        @if (project.ProjectInfo.NostrPubKey != null)
+        {
+            <div class="mb-4 mt-4">
+
+                @{
+                    var Npub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey);
+                }
+                <label for="NostrNpubPublicKey" class="form-label">Project NOSTR public key (npub)</label>
+
+                <div class="input-group">
+                    <InputText id="NostrNpubPublicKey" @bind-Value="@Npub" class="form-control" placeholder="@Npub" readonly/>
+                    <button @onclick="OpenInBrowseAsync" class="btn btn-border">
+                        <Icon IconName="link"></Icon>
+                    </button>
                 </div>
-            }
-            else
-            {
-                <div class="text-center justify-content-center mt-4">
-                    <Icon IconName="shield-star" Height="100" Width="100"></Icon>
-                    <p class="mt-4">
-                        Seize the opportunity to invest in this project.
-                    </p>
-                    <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON"
-                            @onclick="InvestInProject"
-                            disabled="@(projectStats.TimeLeft == 0 ? "disabled" : null)"
-                            title="@(projectStats.TimeLeft == 0 ? "The investing period is over" : null)">
-                        @if (projectStats.TimeLeft > 0)
-                        {
-                            <text>Invest Now</text>
-                        }
-                        else
-                        {
-                            <text>The investing period is over</text>
-                        }
+                <br/>
+                <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
+                <div class="input-group">
+                    <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly/>
+                    <button @onclick="OpenInBrowseAsync" class="btn btn-border">
+                        <Icon IconName="link"></Icon>
                     </button>
                 </div>
 
-            }
-        </div>
 
+                @if (founder)
+                {
+                    <button @onclick="ShowNsecAsync" class="btn btn-border mt-4">Show private key</button>
 
-        <!-- Relays Section -->
-        <div class="card card-body mt-4">
-            <div class="d-flex align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="relay"></Icon>
-                </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Nostr
-                    </h5>
-                </div>
-            </div>
-            @if (project.ProjectInfo.NostrPubKey != null)
-            {
-                <div class="mb-4 mt-4">
-
-                    @{
-                        var Npub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey);
-                    }
-                    <label for="NostrNpubPublicKey" class="form-label">Project NOSTR public key (npub)</label>
-
-                    <div class="input-group">
-                        <InputText id="NostrNpubPublicKey" @bind-Value="@Npub" class="form-control" placeholder="@Npub" readonly />
-                        <button @onclick="OpenInBrowseAsync" class="btn btn-border">
-                            <Icon IconName="link"></Icon>
-                        </button>
-                    </div>
-                    <br />
-                    <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
-                    <div class="input-group">
-                        <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                        <button @onclick="OpenInBrowseAsync" class="btn btn-border">
-                            <Icon IconName="link"></Icon>
-                        </button>
-                    </div>
-
-
-                    @if (founder)
+                    @if (isGeneratingNsec)
                     {
-                        <button @onclick="ShowNsecAsync" class="btn btn-border mt-4">Show private key</button>
-
-                        @if (isGeneratingNsec)
-                        {
-                            <div class="d-flex justify-content-center mt-4">
-                                <div class="loader"></div>
-                            </div>
-                        }
-
-                        @if (!string.IsNullOrEmpty(errorMessage))
-                        {
-                            <div class="mt-2 text-danger">
-                                <span>@errorMessage</span>
-                            </div>
-                        }
-
-                        @if (!string.IsNullOrEmpty(NostrHexSecKey) || !string.IsNullOrEmpty(NostrNsecSecKey))
-                        {
-                            <br />
-                            <label for="NostrNsecSecKey" class="form-label mt-4">Project NOSTR private key (nsec)</label>
-                            <div class="input-group">
-                                <InputText id="NostrNsecSecKey" @bind-Value="NostrNsecSecKey" class="form-control nsec-box" readonly />
-                                <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border">
-                                    <Icon IconName="copy"></Icon>
-                                </button>
-                            </div>
-
-                            <br />
-                            <label for="NostrHexSecKey" class="form-label mt-4">Project NOSTR private key (hex)</label>
-                            <div class="input-group">
-                                <InputText id="NostrHexSecKey" @bind-Value="NostrHexSecKey" class="form-control nsec-box" readonly />
-                                <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border">
-                                    <Icon IconName="copy"></Icon>
-                                </button>
-                            </div>
-                        }
+                        <div class="d-flex justify-content-center mt-4">
+                            <div class="loader"></div>
+                        </div>
                     }
-                </div>
-            }
 
-            <br />
-            <h6>Relays</h6>
-            @foreach (var relay in NostrClients)
-            {
-                <a href="@relay" target="_blank">
-                    <div class="form-control mt-2 d-flex align-items-center">
-                        <Icon IconName="menu_open"></Icon>
-                        <p class="card-text ms-2">@relay</p>
-                    </div>
-                </a>
-            }
-        </div>
-    }
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="mt-2 text-danger">
+                            <span>@errorMessage</span>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(NostrHexSecKey) || !string.IsNullOrEmpty(NostrNsecSecKey))
+                    {
+                        <br/>
+                        <label for="NostrNsecSecKey" class="form-label mt-4">Project NOSTR private key (nsec)</label>
+                        <div class="input-group">
+                            <InputText id="NostrNsecSecKey" @bind-Value="NostrNsecSecKey" class="form-control nsec-box" readonly/>
+                            <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border">
+                                <Icon IconName="copy"></Icon>
+                            </button>
+                        </div>
+
+                        <br/>
+                        <label for="NostrHexSecKey" class="form-label mt-4">Project NOSTR private key (hex)</label>
+                        <div class="input-group">
+                            <InputText id="NostrHexSecKey" @bind-Value="NostrHexSecKey" class="form-control nsec-box" readonly/>
+                            <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border">
+                                <Icon IconName="copy"></Icon>
+                            </button>
+                        </div>
+                    }
+                }
+            </div>
+        }
+
+        <br/>
+        <h6>Relays</h6>
+        @foreach (var relay in NostrClients)
+        {
+            <a href="@relay" target="_blank">
+                <div class="form-control mt-2 d-flex align-items-center">
+                    <Icon IconName="menu_open"></Icon>
+                    <p class="card-text ms-2">@relay</p>
+                </div>
+            </a>
+        }
+    </div>
+}
 </div>
 
 @code {
-    [Parameter]
-    public string ProjectId { get; set; }
+    [Parameter] public string ProjectId { get; set; }
 
     private Project? project;
 
@@ -424,15 +439,15 @@
     private string NostrHexSecKey { get; set; } = string.Empty;
 
 
-    private bool isGeneratingNsec = false;
+    private bool isGeneratingNsec;
     private string errorMessage = string.Empty;
 
     private string error;
 
     private List<(string Hash, int Amount)> SelectedSeeders = new List<(string hash, int amount)>
     {
-    { (new uint256().ToString(), 10) },
-    { (new uint256().ToString(), 20) },
+        (new uint256().ToString(), 10),
+        (new uint256().ToString(), 20)
     };
 
     public class ProjectStats
@@ -443,60 +458,70 @@
         public int TotalSeeders { get; set; }
         public int TimeLeft { get; set; }
         public int FundingProgressPercent { get; set; }
+    }
 
+    readonly ProjectStats projectStats = new()
+    {
+        Loading = true,
+        TimeLeft = 0,
+        TotalInvestors = 0,
+        TotalRaised = 0,
+        TotalSeeders = 0,
+        FundingProgressPercent = 0
     };
 
-    ProjectStats projectStats = new ProjectStats
-        {
-            Loading = true,
-            TimeLeft = 0,
-            TotalInvestors = 0,
-            TotalRaised = 0,
-            TotalSeeders = 0,
-            FundingProgressPercent = 0,
-        };
-
-    bool founder = false;
-    bool invested = false;
-    bool findInProgress = false;
-    DateTime currentDate = DateTime.UtcNow;
+    bool founder;
+    bool invested;
+    bool findInProgress;
+    readonly DateTime currentDate = DateTime.UtcNow;
 
     private List<string> NostrClients = new();
 
     protected override async Task OnInitializedAsync()
     {
-        NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
+        projectStats.Loading = true;
+        findInProgress = false;
+        error = string.Empty;
 
-        project = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+        try
+        {
+            NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
 
-        if (project is InvestorProject findProject)
-        {
-            invested = findProject.InvestedInProject(); // TODO: need to scan for the invested projects when opening on a new browser
-            myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{findProject.TransactionId}";
-        }
-        else
-        {
             project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
-
             if (project != null)
             {
                 founder = true;
+                projectStats.Loading = false;
+                SetProjectLinksAndRefreshBalance();
+                return;
             }
-            else
+
+            project = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+            if (project is InvestorProject investorProject)
             {
-                project = SessionStorage.GetProjectById(ProjectId);
+                invested = investorProject.InvestedInProject();
+                myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investorProject.TransactionId}";
+                projectStats.Loading = false;
+                return;
+            }
 
-                if (project == null)
-                {
-                    findInProgress = true;
+            project = SessionStorage.GetProjectById(ProjectId);
+            if (project != null)
+            {
+                await SetProjectLinksAndRefreshBalance();
+                projectStats.Loading = false;
+                StateHasChanged();
+                return;
+            }
 
-                    var projectIndexerData = await _IndexerService.GetProjectByIdAsync(ProjectId);
+            findInProgress = true;
+            var projectIndexerData = await _IndexerService.GetProjectByIdAsync(ProjectId);
 
-                    if (projectIndexerData != null)
-                    {
-                        project = new Project { CreationTransactionId = projectIndexerData.TrxId };
-                       
-                        _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(x =>
+            if (projectIndexerData != null)
+            {
+                project = new Project { CreationTransactionId = projectIndexerData.TrxId };
+
+                _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(x =>
                             {
                                 if (project is { ProjectInfo : null })
                                     project.ProjectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
@@ -533,17 +558,31 @@
                         StateHasChanged();
                     }
                 }
-            }
-        }
-
-        if (project?.CreationTransactionId != null)
+            
+                
+        catch (Exception ex)
         {
-            projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
-            await RefreshBalance();
+            error = $"An error occurred: {ex.Message}";
+            projectStats.Loading = false;
+            StateHasChanged();
         }
     }
-    
-    
+
+    private async Task SetProjectLinksAndRefreshBalance()
+    {
+        if (!string.IsNullOrEmpty(project?.CreationTransactionId))
+        {
+            projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
+        }
+        else
+        {
+            error = "Project created; awaiting confirmation. Check back shortly.";
+        }
+
+        await RefreshBalance();
+        StateHasChanged();
+    }
+
     private async Task RefreshBalance()
     {
         try
@@ -559,24 +598,33 @@
                     projectStats.TotalInvestors = (int)data.InvestorCount;
                     projectStats.TotalRaised = data.AmountInvested;
 
-                    projectStats.TimeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
-                    if (projectStats.TimeLeft < 0)
-                        projectStats.TimeLeft = 0;
+                    // Calculate time left based on the project start and expiry dates
+                    if (DateTime.UtcNow < project.ProjectInfo.StartDate)
+                    {
+                        // Project has not started yet, so time left is until the start date
+                        projectStats.TimeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
+                    }
+                    else
+                    {
+                        // Project has expired
+                        projectStats.TimeLeft = 0; // Ensure no negative time left
+                    }
 
+                    // Calculate funding progress as a percentage of the target amount
                     var targetSat = Money.Coins(project.ProjectInfo.TargetAmount).Satoshi;
-                    projectStats.FundingProgressPercent = (int)((projectStats.TotalRaised * 100) / targetSat);
+                    projectStats.FundingProgressPercent = (int)(projectStats.TotalRaised * 100 / targetSat);
                 }
             }
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage(ex.Message);
+            notificationComponent.ShowErrorMessage(ex.Message,ex);
         }
         finally
         {
             projectStats.Loading = false;
+            StateHasChanged();
         }
-
     }
 
     private async Task RecoverFunds()
@@ -597,10 +645,7 @@
     {
         if (!passwordComponent.HasPassword())
         {
-            passwordComponent.ShowPassword(async () =>
-            {
-                await GenerateNsec();
-            });
+            passwordComponent.ShowPassword(async () => { await GenerateNsec(); });
         }
         else
         {
@@ -620,7 +665,7 @@
             {
                 var words = await passwordComponent.GetWalletAsync();
                 var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, founderProject.ProjectIndex);
-                NostrHexSecKey = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes());
+                NostrHexSecKey = Encoders.Hex.EncodeData(nostrKey.ToBytes());
                 NostrNsecSecKey = NostrHelper.ConvertHexToNsec(NostrHexSecKey)!;
 
                 StateHasChanged();
@@ -642,7 +687,6 @@
             StateHasChanged();
         }
     }
-
 
 
     private async Task CopyNsecSecKeyToClipboardAsync()
@@ -676,11 +720,11 @@
 
         // Reopen password prompt
         passwordComponent.ShowPassword(async () =>
-     {
-     isGeneratingNsec = true;
-     StateHasChanged();
-     await GenerateNsec();
-     });
+        {
+            isGeneratingNsec = true;
+            StateHasChanged();
+            await GenerateNsec();
+        });
     }
 
     private async void OpenInBrowseAsync()
@@ -704,4 +748,5 @@
         string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
     }
+
 }

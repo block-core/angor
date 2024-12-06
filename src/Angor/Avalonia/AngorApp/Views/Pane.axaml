@@ -1,0 +1,23 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:AngorApp.Views">
+    <Design.PreviewWith>
+        <controls:Pane Width="100" Height="200" Margin="10" ClipToBounds="False">
+            Salud
+        </controls:Pane>
+    </Design.PreviewWith>
+
+    <ControlTheme x:Key="{x:Type controls:Pane}" TargetType="controls:Pane">
+        <Setter Property="ClipToBounds" Value="False" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{StaticResource PanelBackground}" CornerRadius="10" ClipToBounds="True">
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" BlurRadius="10" Opacity="0.5" OffsetX="2" OffsetY="2" />
+                    </Border.Effect>
+                    <ContentPresenter Margin="10" Content="{TemplateBinding Content}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+</ResourceDictionary>

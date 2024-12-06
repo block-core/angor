@@ -1,0 +1,61 @@
+name: Deploy (Production)
+
+on:
+  release:
+    types: [published, prereleased]
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-release:
+    name: Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Get Release Info
+      id: get_release
+      run: |
+        echo "release_tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+        echo "release_name=${GITHUB_REPOSITORY#*/}" >> $GITHUB_OUTPUT
+
+    - name: Download Release Assets
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # Get release ID
+        RELEASE_ID=$(gh api \
+          -H "Accept: application/vnd.github+json" \
+          /repos/${{ github.repository }}/releases/tags/${{ steps.get_release.outputs.release_tag }} \
+          --jq '.id')
+        
+        # Download Linux asset
+        gh release download ${{ steps.get_release.outputs.release_tag }} \
+          --pattern "*linux-x64.zip" \
+          --dir ./downloads
+
+    - name: List Files
+      run: ls -R
+
+    - name: Unzip Artifacts
+      run: |
+        mkdir -p dist
+        unzip './downloads/*.zip' -d dist/
+      shell: bash
+
+    - name: List Files
+      run: ls -R
+
+    - name: Copy index.html to 404.html
+      run: cp dist/wwwroot/index.html dist/wwwroot/404.html
+      
+    - name: Add .nojekyll file
+      run: touch dist/wwwroot/.nojekyll
+
+    - name: Deploy to Github Pages
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+          branch: gh-pages 
+          folder: dist/wwwroot
