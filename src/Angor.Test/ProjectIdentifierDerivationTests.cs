@@ -1,7 +1,5 @@
-using System;
 using NBitcoin;
 using NBitcoin.Secp256k1;
-using Xunit;
 
 namespace Angor.Shared.Tests
 {
@@ -19,8 +17,8 @@ namespace Angor.Shared.Tests
             var ecPubKey2 = ecPrivKey2.CreatePubKey();
 
             // Act
-            var sharedSecretFounder = ProjectIdentifierDerivation.ComputeSharedSecretFounder(ecPrivKey1, ecPubKey2);
-            var sharedSecretAngor = ProjectIdentifierDerivation.ComputeSharedSecretAngor(ecPubKey1, ecPrivKey2);
+            var sharedSecretFounder = ProjectIdentifierDerivation.ComputeSharedSecretPublicKeySender(ecPrivKey1, ecPubKey2);
+            var sharedSecretAngor = ProjectIdentifierDerivation.ComputeSharedSecretPrivateKeyReceiver(ecPubKey1, ecPrivKey2);
 
             // Assert
             Assert.Equal(sharedSecretFounder.ToBytes(), sharedSecretAngor.CreatePubKey().ToBytes());
