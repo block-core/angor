@@ -5,6 +5,7 @@
 @using Angor.Client.Storage
 @using Angor.Shared
 @using Angor.Shared.Models
+@using Angor.Shared.Services
 @using Blockcore.NBitcoin
 @using Blockcore.Networks
 @inherits BaseComponent
@@ -20,7 +21,7 @@
 @inject NavMenuState NavMenuState
 @inject IEncryptionService _encryptionService
 @inject IClipboardService ClipboardService
-
+@inject IIndexerService indexerService
 
 <PageTitle>Wallet and balances</PageTitle>
 <NotificationComponent @ref="notificationComponent"/>
@@ -1202,12 +1203,9 @@ else
 
             res.EnsureSuccessStatusCode();
 
-            var trxhex = await res.Content.ReadAsStringAsync();
-            var trx = network.CreateTransaction(trxhex);
-            var unconfirmedInboundFunds = _cacheStorage.GetUnconfirmedInboundFunds();
-            unconfirmedInboundFunds.Add(new UtxoData { PendingSpent = true, address = receiveAddress, value = trx.Outputs.FirstOrDefault()?.Value.Satoshi ?? Money.Coins(50).Satoshi, outpoint = new Outpoint(trx.GetHash().ToString(), 0) });
-            _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInboundFunds);
-            accountBalanceInfo.UpdateAccountBalanceInfo(accountBalanceInfo.AccountInfo, unconfirmedInboundFunds);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+
+            await RefreshBalance();
         }
         catch (Exception e)
         {
