@@ -63,9 +63,9 @@ public class FounderTransactionActions : IFounderTransactionActions
             var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
-            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}");
-
             var sig = key.SignTaprootKeySpend(hash, sigHash).ToString();
+
+            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}; signature-hex={sig}");
 
             info.Signatures.Add(new SignatureInfoItem { Signature = sig, StageIndex = stageIndex });
         }
