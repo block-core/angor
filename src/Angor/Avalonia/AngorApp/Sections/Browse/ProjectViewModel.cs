@@ -15,8 +15,8 @@ public class ProjectViewModel : ReactiveObject
 
     public string Name => project.Name;
     public string ShortDescription => project.ShortDescription;
-    public object Icon => project.Icon;
-    public object Picture => project.Picture;
+    public Uri Icon => project.Icon;
+    public Uri Picture => project.Picture;
 
     public ReactiveCommand<Unit, Unit> GoToDetails { get; set; }
 }

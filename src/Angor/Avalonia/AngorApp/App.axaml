@@ -1,15 +1,13 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:AngorApp"
-             xmlns:sections="clr-namespace:AngorApp.Sections"
-             xmlns:navigation="clr-namespace:Zafiro.Avalonia.Controls.Navigation;assembly=Zafiro.Avalonia"
              x:Class="AngorApp.App"
              RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+    <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
 
-        <local:ViewLocator/>
+        <local:ViewLocator />
 
     </Application.DataTemplates>
 
@@ -17,17 +15,19 @@
         <FluentTheme />
         <StyleInclude Source="Styles.axaml" />
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
+        <StyleInclude Source="Controls/Pane.axaml" />
         <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
     </Application.Styles>
-             
+
     <Application.Resources>
         <ResourceDictionary>
-            
+
             <ResourceDictionary.MergedDictionaries>
-                <MergeResourceInclude Source="Controls/Pane.axaml" />
                 <MergeResourceInclude Source="Controls/IconButton.axaml" />
+                <MergeResourceInclude Source="Controls/Header.axaml" />
+                <MergeResourceInclude Source="Controls/SectionItem.axaml" />
             </ResourceDictionary.MergedDictionaries>
-            
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

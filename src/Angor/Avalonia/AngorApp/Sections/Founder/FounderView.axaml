@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             xmlns:angorApp="clr-namespace:AngorApp"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.FounderView"
              xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
@@ -50,8 +49,8 @@
                     </controls:IconButton.Icon>
                 </controls:IconButton>
                 <StackPanel Spacing="4" DockPanel.Dock="Left">
-                    <TextBlock Classes="PaneTitle" Text="Founder" FontWeight="Regular" FontSize="18" />
-                    <TextBlock TextWrapping="Wrap" Classes="PaneTitle" Text="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required" FontWeight="Regular" VerticalAlignment="Center" FontSize="14" />
+                    <TextBlock Text="Founder" FontWeight="Regular" FontSize="18" />
+                    <TextBlock TextWrapping="Wrap" Text="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required" FontWeight="Regular" VerticalAlignment="Center" FontSize="14" />
                 </StackPanel>
             </DockPanel>
         </controls:Pane>

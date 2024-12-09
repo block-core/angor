@@ -1,6 +1,6 @@
 namespace AngorApp.Sections.Browse.Details;
 
-public class ProjectDetailsViewModel(Project project) : ReactiveObject
+public class ProjectDetailsViewModel(Project project) : ReactiveObject, IProjectDetailsViewModel
 {
     public string Name => project.Name;
     public string ShortDescription => project.ShortDescription;

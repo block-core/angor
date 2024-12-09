@@ -20,8 +20,8 @@
     <controls:Pane Margin="50">
         <StackPanel Spacing="10" VerticalAlignment="Center">
             <Svg Path="/Assets/angor-icon.svg" />
-            <TextBlock Classes="PaneTitle" FontWeight="Bold">Welcome to Angor</TextBlock>
-            <TextBlock Classes="Regular">A decentralized crowdfunding protocol built on Bitcoin and Nostr</TextBlock>
+            <TextBlock FontWeight="Bold">Welcome to Angor</TextBlock>
+            <TextBlock>A decentralized crowdfunding protocol built on Bitcoin and Nostr</TextBlock>
         </StackPanel>
     </controls:Pane>
 </UserControl>

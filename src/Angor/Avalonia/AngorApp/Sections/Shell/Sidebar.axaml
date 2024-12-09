@@ -33,6 +33,7 @@
         </Style>
         <Style Selector="controls|Pane">
             <Setter Property="Width" Value="{StaticResource CollapsedWidth}" />
+            <Setter Property="Padding" Value="10"></Setter>
             <Setter Property="Transitions">
                 <Setter.Value>
                     <Transitions>

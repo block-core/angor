@@ -41,8 +41,8 @@
                     <i:Icon Value="fa-wallet" Margin="10" />
                     <Button Content="Wallet Words" DockPanel.Dock="Right" />
                     <StackPanel Spacing="4" DockPanel.Dock="Left">
-                        <TextBlock Classes="PaneTitle" Text="Wallet" FontWeight="Regular" FontSize="18" />
-                        <TextBlock Classes="PaneTitle" Text="Wallet and balances" FontWeight="Regular" VerticalAlignment="Center" FontSize="14" />
+                        <TextBlock Text="Wallet" FontWeight="Regular" FontSize="18" />
+                        <TextBlock Text="Wallet and balances" FontWeight="Regular" VerticalAlignment="Center" FontSize="14" />
                     </StackPanel>
                 </DockPanel>
             </controls:Pane>
@@ -52,7 +52,7 @@
                     <i:Icon Value="fa-database" Margin="10"></i:Icon>
                     <Button DockPanel.Dock="Right" i:Attached.Icon="fa-rotate" />
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                        <TextBlock Classes="PaneTitle" Text="0 TBTC" FontSize="18" FontWeight="Bold" />
+                        <TextBlock  Text="0 TBTC" FontSize="18" FontWeight="Bold" />
                         <Button Content="Get Some Test Coins" />
                     </StackPanel>
                 </DockPanel>
@@ -82,7 +82,7 @@
             <!-- Send Section -->
             <controls:Pane>
                 <StackPanel Spacing="10">
-                    <TextBlock Classes="PaneTitle" Text="Send" />
+                    <TextBlock  Text="Send" />
                     <StackPanel Spacing="10">
                         <TextBox Classes="clearButton" Watermark="Enter address" MaxWidth="300" AcceptsReturn="False">
                             <TextBox.InnerLeftContent>
@@ -101,7 +101,7 @@
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top">
                         <i:Icon Value="fa-solid fa-cube" Margin="10" />
-                        <TextBlock Classes="PaneTitle">Addresses and amounts</TextBlock>
+                        <TextBlock >Addresses and amounts</TextBlock>
                     </DockPanel>
                     <Border Padding="15" Margin="10" BorderBrush="{StaticResource Level3}" BorderThickness="1" CornerRadius="8">
                         <Border.Styles>

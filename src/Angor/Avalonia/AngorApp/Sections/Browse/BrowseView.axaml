@@ -2,12 +2,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:AngorApp.Controls"
+             xmlns:c="clr-namespace:AngorApp.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Browse.BrowseView"
-             xmlns:ail="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              x:DataType="browse:IBrowseViewModel" ClipToBounds="False">
 
     <Design.DataContext>
@@ -40,59 +39,48 @@
 
     <StackPanel Spacing="20">
 
-        <controls:Pane Padding="15" CornerRadius="5">
+        <c:Pane Padding="15" CornerRadius="5">
             <DockPanel>
-                <i:Icon Value="fa-magnifying-glass" Margin="10" />
-                <StackPanel Spacing="4" DockPanel.Dock="Left">
-                    <TextBlock Classes="PaneTitle" Text="Browse" FontWeight="Regular" FontSize="18" />
-                    <TextBlock Classes="PaneTitle" Text="Browse Projects" FontWeight="Regular" VerticalAlignment="Center" FontSize="14" />
-                </StackPanel>
+               <c:SectionItem Content="Browse">
+                   <c:SectionItem.LeftContent>
+                       <i:Icon Value="fa-wallet" />
+                   </c:SectionItem.LeftContent>
+               </c:SectionItem>
             </DockPanel>
-        </controls:Pane>
+        </c:Pane>
 
-        <controls:Pane>
+        <c:Pane>
             <TextBox Watermark="Enter Angor project identifier">
                 <TextBox.InnerRightContent>
                     <i:Icon Value="fa-magnifying-glass" Margin="10" />
                 </TextBox.InnerRightContent>
             </TextBox>
-        </controls:Pane>
+        </c:Pane>
 
         <ItemsControl ItemsSource="{Binding Projects}" Margin="-20 -20">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <controls:Pane Margin="20" Theme="{StaticResource ItemPane}">
+                    <c:Pane Margin="20" IsHeaderVisible="True" 
+                            HeaderBackground="{Binding Picture}" 
+                            HeaderIcon="{Binding Icon}">
+                        <c:Pane.Title>
+                            <TextBlock Theme="{StaticResource Highlighted}" FontSize="20" Text="{Binding Name}" />
+                        </c:Pane.Title>
+                        <c:Pane.TitleIcon>
+                            <i:Icon Value="fa-wallet" FontSize="20" />
+                        </c:Pane.TitleIcon>
                         <DockPanel>
-                            <StackPanel VerticalAlignment="Center" DockPanel.Dock="Bottom" Margin="20">
-                                <StackPanel>
-                                    <TextBlock Foreground="Orange" FontSize="20" Text="{Binding Name}" />
-                                    <TextBlock Classes="Regular" Text="{Binding ShortDescription}" />
-                                </StackPanel>
+                            <StackPanel VerticalAlignment="Center" DockPanel.Dock="Bottom">
+                                <TextBlock Text="{Binding ShortDescription}" />
                                 <Separator Margin="0 10" />
-                                <controls:IconButton Command="{Binding GoToDetails}" HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
-                                    <controls:IconButton.Icon>
+                                <c:IconButton Command="{Binding GoToDetails}" HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
+                                    <c:IconButton.Icon>
                                         <i:Icon Value="fa-folder" />
-                                    </controls:IconButton.Icon>
-                                </controls:IconButton>
+                                    </c:IconButton.Icon>
+                                </c:IconButton>
                             </StackPanel>
-
-                            <Panel>
-                                <Image Height="200" VerticalAlignment="Top" Stretch="UniformToFill" ail:ImageLoader.Source="{Binding Picture}" ClipToBounds="True" />
-                                <Panel Height="100" Width="100" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10 20">
-                                    <Ellipse Fill="White" Width="100" Height="100"  />
-                                    <ail:AdvancedImage Stretch="UniformToFill" Source="{Binding Icon}">
-                                        <ail:AdvancedImage.Clip>
-                                            <EllipseGeometry Center="50,50" RadiusX="50" RadiusY="50" />
-                                        </ail:AdvancedImage.Clip>
-                                    </ail:AdvancedImage>
-                                    <Ellipse Stroke="White" StrokeThickness="5" Width="100" Height="100"  />
-                                    <Panel.Effect>
-                                        <DropShadowEffect Color="Black" BlurRadius="10" Opacity="0.4" OffsetX="2" OffsetY="2" />
-                                    </Panel.Effect>
-                                </Panel>
-                            </Panel>
                         </DockPanel>
-                    </controls:Pane>
+                    </c:Pane>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
             <ItemsControl.ItemsPanel>
@@ -102,11 +90,11 @@
             </ItemsControl.ItemsPanel>
         </ItemsControl>
 
-        <controls:IconButton Command="{Binding OpenHub}" Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="ANGOR HUB">
-            <controls:IconButton.Icon>
+        <c:IconButton Command="{Binding OpenHub}" Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="ANGOR HUB">
+            <c:IconButton.Icon>
                 <i:Icon Value="fa-magnifying-glass" />
-            </controls:IconButton.Icon>
-        </controls:IconButton>
+            </c:IconButton.Icon>
+        </c:IconButton>
 
     </StackPanel>
 </UserControl>

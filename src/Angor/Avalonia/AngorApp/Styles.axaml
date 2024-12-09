@@ -1,10 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Design.PreviewWith>
-        <Border Padding="20">
-            <!-- Add Controls for Previewer Here -->
-        </Border>
-    </Design.PreviewWith>
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:AngorApp.Controls"
+        xmlns:avalonia="https://github.com/projektanker/icons.avalonia">
 
     <Styles.Resources>
         <Color x:Key="Level1">#F5FDFF</Color>
@@ -12,20 +9,45 @@
         <Color x:Key="Level3">#C7DBDF</Color>
         <Color x:Key="Level4">#1F5D6A</Color>
         <Color x:Key="Level5">#022229</Color>
+        
         <SolidColorBrush x:Key="SystemRegionBrush" Color="{StaticResource Level3}" />
         <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource Level3}" />
-        
+
+        <ControlTheme x:Key="Regular" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Level4}" />
+        </ControlTheme>
+
+        <ControlTheme x:Key="PaneTitle" TargetType="TextBlock" BasedOn="{StaticResource Regular}">
+            <Setter Property="FontWeight" Value="Bold" />
+        </ControlTheme>
+
+        <ControlTheme x:Key="Highlighted" TargetType="TextBlock" BasedOn="{StaticResource Regular}">
+            <Setter Property="Foreground" Value="Orange" />
+        </ControlTheme>
+
     </Styles.Resources>
+
+    <!-- <Style Selector="TextBlock"> -->
+    <!--     <Setter Property="FontSize" Value="16" /> -->
+    <!--     <Setter Property="Foreground" Value="{StaticResource Level5}" /> -->
+    <!-- </Style> -->
     
-    <Style Selector="TextBlock.PaneTitle">
-        <Setter Property="FontSize" Value="16" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="Foreground" Value="{StaticResource Level4}" />
+    <Style Selector="avalonia|Icon">
+        <Setter Property="Foreground" Value="{StaticResource Level5}" />
     </Style>
     
-    <Style Selector="TextBlock.Regular">
-        <Setter Property="FontSize" Value="16" />
-        <Setter Property="Foreground" Value="{StaticResource Level4}" />
+    <Style Selector="c|Pane c|SectionItem avalonia|Icon">
+        <Setter Property="FontSize" Value="36" />
     </Style>
     
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <StackPanel>
+                <TextBlock Theme="{StaticResource PaneTitle}">Pane Title</TextBlock>
+                <TextBlock Theme="{StaticResource Regular}">Regular</TextBlock>
+                <TextBlock Theme="{StaticResource Highlighted}">Highlighted</TextBlock>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+
 </Styles>

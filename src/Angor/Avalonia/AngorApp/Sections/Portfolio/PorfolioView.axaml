@@ -60,8 +60,8 @@
                     </controls:IconButton.Icon>
                 </controls:IconButton>
                 <StackPanel Spacing="4" DockPanel.Dock="Left">
-                    <TextBlock Classes="PaneTitle" Text="Portfolio" FontWeight="Regular" FontSize="18" />
-                    <TextBlock TextWrapping="Wrap" Classes="PaneTitle" Text="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required" FontWeight="Regular" VerticalAlignment="Center"
+                    <TextBlock Text="Portfolio" FontWeight="Regular" FontSize="18" />
+                    <TextBlock TextWrapping="Wrap" Text="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required" FontWeight="Regular" VerticalAlignment="Center"
                                FontSize="14" />
                 </StackPanel>
             </DockPanel>
@@ -73,8 +73,8 @@
                     <controls:Pane>
                         <StackPanel>
                             <i:Icon Value="fa-solid fa-money-bills"></i:Icon>
-                            <TextBlock Classes="PaneTitle" Text="Funded projects"></TextBlock>
-                            <TextBlock Classes="Regular" Text="0" />
+                            <TextBlock Text="Funded projects"></TextBlock>
+                            <TextBlock Text="0" />
                         </StackPanel>
                     </controls:Pane>
                 </DataTemplate>
