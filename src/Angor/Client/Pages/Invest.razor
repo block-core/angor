@@ -374,6 +374,7 @@ else
     TransactionInfo? signedTransaction;
     Transaction unSignedTransaction;
     string InvestorPubKey;
+    private ProjectValidationService validationService = new ProjectValidationService();
 
 
     private FeeData feeData = new();
@@ -387,6 +388,13 @@ else
 
         Project? findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
+        if (project == null || !validationService.CanInvest(project))
+        {
+            notificationComponent.ShowNotificationMessage("You cannot invest in this project.", 5);
+            NavigationManager.NavigateTo($"/view/{ProjectId}");
+            return;
+        }
+        
         if (findProject != null)
         {
             var investmentProject = findProject as InvestorProject;

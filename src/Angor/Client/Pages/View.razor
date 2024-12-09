@@ -313,18 +313,11 @@ else
                         timeLeft = 1;
                     }
                 }
-                <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON"
+                <button class="btn btn-border mb-3"
                         @onclick="InvestInProject"
-                        disabled="@(timeLeft <= 0 ? "disabled" : null)"
-                        title="@(timeLeft <= 0 ? "The investing period is over" : null)">
-                    @if (timeLeft > 0)
-                    {
-                        <text>Invest Now</text>
-                    }
-                    else
-                    {
-                        <text>The investing period is over</text>
-                    }
+                        disabled="@(project == null || !validationService.CanInvest(project))"
+                        title="@(validationService.CanInvest(project) ? null : "Investment is not allowed for this project.")">
+                    Invest Now
                 </button>
             </div>
         }
@@ -441,6 +434,8 @@ else
 
     private bool isGeneratingNsec;
     private string errorMessage = string.Empty;
+    private ProjectValidationService validationService = new ProjectValidationService();
+
 
     private string error;
 
@@ -748,5 +743,9 @@ else
         string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
     }
+    
 
+
+    
 }
+
