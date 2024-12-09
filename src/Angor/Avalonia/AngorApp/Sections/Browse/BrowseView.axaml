@@ -4,12 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Browse.BrowseView"
              xmlns:ail="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             xmlns:views="clr-namespace:AngorApp.Views"
              x:DataType="browse:IBrowseViewModel" ClipToBounds="False">
 
     <Design.DataContext>
@@ -71,7 +69,7 @@
                                     <TextBlock Classes="Regular" Text="{Binding ShortDescription}" />
                                 </StackPanel>
                                 <Separator Margin="0 10" />
-                                <controls:IconButton HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
+                                <controls:IconButton Command="{Binding GoToDetails}" HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
                                     <controls:IconButton.Icon>
                                         <i:Icon Value="fa-folder" />
                                     </controls:IconButton.Icon>
@@ -92,7 +90,6 @@
                                         <DropShadowEffect Color="Black" BlurRadius="10" Opacity="0.4" OffsetX="2" OffsetY="2" />
                                     </Panel.Effect>
                                 </Panel>
-                                
                             </Panel>
                         </DockPanel>
                     </controls:Pane>

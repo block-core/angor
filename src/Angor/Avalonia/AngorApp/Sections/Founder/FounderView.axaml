@@ -7,7 +7,6 @@
              xmlns:angorApp="clr-namespace:AngorApp"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.FounderView"
-             xmlns:views="clr-namespace:AngorApp.Views"
              xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
              xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
              x:DataType="browse:IBrowseViewModel" ClipToBounds="False">

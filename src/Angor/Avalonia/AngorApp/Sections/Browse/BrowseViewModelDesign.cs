@@ -1,10 +1,13 @@
+using System.Linq;
+using Zafiro.Avalonia.Controls.Navigation;
+
 namespace AngorApp.Sections.Browse;
 
 public class BrowseViewModelDesign : IBrowseViewModel
 {
     public BrowseViewModelDesign()
     {
-        Projects =
+        IEnumerable<Project> projectModels =
         [
             new Project("Space exploration")
             {
@@ -29,8 +32,10 @@ public class BrowseViewModelDesign : IBrowseViewModel
                 Icon = new Uri("https://unchainedcrypto.com/wp-content/uploads/2023/10/bitcoin-hashrate.jpg")
             },
         ];
+        
+        Projects = projectModels.Select(project => new ProjectViewModel(project, null)).ToList();
     }
     
-    public IReadOnlyCollection<Project> Projects { get; set; }
+    public IReadOnlyCollection<ProjectViewModel> Projects { get; set; }
     public ReactiveCommand<Unit, Unit> OpenHub { get; set; }
 }

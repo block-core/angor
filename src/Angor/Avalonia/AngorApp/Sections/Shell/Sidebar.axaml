@@ -6,7 +6,6 @@
              xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
              xmlns:angorApp="clr-namespace:AngorApp"
-             xmlns:views="clr-namespace:AngorApp.Views"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Shell.Sidebar" ClipToBounds="False" x:DataType="shell:IMainViewModel">
 

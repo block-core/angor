@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:details="clr-namespace:AngorApp.Sections.Browse.Details"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="details:ProjectDetailsViewModel">
+    <Panel>
+        <Image Height="200" VerticalAlignment="Top" Stretch="UniformToFill" asyncImageLoader:ImageLoader.Source="{Binding Picture}" ClipToBounds="True" />
+        <Panel Height="100" Width="100" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10 20">
+            <Ellipse Fill="White" Width="100" Height="100"  />
+            <asyncImageLoader:AdvancedImage Stretch="UniformToFill" Source="{Binding Icon}">
+                <asyncImageLoader:AdvancedImage.Clip>
+                    <EllipseGeometry Center="50,50" RadiusX="50" RadiusY="50" />
+                </asyncImageLoader:AdvancedImage.Clip>
+            </asyncImageLoader:AdvancedImage>
+            <Ellipse Stroke="White" StrokeThickness="5" Width="100" Height="100"  />
+            <Panel.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="10" Opacity="0.4" OffsetX="2" OffsetY="2" />
+            </Panel.Effect>
+        </Panel>
+    </Panel>
+</UserControl>

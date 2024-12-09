@@ -24,6 +24,6 @@
     <PackageVersion Include="ReactiveUI" Version="20.1.63" />
     <PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.0.17" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.1" />
-    <PackageVersion Include="Zafiro.Avalonia" Version="12.0.21" />
+    <PackageVersion Include="Zafiro.Avalonia" Version="12.0.23" />
   </ItemGroup>
 </Project>

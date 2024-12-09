@@ -6,7 +6,6 @@
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Portfolio.PortfolioView"
-             xmlns:views="clr-namespace:AngorApp.Views"
              xmlns:founder="clr-namespace:AngorApp.Sections.Portfolio"
              x:DataType="founder:IPortfolioViewModel" ClipToBounds="False">
 
