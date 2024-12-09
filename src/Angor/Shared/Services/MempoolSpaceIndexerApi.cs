@@ -170,6 +170,15 @@ public class MempoolSpaceIndexerApi : IIndexerService
         return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
     }
 
+    public async Task<ProjectInvestment?> GetInvestmentAsync(string projectId, string investorPubKey)
+    {
+        var indexer = _networkService.GetPrimaryIndexer();
+        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects/{projectId}/investments/{investorPubKey}");
+        _networkService.CheckAndHandleError(response);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<ProjectInvestment>();
+    }
+
     public async Task<string> PublishTransactionAsync(string trxHex)
     {
         var indexer = _networkService.GetPrimaryIndexer();
@@ -391,5 +400,35 @@ public class MempoolSpaceIndexerApi : IIndexerService
                 SpentInTransaction = trx.Txid
             })
         };
+    }
+
+    public async Task<(bool IsOnline, string? GenesisHash)> CheckIndexerNetwork(string indexerUrl)
+    {
+        try
+        {
+            // fetch block 0 (Genesis Block)
+            var blockUrl = $"{indexerUrl}{MempoolApiRoute}/block-height/0";
+        
+            var blockResponse = await _httpClient.GetAsync(blockUrl);
+        
+            if (!blockResponse.IsSuccessStatusCode)
+            {
+                _logger.LogWarning($"Failed to fetch genesis block from: {blockUrl}");
+                return (false, null);
+            }
+        
+            var blockHash = await blockResponse.Content.ReadAsStringAsync();
+            return (true, blockHash); // Indexer is online, but no valid block hash
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error during indexer network check: {ex.Message}");
+            return (false, null);
+        }
+    }
+
+    public bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash)
+    {
+        return fetchedHash.StartsWith(expectedHash, StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(fetchedHash);
     }
 }
