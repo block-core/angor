@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:c="clr-namespace:AngorApp.Controls"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.Sections.Founder.FounderView"
+             xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
+             xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
+             x:DataType="browse:IBrowseViewModel" ClipToBounds="False">
+
+    <Design.DataContext>
+        <founder:FounderViewModel />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+
+        <Style Selector="TextBox">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="i|Icon">
+            <Setter Property="FontSize" Value="25" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="TextBlock.FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource Level5}" />
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Spacing="20">
+        
+        <c:Pane Title="Founder" IsTitleVisible="True" Subtitle="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required">
+            <c:Pane.TitleRightContent>
+                <c:IconButton DockPanel.Dock="Right"  VerticalAlignment="Top">CREATE PROJECT
+                    <c:IconButton.Icon>
+                        <i:Icon Value="fa-plus" FontSize="20" />
+                    </c:IconButton.Icon>
+                </c:IconButton>
+            </c:Pane.TitleRightContent>
+            <c:Pane.TitleIcon>
+                <i:Icon Value="fa-magnifying-glass" />
+            </c:Pane.TitleIcon>
+        </c:Pane>
+        
+        <c:IconButton Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="SCAN FOR FOUNDER PROJECTS">
+            <c:IconButton.Icon>
+                <i:Icon Value="fa-magnifying-glass" />
+            </c:IconButton.Icon>
+        </c:IconButton>
+
+    </StackPanel>
+</UserControl>

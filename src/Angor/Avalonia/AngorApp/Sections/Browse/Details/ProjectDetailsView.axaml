@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:details="clr-namespace:AngorApp.Sections.Browse.Details"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:controls="clr-namespace:AngorApp.Controls"
+             xmlns:a="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="1200"
+             x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="details:IProjectDetailsViewModel" ClipToBounds="False">
+
+    <Design.DataContext>
+        <details:ProjectDetailsViewModelDesign />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <!-- <Style Selector="controls|SectionItem.Accent /template/ContentPresenter#PART_Content TextBlock"> -->
+        <!--     <Setter Property="Theme" Value="{StaticResource Highlighted}" /> -->
+        <!-- </Style> -->
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="1* 5* 1*">
+        <StackPanel Grid.Column="1" Spacing="20">
+            <controls:Pane IsHeaderVisible="True" IsTitleVisible="True"
+                           HeaderHeight="300"
+                           HeaderIcon="{Binding Icon}"
+                           HeaderBackground="{Binding Picture}" 
+                           Title="{Binding Name}">
+                <controls:Pane.TitleIcon>
+                    <a:Icon Value="fa-solid fa-tarp" />
+                </controls:Pane.TitleIcon>
+                <DockPanel>
+                    <TextBlock TextAlignment="Center" VerticalAlignment="Center" Width="300">PLACEHOLDER</TextBlock>
+                    <StackPanel Spacing="20">
+                        <StackPanel Margin="30" Spacing="5">
+                            <controls:SectionItem Content="View the transaction on the explorer" />
+                            <controls:SectionItem Content="Target Amount: 50 TBTC" />
+                            <controls:SectionItem Content="Penalty duration: 90 days" />
+                            <controls:SectionItem Content="Project dates: 07/12/2024 - 05/04/2025" />
+                        </StackPanel>
+                        <StackPanel Margin="30" Spacing="5">
+                            <controls:SectionItem Content="Total Raised: 0 TBTC" />
+                            <controls:SectionItem Content="Total Investors: 0" />
+                            <controls:SectionItem Content="The investing period is over" />
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
+            </controls:Pane>
+            <controls:Pane IsTitleVisible="True" Title="Stages">
+                <controls:Pane.TitleIcon>
+                    <a:Icon Value="fa-solid fa-timeline" />
+                </controls:Pane.TitleIcon>
+            </controls:Pane>
+        </StackPanel>
+    </Grid>
+</UserControl>
