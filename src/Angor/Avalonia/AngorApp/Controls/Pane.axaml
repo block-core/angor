@@ -62,8 +62,21 @@
                 </c:Pane.Icon>
             </c:Pane>
             
+            <c:Pane VerticalAlignment="Top" Title="Title" Subtitle="Subtitle" IsTitleVisible="True" />
+
         </StackPanel>
     </Design.PreviewWith>
+    
+    <Style Selector="c|Pane c|SectionItem avalonia|Icon">
+        <Setter Property="FontSize" Value="36" />
+    </Style>
+    
+    <Style Selector="c|Pane /template/ TextBlock#PART_Title">
+        <Setter Property="FontSize" Value="20" />
+    </Style>
+    <Style Selector="c|Pane /template/ TextBlock#PART_Subtitle">
+        <Setter Property="FontSize" Value="16" />
+    </Style>
     
     <Styles.Resources>
         <SolidColorBrush x:Key="PaneBackground" Color="{StaticResource Level2}" />
@@ -71,6 +84,7 @@
 
         <ControlTheme x:Key="{x:Type c:Pane}" TargetType="c:Pane">
             <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="HeaderHeight" Value="200" />
             <Setter Property="Padding" Value="20" />
             <Setter Property="TitlePadding" Value="0 0 0 10" />
             <Setter Property="Template">
@@ -82,17 +96,23 @@
                         <DockPanel>
                         
                             <c:Header IsVisible="{TemplateBinding IsHeaderVisible}" 
-                                      Height="200" 
+                                      Height="{TemplateBinding HeaderHeight}" 
                                       DockPanel.Dock="Top" 
                                       IconUri="{TemplateBinding HeaderIcon}" 
                                       BackgroundImageUri="{TemplateBinding HeaderBackground}" />
                         
                             <DockPanel Margin="{TemplateBinding Padding}" x:Name="TitleAndContent">
                             
-                                <c:SectionItem x:Name="PART_Title" BorderThickness="0" DockPanel.Dock="Top" LeftContent="{TemplateBinding TitleIcon}" 
-                                               Content="{TemplateBinding Title}"
-                                               RightContent="{TemplateBinding TitleRightContent}" />
-                            
+                                <c:SectionItem x:Name="PART_TitleSection" IsVisible="{TemplateBinding IsTitleVisible}" BorderThickness="0" DockPanel.Dock="Top" LeftContent="{TemplateBinding TitleIcon}"
+                                               RightContent="{TemplateBinding TitleRightContent}">
+                                    <c:SectionItem.Content>
+                                        <StackPanel>
+                                            <TextBlock ToolTip.Tip="{Binding $self.Text}" TextTrimming="CharacterEllipsis" x:Name="PART_Title" Text="{TemplateBinding Title}" />
+                                            <TextBlock ToolTip.Tip="{Binding $self.Text}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" x:Name="PART_Subtitle" Text="{TemplateBinding Subtitle}" IsVisible="{Binding !!$self.Text}" />
+                                        </StackPanel>
+                                    </c:SectionItem.Content>
+                                </c:SectionItem>
+
                                 <ContentPresenter Content="{TemplateBinding Content}" />
                             </DockPanel>
                         </DockPanel>

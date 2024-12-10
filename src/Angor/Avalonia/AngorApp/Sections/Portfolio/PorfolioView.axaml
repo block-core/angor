@@ -51,20 +51,17 @@
 
     <StackPanel Spacing="20">
 
-        <controls:Pane Padding="15" CornerRadius="5">
-            <DockPanel>
-                <i:Icon Value="fa-solid fa-hand-holding-dollar" Margin="10" />
+        <controls:Pane Title="Portfolio" IsTitleVisible="True" Subtitle="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required">
+            <controls:Pane.TitleIcon>
+                <i:Icon Value="fa-solid fa-hand-holding-dollar"  />
+            </controls:Pane.TitleIcon>
+            <controls:Pane.TitleRightContent>
                 <controls:IconButton DockPanel.Dock="Right" VerticalAlignment="Top" Content="PENALTIES">
                     <controls:IconButton.Icon>
                         <i:Icon Value="fa-regular fa-face-frown" FontSize="20" />
                     </controls:IconButton.Icon>
                 </controls:IconButton>
-                <StackPanel Spacing="4" DockPanel.Dock="Left">
-                    <TextBlock Text="Portfolio" FontWeight="Regular" FontSize="18" />
-                    <TextBlock TextWrapping="Wrap" Text="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required" FontWeight="Regular" VerticalAlignment="Center"
-                               FontSize="14" />
-                </StackPanel>
-            </DockPanel>
+            </controls:Pane.TitleRightContent>
         </controls:Pane>
 
         <ItemsControl x:Name="PortfolioItems" ItemsSource="{Binding Items}" Margin="-20">

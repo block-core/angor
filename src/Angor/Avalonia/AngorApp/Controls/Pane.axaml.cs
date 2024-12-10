@@ -5,10 +5,10 @@ namespace AngorApp.Controls;
 
 public class Pane : ContentControl
 {
-    public static readonly StyledProperty<object> TitleProperty = AvaloniaProperty.Register<Pane, object>(
+    public static readonly StyledProperty<string> TitleProperty = AvaloniaProperty.Register<Pane, string>(
         nameof(Title));
 
-    public object Title
+    public string Title
     {
         get => GetValue(TitleProperty);
         set => SetValue(TitleProperty, value);
@@ -84,5 +84,23 @@ public class Pane : ContentControl
     {
         get => GetValue(TitleRightContentProperty);
         set => SetValue(TitleRightContentProperty, value);
+    }
+
+    public static readonly StyledProperty<string> SubtitleProperty = AvaloniaProperty.Register<Pane, string>(
+        nameof(Subtitle));
+
+    public string Subtitle
+    {
+        get => GetValue(SubtitleProperty);
+        set => SetValue(SubtitleProperty, value);
+    }
+
+    public static readonly StyledProperty<double> HeaderHeightProperty = AvaloniaProperty.Register<Pane, double>(
+        nameof(HeaderHeight));
+
+    public double HeaderHeight
+    {
+        get => GetValue(HeaderHeightProperty);
+        set => SetValue(HeaderHeightProperty, value);
     }
 }

@@ -36,15 +36,14 @@
         <StackPanel Spacing="20">
 
             <!-- Wallet Section -->
-            <controls:Pane Padding="15" CornerRadius="5">
-                <DockPanel>
-                    <i:Icon Value="fa-wallet" Margin="10" />
+            <controls:Pane IsTitleVisible="True" Title="Wallet" 
+                           Subtitle="Wallet and balances">
+                <controls:Pane.TitleRightContent>
                     <Button Content="Wallet Words" DockPanel.Dock="Right" />
-                    <StackPanel Spacing="4" DockPanel.Dock="Left">
-                        <TextBlock Text="Wallet" FontWeight="Regular" FontSize="18" />
-                        <TextBlock Text="Wallet and balances" FontWeight="Regular" VerticalAlignment="Center" FontSize="14" />
-                    </StackPanel>
-                </DockPanel>
+                </controls:Pane.TitleRightContent>
+                <controls:Pane.TitleIcon>
+                    <i:Icon Value="fa-wallet" />
+                </controls:Pane.TitleIcon>
             </controls:Pane>
 
             <controls:Pane>

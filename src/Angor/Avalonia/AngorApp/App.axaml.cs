@@ -1,10 +1,9 @@
+using AngorApp.Sections.Shell;
 using Avalonia;
 using Avalonia.Markup.Xaml;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 using Zafiro.Avalonia.Mixins;
-using MainView = AngorApp.Sections.Shell.MainView;
-using MainWindow = AngorApp.Sections.Shell.MainWindow;
 
 namespace AngorApp;
 

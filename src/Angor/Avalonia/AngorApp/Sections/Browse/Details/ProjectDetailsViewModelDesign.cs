@@ -1,6 +1,4 @@
-using AngorApp.Sections.Browse.Details;
-
-namespace AngorApp;
+namespace AngorApp.Sections.Browse.Details;
 
 public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
 {

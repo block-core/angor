@@ -11,7 +11,7 @@ public partial class MainViewModel : ReactiveObject, IMainViewModel
     public MainViewModel(IEnumerable<SectionBase> sections, UIServices uiServices)
     {
         Sections = sections;
-        SelectedSection = Sections.OfType<Section>().Skip(1).First();
+        SelectedSection = Sections.OfType<Section>().Skip(0).First();
         OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.Launch(new Uri("https://www.angor.io")));
     }
 

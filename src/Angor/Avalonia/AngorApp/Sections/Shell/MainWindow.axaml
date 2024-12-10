@@ -2,12 +2,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        Width="800"
-        Height="600"
+        Width="1200"
+        Height="800"
+        WindowStartupLocation="CenterOwner"
         x:Class="AngorApp.Sections.Shell.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="AngorApp">
-        <shell:MainView />
+        Title="Angor">
 </Window>

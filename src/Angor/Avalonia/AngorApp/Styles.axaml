@@ -36,9 +36,7 @@
         <Setter Property="Foreground" Value="{StaticResource Level5}" />
     </Style>
     
-    <Style Selector="c|Pane c|SectionItem avalonia|Icon">
-        <Setter Property="FontSize" Value="36" />
-    </Style>
+   
     
     <Design.PreviewWith>
         <Border Padding="20">

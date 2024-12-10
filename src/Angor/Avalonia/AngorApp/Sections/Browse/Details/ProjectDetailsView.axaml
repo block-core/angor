@@ -10,7 +10,7 @@
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="details:IProjectDetailsViewModel" ClipToBounds="False">
 
     <Design.DataContext>
-        <angorApp:ProjectDetailsViewModelDesign />
+        <details:ProjectDetailsViewModelDesign />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -22,11 +22,10 @@
     <Grid ColumnDefinitions="1* 5* 1*">
         <StackPanel Grid.Column="1" Spacing="20">
             <controls:Pane IsHeaderVisible="True" IsTitleVisible="True"
+                           HeaderHeight="300"
                            HeaderIcon="{Binding Icon}"
-                           HeaderBackground="{Binding Picture}">
-                <controls:Pane.Title>
-                    <TextBlock Text="{Binding Name}"  />
-                </controls:Pane.Title>
+                           HeaderBackground="{Binding Picture}" 
+                           Title="{Binding Name}">
                 <controls:Pane.TitleIcon>
                     <a:Icon Value="fa-solid fa-tarp" />
                 </controls:Pane.TitleIcon>
