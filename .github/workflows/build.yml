@@ -47,13 +47,13 @@ jobs:
       shell: bash
 
     - name: Publish
-      run: dotnet publish -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }}.${{ github.run_number }} -v m -o publish  ${{env.PROJECT_PATH}}
+      run: dotnet publish -c Debug -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }}.${{ github.run_number }} -v m -o publish  ${{env.PROJECT_PATH}}
       env:
         matrix.runtime: ${{ matrix.os == 'windows-latest' && 'win-x64' || matrix.os == 'ubuntu-latest' && 'linux-x64' || 'osx-x64' }}
 
     - name: Run Tests
       continue-on-error: true
-      run: dotnet test --configuration Release -r ${{matrix.runtime}} --verbosity normal  ${{env.SOLUTION_PATH}} 
+      run: dotnet test -c Debug -r ${{matrix.runtime}} --verbosity normal  ${{env.SOLUTION_PATH}} 
       env:
         matrix.runtime: ${{ matrix.os == 'windows-latest' && 'win-x64' || matrix.os == 'ubuntu-latest' && 'linux-x64' || 'osx-x64' }}
 
