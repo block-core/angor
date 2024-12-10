@@ -89,7 +89,12 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
 
         var scriptWeights = BuildTaprootScripts(scripts);
 
-        var treeInfo = TaprootSpendInfo.WithHuffmanTree(taprootKey, scriptWeights.ToArray());
+        // Transform the scripts to TapScript format
+        var tapScriptWeights = scriptWeights
+            .Select(sw => (sw.Item1, sw.Item2.ToTapScript(TapLeafVersion.C0)))
+            .ToList();
+
+        var treeInfo = TaprootSpendInfo.WithHuffmanTree(taprootKey, tapScriptWeights.ToArray());
 
         return treeInfo;
     }
