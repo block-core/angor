@@ -1,6 +1,3 @@
-using Zafiro.Avalonia.Controls.Navigation;
-using Zafiro.UI;
-
 namespace AngorApp.Sections.Browse;
 
 public interface IBrowseViewModel
