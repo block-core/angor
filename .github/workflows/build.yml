@@ -29,6 +29,10 @@ jobs:
               os: macos-latest
               runtime: "osx-x64"
               extension: ".zip"
+            - name: macOS ARM64
+              os: macos-latest
+              runtime: "osx-arm64"
+              extension: ".zip"
         fail-fast: false
   
     runs-on: ${{ matrix.os }}
@@ -91,7 +95,7 @@ jobs:
     - name: Install and build
       run: |
         npm install
-        npm run tauri:build
+        npm run tauri:build:${{ matrix.runtime }}
 
     - name: Rename Linux files
       if: matrix.os == 'ubuntu-latest'
