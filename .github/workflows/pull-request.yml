@@ -19,7 +19,7 @@ jobs:
     env:
       PROJECT_NAME: 'Angor'
       SOLUTION_PATH: 'src/Angor.sln'
-      PROJECT_PATH: 'src/Angor/Server/Angor.Server.csproj'
+      PROJECT_PATH: 'src/Angor/Client/Angor.Client.csproj'
       BUILD_CONFIGURATION: 'Release'
 
     steps:
