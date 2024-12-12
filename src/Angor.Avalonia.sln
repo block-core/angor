@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Angor\Avalonia\Directory.Packages.props = Angor\Avalonia\Directory.Packages.props
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.Avalonia", "..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\Zafiro.Avalonia.csproj", "{6D1AC87B-7BF7-4C92-8E72-F8EF830B3F17}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{0A7F0377-628B-41A8-8849-00A3664B69B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A7F0377-628B-41A8-8849-00A3664B69B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A7F0377-628B-41A8-8849-00A3664B69B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D1AC87B-7BF7-4C92-8E72-F8EF830B3F17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D1AC87B-7BF7-4C92-8E72-F8EF830B3F17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D1AC87B-7BF7-4C92-8E72-F8EF830B3F17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D1AC87B-7BF7-4C92-8E72-F8EF830B3F17}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

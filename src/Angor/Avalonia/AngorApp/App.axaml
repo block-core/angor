@@ -13,10 +13,11 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
         <StyleInclude Source="Styles.axaml" />
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <StyleInclude Source="Controls/Pane.axaml" />
-        <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
+        
     </Application.Styles>
 
     <Application.Resources>

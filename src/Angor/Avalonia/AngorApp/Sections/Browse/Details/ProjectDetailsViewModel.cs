@@ -6,4 +6,5 @@ public class ProjectDetailsViewModel(Project project) : ReactiveObject, IProject
     public string ShortDescription => project.ShortDescription;
     public object Icon => project.Icon;
     public object Picture => project.Picture;
+    public IEnumerable<Stage> Stages { get; }
 }
