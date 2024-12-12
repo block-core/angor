@@ -12,7 +12,7 @@ jobs:
     name: Build (${{ matrix.os }})
     strategy:
         matrix:
-          os: [windows-latest, windows-latest, windows-latest, ubuntu-latest, macos-latest]
+          os: [windows-latest, windows-latest, ubuntu-latest, macos-latest]
           include:
             - os: windows-latest
               extension: ".zip"
