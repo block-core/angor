@@ -101,10 +101,15 @@ jobs:
       run: |
         mv src-tauri/target/release/bundle/dmg/Angor_${{ env.VERSION }}_aarch64.dmg src-tauri/target/release/bundle/dmg/angor-desktop-${{ env.VERSION }}-mac-aarch64.dmg
 
-    - name: Rename Mac files
-      if: matrix.os == 'windows-latest'
+    - name: Rename Windows files
+      if: matrix.runtime == 'win-x64'
       run: |
         mv src-tauri/target/release/bundle/msi/Angor_${{ env.VERSION }}_x64_en-US.msi src-tauri/target/release/bundle/msi/angor-desktop-${{ env.VERSION }}-win-x64.msi
+
+    - name: Rename Windows files
+      if: matrix.runtime == 'win-arm64'
+      run: |
+          mv src-tauri/target/release/bundle/msi/Angor_${{ env.VERSION }}_arm64_en-US.msi src-tauri/target/release/bundle/msi/angor-desktop-${{ env.VERSION }}-win-arm64.msi
 
     - uses: actions/upload-artifact@v4
       name: Upload Linux
@@ -122,10 +127,18 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       name: Upload Windows
-      if: matrix.os == 'windows-latest'
+      if: matrix.runtime == 'win-x64'
       with:
           name: angor-desktop-${{ env.VERSION }}-win-x64.msi
           path: src-tauri\target\release\bundle\msi\angor-desktop-${{ env.VERSION }}-win-x64.msi
+
+    - uses: actions/upload-artifact@v4
+      name: Upload Windows
+      if: matrix.runtime == 'win-arm64'
+      with:
+              name: angor-desktop-${{ env.VERSION }}-win-arm64.msi
+              path: src-tauri\target\release\bundle\msi\angor-desktop-${{ env.VERSION }}-win-arm64.msi
+    
 
   create-release:
     name: Publish (Release)
