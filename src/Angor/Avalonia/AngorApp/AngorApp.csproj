@@ -23,6 +23,7 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="Avalonia.Xaml.Behaviors"/>
+        <PackageReference Include="Humanizer.Core" />
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome"/>
         <PackageReference Include="ReactiveUI"/>
         <PackageReference Include="ReactiveUI.SourceGenerators">
@@ -32,6 +33,5 @@
         <PackageReference Include="Zafiro.Avalonia" />
 
     </ItemGroup>
-
 
 </Project>
