@@ -286,6 +286,16 @@
 
             foreach (var pendingSignature in signaturesRequests.Where(_ => _.AmountToInvest == null))
             {
+                if (string.IsNullOrEmpty(pendingSignature.TransactionHex))
+                {
+                    // the only way TransactionHex can be null is if it failed
+                    // further down the code and this is the second time we try to 
+                    // read it in to a trx structure but still
+                    // for some reason the trx is not valid.
+                    Logger.LogDebug($"pendingSignature.TransactionHex is null");
+                    continue;
+                }
+
                 pendingSignature.TransactionHex = await encryption.DecryptNostrContentAsync(
                     nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.TransactionHex);
 
