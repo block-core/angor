@@ -47,7 +47,7 @@ jobs:
       shell: bash
 
     - name: Publish
-      run: dotnet publish -c Release -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }}.${{ github.run_number }} /p:PublishReadyToRun=true /p:EnableUnsafeBinaryFormatterSerialization=true /p:EnableUnsafeUTF7Encoding=true /p:InvariantGlobalization=true /p:DebugType=embedded /p:DebugSymbols=true -v m -o publish  ${{env.PROJECT_PATH}}
+      run: dotnet publish -c Release -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }}.${{ github.run_number }} /p:EnableUnsafeBinaryFormatterSerialization=true /p:EnableUnsafeUTF7Encoding=true /p:InvariantGlobalization=true /p:DebugType=embedded /p:DebugSymbols=true -v m -o publish  ${{env.PROJECT_PATH}}
       env:
         matrix.runtime: ${{ matrix.os == 'windows-latest' && 'win-x64' || matrix.os == 'ubuntu-latest' && 'linux-x64' || 'osx-x64' }}
 
