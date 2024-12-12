@@ -9,24 +9,26 @@ permissions:
 
 jobs:
   build:
-    name: Build (${{ matrix.os }})
+    name: Build (${{ matrix.name }})
     strategy:
         matrix:
-          os: [windows-latest, windows-latest, ubuntu-latest, macos-latest]
           include:
-            - os: windows-latest
+            - name: Windows x64
+              os: windows-latest
               extension: ".zip"
               runtime: "win-x64"
-            - os: windows-latest
+            - name: Windows ARM64
+              os: windows-latest
               extension: ".zip"
               runtime: "win-arm64"
-            - os: ubuntu-latest
+            - name: Linux x64
+              os: ubuntu-latest
               extension: ".tar.gz"
               runtime: "linux-x64"
-            - os: macos-latest
+            - name: macOS x64
+              os: macos-latest
               runtime: "osx-x64"
               extension: ".zip"
-          node_version: [22]
         fail-fast: false
   
     runs-on: ${{ matrix.os }}
