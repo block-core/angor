@@ -20,4 +20,6 @@ public interface IRelayService
     
     string SendDirectMessagesForPubKeyAsync(string senderNosterPrivateKey, string nostrPubKey, string encryptedMessage,
         Action<NostrOkResponse> onResponseAction);
+    Task RequestProjectCreateEventsByPubKeyAsync(string[] nPubs, Action<NostrEvent> onResponseAction, Action? onEoseAction);
+
 }
