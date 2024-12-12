@@ -203,8 +203,8 @@ public class InvestmentOperations
             var sighash = TaprootSigHash.All;// TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
             var allSpendingOutputs = signingContext.Select(s => s.spendingOutput.TxOut).ToArray();
-            var trxData = spender.PrecomputeTransactionData(allSpendingOutputs); 
-            var execData = new TaprootExecutionData(inputIndex, scriptToExecute.ToTapScript(TapLeafVersion.C0).LeafHash) { SigHash = sighash };
+            var trxData = spender.PrecomputeTransactionData(allSpendingOutputs);
+            var execData = new TaprootExecutionData(inputIndex, scriptToExecute.TaprootV1LeafHash) { SigHash = sighash };
             var hash = spender.GetSignatureHashTaproot(trxData, execData);
 
             var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
@@ -286,9 +286,9 @@ public class InvestmentOperations
             const TaprootSigHash sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
             
             var hash = stageTransaction.GetSignatureHashTaproot(new[] { investmentTransaction.Outputs[i+2] },
-                new TaprootExecutionData(0, 
-                        new NBitcoin.Script(scriptStages.Recover.ToBytes()).ToTapScript(TapLeafVersion.C0).LeafHash)
-                    { SigHash = sigHash });
+                new TaprootExecutionData(0,
+                        new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash)
+                { SigHash = sigHash });
 
             
             var signature = key.SignTaprootKeySpend(hash, sigHash);
@@ -329,8 +329,8 @@ public class InvestmentOperations
 
             var hash = stageTransaction.GetSignatureHashTaproot(new[] { investmentTransaction.Outputs[index + 2] },
                 new TaprootExecutionData(0,
-                        new NBitcoin.Script(projectScripts.Recover.ToBytes()).ToTapScript(TapLeafVersion.C0).LeafHash)
-                    { SigHash = sigHash });
+                        new NBitcoin.Script(projectScripts.Recover.ToBytes()).TaprootV1LeafHash)
+                { SigHash = sigHash });
             
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 
@@ -446,7 +446,7 @@ public class InvestmentOperations
 
             var allSpendingOutputs = signingContext.Select(s => s.spendingOutput.TxOut).ToArray();
             var trxData = spender.PrecomputeTransactionData(allSpendingOutputs);
-            var execData = new TaprootExecutionData(inputIndex, scriptToExecute.ToTapScript(TapLeafVersion.C0).LeafHash) { SigHash = sighash };
+            var execData = new TaprootExecutionData(inputIndex, scriptToExecute.TaprootV1LeafHash) { SigHash = sighash };
             var hash = spender.GetSignatureHashTaproot(trxData, execData);
 
             var key = new Key(Encoders.Hex.DecodeData(investorPrivateKey));
@@ -566,7 +566,7 @@ public class InvestmentOperations
 
             var allSpendingOutputs = signingContext.Select(s => s.spendingOutput.TxOut).ToArray();
             var trxData = spender.PrecomputeTransactionData(allSpendingOutputs);
-            var execData = new TaprootExecutionData(inputIndex, scriptToExecute.ToTapScript(TapLeafVersion.C0).LeafHash) { SigHash = sighash };
+            var execData = new TaprootExecutionData(inputIndex, scriptToExecute.TaprootV1LeafHash) { SigHash = sighash };
             var hash = spender.GetSignatureHashTaproot(trxData, execData);
 
             var key = new Key(Encoders.Hex.DecodeData(investorPrivateKey));
