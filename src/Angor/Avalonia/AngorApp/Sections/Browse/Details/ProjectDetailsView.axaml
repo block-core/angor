@@ -3,9 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:details="clr-namespace:AngorApp.Sections.Browse.Details"
-             xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:a="https://github.com/projektanker/icons.avalonia"
+             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="details:IProjectDetailsViewModel" ClipToBounds="False">
 
@@ -13,18 +13,12 @@
         <details:ProjectDetailsViewModelDesign />
     </Design.DataContext>
 
-    <UserControl.Styles>
-        <!-- <Style Selector="controls|SectionItem.Accent /template/ContentPresenter#PART_Content TextBlock"> -->
-        <!--     <Setter Property="Theme" Value="{StaticResource Highlighted}" /> -->
-        <!-- </Style> -->
-    </UserControl.Styles>
-
     <Grid ColumnDefinitions="1* 5* 1*">
         <StackPanel Grid.Column="1" Spacing="20">
             <controls:Pane IsHeaderVisible="True" IsTitleVisible="True"
                            HeaderHeight="300"
                            HeaderIcon="{Binding Icon}"
-                           HeaderBackground="{Binding Picture}" 
+                           HeaderBackground="{Binding Picture}"
                            Title="{Binding Name}">
                 <controls:Pane.TitleIcon>
                     <a:Icon Value="fa-solid fa-tarp" />
@@ -50,6 +44,17 @@
                 <controls:Pane.TitleIcon>
                     <a:Icon Value="fa-solid fa-timeline" />
                 </controls:Pane.TitleIcon>
+                
+                <z:SlimDataGrid ItemsSource="{Binding Stages}">
+                    <z:SlimDataGrid.Columns>
+                        <z:Column Header="STAGE" Binding="{Binding Index}" />
+                        <z:Column Header="STAGE %" Binding="{Binding Weight, StringFormat={}{0:P0}}" />
+                        <z:Column Header="RELEASE DATE" Binding="{Binding ReleaseDate, StringFormat=d}" />
+                        <z:Column Header="DAYS UNTIL STAGE" Binding="{Binding ReleaseDate, Converter={x:Static controls:MiscConverters.TimeLeft}}" />
+                        <z:Column Header="AMOUNT PER STAGE" Binding="{Binding Amount, StringFormat={}{0} TBTC}" />
+                    </z:SlimDataGrid.Columns>
+                </z:SlimDataGrid>
+                
             </controls:Pane>
         </StackPanel>
     </Grid>

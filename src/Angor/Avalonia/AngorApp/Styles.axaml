@@ -1,7 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:c="clr-namespace:AngorApp.Controls"
-        xmlns:avalonia="https://github.com/projektanker/icons.avalonia">
+        xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+        xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia">
 
     <Styles.Resources>
         <Color x:Key="Level1">#F5FDFF</Color>
@@ -24,6 +24,21 @@
         <ControlTheme x:Key="Highlighted" TargetType="TextBlock" BasedOn="{StaticResource Regular}">
             <Setter Property="Foreground" Value="Orange" />
         </ControlTheme>
+        
+        <ControlTheme x:Key="{x:Type z:SlimDataGrid}" TargetType="z:SlimDataGrid" BasedOn="{StaticResource {x:Type z:SlimDataGrid}}">
+            <Setter Property="Background" Value="{StaticResource Level1}" />
+            <Setter Property="HeaderPadding" Value="10" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
+            <Setter Property="RowTheme">
+                <ControlTheme TargetType="z:Row" BasedOn="{StaticResource {x:Type z:Row}}">
+                    <Setter Property="BorderThickness" Value="0 1 0 0" />
+                    <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
+                    <Setter Property="Padding" Value="10 10" />
+                </ControlTheme>
+            </Setter>
+        </ControlTheme>
 
     </Styles.Resources>
 
@@ -35,8 +50,6 @@
     <Style Selector="avalonia|Icon">
         <Setter Property="Foreground" Value="{StaticResource Level5}" />
     </Style>
-    
-   
     
     <Design.PreviewWith>
         <Border Padding="20">
