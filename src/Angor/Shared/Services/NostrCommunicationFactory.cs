@@ -117,7 +117,10 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     public void MonitoringEoseReceivedOnSubscription(string subscription)
     {
         _logger.LogInformation($"Started monitoring subscription {subscription}");
-        _eoseCalledOnSubscriptionClients.TryAdd(subscription, new List<string>());
+        var addedToSubscriptionClients = _eoseCalledOnSubscriptionClients.TryAdd(subscription, new List<string>());
+
+        if(!addedToSubscriptionClients)
+            _logger.LogWarning($"Subscription {subscription} is already being monitored");
     }
     
     public void ClearEoseReceivedOnSubscriptionMonitoring(string subscription)
