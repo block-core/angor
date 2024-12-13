@@ -724,6 +724,9 @@
 
         try
         {
+            // Ensure default images are set for Testnet
+            SetDefaultImagesForTestnet(project.Metadata);
+            
             var words = await passwordComponent.GetWalletAsync();
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectIndex);
 
@@ -1172,4 +1175,45 @@
         isPresetMode = !isPresetMode; // Toggle between Presets and Automatic
         StateHasChanged(); // Update the UI
     }
+    
+    
+    private void SetDefaultImagesForTestnet(ProjectMetadata metadata)
+    {
+        var random = new Random();
+        if (network.NetworkType == NetworkType.Testnet)
+        {
+            if (string.IsNullOrEmpty(metadata.Banner))
+            {
+                metadata.Banner = spacePhotos[random.Next(spacePhotos.Length)];
+            }
+
+            if (string.IsNullOrEmpty(metadata.Picture))
+            {
+                metadata.Picture = spacePhotos[random.Next(spacePhotos.Length)];
+            }
+        }
+    }
+    
+    private readonly string[] spacePhotos = new[]
+    {
+        "https://images-assets.nasa.gov/image/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA22081/PIA22081~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000282/GSFC_20171208_Archive_e000282~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001894/GSFC_20171208_Archive_e001894~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA08216/PIA08216~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001465/GSFC_20171208_Archive_e001465~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001518/GSFC_20171208_Archive_e001518~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA25433/PIA25433~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA15415/PIA15415~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002086/GSFC_20171208_Archive_e002086~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA14731/PIA14731~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002020/GSFC_20171208_Archive_e002020~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/0203048/0203048~thumb.jpg?as=webp"
+    };
+
+
 }
