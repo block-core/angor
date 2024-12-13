@@ -25,7 +25,8 @@
 @inject IClientStorage storage;
 @inject ICacheStorage SessionStorage;
 @inject IWalletOperations _WalletOperations
-
+@inject IIndexerService _IndexerService
+@inject IDerivationOperations _DerivationOperations
 @inject ISignService _SignService
 @inject IRelayService _RelayService
 
@@ -383,6 +384,7 @@ else
         if (!hasWallet)
         {
             NavigationManager.NavigateTo($"/wallet");
+            return;
         }
 
         Project? findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
@@ -413,8 +415,22 @@ else
                 }
             }
         }
-        await CheckIfSeederTimeHasPassed();
 
+        if (project != null)
+        {
+            var words = await passwordComponent.GetWalletAsync();
+            var investorPubKey = _DerivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
+
+            var isAlreadyInvested = await IsInvestorAlreadyInvestedAsync(project.ProjectInfo.ProjectIdentifier, investorPubKey);
+            if (isAlreadyInvested)
+            {
+                notificationComponent.ShowErrorMessage("You are already invested in this project.");
+                NavigationManager.NavigateTo($"/view/{ProjectId}");
+                return;
+            }
+        }
+
+        await CheckIfSeederTimeHasPassed();
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
     }
 
@@ -934,5 +950,14 @@ else
     private void HandleTransactionJsonModalVisibility(bool isVisible)
     {
         showTransactionJsonModal = isVisible;
+    }
+    
+    public async Task<bool> IsInvestorAlreadyInvestedAsync(string projectId, string investorPubKey)
+    {
+        // Step 1: Fetch investments for the given project
+        var investments = await _IndexerService.GetInvestmentsAsync(projectId);
+
+        // Step 2: Check if the investor's public key exists in the list of investments
+        return investments.Any(investment => investment.InvestorPublicKey == investorPubKey);
     }
 }
