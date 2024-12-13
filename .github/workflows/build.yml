@@ -115,7 +115,7 @@ jobs:
     - name: Rename Windows files
       if: matrix.runtime == 'win-x64'
       run: |
-        mv src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/Angor_${{ env.VERSION }}_x64_en-US.msi src-tauri/x86_64-pc-windows-msvc/target/release/bundle/msi/angor-desktop-${{ env.VERSION }}-win-x64.msi
+        mv src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/Angor_${{ env.VERSION }}_x64_en-US.msi src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/angor-desktop-${{ env.VERSION }}-win-x64.msi
 
     - name: Rename Windows files
       if: matrix.runtime == 'win-arm64'
