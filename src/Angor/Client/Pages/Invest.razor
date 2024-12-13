@@ -556,6 +556,16 @@ else
 
     private async Task InvestFunds()
     {
+        
+        var words = await passwordComponent.GetWalletAsync();
+        var investorPubKey = _DerivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
+
+        var isAlreadyInvested = await IsInvestorAlreadyInvestedAsync(project.ProjectInfo.ProjectIdentifier, investorPubKey);
+        if (isAlreadyInvested)
+        {
+            notificationComponent.ShowErrorMessage("You are already invested in this project.");
+            return;
+        }
         if (Investment.IsSeeder)
         {
             bool isTestnet = network.NetworkType == NetworkType.Testnet;
@@ -606,9 +616,7 @@ else
             feeData.FeeEstimations.Fees.Clear();
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
-
-            var words = await passwordComponent.GetWalletAsync();
-
+            
             InvestorPubKey = _derivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
 
             if (Investment.IsSeeder)
