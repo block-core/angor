@@ -30,6 +30,13 @@
     return;
 }
 
+@if (!isValid)
+{
+<div class="alert alert-danger">
+    <h4>Error</h4>
+    <p>@errorMessage</p>
+</div>
+}
 
 <div class="row">
     <div class="card card-body">
@@ -570,6 +577,8 @@
     
     private int totalDuration;
     private int numberOfStages;
+    private bool isValid = true;
+    private string errorMessage;
 
     bool createProfileSpinner;
     bool createApplicationDataSpinner;
@@ -587,11 +596,21 @@
         }
 
         var projects = storage.GetFounderProjects() ?? new List<FounderProject>();
+        projectCount = projects?.Count ?? 0;
+
         var keys = _walletStorage.GetFounderKeys();
 
-        if (projects.Count(p => !string.IsNullOrEmpty(p.CreationTransactionId)) >= keys.Keys.Count)
+        if (projects.Count > 14)
         {
-            notificationComponent.ShowErrorMessage("All founder keys have been used for this wallet!");
+            errorMessage = "You have reached the maximum limit of projects!";
+            isValid = false;
+            return;
+        }
+    
+        if (projects.Count >= keys.Keys.Count)
+        {
+            errorMessage = "All founder keys have been used for this wallet!";
+            isValid = false;
             return;
         }
 
