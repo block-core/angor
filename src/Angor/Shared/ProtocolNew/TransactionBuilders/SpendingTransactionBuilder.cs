@@ -77,7 +77,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
                     input.WitScript[input.WitScript.PushCount - 2]); //control block is the last and execute one before it
 
             var hash = spendingTrx.GetSignatureHashTaproot(trxData,
-                new TaprootExecutionData(inputIndex, scriptToExecute.TaprootV1LeafHash) { SigHash = sigHash });
+                new TaprootExecutionData(inputIndex, scriptToExecute.ToTapScript(TapLeafVersion.C0).LeafHash) { SigHash = sigHash });
 
             var sig = key.SignTaprootKeySpend(hash, sigHash);
 

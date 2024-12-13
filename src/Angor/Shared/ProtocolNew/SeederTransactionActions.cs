@@ -82,7 +82,8 @@ public class SeederTransactionActions : ISeederTransactionActions
 
             var controlBlock = _taprootScriptBuilder.CreateControlBlock(projectScripts, _ => _.Recover);
 
-            var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(projectScripts.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
+            var tapScript = new NBitcoin.Script(projectScripts.Recover.ToBytes()).ToTapScript(TapLeafVersion.C0);
+            var execData = new TaprootExecutionData(stageIndex, tapScript.LeafHash) { SigHash = sigHash };
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
             _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; seeder-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}");
