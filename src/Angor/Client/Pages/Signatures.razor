@@ -284,20 +284,10 @@
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            foreach (var pendingSignature in signaturesRequests.Where(_ => _.AmountToInvest == null))
+            foreach (var pendingSignature in signaturesRequests.Where(_ => _.EncryptedMessage != null && _.AmountToInvest == null))
             {
-                if (string.IsNullOrEmpty(pendingSignature.TransactionHex))
-                {
-                    // the only way TransactionHex can be null is if it failed
-                    // further down the code and this is the second time we try to 
-                    // read it in to a trx structure but still
-                    // for some reason the trx is not valid.
-                    Logger.LogDebug($"pendingSignature.TransactionHex is null");
-                    continue;
-                }
-
                 pendingSignature.TransactionHex = await encryption.DecryptNostrContentAsync(
-                    nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.TransactionHex);
+                    nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.EncryptedMessage);
 
                 try
                 {
@@ -308,7 +298,7 @@
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(pendingSignature.TransactionHex, e);
+                    Logger.LogError(pendingSignature?.TransactionHex ?? e.Message, e);
                     pendingSignature.TransactionHex = null;
                 }
             }
@@ -351,7 +341,7 @@
                 {
                     investorNostrPubKey = investorNostrPubKey,
                     TimeArrived = timeArrived,
-                    TransactionHex = encryptedMessage, //To be encrypted after js interop is loaded
+                    EncryptedMessage = encryptedMessage, //To be encrypted after js interop is loaded
                     EventId = eventId
                 };
 
@@ -568,6 +558,7 @@
         public DateTime? TimeApproved { get; set; }
 
         public string? TransactionHex { get; set; }
+        public string? EncryptedMessage { get; set; }
 
         public string EventId { get; set; }
     }
