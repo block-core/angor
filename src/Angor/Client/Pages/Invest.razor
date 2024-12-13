@@ -415,9 +415,28 @@ else
                 }
             }
         }
+        
+        await CheckIfSeederTimeHasPassed();
+        UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
+    }
 
+    private async Task CheckForExistingProjectAndCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(CheckForExistingInvestedProjects);
+        }
+        else
+        {
+            await CheckForExistingInvestedProjects();
+        }
+    }
+    
+    private async Task CheckForExistingInvestedProjects()
+    {
         if (project != null)
         {
+            
             var words = await passwordComponent.GetWalletAsync();
             var investorPubKey = _DerivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
 
@@ -426,24 +445,27 @@ else
             {
                 notificationComponent.ShowErrorMessage("You are already invested in this project.");
                 NavigationManager.NavigateTo($"/view/{ProjectId}");
-                return;
             }
         }
-
-        await CheckIfSeederTimeHasPassed();
-        UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            if (hasWallet)
+            if (!hasWallet)
             {
-                await RefreshSignatures();
+                NavigationManager.NavigateTo($"/wallet");
+                return;
+            }
+
+            if (passwordComponent != null)
+            {
+                await CheckForExistingProjectAndCheckPassword();
             }
         }
     }
+
 
     private async Task RefreshSignatures()
     {
@@ -556,16 +578,20 @@ else
 
     private async Task InvestFunds()
     {
-        
         var words = await passwordComponent.GetWalletAsync();
-        var investorPubKey = _DerivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
 
-        var isAlreadyInvested = await IsInvestorAlreadyInvestedAsync(project.ProjectInfo.ProjectIdentifier, investorPubKey);
-        if (isAlreadyInvested)
+        if (project != null)
         {
-            notificationComponent.ShowErrorMessage("You are already invested in this project.");
-            return;
+            var investorPubKey = _DerivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
+
+            var isAlreadyInvested = await IsInvestorAlreadyInvestedAsync(project.ProjectInfo.ProjectIdentifier, investorPubKey);
+            if (isAlreadyInvested)
+            {
+                notificationComponent.ShowErrorMessage("You are already invested in this project.");
+                return;
+            }
         }
+
         if (Investment.IsSeeder)
         {
             bool isTestnet = network.NetworkType == NetworkType.Testnet;
