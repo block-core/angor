@@ -313,7 +313,7 @@ else
                         timeLeft = 1;
                     }
                 }
-                <button class="btn btn-border mb-3"
+                <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON"
                         @onclick="InvestInProject"
                         disabled="@(project == null || !validationService.CanInvest(project))"
                         title="@(validationService.CanInvest(project) ? null : "Investment is not allowed for this project.")">
@@ -743,9 +743,5 @@ else
         string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
     }
-    
-
-
-    
 }
 
