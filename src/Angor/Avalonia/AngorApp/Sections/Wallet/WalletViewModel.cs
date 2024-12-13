@@ -1,4 +1,5 @@
-using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using CSharpFunctionalExtensions;
 
 namespace AngorApp.Sections.Wallet;
 
@@ -17,17 +18,6 @@ public class WalletViewModelDesign : IWalletViewModel
     public IWallet Wallet { get; set; } = new WalletDesign();
 }
 
-public class WalletDesign : IWallet
-{
-    public IEnumerable<ITransaction> History { get; } =
-    [
-        new TransactionDesign() { Address = "someaddress1", Amount = 0.0001m, UtxoCount = 12, Path = "path", ViewRawJson = "json"}, 
-        new TransactionDesign() { Address = "someaddress2", Amount = 0.0003m, UtxoCount = 15, Path = "path", ViewRawJson = "json"},
-        new TransactionDesign() { Address = "someaddress3", Amount = 0.0042m, UtxoCount = 15, Path = "path", ViewRawJson = "json"},
-        new TransactionDesign() { Address = "someaddress4", Amount = 0.00581m, UtxoCount = 15, Path = "path", ViewRawJson = "json"},
-    ];
-}
-
 public class TransactionDesign : ITransaction
 {
     public string Address { get; set; }
@@ -40,11 +30,7 @@ public class TransactionDesign : ITransaction
 public interface IWallet
 {
     public IEnumerable<ITransaction> History { get; }
-}
-
-public class WalletModel : IWallet
-{
-    public IEnumerable<ITransaction> History { get; }
+    Task<Result<ITransaction>> CreateTransaction();
 }
 
 public interface ITransaction

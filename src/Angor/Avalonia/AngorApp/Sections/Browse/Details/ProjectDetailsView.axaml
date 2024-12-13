@@ -44,7 +44,7 @@
                 <controls:Pane.TitleIcon>
                     <a:Icon Value="fa-solid fa-timeline" />
                 </controls:Pane.TitleIcon>
-                
+
                 <z:SlimDataGrid ItemsSource="{Binding Stages}">
                     <z:SlimDataGrid.Columns>
                         <z:Column Header="STAGE" Binding="{Binding Index}" />
@@ -54,8 +54,11 @@
                         <z:Column Header="AMOUNT PER STAGE" Binding="{Binding Amount, StringFormat={}{0} TBTC}" />
                     </z:SlimDataGrid.Columns>
                 </z:SlimDataGrid>
-                
+            </controls:Pane>
+            <controls:Pane>
+                <Button Command="{Binding Invest}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20">INVEST</Button>
             </controls:Pane>
         </StackPanel>
+
     </Grid>
 </UserControl>

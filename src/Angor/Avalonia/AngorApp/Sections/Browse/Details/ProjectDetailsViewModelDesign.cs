@@ -1,3 +1,5 @@
+using System.Windows.Input;
+
 namespace AngorApp.Sections.Browse.Details;
 
 public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
@@ -20,4 +22,6 @@ public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
         new() { ReleaseDate = DateTimeOffset.Now.Add(TimeSpan.FromDays(40)), Amount = new decimal(0.3), Index = 3, Weight = 0.25d },
         new() { ReleaseDate = DateTimeOffset.Now.Add(TimeSpan.FromDays(60)), Amount = new decimal(0.2), Index = 4, Weight = 0.25d },
     ];
+
+    public ICommand Invest { get; }
 }

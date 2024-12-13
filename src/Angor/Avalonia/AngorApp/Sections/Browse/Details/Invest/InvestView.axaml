@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:invest="clr-namespace:AngorApp.Sections.Browse.Details.Invest"
+             xmlns:c="clr-namespace:AngorApp.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             ClipToBounds="False"
+             x:Class="AngorApp.Sections.Browse.Details.Invest.InvestView" x:DataType="invest:IInvestViewModel">
+
+    <Design.DataContext>
+        <invest:InvestViewModelDesign />
+    </Design.DataContext>
+
+    <c:Pane>
+        <StackPanel Spacing="20">
+            <TextBlock TextWrapping="Wrap">
+                Here is a small explanation of the project. You can view more details about the project here.
+
+                To invest in this project, the founder must sign a recovery agreement.
+                This agreement ensures that in the event the project does not succeed, you will be able to recover your funds.
+                This provides a safety net for your investment, giving you peace of mind that your financial contribution is protected.
+
+                ProjectId: angor1qmd8kazm8uzk7s0gddf4amjx4mzj3n5wzgn3mde
+
+                Target amount: 50 BTC
+
+                Starting in: 12/12/2024
+            </TextBlock>
+
+            <NumericUpDown IsReadOnly="{Binding IsBusy^}" Watermark="Amount" ShowButtonSpinner="False" Value="{Binding Amount}" />
+
+            <Button Command="{Binding Next}" Padding="2">
+                <!-- <Button.Flyout> -->
+                <!--     <Flyout> -->
+                <!--         <StackPanel> -->
+                <!--             <TextBox Watermark="Password" /> -->
+                <!--             <Button Content="Send" /> -->
+                <!--         </StackPanel> -->
+                <!--     </Flyout> -->
+                <!-- </Button.Flyout> -->
+
+                <Button.Content>
+                    <Panel>
+                        <TextBlock Text="Next" Margin="8" />
+                        <ProgressBar IsVisible="{Binding IsBusy^}" IsIndeterminate="True" MinWidth="0" VerticalAlignment="Bottom" MinHeight="0" Height="4" />
+                    </Panel>
+                </Button.Content>
+            </Button>
+        </StackPanel>
+
+    </c:Pane>
+</UserControl>

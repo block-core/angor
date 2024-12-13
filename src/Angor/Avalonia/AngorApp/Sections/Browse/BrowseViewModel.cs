@@ -1,15 +1,17 @@
 using System.Linq;
+using AngorApp.Sections.Wallet;
 using AngorApp.Services;
+using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Controls.Navigation;
 
 namespace AngorApp.Sections.Browse;
 
 public class BrowseViewModel : ReactiveObject, IBrowseViewModel
 {
-    public BrowseViewModel(INavigator navigator, UIServices uiServices)
+    public BrowseViewModel(Func<Maybe<IWallet>> getWallet, INavigator navigator, UIServices uiServices)
     {
-        Projects = SampleData.GetProjects().Select(project => new ProjectViewModel(project, navigator)).ToList();
-
+        
+        Projects = SampleData.GetProjects().Select(project => new ProjectViewModel(getWallet, project, navigator, uiServices)).ToList();
         OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.Launch(new Uri("https://www.angor.io")));
     }
 
