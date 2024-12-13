@@ -25,7 +25,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
 
         var script = scriptSelector.Compile().Invoke(scripts);
 
-        ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(script.ToBytes()), (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
+        ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(script.ToBytes()).ToTapScript(TapLeafVersion.C0));
 
         return new Script(controlBlock.ToBytes());
     }
@@ -78,7 +78,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
             throw new Exception("no secret found that matches the given scripts");
         }
 
-        ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(execute.ToBytes()), (byte)TaprootConstants.TAPROOT_LEAF_TAPSCRIPT);
+        ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(execute.ToBytes()).ToTapScript(TapLeafVersion.C0));
 
         return (new Script(controlBlock.ToBytes()), execute, secretHashes.ToArray());
     }
@@ -89,7 +89,12 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
 
         var scriptWeights = BuildTaprootScripts(scripts);
 
-        var treeInfo = TaprootSpendInfo.WithHuffmanTree(taprootKey, scriptWeights.ToArray());
+        // Transform the scripts to TapScript format
+        var tapScriptWeights = scriptWeights
+            .Select(sw => (sw.Item1, sw.Item2.ToTapScript(TapLeafVersion.C0)))
+            .ToList();
+
+        var treeInfo = TaprootSpendInfo.WithHuffmanTree(taprootKey, tapScriptWeights.ToArray());
 
         return treeInfo;
     }
