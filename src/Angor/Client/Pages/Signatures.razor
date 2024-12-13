@@ -286,11 +286,11 @@
 
             foreach (var pendingSignature in signaturesRequests.Where(_ => _.EncryptedMessage != null && _.AmountToInvest == null))
             {
-                pendingSignature.TransactionHex = await encryption.DecryptNostrContentAsync(
-                    nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.EncryptedMessage);
-
                 try
                 {
+                    pendingSignature.TransactionHex = await encryption.DecryptNostrContentAsync(
+                        nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.EncryptedMessage);
+
                     var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.TransactionHex);
 
                     pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3) //Todo get the actual outputs with taproot type
