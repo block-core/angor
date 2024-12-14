@@ -222,5 +222,5 @@ jobs:
       with:
           branch: main 
           folder: dist/wwwroot
-          repository-name: block-core/angor-test
+          repository-name: sondreb/angor-test
           token: ${{ secrets.ANGOR_DEPLOY_TOKEN }}
