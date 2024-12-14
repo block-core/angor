@@ -50,6 +50,33 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
+    - name: Install Rust (Stable)
+      uses: actions-rs/toolchain@v1
+      with:
+          toolchain: stable
+          override: true
+
+    # Add Rust cargo cache
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          src-tauri/target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    # Add npm cache
+    - uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
     - name: Variables
       run: |
           echo VERSION=$(npm run version --silent) >> $GITHUB_ENV
@@ -79,12 +106,6 @@ jobs:
       with:
         name: angor-web-${{ env.VERSION }}-${{ matrix.runtime }}.zip
         path: angor-web-${{ env.VERSION }}-${{ matrix.runtime }}.zip
-
-    - name: Install Rust (Stable)
-      uses: actions-rs/toolchain@v1
-      with:
-          toolchain: stable
-          override: true
 
     - name: Install Linux dependencies
       if: matrix.os == 'ubuntu-latest'
