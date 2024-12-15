@@ -302,6 +302,43 @@ namespace Angor.Shared.Services
             
             return ev;
         }
+        
+        public Task<string> AddStageAsync(Stage stage, string hexPrivateKey, string projectIdentifier, Action<NostrOkResponse> action)
+        {
+            var key = NostrPrivateKey.FromHex(hexPrivateKey);
+
+            // Create the content for the stage event
+            var stageContent = new
+            {
+                AmountToRelease = stage.AmountToRelease,
+                ReleaseDate = stage.ReleaseDate.ToString("o"), // ISO 8601 format
+                StageNumber = stage.StageNumber,
+                ProjectIdentifier = projectIdentifier
+            };
+
+            // Serialize the stage content
+            var content = _serializer.Serialize(stageContent);
+
+            // Sign the Nostr event
+            var signed = new NostrEvent
+            {
+                Kind = NostrKind.ApplicationSpecificData, // Use application-specific kind
+                CreatedAt = DateTime.UtcNow,
+                Content = content,
+                Tags = new NostrEventTags(
+                    new NostrEventTag("project-identifier", projectIdentifier),
+                    new NostrEventTag("stage-number", stage.StageNumber.ToString())
+                )
+            }.Sign(key);
+
+            _subscriptionsHandling.TryAddOKAction(signed.Id, action);
+
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            nostrClient.Send(new NostrEventRequest(signed));
+
+            return Task.FromResult(signed.Id);
+        }
+
     }
 
 }

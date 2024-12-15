@@ -197,30 +197,31 @@ else
 
     <!-- Stages Section -->
 
-    <div class="card card-body mt-4">
-        <div class="d-flex align-items-center">
-            <span class="user-select-none">
-                <Icon IconName="stages"></Icon>
-            </span>
-            <div class="h-100 ms-3">
-                <h5 class="mb-0 font-weight-bolder">
-                    Stages
-                </h5>
-            </div>
+<div class="card card-body mt-4">
+    <div class="d-flex align-items-center">
+        <span class="user-select-none">
+            <Icon IconName="stages"></Icon>
+        </span>
+        <div class="h-100 ms-3">
+            <h5 class="mb-0 font-weight-bolder">
+                Stages
+            </h5>
         </div>
-        <div class="table-responsive form-control mt-4">
-            <table class="table align-items-center mb-0">
-                <thead>
-                <tr>
-                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage</th>
-                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage %</th>
-                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Release Date</th>
-                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Days Until Stage</th>
-                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Amount Per Stage</th>
-                    <!-- Other headers -->
-                </tr>
-                </thead>
-                <tbody>
+    </div>
+    <div class="table-responsive form-control mt-4">
+        <table class="table align-items-center mb-0">
+            <thead>
+            <tr>
+                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage</th>
+                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage %</th>
+                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Release Date</th>
+                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Days Until Stage</th>
+                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Amount Per Stage</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (project?.ProjectInfo?.Stages != null && project.ProjectInfo.Stages.Any())
+            {
                 @for (var index = 0; index < project.ProjectInfo.Stages.Count; index++)
                 {
                     var stage = project.ProjectInfo.Stages[index];
@@ -241,13 +242,19 @@ else
                             }
                         </td>
                         <td>@amountInStage @network.CoinTicker</td>
-                        <!-- Other stage details -->
                     </tr>
                 }
-                </tbody>
-            </table>
-        </div>
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-center">No stages available.</td>
+                </tr>
+            }
+            </tbody>
+        </table>
     </div>
+</div>
 
 
     <!-- Seeders Section -->
@@ -510,6 +517,7 @@ else
             {
                 await SetProjectLinksAndRefreshBalance();
                 projectStats.Loading = false;
+                await FetchStages();
                 StateHasChanged();
                 return;
             }
@@ -748,5 +756,42 @@ else
         string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
     }
+    
+    private async Task FetchStages()
+    {
+        if (project?.ProjectInfo?.ProjectIdentifier == null)
+        {
+            notificationComponent.ShowErrorMessage("Project identifier is missing.");
+            return;
+        }
+
+        try
+        {
+            var fetchedStages = new List<Stage>();
+
+            _RelayService.LookupProjectsInfoByEventIds<Stage>(
+                stage =>
+                {
+                    if (!fetchedStages.Any(s => s.StageNumber == stage.StageNumber))
+                    {
+                        fetchedStages.Add(stage);
+                    }
+                },
+                () =>
+                {
+                    // Update project stages
+                    project.ProjectInfo.Stages = fetchedStages.OrderBy(s => s.StageNumber).ToList();
+                    StateHasChanged();
+                },
+                project.ProjectInfo.ProjectIdentifier // Use the project identifier to fetch stages
+            );
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error fetching stages.");
+            notificationComponent.ShowErrorMessage($"Failed to fetch stages: {ex.Message}");
+        }
+    }
+
 
 }

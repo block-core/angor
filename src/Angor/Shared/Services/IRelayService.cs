@@ -20,4 +20,7 @@ public interface IRelayService
     
     string SendDirectMessagesForPubKeyAsync(string senderNosterPrivateKey, string nostrPubKey, string encryptedMessage,
         Action<NostrOkResponse> onResponseAction);
+
+    Task<string> AddStageAsync(Stage stage, string hexPrivateKey, string projectIdentifier,
+        Action<NostrOkResponse> action);
 }

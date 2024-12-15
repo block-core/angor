@@ -859,6 +859,14 @@
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
+            // Publish each stage as a separate Nostr event
+            foreach (var stage in project.ProjectInfo.Stages)
+            {
+                if (!stage.IsPublished) // Avoid re-publishing
+                {
+                    await PublishStageDuringTransaction(stage);
+                }
+            }
             showCreateModal = true;
         }
         catch (Exception e)
@@ -1172,4 +1180,46 @@
         isPresetMode = !isPresetMode; // Toggle between Presets and Automatic
         StateHasChanged(); // Update the UI
     }
+    
+    private async Task PublishStageDuringTransaction(Stage stage)
+    {
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectIndex);
+            var nostrKeyHex = Encoders.Hex.EncodeData(nostrKey.ToBytes());
+
+            var eventId = await _RelayService.AddStageAsync(
+                stage,
+                nostrKeyHex,
+                project.ProjectInfo.ProjectIdentifier,
+                response =>
+                {
+                    if (response.Accepted)
+                    {
+                        stage.EventId = response.EventId; // Store the stage's Nostr event ID
+                        stage.IsPublished = true; // Mark the stage as published
+                        storage.UpdateFounderProject(project); // Save updated stage info
+                        _Logger.LogInformation($"Stage {stage.StageNumber} published successfully.");
+                    }
+                    else
+                    {
+                        _Logger.LogError($"Failed to publish stage {stage.StageNumber}.");
+                    }
+                }
+            );
+
+            if (string.IsNullOrEmpty(eventId))
+            {
+                throw new Exception($"Failed to create Nostr event for stage {stage.StageNumber}.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogError(ex, $"Error publishing stage {stage.StageNumber}: {ex.Message}");
+            notificationComponent.ShowErrorMessage($"Error publishing stage {stage.StageNumber}: {ex.Message}");
+        }
+    }
+
+
 }
