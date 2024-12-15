@@ -116,30 +116,13 @@ namespace Angor.Shared.Services
                 _subscriptionsHandling.TryAddEoseAction(subscriptionKey, onEoseAction);
             }
 
-            var tcs = new TaskCompletionSource();
-
-            // Handle end-of-stream asynchronously
-            if (onEoseAction == null)
-            {
-                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, () => tcs.SetResult());
-            }
-            else
-            {
-                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, () =>
-                {
-                    onEoseAction();
-                    tcs.SetResult();
-                });
-            }
-
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 Authors = nPubs,
                 Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata },
             }));
-
-            await tcs.Task; // Wait for the end of stream
         }
+
 
 
         public Task LookupSignaturesDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)
