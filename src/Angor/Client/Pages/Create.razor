@@ -640,6 +640,13 @@
         // check if the project was already published to nostr
         nostrMetadataCreated = project.NostrProfileCreated;
         nostrApplicationSpecificDataCreated = !string.IsNullOrEmpty(project.ProjectInfoEventId);
+        
+        // Select a preset
+        if(!project.ProjectInfo.Stages.Any())
+        {
+            isPresetMode = true;
+            OnStagePresetChange(new ChangeEventArgs { Value = "preset1" });
+        }
     }
 
 
