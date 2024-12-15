@@ -315,8 +315,8 @@ else
                 }
                 <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON"
                         @onclick="InvestInProject"
-                        disabled="@(project == null || !validationService.CanInvest(project))"
-                        title="@(validationService.CanInvest(project) ? null : "Investment is not allowed for this project.")">
+                        disabled="@(project == null || !CanInvest(project))"
+                        title="@(CanInvest(project) ? null : "Investment is not allowed for this project.")">
                     Invest Now
                 </button>
             </div>
@@ -434,7 +434,6 @@ else
 
     private bool isGeneratingNsec;
     private string errorMessage = string.Empty;
-    private ProjectValidationService validationService = new ProjectValidationService();
 
 
     private string error;
@@ -742,6 +741,17 @@ else
     {
         string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
+    }
+    
+    public bool CanInvest(Project project)
+    {
+        if (project == null) return false;
+
+        var now = DateTime.UtcNow;
+        if (now < project.ProjectInfo.StartDate) return false; // Investing period hasn't started
+        if (now > project.ProjectInfo.ExpiryDate) return false; // Investing period has ended
+
+        return true;
     }
 }
 

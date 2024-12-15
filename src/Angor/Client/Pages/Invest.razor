@@ -374,7 +374,6 @@ else
     TransactionInfo? signedTransaction;
     Transaction unSignedTransaction;
     string InvestorPubKey;
-    private ProjectValidationService validationService = new ProjectValidationService();
 
 
     private FeeData feeData = new();
@@ -388,7 +387,7 @@ else
 
         Project? findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
-        if (project == null || !validationService.CanInvest(project))
+        if (project == null || !CanInvest(project))
         {
             notificationComponent.ShowNotificationMessage("You cannot invest in this project.", 5);
             NavigationManager.NavigateTo($"/view/{ProjectId}");
@@ -942,5 +941,16 @@ else
     private void HandleTransactionJsonModalVisibility(bool isVisible)
     {
         showTransactionJsonModal = isVisible;
+    }
+    
+    public bool CanInvest(Project project)
+    {
+        if (project == null) return false;
+
+        var now = DateTime.UtcNow;
+        if (now < project.ProjectInfo.StartDate) return false; // Investing period hasn't started
+        if (now > project.ProjectInfo.ExpiryDate) return false; // Investing period has ended
+
+        return true;
     }
 }

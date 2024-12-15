@@ -578,7 +578,6 @@
     private int totalDuration;
     private int numberOfStages;
     private bool isValid = true;
-    private int projectCount;
     private string errorMessage;
 
     bool createProfileSpinner;
@@ -595,18 +594,10 @@
         {
             return;
         }
-
-        var projects = storage.GetFounderProjects() ?? new List<FounderProject>();
-        projectCount = projects?.Count ?? 0;
+        
+        var projects = storage.GetFounderProjects()?.Where(p => !string.IsNullOrEmpty(p.CreationTransactionId)).ToList() ?? new List<FounderProject>();
 
         var keys = _walletStorage.GetFounderKeys();
-
-        if (projects.Count > 14)
-        {
-            errorMessage = "You have reached the maximum limit of projects!";
-            isValid = false;
-            return;
-        }
     
         if (projects.Count >= keys.Keys.Count)
         {
