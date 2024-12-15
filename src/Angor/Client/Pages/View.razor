@@ -421,6 +421,8 @@ else
                 </div>
             </a>
         }
+        
+        <button class="btn btn-border mt-4" @onclick="OpenProjectOnHubAsync">Show on Hub</button>
     </div>
 }
 </div>
@@ -747,6 +749,19 @@ else
     {
         string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
+    }
+    
+    private async Task OpenProjectOnHubAsync()
+    {
+        if (project?.ProjectInfo?.NostrPubKey != null && !string.IsNullOrEmpty(ProjectId))
+        {
+            var url = $"https://hub.angor.io/profile/{project.ProjectInfo.NostrPubKey}/{ProjectId}";
+            await Js.InvokeVoidAsync("window.open", url, "_blank");
+        }
+        else
+        {
+            notificationComponent.ShowNotificationMessage("Public key or Project ID is not available.", 3);
+        }
     }
 
 }
