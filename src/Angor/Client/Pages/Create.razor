@@ -616,6 +616,21 @@
                       }
                   };
 
+        // Set default images for Testnet
+        var random = new Random();
+            if (network.NetworkType == NetworkType.Testnet)
+            {
+                if (string.IsNullOrEmpty(project.Metadata.Banner))
+                {
+                    project.Metadata.Banner = spacePhotos[random.Next(spacePhotos.Length)];
+                }
+            
+                if (string.IsNullOrEmpty(project.Metadata.Picture))
+                {
+                    project.Metadata.Picture = spacePhotos[random.Next(spacePhotos.Length)];
+                }
+        }
+
         // save project to storage immediately if new
         if (!projects.Any(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier))
         {
@@ -724,9 +739,6 @@
 
         try
         {
-            // Ensure default images are set for Testnet
-            SetDefaultImagesForTestnet(project.Metadata);
-            
             var words = await passwordComponent.GetWalletAsync();
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectIndex);
 
@@ -1174,24 +1186,6 @@
     {
         isPresetMode = !isPresetMode; // Toggle between Presets and Automatic
         StateHasChanged(); // Update the UI
-    }
-    
-    
-    private void SetDefaultImagesForTestnet(ProjectMetadata metadata)
-    {
-        var random = new Random();
-        if (network.NetworkType == NetworkType.Testnet)
-        {
-            if (string.IsNullOrEmpty(metadata.Banner))
-            {
-                metadata.Banner = spacePhotos[random.Next(spacePhotos.Length)];
-            }
-
-            if (string.IsNullOrEmpty(metadata.Picture))
-            {
-                metadata.Picture = spacePhotos[random.Next(spacePhotos.Length)];
-            }
-        }
     }
     
     private readonly string[] spacePhotos = new[]
