@@ -54,6 +54,8 @@ builder.Services.AddTransient<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>
 builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 
 builder.Services.AddSingleton<INostrCommunicationFactory, NostrCommunicationFactory>();
+builder.Services.AddSingleton<IBlockcoreNBitcoinConverter, BlockcoreNBitcoinConverter>();
+
 builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
 builder.Services.AddSingleton<IPasswordCacheService, PasswordCacheService>();
 builder.Services.AddTransient<IHtmlStripperService, HtmlStripperService>();
