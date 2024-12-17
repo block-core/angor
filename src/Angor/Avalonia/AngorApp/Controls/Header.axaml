@@ -7,7 +7,7 @@
     </Design.PreviewWith>
 
     <ControlTheme TargetType="c:Header" x:Key="{x:Type c:Header}">
-        <Setter Property="IconMargin" Value="10, 20" />
+        <Setter Property="IconMargin" Value="20, 20" />
         <Setter Property="Template">
             <ControlTemplate>
                 <Panel>
