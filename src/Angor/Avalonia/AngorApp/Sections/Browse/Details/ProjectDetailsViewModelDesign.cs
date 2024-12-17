@@ -20,7 +20,7 @@ public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
         new() { ReleaseDate = DateTimeOffset.Now.Date.AddDays(1), Amount = new decimal(0.1), Index = 1, Weight = 0.25d },
         new() { ReleaseDate = DateTimeOffset.Now.Add(TimeSpan.FromDays(20)), Amount = new decimal(0.4), Index = 2, Weight = 0.25d },
         new() { ReleaseDate = DateTimeOffset.Now.Add(TimeSpan.FromDays(40)), Amount = new decimal(0.3), Index = 3, Weight = 0.25d },
-        new() { ReleaseDate = DateTimeOffset.Now.Add(TimeSpan.FromDays(60)), Amount = new decimal(0.2), Index = 4, Weight = 0.25d },
+        new() { ReleaseDate = DateTimeOffset.Now.Add(TimeSpan.FromDays(60)), Amount = new decimal(0.2), Index = 4, Weight = 0.25d }
     ];
 
     public ICommand Invest { get; }
@@ -29,15 +29,20 @@ public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
 
     public IEnumerable<INostrRelay> Relays { get; } =
     [
-        new NostrRelayDesign()
+        new NostrRelayDesign
         {
-            Uri = new Uri("wss://relay.angor.io"),
+            Uri = new Uri("wss://relay.angor.io")
         },
-        new NostrRelayDesign()
+        new NostrRelayDesign
         {
-            Uri = new Uri("wss://relay2.angor.io"),
-        },
+            Uri = new Uri("wss://relay2.angor.io")
+        }
     ];
+
+    public double TotalDays { get; } = 119;
+    public double TotalInvestment { get; } = 1.5d;
+    public double CurrentDays { get; } = 11;
+    public double CurrentInvestment { get; } = 0.79d;
 }
 
 public class NostrRelayDesign : INostrRelay

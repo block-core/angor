@@ -6,6 +6,7 @@
              xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:a="https://github.com/projektanker/icons.avalonia"
              xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
+             xmlns:zc="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="details:IProjectDetailsViewModel">
 
@@ -18,6 +19,7 @@
             <Panel>
                 <controls:Pane IsHeaderVisible="True" IsTitleVisible="True"
                                HeaderHeight="300"
+                               Subtitle="{Binding ShortDescription}"
                                HeaderIcon="{Binding Icon}"
                                HeaderBackground="{Binding Picture}"
                                Title="{Binding Name}">
@@ -25,7 +27,30 @@
                         <a:Icon Value="fa-solid fa-tarp" />
                     </controls:Pane.TitleIcon>
                     <DockPanel>
-                        <TextBlock TextAlignment="Center" VerticalAlignment="Center" Width="300">PLACEHOLDER</TextBlock>
+                        <DockPanel.Styles>
+                            <Style Selector="zc|CircularProgressBar">
+                                <Setter Property="StrokeThickness" Value="16" />
+                                <Setter Property="Foreground" Value="Orange" />
+                                <Setter Property="Background" Value="{StaticResource Level4}" />
+                            </Style>
+                        </DockPanel.Styles>
+                        <UniformGrid Columns="1" Width="300">
+                            <Panel>
+                                <zc:CircularProgressBar x:Name="Days" Margin="10" Maximum="{Binding TotalDays}" Value="{Binding CurrentDays}" />
+                                <TextBlock VerticalAlignment="Center" Classes="SizeBig" HorizontalAlignment="Center">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0}/{1} days">
+                                            <Binding Path="CurrentDays" />
+                                            <Binding Path="TotalDays" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </Panel>
+                            <Panel>
+                                <zc:CircularProgressBar x:Name="Funding" Margin="10" Maximum="{Binding TotalInvestment}" Value="{Binding CurrentInvestment}" />
+                                <TextBlock Text="{Binding #Funding.Proportion, StringFormat={}{0:P0}}" VerticalAlignment="Center" Classes="SizeBig" HorizontalAlignment="Center" />
+                            </Panel>
+                        </UniformGrid>
                         <StackPanel Spacing="20">
                             <StackPanel Margin="30" Spacing="5">
                                 <controls:SectionItem Content="View the transaction on the explorer" />
@@ -72,7 +97,7 @@
                 <controls:Pane.TitleIcon>
                     <a:Icon Value="fa-regular fa-message" />
                 </controls:Pane.TitleIcon>
-                
+
                 <StackPanel Spacing="20">
                     <HeaderedContentControl Header="Project NOSTR public key">
                         <controls:SectionItem LeftContent="{Binding NpubKey}">
@@ -115,7 +140,7 @@
                         </ItemsControl>
                     </HeaderedContentControl>
                 </StackPanel>
-                
+
             </controls:Pane>
         </StackPanel>
 

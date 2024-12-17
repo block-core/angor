@@ -36,7 +36,7 @@
                 </TextBlock>
                 <controls:SectionItem LeftContent="Address" Content="{Binding Transaction.Address}" />
                 <controls:SectionItem LeftContent="Amount" Content="{Binding Transaction.Amount, StringFormat=0.0000 0000 BTC}" />
-                <Button HorizontalAlignment="Center" Command="{Binding Confirm}">
+                <Button HorizontalAlignment="Center" Margin="0 15" Command="{Binding Confirm}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="CONFIRM" VerticalAlignment="Center" />

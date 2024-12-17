@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Windows.Input;
 
 namespace AngorApp.Sections.Browse.Details;
@@ -14,6 +13,10 @@ public interface IProjectDetailsViewModel
     public string NpubKey { get; }
     public string NpubKeyHex { get; }
     public IEnumerable<INostrRelay> Relays { get; }
+    public double TotalDays { get; }
+    public double TotalInvestment { get; }
+    public double CurrentDays { get; }
+    public double CurrentInvestment { get; }
 }
 
 public class NostrRelay
