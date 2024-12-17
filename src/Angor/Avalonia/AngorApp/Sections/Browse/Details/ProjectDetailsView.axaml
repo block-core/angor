@@ -7,13 +7,13 @@
              xmlns:a="https://github.com/projektanker/icons.avalonia"
              xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1200"
-             x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="details:IProjectDetailsViewModel" ClipToBounds="False">
+             x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="details:IProjectDetailsViewModel">
 
     <Design.DataContext>
         <details:ProjectDetailsViewModelDesign />
     </Design.DataContext>
 
-    <Grid ColumnDefinitions="1* 5* 1*">
+    <Grid ColumnDefinitions="1* 5* 1*" ClipToBounds="False">
         <StackPanel Grid.Column="1" Spacing="20">
             <controls:Pane IsHeaderVisible="True" IsTitleVisible="True"
                            HeaderHeight="300"

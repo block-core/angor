@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:amount="clr-namespace:AngorApp.Sections.Browse.Details.Invest.Amount"
+             mc:Ignorable="d"
+             x:Class="AngorApp.Sections.Browse.Details.Invest.Amount.AmountView" x:DataType="amount:IAmountViewModel">
+
+    <Design.DataContext>
+        <amount:AmountViewModelDesign />
+    </Design.DataContext>
+
+    <StackPanel Spacing="20">
+        <TextBlock TextWrapping="Wrap">
+            <TextBlock.Inlines>
+                <Run>
+                    Here is a small explanation of the project.
+                </Run>
+                <Run>You can view more details about the project </Run>
+                <InlineUIContainer>
+                    <HyperlinkButton Content="here" Padding="0" NavigateUri="http://www.google.com" />
+                </InlineUIContainer>
+            </TextBlock.Inlines>
+        </TextBlock>
+        <TextBlock TextWrapping="Wrap">
+            To invest in this project, the founder must sign a recovery agreement.
+            This agreement ensures that in the event the project does not succeed, you will be able to recover your funds.
+            This provides a safety net for your investment, giving you peace of mind that your financial contribution is protected.
+        </TextBlock>
+        <TextBlock>ProjectId: angor1qmd8kazm8uzk7s0gddf4amjx4mzj3n5wzgn3mde</TextBlock>
+        <TextBlock>Target amount: 50 BTC</TextBlock>
+        <TextBlock>Starting in: 12/12/2024</TextBlock>
+
+        <NumericUpDown Watermark="Amount" ShowButtonSpinner="False" Value="{Binding Amount, Mode=TwoWay}" />
+    </StackPanel>
+</UserControl>

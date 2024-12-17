@@ -3,10 +3,57 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:transactionPreview="clr-namespace:AngorApp.Sections.Browse.Details.Invest.TransactionPreview"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.Sections.Browse.Details.Invest.TransactionPreview.TransactionPreviewView" x:DataType="transactionPreview:TransactionPreviewViewModel">
-    <StackPanel>
-        <TextBlock>Transaction preview</TextBlock>
-        <ContentControl Content="{Binding Transaction}" />
-    </StackPanel>
+             xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
+             xmlns:designTime="clr-namespace:Zafiro.Avalonia.DesignTime;assembly=Zafiro.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.Controls"
+             xmlns:dp="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Browse.Details.Invest.TransactionPreview.TransactionPreviewView"
+             x:DataType="transactionPreview:ITransactionPreviewViewModel">
+
+    <Design.DataContext>
+        <transactionPreview:TransactionPreviewViewModelDesign IsBusy="{designTime:Return {x:False}}">
+            <transactionPreview:TransactionPreviewViewModelDesign.Transaction>
+                <wallet:TransactionDesign Address="ADDRESS" Amount="0.12" />
+            </transactionPreview:TransactionPreviewViewModelDesign.Transaction>
+        </transactionPreview:TransactionPreviewViewModelDesign>
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="controls|SectionItem /template/ ContentPresenter#PART_LeftContent TextBlock">
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel VerticalAlignment="Center">
+        <Panel IsVisible="{Binding !TransactionConfirmed^}">
+            <StackPanel IsVisible="{Binding !!Transaction}" Spacing="10">
+                <TextBlock TextAlignment="Center" Padding="10">
+                    <Run>This is a preview of the transaction you will send.</Run>
+                    <LineBreak />
+                    <Run>If everything is correct you can confirm it with the button below</Run>
+                </TextBlock>
+                <controls:SectionItem LeftContent="Address" Content="{Binding Transaction.Address}" />
+                <controls:SectionItem LeftContent="Amount" Content="{Binding Transaction.Amount, StringFormat=0.0000 0000 BTC}" />
+                <Button HorizontalAlignment="Center" Command="{Binding Confirm}">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="CONFIRM" VerticalAlignment="Center" />
+                            <dp:ProgressRing IsVisible="{Binding Confirm.IsExecuting^}"  Margin="10 0" Height="20" Width="20" />
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+                <TextBlock Opacity="{Binding Confirm.IsExecuting^}" HorizontalAlignment="Center" Text="Confirming transaction..." />
+            </StackPanel>
+            <StackPanel IsVisible="{Binding CreateTransaction.IsExecuting^}">
+                <TextBlock Text="Creating transaction. Please wait." TextAlignment="Center" />
+                <dp:ProgressRing Margin="20" Height="100" Width="100" HorizontalAlignment="Stretch" />
+            </StackPanel>
+        </Panel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" IsVisible="{Binding TransactionConfirmed^}" VerticalAlignment="Center">
+            <avalonia:Icon Value="fa-solid fa-check" Foreground="Green" FontSize="20" Margin="10" />
+            <TextBlock Text="The transaction has been confirmed" VerticalAlignment="Center" />
+        </StackPanel>
+    </Panel>
 </UserControl>

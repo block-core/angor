@@ -25,12 +25,19 @@ public class TransactionDesign : ITransaction
     public string Path { get; set; }
     public int UtxoCount { get; set; }
     public string ViewRawJson { get; set; }
+
+    public async Task<Result> Broadcast()
+    {
+        await Task.Delay(4000);
+        return Result.Success();
+    }
 }
 
 public interface IWallet
 {
     public IEnumerable<ITransaction> History { get; }
-    Task<Result<ITransaction>> CreateTransaction();
+    decimal? Balance { get; set; }
+    Task<ITransaction> CreateTransaction(decimal amount, string address);
 }
 
 public interface ITransaction
@@ -40,4 +47,5 @@ public interface ITransaction
     public string Path { get; }
     public int UtxoCount { get; }
     public string ViewRawJson { get; }
+    Task<Result> Broadcast();
 }

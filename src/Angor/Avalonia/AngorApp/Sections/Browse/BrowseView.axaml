@@ -17,18 +17,10 @@
 
         <Style Selector="TextBox">
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
         </Style>
 
-        <Style Selector="Button">
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="10" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="TextBlock.FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{StaticResource Level5}" />
-        </Style>
     </UserControl.Styles>
 
     <StackPanel Spacing="20">

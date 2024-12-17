@@ -40,4 +40,6 @@ public static class MiscConverters
         Humanizer.Configuration.Configurator.DateTimeHumanizeStrategy = new DefaultDateTimeHumanizeStrategy();
         return offset.Humanize(dateToCompareAgainst: DateTimeOffset.Now);
     });
+
+    public static readonly FuncValueConverter<bool, double> BoolToOpacity = new(b => b ? 1 : 0);
 }

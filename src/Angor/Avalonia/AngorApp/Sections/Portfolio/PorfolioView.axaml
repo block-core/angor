@@ -24,18 +24,11 @@
         <Style Selector="i|Icon">
             <Setter Property="FontSize" Value="25" />
         </Style>
-        <Style Selector="Button">
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="10" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="TextBlock.FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{StaticResource Level5}" />
-        </Style>
+
         <Style Selector="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
-        
+
         <Style Selector="ItemsControl#PortfolioItems TextBlock">
             <Setter Property="HorizontalAlignment" Value="Center" />
         </Style>
@@ -46,14 +39,14 @@
             <Setter Property="Spacing" Value="10" />
             <Setter Property="Margin" Value="20" />
         </Style>
-        
+
     </UserControl.Styles>
 
     <StackPanel Spacing="20">
 
         <controls:Pane Title="Portfolio" IsTitleVisible="True" Subtitle="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required">
             <controls:Pane.TitleIcon>
-                <i:Icon Value="fa-solid fa-hand-holding-dollar"  />
+                <i:Icon Value="fa-solid fa-hand-holding-dollar" />
             </controls:Pane.TitleIcon>
             <controls:Pane.TitleRightContent>
                 <controls:IconButton DockPanel.Dock="Right" VerticalAlignment="Top" Content="PENALTIES">
@@ -69,8 +62,8 @@
                 <DataTemplate>
                     <controls:Pane>
                         <StackPanel>
-                            <i:Icon Value="fa-solid fa-money-bills"></i:Icon>
-                            <TextBlock Text="Funded projects"></TextBlock>
+                            <i:Icon Value="fa-solid fa-money-bills" />
+                            <TextBlock Text="Funded projects" />
                             <TextBlock Text="0" />
                         </StackPanel>
                     </controls:Pane>

@@ -7,8 +7,6 @@ using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
 using AngorApp.Services;
 using Avalonia.Controls.Notifications;
-using Avalonia.Controls.Templates;
-using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Dialogs.Simple;
 using Zafiro.Avalonia.Notifications;
 using Separator = AngorApp.Sections.Shell.Separator;
@@ -21,8 +19,8 @@ public class CompositionRoot
     {
         var topLevel = TopLevel.GetTopLevel(control);
         var launcher = new LauncherService(topLevel!.Launcher);
-        var uiServices = new UIServices(launcher, new DesktopDialog(Maybe<DataTemplates>.None), new NotificationService(new WindowNotificationManager(topLevel)));
-        
+        var uiServices = new UIServices(launcher, new DesktopDialog(algorithm: new AlternateSizingAlgorithm()), new NotificationService(new WindowNotificationManager(topLevel)));
+
         IEnumerable<SectionBase> sections =
         [
             new Section("Home", new HomeViewModel(), "svg:/Assets/angor-icon.svg"),
@@ -33,9 +31,9 @@ public class CompositionRoot
             new Section("Founder", new FounderViewModel(), "fa-money-bills"),
             new Separator(),
             new Section("Settings", new WalletViewModel(), "fa-gear"),
-            new CommandSection("Angor Hub", ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.Launch(new Uri("https://www.angor.io"))) , "fa-magnifying-glass") { IsPrimary = false }
+            new CommandSection("Angor Hub", ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.Launch(new Uri("https://www.angor.io"))), "fa-magnifying-glass") { IsPrimary = false }
         ];
-        
+
         return new MainViewModel(sections, uiServices);
     }
 }

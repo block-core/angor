@@ -1,10 +1,12 @@
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using AngorApp.Sections.Browse.Details.Invest;
+using AngorApp.Sections.Browse.Details.Invest.Amount;
+using AngorApp.Sections.Browse.Details.Invest.TransactionPreview;
 using AngorApp.Sections.Wallet;
 using AngorApp.Services;
 using CSharpFunctionalExtensions;
+using Zafiro.Avalonia.Commands;
+using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.Sections.Browse.Details;
@@ -23,11 +25,19 @@ public class ProjectDetailsViewModel(Func<Maybe<IWallet>> getWallet, Project pro
         return maybeWallet.Match(wallet => DoInvest(wallet, project, uiServices), () => uiServices.NotificationService.Show("You need to create a Wallet before investing", "No wallet"));
     });
 
-    private static async Task DoInvest(IWallet getWallet, Project project, UIServices uiServices)
+    private static async Task DoInvest(IWallet wallet, Project project, UIServices uiServices)
     {
-        await uiServices.Dialog.Show(new NavigationViewModel(navigator => new InvestViewModel(getWallet, project, uiServices, navigator)), "Invest", closeable =>
+        var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project, uiServices))
+            .Then(viewModel => new TransactionPreviewViewModel(wallet, project, viewModel.Amount!.Value))
+            .Build();
+
+        Func<ICloseable, IOption[]> func = closeable =>
         [
-            new Option("Close", ReactiveCommand.Create(closeable.Close, Observable.Return(true)))
-        ]);
+            OptionBuilder.Create("Next", wizard.Next),
+            OptionBuilder.Create("Previous", wizard.Back),
+            OptionBuilder.Create("Close", EnhancedCommand.Create(ReactiveCommand.Create(closeable.Close, wizard.IsLastPage)))
+        ];
+
+        await uiServices.Dialog.Show(wizard, $"Invest in {project}", func);
     }
 }
