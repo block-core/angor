@@ -24,4 +24,28 @@ public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
     ];
 
     public ICommand Invest { get; }
+    public string NpubKey { get; } = "npub109t62lkxkfs7m4cac0lp0en45ndl3kdcnqm0serd450dravj9lvq3duh5k";
+    public string NpubKeyHex { get; } = "7957a57ec6b261edd71dc3fe17e675a4dbf8d9b89836f8646dad1ed1f5922fd8";
+
+    public IEnumerable<INostrRelay> Relays { get; } =
+    [
+        new NostrRelayDesign()
+        {
+            Uri = new Uri("wss://relay.angor.io"),
+        },
+        new NostrRelayDesign()
+        {
+            Uri = new Uri("wss://relay2.angor.io"),
+        },
+    ];
+}
+
+public class NostrRelayDesign : INostrRelay
+{
+    public Uri Uri { get; set; }
+}
+
+public interface INostrRelay
+{
+    public Uri Uri { get; }
 }

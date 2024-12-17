@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Windows.Input;
 
 namespace AngorApp.Sections.Browse.Details;
@@ -10,6 +11,14 @@ public interface IProjectDetailsViewModel
     object Picture { get; }
     public IEnumerable<Stage> Stages { get; }
     public ICommand Invest { get; }
+    public string NpubKey { get; }
+    public string NpubKeyHex { get; }
+    public IEnumerable<INostrRelay> Relays { get; }
+}
+
+public class NostrRelay
+{
+    public Uri Uri { get; }
 }
 
 public class Stage

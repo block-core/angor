@@ -25,6 +25,10 @@ public class ProjectDetailsViewModel(Func<Maybe<IWallet>> getWallet, Project pro
         return maybeWallet.Match(wallet => DoInvest(wallet, project, uiServices), () => uiServices.NotificationService.Show("You need to create a Wallet before investing", "No wallet"));
     });
 
+    public string NpubKey { get; }
+    public string NpubKeyHex { get; }
+    public IEnumerable<INostrRelay> Relays { get; }
+
     private static async Task DoInvest(IWallet wallet, Project project, UIServices uiServices)
     {
         var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project, uiServices))

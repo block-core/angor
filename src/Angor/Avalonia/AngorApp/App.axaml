@@ -31,6 +31,7 @@
                 <MergeResourceInclude Source="Controls/Header.axaml" />
                 <MergeResourceInclude Source="Controls/Frame.axaml" />
                 <MergeResourceInclude Source="Controls/SectionItem.axaml" />
+                <MergeResourceInclude Source="Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
 
         </ResourceDictionary>
