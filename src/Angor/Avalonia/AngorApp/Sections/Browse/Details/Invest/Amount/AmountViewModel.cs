@@ -11,7 +11,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
 {
     [Reactive] private decimal? amount;
 
-    public AmountViewModel(IWallet wallet, Project project, UIServices uiServices)
+    public AmountViewModel(IWallet wallet, IProject project, UIServices uiServices)
     {
         Project = project;
         this.ValidationRule(x => x.Amount, x => x > 0, "Amount must be greater than zero");
@@ -19,7 +19,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
         this.ValidationRule(x => x.Amount, x => x <= wallet.Balance, "The amount should be greater than the wallet balance");
     }
 
-    public Project Project { get; }
+    public IProject Project { get; }
 
     public IObservable<bool> IsValid => this.IsValid();
     public IObservable<bool> IsBusy => Observable.Return(false);

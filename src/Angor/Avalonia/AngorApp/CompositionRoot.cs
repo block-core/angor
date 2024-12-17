@@ -23,7 +23,10 @@ public class CompositionRoot
         var uiServices = new UIServices(
             launcher, 
             new DesktopDialog(algorithm: new AlternateSizingAlgorithm()), 
-            new NotificationService(new WindowNotificationManager(topLevel)));
+            new NotificationService(new WindowNotificationManager(topLevel)
+            {
+                Position = NotificationPosition.BottomRight,
+            }));
 
         IEnumerable<SectionBase> sections =
         [

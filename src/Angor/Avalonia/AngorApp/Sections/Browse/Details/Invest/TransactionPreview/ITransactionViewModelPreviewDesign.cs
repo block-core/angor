@@ -10,6 +10,7 @@ public class TransactionPreviewViewModelDesign : ITransactionPreviewViewModel
     public ReactiveCommand<Unit, Result> Confirm { get; }
     public ReactiveCommand<Unit, ITransaction> CreateTransaction { get; }
     public IObservable<bool> TransactionConfirmed { get; }
+    public IProject Project { get; }
     public IObservable<bool> IsValid { get; }
     public bool AutoAdvance => false;
 }

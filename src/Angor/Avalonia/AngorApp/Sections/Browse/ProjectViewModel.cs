@@ -8,9 +8,9 @@ namespace AngorApp.Sections.Browse;
 
 public class ProjectViewModel : ReactiveObject
 {
-    private readonly Project project;
+    private readonly IProject project;
 
-    public ProjectViewModel(Func<Maybe<IWallet>> getWallet, Project project, INavigator navigator, UIServices uiServices)
+    public ProjectViewModel(Func<Maybe<IWallet>> getWallet, IProject project, INavigator navigator, UIServices uiServices)
     {
         this.project = project;
         GoToDetails = ReactiveCommand.Create(() => navigator.Go(() => new ProjectDetailsViewModel(getWallet, project, uiServices)));

@@ -14,8 +14,9 @@ public partial class TransactionPreviewViewModel : ReactiveValidationObject, ITr
 {
     [ObservableAsProperty] private ITransaction? transaction;
 
-    public TransactionPreviewViewModel(IWallet wallet, Project project, UIServices services, decimal amount)
+    public TransactionPreviewViewModel(IWallet wallet, IProject project, UIServices services, decimal amount)
     {
+        Project = project;
         Amount = amount;
         CreateTransaction = ReactiveCommand.CreateFromTask(() => wallet.CreateTransaction(amount, project.Address));
         transactionHelper = CreateTransaction.ToProperty(this, x => x.Transaction);
@@ -28,11 +29,10 @@ public partial class TransactionPreviewViewModel : ReactiveValidationObject, ITr
         CreateTransaction.Execute().Subscribe();
     }
 
+    public IProject Project { get; }
     public decimal Amount { get; }
-
     public ReactiveCommand<Unit, Result> Confirm { get; }
     public IObservable<bool> IsBusy { get; }
-
     public ReactiveCommand<Unit, ITransaction> CreateTransaction { get; }
     public IObservable<bool> TransactionConfirmed { get; }
     public IObservable<bool> IsValid => TransactionConfirmed;

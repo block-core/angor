@@ -1,4 +1,3 @@
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using AngorApp.Common;
@@ -7,14 +6,12 @@ using AngorApp.Sections.Browse.Details.Invest.TransactionPreview;
 using AngorApp.Sections.Wallet;
 using AngorApp.Services;
 using CSharpFunctionalExtensions;
-using Zafiro.Avalonia.Commands;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
-using Zafiro.Reactive;
 
 namespace AngorApp.Sections.Browse.Details;
 
-public class ProjectDetailsViewModel(Func<Maybe<IWallet>> getWallet, Project project, UIServices uiServices) : ReactiveObject, IProjectDetailsViewModel
+public class ProjectDetailsViewModel(Func<Maybe<IWallet>> getWallet, IProject project, UIServices uiServices) : ReactiveObject, IProjectDetailsViewModel
 {
     public string Name => project.Name;
     public string ShortDescription => project.ShortDescription;
@@ -55,7 +52,7 @@ public class ProjectDetailsViewModel(Func<Maybe<IWallet>> getWallet, Project pro
     public double CurrentDays { get; } = 11;
     public double CurrentInvestment { get; } = 0.79d;
 
-    private static async Task DoInvest(IWallet wallet, Project project, UIServices uiServices)
+    private static async Task DoInvest(IWallet wallet, IProject project, UIServices uiServices)
     {
         var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project, uiServices))
             .Then(viewModel => new TransactionPreviewViewModel(wallet, project, uiServices, viewModel.Amount!.Value))

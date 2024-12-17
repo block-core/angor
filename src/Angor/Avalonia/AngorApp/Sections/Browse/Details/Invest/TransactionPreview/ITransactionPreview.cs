@@ -11,4 +11,5 @@ public interface ITransactionPreviewViewModel : IStep
     ReactiveCommand<Unit, Result> Confirm { get; }
     ReactiveCommand<Unit, ITransaction> CreateTransaction { get; }
     public IObservable<bool> TransactionConfirmed { get; }
+    IProject Project { get; }
 }

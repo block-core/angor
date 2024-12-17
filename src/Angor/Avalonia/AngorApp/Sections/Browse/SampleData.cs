@@ -1,8 +1,10 @@
+using System.Linq;
+
 namespace AngorApp.Sections.Browse;
 
 public static class SampleData 
 {
-    public static IEnumerable<Project> GetProjects()
+    public static IEnumerable<IProject> GetProjects()
     {
         IEnumerable<Project> projects =
         [
@@ -46,6 +48,6 @@ public static class SampleData
             },
         ];
 
-        return projects;
+        return projects.Cast<IProject>();
     }
 }

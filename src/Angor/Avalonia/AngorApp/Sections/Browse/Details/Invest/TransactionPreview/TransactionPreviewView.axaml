@@ -34,7 +34,7 @@
                     <LineBreak />
                     <Run>If everything is correct you can confirm it with the button below</Run>
                 </TextBlock>
-                <controls:SectionItem LeftContent="Address" Content="{Binding Transaction.Address}" />
+                <controls:SectionItem LeftContent="Project" Content="{Binding Project.Name}" />
                 <controls:SectionItem LeftContent="Amount" Content="{Binding Transaction.Amount, StringFormat=0.0000 0000 BTC}" />
                 <Button HorizontalAlignment="Center" Margin="0 15" Command="{Binding Confirm}">
                     <Button.Content>
