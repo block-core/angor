@@ -1,4 +1,4 @@
-using Zafiro.Avalonia.Dialogs.Simple;
+using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI;
 
 namespace AngorApp.Services;

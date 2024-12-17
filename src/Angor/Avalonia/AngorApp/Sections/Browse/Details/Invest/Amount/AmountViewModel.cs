@@ -1,3 +1,4 @@
+using System.Reactive.Linq;
 using AngorApp.Sections.Wallet;
 using AngorApp.Services;
 using ReactiveUI.SourceGenerators;
@@ -21,4 +22,6 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
     public Project Project { get; }
 
     public IObservable<bool> IsValid => this.IsValid();
+    public IObservable<bool> IsBusy => Observable.Return(false);
+    public bool AutoAdvance => false;
 }

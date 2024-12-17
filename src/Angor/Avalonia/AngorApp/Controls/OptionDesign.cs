@@ -1,7 +1,8 @@
+using System.Reactive.Linq;
 using Zafiro.Avalonia.Commands;
 using Zafiro.Avalonia.Dialogs;
 
-namespace AngorApp;
+namespace AngorApp.Controls;
 
 public class OptionDesign : IOption
 {
@@ -9,4 +10,5 @@ public class OptionDesign : IOption
     public IEnhancedCommand Command { get; }
     public bool IsDefault { get; set; }
     public bool IsCancel { get; set; }
+    public IObservable<bool> IsVisible { get; } = Observable.Return(true);
 }

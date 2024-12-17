@@ -51,9 +51,5 @@
                 <dp:ProgressRing Margin="20" Height="100" Width="100" HorizontalAlignment="Stretch" />
             </StackPanel>
         </Panel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" IsVisible="{Binding TransactionConfirmed^}" VerticalAlignment="Center">
-            <avalonia:Icon Value="fa-solid fa-check" Foreground="Green" FontSize="20" Margin="10" />
-            <TextBlock Text="The transaction has been confirmed" VerticalAlignment="Center" />
-        </StackPanel>
     </Panel>
 </UserControl>

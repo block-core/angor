@@ -29,6 +29,7 @@ public class TransactionDesign : ITransaction
     public async Task<Result> Broadcast()
     {
         await Task.Delay(4000);
+        return Result.Failure("Catastrophe!");
         return Result.Success();
     }
 }

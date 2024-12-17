@@ -9,4 +9,6 @@ public class AmountViewModelDesign : IAmountViewModel
 
     public decimal? Amount { get; set; } = 0.001m;
     public IObservable<bool> IsValid => Observable.Return(true);
+    public IObservable<bool> IsBusy => Observable.Return(false);
+    public bool AutoAdvance => false;
 }

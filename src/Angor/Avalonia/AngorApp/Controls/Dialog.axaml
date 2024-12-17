@@ -4,7 +4,8 @@
         xmlns:views="clr-namespace:Zafiro.Avalonia.Dialogs.Views;assembly=Zafiro.Avalonia.Dialogs"
         xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
         xmlns:angorApp="clr-namespace:AngorApp"
-        xmlns:amount="clr-namespace:AngorApp.Sections.Browse.Details.Invest.Amount">
+        xmlns:amount="clr-namespace:AngorApp.Sections.Browse.Details.Invest.Amount"
+        xmlns:controls="clr-namespace:AngorApp.Controls">
     <Design.PreviewWith>
         <z:DialogView Width="600" Height="500">
             <z:DialogView.Content>
@@ -12,8 +13,8 @@
             </z:DialogView.Content>
             <z:DialogView.Options>
                 <generic:List x:TypeArguments="z:IOption">
-                    <angorApp:OptionDesign Title="Next" />
-                    <angorApp:OptionDesign Title="Cancel" />
+                    <controls:OptionDesign Title="Next" />
+                    <controls:OptionDesign Title="Cancel" />
                 </generic:List>
             </z:DialogView.Options>
         </z:DialogView>
@@ -44,7 +45,7 @@
                                       DockPanel.Dock="Bottom">
                             <ItemsControl.ItemContainerTheme>
                                 <ControlTheme TargetType="ContentPresenter">
-                                    <Setter x:DataType="z:IOption" Property="IsVisible" Value="{Binding Command.CanExecute^}" />
+                                    <Setter x:DataType="z:IOption" Property="IsVisible" Value="{Binding IsVisible^}" />
                                 </ControlTheme>
                             </ItemsControl.ItemContainerTheme>
                             <ItemsControl.ItemsPanel>

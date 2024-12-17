@@ -7,7 +7,8 @@ using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
 using AngorApp.Services;
 using Avalonia.Controls.Notifications;
-using Zafiro.Avalonia.Dialogs.Simple;
+using Zafiro.Avalonia.Dialogs;
+using Zafiro.Avalonia.Dialogs.SizingAlgorithms;
 using Zafiro.Avalonia.Notifications;
 using Separator = AngorApp.Sections.Shell.Separator;
 
@@ -19,7 +20,10 @@ public class CompositionRoot
     {
         var topLevel = TopLevel.GetTopLevel(control);
         var launcher = new LauncherService(topLevel!.Launcher);
-        var uiServices = new UIServices(launcher, new DesktopDialog(algorithm: new AlternateSizingAlgorithm()), new NotificationService(new WindowNotificationManager(topLevel)));
+        var uiServices = new UIServices(
+            launcher, 
+            new DesktopDialog(algorithm: new AlternateSizingAlgorithm()), 
+            new NotificationService(new WindowNotificationManager(topLevel)));
 
         IEnumerable<SectionBase> sections =
         [
