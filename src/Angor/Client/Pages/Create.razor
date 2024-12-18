@@ -599,36 +599,11 @@
         var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectIndex + 1 ?? 1);
 
         project = projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier)
-                  ?? new FounderProject
-                  {
-                      ProjectIndex = projectsKeys.Index,
-                      Metadata = new ProjectMetadata(),
-                      ProjectInfo = new ProjectInfo
-                      {
-                          FounderKey = projectsKeys.FounderKey,
-                          FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
-                          ProjectIdentifier = projectsKeys.ProjectIdentifier,
-                          NostrPubKey = projectsKeys.NostrPubKey,
-                              StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
-                          PenaltyDays = 90,
-                          ExpiryDate = DateTime.UtcNow.AddDays(120),
-                          TargetAmount = 50
-                      }
-                  };
+                  ?? CreateDefaultProject(projectsKeys);
 
-        // Set default images for Testnet
-        var random = new Random();
-            if (network.NetworkType == NetworkType.Testnet)
-            {
-                if (string.IsNullOrEmpty(project.Metadata.Banner))
-                {
-                    project.Metadata.Banner = spacePhotos[random.Next(spacePhotos.Length)];
-                }
-            
-                if (string.IsNullOrEmpty(project.Metadata.Picture))
-                {
-                    project.Metadata.Picture = spacePhotos[random.Next(spacePhotos.Length)];
-                }
+        if (network.NetworkType == NetworkType.Testnet)
+        {
+            PopulateTestnetData(project);
         }
 
         // save project to storage immediately if new
@@ -1215,6 +1190,44 @@
         "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002020/GSFC_20171208_Archive_e002020~thumb.jpg?as=webp",
         "https://images-assets.nasa.gov/image/0203048/0203048~thumb.jpg?as=webp"
     };
+    
+    private FounderProject CreateDefaultProject(FounderKeys projectsKeys)
+    {
+        return new FounderProject
+        {
+            ProjectIndex = projectsKeys.Index,
+            Metadata = new ProjectMetadata(),
+            ProjectInfo = new ProjectInfo
+            {
+                FounderKey = projectsKeys.FounderKey,
+                FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
+                ProjectIdentifier = projectsKeys.ProjectIdentifier,
+                NostrPubKey = projectsKeys.NostrPubKey,
+                StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
+                PenaltyDays = 90,
+                ExpiryDate = DateTime.UtcNow.AddDays(120),
+                TargetAmount = 50
+            }
+        };
+    }
+    
+    private void PopulateTestnetData(FounderProject project)
+    {
+        var random = new Random();
+
+        // Set random photos for testnet
+        if (string.IsNullOrEmpty(project.Metadata.Banner))
+        {
+            project.Metadata.Banner = spacePhotos[random.Next(spacePhotos.Length)];
+        }
+
+        if (string.IsNullOrEmpty(project.Metadata.Picture))
+        {
+            project.Metadata.Picture = spacePhotos[random.Next(spacePhotos.Length)];
+        }
+    }
+
+
 
 
 }
