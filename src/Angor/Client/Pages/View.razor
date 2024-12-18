@@ -529,35 +529,67 @@ else
             {
                 project = new Project { CreationTransactionId = projectIndexerData.TrxId };
 
-                _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(x =>
+                _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(
+                    x =>
+                    {
+                        if (project is { ProjectInfo: null })
+                        {
+                            try
                             {
-                                if (project is { ProjectInfo : null })
-                                    project.ProjectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
-                                                          throw new Exception("The project info must be in the application specific data event");
+                                Logger.LogDebug("Attempting to deserialize project info from event content: {Content}", x.Content);
+                                project.ProjectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
+                                                      throw new Exception("The project info must be in the application specific data event");
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Error deserializing project info: {Content}", x.Content);
+                                error = "Failed to deserialize project information.";
+                                findInProgress = false;
+                                StateHasChanged();
+                                return;
+                            }
+                        }
+                    },
+                    () =>
+                    {
+                        if (project?.ProjectInfo?.NostrPubKey == null)
+                        {
+                            Logger.LogError("Project NostrPubKey is null or missing after event lookup.");
+                            error = "Project data is incomplete or missing.";
+                            findInProgress = false;
+                            StateHasChanged();
+                            return;
+                        }
+
+                        _RelayService.LookupNostrProfileForNPub(
+                            (projectNpub, metadata) =>
+                            {
+                                if (project is { Metadata: null })
+                                {
+                                    Logger.LogDebug("Received metadata for project NPub: {NPub}", projectNpub);
+                                    project.Metadata = metadata;
+                                }
                             },
                             () =>
                             {
-                                _RelayService.LookupNostrProfileForNPub(
-                                    (projectNpub, metadata) =>
-                                    {
-                                        if (project is { Metadata: null }) { project.Metadata = metadata; }
-                                    }, 
-                                    () =>
-                                    {
-                                        findInProgress = false;
-                                        if (project?.ProjectInfo != null)
-                                        {
-                                            SessionStorage.StoreProject(project);
-                                        }
-                                        else
-                                        {
-                                            // Handle case where project info is not available
-                                            error = "Project not found...";
-                                        }
-                                        StateHasChanged();
-                                    },
-                                    project.ProjectInfo.NostrPubKey);
-                            },projectIndexerData.NostrEventId);
+                                findInProgress = false;
+                                if (project?.ProjectInfo != null)
+                                {
+                                    SessionStorage.StoreProject(project);
+                                    Logger.LogDebug("Project successfully stored in session storage.");
+                                }
+                                else
+                                {
+                                    // Handle case where project info is not available
+                                    Logger.LogError("Project info not available after metadata lookup.");
+                                    error = "Project not found...";
+                                }
+                                StateHasChanged();
+                            },
+                            project.ProjectInfo.NostrPubKey);
+                    },
+                    projectIndexerData.NostrEventId);
+
                     }
                     else
                     {
