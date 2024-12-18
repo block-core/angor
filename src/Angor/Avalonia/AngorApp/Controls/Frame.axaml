@@ -12,7 +12,7 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <Panel>
-                    <ScrollViewer IsDeferredScrollingEnabled="True">
+                    <ScrollViewer>
                         <ContentControl ClipToBounds="False" Content="{Binding $parent[navigation:Frame].Navigator.Content}" />
                     </ScrollViewer>
                     <Button Background="Transparent" VerticalAlignment="Top" HorizontalAlignment="Left"

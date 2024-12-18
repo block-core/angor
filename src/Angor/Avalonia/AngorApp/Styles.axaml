@@ -71,6 +71,10 @@
     <Style Selector="avalonia|Icon">
         <Setter Property="Foreground" Value="{StaticResource Level5}" />
     </Style>
+    
+    <Style Selector=":is(UserControl)">
+        <Setter Property="ClipToBounds" Value="False" />
+    </Style>
 
     <Design.PreviewWith>
         <Border Padding="20">

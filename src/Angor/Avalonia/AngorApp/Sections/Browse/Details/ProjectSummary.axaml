@@ -3,16 +3,24 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.Controls"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:p="https://github.com/projektanker/icons.avalonia"
              xmlns:zc="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
+             xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Browse.Details.ProjectSummary" x:DataType="dt:IProjectDetailsViewModel">
-    
+
     <Design.DataContext>
         <dt:ProjectDetailsViewModelDesign />
     </Design.DataContext>
-    
+
+    <UserControl.Styles>
+        <Style Selector="PathIcon">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+        </Style>
+    </UserControl.Styles>
+
     <controls:Pane IsHeaderVisible="True" IsTitleVisible="True"
                    HeaderHeight="300"
                    Subtitle="{Binding Project.ShortDescription}"
@@ -20,7 +28,7 @@
                    HeaderBackground="{Binding Picture}"
                    Title="{Binding Project.Name}">
         <controls:Pane.TitleIcon>
-            <avalonia:Icon Value="fa-solid fa-tarp" />
+            <p:Icon Value="fa-solid fa-tarp" />
         </controls:Pane.TitleIcon>
         <DockPanel>
             <DockPanel.Styles>
@@ -49,15 +57,62 @@
             </UniformGrid>
             <StackPanel Spacing="20">
                 <StackPanel Margin="30" Spacing="5">
-                    <controls:SectionItem Content="View the transaction on the explorer" />
-                    <controls:SectionItem LeftContent="Target amount" Content="{Binding Project.TargetAmount, StringFormat={x:Static controls:MiscConverters.BigBtcFormat}}" />
-                    <controls:SectionItem Content="Penalty duration: 90 days" />
-                    <controls:SectionItem Content="Project dates: 07/12/2024 - 05/04/2025" />
+                    <HyperlinkButton HorizontalAlignment="Stretch" Padding="0">
+                        <controls:SectionItem Content="View the transaction on the explorer">
+                            <controls:SectionItem.LeftContent>
+                                <PathIcon Data="{StaticResource Explorer}" />
+                            </controls:SectionItem.LeftContent>
+                        </controls:SectionItem>
+                    </HyperlinkButton>
+                    <controls:SectionItem>
+                        <controls:SectionItem.LeftContent>
+                            <p:Icon Value="fa-database" />
+                        </controls:SectionItem.LeftContent>
+                        <controls:SectionItem.Content>
+                            <MultiBinding Converter="{x:Static converters:StringConverters.JoinWithSpaces}">
+                                <Binding>
+                                    <Binding.Source>Target amount:</Binding.Source>
+                                </Binding>
+                                <Binding Path="Project.TargetAmount" StringFormat="{x:Static controls:MiscConverters.BigBtcFormat}" />
+                            </MultiBinding>
+                        </controls:SectionItem.Content>
+                    </controls:SectionItem>
+                    <controls:SectionItem>
+                        <controls:SectionItem.LeftContent>
+                            <p:Icon Value="fa-regular fa-calendar-days" />
+                        </controls:SectionItem.LeftContent>
+                        <controls:SectionItem.Content>
+                            <MultiBinding Converter="{x:Static converters:StringConverters.JoinWithSpaces}">
+                                <Binding>
+                                    <Binding.Source>Penalty duration:</Binding.Source>
+                                </Binding>
+                                <Binding Path="Project.PenaltyDuration" Converter="{x:Static controls:MiscConverters.HumanizeTimeSpan}" />
+                            </MultiBinding>
+
+                        </controls:SectionItem.Content>
+                    </controls:SectionItem>
+                    <controls:SectionItem Content="Project dates: 07/12/2024 - 05/04/2025">
+                        <controls:SectionItem.LeftContent>
+                            <PathIcon Data="{StaticResource DateRange}" />
+                        </controls:SectionItem.LeftContent>
+                    </controls:SectionItem>
                 </StackPanel>
                 <StackPanel Margin="30" Spacing="5">
-                    <controls:SectionItem Content="Total Raised: 0 TBTC" />
-                    <controls:SectionItem Content="Total Investors: 0" />
-                    <controls:SectionItem Content="The investing period is over" />
+                    <controls:SectionItem Content="Total Raised: 0 TBTC">
+                        <controls:SectionItem.LeftContent>
+                            <p:Icon Value="fa-calculator" />
+                        </controls:SectionItem.LeftContent>
+                    </controls:SectionItem>
+                    <controls:SectionItem Content="Total Investors: 0">
+                        <controls:SectionItem.LeftContent>
+                            <p:Icon Value="fa-user" />
+                        </controls:SectionItem.LeftContent>
+                    </controls:SectionItem>
+                    <controls:SectionItem Content="The investing period is over">
+                        <controls:SectionItem.LeftContent>
+                            <p:Icon Value="fa-regular fa-calendar-days" />
+                        </controls:SectionItem.LeftContent>
+                    </controls:SectionItem>
                 </StackPanel>
             </StackPanel>
         </DockPanel>

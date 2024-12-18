@@ -35,11 +35,13 @@ public static class MiscConverters
     public static readonly FuncValueConverter<SectionBase, bool> IsActivatable = new(sectionBase => sectionBase is not Separator);
 
     public static readonly FuncValueConverter<bool, Dock> IsPrimaryToDock = new(isPrimary => isPrimary ? Dock.Top : Dock.Bottom);
+    
     public static readonly FuncValueConverter<DateTimeOffset, string> TimeLeft = new(offset =>
     {
-        Humanizer.Configuration.Configurator.DateTimeHumanizeStrategy = new DefaultDateTimeHumanizeStrategy();
         return offset.Humanize(dateToCompareAgainst: DateTimeOffset.Now);
     });
+    
+    public static readonly FuncValueConverter<TimeSpan, string> HumanizeTimeSpan = new(offset => offset.Humanize());
 
     public static readonly FuncValueConverter<bool, double> BoolToOpacity = new(b => b ? 1 : 0);
 

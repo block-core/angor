@@ -13,7 +13,7 @@ public interface IProject
     IEnumerable<IStage> Stages { get; }
     public string NpubKey { get; }
     public string NpubKeyHex { get; }
-    
+    public TimeSpan PenaltyDuration { get; }
 }
 
 public class ProjectDesign : IProject
@@ -37,6 +37,7 @@ public class ProjectDesign : IProject
 
     public string NpubKey { get; } = "npub17a0glwdvr5wjyjdh5eu4xmh4swtaqrmhcgss22unvr6p3spyyq7qeh4kaz";
     public string NpubKeyHex { get; } = "f75e8fb9ac1d1d2249b7a679536ef58397d00f77c221052b9360f418c024203c";
+    public TimeSpan PenaltyDuration { get; } = TimeSpan.FromDays(90);
 
     public override string ToString() => Name;
 }
