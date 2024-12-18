@@ -492,7 +492,7 @@ else
             {
                 founder = true;
                 projectStats.Loading = false;
-                SetProjectLinksAndRefreshBalance();
+                SetProjectLinksAndRefreshBalance(); // dont block let it update the ui later
                 return;
             }
 
@@ -502,14 +502,15 @@ else
                 invested = investorProject.InvestedInProject();
                 myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investorProject.TransactionId}";
                 projectStats.Loading = false;
+                SetProjectLinksAndRefreshBalance(); // dont block let it update the ui later
                 return;
             }
 
             project = SessionStorage.GetProjectById(ProjectId);
             if (project != null)
             {
-                await SetProjectLinksAndRefreshBalance();
                 projectStats.Loading = false;
+                SetProjectLinksAndRefreshBalance(); // dont block let it update the ui later
                 StateHasChanged();
                 return;
             }
