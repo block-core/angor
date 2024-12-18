@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
@@ -23,15 +23,16 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="Avalonia.Xaml.Behaviors"/>
-        <PackageReference Include="Humanizer.Core" />
+        <PackageReference Include="Deadpikle.AvaloniaProgressRing"/>
+        <PackageReference Include="Humanizer.Core"/>
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome"/>
         <PackageReference Include="ReactiveUI"/>
         <PackageReference Include="ReactiveUI.SourceGenerators">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Zafiro.Avalonia" />
+        <PackageReference Include="Zafiro.Avalonia"/>
+        <PackageReference Include="Zafiro.Avalonia.Dialogs"/>
 
     </ItemGroup>
-
 </Project>

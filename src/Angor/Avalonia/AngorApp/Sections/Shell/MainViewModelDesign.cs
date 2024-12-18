@@ -2,6 +2,7 @@ using AngorApp.Sections.Browse;
 using AngorApp.Sections.Home;
 using AngorApp.Sections.Wallet;
 using AngorApp.Services;
+using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Controls.Navigation;
 
 namespace AngorApp.Sections.Shell;
@@ -15,7 +16,7 @@ public class MainViewModelDesign : IMainViewModel
             new Section("Home", new HomeViewModel(), "svg:/Assets/angor-icon.svg"),
             new Separator(),
             new Section("Wallet", new WalletViewModel(), "fa-wallet"),
-            new Section("Browse", new BrowseViewModel(new Navigator(), new UIServices(new NoopLauncherService())), "fa-magnifying-glass"),
+            new Section("Browse", new BrowseViewModel(() => new WalletDesign() ,new Navigator(), new UIServices(new NoopLauncherService(), new TestDialog(), new TestNotificationService())), "fa-magnifying-glass"),
             new Section("Portfolio", new WalletViewModel(), "fa-hand-holding-dollar"),
             new Section("Founder", new WalletViewModel(), "fa-money-bills"),
             new Separator(),

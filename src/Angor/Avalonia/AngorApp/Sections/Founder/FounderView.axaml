@@ -25,24 +25,19 @@
         <Style Selector="i|Icon">
             <Setter Property="FontSize" Value="25" />
         </Style>
-        <Style Selector="Button">
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="10" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="TextBlock.FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{StaticResource Level5}" />
-        </Style>
+
         <Style Selector="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
+
     </UserControl.Styles>
 
     <StackPanel Spacing="20">
-        
+
         <c:Pane Title="Founder" IsTitleVisible="True" Subtitle="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required">
             <c:Pane.TitleRightContent>
-                <c:IconButton DockPanel.Dock="Right"  VerticalAlignment="Top">CREATE PROJECT
+                <c:IconButton DockPanel.Dock="Right" VerticalAlignment="Top">
+                    CREATE PROJECT
                     <c:IconButton.Icon>
                         <i:Icon Value="fa-plus" FontSize="20" />
                     </c:IconButton.Icon>
@@ -52,7 +47,7 @@
                 <i:Icon Value="fa-magnifying-glass" />
             </c:Pane.TitleIcon>
         </c:Pane>
-        
+
         <c:IconButton Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="SCAN FOR FOUNDER PROJECTS">
             <c:IconButton.Icon>
                 <i:Icon Value="fa-magnifying-glass" />

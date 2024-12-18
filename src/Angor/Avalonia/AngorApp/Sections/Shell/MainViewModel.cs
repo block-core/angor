@@ -12,7 +12,7 @@ public partial class MainViewModel : ReactiveObject, IMainViewModel
     {
         Sections = sections;
         SelectedSection = Sections.OfType<Section>().Skip(0).First();
-        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.Launch(new Uri("https://www.angor.io")));
+        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io")));
     }
 
     public ReactiveCommand<Unit,Unit> OpenHub { get; set; }

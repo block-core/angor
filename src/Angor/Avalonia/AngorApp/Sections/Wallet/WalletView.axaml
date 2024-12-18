@@ -12,7 +12,7 @@
     <Design.DataContext>
         <wallet:WalletViewModelDesign />
     </Design.DataContext>
-    
+
     <UserControl.DataContext>
         <wallet:WalletViewModelDesign />
     </UserControl.DataContext>
@@ -23,15 +23,7 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
         </Style>
-        
-        <Style Selector="Button">
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="10" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="TextBlock.FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{StaticResource Level5}" />
-        </Style>
+
         <Style Selector="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
@@ -61,7 +53,7 @@
                     </StackPanel>
                 </controls:Pane.TitleRightContent>
                 <controls:Pane.TitleIcon>
-                    <i:Icon Value="fa-database" Margin="10"></i:Icon>
+                    <i:Icon Value="fa-database" Margin="10" />
                 </controls:Pane.TitleIcon>
 
             </controls:Pane>
@@ -71,7 +63,7 @@
                 <controls:Pane Margin="10">
                     <Button HorizontalAlignment="Stretch" Background="Transparent">
                         <StackPanel>
-                            <i:Icon Value="fa-sold fa-up-long"></i:Icon>
+                            <i:Icon Value="fa-sold fa-up-long" />
                             <TextBlock Text="Send" />
                         </StackPanel>
                     </Button>
@@ -79,7 +71,7 @@
                 <controls:Pane Margin="10">
                     <Button HorizontalAlignment="Stretch" Background="Transparent">
                         <StackPanel>
-                            <i:Icon Value="fa-sold fa-down-long"></i:Icon>
+                            <i:Icon Value="fa-sold fa-down-long" />
                             <TextBlock Text="Receive" />
                         </StackPanel>
                     </Button>
