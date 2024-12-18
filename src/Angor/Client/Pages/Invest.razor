@@ -945,6 +945,7 @@ else
 
     public bool CanInvest(Project project)
     {
+        // on testnet we will not disable the ability to invest at all
         if (project == null || project.ProjectInfo == null) return false;
         if (network.NetworkType == NetworkType.Testnet) return true;
 
