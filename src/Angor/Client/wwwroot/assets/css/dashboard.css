@@ -114,7 +114,7 @@ h6,
 
 p {
     margin-top: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 0;
 }
 
 abbr[title] {
@@ -5719,7 +5719,7 @@ fieldset:disabled .btn {
 }
 
 .alert-warning {
-    --angor-alert-color: #975400;
+    --angor-alert-color: #040200;
     --angor-alert-bg: #fee8cc;
     --angor-alert-border-color: #feddb3;
 }

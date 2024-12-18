@@ -39,6 +39,7 @@
     --angor-modal-header-padding: 1rem 1rem;
     --angor-modal-title-line-height: 1.5;
     --angor-modal-footer-gap: 0.5rem;
+    --btn-border: #046479;
 }
 
 .dark {
@@ -232,7 +233,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--angor-light);
+    background: var(--angor-scrollbar-thumb-hover-bg);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -781,6 +782,10 @@ tr[style*="cursor: pointer;"]:hover {
     border-color: var(--angor-dark) !important;
 }
 
+.text-black{
+    color: #000 !important;
+}
+
 .dark g[fill] {
     fill: var(--angor-primary) !important;
 }
@@ -967,10 +972,11 @@ tr[style*="cursor: pointer;"]:hover {
 }
 
 input[type="checkbox"] + label {
-    display: block;
+    display: flex;
     margin: 0.2em;
     cursor: pointer;
     padding: 0.2em;
+    align-items: center;
 }
 
 input[type="checkbox"] {
