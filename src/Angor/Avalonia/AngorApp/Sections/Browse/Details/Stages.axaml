@@ -18,7 +18,7 @@
             <avalonia:Icon Value="fa-solid fa-timeline" />
         </controls:Pane.TitleIcon>
 
-        <z:SlimDataGrid ItemsSource="{Binding Stages}">
+        <z:SlimDataGrid ItemsSource="{Binding Project.Stages}">
             <z:SlimDataGrid.Columns>
                 <z:Column Header="STAGE" Binding="{Binding Index}" />
                 <z:Column Header="STAGE %" Binding="{Binding Weight, StringFormat={}{0:P0}}" />

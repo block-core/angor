@@ -5,4 +5,5 @@ namespace AngorApp.Sections.Browse.Details.Invest.Amount;
 public interface IAmountViewModel : IStep
 {
     public decimal? Amount { get; set; }
+    IProject Project { get; }
 }

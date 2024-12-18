@@ -22,7 +22,7 @@
 
         <StackPanel Spacing="20">
             <HeaderedContentControl Header="Project NOSTR public key">
-                <c:SectionItem LeftContent="{Binding NpubKey}">
+                <c:SectionItem LeftContent="{Binding Project.NpubKey}">
                     <c:SectionItem.RightContent>
                         <Button Command="{x:Static misc:Commands.LaunchUri}">
                             <Button.CommandParameter>
@@ -32,7 +32,7 @@
                                             <x:String>https://hub.angor.io/profile/</x:String>
                                         </Binding.Source>
                                     </Binding>
-                                    <Binding Path="NpubKey" />
+                                    <Binding Path="Project.NpubKey" />
                                 </MultiBinding>
                             </Button.CommandParameter>
                             <Button.Content>
@@ -43,7 +43,7 @@
                 </c:SectionItem>
             </HeaderedContentControl>
             <HeaderedContentControl Header="Project NOSTR public key">
-                <c:SectionItem LeftContent="{Binding NpubKeyHex}">
+                <c:SectionItem LeftContent="{Binding Project.NpubKeyHex}">
                     <c:SectionItem.RightContent>
                         <Button Command="{x:Static misc:Commands.LaunchUri}">
                             <Button.CommandParameter>
@@ -53,7 +53,7 @@
                                             <x:String>https://hub.angor.io/profile/</x:String>
                                         </Binding.Source>
                                     </Binding>
-                                    <Binding Path="NpubKey" />
+                                    <Binding Path="Project.NpubKey" />
                                 </MultiBinding>
                             </Button.CommandParameter>
                             <Button.Content>

@@ -15,10 +15,10 @@
     
     <controls:Pane IsHeaderVisible="True" IsTitleVisible="True"
                    HeaderHeight="300"
-                   Subtitle="{Binding ShortDescription}"
+                   Subtitle="{Binding Project.ShortDescription}"
                    HeaderIcon="{Binding Icon}"
                    HeaderBackground="{Binding Picture}"
-                   Title="{Binding Name}">
+                   Title="{Binding Project.Name}">
         <controls:Pane.TitleIcon>
             <avalonia:Icon Value="fa-solid fa-tarp" />
         </controls:Pane.TitleIcon>
@@ -50,7 +50,7 @@
             <StackPanel Spacing="20">
                 <StackPanel Margin="30" Spacing="5">
                     <controls:SectionItem Content="View the transaction on the explorer" />
-                    <controls:SectionItem Content="Target Amount: 50 TBTC" />
+                    <controls:SectionItem LeftContent="Target amount" Content="{Binding Project.TargetAmount, StringFormat={x:Static controls:MiscConverters.BigBtcFormat}}" />
                     <controls:SectionItem Content="Penalty duration: 90 days" />
                     <controls:SectionItem Content="Project dates: 07/12/2024 - 05/04/2025" />
                 </StackPanel>

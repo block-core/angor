@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:amount="clr-namespace:AngorApp.Sections.Browse.Details.Invest.Amount"
+             xmlns:controls="clr-namespace:AngorApp.Controls"
              mc:Ignorable="d"
              x:Class="AngorApp.Sections.Browse.Details.Invest.Amount.AmountView" x:DataType="amount:IAmountViewModel">
 
@@ -27,10 +28,9 @@
             This agreement ensures that in the event the project does not succeed, you will be able to recover your funds.
             This provides a safety net for your investment, giving you peace of mind that your financial contribution is protected.
         </TextBlock>
-        <TextBlock>ProjectId: angor1qmd8kazm8uzk7s0gddf4amjx4mzj3n5wzgn3mde</TextBlock>
-        <TextBlock>Target amount: 50 BTC</TextBlock>
-        <TextBlock>Starting in: 12/12/2024</TextBlock>
-
+        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Project Id:" Content="{Binding Project.Id}"/>
+        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Target Amount:" Content="{Binding Project.TargetAmount, StringFormat={x:Static controls:MiscConverters.BigBtcFormat} }"/>
+        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Starting in:" Content="{Binding Project.StartingDate}"/>
         <NumericUpDown Watermark="Amount" ShowButtonSpinner="False" Value="{Binding Amount, Mode=TwoWay}" />
     </StackPanel>
 </UserControl>

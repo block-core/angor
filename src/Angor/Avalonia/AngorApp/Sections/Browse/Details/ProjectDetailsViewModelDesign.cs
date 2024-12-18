@@ -43,6 +43,7 @@ public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
     public double TotalInvestment { get; } = 1.5d;
     public double CurrentDays { get; } = 11;
     public double CurrentInvestment { get; } = 0.79d;
+    public IProject Project { get; set; } = new ProjectDesign();
 }
 
 public class NostrRelayDesign : INostrRelay

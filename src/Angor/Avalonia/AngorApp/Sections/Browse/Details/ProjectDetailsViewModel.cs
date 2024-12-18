@@ -18,14 +18,6 @@ public class ProjectDetailsViewModel(Func<Maybe<IWallet>> getWallet, IProject pr
     public object Icon => project.Icon;
     public object Picture => project.Picture;
 
-    public IEnumerable<Stage> Stages { get; } =
-    [
-        new() { ReleaseDate = DateTimeOffset.Now.Date.AddDays(1), Amount = new decimal(0.1), Index = 1, Weight = 0.25d },
-        new() { ReleaseDate = DateTimeOffset.Now.Add(TimeSpan.FromDays(20)), Amount = new decimal(0.4), Index = 2, Weight = 0.25d },
-        new() { ReleaseDate = DateTimeOffset.Now.Add(TimeSpan.FromDays(40)), Amount = new decimal(0.3), Index = 3, Weight = 0.25d },
-        new() { ReleaseDate = DateTimeOffset.Now.Add(TimeSpan.FromDays(60)), Amount = new decimal(0.2), Index = 4, Weight = 0.25d }
-    ];
-
     public ICommand Invest { get; } = ReactiveCommand.CreateFromTask(() =>
     {
         var maybeWallet = getWallet();
@@ -51,10 +43,11 @@ public class ProjectDetailsViewModel(Func<Maybe<IWallet>> getWallet, IProject pr
     public double TotalInvestment { get; } = 1.5d;
     public double CurrentDays { get; } = 11;
     public double CurrentInvestment { get; } = 0.79d;
+    public IProject Project => project;
 
     private static async Task DoInvest(IWallet wallet, IProject project, UIServices uiServices)
     {
-        var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project, uiServices))
+        var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project))
             .Then(viewModel => new TransactionPreviewViewModel(wallet, project, uiServices, viewModel.Amount!.Value))
             .Then(prev => new SuccessViewModel("Transaction confirmed!"))
             .Build();

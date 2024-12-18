@@ -47,4 +47,7 @@ public static class MiscConverters
     {
         return "https://hub.angor.io/profile/" + value;
     });
+
+    public static string BigBtcFormat = "{0} BTC";
+    public static string AmountBtcFormat = "0.0000 0000 BTC";
 }

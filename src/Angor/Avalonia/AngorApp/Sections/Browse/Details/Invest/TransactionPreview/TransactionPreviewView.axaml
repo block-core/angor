@@ -33,8 +33,8 @@
                     <LineBreak />
                     <Run>If everything is correct you can confirm it with the button below.</Run>
                 </TextBlock>
-                <controls:SectionItem LeftContent="Project" Content="{Binding Project.Name}" />
-                <controls:SectionItem LeftContent="Amount" Content="{Binding Transaction.Amount, StringFormat=0.0000 0000 BTC}" />
+                <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Project" Content="{Binding Project.Name}" />
+                <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Amount" Content="{Binding Transaction.Amount, StringFormat={x:Static controls:MiscConverters.AmountBtcFormat}}" />
                 <Button HorizontalAlignment="Center" Margin="0 15" Command="{Binding Confirm}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
@@ -47,7 +47,7 @@
             </StackPanel>
             <StackPanel IsVisible="{Binding CreateTransaction.IsExecuting^}">
                 <TextBlock Text="Building transaction preview. Please wait." TextAlignment="Center" />
-                <dp:ProgressRing Margin="20" Height="100" Width="100" HorizontalAlignment="Stretch" />
+                <dp:ProgressRing Margin="20" Height="60" Width="60" HorizontalAlignment="Stretch" />
             </StackPanel>
         </Panel>
     </Panel>
