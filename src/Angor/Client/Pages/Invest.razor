@@ -942,15 +942,17 @@ else
     {
         showTransactionJsonModal = isVisible;
     }
-    
+
     public bool CanInvest(Project project)
     {
-        if (project == null) return false;
+        if (project == null || project.ProjectInfo == null) return false;
+        if (network.NetworkType == NetworkType.Testnet) return true;
 
         var now = DateTime.UtcNow;
-        if (now < project.ProjectInfo.StartDate) return false; // Investing period hasn't started
-        if (now > project.ProjectInfo.ExpiryDate) return false; // Investing period has ended
 
-        return true;
+        if (now <= project.ProjectInfo.StartDate) return true;
+
+        return false;
     }
+
 }
