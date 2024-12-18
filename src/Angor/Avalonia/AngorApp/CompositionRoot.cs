@@ -10,6 +10,7 @@ using Avalonia.Controls.Notifications;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Dialogs.SizingAlgorithms;
 using Zafiro.Avalonia.Notifications;
+using Zafiro.Avalonia.Services;
 using Separator = AngorApp.Sections.Shell.Separator;
 
 namespace AngorApp;
@@ -38,7 +39,7 @@ public class CompositionRoot
             new Section("Founder", new FounderViewModel(), "fa-money-bills"),
             new Separator(),
             new Section("Settings", new WalletViewModel(), "fa-gear"),
-            new CommandSection("Angor Hub", ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.Launch(new Uri("https://www.angor.io"))), "fa-magnifying-glass") { IsPrimary = false }
+            new CommandSection("Angor Hub", ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io"))), "fa-magnifying-glass") { IsPrimary = false }
         ];
 
         return new MainViewModel(sections, uiServices);

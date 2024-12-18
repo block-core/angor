@@ -12,7 +12,7 @@ public class BrowseViewModel : ReactiveObject, IBrowseViewModel
     {
         
         Projects = SampleData.GetProjects().Select(project => new ProjectViewModel(getWallet, project, navigator, uiServices)).ToList();
-        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.Launch(new Uri("https://www.angor.io")));
+        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io")));
     }
 
     public ReactiveCommand<Unit, Unit> OpenHub { get; set; }

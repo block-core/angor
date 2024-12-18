@@ -24,7 +24,7 @@
             <HeaderedContentControl Header="Project NOSTR public key">
                 <c:SectionItem LeftContent="{Binding NpubKey}">
                     <c:SectionItem.RightContent>
-                        <Button Command="{x:Static a:Launcher.LaunchUriCommand}">
+                        <Button Command="{x:Static misc:Commands.LaunchUri}">
                             <Button.CommandParameter>
                                 <MultiBinding Converter="{x:Static conv:StringConverters.Concat}">
                                     <Binding>
