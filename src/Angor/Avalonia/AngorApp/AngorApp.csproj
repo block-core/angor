@@ -31,13 +31,8 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-<!--        <PackageReference Include="Zafiro.Avalonia"/>-->
-<!--        <PackageReference Include="Zafiro.Avalonia.Dialogs"/>-->
+        <PackageReference Include="Zafiro.Avalonia"/>
+        <PackageReference Include="Zafiro.Avalonia.Dialogs"/>
 
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia.Dialogs\Zafiro.Avalonia.Dialogs.csproj" />
-      <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\Zafiro.Avalonia.csproj" />
     </ItemGroup>
 </Project>
