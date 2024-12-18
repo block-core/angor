@@ -42,4 +42,9 @@ public static class MiscConverters
     });
 
     public static readonly FuncValueConverter<bool, double> BoolToOpacity = new(b => b ? 1 : 0);
+
+    public static FuncValueConverter<string, string> HubProfile = new((value) =>
+    {
+        return "https://hub.angor.io/profile/" + value;
+    });
 }

@@ -2,89 +2,23 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:details="clr-namespace:AngorApp.Sections.Browse.Details"
+             xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.Controls"
-             xmlns:a="https://github.com/projektanker/icons.avalonia"
-             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
-             xmlns:zc="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1200"
-             x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="details:IProjectDetailsViewModel">
+             x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
-        <details:ProjectDetailsViewModelDesign />
+        <dt:ProjectDetailsViewModelDesign />
     </Design.DataContext>
 
     <Grid ColumnDefinitions="1* 5* 1*" ClipToBounds="False">
         <StackPanel Grid.Column="1" Spacing="20">
             <Panel>
-                <controls:Pane IsHeaderVisible="True" IsTitleVisible="True"
-                               HeaderHeight="300"
-                               Subtitle="{Binding ShortDescription}"
-                               HeaderIcon="{Binding Icon}"
-                               HeaderBackground="{Binding Picture}"
-                               Title="{Binding Name}">
-                    <controls:Pane.TitleIcon>
-                        <a:Icon Value="fa-solid fa-tarp" />
-                    </controls:Pane.TitleIcon>
-                    <DockPanel>
-                        <DockPanel.Styles>
-                            <Style Selector="zc|CircularProgressBar">
-                                <Setter Property="StrokeThickness" Value="16" />
-                                <Setter Property="Foreground" Value="Orange" />
-                                <Setter Property="Background" Value="{StaticResource Level4}" />
-                            </Style>
-                        </DockPanel.Styles>
-                        <UniformGrid Columns="1" Width="300">
-                            <Panel>
-                                <zc:CircularProgressBar x:Name="Days" Margin="10" Maximum="{Binding TotalDays}" Value="{Binding CurrentDays}" />
-                                <TextBlock VerticalAlignment="Center" Classes="SizeBig" HorizontalAlignment="Center">
-                                    <TextBlock.Text>
-                                        <MultiBinding StringFormat="{}{0}/{1} days">
-                                            <Binding Path="CurrentDays" />
-                                            <Binding Path="TotalDays" />
-                                        </MultiBinding>
-                                    </TextBlock.Text>
-                                </TextBlock>
-                            </Panel>
-                            <Panel>
-                                <zc:CircularProgressBar x:Name="Funding" Margin="10" Maximum="{Binding TotalInvestment}" Value="{Binding CurrentInvestment}" />
-                                <TextBlock Text="{Binding #Funding.Proportion, StringFormat={}{0:P0}}" VerticalAlignment="Center" Classes="SizeBig" HorizontalAlignment="Center" />
-                            </Panel>
-                        </UniformGrid>
-                        <StackPanel Spacing="20">
-                            <StackPanel Margin="30" Spacing="5">
-                                <controls:SectionItem Content="View the transaction on the explorer" />
-                                <controls:SectionItem Content="Target Amount: 50 TBTC" />
-                                <controls:SectionItem Content="Penalty duration: 90 days" />
-                                <controls:SectionItem Content="Project dates: 07/12/2024 - 05/04/2025" />
-                            </StackPanel>
-                            <StackPanel Margin="30" Spacing="5">
-                                <controls:SectionItem Content="Total Raised: 0 TBTC" />
-                                <controls:SectionItem Content="Total Investors: 0" />
-                                <controls:SectionItem Content="The investing period is over" />
-                            </StackPanel>
-                        </StackPanel>
-                    </DockPanel>
-                </controls:Pane>
+                <dt:ProjectSummary />
                 <Border CornerRadius="20" Background="White" Padding="10" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="20 20">
                     <Button Command="{Binding Invest}">INVEST NOW</Button>
                 </Border>
             </Panel>
-            <controls:Pane IsTitleVisible="True" Title="Stages">
-                <controls:Pane.TitleIcon>
-                    <a:Icon Value="fa-solid fa-timeline" />
-                </controls:Pane.TitleIcon>
-
-                <z:SlimDataGrid ItemsSource="{Binding Stages}">
-                    <z:SlimDataGrid.Columns>
-                        <z:Column Header="STAGE" Binding="{Binding Index}" />
-                        <z:Column Header="STAGE %" Binding="{Binding Weight, StringFormat={}{0:P0}}" />
-                        <z:Column Header="RELEASE DATE" Binding="{Binding ReleaseDate, StringFormat=d}" />
-                        <z:Column Header="DAYS UNTIL STAGE" Binding="{Binding ReleaseDate, Converter={x:Static controls:MiscConverters.TimeLeft}}" />
-                        <z:Column Header="AMOUNT PER STAGE" Binding="{Binding Amount, StringFormat={}{0} TBTC}" />
-                    </z:SlimDataGrid.Columns>
-                </z:SlimDataGrid>
-            </controls:Pane>
             <controls:Pane>
                 <StackPanel HorizontalAlignment="Center" Spacing="20">
                     <PathIcon Height="100" Width="200" Data="{StaticResource ShieldStar}" />
@@ -93,55 +27,8 @@
                 </StackPanel>
             </controls:Pane>
 
-            <controls:Pane IsTitleVisible="True" Title="Nostr">
-                <controls:Pane.TitleIcon>
-                    <a:Icon Value="fa-regular fa-message" />
-                </controls:Pane.TitleIcon>
+            <dt:NostProperties />
 
-                <StackPanel Spacing="20">
-                    <HeaderedContentControl Header="Project NOSTR public key">
-                        <controls:SectionItem LeftContent="{Binding NpubKey}">
-                            <controls:SectionItem.RightContent>
-                                <Button>
-                                    <Button.Content>
-                                        <a:Icon Value="fa-solid fa-up-right-from-square" />
-                                    </Button.Content>
-                                </Button>
-                            </controls:SectionItem.RightContent>
-                        </controls:SectionItem>
-                    </HeaderedContentControl>
-                    <HeaderedContentControl Header="Project NOSTR public key">
-                        <controls:SectionItem LeftContent="{Binding NpubKeyHex}">
-                            <controls:SectionItem.RightContent>
-                                <Button>
-                                    <Button.Content>
-                                        <a:Icon Value="fa-solid fa-up-right-from-square" />
-                                    </Button.Content>
-                                </Button>
-                            </controls:SectionItem.RightContent>
-                        </controls:SectionItem>
-                    </HeaderedContentControl>
-                    <HeaderedContentControl Header="Relays">
-                        <ItemsControl ItemsSource="{Binding Relays}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Spacing="10" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <controls:SectionItem Content="{Binding Uri}">
-                                        <controls:SectionItem.LeftContent>
-                                            <a:Icon Value="fa-solid fa-arrow-right" />
-                                        </controls:SectionItem.LeftContent>
-                                    </controls:SectionItem>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </HeaderedContentControl>
-                </StackPanel>
-
-            </controls:Pane>
         </StackPanel>
 
     </Grid>

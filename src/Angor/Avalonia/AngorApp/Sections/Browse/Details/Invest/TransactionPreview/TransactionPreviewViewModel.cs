@@ -18,7 +18,7 @@ public partial class TransactionPreviewViewModel : ReactiveValidationObject, ITr
     {
         Project = project;
         Amount = amount;
-        CreateTransaction = ReactiveCommand.CreateFromTask(() => wallet.CreateTransaction(amount, project.Address));
+        CreateTransaction = ReactiveCommand.CreateFromTask(() => wallet.CreateTransaction(amount, project.BitcoinAddress));
         transactionHelper = CreateTransaction.ToProperty(this, x => x.Transaction);
         Confirm = ReactiveCommand.CreateFromTask(() => Transaction!.Broadcast(), this.WhenAnyValue(x => x.Transaction).NotNull());
         TransactionConfirmed = Confirm.Successes().Select(_ => true).StartWith(false);
