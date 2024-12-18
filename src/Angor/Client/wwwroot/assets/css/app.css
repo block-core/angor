@@ -39,12 +39,13 @@
     --angor-modal-header-padding: 1rem 1rem;
     --angor-modal-title-line-height: 1.5;
     --angor-modal-footer-gap: 0.5rem;
-    --btn-border: #046479;
+    --btn-border: #cccccc;
 }
 
 .dark {
     --angor-primary: var(--angor-light) !important;
     --angor-accent: var(--angor-dark) !important;
+    --btn-border: #046479;
 }
 
 .col-form-label {
@@ -822,7 +823,6 @@ tr[style*="cursor: pointer;"]:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
