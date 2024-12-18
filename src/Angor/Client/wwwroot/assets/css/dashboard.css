@@ -114,7 +114,7 @@ h6,
 
 p {
     margin-top: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 0;
 }
 
 abbr[title] {
@@ -5719,7 +5719,7 @@ fieldset:disabled .btn {
 }
 
 .alert-warning {
-    --angor-alert-color: #975400;
+    --angor-alert-color: #040200;
     --angor-alert-bg: #fee8cc;
     --angor-alert-border-color: #feddb3;
 }
@@ -24297,7 +24297,7 @@ body:not(.dark) .sidenav.bg-transparent .collapse .nav-item .nav-link.active.tex
     color: #fff;
     border-right-width: 0;
     border-bottom-width: 0;
-    background-color: rgba(199, 199, 199, 0.2);
+    background-color: #0222291c;
 }
 
     .navbar-vertical .navbar-nav > .nav-item .nav-link.active + .collapse .nav-item.active .nav-link.active,
