@@ -6,6 +6,10 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        <Company>Angor</Company>
+        <Product>Angor</Product>
+        <AssemblyName>Angor</AssemblyName>
+        <RootNamespace>Angor</RootNamespace>
     </PropertyGroup>
 
     <PropertyGroup>

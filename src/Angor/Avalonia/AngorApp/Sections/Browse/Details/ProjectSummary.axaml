@@ -35,12 +35,13 @@
                 <Style Selector="zc|CircularProgressBar">
                     <Setter Property="StrokeThickness" Value="16" />
                     <Setter Property="Foreground" Value="Orange" />
+                    <Setter Property="Margin" Value="30" />
                     <Setter Property="Background" Value="{StaticResource Level4}" />
                 </Style>
             </DockPanel.Styles>
             <UniformGrid Columns="1" Width="300">
                 <Panel>
-                    <zc:CircularProgressBar x:Name="Days" Margin="10" Maximum="{Binding TotalDays}" Value="{Binding CurrentDays}" />
+                    <zc:CircularProgressBar x:Name="Days" Maximum="{Binding TotalDays}" Value="{Binding CurrentDays}" />
                     <TextBlock VerticalAlignment="Center" Classes="SizeBig" HorizontalAlignment="Center">
                         <TextBlock.Text>
                             <MultiBinding StringFormat="{}{0}/{1} days">
@@ -51,7 +52,7 @@
                     </TextBlock>
                 </Panel>
                 <Panel>
-                    <zc:CircularProgressBar x:Name="Funding" Margin="10" Maximum="{Binding TotalInvestment}" Value="{Binding CurrentInvestment}" />
+                    <zc:CircularProgressBar x:Name="Funding" Maximum="{Binding TotalInvestment}" Value="{Binding CurrentInvestment}" />
                     <TextBlock Text="{Binding #Funding.Proportion, StringFormat={}{0:P0}}" VerticalAlignment="Center" Classes="SizeBig" HorizontalAlignment="Center" />
                 </Panel>
             </UniformGrid>

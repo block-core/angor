@@ -15,6 +15,14 @@
         <dt:ProjectDetailsViewModelDesign />
     </Design.DataContext>
     
+    <UserControl.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="IsReadOnly" Value="True" />
+        </Style>
+    </UserControl.Styles>
+    
     <c:Pane IsTitleVisible="True" Title="Nostr">
         <c:Pane.TitleIcon>
             <p:Icon Value="fa-regular fa-message" />
@@ -22,7 +30,10 @@
 
         <StackPanel Spacing="20">
             <HeaderedContentControl Header="Project NOSTR public key">
-                <c:SectionItem LeftContent="{Binding Project.NpubKey}">
+                <c:SectionItem>
+                    <c:SectionItem.LeftContent>
+                        <TextBox Text="{Binding Project.NpubKey}" />
+                    </c:SectionItem.LeftContent>
                     <c:SectionItem.RightContent>
                         <Button Command="{x:Static misc:Commands.LaunchUri}">
                             <Button.CommandParameter>
@@ -43,7 +54,10 @@
                 </c:SectionItem>
             </HeaderedContentControl>
             <HeaderedContentControl Header="Project NOSTR public key">
-                <c:SectionItem LeftContent="{Binding Project.NpubKeyHex}">
+                <c:SectionItem>
+                    <c:SectionItem.LeftContent>
+                        <TextBox Text="{Binding Project.NpubKeyHex}" />
+                    </c:SectionItem.LeftContent>
                     <c:SectionItem.RightContent>
                         <Button Command="{x:Static misc:Commands.LaunchUri}">
                             <Button.CommandParameter>
