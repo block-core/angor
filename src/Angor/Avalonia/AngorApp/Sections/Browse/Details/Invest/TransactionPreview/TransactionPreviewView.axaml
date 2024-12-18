@@ -7,7 +7,7 @@
              xmlns:designTime="clr-namespace:Zafiro.Avalonia.DesignTime;assembly=Zafiro.Avalonia"
              xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:dp="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" 
              x:Class="AngorApp.Sections.Browse.Details.Invest.TransactionPreview.TransactionPreviewView"
              x:DataType="transactionPreview:ITransactionPreviewViewModel">
 
@@ -22,6 +22,9 @@
     <UserControl.Styles>
         <Style Selector="controls|SectionItem /template/ ContentPresenter#PART_LeftContent TextBlock">
             <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
     </UserControl.Styles>
 

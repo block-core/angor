@@ -8,7 +8,6 @@ using AngorApp.Sections.Wallet;
 using AngorApp.Services;
 using Avalonia.Controls.Notifications;
 using Zafiro.Avalonia.Dialogs;
-using Zafiro.Avalonia.Dialogs.SizingAlgorithms;
 using Zafiro.Avalonia.Notifications;
 using Zafiro.Avalonia.Services;
 using Separator = AngorApp.Sections.Shell.Separator;
@@ -23,7 +22,7 @@ public class CompositionRoot
         var launcher = new LauncherService(topLevel!.Launcher);
         var uiServices = new UIServices(
             launcher, 
-            new DesktopDialog(algorithm: new AlternateSizingAlgorithm()), 
+            new DesktopDialog(), 
             new NotificationService(new WindowNotificationManager(topLevel)
             {
                 Position = NotificationPosition.BottomRight,

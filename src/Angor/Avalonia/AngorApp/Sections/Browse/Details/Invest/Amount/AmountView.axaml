@@ -10,6 +10,12 @@
     <Design.DataContext>
         <amount:AmountViewModelDesign />
     </Design.DataContext>
+    
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
 
     <StackPanel Spacing="20">
         <TextBlock TextWrapping="Wrap">
