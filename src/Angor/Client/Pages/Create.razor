@@ -599,22 +599,12 @@
         var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectIndex + 1 ?? 1);
 
         project = projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier)
-                  ?? new FounderProject
-                  {
-                      ProjectIndex = projectsKeys.Index,
-                      Metadata = new ProjectMetadata(),
-                      ProjectInfo = new ProjectInfo
-                      {
-                          FounderKey = projectsKeys.FounderKey,
-                          FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
-                          ProjectIdentifier = projectsKeys.ProjectIdentifier,
-                          NostrPubKey = projectsKeys.NostrPubKey,
-                              StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
-                          PenaltyDays = 90,
-                          ExpiryDate = DateTime.UtcNow.AddDays(120),
-                          TargetAmount = 50
-                      }
-                  };
+                  ?? CreateDefaultProject(projectsKeys);
+
+        if (network.NetworkType == NetworkType.Testnet)
+        {
+            PopulateTestnetData(project);
+        }
 
         // save project to storage immediately if new
         if (!projects.Any(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier))
@@ -625,6 +615,13 @@
         // check if the project was already published to nostr
         nostrMetadataCreated = project.NostrProfileCreated;
         nostrApplicationSpecificDataCreated = !string.IsNullOrEmpty(project.ProjectInfoEventId);
+        
+        // Select a preset
+        if(!project.ProjectInfo.Stages.Any())
+        {
+            isPresetMode = true;
+            OnStagePresetChange(new ChangeEventArgs { Value = "preset1" });
+        }
     }
 
 
@@ -1172,4 +1169,65 @@
         isPresetMode = !isPresetMode; // Toggle between Presets and Automatic
         StateHasChanged(); // Update the UI
     }
+    
+    private readonly string[] spacePhotos = new[]
+    {
+        "https://images-assets.nasa.gov/image/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA22081/PIA22081~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000282/GSFC_20171208_Archive_e000282~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001894/GSFC_20171208_Archive_e001894~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA08216/PIA08216~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001465/GSFC_20171208_Archive_e001465~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001518/GSFC_20171208_Archive_e001518~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA25433/PIA25433~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA15415/PIA15415~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002086/GSFC_20171208_Archive_e002086~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA14731/PIA14731~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002020/GSFC_20171208_Archive_e002020~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/0203048/0203048~thumb.jpg?as=webp"
+    };
+    
+    private FounderProject CreateDefaultProject(FounderKeys projectsKeys)
+    {
+        return new FounderProject
+        {
+            ProjectIndex = projectsKeys.Index,
+            Metadata = new ProjectMetadata(),
+            ProjectInfo = new ProjectInfo
+            {
+                FounderKey = projectsKeys.FounderKey,
+                FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
+                ProjectIdentifier = projectsKeys.ProjectIdentifier,
+                NostrPubKey = projectsKeys.NostrPubKey,
+                StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
+                PenaltyDays = 90,
+                ExpiryDate = DateTime.UtcNow.AddDays(120),
+                TargetAmount = 50
+            }
+        };
+    }
+    
+    private void PopulateTestnetData(FounderProject project)
+    {
+        var random = new Random();
+
+        // Set random photos for testnet
+        if (string.IsNullOrEmpty(project.Metadata.Banner))
+        {
+            project.Metadata.Banner = spacePhotos[random.Next(spacePhotos.Length)];
+        }
+
+        if (string.IsNullOrEmpty(project.Metadata.Picture))
+        {
+            project.Metadata.Picture = spacePhotos[random.Next(spacePhotos.Length)];
+        }
+    }
+
+
+
+
 }
