@@ -8,14 +8,10 @@
              xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Wallet.WalletView" ClipToBounds="False" x:DataType="wallet:IWalletViewModel">
-
+    
     <Design.DataContext>
         <wallet:WalletViewModelDesign />
     </Design.DataContext>
-
-    <UserControl.DataContext>
-        <wallet:WalletViewModelDesign />
-    </UserControl.DataContext>
 
     <UserControl.Styles>
 
@@ -38,7 +34,10 @@
             <controls:Pane IsTitleVisible="True" Title="Wallet"
                            Subtitle="Wallet and balances">
                 <controls:Pane.TitleRightContent>
-                    <Button Content="Wallet Words" DockPanel.Dock="Right" />
+                    <UniformGrid Rows="1">
+                        <Button HorizontalAlignment="Stretch" Command="{Binding Send}" Content="Send" />
+                        <Button HorizontalAlignment="Stretch" Content="Receive" />
+                    </UniformGrid>
                 </controls:Pane.TitleRightContent>
                 <controls:Pane.TitleIcon>
                     <i:Icon Value="fa-wallet" />
@@ -56,48 +55,6 @@
                     <i:Icon Value="fa-database" Margin="10" />
                 </controls:Pane.TitleIcon>
 
-            </controls:Pane>
-
-            <!-- Actions (Send/Receive) -->
-            <WrapPanel ItemWidth="200" HorizontalAlignment="Center">
-                <controls:Pane Margin="10">
-                    <Button HorizontalAlignment="Stretch" Background="Transparent">
-                        <StackPanel>
-                            <i:Icon Value="fa-sold fa-up-long" />
-                            <TextBlock Text="Send" />
-                        </StackPanel>
-                    </Button>
-                </controls:Pane>
-                <controls:Pane Margin="10">
-                    <Button HorizontalAlignment="Stretch" Background="Transparent">
-                        <StackPanel>
-                            <i:Icon Value="fa-sold fa-down-long" />
-                            <TextBlock Text="Receive" />
-                        </StackPanel>
-                    </Button>
-                </controls:Pane>
-            </WrapPanel>
-
-
-            <!-- Send Section -->
-            <controls:Pane IsTitleVisible="True" Title="Send">
-                <controls:Pane.TitleIcon>
-                    <i:Icon Value="fa-solid fa-angle-right" />
-                </controls:Pane.TitleIcon>
-                <StackPanel Spacing="10">
-                    <StackPanel Spacing="10">
-                        <TextBox Classes="clearButton" Watermark="Enter address" MaxWidth="300" AcceptsReturn="False">
-                            <TextBox.InnerLeftContent>
-                                <i:Icon Value="fa-solid fa-pen-to-square" Margin="4" />
-                            </TextBox.InnerLeftContent>
-                        </TextBox>
-                        <TextBox Watermark="Amount" MaxWidth="300" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Button Content="Coin Control" />
-                        <Button Content="Send" />
-                    </StackPanel>
-                </StackPanel>
             </controls:Pane>
 
             <controls:Pane IsTitleVisible="True" Title="Addresses and amounts">

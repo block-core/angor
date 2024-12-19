@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using CSharpFunctionalExtensions;
 
 namespace AngorApp.Sections.Wallet;
 
@@ -25,4 +26,12 @@ public class WalletDesign : IWallet
             Amount = amount
         };
     }
+
+    public Result IsAddressValid(string address)
+    {
+        var value = BitcoinAddressValidator.ValidateBitcoinAddress(address, Network);
+        return value.IsValid ? Result.Success() : Result.Failure(value.Message);
+    }
+
+    public BitcoinAddressValidator.BitcoinNetwork Network => BitcoinAddressValidator.BitcoinNetwork.Testnet;
 }
