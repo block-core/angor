@@ -89,6 +89,41 @@ namespace Angor.Shared.Services
                 Kinds = [NostrKind.ApplicationSpecificData, NostrKind.Metadata],
             }));
         }
+        
+        // add the same as function ^^ as async
+        public async Task RequestProjectCreateEventsByPubKeyAsync(
+            string[] nPubs,
+            Action<NostrEvent> onResponseAction,
+            Action? onEoseAction)
+        {
+            var subscriptionKey = Guid.NewGuid().ToString().Replace("-", "");
+
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+
+            if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event is not null)
+                    .Select(_ => _.Event)
+                    .Subscribe(onResponseAction!);
+
+                _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            if (onEoseAction != null)
+            {
+                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, onEoseAction);
+            }
+
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                Authors = nPubs,
+                Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata },
+            }));
+        }
+
+
 
         public Task LookupSignaturesDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)
         {
