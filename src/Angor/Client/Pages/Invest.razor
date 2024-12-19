@@ -387,6 +387,13 @@ else
 
         Project? findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
 
+        if (project == null || !CanInvest(project))
+        {
+            notificationComponent.ShowNotificationMessage("You cannot invest in this project.", 5);
+            NavigationManager.NavigateTo($"/view/{ProjectId}");
+            return;
+        }
+        
         if (findProject != null)
         {
             var investmentProject = findProject as InvestorProject;
@@ -935,4 +942,18 @@ else
     {
         showTransactionJsonModal = isVisible;
     }
+
+    public bool CanInvest(Project project)
+    {
+        // on testnet we will not disable the ability to invest at all
+        if (project == null || project.ProjectInfo == null) return false;
+        if (network.NetworkType == NetworkType.Testnet) return true;
+
+        var now = DateTime.UtcNow;
+
+        if (now <= project.ProjectInfo.StartDate) return true;
+
+        return false;
+    }
+
 }

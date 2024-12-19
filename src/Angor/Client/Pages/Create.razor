@@ -30,6 +30,13 @@
     return;
 }
 
+@if (!isValid)
+{
+<div class="alert alert-danger">
+    <h4>Error</h4>
+    <p>@errorMessage</p>
+</div>
+}
 
 <div class="row">
     <div class="card card-body">
@@ -570,6 +577,8 @@
     
     private int totalDuration;
     private int numberOfStages;
+    private bool isValid = true;
+    private string errorMessage;
 
     bool createProfileSpinner;
     bool createApplicationDataSpinner;
@@ -585,13 +594,15 @@
         {
             return;
         }
+        
+        var projects = storage.GetFounderProjects()?.Where(p => !string.IsNullOrEmpty(p.CreationTransactionId)).ToList() ?? new List<FounderProject>();
 
-        var projects = storage.GetFounderProjects() ?? new List<FounderProject>();
         var keys = _walletStorage.GetFounderKeys();
-
-        if (projects.Count(p => !string.IsNullOrEmpty(p.CreationTransactionId)) >= keys.Keys.Count)
+    
+        if (projects.Count >= keys.Keys.Count)
         {
-            notificationComponent.ShowErrorMessage("All founder keys have been used for this wallet!");
+            errorMessage = "All founder keys have been used for this wallet!";
+            isValid = false;
             return;
         }
 
