@@ -546,6 +546,7 @@ else
                                             {
                                                 SessionStorage.StoreProject(project);
                                             }
+                                            
                                         }
                                         else
                                         {
@@ -555,6 +556,9 @@ else
                                         StateHasChanged();
                                     },
                                     project.ProjectInfo.NostrPubKey);
+                                
+                                SetProjectLinksAndRefreshBalance();
+
                             },projectIndexerData.NostrEventId);
                     }
                     else
