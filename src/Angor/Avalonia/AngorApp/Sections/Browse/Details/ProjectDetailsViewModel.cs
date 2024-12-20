@@ -48,7 +48,11 @@ public class ProjectDetailsViewModel(Func<Maybe<IWallet>> getWallet, IProject pr
     private static async Task DoInvest(IWallet wallet, IProject project, UIServices uiServices)
     {
         var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project))
-            .Then(viewModel => new TransactionPreviewViewModel(wallet, project, uiServices, viewModel.Amount!.Value))
+            .Then(viewModel =>
+            {
+                var destination = new Destination(project.Name, viewModel.Amount!.Value, project.BitcoinAddress);
+                return new TransactionPreviewViewModel(wallet, destination, uiServices);
+            })
             .Then(prev => new SuccessViewModel("Transaction confirmed!"))
             .Build();
 

@@ -79,7 +79,7 @@
     
     <Style Selector="dialogs|DialogView :is(UserControl)">
         <Setter Property="Width" Value="500" />
-        <Setter Property="Height" Value="380" />
+        <!-- <Setter Property="Height" Value="400" /> -->
     </Style>
 
     <Design.PreviewWith>

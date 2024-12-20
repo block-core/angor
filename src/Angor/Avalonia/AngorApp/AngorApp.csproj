@@ -35,4 +35,19 @@
         <PackageReference Include="Zafiro.Avalonia.Dialogs"/>
 
     </ItemGroup>
+
+    <ItemGroup>
+      <UpToDateCheckInput Remove="Sections\Browse\Details\Invest\TransactionPreview\TransactionPreviewView.axaml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Common\TransactionPreview\TransactionPreviewView.axaml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Common\Success\SuccessView.axaml.cs">
+        <DependentUpon>SuccessView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
 </Project>

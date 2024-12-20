@@ -59,4 +59,6 @@ public static class SampleData
 
         return projects;
     }
+
+    public static string TestNetBitcoinAddress { get; } = "mzHrLAR3WWLE4eCpq82BDCKmLeYRyYXPtm";
 }
