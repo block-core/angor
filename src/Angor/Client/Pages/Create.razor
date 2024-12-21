@@ -30,6 +30,13 @@
     return;
 }
 
+@if (!isValid)
+{
+    <div class="alert alert-danger">
+        <h4>Error</h4>
+        <p>@errorMessage</p>
+    </div>
+}
 
 <div class="row">
     <div class="card card-body">
@@ -570,6 +577,8 @@
     
     private int totalDuration;
     private int numberOfStages;
+    private bool isValid = true;
+    private string errorMessage;
 
     bool createProfileSpinner;
     bool createApplicationDataSpinner;
@@ -586,16 +595,21 @@
             return;
         }
 
-        var projects = storage.GetFounderProjects() ?? new List<FounderProject>();
+        var projects = storage.GetFounderProjects();
+
         var keys = _walletStorage.GetFounderKeys();
 
-        if (projects.Count(p => !string.IsNullOrEmpty(p.CreationTransactionId)) >= keys.Keys.Count)
+        // if CreationTransactionId is not null this means the project was published to the blockchain
+        var startedProjects = projects.Where(p => !string.IsNullOrEmpty(p.CreationTransactionId)).ToList();
+
+        if (startedProjects.Count >= keys.Keys.Count)
         {
-            notificationComponent.ShowErrorMessage("All founder keys have been used for this wallet!");
+            errorMessage = "All founder keys have been used for this wallet!";
+            isValid = false;
             return;
         }
 
-        var latestProject = projects.Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).MaxBy(p => p.ProjectIndex);
+        var latestProject = startedProjects.MaxBy(p => p.ProjectIndex);
         var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectIndex + 1 ?? 1);
 
         project = projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier)
@@ -1226,8 +1240,4 @@
             project.Metadata.Picture = spacePhotos[random.Next(spacePhotos.Length)];
         }
     }
-
-
-
-
 }

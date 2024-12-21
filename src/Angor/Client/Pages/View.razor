@@ -23,7 +23,7 @@
 @inject IJSRuntime Js;
 @inject ILogger<Browse> Logger;
 @inject IHtmlStripperService HtmlStripperService;
-
+@inject IApplicationLogicService applicationLogicService;
 @inject NostrConversionHelper NostrHelper
 
 
@@ -305,25 +305,19 @@ else
                     Seize the opportunity to invest in this project.
                 </p>
                 @{
-                    var timeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
-
-                    if (timeLeft <= 0 && network.NetworkType == NetworkType.Testnet)
-                    {
-                        // on testnet we will not disable the ability to invest at all
-                        timeLeft = 1;
-                    }
+                    var canInvest = applicationLogicService.IsInvestmentWindowOpen(project?.ProjectInfo);
                 }
                 <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON"
                         @onclick="InvestInProject"
-                        disabled="@(timeLeft <= 0 ? "disabled" : null)"
-                        title="@(timeLeft <= 0 ? "The investing period is over" : null)">
-                    @if (timeLeft > 0)
+                        disabled="@(!canInvest)">
+
+                    @if (!canInvest)
                     {
-                        <text>Invest Now</text>
+                        <text>The investing period is over</text>
                     }
                     else
                     {
-                        <text>The investing period is over</text>
+                        <text>Invest Now</text>
                     }
                 </button>
             </div>
@@ -441,6 +435,7 @@ else
 
     private bool isGeneratingNsec;
     private string errorMessage = string.Empty;
+
 
     private string error;
 
@@ -759,5 +754,5 @@ else
         string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
     }
-
 }
+
