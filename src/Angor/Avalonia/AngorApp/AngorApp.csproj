@@ -37,17 +37,21 @@
     </ItemGroup>
 
     <ItemGroup>
-      <UpToDateCheckInput Remove="Sections\Browse\Details\Invest\TransactionPreview\TransactionPreviewView.axaml" />
+        <UpToDateCheckInput Remove="Sections\Browse\Details\Invest\TransactionPreview\TransactionPreviewView.axaml"/>
     </ItemGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="Common\TransactionPreview\TransactionPreviewView.axaml" />
+        <AdditionalFiles Include="Common\TransactionPreview\TransactionPreviewView.axaml"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Common\Success\SuccessView.axaml.cs">
-        <DependentUpon>SuccessView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
+        <Compile Update="Common\Success\SuccessView.axaml.cs">
+            <DependentUpon>SuccessView.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\AngorApp.Model\AngorApp.Model.csproj"/>
     </ItemGroup>
 </Project>

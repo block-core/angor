@@ -2,21 +2,21 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:transactionPreview="clr-namespace:AngorApp.Sections.Browse.Details.Invest.TransactionPreview"
              xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
              xmlns:designTime="clr-namespace:Zafiro.Avalonia.DesignTime;assembly=Zafiro.Avalonia"
              xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:dp="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:transactionPreview1="clr-namespace:AngorApp.Common.TransactionPreview"
              mc:Ignorable="d"
-             x:Class="AngorApp.Sections.Browse.Details.Invest.TransactionPreview.TransactionPreviewView"
-             x:DataType="transactionPreview:ITransactionPreviewViewModel">
+             x:Class="AngorApp.Common.TransactionPreview.TransactionPreviewView"
+             x:DataType="transactionPreview1:ITransactionPreviewViewModel">
 
     <Design.DataContext>
-        <transactionPreview:TransactionPreviewViewModelDesign IsBusy="{designTime:Return {x:False}}">
-            <transactionPreview:TransactionPreviewViewModelDesign.Transaction>
-                <wallet:TransactionDesign Address="ADDRESS" Amount="0.12" />
-            </transactionPreview:TransactionPreviewViewModelDesign.Transaction>
-        </transactionPreview:TransactionPreviewViewModelDesign>
+        <transactionPreview1:TransactionPreviewViewModelDesign IsBusy="{designTime:Return {x:False}}">
+            <transactionPreview1:TransactionPreviewViewModelDesign.Transaction>
+                <wallet:UnsignedTransactionDesign Address="ADDRESS" Amount="0.12" />
+            </transactionPreview1:TransactionPreviewViewModelDesign.Transaction>
+        </transactionPreview1:TransactionPreviewViewModelDesign>
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -28,27 +28,36 @@
         </Style>
     </UserControl.Styles>
 
-    <Panel IsVisible="{Binding !TransactionConfirmed^}" HorizontalAlignment="Center">
-        <StackPanel IsVisible="{Binding !!Transaction}" Spacing="10">
-            <StackPanel Margin="10">
-                <TextBlock>This is a preview of the transaction you will send.</TextBlock>
-                <TextBlock>If everything is correct you can confirm it with the button below.</TextBlock>
+    <StackPanel Spacing="10">
+        <StackPanel Margin="10">
+            <TextBlock>This is a preview of the transaction you will send.</TextBlock>
+            <TextBlock>If everything is correct you can confirm it with the button below.</TextBlock>
+        </StackPanel>
+        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Destination" Content="{Binding Destination.Name}" />
+        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Amount" Content="{Binding Destination.Amount, StringFormat={x:Static controls:MiscConverters.AmountBtcFormat}}" />
+        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Total Fee">
+            <HeaderedContentControl.Content>
+                <Panel HorizontalAlignment="Left">
+                    <TextBlock VerticalAlignment="Center" Text="{Binding Feerate}" IsVisible="{Binding !CreateTransaction.IsExecuting^}" />
+                    <dp:ProgressRing Height="20" Width="20" IsVisible="{Binding CreateTransaction.IsExecuting^}" />
+                </Panel>
+            </HeaderedContentControl.Content>
+        </HeaderedContentControl>
+        <HeaderedContentControl Header="Fee Rate">
+            <StackPanel>
+                <Slider IsSnapToTickEnabled="True" TickFrequency="1" Maximum="10" Minimum="1" Value="{Binding Feerate}" />
+                <TextBlock Text="{Binding Feerate}" HorizontalAlignment="Center" />
             </StackPanel>
-            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Destination" Content="{Binding Destination.Name}" />
-            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Amount" Content="{Binding Transaction.Amount, StringFormat={x:Static controls:MiscConverters.AmountBtcFormat}}" />
-            <Button HorizontalAlignment="Center" Margin="0 15" Command="{Binding Confirm}">
-                <Button.Content>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="CONFIRM" IsVisible="{Binding !Confirm.IsExecuting^}" VerticalAlignment="Center" />
-                        <TextBlock IsVisible="{Binding Confirm.IsExecuting^}" HorizontalAlignment="Center" Text="CONFIRMING..." VerticalAlignment="Center" />
-                        <dp:ProgressRing IsVisible="{Binding Confirm.IsExecuting^}"  Margin="10 0" Height="20" Width="20" />
-                    </StackPanel>
-                </Button.Content>
-            </Button>
-        </StackPanel>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding CreateTransaction.IsExecuting^}">
-            <TextBlock Text="Building transaction preview. Please wait." TextAlignment="Center" />
-            <dp:ProgressRing Margin="20" Height="60" Width="60" HorizontalAlignment="Stretch" />
-        </StackPanel>
-    </Panel>
+        </HeaderedContentControl>
+        <Button HorizontalAlignment="Center" Margin="0 15" Command="{Binding Confirm}">
+            <Button.Content>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="CONFIRM" IsVisible="{Binding !Confirm.IsExecuting^}" VerticalAlignment="Center" />
+                    <TextBlock IsVisible="{Binding Confirm.IsExecuting^}" HorizontalAlignment="Center" Text="CONFIRMING..." VerticalAlignment="Center" />
+                    <dp:ProgressRing IsVisible="{Binding Confirm.IsExecuting^}" Margin="10 0" Height="20" Width="20" />
+                </StackPanel>
+            </Button.Content>
+        </Button>
+    </StackPanel>
+
 </UserControl>

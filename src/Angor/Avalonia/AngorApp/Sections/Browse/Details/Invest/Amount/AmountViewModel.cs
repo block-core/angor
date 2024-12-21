@@ -1,5 +1,5 @@
 using System.Reactive.Linq;
-using AngorApp.Sections.Wallet;
+using AngorApp.Model;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
@@ -13,7 +13,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
     public AmountViewModel(IWallet wallet, IProject project)
     {
         Project = project;
-        this.ValidationRule(x => x.Amount, this.WhenAnyValue(x => x.Amount).Skip(1), x => x is null or > 0, _ =>  "Amount must be greater than zero");
+        this.ValidationRule(x => x.Amount, this.WhenAnyValue(x => x.Amount).Skip(1), x => x is null or > 0, _ => "Amount must be greater than zero");
         this.ValidationRule(x => x.Amount, this.WhenAnyValue(x => x.Amount).Skip(1), x => x is not null, _ => "Please, specify an amount");
         this.ValidationRule(x => x.Amount, this.WhenAnyValue(x => x.Amount).Skip(1), x => x is null || x <= wallet.Balance, _ => "The amount should be greater than the wallet balance");
     }
