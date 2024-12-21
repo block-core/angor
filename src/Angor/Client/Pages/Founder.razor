@@ -34,14 +34,18 @@
 
                 </div>
             </div>
-            <button class="btn btn-border" @onclick="NavigateToCreateProject" disabled="@scanningForProjects">
-                <i>
-                    <Icon IconName="add"></Icon>
-                </i>
-                <span class="nav-link-text ms-1">
-                    @(scanningForProjects ? "Scanning..." : "Create Project")
-                </span>
-            </button>
+            <div class="tooltip-container" data-bs-toggle="tooltip" title="@GetCreateButtonTooltip()">
+                <button
+                    class="btn btn-border"
+                    @onclick="NavigateToCreateProject"
+                    disabled="@(scanningForProjects || (founderProjects.Count >= 14) ? true : null)">                    <i>
+                        <Icon IconName="add"></Icon>
+                    </i>
+                    <span class="nav-link-text ms-1">
+                        @(scanningForProjects ? "Scanning..." : "Create Project")
+                    </span>
+                </button>
+            </div>
 
         </div>
         <p class="mb-0 font-weight-normal text-sm mt-4">
@@ -121,10 +125,8 @@
 
             var indexerProject = await _IndexerService.GetProjectByIdAsync(key.ProjectIdentifier);
 
-            if (indexerProject != null)
-            {
+            if (indexerProject != null) //TODO we need to talk about supporting projects that are created with gaps
                 founderProjectsToLookup.Add(key.NostrPubKey, indexerProject);
-            }
         }
 
         if (!founderProjectsToLookup.Any())
@@ -144,42 +146,37 @@
 
                         if (existingProject != null)
                         {
-                            if (existingProject.Metadata is null)
-                                existingProject.Metadata = nostrMetadata;
+                            existingProject.Metadata ??= nostrMetadata;
                         }
                         else
                         {
-                            founderProjects.Add(new FounderProject
-                            {
-                                Metadata = nostrMetadata,
-                                ProjectInfo = new ProjectInfo { NostrPubKey = e.Pubkey }
-                            });
+                            var founderProject = CreateFounderProject(founderProjectsToLookup, e);
+                            founderProject.Metadata = nostrMetadata;
+                            founderProjects.Add(founderProject);
                         }
 
                         break;
 
                     case { Kind: NostrKind.ApplicationSpecificData }:
+                        
+                        if (e.Id != founderProjectsToLookup[e.Pubkey].NostrEventId)
+                            return;
+                        
                         var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
                         var project = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
 
                         if (project != null)
                         {
+                            if (!string.IsNullOrEmpty(project.ProjectInfo.ProjectIdentifier))
+                                return;
+
                             project.ProjectInfo = projectInfo;
                         }
                         else
                         {
-                            var projectIndex = founderProjectsToLookup.Keys.ToList().IndexOf(e.Pubkey) + 1;
-                            var trxId = founderProjectsToLookup[e.Pubkey].TrxId;
-
-                            founderProjects.Add(new FounderProject
-                            {
-                                ProjectInfo = projectInfo,
-                                ProjectIndex = projectIndex,
-                                CreationTransactionId = trxId,
-                                NostrProfileCreated = true,
-                                ProjectInfoEventId = e.Id // todo: david to verify this is correct
-                            });
-                        }
+                            project ??= CreateFounderProject(founderProjectsToLookup, e, projectInfo);
+                            founderProjects.Add(project);
+                        }   
 
                         break;
                 }
@@ -207,6 +204,23 @@
             founderProjectsToLookup.Keys.ToArray());
     }
 
+    private FounderProject CreateFounderProject(Dictionary<string, ProjectIndexerData> founderProjectsToLookup, 
+        NostrEvent e, ProjectInfo? projectInfo = null)
+    {
+        var keys = _walletStorage.GetFounderKeys();
+        var projectIndex = keys.Keys.First(x => x.NostrPubKey == e.Pubkey).Index; //we throw if not found
+        var trxId = founderProjectsToLookup[e.Pubkey].TrxId;
+
+        return new FounderProject
+        {
+            ProjectInfo = projectInfo ?? new ProjectInfo { NostrPubKey = e.Pubkey },
+            ProjectIndex = projectIndex,
+            CreationTransactionId = trxId,
+            NostrProfileCreated = true,
+            ProjectInfoEventId = founderProjectsToLookup[e.Pubkey].NostrEventId
+        };
+    }
+
     private async Task NavigateToCreateProject()
     {
         // perform a rescan before creating a project (to update the keys)
@@ -214,5 +228,14 @@
 
         NavigationManager.NavigateTo("/create");
     }
+    private string GetCreateButtonTooltip()
+    {
+        if (founderProjects.Count >= 15)
+            return "You have reached the maximum number of projects. Please manage your existing projects.";
+        if (scanningForProjects)
+            return "Scanning in progress...";
+        return "Create a new project.";
+    }
+
 
 }

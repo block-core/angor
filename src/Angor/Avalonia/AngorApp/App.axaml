@@ -1,34 +1,39 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="using:AngorApp"
+             xmlns:misc="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
              x:Class="AngorApp.App"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             RequestedThemeVariant="Light">
+    <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
-        <local:ViewLocator/>
+
+        <misc:NamingConventionViewLocator />
+        <misc:DataTemplateInclude Source="avares://Zafiro.Avalonia/Controls/Wizards/WizardTemplate.axaml" />
+
     </Application.DataTemplates>
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
+        <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" />
+        <StyleInclude Source="Styles.axaml" />
+        <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
+        <StyleInclude Source="Controls/Pane.axaml" />
+        <StyleInclude Source="Controls/Dialog.axaml" />
+        <StyleInclude Source="avares://AvaloniaProgressRing/Styles/ProgressRing.xaml" />
     </Application.Styles>
-             
+
     <Application.Resources>
         <ResourceDictionary>
-            
+
             <ResourceDictionary.MergedDictionaries>
-                <MergeResourceInclude Source="Views/Pane.axaml" />
-                <MergeResourceInclude Source="Views/IconButton.axaml" />
+                <MergeResourceInclude Source="Controls/IconButton.axaml" />
+                <MergeResourceInclude Source="Controls/Header.axaml" />
+                <MergeResourceInclude Source="Controls/Frame.axaml" />
+                <MergeResourceInclude Source="Controls/SectionItem.axaml" />
+                <MergeResourceInclude Source="Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
-            
-            <Color x:Key="Level1">#F5FDFF</Color>
-            <Color x:Key="Level2">#F1FAFC</Color>
-            <Color x:Key="Level3">#C7DBDF</Color>
-            <Color x:Key="Level4">#1F5D6A</Color>
-            <Color x:Key="Level5">#022229</Color>
-            <SolidColorBrush x:Key="SystemRegionBrush" Color="{StaticResource Level3}" />
-            <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource Level3}" />
-            <SolidColorBrush x:Key="PanelBackground" Color="{StaticResource Level2}" />
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

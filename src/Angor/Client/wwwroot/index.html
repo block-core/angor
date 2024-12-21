@@ -8,7 +8,6 @@
     <base href="/" />
     <link rel="icon" type="image/svg+xml" href="/assets/img/angor-icon.svg" />
     <link rel="icon" type="image/png" href="/assets/img/favicon.png" />
-    <link href="manifest.json" rel="manifest" />
     <link rel="apple-touch-icon" sizes="512x512" href="/assets/img/icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/assets/img/icon-192.png" />
     <link href="Angor.Client.styles.css" rel="stylesheet" />
@@ -43,17 +42,11 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
-    <script>
-        // Add timestamp to force reload of service worker
-        navigator.serviceWorker.register('service-worker.js?v=' + new Date().getTime());
-    </script>
     <script type="module" src="service-crypto.js?v=1"></script>
-    <script src="/ServiceWorkerRegister.js?v=1"></script>
     <script src="nostr-tools-methods.js?v=1" type="module"></script>
     <script src="/assets/js/appUpdate.js?v=1"></script>
     <script src="/assets/js/app.js?v=1"></script>
     <script src="_framework/blazor.webassembly.js?v=1"></script>
-
 </body>
 
 </html>

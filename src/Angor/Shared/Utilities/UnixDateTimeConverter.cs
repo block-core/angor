@@ -18,7 +18,9 @@ public class UnixDateTimeConverter : JsonConverter<DateTime>
 
     public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
     {
-        var unixTime = new DateTimeOffset(value).ToUnixTimeSeconds();
+        // Ensure the DateTime is in UTC and has no milliseconds
+        var utcValue = value.ToUniversalTime().AddTicks(-(value.Ticks % TimeSpan.TicksPerSecond));
+        var unixTime = new DateTimeOffset(utcValue).ToUnixTimeSeconds();
         writer.WriteNumberValue(unixTime);
     }
 }

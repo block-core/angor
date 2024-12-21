@@ -19,7 +19,7 @@ jobs:
     env:
       PROJECT_NAME: 'Angor'
       SOLUTION_PATH: 'src/Angor.sln'
-      PROJECT_PATH: 'src/Angor/Server/Angor.Server.csproj'
+      PROJECT_PATH: 'src/Angor/Client/Angor.Client.csproj'
       BUILD_CONFIGURATION: 'Release'
 
     steps:
@@ -30,7 +30,7 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: | 
-          9.0.x
+          8.0.x
 
     - name: Setup Node.js (${{ matrix.node_version }})
       uses: actions/setup-node@v1
@@ -48,6 +48,11 @@ jobs:
     - name: Restore
       run: dotnet restore ${{env.SOLUTION_PATH}}
 
-    - name: Unit Test
+    - name: Unit Test (Debug)
       run: |
-       dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Release src/Angor.sln | grep -E '(Passed|Failed) .*ms'
+       dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Debug src/Angor.sln | grep -E '(Passed|Failed) .*ms'
+
+    - name: Unit Test (Release)
+      run: |
+        dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Release src/Angor.sln | grep -E '(Passed|Failed) .*ms'
+ 

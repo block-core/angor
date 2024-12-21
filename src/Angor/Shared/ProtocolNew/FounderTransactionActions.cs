@@ -55,6 +55,8 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         SignatureInfo info = new SignatureInfo { ProjectIdentifier = projectInfo.ProjectIdentifier };
 
+        AssemblyLogger.LogAssemblyVersion(key.GetType(), _logger);
+
         // todo: david change to Enumerable.Range 
         for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
         {
@@ -63,9 +65,13 @@ public class FounderTransactionActions : IFounderTransactionActions
             var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
-            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}");
-
             var sig = key.SignTaprootKeySpend(hash, sigHash).ToString();
+
+            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}; signature-hex={sig}");
+
+            var result = key.PubKey.GetTaprootFullPubKey().VerifySignature(hash, TaprootSignature.Parse(sig).SchnorrSignature);
+
+            _logger.LogInformation($"verification = {result}");
 
             info.Signatures.Add(new SignatureInfoItem { Signature = sig, StageIndex = stageIndex });
         }
@@ -117,7 +123,7 @@ public class FounderTransactionActions : IFounderTransactionActions
         {
             var scriptToExecute = new NBitcoin.Script(input.WitScript[1]);
             var controlBlock = input.WitScript[2];
-            
+
             var execData = new TaprootExecutionData(inputIndex, scriptToExecute.TaprootV1LeafHash) { SigHash = sigHash };
             var hash = spendingTransaction.GetSignatureHashTaproot(trxData, execData);
             

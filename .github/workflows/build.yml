@@ -9,21 +9,30 @@ permissions:
 
 jobs:
   build:
-    name: Build (${{ matrix.os }})
+    name: Build (${{ matrix.name }})
     strategy:
         matrix:
-          os: [windows-latest, ubuntu-latest, macos-latest]
           include:
-            - os: windows-latest
+            - name: Windows x64
+              os: windows-latest
               extension: ".zip"
               runtime: "win-x64"
-            - os: ubuntu-latest
+            # - name: Windows ARM64
+            #   os: windows-latest
+            #   extension: ".zip"
+            #   runtime: "win-arm64"
+            - name: Linux x64
+              os: ubuntu-latest
               extension: ".tar.gz"
               runtime: "linux-x64"
-            - os: macos-latest
-              runtime: "osx-x64"
+            # - name: macOS x64
+            #   os: macos-13
+            #   runtime: "osx-x64"
+            #   extension: ".zip"
+            - name: macOS ARM64
+              os: macos-latest
+              runtime: "osx-arm64"
               extension: ".zip"
-          node_version: [22]
         fail-fast: false
   
     runs-on: ${{ matrix.os }}
@@ -31,7 +40,7 @@ jobs:
     env:
         PROJECT_NAME: "Angor"
         SOLUTION_PATH: "src/Angor.sln"
-        PROJECT_PATH: "src/Angor/Server/Angor.Server.csproj"
+        PROJECT_PATH: "src/Angor/Client/Angor.Client.csproj"
 
     steps:
     - uses: actions/checkout@v3
@@ -39,7 +48,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '9.0.x'
+        dotnet-version: '8.0.x'
 
     - name: Variables
       run: |
@@ -47,15 +56,11 @@ jobs:
       shell: bash
 
     - name: Publish
-      run: dotnet publish -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }}.${{ github.run_number }} -v m -o publish  ${{env.PROJECT_PATH}}
-      env:
-        matrix.runtime: ${{ matrix.os == 'windows-latest' && 'win-x64' || matrix.os == 'ubuntu-latest' && 'linux-x64' || 'osx-x64' }}
+      run: dotnet publish -c Release -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }}.${{ github.run_number }} -v m -o publish  ${{env.PROJECT_PATH}}
 
     - name: Run Tests
       continue-on-error: true
-      run: dotnet test --configuration Release -r ${{matrix.runtime}} --verbosity normal  ${{env.SOLUTION_PATH}} 
-      env:
-        matrix.runtime: ${{ matrix.os == 'windows-latest' && 'win-x64' || matrix.os == 'ubuntu-latest' && 'linux-x64' || 'osx-x64' }}
+      run: dotnet test -c Release -r ${{matrix.runtime}} --verbosity normal  ${{env.SOLUTION_PATH}} 
 
     - name: Zip Release
       run: |
@@ -90,43 +95,61 @@ jobs:
     - name: Install and build
       run: |
         npm install
-        npm run tauri:build
+        npm run tauri:build:${{ matrix.runtime }}
 
     - name: Rename Linux files
       if: matrix.os == 'ubuntu-latest'
       run: |
-        mv src-tauri/target/release/bundle/appimage/Angor_${{ env.VERSION }}_amd64.AppImage src-tauri/target/release/bundle/appimage/angor-desktop-${{ env.VERSION }}-linux-amd64.AppImage
+        mv src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/Angor_${{ env.VERSION }}_amd64.AppImage src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/angor-desktop-${{ env.VERSION }}-linux-amd64.AppImage
 
     - name: Rename Mac files
-      if: matrix.os == 'macos-latest'
+      if: matrix.runtime == 'osx-x64'
       run: |
-        mv src-tauri/target/release/bundle/dmg/Angor_${{ env.VERSION }}_aarch64.dmg src-tauri/target/release/bundle/dmg/angor-desktop-${{ env.VERSION }}-mac-aarch64.dmg
+        mv src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Angor_${{ env.VERSION }}_aarch64.dmg src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/angor-desktop-${{ env.VERSION }}-mac-aarch64.dmg
 
     - name: Rename Mac files
-      if: matrix.os == 'windows-latest'
+      if: matrix.runtime == 'osx-arm64'
       run: |
-        mv src-tauri/target/release/bundle/msi/Angor_${{ env.VERSION }}_x64_en-US.msi src-tauri/target/release/bundle/msi/angor-desktop-${{ env.VERSION }}-win-x64.msi
+          mv src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Angor_${{ env.VERSION }}_aarch64.dmg src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/angor-desktop-${{ env.VERSION }}-mac-aarch64.dmg
+  
+    - name: Rename Windows files
+      if: matrix.runtime == 'win-x64'
+      run: |
+        mv src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/Angor_${{ env.VERSION }}_x64_en-US.msi src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/angor-desktop-${{ env.VERSION }}-win-x64.msi
+
+    - name: Rename Windows files
+      if: matrix.runtime == 'win-arm64'
+      run: |
+          mv src-tauri/target/release/bundle/msi/Angor_${{ env.VERSION }}_arm64_en-US.msi src-tauri/target/release/bundle/msi/angor-desktop-${{ env.VERSION }}-win-arm64.msi
 
     - uses: actions/upload-artifact@v4
       name: Upload Linux
       if: matrix.os == 'ubuntu-latest'
       with:
           name: angor-desktop-${{ env.VERSION }}-linux-amd64.AppImage
-          path: src-tauri/target/release/bundle/appimage/angor-desktop-${{ env.VERSION }}-linux-amd64.AppImage
+          path: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/angor-desktop-${{ env.VERSION }}-linux-amd64.AppImage
 
     - uses: actions/upload-artifact@v4
       name: Upload Mac
       if: matrix.os == 'macos-latest'
       with:
         name: angor-desktop-${{ env.VERSION }}-mac-aarch64.dmg
-        path: src-tauri/target/release/bundle/dmg/angor-desktop-${{ env.VERSION }}-mac-aarch64.dmg
+        path: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/angor-desktop-${{ env.VERSION }}-mac-aarch64.dmg
 
     - uses: actions/upload-artifact@v4
       name: Upload Windows
-      if: matrix.os == 'windows-latest'
+      if: matrix.runtime == 'win-x64'
       with:
           name: angor-desktop-${{ env.VERSION }}-win-x64.msi
-          path: src-tauri\target\release\bundle\msi\angor-desktop-${{ env.VERSION }}-win-x64.msi
+          path: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/angor-desktop-${{ env.VERSION }}-win-x64.msi
+
+    - uses: actions/upload-artifact@v4
+      name: Upload Windows
+      if: matrix.runtime == 'win-arm64'
+      with:
+              name: angor-desktop-${{ env.VERSION }}-win-arm64.msi
+              path: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/angor-desktop-${{ env.VERSION }}-win-arm64.msi
+    
 
   create-release:
     name: Publish (Release)
