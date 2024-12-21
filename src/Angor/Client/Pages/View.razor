@@ -502,14 +502,15 @@ else
                 invested = investorProject.InvestedInProject();
                 myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investorProject.TransactionId}";
                 projectStats.Loading = false;
+                SetProjectLinksAndRefreshBalance();
                 return;
             }
 
             project = SessionStorage.GetProjectById(ProjectId);
             if (project != null)
             {
-                await SetProjectLinksAndRefreshBalance();
                 projectStats.Loading = false;
+                SetProjectLinksAndRefreshBalance();
                 StateHasChanged();
                 return;
             }
