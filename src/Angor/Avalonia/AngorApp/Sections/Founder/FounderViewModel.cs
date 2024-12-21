@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Linq;
+using AngorApp.Model;
 using AngorApp.Sections.Browse;
 
 namespace AngorApp.Sections.Founder;

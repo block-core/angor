@@ -18,7 +18,7 @@ public class WalletDesign : IWallet
 
     public async Task<Result<IUnsignedTransaction>> CreateTransaction(decimal amount, string address, decimal feerate)
     {
-        await Task.Delay(3000);
+        await Task.Delay(1000);
 
         //return Result.Failure<ITransaction>("Transaction creation failed");
         return new UnsignedTransactionDesign

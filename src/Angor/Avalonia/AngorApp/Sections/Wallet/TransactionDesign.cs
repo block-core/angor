@@ -15,9 +15,10 @@ public class UnsignedTransactionDesign : IUnsignedTransaction
     public string Path { get; set; }
     public int UtxoCount { get; set; }
     public string ViewRawJson { get; set; }
+    
     public async Task<Result<IBroadcastedTransaction>> Broadcast()
     {
-        await Task.Delay(2000);
+        await Task.Delay(3000);
         return new BroadcastedTransactionDesign();
     }
 }

@@ -20,7 +20,7 @@ public partial class TransactionPreviewViewModel : ReactiveValidationObject, ITr
         Destination = destination;
         CreateTransaction = ReactiveCommand.CreateFromTask(() => wallet.CreateTransaction(destination.Amount, destination.BitcoinAddress, Feerate));
         transactionHelper = CreateTransaction.Successes().ToProperty(this, x => x.Transaction);
-        Confirm = ReactiveCommand.CreateFromTask(() => Transaction!.Broadcast(), this.WhenAnyValue(x => x.Transaction).NotNull());
+        Confirm = ReactiveCommand.CreateFromTask(() => Transaction!.Broadcast(), this.WhenAnyValue(x => x.Transaction).Null().CombineLatest(CreateTransaction.IsExecuting, (a, b) => !a && !b));
         TransactionConfirmed = Confirm.Successes().Select(_ => true).StartWith(false);
         IsBusy = CreateTransaction.IsExecuting.CombineLatest(Confirm.IsExecuting, (a, b) => a | b);
 
@@ -37,18 +37,4 @@ public partial class TransactionPreviewViewModel : ReactiveValidationObject, ITr
     public Destination Destination { get; }
     public IObservable<bool> IsValid => TransactionConfirmed;
     public bool AutoAdvance => true;
-}
-
-public class Destination
-{
-    public Destination(string name, decimal amount, string bitcoinAddress)
-    {
-        Name = name;
-        Amount = amount;
-        BitcoinAddress = bitcoinAddress;
-    }
-
-    public string Name { get; set; }
-    public decimal Amount { get; set; }
-    public string BitcoinAddress { get; set; }
 }

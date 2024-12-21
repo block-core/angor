@@ -1,4 +1,5 @@
 using System.Linq;
+using AngorApp.Model;
 
 namespace AngorApp.Sections.Browse;
 
