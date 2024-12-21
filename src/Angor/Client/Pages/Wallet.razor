@@ -1203,6 +1203,7 @@ else
     {
         if (!CanGetTestCoins())
         {
+            notificationComponent.ShowNotificationMessage("you already have too much test coins!");
             return;
         }
 
@@ -1239,7 +1240,6 @@ else
 
         if (Money.Satoshis(accountBalanceInfo.TotalBalance + accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) > 100)
         {
-            notificationComponent.ShowNotificationMessage("you already have too much test coins!");
             return false;
         }
 
