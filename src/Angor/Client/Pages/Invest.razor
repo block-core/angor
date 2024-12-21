@@ -21,15 +21,15 @@
 @inject IJSRuntime JS
 
 @inject ILogger<Invest> _Logger;
-@inject IDerivationOperations _derivationOperations
+@inject IDerivationOperations _derivationOperations;
 @inject IClientStorage storage;
 @inject ICacheStorage SessionStorage;
-@inject IWalletOperations _WalletOperations
+@inject IWalletOperations _WalletOperations;
+@inject IApplicationLogicService applicationLogicService;
+@inject ISignService _SignService;
+@inject IRelayService _RelayService;
 
-@inject ISignService _SignService
-@inject IRelayService _RelayService
-
-@inject IInvestorTransactionActions _InvestorTransactionActions
+@inject IInvestorTransactionActions _InvestorTransactionActions;
 
 @inject ISerializer serializer
 @inject IEncryptionService encryption
@@ -386,13 +386,6 @@ else
         }
 
         Project? findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
-
-        if (project == null || !CanInvest(project))
-        {
-            notificationComponent.ShowNotificationMessage("You cannot invest in this project.", 5);
-            NavigationManager.NavigateTo($"/view/{ProjectId}");
-            return;
-        }
         
         if (findProject != null)
         {
@@ -420,6 +413,14 @@ else
                 }
             }
         }
+
+        if (!applicationLogicService.IsInvestmentWindowOpen(project?.ProjectInfo))
+        {
+            notificationComponent.ShowNotificationMessage("You cannot invest in this project.", 5);
+            NavigationManager.NavigateTo($"/view/{ProjectId}");
+            return;
+        }
+
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
@@ -942,18 +943,4 @@ else
     {
         showTransactionJsonModal = isVisible;
     }
-
-    public bool CanInvest(Project project)
-    {
-        // on testnet we will not disable the ability to invest at all
-        if (project == null || project.ProjectInfo == null) return false;
-        if (network.NetworkType == NetworkType.Testnet) return true;
-
-        var now = DateTime.UtcNow;
-
-        if (now <= project.ProjectInfo.StartDate) return true;
-
-        return false;
-    }
-
 }
