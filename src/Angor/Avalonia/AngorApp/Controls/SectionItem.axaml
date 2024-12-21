@@ -2,12 +2,16 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="using:AngorApp.Controls">
     <Design.PreviewWith>
-        <controls:SectionItem LeftContent="Left" RightContent="Right" Content="saasdf">
-            <!-- <controls:SectionItem.Content> -->
-            <!--     <TextBlock></TextBlock> -->
-            <!-- </controls:SectionItem.Content> -->
-        </controls:SectionItem>
+        <StackPanel>
+            <controls:SectionItem LeftContent="Left" RightContent="Right" Content="saasdf" />
+            <controls:SectionItem Theme="{StaticResource Basic}" LeftContent="Left" RightContent="Right" Content="saasdf" />
+        </StackPanel>
     </Design.PreviewWith>
+
+    <ControlTheme TargetType="controls:SectionItem" x:Key="Basic" BasedOn="{StaticResource {x:Type controls:SectionItem}}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </ControlTheme>
 
     <ControlTheme TargetType="controls:SectionItem" x:Key="{x:Type controls:SectionItem}">
         <Setter Property="Padding" Value="8" />
@@ -18,9 +22,9 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <Border CornerRadius="{TemplateBinding CornerRadius}"
-                    Background="{TemplateBinding Background}" 
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    BorderThickness="{TemplateBinding BorderThickness}">
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
                     <DockPanel>
                         <DockPanel.Styles>
                             <Style Selector="DockPanel > :is(Control)">

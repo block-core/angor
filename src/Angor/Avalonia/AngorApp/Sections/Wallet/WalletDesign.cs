@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using AngorApp.Model;
+using AngorApp.Sections.Browse;
 using CSharpFunctionalExtensions;
 
 namespace AngorApp.Sections.Wallet;
@@ -14,7 +15,9 @@ public class WalletDesign : IWallet
         new BroadcastedTransactionDesign { Address = "someaddress4", Amount = 0.00581m, UtxoCount = 15, Path = "path", ViewRawJson = "json" }
     ];
 
-    public decimal? Balance { get; set; } = 2m;
+    public decimal? Balance { get; set; } = 0.2m;
+
+    public string ReceiveAddress { get; } = SampleData.TestNetBitcoinAddress;
 
     public async Task<Result<IUnsignedTransaction>> CreateTransaction(decimal amount, string address, decimal feerate)
     {

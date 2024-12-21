@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:c="clr-namespace:AngorApp.Controls"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.Sections.Wallet.Balance" x:DataType="wallet:IWalletViewModel">
+    
+    <Design.DataContext>
+        <wallet:WalletViewModelDesign />
+    </Design.DataContext>
+    
+    <c:Pane IsTitleVisible="True">
+        <c:Pane.Title>
+            <Binding  Path="Wallet.Balance" StringFormat="{x:Static c:MiscConverters.AmountBtcFormat}" />
+        </c:Pane.Title>
+        <c:Pane.TitleRightContent>
+            <StackPanel Orientation="Horizontal" Spacing="20">
+                <Button DockPanel.Dock="Right" i:Attached.Icon="fa-rotate" />
+            </StackPanel>
+        </c:Pane.TitleRightContent>
+        <c:Pane.TitleIcon>
+            <i:Icon Value="fa-database" Margin="10" />
+        </c:Pane.TitleIcon>
+
+    </c:Pane>
+
+</UserControl>

@@ -8,7 +8,7 @@
              xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Wallet.WalletView" ClipToBounds="False" x:DataType="wallet:IWalletViewModel">
-    
+
     <Design.DataContext>
         <wallet:WalletViewModelDesign />
     </Design.DataContext>
@@ -27,16 +27,26 @@
 
     <DockPanel>
 
-        <!-- Main Content Area -->
         <StackPanel Spacing="20">
 
-            <!-- Wallet Section -->
             <controls:Pane IsTitleVisible="True" Title="Wallet"
                            Subtitle="Wallet and balances">
                 <controls:Pane.TitleRightContent>
                     <UniformGrid Rows="1">
-                        <Button HorizontalAlignment="Stretch" Command="{Binding Send}" Content="Send" />
-                        <Button HorizontalAlignment="Stretch" Content="Receive" />
+                        <UniformGrid.Styles>
+                            <Style Selector="Button">
+                                <Setter Property="Margin" Value="5" />
+                                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            </Style>
+                        </UniformGrid.Styles>
+                        <Button Command="{Binding Send}" Content="Send" />
+                        <Button Content="Receive">
+                            <Button.Flyout>
+                                <Flyout>
+                                    <wallet:Receive />
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
                     </UniformGrid>
                 </controls:Pane.TitleRightContent>
                 <controls:Pane.TitleIcon>
@@ -44,45 +54,10 @@
                 </controls:Pane.TitleIcon>
             </controls:Pane>
 
-            <controls:Pane IsTitleVisible="True" Title="0 TBTC">
-                <controls:Pane.TitleRightContent>
-                    <StackPanel Orientation="Horizontal" Spacing="20">
-                        <Button Content="Get Some Test Coins" />
-                        <Button DockPanel.Dock="Right" i:Attached.Icon="fa-rotate" />
-                    </StackPanel>
-                </controls:Pane.TitleRightContent>
-                <controls:Pane.TitleIcon>
-                    <i:Icon Value="fa-database" Margin="10" />
-                </controls:Pane.TitleIcon>
+            <wallet:Balance />
 
-            </controls:Pane>
-
-            <controls:Pane IsTitleVisible="True" Title="Addresses and amounts">
-                <controls:Pane.TitleIcon>
-                    <i:Icon Value="fa-solid fa-cube" />
-                </controls:Pane.TitleIcon>
-
-                <z:SlimDataGrid Margin="10" ItemsSource="{Binding Wallet.History}">
-                    <z:SlimDataGrid.Columns>
-                        <z:Column Header="ADDRESS" Binding="{Binding Address}" />
-                    </z:SlimDataGrid.Columns>
-                    <z:SlimDataGrid.Columns>
-                        <z:Column Header="AMOUNT" Binding="{Binding Amount}" />
-                    </z:SlimDataGrid.Columns>
-                    <z:SlimDataGrid.Columns>
-                        <z:Column Header="PATH" Binding="{Binding Path}" />
-                    </z:SlimDataGrid.Columns>
-                    <z:SlimDataGrid.Columns>
-                        <z:Column Header="UTXO COUNT" Binding="{Binding UtxoCount}" />
-                    </z:SlimDataGrid.Columns>
-                    <z:SlimDataGrid.Columns>
-                        <z:Column Header="VIEW RAW JSON" Binding="{Binding ViewRawJson}" />
-                    </z:SlimDataGrid.Columns>
-
-
-                </z:SlimDataGrid>
-            </controls:Pane>
-
+            <wallet:HistoryView />
+            
         </StackPanel>
     </DockPanel>
 

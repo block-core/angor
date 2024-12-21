@@ -47,6 +47,14 @@
             <DependentUpon>SuccessView.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
+        <Compile Update="Sections\Wallet\HistoryView.axaml.cs">
+          <DependentUpon>HistoryView.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Sections\Wallet\Balance.axaml.cs">
+          <DependentUpon>Balance.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>
