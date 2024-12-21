@@ -237,7 +237,7 @@ else
                         </div>
 
                     </div>
-                    @if (network.NetworkType != NetworkType.Mainnet && (accountBalanceInfo.TotalUnconfirmedBalance <= 0) & (accountBalanceInfo.TotalBalance <= 0))
+                    @if (CanGetTestCoins())
                     {
                         <div class="d-flex flex-wrap align-items-center">
                             <button class="btn btn-border ms-2" data-cy="get-test-coins" @onclick="GetTestCoins" disabled="@testCoinsSpinner">
@@ -1201,9 +1201,8 @@ else
 
     private async Task GetTestCoins()
     {
-        if (Money.Satoshis(accountBalanceInfo.TotalBalance + accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) > 10)
+        if (!CanGetTestCoins())
         {
-            notificationComponent.ShowNotificationMessage("you already have coins!");
             return;
         }
 
@@ -1229,6 +1228,22 @@ else
         {
             testCoinsSpinner = false;
         }
+    }
+
+    private bool CanGetTestCoins()
+    {
+        if (network.NetworkType == NetworkType.Mainnet)
+        {
+            return false;
+        }
+
+        if (Money.Satoshis(accountBalanceInfo.TotalBalance + accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) > 100)
+        {
+            notificationComponent.ShowNotificationMessage("you already have too much test coins!");
+            return false;
+        }
+
+        return true;
     }
 
     void SetActiveTab(int tab)
