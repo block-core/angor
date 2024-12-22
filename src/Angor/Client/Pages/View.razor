@@ -356,14 +356,15 @@ else
                 <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                 <div class="input-group">
                     <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly/>
-                    <button @onclick="OpenInBrowseAsync" class="btn btn-border">
+                  @*   <button @onclick="OpenInBrowseAsync" class="btn btn-border">
                         <Icon IconName="link"></Icon>
-                    </button>
+                    </button> *@
                 </div>
 
 
                 @if (founder)
                 {
+                    <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border mt-4 mr-1">Edit project profile</button>
                     <button @onclick="ShowNsecAsync" class="btn btn-border mt-4">Show private key</button>
 
                     @if (isGeneratingNsec)
@@ -733,13 +734,29 @@ else
         });
     }
 
+    private async void OpenInBrowseProfileAsync()
+    {
+        var npub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey);
+
+        if (!string.IsNullOrEmpty(npub))
+        {
+            var url = $"https://profile.angor.io/profile/{npub}";
+
+            await Js.InvokeVoidAsync("window.open", url, "_blank");
+        }
+        else
+        {
+            notificationComponent.ShowNotificationMessage("Public key is not available.", 3);
+        }
+    }
+
     private async void OpenInBrowseAsync()
     {
         var pubkey = project.ProjectInfo.NostrPubKey;
 
         if (!string.IsNullOrEmpty(pubkey))
         {
-            var url = $"https://hub.angor.io/profile/{pubkey}";
+            var url = $"https://hub.angor.io/project/{pubkey}";
 
             await Js.InvokeVoidAsync("window.open", url, "_blank");
         }
