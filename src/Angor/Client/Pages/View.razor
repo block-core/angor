@@ -752,18 +752,9 @@ else
 
     private async void OpenInBrowseAsync()
     {
-        var pubkey = project.ProjectInfo.NostrPubKey;
+        var url = $"https://hub.angor.io/project/{project.ProjectInfo.ProjectIdentifier}";
 
-        if (!string.IsNullOrEmpty(pubkey))
-        {
-            var url = $"https://hub.angor.io/project/{pubkey}";
-
-            await Js.InvokeVoidAsync("window.open", url, "_blank");
-        }
-        else
-        {
-            notificationComponent.ShowNotificationMessage("Public key is not available.", 3);
-        }
+        await Js.InvokeVoidAsync("window.open", url, "_blank");
     }
  
     public MarkupString ConvertToMarkupString(string input)
