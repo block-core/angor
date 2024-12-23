@@ -91,7 +91,30 @@
 <button class="btn btn-primary" @onclick="CheckForInvestments">
     Check for Investments
 </button>
-
+<div class="row mt-4">
+    @if (investmentMessages.Any())
+    {
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Investment Notifications</h5>
+                <ul>
+                    @foreach (var message in investmentMessages)
+                    {
+                    <li>@message</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+    }
+    else
+    {
+    <div class="col-12">
+        <div class="alert alert-info">No new investments found.</div>
+    </div>
+    }
+</div>
 
 <div class="row">
     <div class="col">
@@ -115,6 +138,7 @@
     
     private string founderPrivateKey;
     private string founderPubKey;
+    private List<string> investmentMessages = new();
 
     private NotificationComponent notificationComponent;
 
@@ -255,74 +279,98 @@
         return "Create a new project.";
     }
     
-    private async Task CheckForInvestments()
+     private async Task CheckForInvestments()
     {
-        if (!passwordComponent.HasPassword())
+        try
         {
-            passwordComponent.ShowPassword(async () => { await InitializeKeysAndCheckInvestments(); });
+            // Ensure user provides the wallet password
+            if (!passwordComponent.HasPassword())
+            {
+                passwordComponent.ShowPassword(async () => await InitializeKeysAndScanInvestments());
+            }
+            else
+            {
+                await InitializeKeysAndScanInvestments();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            await InitializeKeysAndCheckInvestments();
+            notificationComponent.ShowErrorMessage($"Error: {ex.Message}", ex);
         }
     }
-    
-    private async Task InitializeKeysAndCheckInvestments()
-{
-    try
+
+    private async Task InitializeKeysAndScanInvestments()
     {
-        // Retrieve wallet seed words
-        var words = await passwordComponent.GetWalletAsync();
-        if (words == null)
+        try
         {
-            notificationComponent.ShowErrorMessage("Unable to retrieve wallet seed words.");
-            return;
+            // Retrieve wallet seed words
+            var words = await passwordComponent.GetWalletAsync();
+            if (words == null)
+            {
+                notificationComponent.ShowErrorMessage("Unable to retrieve wallet seed words.");
+                return;
+            }
+
+            // Derive the founder's private key
+            var founderProject = storage.GetFounderProjects().FirstOrDefault();
+            if (founderProject == null)
+            {
+                notificationComponent.ShowNotificationMessage("No founder projects found.");
+                return;
+            }
+
+            var derivedPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, founderProject.ProjectIndex);
+            if (derivedPrivateKey == null)
+            {
+                notificationComponent.ShowErrorMessage("Failed to derive the founder's private key.");
+                return;
+            }
+
+            founderPrivateKey = derivedPrivateKey.GetWif(network).ToString();
+            founderPubKey = derivedPrivateKey.PubKey.ToHex();
+
+            // Scan for investments using the derived keys
+            await ScanForInvestments(founderPubKey);
         }
-
-        // Get the first founder project
-        var founderProject = founderProjects.FirstOrDefault();
-        if (founderProject == null)
+        catch (Exception ex)
         {
-            notificationComponent.ShowNotificationMessage("No founder projects found.");
-            return;
+            notificationComponent.ShowErrorMessage($"Error initializing keys or scanning for investments: {ex.Message}", ex);
         }
-
-        // Derive the founder's private key
-        var founderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, founderProject.ProjectIndex);
-        if (founderPrivateKey == null)
-        {
-            notificationComponent.ShowErrorMessage("Failed to derive the founder's private key.");
-            return;
-        }
-
-        // Serialize private key using GetWif
-        string founderPrivateKeyWif = founderPrivateKey.GetWif(network).ToString(); // WIF format
-        string founderPubKeyHex = founderPrivateKey.PubKey.ToHex(); // Hex format for public key
-
-        if (string.IsNullOrEmpty(founderPrivateKeyWif) || string.IsNullOrEmpty(founderPubKeyHex))
-        {
-            notificationComponent.ShowErrorMessage("Derived keys are invalid or empty.");
-            return;
-        }
-
-        // Store keys for later use
-        this.founderPrivateKey = founderPrivateKeyWif;
-        this.founderPubKey = founderPubKeyHex;
-
-        // Display success notification
-        notificationComponent.ShowNotificationMessage("Keys derived successfully!");
-
-        // Listen for incoming notifications
-        RelayService.ListenForNotifications(founderPubKeyHex, async nostrEvent =>
-        {
-            await HandleIncomingNotification(nostrEvent);
-        });
     }
-    catch (Exception ex)
+
+    private async Task ScanForInvestments(string pubKeyHex)
     {
-        notificationComponent.ShowErrorMessage($"Error initializing keys or checking investments: {ex.Message}", ex);
+        try
+        {
+            investmentMessages.Clear();
+
+            await RelayService.LookupDirectMessagesForPubKeyAsync(
+                pubKeyHex,
+                null,
+                limit: 50,
+                async message =>
+                {
+                    var decryptedMessage = await _encryptionService.DecryptNostrContentAsync(
+                        founderPrivateKey,
+                        pubKeyHex,
+                        message.Content);
+
+                    investmentMessages.Add(decryptedMessage);
+                    StateHasChanged();
+                },
+                pubKeyHex);
+
+            if (!investmentMessages.Any())
+            {
+                investmentMessages.Add("No investments found.");
+            }
+            }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage($"Error scanning for investments: {ex.Message}", ex);
+        }
+        }
     }
-}
 
     
     private async Task HandleIncomingNotification(NostrEvent nostrEvent)
