@@ -51,7 +51,7 @@
                     <avalonia:Icon Value="fa-info" />
                 </controls:IconButton.Icon>
                 <controls:IconButton.Flyout>
-                    <Flyout>
+                    <Flyout Placement="BottomEdgeAlignedLeft">
                         <amount:StagesBreakdown />
                     </Flyout>
                 </controls:IconButton.Flyout>
