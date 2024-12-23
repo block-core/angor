@@ -93,6 +93,14 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDays, investorKey);
     }
 
+    public Transaction BuildReleaseInvestorFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, string investorReleaseKey)
+    {
+        // todo: build the release trx
+        //var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
+
+        return _investmentTransactionBuilder.BuildUpfrontReleaseFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDays, investorReleaseKey);
+    }
+
     public TransactionInfo BuildAndSignRecoverReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
         Transaction recoveryTransaction, string investorReceiveAddress, FeeEstimation feeEstimation, string investorPrivateKey)
     {
@@ -281,8 +289,6 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             .Skip(2).Take(projectInfo.Stages.Count)
             .Select(_ => _.TxOut)
             .ToArray();
-
-        AssemblyLogger.LogAssemblyVersion(pubkey.GetType(), _logger);
 
         // todo: David change to Enumerable.Range 
         bool failedValidation = false;

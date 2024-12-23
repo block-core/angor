@@ -20,8 +20,10 @@
 @inject IDerivationOperations _derivationOperations
 @inject IWalletOperations _WalletOperations
 @inject IFounderTransactionActions _founderTransactionActions
+@inject IInvestorTransactionActions _investorTransactionActions
 @inject ILogger<Recover> Logger;
 @inject IClipboardService _clipboardService
+
 
 @inherits BaseComponent
 
@@ -543,7 +545,6 @@
                 founderContext.InvestmentTrasnactionsHex.Add(trx.Transaction.ToHex(network.Consensus.ConsensusFactory));
             }
 
-
             var accountInfo = storage.GetAccountInfo(network.Name);
             var address = accountInfo.GetNextReceiveAddress();
             var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
@@ -767,6 +768,34 @@
 
     private void ReleaseFundsToInvestors(MouseEventArgs e)
     {
-        throw new NotImplementedException();
+        foreach (var transaction in transactions)
+        {
+            // todo: in the initial communication between the founder and investor the investor should provide the address to send the funds on a release.
+            string releaseAddress = string.Empty;
+
+            var sigs = SignReleaseOfFunds(transaction.Transaction, project, null, releaseAddress);
+
+            // publish the sigs to the investors pubkey on nostr under a specific tag an investor will know it is a release of funds sig response
+
+        }
+        
     }
+
+    private SignatureInfo SignReleaseOfFunds(Transaction investorTrx, ProjectInfo info, string founderSigningPrivateKey, string investorReleaseAddress)
+    {
+        var transactionHex = investorTrx.ToHex();
+
+
+        // build sigs
+        var recoveryTrx = _investorTransactionActions.BuildReleaseInvestorFundsTransaction(info, investorTrx, investorReleaseAddress);
+        var sig = _founderTransactionActions.SignInvestorRecoveryTransactions(info, transactionHex, recoveryTrx, founderSigningPrivateKey);
+
+        // todo: make a similar method for release funds to investors
+        //if (!_investorTransactionActions.CheckInvestorRecoverySignatures(info, investorTrx, sig))
+        //    throw new InvalidOperationException();
+
+
+        return sig;
+    }
+
 }

@@ -68,4 +68,21 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
 
         return transaction;
     }
+
+    public Transaction BuildUpfrontReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, int penaltyDays, string investorReleaseKey)
+    {
+        // for the release we just send to a regular witness address
+        var spendingScript = new PubKey(investorReleaseKey).WitHash.ScriptPubKey;
+
+        var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
+
+        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2).Take(projectInfo.Stages.Count))
+        {
+            transaction.Inputs.Add(new TxIn(output.ToOutPoint()));
+
+            transaction.Outputs.Add(new TxOut(output.TxOut.Value, spendingScript));
+        }
+
+        return transaction;
+    }
 }
