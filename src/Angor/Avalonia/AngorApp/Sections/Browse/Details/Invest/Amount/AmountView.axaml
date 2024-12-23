@@ -26,7 +26,7 @@
                 </Run>
                 <Run>You can view more details about the project </Run>
                 <InlineUIContainer>
-                    <HyperlinkButton Content="here" Padding="0" NavigateUri="http://www.google.com" />
+                    <HyperlinkButton Content="here" Padding="0" NavigateUri="{Binding Project.InformationUri}" />
                 </InlineUIContainer>
             </TextBlock.Inlines>
         </TextBlock>
@@ -35,9 +35,9 @@
             This agreement ensures that in the event the project does not succeed, you will be able to recover your funds.
             This provides a safety net for your investment, giving you peace of mind that your financial contribution is protected.
         </TextBlock>
-        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Project Id:" Content="{Binding Project.Id}"/>
-        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Target Amount:" Content="{Binding Project.TargetAmount, StringFormat={x:Static controls:MiscConverters.BigBtcFormat} }"/>
-        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Starting in:" Content="{Binding Project.StartingDate}"/>
+        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Project Id:" Content="{Binding Project.Id}"/>
+        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Target Amount:" Content="{Binding Project.TargetAmount, StringFormat={x:Static controls:MiscConverters.BigBtcFormat} }"/>
+        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Starting in:" Content="{Binding Project.StartingDate}"/>
         <NumericUpDown Watermark="Amount" ShowButtonSpinner="False" Value="{Binding Amount, Mode=TwoWay}">
             <Interaction.Behaviors>
                 <behaviors:UntouchedClassBehavior />

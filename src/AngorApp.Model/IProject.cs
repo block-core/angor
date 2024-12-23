@@ -14,4 +14,5 @@ public interface IProject
     public string NpubKey { get; }
     public string NpubKeyHex { get; }
     public TimeSpan PenaltyDuration { get; }
+    public Uri InformationUri { get; }
 }
