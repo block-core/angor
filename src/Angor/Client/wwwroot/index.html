@@ -35,6 +35,16 @@
     <div id="app">
         <div class="loader-wrapper">
             <div class="loader"></div>
+            <script>
+                (function() {
+                    const theme = localStorage.getItem('theme');
+                    const loader = document.querySelector('.loader-wrapper');
+                    if (theme === 'dark') {
+                        document.body.classList.add('dark');
+                        loader.style.backgroundColor = '#083b46';
+                    }
+                })();
+            </script>
         </div>
     </div>
     <div id="blazor-error-ui">
