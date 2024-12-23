@@ -284,13 +284,13 @@
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            foreach (var pendingSignature in signaturesRequests.Where(_ => _.AmountToInvest == null))
+            foreach (var pendingSignature in signaturesRequests.Where(_ => _.EncryptedMessage != null && _.AmountToInvest == null))
             {
-                pendingSignature.TransactionHex = await encryption.DecryptNostrContentAsync(
-                    nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.TransactionHex);
-
                 try
                 {
+                    pendingSignature.TransactionHex = await encryption.DecryptNostrContentAsync(
+                        nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.EncryptedMessage);
+
                     var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.TransactionHex);
 
                     pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3) //Todo get the actual outputs with taproot type
@@ -298,7 +298,7 @@
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(pendingSignature.TransactionHex, e);
+                    Logger.LogError(pendingSignature?.TransactionHex ?? e.Message, e);
                     pendingSignature.TransactionHex = null;
                 }
             }
@@ -341,7 +341,7 @@
                 {
                     investorNostrPubKey = investorNostrPubKey,
                     TimeArrived = timeArrived,
-                    TransactionHex = encryptedMessage, //To be encrypted after js interop is loaded
+                    EncryptedMessage = encryptedMessage, //To be encrypted after js interop is loaded
                     EventId = eventId
                 };
 
@@ -558,6 +558,7 @@
         public DateTime? TimeApproved { get; set; }
 
         public string? TransactionHex { get; set; }
+        public string? EncryptedMessage { get; set; }
 
         public string EventId { get; set; }
     }

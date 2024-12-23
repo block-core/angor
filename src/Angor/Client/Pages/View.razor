@@ -492,7 +492,7 @@ else
             {
                 founder = true;
                 projectStats.Loading = false;
-                SetProjectLinksAndRefreshBalance(); // dont block let it update the ui later
+                SetProjectLinksAndRefreshBalance();
                 return;
             }
 
@@ -502,7 +502,7 @@ else
                 invested = investorProject.InvestedInProject();
                 myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investorProject.TransactionId}";
                 projectStats.Loading = false;
-                SetProjectLinksAndRefreshBalance(); // dont block let it update the ui later
+                SetProjectLinksAndRefreshBalance();
                 return;
             }
 
@@ -510,7 +510,7 @@ else
             if (project != null)
             {
                 projectStats.Loading = false;
-                SetProjectLinksAndRefreshBalance(); // dont block let it update the ui later
+                SetProjectLinksAndRefreshBalance();
                 StateHasChanged();
                 return;
             }
@@ -522,11 +522,14 @@ else
             {
                 project = new Project { CreationTransactionId = projectIndexerData.TrxId };
 
-                _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(x =>
+                _RelayService.LookupProjectsInfoByEventIds<ProjectInfo>(projectInfo =>
                             {
-                                if (project is { ProjectInfo : null })
-                                    project.ProjectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
-                                                          throw new Exception("The project info must be in the application specific data event");
+                                if (projectInfo is null)
+                                {
+                                    throw new Exception("The project info must be in the application specific data event");
+                                }
+
+                                if (project is { ProjectInfo : null }) { project.ProjectInfo = projectInfo; }
                             },
                             () =>
                             {
@@ -540,7 +543,11 @@ else
                                         findInProgress = false;
                                         if (project?.ProjectInfo != null)
                                         {
-                                            SessionStorage.StoreProject(project);
+                                            if (!SessionStorage.IsProjectInStorageById(project.ProjectInfo.ProjectIdentifier))
+                                            {
+                                                SessionStorage.StoreProject(project);
+                                            }
+                                            
                                         }
                                         else
                                         {
@@ -550,6 +557,9 @@ else
                                         StateHasChanged();
                                     },
                                     project.ProjectInfo.NostrPubKey);
+                                
+                                SetProjectLinksAndRefreshBalance();
+
                             },projectIndexerData.NostrEventId);
                     }
                     else
