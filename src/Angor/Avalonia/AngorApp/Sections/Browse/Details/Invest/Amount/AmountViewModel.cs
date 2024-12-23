@@ -15,7 +15,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
         Project = project;
         this.ValidationRule(x => x.Amount, this.WhenAnyValue(x => x.Amount), x => x is null or > 0, _ => "Amount must be greater than zero");
         this.ValidationRule(x => x.Amount, this.WhenAnyValue(x => x.Amount), x => x is not null, _ => "Please, specify an amount");
-        this.ValidationRule(x => x.Amount, this.WhenAnyValue(x => x.Amount), x => x is null || x <= wallet.Balance, _ => "The amount should be greater than the wallet balance");
+        this.ValidationRule(x => x.Amount, this.WhenAnyValue(x => x.Amount), x => x is null || x <= wallet.Balance, _ => "Not enough balance");
     }
 
     public IProject Project { get; }

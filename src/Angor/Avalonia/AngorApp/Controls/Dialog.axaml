@@ -31,7 +31,7 @@
     </Style>
 
     <Style Selector="z|DialogView">
-        <Setter Property="OptionsPanelHeight" Value="40" />
+        <Setter Property="OptionsPanelHeight" Value="38" />
         <Setter Property="Template">
             <ControlTemplate TargetType="z:DialogView">
                 <Border Background="{StaticResource Level1}">
