@@ -8,5 +8,7 @@ public class Project
     public ProjectInfo ProjectInfo { get; set; }
 
     public string? CreationTransactionId { get; set; }
+    public List<Stage>? Stages { get; set; } = new(); 
+
 
 }

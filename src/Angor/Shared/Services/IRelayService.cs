@@ -12,6 +12,8 @@ public interface IRelayService
     Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string nsec, Action<NostrOkResponse> action);
     Task<string> DeleteProjectAsync(string eventId, string hexPrivateKey);
     void LookupProjectsInfoByEventIds<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction, params string[] nostrEventIds);
+    void LookupProjectsInfoByEventIdsTest<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction, params string[] nostrEventIds);
+
     void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,params string[] nostrPubKeys);
 
     Task LookupSignaturesDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction);

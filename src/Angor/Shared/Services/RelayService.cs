@@ -60,6 +60,55 @@ namespace Angor.Shared.Services
             
             nostrClient.Send(request);
         }
+        
+        public void LookupProjectsInfoByEventIdsTest<T>(
+            Action<T> responseDataAction, 
+            Action? OnEndOfStreamAction,
+            params string[] nostrEventIds)
+        {
+            const string subscriptionName = "ProjectInfoLookups";
+
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+
+            if (nostrClient == null)
+                throw new InvalidOperationException("The nostr client is null");
+
+            if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionName))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionName)
+                    .Select(_ => _.Event)
+                    .Subscribe(ev =>
+                    {
+                        try
+                        {
+                            var deserializedData = _serializer.Deserialize<T>(ev.Content);
+                            responseDataAction(deserializedData);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error deserializing event content: {Content}", ev.Content);
+                        }
+                    });
+
+                _subscriptionsHandling.TryAddRelaySubscription(subscriptionName, subscription);
+            }
+
+            if (OnEndOfStreamAction != null)
+            {
+                _subscriptionsHandling.TryAddEoseAction(subscriptionName, OnEndOfStreamAction);
+            }
+
+            // Adjust the filter to fetch all relevant event kinds.
+            var request = new NostrRequest(subscriptionName, new NostrFilter
+            {
+                Ids = nostrEventIds,
+                Kinds = new[] { NostrKind.ApplicationSpecificData, NostrKind.Metadata } // Include all necessary kinds
+            });
+
+            nostrClient.Send(request);
+        }
+
 
         public void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,params string[] nPubs)
         {

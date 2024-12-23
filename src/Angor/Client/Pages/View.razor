@@ -532,63 +532,40 @@ else
                 _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(
                     x =>
                     {
-                        if (project is { ProjectInfo: null })
+                        try
                         {
-                            try
+                            Logger.LogDebug("Attempting to deserialize event content: {Content}", x.Content);
+
+                            if (x.Kind == NostrKind.ApplicationSpecificData && project.ProjectInfo == null)
                             {
-                                Logger.LogDebug("Attempting to deserialize project info from event content: {Content}", x.Content);
                                 project.ProjectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
-                                                      throw new Exception("The project info must be in the application specific data event");
+                                                      throw new Exception("Failed to deserialize ProjectInfo.");
                             }
-                            catch (Exception ex)
+                            else if (x.Kind == NostrKind.Metadata && project.Metadata == null)
                             {
-                                Logger.LogError(ex, "Error deserializing project info: {Content}", x.Content);
-                                error = "Failed to deserialize project information.";
-                                findInProgress = false;
-                                StateHasChanged();
-                                return;
+                                project.Metadata = serializer.Deserialize<ProjectMetadata>(x.Content!) ??
+                                                   throw new Exception("Failed to deserialize ProjectMetadata.");
                             }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogError(ex, "Error deserializing project data: {Content}", x.Content);
+                            error = "Failed to fetch project information.";
                         }
                     },
                     () =>
                     {
-                        if (project?.ProjectInfo?.NostrPubKey == null)
+                        if (project?.ProjectInfo == null || project?.Metadata == null)
                         {
-                            Logger.LogError("Project NostrPubKey is null or missing after event lookup.");
+                            Logger.LogError("Project information or metadata is missing after event lookup.");
                             error = "Project data is incomplete or missing.";
-                            findInProgress = false;
-                            StateHasChanged();
-                            return;
                         }
 
-                        _RelayService.LookupNostrProfileForNPub(
-                            (projectNpub, metadata) =>
-                            {
-                                if (project is { Metadata: null })
-                                {
-                                    Logger.LogDebug("Received metadata for project NPub: {NPub}", projectNpub);
-                                    project.Metadata = metadata;
-                                }
-                            },
-                            () =>
-                            {
-                                findInProgress = false;
-                                if (project?.ProjectInfo != null)
-                                {
-                                    SessionStorage.StoreProject(project);
-                                    Logger.LogDebug("Project successfully stored in session storage.");
-                                }
-                                else
-                                {
-                                    // Handle case where project info is not available
-                                    Logger.LogError("Project info not available after metadata lookup.");
-                                    error = "Project not found...";
-                                }
-                                StateHasChanged();
-                            },
-                            project.ProjectInfo.NostrPubKey);
+                        findInProgress = false;
+                        StateHasChanged();
                     },
-                    projectIndexerData.NostrEventId);
+                    projectIndexerData.NostrEventId); // Pass the correct IDs
+
 
                     }
                     else
