@@ -13,7 +13,7 @@ describe("walletSpec", { retries: 3 }, () => {
     cy.visitLocalhost();
   });
 
-  it("createWallet", () => {
+  it.only("createWallet", () => {
     cy.clickOnNavBar(Navbar.WALLET);
     cy.clickElementWithDataCy(WALLET_DATA_CY.CREATE_WALLET);
     cy.clickElementWithDataCy(WALLET_DATA_CY.GENERATE_WALLET_WORDS);

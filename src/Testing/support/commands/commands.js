@@ -2,7 +2,7 @@ Cypress.Commands.add("visitLocalhost", () => {
   // Set the viewport to a desktop resolution
   cy.viewport(1280, 720); // You can adjust the width and height as needed
   cy.visit("http://localhost:5062/");
-  cy.get("#youtube-video", { timeout: 5000 }).should("be.visible");
+  cy.get("#welcomeHeading", { timeout: 5000 }).should("be.visible");
   cy.get(
     '#theme-icon'
   )
