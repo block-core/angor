@@ -7,6 +7,9 @@ public class FounderProject : Project
     public int ProjectIndex { get; set; }
     public DateTime? LastRequestForSignaturesTime { get; set; }
 
+    public string ProjectInfoEventId { get; set; }
+    public bool NostrProfileCreated { get; set; }
+    
     public bool NostrMetadataCreated()
     {
         return !string.IsNullOrEmpty(Metadata?.Name);
@@ -14,6 +17,6 @@ public class FounderProject : Project
 
     public bool NostrApplicationSpecificDataCreated()
     {
-        return ProjectInfo?.Stages.Any() ?? false;
+        return !string.IsNullOrEmpty(ProjectInfoEventId);
     }
 }

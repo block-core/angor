@@ -282,21 +282,28 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             .Select(_ => _.TxOut)
             .ToArray();
 
+        AssemblyLogger.LogAssemblyVersion(pubkey.GetType(), _logger);
+
         // todo: David change to Enumerable.Range 
+        bool failedValidation = false;
         for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
         {
             var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
 
             var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
             var hash = nBitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
+            var sig = founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature;
 
-            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={projectInfo.FounderRecoveryKey}; stage={stageIndex}; hash={hash}");
+            var result = pubkey.VerifySignature(hash, TaprootSignature.Parse(sig).SchnorrSignature);
 
-            var result = pubkey.VerifySignature(hash, TaprootSignature.Parse(founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature).SchnorrSignature);
+            _logger.LogInformation($"verifying sig for project={projectInfo.ProjectIdentifier}; success = {result}; founder-recovery-pubkey={projectInfo.FounderRecoveryKey}; stage={stageIndex}; hash={hash}; signature-hex={sig}");
 
             if (result == false)
-                throw new Exception("Invalid signatures provided by founder");
+                failedValidation = true;
         }
+
+        if(failedValidation)
+            throw new Exception("Invalid signatures provided by founder");
 
         return true;
      }

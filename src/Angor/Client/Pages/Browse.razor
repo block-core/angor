@@ -12,6 +12,7 @@
 @inject INetworkService _NetworkService
 @inject ISerializer serializer
 @inject ILogger<Browse> Logger;
+@inject IHtmlStripperService HtmlStripperService;
 
 <NotificationComponent @ref="notificationComponent" />
 
@@ -197,7 +198,7 @@ else
                                                         </div>
                                                     </div>
 
-                                                    <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@ConvertToMarkupString(StripHtmlTags(project.Metadata.About))</p>
+                                                    <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@ConvertToMarkupString(project.Metadata.About)</p>
                                                 }
                                             }
                                             else
@@ -379,7 +380,34 @@ else
 
             if (findProject != null)
             {
-                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), StateHasChanged, new[] { findProject.NostrPubKey });
+
+                var projectNpub = string.Empty;
+                _RelayService.LookupProjectsInfoByEventIds<ProjectInfo>(p =>
+                    {
+                        if (SessionStorage.IsProjectInStorageById(p.ProjectIdentifier)) 
+                            return;
+                        SessionStorage.StoreProject(new Project { ProjectInfo = p, CreationTransactionId = findProject.TrxId });
+                        projectNpub = p.NostrPubKey;
+                    },
+                    () =>
+                    {
+                        _RelayService.LookupNostrProfileForNPub((npub, nostrMetadata) =>
+                            {
+                                var project = SessionStorage.GetProjectById(findProject.ProjectIdentifier);
+
+                                if (project!.Metadata != null)
+                                    return;
+
+                                project.Metadata = nostrMetadata;
+                                SessionStorage.StoreProject(project);
+                            }, () =>
+                            {
+                                searchInProgress = false;
+                                StateHasChanged();
+                            },
+                            projectNpub);
+                    },
+                    findProject.NostrEventId);
                 projects = new List<ProjectIndexerData> { findProject };
             }
             else
@@ -411,80 +439,54 @@ else
             SessionStorage.SetProjectIndexerData(projects);
 
             var projectsForLookup = projectsNotInList
-                .Where(_ => _.NostrPubKey != null)
-                .Select(_ => _.NostrPubKey)
+                .Where(_ => !string.IsNullOrEmpty(_.NostrEventId))
+                .Select(_ => _.NostrEventId)
                 .ToArray();
 
             nostrSearchInProgress = true;
 
             if (projectsForLookup.Any())
-                _RelayService.RequestProjectCreateEventsByPubKey(HandleProjectEvents(), () =>
-                {
-                    nostrSearchInProgress = false;
-                    StateHasChanged();
-                }, projectsForLookup);
+            {
+                var projectNpubsForLookup = new Dictionary<string, string>();
+
+                _RelayService.LookupProjectsInfoByEventIds<ProjectInfo>(x =>
+                    {
+                        if (SessionStorage.IsProjectInStorageById(x.ProjectIdentifier))
+                            return;
+
+                        var projectIndexerData = projectsNotInList.First(p => p.ProjectIdentifier == x.ProjectIdentifier);
+
+                        SessionStorage.StoreProject(new Project { ProjectInfo = x, CreationTransactionId = projectIndexerData.TrxId });
+
+                        projectNpubsForLookup.Add(x.NostrPubKey, projectIndexerData.ProjectIdentifier);
+
+                    }, () =>
+                        _RelayService.LookupNostrProfileForNPub((npub, nostrMetadata) =>
+                            {
+                                var project = SessionStorage.GetProjectById(projectNpubsForLookup[npub]);
+                                if (project == null)
+                                {
+                                    throw new ArgumentOutOfRangeException("Unable to find the project in storage for requested metadata " + npub);
+                                }
+
+                                if (project.Metadata != null)
+                                    return;
+
+                                project.Metadata = nostrMetadata;
+                                SessionStorage.StoreProject(project);
+                            }, () =>
+                            {
+                                nostrSearchInProgress = false;
+                                StateHasChanged();
+                            },
+                            projectNpubsForLookup.Keys.ToArray()),
+                    projectsForLookup);
+            }
 
             StateHasChanged();
         }
 
         searchInProgress = false;
-    }
-
-    private Action<NostrEvent> HandleProjectEvents()
-    {
-        return e =>
-        {
-            var projectIndexerData = projects.FirstOrDefault(x => x.NostrPubKey == e.Pubkey);
-
-            if (projectIndexerData == null && findProject?.NostrPubKey == e.Pubkey)
-            {
-                projectIndexerData = findProject;
-            }
-
-            switch (e)
-            {
-                case { Kind: NostrKind.Metadata }:
-
-                    try
-                    {
-                        var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
-                        if (projectIndexerData != null)
-                        {
-                            var project = SessionStorage.GetProjectById(projectIndexerData.ProjectIdentifier);
-                            if (project != null)
-                            {
-                                project.Metadata = nostrMetadata;
-                                SessionStorage.StoreProject(project);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError(ex, $"error parsing the result of kind {NostrKind.Metadata} from relay, ProjectIdentifier = {projectIndexerData?.ProjectIdentifier}");
-                    }
-
-                    break;
-                case { Kind: NostrKind.ApplicationSpecificData }:
-
-                    try
-                    {
-                        var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
-                        if (projectInfo != null && projectIndexerData != null)
-                        {
-                            if (!SessionStorage.IsProjectInStorageById(projectInfo.ProjectIdentifier))
-                            {
-                                SessionStorage.StoreProject(new Project { ProjectInfo = projectInfo, CreationTransactionId = projectIndexerData.TrxId });
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError(ex, $"error parsing the result of kind {NostrKind.ApplicationSpecificData} from relay, ProjectIdentifier = {projectIndexerData?.ProjectIdentifier}");
-                    }
-
-                    break;
-            }
-        };
     }
 
     private void ViewProjectDetails(string projectIdentifier)
@@ -511,53 +513,11 @@ else
     {
         searchQuery = e.Value.ToString();
     }
-
-    public string StripHtmlTags(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            return string.Empty;
-        }
-
-        input = Regex.Replace(input, @"<script.*?>.*?</script>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-
-        input = Regex.Replace(input, @"<style.*?>.*?</style>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-        input = Regex.Replace(input, @"<([a-zA-Z][^\s>]*)(\s+[^>]*)?>", match =>
-        {
-            string tag = match.Groups[1].Value;
-            string attributes = match.Groups[2].Value;
-
-            attributes = Regex.Replace(attributes, @"\s+(style|class)\s*=\s*""[^""]*""", string.Empty, RegexOptions.IgnoreCase);
-
-            return $"<{tag}{attributes}>";
-        }, RegexOptions.IgnoreCase);
-
-        string allowedTagsPattern = @"<(?!\/?(br|p|a|ul|ol|li|strong|em|b|i|u|hr|blockquote|img|div|span|table|thead|tbody|tr|td|th)\b)[^>]+>";
-        input = Regex.Replace(input, allowedTagsPattern, string.Empty, RegexOptions.IgnoreCase);
-
-        string[] blockTags = { "h1", "h2", "h3", "h4", "h5", "h6", "p", "div", "section", "article", "footer", "header", "main" };
-
-        foreach (var tag in blockTags)
-        {
-            input = Regex.Replace(input, $@"<\/?{tag}[^>]*>", "<br />", RegexOptions.IgnoreCase);
-        }
-
-        input = Regex.Replace(input, @"<((?!br\s*/?)[^>]+)>", string.Empty);
-
-        input = Regex.Replace(input, @"(\r?\n){2,}", "\n");
-        input = Regex.Replace(input, @"(<br />\s*){2,}", "<br />");
-        input = Regex.Replace(input, @"^\s*<br />\s*|\s*<br />\s*$", string.Empty);
-        input = Regex.Replace(input, @"\s*(<br />)\s*", "$1");
-
-
-        return input;
-    }
+ 
 
     public MarkupString ConvertToMarkupString(string input)
     {
-        string sanitizedInput = StripHtmlTags(input);
+        string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
     }
 }

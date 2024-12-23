@@ -1,0 +1,40 @@
+﻿@page "/debug"
+
+@using Angor.Shared.Utilities
+@inject ILogger<DebugPage> Logger
+
+<PageTitle>Debug Page</PageTitle>
+
+<h3>Assembly Information</h3>
+
+@foreach (var assembly in assemblyInfos)
+{
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5>@assembly.Name</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Version:</strong> @assembly.Version</p>
+            <p><strong>Full Name:</strong> @assembly.FullName</p>
+            <p><strong>Location:</strong> @assembly.Location</p>
+            <p><strong>Image Runtime Version:</strong> @assembly.ImageRuntimeVersion</p>
+            <p><strong>Entry Point:</strong> @assembly.EntryPoint</p>
+            <p><strong>Referenced Assemblies:</strong></p>
+            <ul>
+                @foreach (var referencedAssembly in assembly.ReferencedAssemblies)
+                {
+                    <li>@referencedAssembly</li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+@code {
+    private List<AssemblyInfo> assemblyInfos = new();
+
+    protected override void OnInitialized()
+    {
+        assemblyInfos = AssemblyInfoHelper.GetAllAssembliesInfo();
+    }
+}

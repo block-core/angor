@@ -53,9 +53,13 @@ builder.Services.AddTransient<IInvestmentTransactionBuilder, InvestmentTransacti
 builder.Services.AddTransient<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
 builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 
+builder.Services.AddScoped<IApplicationLogicService, ApplicationLogicService>();
+
 builder.Services.AddSingleton<INostrCommunicationFactory, NostrCommunicationFactory>();
 builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
 builder.Services.AddSingleton<IPasswordCacheService, PasswordCacheService>();
+builder.Services.AddTransient<IHtmlStripperService, HtmlStripperService>();
+
 builder.Services.AddScoped<NostrConversionHelper>();
 
 builder.Services.AddScoped<IconService>();

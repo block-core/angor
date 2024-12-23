@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
+             xmlns:controls="clr-namespace:AngorApp.Controls"
+             mc:Ignorable="d" d:DesignWidth="1200"
+             x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
+
+    <Design.DataContext>
+        <dt:ProjectDetailsViewModelDesign />
+    </Design.DataContext>
+
+    <Grid ColumnDefinitions="1* 5* 1*" ClipToBounds="False">
+        <StackPanel Grid.Column="1" Spacing="20">
+            <Panel>
+                <dt:ProjectSummary />
+                <Border CornerRadius="20" Background="White" Padding="10" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="20 20">
+                    <Button Command="{Binding Invest}">INVEST NOW</Button>
+                </Border>
+            </Panel>
+            <controls:Pane>
+                <StackPanel HorizontalAlignment="Center" Spacing="20">
+                    <PathIcon Height="100" Width="200" Data="{StaticResource ShieldStar}" />
+                    <TextBlock Text="Seize the opportunity to invest in this project" TextAlignment="Center" />
+                    <Button HorizontalAlignment="Center" Command="{Binding Invest}">INVEST NOW</Button>
+                </StackPanel>
+            </controls:Pane>
+
+            <dt:NostProperties />
+
+        </StackPanel>
+
+    </Grid>
+</UserControl>

@@ -24,7 +24,8 @@ public class ProjectMetadata
             Nip05 = nostrMetadata.Nip57,
             About = nostrMetadata.About,
             Banner = nostrMetadata.Banner,
-            Picture = nostrMetadata.Picture
+            Picture = nostrMetadata.Picture,
+            Name = nostrMetadata.Name
         };
         if (nostrMetadata.AdditionalData.ContainsKey(nameof(project.Website)))
             project.Website = nostrMetadata.AdditionalData[nameof(project.Website)].ToString();

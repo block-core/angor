@@ -7,6 +7,7 @@
 
 @inject INetworkConfiguration _networkConfiguration
 @inject INetworkService _networkService
+@inject IIndexerService _indexerService;
 @inject IClientStorage _clientStorage
 @inject ICacheStorage _cacheStorage;
 @inject IWalletStorage _walletStorage;
@@ -78,46 +79,40 @@
                                             <h5>This will wipe your wallet!</h5>
                                         </div>
 
-                                        <div class="card">
-                                            <div class="card-header p-2">
-                                                <div class="d-flex align-items-center text-warning">
-                                                    <span>Warning</span>
-                                                </div>
-                                            </div>
-                                            <div class="card-body pb-0 pt-0 ps-3 pe-3">
-                                                <p class="mb-0">By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
-                                            </div>
-                                            <div class="card-footer pb-2 pt-2 ps-3 pe-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
-                                                    <label class="form-check-label mb-0" for="confirmWipeCheckbox">
-                                                        Confirm?
-                                                    </label>
-                                                </div>
-                                                @if (showConfirmWipeMessage)
-                                                {
-                                                    <div class="alert alert-danger text-white mt-2" role="alert">
-                                                        Please tick the box to wipe all storage!
-                                                    </div>
-                                                }
+                                        <div class="alert alert-warning" role="alert">
+                                            <p class="mb-0 text-bl">Warning: By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
 
+                                            <div class="form-check">
+                                                <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                                <label class="form-check-label text-black mb-0" for="confirmWipeCheckbox">
+                                                    Confirm?
+                                                </label>
                                             </div>
+                                            @if (showConfirmWipeMessage)
+                                            {
+                                                <div class="alert alert-danger mt-2 mb-0" role="alert">
+                                                    Please tick the box to wipe all storage!
+                                                </div>
+                                            }
                                         </div>
-
 
                                         <!-- Dropdown for network selection -->
                                         <div class="card card-body mb-3 mt-4">
                                             <label for="networkSelection">Select Network:</label>
                                             <select class="form-control mt-2" id="networkSelection" @bind="selectedNetwork">
-                                                <option value="testnet" selected>Testnet</option>
-                                                <option value="mainnet">Mainnet</option>
+                                                <option value="Angornet" selected>Angornet</option>
+                                                <option value="TestNet4" disabled selected>Testnet4</option>
+                                                <option value="Signet" disabled selected>Signet</option>
+                                                <option value="TestNet" disabled selected>Testnet</option>
+                                                <option value="Main">Mainnet</option>
+                                                <option value="Liquid" disabled>Liquid</option>
                                             </select>
                                         </div>
 
                                     </div>
                                     <div class="modal-footer">
                                         <button class="btn btn-danger" @onclick="ChangeNetwork">Change Network</button>
-                                     </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -374,29 +369,21 @@
                                         </span>
                                     </div>
                                     <div class="modal-body modal-body-scroll">
-                                        <div class="card">
-                                            <div class="card-header p-2">
-                                                <div class="d-flex align-items-center text-warning">
-                                                    <span>Warning</span>
+                                        <div class="alert alert-warning" role="alert">
+                                            <p class="mb-0 text-bl">Warning: By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
+
+                                            <div class="form-check">
+                                                <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                                <label class="form-check-label text-black mb-0" for="confirmWipeCheckbox">
+                                                    Confirm?
+                                                </label>
+                                            </div>
+                                            @if (showConfirmWipeMessage)
+                                            {
+                                                <div class="alert alert-danger mt-2 mb-0" role="alert">
+                                                    Please tick the box to wipe all storage!
                                                 </div>
-                                            </div>
-                                            <div class="card-body pb-0 pt-0 ps-3 pe-3">
-                                                <p class="mb-0">By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
-                                            </div>
-                                            <div class="card-footer pb-2 pt-2 ps-3 pe-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
-                                                    <label class="form-check-label mb-0" for="confirmWipeCheckbox">
-                                                        Confirm?
-                                                    </label>
-                                                </div>
-                                                @if (showConfirmWipeMessage)
-                                                {
-                                                    <div class="alert alert-danger text-white mt-2" role="alert">
-                                                        Please tick the box to wipe all storage!
-                                                    </div>
-                                                }
-                                            </div>
+                                            }
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -426,8 +413,8 @@
 
     private bool confirmWipe = false;
     private bool showConfirmWipeMessage = false;
-    private string selectedNetwork = "testnet"; // Default to "testnet"
-    
+    private string selectedNetwork = "Main"; // Default to "testnet"
+
     private string selectedCurrency = "BTC"; // Default to BTC
 
     private SettingsInfo settingsInfo;
@@ -441,12 +428,11 @@
         networkType = _networkConfiguration.GetNetwork().Name;
 
         _networkService.OnStatusChanged += UpdateUI;
-        
+
         selectedCurrency = _clientStorage.GetCurrencyDisplaySetting();
 
-        if (!networkType.ToLower().Contains("test"))
-            selectedNetwork = "mainnet";
-        
+        selectedNetwork = networkType;
+
         return base.OnInitializedAsync();
     }
 
@@ -475,30 +461,58 @@
         {
             if (!Uri.TryCreate(newIndexerLink, UriKind.Absolute, out Uri? uri))
             {
-                notificationComponent.ShowErrorMessage($"invalid url {newIndexerLink}");
+                notificationComponent.ShowErrorMessage($"Invalid URL: {newIndexerLink}");
                 return;
             }
 
             if (uri.Scheme is not ("http" or "https"))
             {
-                notificationComponent.ShowErrorMessage($"invalid url {newIndexerLink} schema must be http or https");
+                notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
                 return;
             }
 
-            newIndexerLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
+            newIndexerLink = $"{uri.Scheme}://{uri.Host}".TrimEnd('/');
+
+            Logger.LogInformation($"Normalized URL: {newIndexerLink}");
 
             if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
             {
-                notificationComponent.ShowErrorMessage($"url exists {newIndexerLink}");
+                notificationComponent.ShowErrorMessage($"URL already exists: {newIndexerLink}");
                 return;
             }
 
-            settingsInfo.Indexers.Add(new SettingsUrl { Url = newIndexerLink, IsPrimary = !settingsInfo.Indexers.Any() });
-            _clientStorage.SetSettingsInfo(settingsInfo);
-            newIndexerLink = string.Empty;
-        }
+            // Check indexer status and fetch genesis block hash
+            var (isOnline, genesisHash) = await _indexerService.CheckIndexerNetwork(newIndexerLink);
+            if (!isOnline)
+            {
+                notificationComponent.ShowErrorMessage("The indexer is offline or unreachable.");
+                return;
+            }
 
-        await Refresh(false);
+            var expectedHash = _networkConfiguration.GetGenesisBlockHash();
+            if (!_indexerService.ValidateGenesisBlockHash(genesisHash, expectedHash))
+            {
+                var expectedNetworkName = _networkConfiguration.GetNetwork().Name;
+                var fetchedNetworkName = _networkConfiguration.GetNetworkNameFromGenesisBlockHash(genesisHash);
+                notificationComponent.ShowErrorMessage($"The indexer is not compatible with the selected network. " +
+                $"Expected: {expectedNetworkName}, Provided: {fetchedNetworkName ?? "Unknown"}");
+                return;
+            }
+
+            // Add indexer to settings
+            settingsInfo.Indexers.Add(new SettingsUrl
+                {
+                    Url = newIndexerLink,
+                    LastCheck = DateTime.UtcNow,
+                    Status = UrlStatus.Online
+                });
+
+            _clientStorage.SetSettingsInfo(settingsInfo);
+            notificationComponent.ShowNotificationMessage("Indexer added successfully.");
+            newIndexerLink = string.Empty;
+
+            await Refresh(false);
+        }
     }
 
     private async Task AddRelay()
@@ -634,59 +648,88 @@
 
     private void WipeAllData()
     {
-        if (!confirmWipe)
+        try
         {
-            showConfirmWipeMessage = true;
-            return;
+            if (!confirmWipe)
+            {
+                showConfirmWipeMessage = true;
+                return;
+            }
+
+            // Perform data wiping
+            _clientStorage.WipeStorage();
+            _cacheStorage.WipeSession();
+
+            // Reset states
+            showWipeallModal = false;
+            showConfirmWipeMessage = false;
+            confirmWipe = false;
+
+            // Update network settings
+            _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
+            _networkService.AddSettingsIfNotExist();
+
+            // Refresh UI data
+            networkType = _networkConfiguration.GetNetwork().Name;
+            settingsInfo = _clientStorage.GetSettingsInfo();
+
+            hasWallet = _walletStorage.HasWallet();
+            StateHasChanged();
+
+            // Show success message
+            notificationComponent.ShowNotificationMessage("Data has been successfully wiped.");
+
+            // Notify other components of state change
+            NavMenuState.NotifyStateChanged();
         }
-
-        _clientStorage.WipeStorage();
-        _cacheStorage.WipeSession();
-
-        showWipeallModal = false;
-        showConfirmWipeMessage = false;
-        confirmWipe = false;
-
-        if (!networkType.ToLower().Contains("test"))
-            selectedNetwork = "mainnet";
-
-        _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
-        _networkService.AddSettingsIfNotExist();
-
-        networkType = _networkConfiguration.GetNetwork().Name;
-        settingsInfo = _clientStorage.GetSettingsInfo();
-
-        hasWallet = _walletStorage.HasWallet();
-        StateHasChanged();
-
-        NavMenuState.NotifyStateChanged();
+        catch (Exception e)
+        {
+            Logger.LogError(e, $"Error during data wipe: {e.Message}");
+            notificationComponent.ShowErrorMessage("Failed to wipe data: " + e.Message);
+        }
     }
 
     private void ChangeNetwork()
     {
-        if (!confirmWipe)
+        try
         {
-            showConfirmWipeMessage = true;
-            return;
+            if (!confirmWipe)
+            {
+                showConfirmWipeMessage = true;
+                return;
+            }
+
+            // Perform data wiping before changing the network
+            _clientStorage.WipeStorage();
+            _cacheStorage.WipeSession();
+
+            // Reset states
+            showChangeNetworkModal = false;
+            showConfirmWipeMessage = false;
+            confirmWipe = false;
+
+            // Update network settings
+            _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
+            _networkService.AddSettingsIfNotExist();
+
+            // Refresh UI data
+            networkType = _networkConfiguration.GetNetwork().Name;
+            settingsInfo = _clientStorage.GetSettingsInfo();
+
+            hasWallet = _walletStorage.HasWallet();
+            StateHasChanged();
+
+            // Notify user of successful network change
+            notificationComponent.ShowNotificationMessage("Network has been successfully changed.");
+
+            // Notify other components of state change
+            NavMenuState.NotifyStateChanged();
         }
-
-        _clientStorage.WipeStorage();
-        _cacheStorage.WipeSession();
-
-        showChangeNetworkModal = false;
-        showConfirmWipeMessage = false;
-        confirmWipe = false;
-
-        _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
-        _networkService.AddSettingsIfNotExist();
-
-        networkType = _networkConfiguration.GetNetwork().Name;
-        settingsInfo = _clientStorage.GetSettingsInfo();
-
-        hasWallet = _walletStorage.HasWallet();
-        StateHasChanged();
-
-        NavMenuState.NotifyStateChanged();
+        catch (Exception e)
+        {
+            Logger.LogError(e, $"Error during network change: {e.Message}");
+            notificationComponent.ShowErrorMessage("Failed to change network: " + e.Message);
+        }
     }
 
 

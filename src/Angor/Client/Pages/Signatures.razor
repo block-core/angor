@@ -284,13 +284,13 @@
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            foreach (var pendingSignature in signaturesRequests.Where(_ => _.AmountToInvest == null))
+            foreach (var pendingSignature in signaturesRequests.Where(_ => _.EncryptedMessage != null && _.AmountToInvest == null))
             {
-                pendingSignature.TransactionHex = await encryption.DecryptNostrContentAsync(
-                    nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.TransactionHex);
-
                 try
                 {
+                    pendingSignature.TransactionHex = await encryption.DecryptNostrContentAsync(
+                        nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.EncryptedMessage);
+
                     var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.TransactionHex);
 
                     pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3) //Todo get the actual outputs with taproot type
@@ -298,7 +298,7 @@
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(pendingSignature.TransactionHex, e);
+                    Logger.LogError(pendingSignature?.TransactionHex ?? e.Message, e);
                     pendingSignature.TransactionHex = null;
                 }
             }
@@ -313,43 +313,41 @@
 
     private async Task FetchPendingSignatures(FounderProject project)
     {
-        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null,// project.LastRequestForSignaturesTime , async
+        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null, null,// project.LastRequestForSignaturesTime , async
             (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
-        {
-            Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
-
-            var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
-
-            if (sigReq != null)
             {
-                if (sigReq.TimeArrived < timeArrived)
+                Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
+
+                var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
+
+                if (sigReq != null)
                 {
+                    if (sigReq.TimeArrived >= timeArrived)
+                    {
+                        return; //multiple relays could mean the same massage multiple times
+                    }
+
                     Logger.LogDebug($"Sig request event received is replaced");
 
                     // this is a newer sig request so replace it
                     signaturesRequests.Remove(sigReq);
                 }
-                else
-                {
-                    return; //multiple relays could mean the same massage multiple times
-                }
-            }
 
-            Logger.LogDebug($"Sig request event received is new");
+                Logger.LogDebug($"Sig request event received is new");
 
-            messagesReceived = true;
+                messagesReceived = true;
 
-            var signatureRequest = new SignatureRequest
+                var signatureRequest = new SignatureRequest
                 {
                     investorNostrPubKey = investorNostrPubKey,
                     TimeArrived = timeArrived,
-                    TransactionHex = encryptedMessage, //To be encrypted after js interop is loaded
+                    EncryptedMessage = encryptedMessage, //To be encrypted after js interop is loaded
                     EventId = eventId
                 };
 
-            signaturesRequests.Add(signatureRequest);
-            Logger.LogDebug($"Added to pendingSignatures");
-        },
+                signaturesRequests.Add(signatureRequest);
+                Logger.LogDebug($"Added to pendingSignatures");
+            },
             () =>
             {
                 Logger.LogDebug($"End of messages");
@@ -448,8 +446,7 @@
         }
         catch (Exception e)
         {
-            Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            notificationComponent.ShowErrorMessage(e.Message,e);
         }
         finally
         {
@@ -496,8 +493,7 @@
         }
         catch (Exception e)
         {
-            Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message);
+            notificationComponent.ShowErrorMessage(e.Message,e);
         }
         finally
         {
@@ -562,6 +558,7 @@
         public DateTime? TimeApproved { get; set; }
 
         public string? TransactionHex { get; set; }
+        public string? EncryptedMessage { get; set; }
 
         public string EventId { get; set; }
     }

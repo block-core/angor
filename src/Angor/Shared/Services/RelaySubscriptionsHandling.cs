@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Blockcore.EventBus;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Requests;
 using Nostr.Client.Responses;
@@ -65,9 +66,12 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
     public bool TryAddEoseAction(string subscriptionName, Action action)
     {
-        _communicationFactory.MonitoringEoseReceivedOnSubscription(subscriptionName);
-        
-        return userEoseActions.TryAdd(subscriptionName,action);
+        var add = _communicationFactory.MonitoringEoseReceivedOnSubscription(subscriptionName);
+
+        if (!add)
+            _logger.LogWarning($"Subscription {subscriptionName} is already being monitored");
+
+        return userEoseActions.TryAdd(subscriptionName,action); 
     }
 
     public void HandleEoseMessages(NostrEoseResponse _)

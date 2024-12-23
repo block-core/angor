@@ -1,0 +1,104 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:controls="clr-namespace:AngorApp.Controls"
+             xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Shell.Sidebar" ClipToBounds="False" x:DataType="shell:IMainViewModel">
+
+    <Design.DataContext>
+        <shell:MainViewModelDesign />
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <x:Double x:Key="IconSize">25</x:Double>
+        <x:Double x:Key="CollapsedWidth">85</x:Double>
+        <x:Double x:Key="ExpandedWidth">200</x:Double>
+        <x:TimeSpan x:Key="ExpandToggleDuration">0:0:0.2</x:TimeSpan>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="i|Icon">
+            <Setter Property="FontSize" Value="{StaticResource IconSize}" />
+            <Setter Property="Foreground" Value="{StaticResource Level5}" />
+        </Style>
+        <Style Selector="Svg">
+            <Setter Property="Height" Value="{StaticResource IconSize}" />
+        </Style>
+        <Style Selector="controls|Pane">
+            <Setter Property="Width" Value="{StaticResource CollapsedWidth}" />
+            <Setter Property="Padding" Value="10"></Setter>
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <DoubleTransition Property="Width" Duration="{StaticResource ExpandToggleDuration}" />
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style Selector="controls|Pane TextBlock">
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="Foreground" Value="{StaticResource Level5}" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="{StaticResource ExpandToggleDuration}" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="controls|Pane:pointerover">
+            <Setter Property="Width" Value="{StaticResource ExpandedWidth}" />
+        </Style>
+        <Style Selector="controls|Pane:pointerover TextBlock">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+    </UserControl.Styles>
+
+    <controls:Pane>
+
+        <ListBox Background="Transparent" ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}">
+
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <DockPanel LastChildFill="False" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+
+            <ListBox.DataTemplates>
+                <DataTemplate DataType="shell:Section">
+                    <DockPanel Margin="8">
+                        <ContentControl Margin="10 0 10 0" Content="{Binding Icon, Converter={x:Static controls:MiscConverters.StringToIcon}}" />
+                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                    </DockPanel>
+                </DataTemplate>
+                <DataTemplate DataType="shell:CommandSection">
+                    <controls:IconButton Command="{Binding Command}" Background="Transparent" HorizontalAlignment="Stretch" Icon="{Binding Icon, Converter={x:Static controls:MiscConverters.StringToIcon}}">
+                        <controls:IconButton.Content>
+                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                        </controls:IconButton.Content>
+                    </controls:IconButton>
+                </DataTemplate>
+                <DataTemplate DataType="shell:Separator">
+                    <Separator />
+                </DataTemplate>
+            </ListBox.DataTemplates>
+
+                <ListBox.ItemContainerTheme>
+                    <ControlTheme x:DataType="shell:SectionBase" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                        <Setter Property="CornerRadius" Value="10" />
+                        <Setter Property="Margin" Value="2" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="DockPanel.Dock" Value="{Binding IsPrimary, Converter={x:Static controls:MiscConverters.IsPrimaryToDock}}" />
+                        <Setter Property="IsHitTestVisible" Value="{Binding Converter={x:Static controls:MiscConverters.IsActivatable}}" />
+                    </ControlTheme>
+                </ListBox.ItemContainerTheme>
+            </ListBox>
+
+    </controls:Pane>
+
+</UserControl>

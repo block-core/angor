@@ -114,10 +114,10 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         return response;
     }
     
-    public void MonitoringEoseReceivedOnSubscription(string subscription)
+    public bool MonitoringEoseReceivedOnSubscription(string subscription)
     {
         _logger.LogInformation($"Started monitoring subscription {subscription}");
-        _eoseCalledOnSubscriptionClients.Add(subscription, new List<string>());
+        return _eoseCalledOnSubscriptionClients.TryAdd(subscription, new List<string>());
     }
     
     public void ClearEoseReceivedOnSubscriptionMonitoring(string subscription)

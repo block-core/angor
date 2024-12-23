@@ -14,17 +14,13 @@
 </div>
 
 @code {
-    [Parameter]
-    public decimal BtcBalance { get; set; }
+    [Parameter] public decimal BtcBalance { get; set; }
 
-    [Parameter]
-    public string BtcBalanceInFiat { get; set; }
+    [Parameter] public string BtcBalanceInFiat { get; set; }
 
-    [Parameter]
-    public string PreferredCurrency { get; set; }
+    [Parameter] public string PreferredCurrency { get; set; }
 
-    [Parameter]
-    public bool ShowFiatInline { get; set; } = false;
+    [Parameter] public bool ShowFiatInline { get; set; } = false;
 
     private Network _network;
 
@@ -34,9 +30,11 @@
         base.OnInitialized();
     }
 
-    private string GetTooltip() =>
-        PreferredCurrency != "BTC" && !string.IsNullOrEmpty(BtcBalanceInFiat) && !ShowFiatInline
+    private string GetTooltip()
+    {
+        return PreferredCurrency != "BTC" && !string.IsNullOrEmpty(BtcBalanceInFiat) && !ShowFiatInline
             ? $"Equivalent: {BtcBalanceInFiat}"
             : string.Empty;
-}
+    }
 
+}
