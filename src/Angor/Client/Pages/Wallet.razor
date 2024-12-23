@@ -73,7 +73,7 @@
                     <span class="mb-3" aria-hidden="true" data-cy="create-wallet">
                         <Icon IconName="add" Width="64" Height="64" />
                     </span>
-                    <h taadd> Create Wallet </h>
+                    <h5 > Create Wallet </h5>
                 </div>
             </div>
         </div>
@@ -158,7 +158,7 @@
 
                                 <div class="mb-2">
                                     <div class="input-group mb-3">
-                                        <input type="@passwordInputType" class="form-control" @bind="newWalletPassword" placeholder="Enter a password for your wallet" />
+                                        <input type="@passwordInputType" class="form-control" @bind="newWalletPassword" placeholder="Enter a password for your wallet"/>
                                         <button class="btn btn-border" type="button" @onclick="TogglePasswordVisibility">
                                             @if (passwordToggleText == "Show")
                                             {
@@ -204,7 +204,7 @@
                         <div class="modal-footer">
                             @if (!createWalletSpinner)
                             {
-                                <button class="btn btn-success" @onclick="CreateWalletAsync">@createWalletTitle</button>
+                                <button data-cy="create-wallet-module" class="btn btn-success" @onclick="CreateWalletAsync">@createWalletTitle</button>
                             }
                         </div>
                     </div>
@@ -227,7 +227,7 @@ else
                             <span class="user-select-none">
                                 <Icon IconName="balance" Width="72" Height="72"></Icon>
                             </span>
-                            <div>
+                            <div data-cy="balance-amount">
                                 <BalanceDisplay BtcBalance="@Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC)"
                                                 BtcBalanceInFiat="@btcBalanceInUsd"
                                                 PreferredCurrency="@storage.GetCurrencyDisplaySetting()"
@@ -271,7 +271,7 @@ else
                 {
                     <div class="mb-4 me-4">
                         <p class="text-sm opacity-8 mb-0" data-cy="confirmed-balance">Unconfirmed balance</p>
-                        <h6 class="mb-0">@Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
+                        <h6 class="mb-0" >@Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
                     </div>
                 }
                 @if (accountBalanceInfo.TotalBalanceReserved > 0)
@@ -311,7 +311,7 @@ else
                                     <div class="mb-1">
                                         <label class="mb-3">Please enter your wallet password:</label>
                                         <div class="input-group">
-                                            <input type="@passwordInputType" class="form-control" @bind="showWalletPassword" />
+                                            <input type="@passwordInputType" class="form-control" @bind="showWalletPassword"  data-cy="password-show-words" />
                                             <button class="btn btn-border" type="button" @onclick="TogglePasswordVisibility">
                                                 @if (passwordToggleText == "Show")
                                                 {

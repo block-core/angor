@@ -8,7 +8,7 @@ import {
   TEST_DATA,
 } from "../support/enums";
 
-describe("walletSpec", { retries: 3 }, () => {
+describe("walletSpec", { retries: 1 }, () => { // temp for testing
   beforeEach(() => {
     cy.visitLocalhost();
   });
@@ -23,22 +23,26 @@ describe("walletSpec", { retries: 3 }, () => {
       .then((walletWords) => {
         // cy.clickSubmitButton(ERROR_MESSAGES.NULL_PASSWORD_MESSAGE); //for some reason doesnt work in github, add after works //try to create wallet without password and checkbox
         cy.typeTextInElement("password", "abc123");
-        cy.clickSubmitButton();
-        cy.get(`[data-cy=${WALLET_DATA_CY.CHECKBOX_ERROR}]`).should(
+        // cy.clickSubmitButton();
+        // cy.clickElementWithDataCy('create-wallet-module'); 
+        cy.get(`[data-cy=create-wallet-module]`).click({ force: true }); // add this as enum - also can remove the force
+          cy.get(`[data-cy=${WALLET_DATA_CY.CHECKBOX_ERROR}]`).should(
           "contain",
           ERROR_MESSAGES.NO_CHECKBOX_TICK
         );
-        cy.clickOnCheckBoxByDataCy(WALLET_DATA_CY.WALLET_CHECKBOX);
-        cy.clickSubmitButton();
-        cy.waitForLoader();
-        cy.get(`[data-cy=${WALLET_DATA_CY.BALANCE}]`).should(
-          "have.text",
-          "Balance: "
-        );
+        // cy.clickOnCheckBoxByDataCy(WALLET_DATA_CY.WALLET_CHECKBOX);
+          cy.get(`[data-cy=${WALLET_DATA_CY.WALLET_CHECKBOX}]`).check({force: true}); // same thing as above
+          // cy.clickSubmitButton();
+          cy.get(`[data-cy=create-wallet-module]`).click({ force: true }); // add this as enum - also can remove the force
+          cy.waitForLoader();
+        // cy.get(`[data-cy=${WALLET_DATA_CY.BALANCE}]`).should( // balance component is removed 
+        //   "have.text",
+        //   "Balance: "
+        // );
         cy.verifyBalance("0", WALLET_DATA_CY.BALANCE_AMOUNT);
         //verify words
         cy.clickElementWithDataCy(WALLET_DATA_CY.WALLET_WORDS);
-        cy.get(".input-group").type("abc123");
+        cy.get(`[data-cy=password-show-words]`).type("abc123"); // move to enum
         cy.clickElementWithDataCy(WALLET_DATA_CY.WALLET_WORDS_SHOW);
         cy.get(`[data-cy=${WALLET_DATA_CY.WALLET_WORDS_ALERT}]`).should(
           "contain.text",
