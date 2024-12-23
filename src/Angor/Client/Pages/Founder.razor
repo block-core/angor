@@ -266,41 +266,64 @@
             await InitializeKeysAndCheckInvestments();
         }
     }
-
-
+    
     private async Task InitializeKeysAndCheckInvestments()
+{
+    try
     {
-        try
+        // Retrieve wallet seed words
+        var words = await passwordComponent.GetWalletAsync();
+        if (words == null)
         {
-            var words = await passwordComponent.GetWalletAsync();
-            if (words == null)
-            {
-                notificationComponent.ShowErrorMessage("Unable to retrieve wallet seed words.");
-                return;
-            }
-
-            var founderProject = founderProjects.FirstOrDefault();
-            if (founderProject == null)
-            {
-                notificationComponent.ShowNotificationMessage("No founder projects found.");
-                return;
-            }
-
-            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, founderProject.ProjectIndex);
-            founderPrivateKey = Encoders.Hex.EncodeData(nostrKey.ToBytes());
-            founderPubKey = nostrKey.PubKey.ToHex() ;
-
-            notificationComponent.ShowNotificationMessage("Private key initialized successfully!");
-
-            RelayService.ListenForNotifications(founderPubKey, async nostrEvent =>
-            {
-                await HandleIncomingNotification(nostrEvent);
-            });        }
-        catch (Exception ex)
-        {
-            notificationComponent.ShowErrorMessage($"Error initializing keys or checking investments: {ex.Message}", ex);
+            notificationComponent.ShowErrorMessage("Unable to retrieve wallet seed words.");
+            return;
         }
+
+        // Get the first founder project
+        var founderProject = founderProjects.FirstOrDefault();
+        if (founderProject == null)
+        {
+            notificationComponent.ShowNotificationMessage("No founder projects found.");
+            return;
+        }
+
+        // Derive the founder's private key
+        var founderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, founderProject.ProjectIndex);
+        if (founderPrivateKey == null)
+        {
+            notificationComponent.ShowErrorMessage("Failed to derive the founder's private key.");
+            return;
+        }
+
+        // Serialize private key using GetWif
+        string founderPrivateKeyWif = founderPrivateKey.GetWif(network).ToString(); // WIF format
+        string founderPubKeyHex = founderPrivateKey.PubKey.ToHex(); // Hex format for public key
+
+        if (string.IsNullOrEmpty(founderPrivateKeyWif) || string.IsNullOrEmpty(founderPubKeyHex))
+        {
+            notificationComponent.ShowErrorMessage("Derived keys are invalid or empty.");
+            return;
+        }
+
+        // Store keys for later use
+        this.founderPrivateKey = founderPrivateKeyWif;
+        this.founderPubKey = founderPubKeyHex;
+
+        // Display success notification
+        notificationComponent.ShowNotificationMessage("Keys derived successfully!");
+
+        // Listen for incoming notifications
+        RelayService.ListenForNotifications(founderPubKeyHex, async nostrEvent =>
+        {
+            await HandleIncomingNotification(nostrEvent);
+        });
     }
+    catch (Exception ex)
+    {
+        notificationComponent.ShowErrorMessage($"Error initializing keys or checking investments: {ex.Message}", ex);
+    }
+}
+
     
     private async Task HandleIncomingNotification(NostrEvent nostrEvent)
     {
