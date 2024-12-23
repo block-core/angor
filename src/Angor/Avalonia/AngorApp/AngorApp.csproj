@@ -32,35 +32,12 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-
+        <PackageReference Include="Zafiro.Avalonia"/>
+        <PackageReference Include="Zafiro.Avalonia.Dialogs"/>
     </ItemGroup>
 
     <ItemGroup>
-        <UpToDateCheckInput Remove="Sections\Browse\Details\Invest\TransactionPreview\TransactionPreviewView.axaml"/>
+      <ProjectReference Include="..\..\..\AngorApp.Model\AngorApp.Model.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-        <AdditionalFiles Include="Common\TransactionPreview\TransactionPreviewView.axaml"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Compile Update="Common\Success\SuccessView.axaml.cs">
-            <DependentUpon>SuccessView.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
-        <Compile Update="Sections\Wallet\HistoryView.axaml.cs">
-          <DependentUpon>HistoryView.axaml</DependentUpon>
-          <SubType>Code</SubType>
-        </Compile>
-        <Compile Update="Sections\Wallet\Balance.axaml.cs">
-          <DependentUpon>Balance.axaml</DependentUpon>
-          <SubType>Code</SubType>
-        </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia.Dialogs\Zafiro.Avalonia.Dialogs.csproj" />
-        <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\Zafiro.Avalonia.csproj" />
-        <ProjectReference Include="..\..\..\AngorApp.Model\AngorApp.Model.csproj"/>
-    </ItemGroup>
+    
 </Project>
