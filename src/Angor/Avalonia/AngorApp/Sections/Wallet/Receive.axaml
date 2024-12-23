@@ -5,6 +5,7 @@
              xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
              xmlns:c="clr-namespace:AngorApp.Controls"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:s="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="400"
              x:Class="AngorApp.Sections.Wallet.Receive" x:DataType="wallet:IWalletViewModel">
     
@@ -16,7 +17,7 @@
         <TextBlock Text="Use this address receive funds in this wallet" TextAlignment="Center" />
         <c:SectionItem Theme="{StaticResource Basic}" Content="{Binding Wallet.ReceiveAddress}">
             <c:SectionItem.RightContent>
-                <Button>
+                <Button CommandParameter="{Binding Wallet.ReceiveAddress}" Command="{Binding Source={x:Static s:Commands.Instance}, Path=CopyText}">
                     <Button.Content>
                         <avalonia:Icon Value="fa-copy" FontSize="20" />
                     </Button.Content>

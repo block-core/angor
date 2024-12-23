@@ -5,38 +5,9 @@
              xmlns:c="clr-namespace:AngorApp.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:send="clr-namespace:AngorApp.Sections.Wallet.Send"
-             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Wallet.Send.AddressAndAmountView" x:DataType="send:IAddressAndAmountViewModel">
-
-    <UserControl.Styles>
-        <Style Selector="TextBox.initial /template/ Border#PART_BorderElement">
-            <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}" />
-        </Style>
-        <Style Selector="TextBox.initial:focus /template/ Border#PART_BorderElement">
-            <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushFocused}" />
-        </Style>
-        <Style Selector="TextBox.initial /template/ DataValidationErrors">
-            <Setter Property="ErrorTemplate">
-                <Setter.Value>
-                    <DataTemplate />
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style Selector="NumericUpDown.initial /template/ Border#PART_BorderElement">
-            <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}" />
-        </Style>
-        <Style Selector="NumericUpDown.initial:focus /template/ Border#PART_BorderElement">
-            <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushFocused}" />
-        </Style>
-        <Style Selector="NumericUpDown.initial /template/ DataValidationErrors">
-            <Setter Property="ErrorTemplate">
-                <Setter.Value>
-                    <DataTemplate />
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </UserControl.Styles>
 
     <c:Pane Theme="{StaticResource  Borderless}" IsTitleVisible="True" Title="Send">
         <c:Pane.TitleIcon>
@@ -47,7 +18,7 @@
                 <HeaderedContentControl Header="Destination">
                     <TextBox Text="{Binding Address}" Classes="clearButton" Watermark="Enter address" AcceptsReturn="False">
                         <Interaction.Behaviors>
-                            <angorApp:AddClassWhenUnmodifiedBehavior />
+                            <behaviors:UntouchedClassBehavior />
                         </Interaction.Behaviors>
                         <TextBox.InnerLeftContent>
                             <i:Icon Value="fa-solid fa-pen-to-square" Margin="4" />
@@ -57,7 +28,7 @@
                 <HeaderedContentControl Header="Amount">
                     <NumericUpDown Value="{Binding Amount}" Watermark="0" ShowButtonSpinner="False">
                         <Interaction.Behaviors>
-                            <angorApp:AddClassWhenUnmodifiedBehavior />
+                            <behaviors:UntouchedClassBehavior />
                         </Interaction.Behaviors>
                         <NumericUpDown.InnerRightContent>
                             <TextBlock VerticalAlignment="Center" Text="BTC" Padding="10 0 " />

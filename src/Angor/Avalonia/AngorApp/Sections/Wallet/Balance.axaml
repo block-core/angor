@@ -22,7 +22,7 @@
             </StackPanel>
         </c:Pane.TitleRightContent>
         <c:Pane.TitleIcon>
-            <i:Icon Value="fa-database" Margin="10" />
+            <i:Icon Value="fa-database" />
         </c:Pane.TitleIcon>
 
     </c:Pane>

@@ -8,7 +8,6 @@ using AngorApp.Sections.Wallet;
 using AngorApp.Services;
 using Avalonia.Controls.Notifications;
 using Zafiro.Avalonia.Dialogs;
-using Zafiro.Avalonia.Notifications;
 using Zafiro.Avalonia.Services;
 using Separator = AngorApp.Sections.Shell.Separator;
 

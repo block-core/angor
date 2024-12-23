@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:amount="clr-namespace:AngorApp.Sections.Browse.Details.Invest.Amount"
              xmlns:controls="clr-namespace:AngorApp.Controls"
+             xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              mc:Ignorable="d"
              x:Class="AngorApp.Sections.Browse.Details.Invest.Amount.AmountView" x:DataType="amount:IAmountViewModel">
 
@@ -37,6 +38,10 @@
         <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Project Id:" Content="{Binding Project.Id}"/>
         <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Target Amount:" Content="{Binding Project.TargetAmount, StringFormat={x:Static controls:MiscConverters.BigBtcFormat} }"/>
         <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Starting in:" Content="{Binding Project.StartingDate}"/>
-        <NumericUpDown Watermark="Amount" ShowButtonSpinner="False" Value="{Binding Amount, Mode=TwoWay}" />
+        <NumericUpDown Watermark="Amount" ShowButtonSpinner="False" Value="{Binding Amount, Mode=TwoWay}">
+            <Interaction.Behaviors>
+                <behaviors:UntouchedClassBehavior />
+            </Interaction.Behaviors>
+        </NumericUpDown>
     </StackPanel>
 </UserControl>
