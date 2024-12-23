@@ -7,6 +7,7 @@
              xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:dp="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              xmlns:transactionPreview1="clr-namespace:AngorApp.Common.TransactionPreview"
+             xmlns:f="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
              mc:Ignorable="d"
              x:Class="AngorApp.Common.TransactionPreview.TransactionPreviewView"
              x:DataType="transactionPreview1:ITransactionPreviewViewModel">
@@ -38,7 +39,15 @@
         <HeaderedContentControl Theme="{StaticResource Inline}" Header="Total Fee">
             <HeaderedContentControl.Content>
                 <Panel HorizontalAlignment="Left">
-                    <TextBlock VerticalAlignment="Center" Text="{Binding Feerate}" IsVisible="{Binding !CreateTransaction.IsExecuting^}" />
+                    <TextBlock VerticalAlignment="Center" IsVisible="{Binding !CreateTransaction.IsExecuting^}">
+                        <TextBlock.Text>
+                           <MultiBinding StringFormat="{}{0:N0} sats">
+                               <MultiBinding Converter="{x:Static controls:MathConverters.Evaluate}" ConverterParameter="{}{0}*100000000">
+                                   <Binding Path="Transaction.TotalFee" />
+                               </MultiBinding>
+                           </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
                     <dp:ProgressRing Height="20" Width="20" IsVisible="{Binding CreateTransaction.IsExecuting^}" />
                 </Panel>
             </HeaderedContentControl.Content>

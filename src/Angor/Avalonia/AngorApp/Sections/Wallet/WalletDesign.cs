@@ -28,7 +28,7 @@ public class WalletDesign : IWallet
         {
             Address = address,
             Amount = amount,
-            TotalFee = feerate * 10,
+            TotalFee = feerate * 0.00001m,
             FeeRate = feerate
         };
     }

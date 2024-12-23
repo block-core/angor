@@ -6,7 +6,7 @@ namespace AngorApp.Controls
 {
     public class MathConverters
     {
-        public static Zafiro.Avalonia.Converters.FuncMultiValueConverter<object, double, string> Evaluate = new((inputs, expression) =>
+        public static Zafiro.Avalonia.Converters.FuncMultiValueConverter<object, double, string> Evaluate { get; } = new((inputs, expression) =>
         {
             if (expression == null)
             {
