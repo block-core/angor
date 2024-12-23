@@ -20,4 +20,6 @@ public interface IRelayService
     
     string SendDirectMessagesForPubKeyAsync(string senderNosterPrivateKey, string nostrPubKey, string encryptedMessage,
         Action<NostrOkResponse> onResponseAction);
+    string NotifyFounderOfInvestment(string founderPubKey, string investorPubKey, string projectIdentifier, string encryptedMessage);
+    void ListenForNotifications(string pubKey, Action<NostrEvent> onMessageReceived);
 }

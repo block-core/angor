@@ -302,6 +302,60 @@ namespace Angor.Shared.Services
             
             return ev;
         }
+        
+        public string NotifyFounderOfInvestment(string founderPubKey, string investorPubKey, string projectIdentifier, string encryptedMessage)
+        {
+            var sender = NostrPrivateKey.FromHex(investorPubKey);
+            var client = _communicationFactory.GetOrCreateClient(_networkService);
+
+            var messageContent = new
+            {
+                Message = "An investor has successfully invested in your project.",
+                ProjectIdentifier = projectIdentifier,
+                Time = DateTime.UtcNow
+            };
+
+            var encryptedContent = _serializer.Serialize(messageContent);
+
+            var eventMessage = new NostrEvent
+            {
+                Kind = NostrKind.EncryptedDm,
+                CreatedAt = DateTime.UtcNow,
+                Content = encryptedContent,
+                Tags = new NostrEventTags(NostrEventTag.Profile(founderPubKey))
+            };
+
+            var signedMessage = eventMessage.Sign(sender);
+            client.Send(new NostrEventRequest(signedMessage));
+            return signedMessage.Id!;
+        }
+        public void ListenForNotifications(string pubKey, Action<NostrEvent> onMessageReceived)
+        {
+            var subscriptionKey = pubKey + "_Notifications";
+
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+
+            if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(e => e.Subscription == subscriptionKey)
+                    .Where(e => e.Event is not null)
+                    .Select(e => e.Event)
+                    .Subscribe(onMessageReceived);
+
+                _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                P = new[] { pubKey },
+                Kinds = new[] { NostrKind.EncryptedDm }
+            }));
+        }
+
     }
+    
+    
+    
 
 }

@@ -852,6 +852,9 @@ else
             SessionStorage.SetUnconfirmedInboundFunds(unspentInfo);
 
             notificationComponent.ShowNotificationMessage("Invested in project", 5);
+            
+            //notify the founder
+            await NotifyFounder(investorProject.ProjectInfo.FounderKey, InvestorPubKey, investorProject.ProjectInfo.ProjectIdentifier);
 
             NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
         }
@@ -943,4 +946,15 @@ else
     {
         showTransactionJsonModal = isVisible;
     }
+    
+    private async Task NotifyFounder(string founderPubKey, string investorPubKey, string projectIdentifier)
+    {
+        var messageContent = $"Investor has successfully invested in your project: {projectIdentifier}.";
+    
+        var encryptedMessage = await encryption.EncryptNostrContentAsync(
+            investorPubKey, founderPubKey, messageContent);
+    
+        _RelayService.NotifyFounderOfInvestment(founderPubKey, investorPubKey, projectIdentifier, encryptedMessage);
+    }
+
 }

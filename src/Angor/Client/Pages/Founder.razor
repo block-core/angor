@@ -4,6 +4,10 @@
 @using Angor.Shared.Models
 @using Angor.Shared.Services
 @using Nostr.Client.Messages
+@using Angor.Shared;
+@using Blockcore.NBitcoin.DataEncoders;
+@using DBreeze.Utils
+@using Nostr.Client.Keys;
 
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
@@ -11,8 +15,14 @@
 @inject IRelayService RelayService;
 @inject IIndexerService _IndexerService
 @inject ISerializer serializer
+@inject IDerivationOperations _derivationOperations
+@inject ICacheStorage SessionStorage
+@inject IEncryptionService _encryptionService
 
+@inherits BaseComponent
 <NotificationComponent @ref="notificationComponent"/>
+<PasswordComponent @ref="passwordComponent"/>
+
 
 @if (!hasWallet)
 {
@@ -78,6 +88,11 @@
     </div>
 }
 
+<button class="btn btn-primary" @onclick="CheckForInvestments">
+    Check for Investments
+</button>
+
+
 <div class="row">
     <div class="col">
         <div class="d-flex justify-content-center mt-4">
@@ -97,6 +112,9 @@
     private List<FounderProject> founderProjects = new();
     private bool hasWallet;
     bool scanningForProjects;
+    
+    private string founderPrivateKey;
+    private string founderPubKey;
 
     private NotificationComponent notificationComponent;
 
@@ -236,6 +254,65 @@
             return "Scanning in progress...";
         return "Create a new project.";
     }
+    
+    private async Task CheckForInvestments()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(async () => { await InitializeKeysAndCheckInvestments(); });
+        }
+        else
+        {
+            await InitializeKeysAndCheckInvestments();
+        }
+    }
 
+
+    private async Task InitializeKeysAndCheckInvestments()
+    {
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+            if (words == null)
+            {
+                notificationComponent.ShowErrorMessage("Unable to retrieve wallet seed words.");
+                return;
+            }
+
+            var founderProject = founderProjects.FirstOrDefault();
+            if (founderProject == null)
+            {
+                notificationComponent.ShowNotificationMessage("No founder projects found.");
+                return;
+            }
+
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, founderProject.ProjectIndex);
+            founderPrivateKey = Encoders.Hex.EncodeData(nostrKey.ToBytes());
+            founderPubKey = nostrKey.PubKey.ToHex() ;
+
+            notificationComponent.ShowNotificationMessage("Private key initialized successfully!");
+
+            RelayService.ListenForNotifications(founderPubKey, async nostrEvent =>
+            {
+                await HandleIncomingNotification(nostrEvent);
+            });        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage($"Error initializing keys or checking investments: {ex.Message}", ex);
+        }
+    }
+    
+    private async Task HandleIncomingNotification(NostrEvent nostrEvent)
+    {
+        try
+        {
+            var decryptedMessage = await _encryptionService.DecryptNostrContentAsync(founderPrivateKey, nostrEvent.Pubkey, nostrEvent.Content);
+            notificationComponent.ShowNotificationMessage(decryptedMessage, 10);
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage($"Error decrypting notification: {ex.Message}", ex);
+        }
+    }
 
 }
