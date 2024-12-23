@@ -135,7 +135,7 @@
     private List<FounderProject> founderProjects = new();
     private bool hasWallet;
     bool scanningForProjects;
-    
+
     private string founderPrivateKey;
     private string founderPubKey;
     private List<string> investmentMessages = new();
@@ -200,10 +200,10 @@
                         break;
 
                     case { Kind: NostrKind.ApplicationSpecificData }:
-                        
+
                         if (e.Id != founderProjectsToLookup[e.Pubkey].NostrEventId)
                             return;
-                        
+
                         var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
                         var project = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
 
@@ -218,7 +218,7 @@
                         {
                             project ??= CreateFounderProject(founderProjectsToLookup, e, projectInfo);
                             founderProjects.Add(project);
-                        }   
+                        }
 
                         break;
                 }
@@ -246,7 +246,7 @@
             founderProjectsToLookup.Keys.ToArray());
     }
 
-    private FounderProject CreateFounderProject(Dictionary<string, ProjectIndexerData> founderProjectsToLookup, 
+    private FounderProject CreateFounderProject(Dictionary<string, ProjectIndexerData> founderProjectsToLookup,
         NostrEvent e, ProjectInfo? projectInfo = null)
     {
         var keys = _walletStorage.GetFounderKeys();
@@ -270,6 +270,7 @@
 
         NavigationManager.NavigateTo("/create");
     }
+
     private string GetCreateButtonTooltip()
     {
         if (founderProjects.Count >= 15)
@@ -278,8 +279,8 @@
             return "Scanning in progress...";
         return "Create a new project.";
     }
-    
-     private async Task CheckForInvestments()
+
+    private async Task CheckForInvestments()
     {
         try
         {
@@ -364,25 +365,10 @@
             {
                 investmentMessages.Add("No investments found.");
             }
-            }
+        }
         catch (Exception ex)
         {
             notificationComponent.ShowErrorMessage($"Error scanning for investments: {ex.Message}", ex);
-        }
-        }
-    }
-
-    
-    private async Task HandleIncomingNotification(NostrEvent nostrEvent)
-    {
-        try
-        {
-            var decryptedMessage = await _encryptionService.DecryptNostrContentAsync(founderPrivateKey, nostrEvent.Pubkey, nostrEvent.Content);
-            notificationComponent.ShowNotificationMessage(decryptedMessage, 10);
-        }
-        catch (Exception ex)
-        {
-            notificationComponent.ShowErrorMessage($"Error decrypting notification: {ex.Message}", ex);
         }
     }
 
