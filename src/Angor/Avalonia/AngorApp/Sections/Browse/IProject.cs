@@ -1,20 +1,7 @@
+using AngorApp.Model;
+
 namespace AngorApp.Sections.Browse;
 
-public interface IProject
-{
-    public string Id { get; set; }
-    public string Name { get; }
-    public Uri Picture { get; }
-    public Uri Icon { get; }
-    public string ShortDescription { get; }
-    string BitcoinAddress { get; }
-    public decimal TargetAmount { get; }
-    public DateOnly StartingDate { get; }
-    IEnumerable<IStage> Stages { get; }
-    public string NpubKey { get; }
-    public string NpubKeyHex { get; }
-    public TimeSpan PenaltyDuration { get; }
-}
 
 public class ProjectDesign : IProject
 {
@@ -38,22 +25,7 @@ public class ProjectDesign : IProject
     public string NpubKey { get; } = "npub17a0glwdvr5wjyjdh5eu4xmh4swtaqrmhcgss22unvr6p3spyyq7qeh4kaz";
     public string NpubKeyHex { get; } = "f75e8fb9ac1d1d2249b7a679536ef58397d00f77c221052b9360f418c024203c";
     public TimeSpan PenaltyDuration { get; } = TimeSpan.FromDays(90);
+    public Uri InformationUri { get; } = new Uri("https://www.google.com");
 
     public override string ToString() => Name;
-}
-
-public class StageDesign : IStage
-{
-    public DateOnly ReleaseDate { get; set; }
-    public decimal Amount { get; set; }
-    public int Index { get; set; }
-    public double Weight { get; set; }
-}
-
-public interface IStage
-{
-    DateOnly ReleaseDate { get; }
-    decimal Amount { get; }
-    int Index { get; }
-    double Weight { get; }
 }

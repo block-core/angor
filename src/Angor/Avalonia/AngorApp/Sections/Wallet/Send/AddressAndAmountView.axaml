@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:c="clr-namespace:AngorApp.Controls"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:send="clr-namespace:AngorApp.Sections.Wallet.Send"
+             xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Wallet.Send.AddressAndAmountView" x:DataType="send:IAddressAndAmountViewModel">
+
+    <c:Pane Theme="{StaticResource  Borderless}" IsTitleVisible="True" Title="Send">
+        <c:Pane.TitleIcon>
+            <i:Icon Value="fa-solid fa-angle-right" />
+        </c:Pane.TitleIcon>
+        <StackPanel Spacing="10" MaxWidth="500">
+            <StackPanel Spacing="10">
+                <HeaderedContentControl Header="Destination">
+                    <TextBox Text="{Binding Address}" Classes="clearButton" Watermark="Enter address" AcceptsReturn="False">
+                        <Interaction.Behaviors>
+                            <behaviors:UntouchedClassBehavior />
+                        </Interaction.Behaviors>
+                        <TextBox.InnerLeftContent>
+                            <i:Icon Value="fa-solid fa-pen-to-square" Margin="4" />
+                        </TextBox.InnerLeftContent>
+                    </TextBox>
+                </HeaderedContentControl>
+                <HeaderedContentControl Header="Amount">
+                    <NumericUpDown Value="{Binding Amount}" Watermark="0" ShowButtonSpinner="False">
+                        <Interaction.Behaviors>
+                            <behaviors:UntouchedClassBehavior />
+                        </Interaction.Behaviors>
+                        <NumericUpDown.InnerRightContent>
+                            <TextBlock VerticalAlignment="Center" Text="BTC" Padding="10 0 " />
+                        </NumericUpDown.InnerRightContent>
+                    </NumericUpDown>
+                </HeaderedContentControl>
+            </StackPanel>
+        </StackPanel>
+    </c:Pane>
+
+</UserControl>
