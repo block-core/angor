@@ -28,6 +28,7 @@ const WALLET_DATA_CY = {
   ADRESS_EXPEND: 'expend-amount',
   CREATE_WALLET_MOUDLE: 'create-wallet-module',
   PASSWORD_SHOW_WORDS: 'password-show-words',
+  DISMISS_MODAL: 'dissmiss_module',
 };
 
 const TEST_DATA = {

@@ -13,7 +13,7 @@ describe("walletSpec", {retries: 1}, () => { // changed for 1 - temp for testing
         cy.visitLocalhost();
     });
 
-    it.only("createWallet", () => {
+    it("createWallet", () => {
         cy.clickOnNavBar(Navbar.WALLET);
         cy.clickElementWithDataCy(WALLET_DATA_CY.CREATE_WALLET);
         cy.clickElementWithDataCy(WALLET_DATA_CY.GENERATE_WALLET_WORDS);
@@ -62,7 +62,7 @@ describe("walletSpec", {retries: 1}, () => { // changed for 1 - temp for testing
             });
     });
 
-    it("failRecoverWallet", () => {
+    it.only("failRecoverWallet", () => {
         cy.clickOnNavBar(Navbar.WALLET);
         cy.recoverWallet("these are not valid wallet words", "");
         cy.verifyElementPopUp(

@@ -22,7 +22,7 @@ Cypress.Commands.add("recoverWallet", (walletWords, password) => {
   if (password) {
     cy.typeTextInElement("password", password);
   }
-  cy.clickOnCheckBoxByDataCy(WALLET_DATA_CY.WALLET_CHECKBOX);
+  cy.clickOnCheckBoxByDataCy(WALLET_DATA_CY.WALLET_CHECKBOX,true);
   cy.clickSubmitButton();
   cy.waitForLoader();
 });
