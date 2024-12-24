@@ -26,6 +26,8 @@ const WALLET_DATA_CY = {
   CONFIRMED_BALANCE: "confirmed-balance",
   ADRESS_ROW: 'adress-row',
   ADRESS_EXPEND: 'expend-amount',
+  CREATE_WALLET_MOUDLE: 'create-wallet-module',
+  PASSWORD_SHOW_WORDS: 'password-show-words',
 };
 
 const TEST_DATA = {

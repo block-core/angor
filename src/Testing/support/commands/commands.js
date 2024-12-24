@@ -67,10 +67,9 @@ Cypress.Commands.add("clickOnCheckBox", () => {
   cy.get(`.form-check input[type="checkbox"]`).check();
 });
 
-Cypress.Commands.add("clickOnCheckBoxByDataCy", (datacy) => {
-  cy.get(`[data-cy=${datacy}]`).check();
+Cypress.Commands.add("clickOnCheckBoxByDataCy", (datacy, force = false) => {
+  cy.get(`[data-cy=${datacy}]`).check({ force });
 });
-
 Cypress.Commands.add("verifyTextInDataCy", (datacy, text) => {
   cy.get(`[data-cy=${datacy}]`).contains(text).should("exist");
 });
