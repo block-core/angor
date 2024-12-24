@@ -987,12 +987,12 @@ tr[style*="cursor: pointer;"]:hover {
 
 .btn-border {
   border: 1px solid var(--btn-border) !important;
-  background-color: rgba(31, 93, 106, 0.2);
+  background-color: rgba(31, 93, 106, 0.3);
   color: var(--angor-primary) !important;
 }
 
 .btn-border:hover {
-  color: var(--angor-accent);
+  color: var(--angor-secondary);
   background-color: rgba(31, 93, 106, 0.6);
 }
 
@@ -1423,4 +1423,56 @@ a p {
 .feature-text {
   color: var(--bs-secondary);
   font-size: 0.9rem;
+}
+
+.tab-card {
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+    .tab-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .tab-card.active {
+        border-color: var(--angor-primary);
+        background: var(--angor-accent);
+    }
+
+.tab-icon {
+    transition: transform 0.3s ease;
+}
+
+.tab-card:hover .tab-icon {
+    transform: scale(1.1);
+}
+
+.heartbeat {
+    animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+    0% {
+        transform: scale(1);
+    }
+
+    14% {
+        transform: scale(1.1);
+    }
+
+    28% {
+        transform: scale(1);
+    }
+
+    42% {
+        transform: scale(1.1);
+    }
+
+    70% {
+        transform: scale(1);
+    }
 }

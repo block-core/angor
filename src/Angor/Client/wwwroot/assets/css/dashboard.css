@@ -5142,8 +5142,6 @@ fieldset:disabled .btn {
     background-clip: border-box;
     border: var(--angor-card-border-width) solid var(--angor-card-border-color);
     border-radius: var(--angor-card-border-radius);
-    margin-left: 4px;
-    margin-right: 4px;
 }
 .dark .card {
     --angor-accent: var(--angor-dark) !important;

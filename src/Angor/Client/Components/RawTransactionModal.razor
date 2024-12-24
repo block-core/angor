@@ -1,5 +1,8 @@
 ﻿@using Angor.Shared.Models
 @inject IClipboardService ClipboardService
+@inherits BaseComponent
+
+<NotificationComponent @ref="notificationComponent" />
 
 @if (IsVisible)
 {
@@ -11,14 +14,14 @@
                         <h5 class="modal-title">Raw Transaction JSON</h5>
                         <span type="button" @onclick="CloseModal" aria-label="Close">
                             <Icon IconName="close-circle"/>
-                            <i @onclick="CopyToClipboard" class="ms-auto cursor-pointer user-select-none">
-                                <Icon IconName="copy"></Icon>
-                            </i>
-                        </span>
+                        </span>  
                     </div>
                     <div class="modal-body">
                         <pre>@RawTransactionJson</pre>
                     </div>
+                    <i @onclick="CopyToClipboard" class="ms-auto cursor-pointer user-select-none">
+                        <Icon IconName="copy"></Icon>
+                    </i>
                 </div>
             </div>
         </div>
@@ -38,5 +41,7 @@
     private async Task CopyToClipboard()
     {
         await ClipboardService.WriteTextAsync(RawTransactionJson);
+        notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
+
     }
 }
