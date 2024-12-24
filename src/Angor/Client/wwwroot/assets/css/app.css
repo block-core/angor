@@ -1476,3 +1476,164 @@ a p {
         transform: scale(1);
     }
 }
+.animate-grid {
+    opacity: 0;
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideUp 0.6s ease-out forwards;
+}
+
+.animate-list .project-card {
+    opacity: 0;
+    transform: translateX(-20px);
+    animation: slideIn 0.6s ease-out forwards;
+}
+
+.hover-effect {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-effect:hover {
+    transform: translateY(-5px);
+}
+
+.card-zoom {
+    overflow: hidden;
+}
+
+.card-zoom img {
+    transition: transform 0.3s ease;
+}
+
+.card-zoom:hover img {
+    transform: scale(1.05);
+}
+
+.fade-in {
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+.slide-up {
+    transform: translateY(20px);
+    animation: slideUp 0.8s ease-out forwards 0.2s;
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+ 
+    .profile-card {
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .banner-container {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.8s ease-in;
+    }
+
+    .animate-fade-in-delayed {
+        animation: fadeIn 1.2s ease-in;
+    }
+
+    .animate-slide-down {
+        animation: slideDown 0.8s ease-out;
+    }
+
+    .animate-scale-in {
+        animation: scaleIn 0.8s ease-out;
+    }
+
+    .animate-fade-up {
+        animation: fadeUp 0.8s ease-out;
+    }
+
+    .animate-rotate {
+        transition: transform 0.3s ease;
+    }
+
+    .animate-rotate:hover {
+        transform: rotate(360deg);
+    }
+
+    .project-title a {
+        position: relative;
+        text-decoration: none;
+        color: var(--angor-primary);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+        from { transform: translateY(-100%); }
+        to { transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+        from { 
+            transform: scale(0);
+            opacity: 0;
+        }
+        to { 
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeUp {
+        from { 
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        to { 
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+ 

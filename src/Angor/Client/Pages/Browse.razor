@@ -78,19 +78,19 @@ else
 {
     @if (isGridView)
     {
-        <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper" data-cy="project-grid">
+        <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper animate-grid" data-cy="project-grid">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
-                <div class="col d-flex align-items-stretch">
-                    <div class="card mt-4 w-100 project-card">
-                        <a class="d-block">
+                <div class="col d-flex align-items-stretch animate-card">
+                    <div class="card mt-4 w-100 project-card hover-effect">
+                        <a class="d-block card-zoom">
                             @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                             {
                                 var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                 <div class="banner-container">
-                                    <img class="banner-image" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                    <div class="profile-container">
-                                        <img class="profile-image" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    <img class="banner-image fade-in" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    <div class="profile-container slide-up">
+                                        <img class="profile-image pulse" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                     </div>
                                 </div>
                             }
@@ -152,10 +152,10 @@ else
     }
     else
     {
-        <div class="project-wrapper">
+        <div class="project-wrapper animate-list">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
-                <div class="card mt-4 project-card">
+                <div class="card mt-4 project-card slide-in hover-effect">
                     <div class="row g-0">
                         <div class="col-md-4 position-relative">
                             <div class="banner-container-list">
@@ -243,6 +243,8 @@ else
         </a>
     </div>
 }
+
+ 
 
 @code {
     private NotificationComponent notificationComponent;

@@ -61,31 +61,37 @@
 else
 {
     <!-- Project Details Section -->
-    <div class="card card-body p-0">
+
         @if (project.ProjectInfo.NostrPubKey != null)
         {
-            var metadata = project.Metadata;
+            <div class="card card-body p-0 profile-card animate-fade-in">
+            @{var metadata = project.Metadata;}
 
-            <div class="card-header p-0 overflow-hidden position-relative">
-                <img class="card-img-top card-img-top-view" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
-                <img class="profile-image-view rounded-circle" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
+            <div class="card-header p-0 overflow-hidden position-relative banner-container">
+                <img class="card-img-top card-img-top-view animate-slide-down" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
+                <img class="profile-image-view rounded-circle animate-scale-in" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
             </div>
 
-            <div class="p-4">
+            <div class="p-4 content-container animate-fade-up">
                 <div class="d-flex align-items-center justify-content-between mb-4">
-                    <div class="d-flex align-items-center">
-                        <span class="user-select-none">
+                    <div class="d-flex align-items-center hover-effect">
+                        <span class="user-select-none animate-rotate">
                             <Icon IconName="view" Height="32" Width="32"></Icon>
                         </span>
                         <div class="h-100 ms-3">
-                            <h5 class="mb-0 font-weight-bolder">
+                            <h5 class="mb-0 font-weight-bolder project-title">
                                 <a href="/view/@project.ProjectInfo.ProjectIdentifier">@metadata?.Name</a>
                             </h5>
                         </div>
                     </div>
                 </div>
 
-                <p class="card-subtitle">@((MarkupString)metadata?.About)</p>
+
+                <p class="card-subtitle animate-fade-in-delayed">@((MarkupString)metadata?.About)</p>
+            </div>
+
+            </div>
+              <div class="card card-body mt-4">
 
                 <div class="row align-items-center">
                     <div class="col-12 col-md-12 col-lg-8 order-2 order-md-2 mt-4">
@@ -93,14 +99,14 @@ else
                             <Icon IconName="explorer"></Icon>
                             <a class="ms-2" href="@projectExplorerLink" target="_blank">View the transaction on the explorer.</a>
                         </div>
-                        @* <div class="form-control mt-1 d-flex align-items-center">
+                         <div class="form-control mt-1 d-flex align-items-center">
                     <Icon IconName="view"></Icon>
                     <p class="card-text ms-2">Project Identifier: @project.ProjectInfo.ProjectIdentifier</p>
                     </div>
                     <div class="form-control mt-1 d-flex align-items-center">
                     <Icon IconName="key"></Icon>
                     <p class="card-text ms-2">Founder Key: @project.ProjectInfo.FounderKey</p>
-                    </div> *@
+                    </div> 
                         <div class="form-control mt-1 d-flex align-items-center">
                             <Icon IconName="balance"></Icon>
                             <p class="card-text ms-2">Target Amount: @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
@@ -191,9 +197,10 @@ else
                     </div>
                 </div>
 
-            </div>
+            </div>  
+            
         }
-    </div>
+
 
     <!-- Stages Section -->
 
