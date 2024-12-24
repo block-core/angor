@@ -327,6 +327,13 @@ namespace Angor.Shared.Services
 
             var signedMessage = eventMessage.Sign(sender);
             client.Send(new NostrEventRequest(signedMessage));
+
+            Console.WriteLine($"Message sent: {messageContent.Message}");
+            Console.WriteLine($"Project Identifier: {messageContent.ProjectIdentifier}");
+            Console.WriteLine($"Time: {messageContent.Time}");
+            Console.WriteLine($"Encrypted Content: {encryptedContent}");
+            Console.WriteLine($"Event ID: {signedMessage.Id}");
+
             return signedMessage.Id!;
         }
         public void ListenForNotifications(string pubKey, Action<NostrEvent> onMessageReceived)
