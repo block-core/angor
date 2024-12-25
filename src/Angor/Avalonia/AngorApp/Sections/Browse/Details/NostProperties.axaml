@@ -35,7 +35,7 @@
                         <TextBox Text="{Binding Project.NpubKey}" />
                     </c:SectionItem.LeftContent>
                     <c:SectionItem.RightContent>
-                        <Button Command="{x:Static misc:Commands.LaunchUri}">
+                        <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}">
                             <Button.CommandParameter>
                                 <MultiBinding Converter="{x:Static conv:StringConverters.Concat}">
                                     <Binding>
@@ -59,7 +59,7 @@
                         <TextBox Text="{Binding Project.NpubKeyHex}" />
                     </c:SectionItem.LeftContent>
                     <c:SectionItem.RightContent>
-                        <Button Command="{x:Static misc:Commands.LaunchUri}">
+                        <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}">
                             <Button.CommandParameter>
                                 <MultiBinding Converter="{x:Static conv:StringConverters.Concat}">
                                     <Binding>

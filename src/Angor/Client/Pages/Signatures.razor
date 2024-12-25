@@ -9,6 +9,7 @@
 @using Blockcore.NBitcoin.DataEncoders
 @using System.Text.Json
 @using Angor.Shared.Services
+@using System.Security.Cryptography
 
 @inject IJSRuntime JS
 
@@ -296,12 +297,21 @@
                     pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3) //Todo get the actual outputs with taproot type
                         .Sum(_ => _.TxOut.Value.ToUnit(MoneyUnit.BTC));
                 }
-                catch (Exception e)
+                catch (FormatException fe)
                 {
-                    Logger.LogError(pendingSignature?.TransactionHex ?? e.Message, e);
+                    Logger.LogError("Format error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", pendingSignature?.TransactionHex, fe.Message);
                     pendingSignature.TransactionHex = null;
                 }
-            }
+                catch (CryptographicException ce)
+                {
+                    Logger.LogError("Cryptographic error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", pendingSignature?.TransactionHex, ce.Message);
+                    pendingSignature.TransactionHex = null;
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError("Error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", pendingSignature?.TransactionHex, e.Message);
+                    pendingSignature.TransactionHex = null;
+                }            }
             Logger.LogDebug($"Calling StateHasChanged in OnAfterRenderAsync");
             messagesReceived = false;
             StateHasChanged();

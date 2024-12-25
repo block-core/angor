@@ -31,7 +31,7 @@
     </Style>
 
     <Style Selector="z|DialogView">
-        <Setter Property="OptionsPanelHeight" Value="30" />
+        <Setter Property="OptionsPanelHeight" Value="38" />
         <Setter Property="Template">
             <ControlTemplate TargetType="z:DialogView">
                 <Border Background="{StaticResource Level1}">
@@ -50,7 +50,7 @@
                             </ItemsControl.ItemContainerTheme>
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" Spacing="8" />
+                                    <StackPanel Height="{Binding $parent[z:DialogView].OptionsPanelHeight}" Orientation="Horizontal" Spacing="8" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>

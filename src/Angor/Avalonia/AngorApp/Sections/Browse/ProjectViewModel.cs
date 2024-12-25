@@ -1,5 +1,5 @@
+using AngorApp.Model;
 using AngorApp.Sections.Browse.Details;
-using AngorApp.Sections.Wallet;
 using AngorApp.Services;
 using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Controls.Navigation;
