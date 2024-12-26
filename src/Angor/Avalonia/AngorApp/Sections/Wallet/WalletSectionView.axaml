@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:noWallet="clr-namespace:AngorApp.Sections.Wallet.NoWallet"
+             xmlns:controls="clr-namespace:AngorApp.Controls"
+             xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
+             xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Wallet.WalletSectionView" x:DataType="wallet:WalletSectionViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="WrapPanel > :is(Control)">
+            <Setter Property="Margin" Value="10"></Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <StackPanel IsVisible="{Binding Path=Wallet, Converter={x:Static ObjectConverters.IsNull}}">
+            <controls:Pane Title="Setup your wallet" IsTitleVisible="True">
+                <WrapPanel HorizontalAlignment="Center" Margin="-10">
+                    <Button Content="Create wallet" Command="{Binding CreateWallet}" />
+                    <Button Content="Recover wallet" />
+                </WrapPanel>
+            </controls:Pane>
+        </StackPanel>
+        <operate:WalletView IsVisible="{Binding Path=., Converter={x:Static ObjectConverters.IsNotNull}}" DataContext="{Binding Wallet}" />
+    </Panel>
+</UserControl>
