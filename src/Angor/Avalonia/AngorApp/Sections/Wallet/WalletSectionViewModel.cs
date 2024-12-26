@@ -17,11 +17,11 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
     public WalletSectionViewModel(IWalletFactory walletFactory, IWalletProvider walletProvider, UIServices services)
     {
         CreateWallet = ReactiveCommand.CreateFromTask(walletFactory.Create);
-        CreateWallet.Successes().Do(walletProvider.SetWallet).Subscribe();
-        walletHelper = CreateWallet.Successes().Select(wallet => new WalletViewModel(wallet, services)).ToProperty<WalletSectionViewModel, IWalletViewModel>(this, x => x.Wallet);
+        CreateWallet.Values().Successes().Do(walletProvider.SetWallet).Subscribe();
+        walletHelper = CreateWallet.Values().Successes().Select(w => new WalletViewModel(w, services)).ToProperty<WalletSectionViewModel, IWalletViewModel>(this, x => x.Wallet);
         Recover = ReactiveCommand.Create(() => { });
     }
 
-    public ReactiveCommand<Unit, Result<IWallet>> CreateWallet { get; }
+    public ReactiveCommand<Unit, Maybe<Result<IWallet>>> CreateWallet { get; }
     public ICommand Recover { get; }
 }

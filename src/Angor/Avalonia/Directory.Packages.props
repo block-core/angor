@@ -18,7 +18,7 @@
     <PackageVersion Include="Avalonia.iOS" Version="11.2.3" />
     <PackageVersion Include="Avalonia.Browser" Version="11.2.3" />
     <PackageVersion Include="Avalonia.Android" Version="11.2.3" />
-    <PackageVersion Include="Avalonia.Xaml.Behaviors" Version="11.2.0.1" />
+    <PackageVersion Include="Avalonia.Xaml.Behaviors" Version="11.2.0.7" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageVersion Include="Deadpikle.AvaloniaProgressRing" Version="0.10.10" />
     <PackageVersion Include="Humanizer.Core" Version="2.14.1" />
@@ -27,8 +27,9 @@
     <PackageVersion Include="ReactiveUI" Version="20.1.63" />
     <PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.0.17" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.1" />
-    <PackageVersion Include="Zafiro.Avalonia" Version="17.1.8" />
+    <PackageVersion Include="Zafiro" Version="14.0.7" />
+    <PackageVersion Include="Zafiro.Avalonia" Version="19.0.3" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.4.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="17.1.8" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="19.0.3" />
   </ItemGroup>
 </Project>

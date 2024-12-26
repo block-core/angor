@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:step6="clr-namespace:AngorApp.Sections.Wallet.Create.Step_6"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Wallet.Create.Step_6.SummaryAndCreationView"
+             x:DataType="step6:ISummaryAndCreationViewModel">
+
+    <Design.DataContext>
+        <angorApp:SummaryAndCreationViewModelDesign />
+    </Design.DataContext>
+
+    <StackPanel Grid.IsSharedSizeScope="True" Spacing="20">
+        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Seed words:">
+            <TextBlock TextWrapping="Wrap">12 English words (already confirmed)</TextBlock>
+        </HeaderedContentControl>
+        <HeaderedContentControl Theme="{StaticResource Inline}" Header="BIP39 Passphrase:">
+            <Panel>
+                <TextBlock Text="[Provided]" IsVisible="{Binding Passphrase.HasValue}" />
+                <TextBlock Text="[None]" IsVisible="{Binding Passphrase.HasNoValue}" />
+            </Panel>
+        </HeaderedContentControl>
+        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Encryption Password:">
+            <TextBlock Text="[Set]" />
+        </HeaderedContentControl>
+        <Button Command="{Binding CreateWallet}" Content="Create Wallet" HorizontalAlignment="Center" />
+    </StackPanel>
+</UserControl>

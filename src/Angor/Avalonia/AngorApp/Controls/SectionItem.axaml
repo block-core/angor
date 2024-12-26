@@ -40,7 +40,14 @@
     </ControlTheme>
     <Design.PreviewWith>
         <StackPanel Width="200">
-            <controls:SectionItem LeftContent="Left" RightContent="Right" Content="saasdf" />
+            <controls:SectionItem Content="saasdf">
+                <controls:SectionItem.RightContent>
+                    <Border Background="Blue" Width="20" Height="20"></Border>    
+                </controls:SectionItem.RightContent>
+                <controls:SectionItem.LeftContent>
+                    <Border Background="Red" Width="20" Height="20"></Border>
+                </controls:SectionItem.LeftContent>
+            </controls:SectionItem>
             <controls:SectionItem Theme="{StaticResource Basic}" LeftContent="Left" RightContent="Right" Content="saasdf" />
             <controls:SectionItem Content="No left content" />
             <controls:SectionItem Theme="{StaticResource Basic}" Content="No left content" />

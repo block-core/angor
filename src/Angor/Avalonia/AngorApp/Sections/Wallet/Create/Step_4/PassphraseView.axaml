@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:step4="clr-namespace:AngorApp.Sections.Wallet.Create.Step_4"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Wallet.Create.Step_4.PassphraseView"
+             x:DataType="step4:IPassphraseViewModel">
+    <StackPanel Spacing="20">
+        <TextBlock TextWrapping="Wrap">You may set an additional passphrase for extra security. It will be combined with your 12 seed words to derive your wallet’s master key.</TextBlock>
+        <TextBlock TextWrapping="Wrap">If you lose this passphrase, you won't recover your exact wallet, even if you have your seed words.</TextBlock>
+        <TextBlock TextWrapping="Wrap">Leave blank if not needed.</TextBlock>
+        <TextBox TextWrapping="Wrap" Width="200" Watermark="Passphrase" Text="{Binding Passphrase}" />
+    </StackPanel>
+
+</UserControl>

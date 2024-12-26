@@ -1,5 +1,6 @@
 using System.Linq;
 using AngorApp.Model;
+using AngorApp.Sections.Wallet.Create.Step_2;
 
 namespace AngorApp.Sections.Browse;
 
@@ -68,4 +69,13 @@ public static class SampleData
     }
 
     public static string TestNetBitcoinAddress { get; } = "mzHrLAR3WWLE4eCpq82BDCKmLeYRyYXPtm";
+
+    public static WordList Seedwords
+    {
+        get
+        {
+            List<string> list = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+            return new WordList(list.Select((s, i) => new SeedWord(i + 1, s)));
+        }
+    }
 }

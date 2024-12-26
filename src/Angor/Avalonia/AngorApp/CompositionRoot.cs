@@ -5,13 +5,12 @@ using AngorApp.Sections.Home;
 using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
-using AngorApp.Sections.Wallet.NoWallet;
+using AngorApp.Sections.Wallet.Create;
 using AngorApp.Services;
 using Avalonia.Controls.Notifications;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Services;
 using Separator = AngorApp.Sections.Shell.Separator;
-using WalletSectionViewModel = AngorApp.Sections.Wallet.WalletSectionViewModel;
 
 namespace AngorApp;
 
@@ -35,7 +34,7 @@ public class CompositionRoot
         [
             new Section("Home", new HomeSectionViewModel(), "svg:/Assets/angor-icon.svg"),
             new Separator(),
-            new Section("Wallet", new WalletSectionViewModel(new WalletFactoryDesign(uiServices), walletStoreDesign, uiServices), "fa-wallet"),
+            new Section("Wallet", new WalletSectionViewModel(new WalletFactory(uiServices), walletStoreDesign, uiServices), "fa-wallet"),
             new Section("Browse", new NavigationViewModel(navigator => new BrowseSectionViewModel(walletStoreDesign, navigator, uiServices)), "fa-magnifying-glass"),
             new Section("Portfolio", new PortfolioSectionViewModel(), "fa-hand-holding-dollar"),
             new Section("Founder", new FounderSectionViewModel(), "fa-money-bills"),

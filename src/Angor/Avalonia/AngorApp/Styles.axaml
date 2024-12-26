@@ -2,7 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
         xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
-        xmlns:wizards="clr-namespace:Zafiro.Avalonia.Controls.Wizards;assembly=Zafiro.Avalonia">
+        xmlns:wizards="clr-namespace:Zafiro.Avalonia.Controls.Wizards;assembly=Zafiro.Avalonia"
+        xmlns:controls="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia">
 
     <Styles.Resources>
         <Color x:Key="Level1">#F5FDFF</Color>
@@ -14,6 +15,8 @@
         <SolidColorBrush x:Key="SystemRegionBrush" Color="{StaticResource Level3}" />
         <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource Level3}" />
         <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="{StaticResource Level2}" />
+        <SolidColorBrush x:Key="ThemeAccentBrush" Color="{StaticResource Level4}" />
+        
         <x:Double x:Key="FlyoutThemeMaxWidth">700</x:Double>
 
         <ControlTheme x:Key="Regular" TargetType="TextBlock">
@@ -91,6 +94,31 @@
         <Setter Property="Margin" Value="0" />
         <Setter Property="Background" Value="#2B000000" />
         <Setter Property="Height" Value="2" />
+    </Style>
+    
+    <Style Selector="Border.Alert">
+        <Setter Property="Background" Value="#fff3cd" />
+        <Setter Property="BorderBrush" Value="#ffeeba" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="Margin" Value="0,16" />
+    </Style>
+    
+    <Style Selector="TextBlock.Dimmed">
+        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+    </Style>
+    
+    <Style Selector="TextBlock.Bullet">
+        <Setter Property="Text" Value="•"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+        <Setter Property="FontSize" Value="14"/>
+    </Style>
+    
+    <Style Selector="controls|StepIndicator">
+        <Setter Property="Background" Value="{StaticResource Level3}" />
+        <Setter Property="Foreground" Value="{StaticResource Level4}" />
     </Style>
 
     <Design.PreviewWith>
