@@ -48,7 +48,8 @@
                 <button
                     class="btn btn-border"
                     @onclick="NavigateToCreateProject"
-                    disabled="@(scanningForProjects || (founderProjects.Count >= 14) ? true : null)">                    <i>
+                    disabled="@(scanningForProjects || (founderProjects.Count >= 14) ? true : null)">
+                    <i>
                         <Icon IconName="add"></Icon>
                     </i>
                     <span class="nav-link-text ms-1">
@@ -91,28 +92,33 @@
 <button class="btn btn-primary" @onclick="CheckForInvestments">
     Check for Investments
 </button>
+
+<button class="btn btn-primary" @onclick="RetrieveInvestmentNotifications">
+    Check for Investment Notifications
+</button>
+
 <div class="row mt-4">
     @if (investmentMessages.Any())
     {
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Investment Notifications</h5>
-                <ul>
-                    @foreach (var message in investmentMessages)
-                    {
-                    <li>@message</li>
-                    }
-                </ul>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Investment Notifications</h5>
+                    <ul>
+                        @foreach (var message in investmentMessages)
+                        {
+                            <li>@message</li>
+                        }
+                    </ul>
+                </div>
             </div>
         </div>
-    </div>
     }
     else
     {
-    <div class="col-12">
-        <div class="alert alert-info">No new investments found.</div>
-    </div>
+        <div class="col-12">
+            <div class="alert alert-info">No new investments found.</div>
+        </div>
     }
 </div>
 
@@ -369,6 +375,54 @@
         catch (Exception ex)
         {
             notificationComponent.ShowErrorMessage($"Error scanning for investments: {ex.Message}", ex);
+        }
+    }
+
+    private async Task RetrieveInvestmentNotifications()
+    {
+        try
+        {
+            // Clear existing messages
+            investmentMessages.Clear();
+
+            // Define the founder's public key
+            var founderPubKey = "your-founder-pubkey"; // Replace with actual founder pubkey logic
+
+            // Define the project identifier tag (e.g., "#e" for event-specific notifications)
+            var projectIdentifier = "your-project-identifier"; // Replace with actual logic to retrieve project ID
+
+            // Retrieve investment notifications
+            RelayService.RequestFilteredEventsByTagAndPubKey(
+                onResponseAction: async eventMessage =>
+                {
+                    // Decrypt the message content
+                    var decryptedMessage = await _encryptionService.DecryptNostrContentAsync(
+                        founderPrivateKey, // Replace with the actual private key
+                        founderPubKey,
+                        eventMessage.Content);
+
+                    // Add the message to the list
+                    investmentMessages.Add(decryptedMessage);
+
+                    // Trigger UI update
+                    StateHasChanged();
+                },
+                onEoseAction: () =>
+                {
+                    if (!investmentMessages.Any())
+                    {
+                        investmentMessages.Add("No investment notifications found.");
+                        StateHasChanged();
+                    }
+                },
+                founderPubKey: founderPubKey,
+                tagKey: "#e", // Replace with the tag key you're filtering on (e.g., "#e", "#p", "#a")
+                tagValue: projectIdentifier, // Replace with the tag value you're filtering on
+                limit: 50);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error retrieving notifications: {ex.Message}");
         }
     }
 

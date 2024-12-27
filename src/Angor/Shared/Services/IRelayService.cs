@@ -1,6 +1,7 @@
 using Angor.Shared.Models;
 using Nostr.Client.Messages;
 using Nostr.Client.Messages.Metadata;
+using Nostr.Client.Requests;
 using Nostr.Client.Responses;
 
 namespace Angor.Shared.Services;
@@ -22,4 +23,5 @@ public interface IRelayService
         Action<NostrOkResponse> onResponseAction);
     string NotifyFounderOfInvestment(string founderPubKey, string investorPubKey, string projectIdentifier, string encryptedMessage);
     void ListenForNotifications(string pubKey, Action<NostrEvent> onMessageReceived);
+    void RequestFilteredEventsByTagAndPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction, string founderPubKey, string? tagKey = null, string? tagValue = null, int? limit = 50);
 }

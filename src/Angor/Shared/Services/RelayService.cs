@@ -16,9 +16,10 @@ namespace Angor.Shared.Services
         private readonly INetworkService _networkService;
         private readonly IRelaySubscriptionsHandling _subscriptionsHandling;
         private readonly ISerializer _serializer;
-        
-        
-        public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService, IRelaySubscriptionsHandling subscriptionsHanding, ISerializer serializer)
+
+
+        public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory,
+            INetworkService networkService, IRelaySubscriptionsHandling subscriptionsHanding, ISerializer serializer)
         {
             _logger = logger;
             _communicationFactory = communicationFactory;
@@ -31,10 +32,10 @@ namespace Angor.Shared.Services
             params string[] nostrEventIds)
         {
             const string subscriptionName = "ProjectInfoLookups";
-            
+
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            
-            if (nostrClient == null) 
+
+            if (nostrClient == null)
                 throw new InvalidOperationException("The nostr client is null");
 
             if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionName))
@@ -51,20 +52,21 @@ namespace Angor.Shared.Services
             {
                 _subscriptionsHandling.TryAddEoseAction(subscriptionName, OnEndOfStreamAction);
             }
-            
+
             var request = new NostrRequest(subscriptionName, new NostrFilter
             {
                 Ids = nostrEventIds,
                 Kinds = [NostrKind.ApplicationSpecificData]
             });
-            
+
             nostrClient.Send(request);
         }
 
-        public void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,params string[] nPubs)
+        public void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,
+            params string[] nPubs)
         {
-            var subscriptionKey = Guid.NewGuid().ToString().Replace("-","");
-            
+            var subscriptionKey = Guid.NewGuid().ToString().Replace("-", "");
+
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
             if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionKey))
@@ -80,9 +82,9 @@ namespace Angor.Shared.Services
 
             if (onEoseAction != null)
             {
-                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, onEoseAction);   
+                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, onEoseAction);
             }
-            
+
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 Authors = nPubs,
@@ -90,7 +92,8 @@ namespace Angor.Shared.Services
             }));
         }
 
-        public Task LookupSignaturesDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)
+        public Task LookupSignaturesDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit,
+            Action<NostrEvent> onResponseAction)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
@@ -114,11 +117,12 @@ namespace Angor.Shared.Services
                 Since = since,
                 Limit = limit
             }));
-            
+
             return Task.CompletedTask;
         }
 
-        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Func<NostrEvent,Task> onResponseAction, string? senderNpub = null)
+        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit,
+            Func<NostrEvent, Task> onResponseAction, string? senderNpub = null)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
@@ -147,14 +151,15 @@ namespace Angor.Shared.Services
                 nostrFilter.Authors = new[] { senderNpub };
 
             nostrClient.Send(new NostrRequest(subscriptionKey, nostrFilter));
-            
+
             return Task.CompletedTask;
         }
 
-        public string SendDirectMessagesForPubKeyAsync(string senderNosterPrivateKey, string nostrPubKey, string encryptedMessage, Action<NostrOkResponse> onResponseAction)
+        public string SendDirectMessagesForPubKeyAsync(string senderNosterPrivateKey, string nostrPubKey,
+            string encryptedMessage, Action<NostrOkResponse> onResponseAction)
         {
             var sender = NostrPrivateKey.FromHex(senderNosterPrivateKey);
-            
+
             var client = _communicationFactory.GetOrCreateClient(_networkService);
 
             var ev = new NostrEvent
@@ -164,13 +169,13 @@ namespace Angor.Shared.Services
                 Content = encryptedMessage,
                 Tags = new NostrEventTags(NostrEventTag.Profile(nostrPubKey))
             };
-            
+
             var signed = ev.Sign(sender);
-            
-            if (!_subscriptionsHandling.TryAddOKAction(signed.Id!,onResponseAction))
+
+            if (!_subscriptionsHandling.TryAddOKAction(signed.Id!, onResponseAction))
                 throw new InvalidOperationException(
                     $"Failed to add ok action to monitoring of relay results {signed.Id}");
-            
+
             client.Send(new NostrEventRequest(signed));
 
             return signed.Id!;
@@ -181,26 +186,28 @@ namespace Angor.Shared.Services
             _subscriptionsHandling.Dispose();
         }
 
-        public void LookupNostrProfileForNPub(Action<string,ProjectMetadata> onResponse, Action onEndOfStream, params string[] npubs)
+        public void LookupNostrProfileForNPub(Action<string, ProjectMetadata> onResponse, Action onEndOfStream,
+            params string[] npubs)
         {
             var client = _communicationFactory.GetOrCreateClient(_networkService);
-            
-            var subscriptionKey = Guid.NewGuid().ToString().Replace("-","");
-            
+
+            var subscriptionKey = Guid.NewGuid().ToString().Replace("-", "");
+
             if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionKey))
             {
                 var subscription = client.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event is not null)
                     .Select(_ => _.Event as NostrMetadataEvent)
-                    .Subscribe(@event => onResponse(@event.Pubkey, ProjectMetadata.Parse(_serializer.Deserialize<NostrMetadata>(@event.Content))));
+                    .Subscribe(@event => onResponse(@event.Pubkey,
+                        ProjectMetadata.Parse(_serializer.Deserialize<NostrMetadata>(@event.Content))));
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
             }
-            
+
             if (onEndOfStream != null)
             {
-                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, onEndOfStream);   
+                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, onEndOfStream);
             }
 
             client.Send(new NostrRequest(subscriptionKey, new NostrFilter
@@ -215,41 +222,43 @@ namespace Angor.Shared.Services
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
             if (!project.NostrPubKey.Contains(key.DerivePublicKey().Hex))
-                throw new ArgumentException($"The nostr pub key on the project does not fit the npub calculated from the nsec {project.NostrPubKey} {key.DerivePublicKey().Hex}");
-            
+                throw new ArgumentException(
+                    $"The nostr pub key on the project does not fit the npub calculated from the nsec {project.NostrPubKey} {key.DerivePublicKey().Hex}");
+
             var content = _serializer.Serialize(project);
-            
+
             var signed = GetNip78NostrEvent(content)
                 .Sign(key);
 
-            _subscriptionsHandling.TryAddOKAction(signed.Id,action);
-            
+            _subscriptionsHandling.TryAddOKAction(signed.Id, action);
+
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            
+
             nostrClient.Send(new NostrEventRequest(signed));
-            
+
             return Task.FromResult(signed.Id);
         }
 
-        public Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string hexPrivateKey, Action<NostrOkResponse> action)
+        public Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string hexPrivateKey,
+            Action<NostrOkResponse> action)
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
             var content = _serializer.Serialize(metadata);
-            
-            var signed = new NostrEvent
-                {
-                    Kind = NostrKind.Metadata,
-                    CreatedAt = DateTime.UtcNow,
-                    Content = content
-                }.Sign(key);
 
-            _subscriptionsHandling.TryAddOKAction(signed.Id,action);
-            
+            var signed = new NostrEvent
+            {
+                Kind = NostrKind.Metadata,
+                CreatedAt = DateTime.UtcNow,
+                Content = content
+            }.Sign(key);
+
+            _subscriptionsHandling.TryAddOKAction(signed.Id, action);
+
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            
+
             nostrClient.Send(new NostrEventRequest(signed));
-            
+
             return Task.FromResult(signed.Id);
         }
 
@@ -267,11 +276,11 @@ namespace Angor.Shared.Services
 
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
             nostrClient.Send(deleteEvent);
-            
+
             return Task.FromResult(deleteEvent.Id);
         }
-        
-        private static NostrEvent GetNip78NostrEvent( string content)
+
+        private static NostrEvent GetNip78NostrEvent(string content)
         {
             var ev = new NostrEvent
             {
@@ -281,7 +290,7 @@ namespace Angor.Shared.Services
             };
             return ev;
         }
-        
+
         private static NostrEvent GetNip99NostrEvent(ProjectInfo project, string content)
         {
             var ev = new NostrEvent
@@ -293,21 +302,24 @@ namespace Angor.Shared.Services
                     new NostrEventTag("d", "AngorApp", "Create a new project event"),
                     new NostrEventTag("title", "New project :)"),
                     new NostrEventTag("published_at", DateTime.UtcNow.ToString()),
-                    new NostrEventTag("t","#AngorProjectInfo"),
-                    new NostrEventTag("image",""),
-                    new NostrEventTag("summary","A new project that will save the world"),
-                    new NostrEventTag("location",""),
-                    new NostrEventTag("price","1","BTC"))
+                    new NostrEventTag("t", "#AngorProjectInfo"),
+                    new NostrEventTag("image", ""),
+                    new NostrEventTag("summary", "A new project that will save the world"),
+                    new NostrEventTag("location", ""),
+                    new NostrEventTag("price", "1", "BTC"))
             };
-            
+
             return ev;
         }
-        
-        public string NotifyFounderOfInvestment(string founderPubKey, string investorPubKey, string projectIdentifier, string encryptedMessage)
+
+        public string NotifyFounderOfInvestment(string founderPubKey, string investorPubKey, string projectIdentifier,
+            string encryptedMessage)
         {
+            // Generate sender's private key
             var sender = NostrPrivateKey.FromHex(investorPubKey);
             var client = _communicationFactory.GetOrCreateClient(_networkService);
 
+            // Prepare the message content
             var messageContent = new
             {
                 Message = "An investor has successfully invested in your project.",
@@ -317,17 +329,26 @@ namespace Angor.Shared.Services
 
             var encryptedContent = _serializer.Serialize(messageContent);
 
+            // Create the Nostr event
             var eventMessage = new NostrEvent
             {
                 Kind = NostrKind.EncryptedDm,
                 CreatedAt = DateTime.UtcNow,
                 Content = encryptedContent,
-                Tags = new NostrEventTags(NostrEventTag.Profile(founderPubKey))
+                Tags = new NostrEventTags(
+                    NostrEventTag.Profile(founderPubKey), // Recipient's pubkey
+                    new NostrEventTag("t", "investment_notification"), // Message type
+                    new NostrEventTag("project_id", projectIdentifier) // Project identifier
+                )
             };
 
+            // Sign the event
             var signedMessage = eventMessage.Sign(sender);
+
+            // Send the event
             client.Send(new NostrEventRequest(signedMessage));
 
+            // Log the message details
             Console.WriteLine($"Message sent: {messageContent.Message}");
             Console.WriteLine($"Project Identifier: {messageContent.ProjectIdentifier}");
             Console.WriteLine($"Time: {messageContent.Time}");
@@ -336,6 +357,8 @@ namespace Angor.Shared.Services
 
             return signedMessage.Id!;
         }
+
+
         public void ListenForNotifications(string pubKey, Action<NostrEvent> onMessageReceived)
         {
             var subscriptionKey = pubKey + "_Notifications";
@@ -360,9 +383,61 @@ namespace Angor.Shared.Services
             }));
         }
 
-    }
-    
-    
-    
+        public void RequestFilteredEventsByTagAndPubKey(
+            Action<NostrEvent> onResponseAction,
+            Action? onEoseAction,
+            string founderPubKey,
+            string? tagKey = null,
+            string? tagValue = null,
+            int? limit = 50)
+        {
+            // Generate a unique subscription key
+            var subscriptionKey = Guid.NewGuid().ToString().Replace("-", "");
 
+            // Get the Nostr client
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+
+            // Check if the subscription is already added
+            if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(e => e.Subscription == subscriptionKey) // Match subscription key
+                    .Where(e => e.Event is not null) // Ensure event is not null
+                    .Select(e => e.Event) // Select the event
+                    .Subscribe(onResponseAction!); // Trigger response action
+
+                _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            if (onEoseAction != null)
+            {
+                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, onEoseAction);
+            }
+
+            // Construct the filter
+            var nostrFilter = new NostrFilter
+            {
+                P = new[] { founderPubKey }, // Filter events addressed to the founder's pubkey
+                Kinds = new[] { NostrKind.EncryptedDm }, // Only encrypted direct messages
+                Limit = limit, // Optional limit
+            };
+
+            // Add tag filtering logic
+            if (tagKey == "#e" && !string.IsNullOrEmpty(tagValue))
+            {
+                nostrFilter.E = new[] { tagValue };
+            }
+            else if (tagKey == "#p" && !string.IsNullOrEmpty(tagValue))
+            {
+                nostrFilter.P = new[] { tagValue };
+            }
+            else if (tagKey == "#a" && !string.IsNullOrEmpty(tagValue))
+            {
+                nostrFilter.A = new[] { tagValue };
+            }
+
+            // Send the filter request
+            nostrClient.Send(new NostrRequest(subscriptionKey, nostrFilter));
+        }
+    }
 }
