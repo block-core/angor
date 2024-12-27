@@ -7,6 +7,7 @@
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin.DataEncoders
 @using Nostr.Client.Messages
+@using System.Text.RegularExpressions;
 
 @inject ILogger<Investor> _Logger
 @inject IClientStorage storage;
@@ -302,6 +303,9 @@
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
     private List<Notification> notifications = new();
+    private HashSet<string> processedMessages = new();
+    private HashSet<string> processedUtxos = new HashSet<string>();
+
 
     private Dictionary<string, bool> investmentRequestsMap = new Dictionary<string, bool>();
 
@@ -623,7 +627,6 @@
     {
         foreach (var project in projects)
         {
-            // Extract Nostr public keys
             var investorNpub = project.InvestorNPub;
             var projectNostrPubKey = project.ProjectInfo.NostrPubKey;
             var words = await passwordComponent.GetWalletAsync();
@@ -631,7 +634,6 @@
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(privateKey.ToBytes());
 
-            // Lookup direct messages for each project
             await _RelayService.LookupDirectMessagesForPubKeyAsync(
                 investorNpub,
                 null,
@@ -640,19 +642,43 @@
                 {
                     try
                     {
+                        // Decrypt the message content
                         var decryptedMessage = await _encryptionService.DecryptNostrContentAsync(
                             nostrPrivateKeyHex,
                             projectNostrPubKey,
                             nostrEvent.Content);
 
-                        // Add to notifications for display
-                        AddNotification(
-                            "UTXO Spent Notification",
-                            $"Project: {project.ProjectInfo.ProjectIdentifier}\nMessage: {decryptedMessage}",
-                            "info"
-                        );
+                        // Extract UTXO details
+                        var utxoDetails = ExtractUtxoDetails(decryptedMessage);
 
-                        StateHasChanged();
+                        if (utxoDetails.HasValue && utxoDetails.Value.TransactionId != null && utxoDetails.Value.AmountSpent != null)
+                        {
+                            var transactionId = utxoDetails.Value.TransactionId;
+                            var amountSpent = utxoDetails.Value.AmountSpent;
+
+                            // Generate a unique identifier for the UTXO
+                            var utxoIdentifier = $"{transactionId}:{amountSpent}";
+
+                            if (!processedUtxos.Contains(utxoIdentifier))
+                            {
+                                processedUtxos.Add(utxoIdentifier);
+
+                                // Add the notification
+                                AddNotification(
+                                    "UTXO Spent Notification",
+                                    $"Project: {project.ProjectInfo.ProjectIdentifier}\n" +
+                                    $"BTC Spent: {amountSpent}\n" +
+                                    $"Transaction ID: {transactionId}",
+                                    "info"
+                                );
+
+                                StateHasChanged();
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Unrecognized message format: {decryptedMessage}");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -663,6 +689,7 @@
             );
         }
     }
+
 
     private void AddNotification(string title, string message, string type = "info")
     {
@@ -681,6 +708,26 @@
         notifications.RemoveAll(n => n.Id == id);
         StateHasChanged();
     }
+
+    private (decimal? AmountSpent, string? TransactionId)? ExtractUtxoDetails(string messageContent)
+    {
+        // Regex for extracting the BTC amount and Transaction ID
+        var regex = new Regex(@"amount ([\d.]+) BTC has been spent.*Transaction ID: (\w+)");
+        var match = regex.Match(messageContent);
+
+        if (match.Success)
+        {
+            return (
+                AmountSpent: decimal.TryParse(match.Groups[1].Value, out var amount) ? amount : null,
+                TransactionId: match.Groups[2].Value
+            );
+        }
+
+        return null;
+    }
+
+
+
     public class Notification
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();

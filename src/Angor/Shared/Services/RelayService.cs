@@ -338,5 +338,6 @@ namespace Angor.Shared.Services
             var client = _communicationFactory.GetOrCreateClient(_networkService);
             client.Send(new NostrEventRequest(signedEvent));
         }
+        
     }
 }
