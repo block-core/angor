@@ -15,9 +15,15 @@ public interface IRelayService
     void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,params string[] nostrPubKeys);
 
     Task LookupSignaturesDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction);
-    
-    Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Func<NostrEvent,Task> onResponseAction, string? fromNpub);
+
+    public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit,
+        Func<NostrEvent, Task> onResponseAction, string? senderNpub = null);
     
     string SendDirectMessagesForPubKeyAsync(string senderNosterPrivateKey, string nostrPubKey, string encryptedMessage,
         Action<NostrOkResponse> onResponseAction);
+
+    void NotifyInvestorOfSpentUtxo(string senderPrivateKey, string investorPubKey, string transactionId,
+        int outputIndex, decimal amount, Action<NostrOkResponse> onResponse);
+    
+    
 }
