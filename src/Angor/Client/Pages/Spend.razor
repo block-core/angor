@@ -496,6 +496,7 @@
         // Get the founder's private key for signing
         var founderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
 
+        // Use the updated NotifyInvestorOfSpentUtxo method
         _RelayService.NotifyInvestorOfSpentUtxo(
             Encoders.Hex.EncodeData(founderPrivateKey.ToBytes()), // Ensure the private key is passed as a hex string
             investorPubKey,
@@ -505,6 +506,7 @@
             response => Console.WriteLine($"Notification sent to investor: {response}")
         );
     }
+
 
 
     private async Task NotifyInvestorAboutSpentUtxoCheckPassword(string trxId, int outputIndex, decimal amount)

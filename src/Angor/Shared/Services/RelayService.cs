@@ -2,6 +2,7 @@
 using Angor.Shared.Models;
 using Nostr.Client.Requests;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 using Nostr.Client.Messages.Metadata;
@@ -312,20 +313,39 @@ namespace Angor.Shared.Services
             return ev;
         }
 
-        public void NotifyInvestorOfSpentUtxo(string senderPrivateKey, string investorPubKey, string transactionId,
-            int outputIndex, decimal amount, Action<NostrOkResponse> onResponse)
+        public void NotifyInvestorOfSpentUtxo(
+            string senderPrivateKey,
+            string investorPubKey,
+            string transactionId,
+            int outputIndex,
+            decimal amount,
+            Action<NostrOkResponse> onResponse)
         {
             var sender = NostrPrivateKey.FromHex(senderPrivateKey);
 
-            var messageContent =
-                $"Your UTXO (Transaction ID: {transactionId}, Output Index: {outputIndex}) of amount {amount} BTC has been spent.";
+            // Serialize the notification details into JSON
+            var messageContent = JsonConvert.SerializeObject(new
+            {
+                type = "utxo_notification", // Identifier for this event type
+                transactionId,
+                outputIndex,
+                amount,
+                message =
+                    $"Your UTXO (Transaction ID: {transactionId}, Output Index: {outputIndex}) of amount {amount} BTC has been spent."
+            });
+
+            // Define a custom event kind; ensure this doesn't conflict with existing kinds
+            const int CustomEventKind = 10001;
 
             var nostrEvent = new NostrEvent
             {
-                Kind = NostrKind.EncryptedDm,
+                Kind = (NostrKind)CustomEventKind,
                 CreatedAt = DateTime.UtcNow,
                 Content = messageContent,
-                Tags = new NostrEventTags(NostrEventTag.Profile(investorPubKey))
+                Tags = new NostrEventTags(
+                    NostrEventTag.Profile(investorPubKey),
+                    new NostrEventTag("type", "utxo_notification")
+                )
             };
 
             var signedEvent = nostrEvent.Sign(sender);
@@ -338,6 +358,5 @@ namespace Angor.Shared.Services
             var client = _communicationFactory.GetOrCreateClient(_networkService);
             client.Send(new NostrEventRequest(signedEvent));
         }
-        
     }
 }

@@ -283,6 +283,7 @@
         }
     </div>
 
+
     <div class="mt-4">
         <!-- Check If Founder Spent UTXO Button -->
         <button class="btn btn-primary mb-3"
@@ -644,42 +645,37 @@
                 {
                     try
                     {
-                        // Decrypt the message content
                         var decryptedMessage = await _encryptionService.DecryptNostrContentAsync(
                             nostrPrivateKeyHex,
                             projectNostrPubKey,
                             nostrEvent.Content);
 
-                        // Extract UTXO details
-                        var utxoDetails = ExtractUtxoDetails(decryptedMessage);
+                        Console.WriteLine($"Decrypted message content: {decryptedMessage}");
 
-                        if (utxoDetails.HasValue && utxoDetails.Value.TransactionId != null && utxoDetails.Value.AmountSpent != null)
+                        var jsonObject = JsonSerializer.Deserialize<JsonElement>(decryptedMessage);
+
+                        if (jsonObject.TryGetProperty("type", out var type) && type.GetString() == "utxo_notification")
                         {
-                            var transactionId = utxoDetails.Value.TransactionId;
-                            var amountSpent = utxoDetails.Value.AmountSpent;
+                            var utxoNotification = JsonSerializer.Deserialize<UtxoNotification>(decryptedMessage);
 
-                            // Generate a unique identifier for the UTXO
-                            var utxoIdentifier = $"{transactionId}:{amountSpent}";
-
-                            if (!processedUtxos.Contains(utxoIdentifier))
+                            if (utxoNotification == null)
                             {
-                                processedUtxos.Add(utxoIdentifier);
-
-                                // Add the notification
-                                AddNotification(
-                                    "UTXO Spent Notification",
-                                    $"Project: {project.ProjectInfo.ProjectIdentifier}\n" +
-                                    $"BTC Spent: {amountSpent}\n" +
-                                    $"Transaction ID: {transactionId}",
-                                    "info"
-                                );
-
-                                StateHasChanged();
+                                Console.WriteLine("Invalid UTXO notification format.");
+                                return;
                             }
+
+                            // Add notification
+                            AddNotification(
+                                "UTXO Spent Notification",
+                                $"Project: {project.ProjectInfo.ProjectIdentifier}, BTC Spent: {utxoNotification.amount}, Transaction ID: {utxoNotification.transactionId}",
+                                "info"
+                            );
+
+                            StateHasChanged();
                         }
                         else
                         {
-                            Console.WriteLine($"Unrecognized message format: {decryptedMessage}");
+                            Console.WriteLine("Message type is not UTXO notification.");
                         }
                     }
                     catch (Exception ex)
@@ -695,6 +691,12 @@
 
     private void AddNotification(string title, string message, string type = "info")
     {
+        if (notifications.Any(n => n.Message == message))
+        {
+            Console.WriteLine("Duplicate notification detected. Skipping.");
+            return;
+        }
+
         notifications.Add(new Notification
         {
             Title = title,
@@ -705,35 +707,38 @@
         StateHasChanged();
     }
 
+
     private void DismissNotification(string id)
     {
         notifications.RemoveAll(n => n.Id == id);
         StateHasChanged();
     }
 
-    private (decimal? AmountSpent, string? TransactionId)? ExtractUtxoDetails(string messageContent)
+    private UtxoDetails? ExtractUtxoDetails(string messageContent)
     {
         try
         {
-            // Attempt to parse the message as JSON
-            var jsonMessage = JsonSerializer.Deserialize<JsonElement>(messageContent);
+            var jsonObject = JsonSerializer.Deserialize<JsonElement>(messageContent);
 
-            // Extract fields
-            var transactionId = jsonMessage.GetProperty("projectIdentifier").GetString();
-            var signatures = jsonMessage.GetProperty("signatures").EnumerateArray();
+            if (jsonObject.TryGetProperty("projectIdentifier", out var projectIdentifier) &&
+                jsonObject.TryGetProperty("signatures", out var signatures))
+            {
+                // Assuming you can derive `amountSpent` if needed
+                return new UtxoDetails
+                {
+                    TransactionId = projectIdentifier.GetString() ?? "",
+                    AmountSpent = 0 // Adjust based on JSON structure
+                };
+            }
 
-            // AmountSpent can be inferred from the first signature or additional logic (example logic for demo)
-            decimal? amountSpent = signatures.FirstOrDefault().GetProperty("signature").GetString()?.Length;
-
-            return (amountSpent, transactionId);
+            return null;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to parse message content: {ex.Message}");
+            Console.WriteLine($"Error parsing JSON: {ex.Message}");
             return null;
         }
     }
-
 
 
     public class Notification
@@ -744,5 +749,22 @@
         public string Type { get; set; } // success, info, warning, error
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     }
+
+    public class UtxoNotification
+    {
+        public string type { get; set; }
+        public string transactionId { get; set; }
+        public int outputIndex { get; set; }
+        public decimal amount { get; set; }
+        public string message { get; set; }
+    }
+
+
+    public class UtxoDetails
+    {
+        public string TransactionId { get; set; }
+        public decimal AmountSpent { get; set; }
+    }
+
 
 }
