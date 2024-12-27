@@ -110,32 +110,32 @@
                             <i class="me-2">
                                 <Icon IconName="view" />
                             </i>
-                            <p class="card-text ms-2">Project Identifier: @project.ProjectInfo.ProjectIdentifier</p>
+                            <p class="card-text ms-2 text-break">Project Identifier: <b>@project.ProjectInfo.ProjectIdentifier</b> </p>
                         </div>
                         <div class="form-control mt-1 d-flex align-items-center">
                             <i class="me-2">
                                 <Icon IconName="key" />
                             </i>
-                            <p class="card-text ms-2">Founder Key: @project.ProjectInfo.FounderKey</p>
+                            <p class="card-text ms-2 text-break">Founder Key: <b>@project.ProjectInfo.FounderKey</b></p>
                         </div>
                         <div class="form-control mt-1 d-flex align-items-center">
                             <i class="me-2">
                                 <Icon IconName="balance" />
                             </i>
-                            <p class="card-text ms-2">Target Amount: @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
+                            <p class="card-text ms-2">Target Amount: <b>@project.ProjectInfo.TargetAmount @network.CoinTicker</b></p>
                         </div>
                         <div class="form-control mt-1 d-flex align-items-center">
                             <i class="me-2">
                                 <Icon IconName="calendar" />
                             </i>
-                            <p class="card-text ms-2">Penalty duration: @project.ProjectInfo.PenaltyDays days</p>
+                            <p class="card-text ms-2">Penalty duration: <b>@project.ProjectInfo.PenaltyDays days</b></p>
                         </div>
                         <div class="form-control mt-1 d-flex align-items-center">
                             <i class="me-2">
                                 <Icon IconName="date" />
                             </i>
                             <p class="card-text ms-2">
-                                Project dates: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") - @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")
+                                Project dates: <b>@project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") - @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")</b>
                             </p>
                         </div>
 
@@ -187,13 +187,13 @@
                                 <i class="me-2">
                                     <Icon IconName="calculator" />
                                 </i>
-                                <p class="card-text ms-2">Total Raised: @Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                <p class="card-text ms-2">Total Raised: <b>@Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) @network.CoinTicker</b> </p>
                             </div>
                             <div class="form-control mt-1 d-flex align-items-center">
                                 <i class="me-2">
                                     <Icon IconName="users" />
                                 </i>
-                                <p class="card-text ms-2">Total Investors: @projectStats.TotalInvestors</p>
+                                <p class="card-text ms-2">Total Investors: <b>@projectStats.TotalInvestors</b></p>
                             </div>
                             <div class="form-control mt-1 d-flex align-items-center">
                                 <i class="me-2">
@@ -309,9 +309,8 @@
                     </i>
                     <h3 class="mt-4 text-success">Project Owner Dashboard</h3>
                     <p class="action-text">Manage your project funds and approve transactions</p>
-
                     <div class="action-buttons">
-                        <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border text-white me-3 animate-scale">
+                        <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border text-white animate-scale">
                             <i class="me-2">
                                 <Icon IconName="wallet" />
                             </i>
@@ -323,7 +322,16 @@
                             </i>
                             Pending Approvals
                         </a>
+
+                        <a href="#" class="btn btn-border animate-scale warning-button disabled">
+                            <i class="me-2">
+                                <Icon IconName="lock" />
+                            </i>
+                            Release funds back to investors
+                        </a>
                     </div>
+
+
                 </div>
             }
             else if (invested)

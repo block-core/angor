@@ -155,15 +155,16 @@ else
         <div class="project-wrapper animate-list">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
+                <div class="animate-card">
                 <div class="card mt-4 project-card slide-in hover-effect">
                     <div class="row g-0">
-                        <div class="col-md-4 position-relative">
+                        <div class="col-md-4 position-relative card-zoom">
                             <div class="banner-container-list">
                                 @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                                 {
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                    <img class="banner-image" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                    <div class="profile-container">
+                                    <img class="banner-image fade-in" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    <div class="profile-container slide-up">
                                         <img class="profile-image" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Image" />
                                     </div>
                                 }
@@ -225,6 +226,7 @@ else
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
             }
         </div>

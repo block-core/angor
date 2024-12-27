@@ -1139,7 +1139,7 @@ input[type="checkbox"]:checked:disabled + label:before {
 
 .banner-container-list {
   position: relative;
-  height: 200px;
+  height: 220px;
   overflow: hidden;
   border-top-left-radius: 10px;
   border-bottom-left-radius: 10px;
@@ -1717,5 +1717,44 @@ button:hover:not(:disabled) {
 }
 
     .animate-scale:hover {
-        transform: scale(1.05);
+        transform: scale(1);
     }
+
+.action-buttons a {
+    display: inline-block;
+    text-align: center;
+    padding: 10px 20px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    width: auto;
+    transition: all 0.3s ease;
+}
+
+    .action-buttons a.disabled {
+        pointer-events: none;
+        opacity: 0.6;
+    }
+
+    .action-buttons a.warning-button {
+        border: 1px solid #dc3545;
+        background-color: #dc3545;
+        color: #721c24;
+    }
+
+        .action-buttons a.warning-button:hover {
+            background-color: #dc3545;
+            color: #ffffff; 
+        }
+
+@media (max-width: 768px) {
+    .action-buttons a {
+        display: block;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+        .action-buttons a.me-3 {
+            margin-right: 0;
+        }
+}
+
