@@ -2,31 +2,26 @@
 @using Angor.Client.Models
 @using Angor.Client.Storage
 @using System.Text.RegularExpressions
- 
+@using Blockcore.NBitcoin
+
 
 @inject IRelayService RelayService;
 @inject IClientStorage Storage;
 @inject IHtmlStripperService HtmlStripperService;
 
 
-
 <div class="col d-flex align-items-stretch">
     <div class="card mt-4 w-100 project-card">
         <a class="d-block">
-
             <div class="banner-container">
-                <img class="banner-image" src="@(FounderProject?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(@FounderProject?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                <img class="banner-image" src="@(FounderProject?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(@FounderProject?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
                 <div class="profile-container">
-                    <img class="profile-image" src="@(FounderProject?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="@(FounderProject?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                    <img class="profile-image" src="@(FounderProject?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="@(FounderProject?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
                 </div>
             </div>
-
         </a>
 
         <div class="card-body pb-0">
-
-
-
             <div class="d-flex align-items-center mb-4">
                 <span class="user-select-none">
                     <Icon IconName="view" Height="24" Width="24"></Icon>
@@ -39,12 +34,25 @@
             </div>
             <p class="mb-0 line-clamp-3">@(ConvertToMarkupString(FounderProject.Metadata.About))</p>
 
-
-
+            <!-- Add Investment Stats Section -->
+            <div class="investment-stats mt-3">
+                <div class="d-flex align-items-center mb-2">
+                    <Icon IconName="users"></Icon>
+                    <p class="mb-0 ms-2">
+                        <b>Total Investors:</b> @FounderProject.Stats.InvestorCount
+                    </p>
+                </div>
+                <div class="d-flex align-items-center">
+                    <Icon IconName="calculator"></Icon>
+                    <p class="mb-0 ms-2">
+                        <b>Total Raised:</b> @Money.Satoshis(FounderProject.Stats.AmountInvested).ToUnit(MoneyUnit.BTC) BTC
+                    </p>
+                </div>
+            </div>
         </div>
+
         <div class="card-footer pt-0">
             <hr class="horizontal light mt-3">
-
             <a role="button" class="d-flex align-items-center btn btn-border w-100-m" href=@($"/view/{FounderProject.ProjectInfo.ProjectIdentifier}")>
                 <span class="user-select-none">
                     <Icon IconName="view-project" Height="24" Width="24"></Icon>
@@ -69,7 +77,6 @@
                     </div>
                 </a>
             }
-
         </div>
     </div>
 </div>
@@ -77,8 +84,7 @@
 
 @code {
 
-    [Parameter]
-    public FounderProject FounderProject { get; set; }
+    [Parameter] public FounderProject FounderProject { get; set; }
 
     public bool InvestmentRequests { get; set; }
 
@@ -95,11 +101,11 @@
             });
     }
 
- 
 
     public MarkupString ConvertToMarkupString(string input)
     {
         string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
     }
+
 }

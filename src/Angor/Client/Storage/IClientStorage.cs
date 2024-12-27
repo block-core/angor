@@ -29,5 +29,9 @@ namespace Angor.Client.Storage
 
         string GetCurrencyDisplaySetting();
         void SetCurrencyDisplaySetting(string setting);
+        
+        void SaveInvestmentStats(string projectId, ProjectStats stats);
+        ProjectStats? GetInvestmentStats(string projectId);
+        void ClearInvestmentStats(string projectId);
     }
 }

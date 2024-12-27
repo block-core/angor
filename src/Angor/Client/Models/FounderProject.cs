@@ -19,4 +19,6 @@ public class FounderProject : Project
     {
         return !string.IsNullOrEmpty(ProjectInfoEventId);
     }
+    public ProjectStats Stats { get; set; } = new ProjectStats();
+
 }

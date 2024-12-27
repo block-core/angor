@@ -3,6 +3,7 @@
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Angor.Shared.Services
+@using Blockcore.NBitcoin
 @using Nostr.Client.Messages
 
 @inject NavigationManager NavigationManager
@@ -38,7 +39,8 @@
                 <button
                     class="btn btn-border"
                     @onclick="NavigateToCreateProject"
-                    disabled="@(scanningForProjects || (founderProjects.Count >= 14) ? true : null)">                    <i>
+                    disabled="@(scanningForProjects || (founderProjects.Count >= 14) ? true : null)">
+                    <i>
                         <Icon IconName="add"></Icon>
                     </i>
                     <span class="nav-link-text ms-1">
@@ -108,6 +110,7 @@
         if (hasWallet)
         {
             founderProjects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
+            await ScanForNewInvestmentsAsync();
         }
     }
 
@@ -125,7 +128,7 @@
 
             var indexerProject = await _IndexerService.GetProjectByIdAsync(key.ProjectIdentifier);
 
-            if (indexerProject != null) //TODO we need to talk about supporting projects that are created with gaps
+            if (indexerProject != null) // TODO: Support projects with gaps
                 founderProjectsToLookup.Add(key.NostrPubKey, indexerProject);
         }
 
@@ -138,48 +141,62 @@
         RelayService.RequestProjectCreateEventsByPubKey(
             e =>
             {
-                switch (e)
+                // Run the async logic in a fire-and-forget task
+                _ = Task.Run(async () =>
                 {
-                    case { Kind: NostrKind.Metadata }:
-                        var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
-                        var existingProject = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
+                    switch (e)
+                    {
+                        case { Kind: NostrKind.Metadata }:
+                            var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
+                            var existingProject = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
 
-                        if (existingProject != null)
-                        {
-                            existingProject.Metadata ??= nostrMetadata;
-                        }
-                        else
-                        {
-                            var founderProject = CreateFounderProject(founderProjectsToLookup, e);
-                            founderProject.Metadata = nostrMetadata;
-                            founderProjects.Add(founderProject);
-                        }
+                            if (existingProject != null)
+                            {
+                                existingProject.Metadata ??= nostrMetadata;
+                            }
+                            else
+                            {
+                                var founderProject = CreateFounderProject(founderProjectsToLookup, e);
+                                founderProject.Metadata = nostrMetadata;
 
-                        break;
+                                // Initialize stats for the new project
+                                founderProject.Stats = await _IndexerService.GetProjectStatsAsync(founderProject.ProjectInfo.ProjectIdentifier) ?? new ProjectStats();
 
-                    case { Kind: NostrKind.ApplicationSpecificData }:
-                        
-                        if (e.Id != founderProjectsToLookup[e.Pubkey].NostrEventId)
-                            return;
-                        
-                        var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
-                        var project = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
+                                founderProjects.Add(founderProject);
+                            }
 
-                        if (project != null)
-                        {
-                            if (!string.IsNullOrEmpty(project.ProjectInfo.ProjectIdentifier))
+                            break;
+
+                        case { Kind: NostrKind.ApplicationSpecificData }:
+                            if (e.Id != founderProjectsToLookup[e.Pubkey].NostrEventId)
                                 return;
 
-                            project.ProjectInfo = projectInfo;
-                        }
-                        else
-                        {
-                            project ??= CreateFounderProject(founderProjectsToLookup, e, projectInfo);
-                            founderProjects.Add(project);
-                        }   
+                            var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
+                            var project = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
 
-                        break;
-                }
+                            if (project != null)
+                            {
+                                if (!string.IsNullOrEmpty(project.ProjectInfo.ProjectIdentifier))
+                                    return;
+
+                                project.ProjectInfo = projectInfo;
+
+                                // Update stats for the existing project
+                                project.Stats = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier) ?? new ProjectStats();
+                            }
+                            else
+                            {
+                                project = CreateFounderProject(founderProjectsToLookup, e, projectInfo);
+
+                                // Initialize stats for the new project
+                                project.Stats = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier) ?? new ProjectStats();
+
+                                founderProjects.Add(project);
+                            }
+
+                            break;
+                    }
+                });
             },
             () =>
             {
@@ -204,7 +221,8 @@
             founderProjectsToLookup.Keys.ToArray());
     }
 
-    private FounderProject CreateFounderProject(Dictionary<string, ProjectIndexerData> founderProjectsToLookup, 
+
+    private FounderProject CreateFounderProject(Dictionary<string, ProjectIndexerData> founderProjectsToLookup,
         NostrEvent e, ProjectInfo? projectInfo = null)
     {
         var keys = _walletStorage.GetFounderKeys();
@@ -228,6 +246,7 @@
 
         NavigationManager.NavigateTo("/create");
     }
+
     private string GetCreateButtonTooltip()
     {
         if (founderProjects.Count >= 15)
@@ -235,6 +254,46 @@
         if (scanningForProjects)
             return "Scanning in progress...";
         return "Create a new project.";
+    }
+
+    private async Task ScanForNewInvestmentsAsync()
+    {
+        try
+        {
+            foreach (var project in founderProjects)
+            {
+                if (project?.ProjectInfo == null)
+                    continue;
+
+                // Fetch current stats from the IndexerService
+                var currentStats = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
+
+                if (currentStats == null)
+                    continue;
+
+                // Check for new investments
+                if (currentStats.InvestorCount > project.Stats.InvestorCount ||
+                    currentStats.AmountInvested > project.Stats.AmountInvested)
+                {
+                    // Update project stats
+                    project.Stats.InvestorCount = (int)currentStats.InvestorCount;
+                    project.Stats.AmountInvested = currentStats.AmountInvested;
+
+                    // Notify the founder
+                    notificationComponent.ShowNotificationMessage(
+                        $"New investment detected in project '{project.ProjectInfo.ProjectIdentifier}': {currentStats.InvestorCount} investors, {Money.Satoshis(currentStats.AmountInvested).ToUnit(MoneyUnit.BTC)} BTC raised.", 5);
+
+                    // Save updated project to storage
+                    storage.UpdateFounderProject(project);
+                }
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error scanning for investments: {ex.Message}");
+        }
     }
 
 
