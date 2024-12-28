@@ -1327,7 +1327,7 @@ a p {
 }
 
 .bg-danger {
-    background-color: rgb(247, 106, 106) !important;
+    background-color: rgba(255, 71, 87, 0.8) !important;
     color: white;
 }
 
@@ -1677,13 +1677,13 @@ button:hover:not(:disabled) {
     }
 
     .action-buttons a.warning-button {
-        border: 1px solid #dc3545;
-        background-color: #dc3545;
+        border: 1px solid rgba(255, 71, 87, 0.8);
+        background-color: rgba(255, 71, 87, 0.8);
         color: #721c24;
     }
 
         .action-buttons a.warning-button:hover {
-            background-color: #dc3545;
+            background-color: rgba(255, 71, 87, 0.8);
             color: #ffffff;
         }
 
@@ -1699,393 +1699,125 @@ button:hover:not(:disabled) {
         }
 }
 
-@keyframes slideUp {
-    0% {
-        transform: translateY(100%);
-        opacity: 0;
-    }
 
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
+
+@keyframes errorEntry {
+  0% { transform: translateY(100%) scale(0.95); opacity: 0; }
+  60% { transform: translateY(-10px) scale(1); }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
 }
 
-@keyframes shake {
-    0%, 100% {
-        transform: translateX(0);
-    }
-
-    10%, 30%, 50%, 70%, 90% {
-        transform: translateX(-2px);
-    }
-
-    20%, 40%, 60%, 80% {
-        transform: translateX(2px);
-    }
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.05);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
-
-@keyframes errorSlideUp {
-    0% {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-
-    70% {
-        transform: translateY(-10px);
-    }
-
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@keyframes iconRotate {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    25% {
-        transform: rotate(-10deg);
-    }
-
-    75% {
-        transform: rotate(10deg);
-    }
-
-    100% {
-        transform: rotate(0deg);
-    }
-}
-
-@keyframes glowPulse {
-    0% {
-        box-shadow: 0 0 5px rgba(255, 71, 87, 0.2);
-    }
-
-    50% {
-        box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
-    }
-
-    100% {
-        box-shadow: 0 0 5px rgba(255, 71, 87, 0.2);
-    }
+@keyframes iconSpin {
+  0% { transform: rotate(0) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1); }
 }
 
 #blazor-error-ui {
-    background-color: #135deg;
-    border-radius: 16px;
-    bottom: 20px;
-    border: 2px solid rgb(255 0 0);
-    box-shadow: 0 8px 32px rgba(8, 59, 70, 0.2);
-    display: none;
-    left: 20px;
-    right: 20px;
-    width: auto;
-    margin: 0 auto;
-    max-width: 1200px;
-    padding: 1.5rem;
-    position: fixed;
-    z-index: 9999;
-    animation: errorSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-    font-family: system-ui, -apple-system, sans-serif;
-    color: var(--angor-primary);
-    backdrop-filter: blur(10px);
+  position: fixed;
+  bottom: clamp(16px, 3vh, 24px);
+  left: clamp(16px, 4vw, 24px);
+  right: clamp(16px, 4vw, 24px);
+  max-width: min(90vw, 600px);
+  margin: 0 auto;
+  padding: clamp(1rem, 3vh, 1.5rem);
+  
+  display: none;
+  align-items: center;
+  gap: 1rem;
+  
+  background: rgba(2, 103, 126, 0.85);
+  backdrop-filter: blur(10px);
+  border: 3px solid rgba(255, 71, 87, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(8, 59, 70, 0.3),
+              0 0 0 1px rgba(255, 255, 255, 0.1);
+  
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #ffffff;
+  z-index: 9999;
+  animation: errorEntry 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .dark #blazor-error-ui {
-    background: linear-gradient(135deg, #083b46, #062a32);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 2px solid rgb(255 0 0);
+  background: linear-gradient(135deg, rgba(8, 59, 70, 0.95), rgba(6, 42, 50, 0.95));
 }
 
 #blazor-error-ui strong {
-    color: #e2e8f0;
-    font-size: 1.1rem;
-    font-weight: 500;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+  font-weight: 500;
+  color: #e2e8f0;
+  margin-right: auto;
 }
 
 #blazor-error-ui .reload {
-    background: rgba(8, 145, 178, 0.2);
-    border-radius: 12px;
-    color: #e2e8f0;
-    padding: 0.8rem 1.5rem;
-    margin: 0 1rem;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
-    text-decoration: none;
+  padding: clamp(0.5rem, 2vw, 0.8rem) clamp(1rem, 3vw, 1.5rem);
+  background: rgba(8, 145, 178, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #e2e8f0;
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
-    #blazor-error-ui .reload:hover {
-        background: rgba(8, 145, 178, 0.3);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(8, 145, 178, 0.2);
-    }
+#blazor-error-ui .reload:hover {
+  background: rgba(8, 145, 178, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.2);
+}
 
 #blazor-error-ui .dismiss {
-    color: #e2e8f0;
-    opacity: 0.8;
-    position: absolute;
-    right: 1.5rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: rgba(8, 145, 178, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
+  position: static;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: grid;
+  place-items: center;
+  z-index: 1;
 }
 
-    #blazor-error-ui .dismiss:hover {
-        opacity: 1;
-        background: rgba(8, 145, 178, 0.3);
-        transform: translateY(-50%) rotate(90deg);
-    }
-
-.error-icon {
-    animation: iconRotate 1.5s ease infinite;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+#blazor-error-ui .dismiss:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
 }
 
-.dark .error-icon {
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-}
-
-@media (max-width: 768px) {
-    #blazor-error-ui {
-        left: 16px;
-        right: 16px;
-        bottom: 16px;
-        padding: 1rem;
-    }
-
-        #blazor-error-ui strong {
-            font-size: 1rem;
-        }
-
-        #blazor-error-ui .reload {
-            padding: 0.6rem 1rem;
-        }
-}
-
-@keyframes slideUp {
-    0% {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@keyframes shake {
-    0%, 100% {
-        transform: translateX(0);
-    }
-
-    10%, 30%, 50%, 70%, 90% {
-        transform: translateX(-2px);
-    }
-
-    20%, 40%, 60%, 80% {
-        transform: translateX(2px);
-    }
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.05);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
-
-@keyframes errorSlideUp {
-    0% {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-
-    70% {
-        transform: translateY(-10px);
-    }
-
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@keyframes iconRotate {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    25% {
-        transform: rotate(-10deg);
-    }
-
-    75% {
-        transform: rotate(10deg);
-    }
-
-    100% {
-        transform: rotate(0deg);
-    }
-}
-
-@keyframes glowPulse {
-    0% {
-        box-shadow: 0 0 5px rgba(255, 71, 87, 0.2);
-    }
-
-    50% {
-        box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
-    }
-
-    100% {
-        box-shadow: 0 0 5px rgba(255, 71, 87, 0.2);
-    }
-}
-
-#blazor-error-ui {
-    background-color: rgba(8, 145, 178, 0.3);
-    border-radius: 16px;
-    border: 2px solid rgba(255, 0, 0);
-    bottom: 20px;
-    box-shadow: 0 8px 32px rgba(8, 59, 70, 0.2);
-    display: none;
-    left: 20px;
-    right: 20px;
-    width: auto;
-    margin: 0 auto;
-    max-width: 1200px;
-    padding: 1.5rem;
-    position: fixed;
-    z-index: 9999;
-    animation: errorSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-    font-family: system-ui, -apple-system, sans-serif;
-    color: white;
-    backdrop-filter: blur(10px);
-}
-
-.dark #blazor-error-ui {
-    background-color: #083b46;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-#blazor-error-ui strong {
-    color: var(--angor-primary);
-    font-size: 1.1rem;
-    font-weight: 500;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-#blazor-error-ui .reload {
-    background: rgba(8, 145, 178, 0.2);
-    border: 1px solid rgba(8, 145, 178, 0.3);
-    border-radius: 12px;
-    color: var(--angor-primary) !important;
-    padding: 0.8rem 1.5rem;
-    margin: 0 1rem;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
-    text-decoration: none;
-}
-
-    #blazor-error-ui .reload:hover {
-        background: rgba(8, 145, 178, 0.3);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(8, 145, 178, 0.2);
-    }
-
-#blazor-error-ui .dismiss {
-    color: var(--angor-primary) !important;
-    opacity: 0.8;
-    position: absolute;
-    right: 1.5rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: rgba(8, 145, 178, 0.2);
-    border: 1px solid rgba(8, 145, 178, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-    #blazor-error-ui .dismiss:hover {
-        opacity: 1;
-        background: rgba(8, 145, 178, 0.3);
-        transform: translateY(-50%) rotate(90deg);
-    }
-
-.error-icon {
-    animation: iconRotate 1.5s ease infinite;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-}
-
-.dark .error-icon {
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-}
-
-@media (max-width: 768px) {
-    #blazor-error-ui {
-        left: 16px;
-        right: 16px;
-        bottom: 16px;
-        padding: 1rem;
-    }
-
-        #blazor-error-ui strong {
-            font-size: 1rem;
-        }
-
-        #blazor-error-ui .reload {
-            padding: 0.6rem 1rem;
-        }
-}
 #blazor-error-ui img.primary-color {
-    animation: iconRotate 1.5s ease infinite;
+  width: clamp(24px, 4vw, 32px);
+  height: clamp(24px, 4vw, 32px);
+  animation: iconSpin 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dark #blazor-error-ui img.primary-color {
-    filter: invert(85%) sepia(29%) saturate(456%) hue-rotate(157deg) brightness(95%) contrast(90%);
+#blazor-error-ui .content-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
 }
 
-.primary-color {
-    color: var(--angor-primary);
-    margin-right: 0.8rem;
+#blazor-error-ui .actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+@media (max-width: 480px) {
+  #blazor-error-ui .content-wrapper {
+      flex-wrap: wrap;
+      justify-content: center;
+      text-align: center;
+  }
+
+  #blazor-error-ui strong {
+      width: 100%;
+      margin-bottom: 0.5rem;
+  }
 }

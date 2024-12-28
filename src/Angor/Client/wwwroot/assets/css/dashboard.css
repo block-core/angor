@@ -3681,20 +3681,21 @@ fieldset:disabled .btn {
 
 .btn-danger {
     --angor-secondary: #000;
-    --angor-btn-bg: #F44335;
-    --angor-btn-border-color: #F44335;
+    --angor-btn-bg: rgba(255, 71, 87, 0.8);
+    --angor-btn-border-color: rgba(255, 71, 87, 0.5);
     --angor-btn-hover-color: #000;
-    --angor-secondary: #f65f53;
-    --angor-btn-hover-border-color: #f55649;
+    --angor-secondary: rgba(255, 71, 87, 0.5);
+    --angor-btn-hover-border-color: rgba(255, 71, 87, 0.5);
     --angor-btn-focus-shadow-rgb: 207, 57, 45;
     --angor-btn-active-color: #000;
-    --angor-btn-active-bg: #f6695d;
-    --angor-btn-active-border-color: #f55649;
+    --angor-btn-active-bg: rgba(255, 71, 87, 0.6);
+    --angor-btn-active-border-color: rgba(255, 71, 87, 0.6);
     --angor-btn-active-shadow: none;
     --angor-btn-disabled-color: #000;
-    --angor-btn-disabled-bg: #F44335;
-    --angor-btn-disabled-border-color: #F44335;
+    --angor-btn-disabled-bg: rgba(255, 71, 87, 0.4);
+    --angor-btn-disabled-border-color: rgba(255, 71, 87, 0.5);
 }
+
 
 .btn-light {
     --angor-secondary: #000;
@@ -3850,19 +3851,19 @@ fieldset:disabled .btn {
 }
 
 .btn-outline-danger {
-    --angor-secondary: #F44335;
-    --angor-btn-border-color: #F44335;
+    --angor-secondary: rgba(255, 71, 87, 0.8);
+    --angor-btn-border-color: rgba(255, 71, 87, 0.8);
     --angor-btn-hover-color: #000;
-    --angor-secondary: #F44335;
-    --angor-btn-hover-border-color: #F44335;
+    --angor-secondary: rgba(255, 71, 87, 0.8);
+    --angor-btn-hover-border-color: rgba(245, 44, 61, 0.8);
     --angor-btn-focus-shadow-rgb: 244, 67, 53;
     --angor-btn-active-color: #000;
-    --angor-btn-active-bg: #F44335;
-    --angor-btn-active-border-color: #F44335;
+    --angor-btn-active-bg: rgba(255, 71, 87, 0.8);
+    --angor-btn-active-border-color: rgba(255, 71, 87, 0.8);
     --angor-btn-active-shadow: none;
-    --angor-btn-disabled-color: #F44335;
+    --angor-btn-disabled-color: rgba(255, 71, 87, 0.8);
     --angor-btn-disabled-bg: transparent;
-    --angor-btn-disabled-border-color: #F44335;
+    --angor-btn-disabled-border-color: rgba(255, 71, 87, 0.8);
     --angor-gradient: none;
 }
 
@@ -8020,7 +8021,7 @@ fieldset:disabled .btn {
     }
 
 .link-danger {
-    color: #F44335 !important;
+    color: rgba(255, 71, 87, 0.8) !important;
 }
 
     .link-danger:hover,
@@ -8706,7 +8707,7 @@ fieldset:disabled .btn {
 }
 
 .border-danger {
-    border-color: #F44335 !important;
+    border-color: rgba(255, 71, 87, 0.8) !important;
 }
 
 .border-light {
@@ -10517,7 +10518,7 @@ fieldset:disabled .btn {
 }
 
 .text-danger {
-    color: #F44335 !important;
+    color: rgba(255, 71, 87, 0.8) !important;
 }
 
 .text-light {
@@ -10597,7 +10598,7 @@ fieldset:disabled .btn {
 }
 
 .bg-danger {
-    background-color: #F44335 !important;
+    background-color: rgba(255, 71, 87, 0.8) !important;
 }
 
 .bg-light {
@@ -20322,7 +20323,7 @@ fieldset:disabled .btn {
 }
 
 .badge.bg-danger {
-    background: #F44335;
+    background: rgba(255, 71, 87, 0.8);
 }
 
 .badge.bg-light {
@@ -20688,14 +20689,14 @@ fieldset:disabled .btn {
 
     .btn-danger:hover,
     .btn.bg-gradient-danger:hover {
-        background-color: #F44335;
-        border-color: #F44335;
+        background-color: rgba(255, 71, 87, 0.8);
+        border-color: rgba(255, 71, 87, 0.8);
         box-shadow: 0 14px 26px -12px rgba(244, 67, 53, 0.4), 0 4px 23px 0 rgba(244, 67, 53, 0.15), 0 8px 10px -5px rgba(244, 67, 53, 0.2);
     }
 
     .btn-danger .btn.bg-outline-danger,
     .btn.bg-gradient-danger .btn.bg-outline-danger {
-        border: 1px solid #F44335;
+        border: 1px solid rgba(255, 71, 87, 0.8);
     }
 
     .btn-danger:not(:disabled):not(.disabled).active,
@@ -20704,8 +20705,8 @@ fieldset:disabled .btn {
     .btn.bg-gradient-danger:not(:disabled):not(.disabled).active,
     .btn.bg-gradient-danger:not(:disabled):not(.disabled):active,
     .show > .btn.bg-gradient-danger.dropdown-toggle {
-        color: color-yiq(#F44335);
-        background-color: #F44335;
+        color: color-yiq(rgba(255, 71, 87, 0.8));
+        background-color: rgba(255, 71, 87, 0.8);
     }
 
     .btn-danger.focus,
@@ -20723,7 +20724,7 @@ fieldset:disabled .btn {
         background-color: transparent;
         opacity: .75;
         box-shadow: none;
-        color: #F44335;
+        color: rgba(255, 71, 87, 0.8);
     }
 
 .btn-light,
@@ -22090,14 +22091,14 @@ body.dark {
 
         .input-group.input-group-dynamic.is-focused.is-invalid label,
         .input-group.input-group-static.is-focused.is-invalid label {
-            color: #F44335;
+            color: rgba(255, 71, 87, 0.8);
         }
 
         .input-group.input-group-dynamic.is-focused.is-invalid .form-control,
         .input-group.input-group-dynamic.is-focused.is-invalid .form-control:focus,
         .input-group.input-group-static.is-focused.is-invalid .form-control,
         .input-group.input-group-static.is-focused.is-invalid .form-control:focus {
-            background-image: linear-gradient(0deg, #F44335 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
+            background-image: linear-gradient(0deg, rgba(255, 71, 87, 0.8) 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
             border-radius: 0 !important;
         }
 
@@ -22113,7 +22114,7 @@ body.dark {
         .input-group.input-group-dynamic.is-invalid .form-control:focus,
         .input-group.input-group-static.is-invalid .form-control,
         .input-group.input-group-static.is-invalid .form-control:focus {
-            background-image: linear-gradient(0deg, #F44335 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
+            background-image: linear-gradient(0deg, rgba(255, 71, 87, 0.8) 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
             border-radius: 0 !important;
         }
 
@@ -22252,22 +22253,22 @@ body.dark {
 
         .input-group.input-group-outline.is-invalid.is-focused .form-label + .form-control,
         .input-group.input-group-outline.is-invalid.is-filled .form-label + .form-control {
-            border-color: #F44335 !important;
-            box-shadow: inset 1px 0 #F44335, inset -1px 0 #F44335, inset 0 -1px #F44335;
+            border-color: rgba(255, 71, 87, 0.8) !important;
+            box-shadow: inset 1px 0 rgba(255, 71, 87, 0.8), inset -1px 0 rgba(255, 71, 87, 0.8), inset 0 -1px rgba(255, 71, 87, 0.8);
             border-top-color: transparent !important;
         }
 
         .input-group.input-group-outline.is-invalid.is-focused .form-label,
         .input-group.input-group-outline.is-invalid.is-filled .form-label {
-            color: #F44335;
+            color: rgba(255, 71, 87, 0.8);
         }
 
             .input-group.input-group-outline.is-invalid.is-focused .form-label:before,
             .input-group.input-group-outline.is-invalid.is-focused .form-label:after,
             .input-group.input-group-outline.is-invalid.is-filled .form-label:before,
             .input-group.input-group-outline.is-invalid.is-filled .form-label:after {
-                border-top-color: #F44335;
-                box-shadow: inset 0 1px #F44335;
+                border-top-color: rgba(255, 71, 87, 0.8);
+                box-shadow: inset 0 1px rgba(255, 71, 87, 0.8);
             }
 
         .input-group.input-group-outline.input-group-sm .form-label,
@@ -22603,7 +22604,7 @@ label,
 }
 
 .bg-gradient-faded-danger-vertical {
-    background-image: radial-gradient(200px circle at 50% 70%, rgba(244, 67, 53, 0.3) 0, #F44335 100%);
+    background-image: radial-gradient(200px circle at 50% 70%, rgba(244, 67, 53, 0.3) 0, rgba(255, 71, 87, 0.8) 100%);
 }
 
 .bg-gradient-faded-light-vertical {
@@ -22893,7 +22894,7 @@ html {
     }
 
 *.gradient-animation {
-    background: linear-gradient(-45deg, #49a3f1, #F44335, #fb8c00, #EC407A, #344767);
+    background: linear-gradient(-45deg, #49a3f1, rgba(255, 71, 87, 0.8), #fb8c00, #EC407A, #344767);
     background-size: 400% 400% !important;
     animation: gradient 10s ease infinite;
 }
@@ -24084,7 +24085,7 @@ hr.horizontal {
 
 .sidenav[data-color="danger"] .navbar-nav > .nav-item .nav-link.active + .collapse .nav-item.active .nav-link.active,
 .sidenav[data-color="danger"] .navbar-nav > .nav-item .nav-link.active + .collapsing .nav-item.active .nav-link.active {
-    background-image: linear-gradient(195deg, #F44335 0%, #F44335 100%);
+    background-image: linear-gradient(195deg, rgba(255, 71, 87, 0.8) 0%, rgba(255, 71, 87, 0.8) 100%);
 }
 
 .sidenav[data-color="danger"] .navbar-nav > .nav-item .nav-link.active + .collapse .nav-item .nav-link.active,
@@ -24094,7 +24095,7 @@ hr.horizontal {
 
     .sidenav[data-color="danger"] .navbar-nav > .nav-item .nav-link.active + .collapse .nav-item .nav-link.active + .collapse .nav-item .nav-link.active,
     .sidenav[data-color="danger"] .navbar-nav > .nav-item .nav-link.active + .collapsing .nav-item .nav-link.active + .collapse .nav-item .nav-link.active {
-        background-image: linear-gradient(195deg, #F44335 0%, #F44335 100%);
+        background-image: linear-gradient(195deg, rgba(255, 71, 87, 0.8) 0%, rgba(255, 71, 87, 0.8) 100%);
     }
 
 .sidenav[data-color="light"] .navbar-nav > .nav-item .nav-link.active + .collapse .nav-item.active .nav-link.active,

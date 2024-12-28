@@ -49,10 +49,13 @@
         </div>
     </div>
     <div id="blazor-error-ui">
-    <img src="/assets/icons/info.svg" width="32" height="32" alt="error" class="primary-color">
-        <strong>An unhandled error has occurred</strong>
-        <a href="" class="reload">Reload Application</a>
-        <a class="dismiss">✕</a>
+        <div class="content-wrapper">
+            <strong>An unhandled error has occurred</strong>
+            <div class="actions">
+                <a href="" class="reload">Reload</a>
+                <a class="dismiss">✕</a>
+            </div>
+        </div>
     </div>
     <script type="module" src="service-crypto.js?v=1"></script>
     <script src="nostr-tools-methods.js?v=1" type="module"></script>
