@@ -1,0 +1,69 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:AngorApp.Controls">
+    <Design.PreviewWith>
+        <Border>
+            <controls:AmountControl Width="400" />
+        </Border>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|AmountControl.untouched /template/ DataValidationErrors">
+        <Setter Property="ErrorTemplate">
+            <Setter.Value>
+                <DataTemplate />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Styles.Resources>
+        <ControlTheme TargetType="controls:AmountControl" x:Key="{x:Type controls:AmountControl}">
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Padding="{TemplateBinding Padding}">
+                        <Border.Styles>
+                            <Style Selector="TextBlock.Dimmed">
+                                <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                            </Style>
+                        </Border.Styles>
+                        <DataValidationErrors>
+                            <StackPanel>
+                                <UniformGrid Rows="1" HorizontalAlignment="Center">
+                                    <UniformGrid.Styles>
+                                        <Style Selector="TextBlock.Active">
+                                            <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}" />
+                                            <Setter Property="FontWeight" Value="Bold" />
+                                        </Style>
+                                    </UniformGrid.Styles>
+                                    <TextBlock Classes.Active="{Binding Path=!$parent[controls:AmountControl].IsBitcoin}" Text="Sats" VerticalAlignment="Center" />
+                                    <ToggleSwitch x:Name="ToggleSwitch" VerticalAlignment="Center" HorizontalAlignment="Right" OnContent="" OffContent="" IsChecked="{Binding $parent[controls:AmountControl].IsBitcoin}" />
+                                    <TextBlock Classes.Active="{Binding Path=$parent[controls:AmountControl].IsBitcoin}" Text="Bitcoin" VerticalAlignment="Center" />
+                                </UniformGrid>
+                                <NumericUpDown ClipValueToMinMax="True" x:Name="PART_NumericUpDown"
+                                               Classes.Bitcoin="{Binding $parent[controls:AmountControl].IsBitcoin}" Watermark="{Binding $parent[controls:AmountControl].Unit, StringFormat='Amount in {0}'}"
+                                               ShowButtonSpinner="False"
+                                               Value="{Binding $parent[controls:AmountControl].Value}">
+                                    <NumericUpDown.Styles>
+                                        <Style Selector="NumericUpDown">
+                                            <Setter Property="Maximum" Value="2100000000000000" />
+                                        </Style>
+                                        <Style Selector="NumericUpDown.Bitcoin">
+                                            <Setter Property="Maximum" Value="21000000" />
+                                        </Style>
+                                    </NumericUpDown.Styles>
+                                    <NumericUpDown.InnerRightContent>
+                                        <TextBlock Classes="Dimmed" Text="{Binding $parent[controls:AmountControl].Unit}" VerticalAlignment="Center" Margin="0 0 10 0" />
+                                    </NumericUpDown.InnerRightContent>
+                                </NumericUpDown>
+                                <Panel Margin="0 2" IsVisible="{Binding !!$parent[controls:AmountControl].Value}">
+                                    <TextBlock Classes="Dimmed SizeSmall" IsVisible="{Binding !$parent[controls:AmountControl].IsBitcoin}" Text="{Binding $parent[controls:AmountControl].Bitcoin, StringFormat='{}&#61; {0} BTC'}" />
+                                    <TextBlock Classes="Dimmed SizeSmall" IsVisible="{Binding $parent[controls:AmountControl].IsBitcoin}" Text="{Binding $parent[controls:AmountControl].Satoshis, StringFormat='{}&#61; {0} sats'}" />
+                                </Panel>
+                            </StackPanel>
+                        </DataValidationErrors>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </Styles.Resources>
+</Styles>

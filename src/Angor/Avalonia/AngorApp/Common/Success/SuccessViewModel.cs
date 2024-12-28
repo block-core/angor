@@ -1,7 +1,7 @@
 using System.Reactive.Linq;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 
-namespace AngorApp.Common;
+namespace AngorApp.Common.Success;
 
 public class SuccessViewModel : IStep
 {

@@ -61,4 +61,10 @@ public static class MiscConverters
         Debug.Assert(s != null, nameof(s) + " != null");
         return QRGenerator.SvgImageFrom(s);
     });
+
+    public static FuncValueConverter<ulong, string> SatsToBtc { get; } = new(satoshis =>
+    {
+        var btc = satoshis / 10000_0000;
+        return $"{btc:0.0000 0000}" + " BTC";
+    });
 }

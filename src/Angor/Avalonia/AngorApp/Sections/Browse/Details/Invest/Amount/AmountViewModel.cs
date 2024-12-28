@@ -8,7 +8,7 @@ namespace AngorApp.Sections.Browse.Details.Invest.Amount;
 
 public partial class AmountViewModel : ReactiveValidationObject, IAmountViewModel
 {
-    [Reactive] private decimal? amount;
+    [Reactive] private ulong? amount;
 
     public AmountViewModel(IWallet wallet, IProject project)
     {
@@ -19,7 +19,6 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
     }
 
     public IProject Project { get; }
-
     public IObservable<bool> IsValid => this.IsValid();
     public IObservable<bool> IsBusy => Observable.Return(false);
     public bool AutoAdvance => false;

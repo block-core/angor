@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:controls="clr-namespace:AngorApp.Controls"
+             xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.Sections.Wallet.Operate.WalletView" ClipToBounds="False" x:DataType="operate:IWalletViewModel">
+
+    <Design.DataContext>
+        <operate:WalletViewModelDesign />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+
+        <Style Selector="TextBox">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
+        </Style>
+
+        <Style Selector="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+
+        <StackPanel Spacing="20">
+
+            <controls:Pane IsTitleVisible="True" Title="Wallet"
+                           Subtitle="Wallet and balances">
+                <controls:Pane.TitleRightContent>
+                    <UniformGrid Rows="1">
+                        <UniformGrid.Styles>
+                            <Style Selector="Button">
+                                <Setter Property="Margin" Value="5" />
+                                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            </Style>
+                        </UniformGrid.Styles>
+                        <Button Command="{Binding Send}" Content="Send" />
+                        <Button Content="Receive">
+                            <Button.Flyout>
+                                <Flyout>
+                                    <operate:Receive />
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                    </UniformGrid>
+                </controls:Pane.TitleRightContent>
+                <controls:Pane.TitleIcon>
+                    <i:Icon Value="fa-wallet" />
+                </controls:Pane.TitleIcon>
+            </controls:Pane>
+
+            <operate:Balance />
+
+            <operate:HistoryView />
+            
+        </StackPanel>
+    </DockPanel>
+
+</UserControl>

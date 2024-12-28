@@ -1,20 +1,20 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
-                    xmlns:controls1="clr-namespace:AngorApp.Controls">
+                    xmlns:c="clr-namespace:AngorApp.Controls">
 
     <Design.PreviewWith>
-        <controls1:IconButton Content="THIS IS A BUTTON">
-            <controls1:IconButton.Icon>
+        <c:IconButton Content="THIS IS A BUTTON">
+            <c:IconButton.Icon>
                 <avalonia:Icon Value="fa-wallet" />
-            </controls1:IconButton.Icon>
-        </controls1:IconButton>
+            </c:IconButton.Icon>
+        </c:IconButton>
     </Design.PreviewWith>
 
-    <ControlTheme TargetType="controls1:IconButton" x:Key="{x:Type controls1:IconButton}" BasedOn="{StaticResource {x:Type Button}}">
+    <ControlTheme TargetType="c:IconButton" x:Key="{x:Type c:IconButton}" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="controls1:IconButton">
+                <ControlTemplate TargetType="c:IconButton">
                     <Button
                         Padding="{TemplateBinding Padding}"
                         Flyout="{TemplateBinding Flyout}"
@@ -24,10 +24,10 @@
                         Background="{TemplateBinding Background}"
                         HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                         VerticalAlignment="{TemplateBinding VerticalAlignment}">
-                        <DockPanel>
-                            <ContentPresenter Margin="5 4 10 4" Content="{TemplateBinding Icon}" />
-                            <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center" />
-                        </DockPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ContentPresenter IsVisible="{Binding !!$parent[c:IconButton].Icon}" Content="{TemplateBinding Icon}" />
+                            <ContentPresenter IsVisible="{Binding !!$parent[c:IconButton].Content}" Content="{TemplateBinding Content}" VerticalAlignment="Center" />
+                        </StackPanel>
                     </Button>
                 </ControlTemplate>
             </Setter.Value>

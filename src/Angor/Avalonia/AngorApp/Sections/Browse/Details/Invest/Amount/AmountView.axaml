@@ -37,15 +37,17 @@
             This agreement ensures that in the event the project does not succeed, you will be able to recover your funds.
             This provides a safety net for your investment, giving you peace of mind that your financial contribution is protected.
         </TextBlock>
+        <Separator />
         <StackPanel Spacing="10" Grid.IsSharedSizeScope="True">
             <HeaderedContentControl Theme="{StaticResource Inline}" Header="Project Id:" Content="{Binding Project.Id}" />
             <HeaderedContentControl Theme="{StaticResource Inline}" Header="Target Amount:" Content="{Binding Project.TargetAmount, StringFormat={x:Static controls:MiscConverters.BigBtcFormat} }" />
             <HeaderedContentControl Theme="{StaticResource Inline}" Header="Starting in:" Content="{Binding Project.StartingDate}" />
-            <NumericUpDown Watermark="Investment amount" ShowButtonSpinner="False" Value="{Binding Amount, Mode=TwoWay}">
+            <Separator />
+            <controls:AmountControl Satoshis="{Binding Amount}">
                 <Interaction.Behaviors>
                     <behaviors:UntouchedClassBehavior />
                 </Interaction.Behaviors>
-            </NumericUpDown>
+            </controls:AmountControl>
             <controls:IconButton HorizontalAlignment="Right" Content="Stages breakdown" IsVisible="{Binding !!Amount}">
                 <controls:IconButton.Icon>
                     <avalonia:Icon Value="fa-info" />

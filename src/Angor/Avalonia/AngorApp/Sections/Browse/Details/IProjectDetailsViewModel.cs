@@ -15,11 +15,3 @@ public interface IProjectDetailsViewModel
     public double CurrentInvestment { get; }
     public IProject Project { get; }
 }
-
-public class Stage
-{
-    public int Index { get; set; }
-    public double Weight { get; set; }
-    public DateTimeOffset ReleaseDate { get; set; }
-    public decimal Amount { get; set; }
-}
