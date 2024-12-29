@@ -1825,3 +1825,32 @@ button:hover:not(:disabled) {
     z-index:9000000;
     position:fixed;
 }
+
+.form-check {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.form-check-input {
+    margin-right: 0.5rem;
+    width: 1.2em;
+    height: 1.2em;
+    cursor: pointer;
+}
+
+.form-check-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.form-check-label {
+    cursor: pointer;
+    user-select: none;
+    margin: 0;
+}
+
+.form-check-input:checked {
+    background-color: var(--angor-secondary);
+    border-color: var(--angor-secondary);
+}
