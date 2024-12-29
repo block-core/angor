@@ -3587,7 +3587,7 @@ textarea.form-control.is-invalid {
 .btn:disabled,
 .btn.disabled,
 fieldset:disabled .btn {
-    color: var(--angor-btn-disabled-color);
+    color: var(--angor-primary);
     pointer-events: none;
     background-color: var(--angor-btn-disabled-bg);
     border-color: var(--angor-btn-disabled-border-color);
@@ -8647,7 +8647,7 @@ fieldset:disabled .btn {
 }
 
 .border {
-    border: 1px solid #1f5d6a !important
+    border: 1px solid #bcdfe6 !important
 }
 
 .border-0 {
@@ -10546,7 +10546,7 @@ fieldset:disabled .btn {
 }
 
 .text-muted {
-    color: #6c757d !important;
+    color: var(--angor-primary) !important;
 }
 
 .text-black-50 {

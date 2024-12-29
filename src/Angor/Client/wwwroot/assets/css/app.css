@@ -1857,3 +1857,87 @@ button:hover:not(:disabled) {
     background-color: var(--angor-secondary);
     border-color: var(--angor-secondary);
 }
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.stat-item {
+    padding: 0.5rem;
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.stat-label {
+    color: var(--angor-primary);
+    font-size: 0.9rem;
+}
+
+.countdown-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.countdown-timer {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.time-block {
+    background: var(--angor-secondary);
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    min-width: 80px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.time-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.time-label {
+    display: block;
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .countdown-timer {
+        gap: 0.5rem;
+    }
+    
+    .time-block {
+        padding: 0.5rem 0.75rem;
+        min-width: 70px;
+    }
+    
+    .time-value {
+        font-size: 1.2rem;
+    }
+    
+    .time-label {
+        font-size: 0.7rem;
+    }
+}
