@@ -83,37 +83,9 @@
 
     <div class="mb-4">
         <div class="card card-body">
-            <div class="d-flex justify-content-between">
-                <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
-                @if (stageisActive)
-                {
+         <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
 
-                    <button class="btn @((noCoinsToClaim) ? "btn-light" : "btn-success")" disabled="@((noCoinsToClaim || !IsCheckboxSelectedForStage(stage.StageIndex)))" @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
-                        @if (stage.StageSpinner)
-                        {
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            <span>Building trx...</span>
-                        }
-                        else
-                        {
-                            @if (investedCount == 0)
-                            {
-                                <span>Claimed</span>
-                            }
-                            else
-                            {
-                                <span>Claim Coins</span>
-                            }
-                        }
-                    </button>
-                }
-                else
-                {
-                    <button class="btn btn-warning" disabled>In @((stage.Stage.ReleaseDate - DateTime.UtcNow).Days) Days</button>
-                }
-
-            </div>
-            <p class="card-subtitle text-muted mb-2">Estimated completion time: @stage.Stage.ReleaseDate.ToString("dd/MM/yyyy")</p>
+            <p class="card-subtitle text-muted mb-2 mt-4">Estimated completion time: @stage.Stage.ReleaseDate.ToString("dd/MM/yyyy")</p>
 
             <button @onclick="() => Expand(stage.StageIndex)" class="btn btn-border d-block">
                 <i class="bi bi-chevron-double-down"></i> Expand
@@ -143,7 +115,43 @@
 
                 </div>
             }
+
+
+
+            <div class="d-flex justify-content-between mt-4">
+                @if (stageisActive)
+                {
+
+                    <button class="btn @((noCoinsToClaim) ? "btn-light" : "btn-success")" disabled="@((noCoinsToClaim || !IsCheckboxSelectedForStage(stage.StageIndex)))" @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
+                        @if (stage.StageSpinner)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span>Building trx...</span>
+                        }
+                        else
+                        {
+                            @if (investedCount == 0)
+                            {
+                                <span>Claimed</span>
+                            }
+                            else
+                            {
+                                <span>Claim Coins</span>
+                            }
+                        }
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-warning" disabled>In @((stage.Stage.ReleaseDate - DateTime.UtcNow).Days) Days</button>
+                }
+
+            </div>
+
+
         </div>
+
+
     </div>
 }
 
