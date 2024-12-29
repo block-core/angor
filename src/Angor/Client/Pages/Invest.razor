@@ -233,7 +233,10 @@
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-border" @onclick="Send" disabled="@investSpinner">
+                            <button class="btn btn-border" @onclick="ShowTransactionJsonModal">
+                                Transaction Details
+                            </button> 
+                            <button type="button" class="btn btn-border" @onclick="Send" disabled="@investSpinner">
                             @if (investSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -245,9 +248,7 @@
                             }
                         </button>
                     </div>
-                    <button class="btn btn-primary" @onclick="ShowTransactionJsonModal">
-                        Show Transaction Details
-                    </button>
+      
 
                     <RawTransactionModal RawTransactionJson="@transactionJson" IsVisible="@showTransactionJsonModal" IsVisibleChanged="HandleTransactionJsonModalVisibility"/>
                 </div>

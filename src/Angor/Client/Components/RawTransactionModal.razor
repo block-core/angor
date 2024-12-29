@@ -6,7 +6,7 @@
 
 @if (IsVisible)
 {
-    <div class="modal-wrapper">
+    <div class="modal-wrapper z-index-top">
         <div class="modal fade show d-block">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -19,9 +19,11 @@
                     <div class="modal-body">
                         <pre>@RawTransactionJson</pre>
                     </div>
-                    <i @onclick="CopyToClipboard" class="ms-auto cursor-pointer user-select-none">
-                        <Icon IconName="copy"></Icon>
-                    </i>
+                    <div class="modal-footer">
+                        <i @onclick="CopyToClipboard" class="ms-auto cursor-pointer user-select-none">
+                            <Icon IconName="copy"></Icon>
+                        </i>
+                    </div>
                 </div>
             </div>
         </div>
