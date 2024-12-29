@@ -178,7 +178,7 @@
     {
         <div class="modal-wrapper">
             <div class="modal fade show d-block" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content modern-modal">
                         <div class="modal-header border-0 pb-0">
                             <div class="d-flex align-items-center">
@@ -191,8 +191,8 @@
                         </div>
 
                         <div class="modal-body modal-body-scroll py-4">
-                            <div class="transaction-info-section mb-4">
-                                <div class="info-card mb-3">
+                            <div class="transaction-info-section row">
+                                <div class="col-12 col-md-6 mb-3">
                                     <div class="info-label">Password</div>
                                     <input type="password" class="form-control" @bind="showWalletPassword" placeholder="Enter password">
                                     @if (!string.IsNullOrEmpty(showWalletPasswordError))
@@ -200,24 +200,27 @@
                                         <div class="alert alert-danger mt-2">@showWalletPasswordError</div>
                                     }
                                 </div>
-
                                 @if (!string.IsNullOrEmpty(showWalletWords))
                                 {
-                                    <div class="info-card mb-3">
+                                    <div class="col-12 col-md-6 mb-3">
                                         <div class="info-label">Wallet Words</div>
                                         <textarea class="form-control" @bind="showWalletWords" rows="3" readonly></textarea>
                                     </div>
-                                    <div class="info-card mb-3">
+                                    <div class="col-12 col-md-6 mb-3">
                                         <div class="info-label">Passphrase</div>
                                         <input type="text" class="form-control" @bind="showWalletWordsPassphrase" readonly>
                                     </div>
-                                    <button class="btn btn-border-success" @onclick="CopyWordsToClibboard">Copy to Clipboard</button>
+                                    <div class="col-12 mt-2">
+                                        <button class="btn btn-border-success w-100 w-md-auto" @onclick="CopyWordsToClibboard">
+                                            Copy to Clipboard
+                                        </button>
+                                    </div>
                                 }
                             </div>
                         </div>
 
                         <div class="modal-footer border-0 pt-0">
-                            <button class="btn btn-border-success" @onclick="ShowWords" disabled="@createWalletSpinner">
+                            <button class="btn btn-border-success w-100 w-md-auto" @onclick="ShowWords" disabled="@createWalletSpinner">
                                 @if (createWalletSpinner)
                                 {
                                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
