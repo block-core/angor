@@ -509,45 +509,52 @@ else
 
                 @if (coinControlModal)
                 {
-                    <!-- Select UTXOs Modal -->
                     <div class="modal-wrapper">
-                        <div class="modal fade show d-block">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="coinControlModalLabel">Select UTXOs</h5>
-                                        <span type="button" @onclick="() => coinControlModal = false" aria-label="Close">
-                                            <Icon IconName="close-circle" />
-                                        </span>
+                        <div class="modal fade show d-block" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content modern-modal">
+                                    <div class="modal-header border-0 pb-0">
+                                        <div class="d-flex align-items-center">
+                                            <Icon IconName="utxo" Height="32" Width="32" class="me-2" />
+                                            <h5 class="modal-title">Select UTXOs</h5>
+                                        </div>
+                                        <button class="btn-close-custom" @onclick="() => coinControlModal = false">
+                                            <Icon IconName="close-circle" Height="24" Width="24" />
+                                        </button>
                                     </div>
-                                    <div class="modal-body modal-body-scroll">
-                                        <!-- The tick boxes and amounts will go here -->
 
-                                        <p>Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-                                        @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AddressesInfo.Union(accountBalanceInfo.AccountInfo.ChangeAddressesInfo))
-                                        {
-                                            foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                    <div class="modal-body modal-body-scroll py-4">
+                                        <div class="transaction-info-section mb-4">
+                                            <p>Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                            @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AddressesInfo.Union(accountBalanceInfo.AccountInfo.ChangeAddressesInfo))
                                             {
-                                                var outpointStr = addressUtxoItem.outpoint.ToString();
-                                                var outpointLength = outpointStr.Length;
-                                                var shortenedOutpoint = outpointLength > 20
-                                                ? $"{outpointStr.Substring(0, 10)} ... {outpointStr.Substring(outpointLength - 10)}"
-                                                : outpointStr;
+                                                foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                                {
+                                                    var outpointStr = addressUtxoItem.outpoint.ToString();
+                                                    var outpointLength = outpointStr.Length;
+                                                    var shortenedOutpoint = outpointLength > 20
+                                                        ? $"{outpointStr.Substring(0, 10)} ... {outpointStr.Substring(outpointLength - 10)}"
+                                                        : outpointStr;
 
-                                                var valueInBTC = Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC);
-                                                var coinTicker = network.CoinTicker;
-                                                var isTicked = _sendInfo.SendUtxos.ContainsKey(outpointStr);
+                                                    var valueInBTC = Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC);
+                                                    var coinTicker = network.CoinTicker;
+                                                    var isTicked = _sendInfo.SendUtxos.ContainsKey(outpointStr);
 
-                                                <input type="checkbox" id="@outpointStr" @bind="@isTicked" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
-                                                <label class="fs-lable-s" for="@outpointStr">
-                                                    @($"{shortenedOutpoint} - {valueInBTC} {coinTicker}")
-                                                </label>
+                                                    <div class="info-card mb-3">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="@outpointStr" @bind="@isTicked" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
+                                                            <label class="form-check-label" for="@outpointStr">
+                                                                @($"{shortenedOutpoint} - {valueInBTC} {coinTicker}")
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                }
                                             }
-                                        }
-
+                                        </div>
                                     </div>
-                                    <div class="modal-footer">
-                                        <button class="btn btn-warning" @onclick="() => coinControlModal = false">Submit</button>
+
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button class="btn btn-border-success" @onclick="() => coinControlModal = false">Submit</button>
                                     </div>
                                 </div>
                             </div>
