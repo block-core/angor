@@ -83,6 +83,10 @@
 
             <div class="col-12 mb-4 animate-card">
                 <div class="card card-body hover-effect b-shadow">
+                    <p class="mb-4">
+                         Click on the expand button to view and select transactions. After selecting transactions, use the Claim button at the bottom to process them.
+                    </p>
+
                     <div class="d-flex justify-content-between align-items-center flex-wrap">
                         <h5 class="card-title mb-0">
                             Stage @stage.StageIndex (@stage.Stage.AmountToRelease%)
@@ -90,36 +94,21 @@
                             <span class="badge bg-secondary ms-2">@investedCount trx</span>
                         </h5>
 
-                        <div class="mt-2 mt-md-0">
-                            @if (stageisActive)
+                        <button @onclick="() => Expand(stage.StageIndex)"
+                                class="btn btn-border animate-scale d-flex align-items-center">
+                            @if (stage.StageIndex == expandedStageId)
                             {
-                                <button class="btn @((noCoinsToClaim) ? "btn-light" : "btn-success") me-2 animate-scale"
-                                        disabled="@((noCoinsToClaim || !IsCheckboxSelectedForStage(stage.StageIndex)))"
-                                        @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
-                                    @if (stage.StageSpinner)
-                                    {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                        <span>Building trx...</span>
-                                    }
-                                    else
-                                    {
-                                        <span>@(investedCount == 0 ? "Claimed" : "Claim Coins")</span>
-                                    }
-                                </button>
+                                <i class="bi bi-chevron-up me-2"></i>
+                                <Icon IconName="collapse" Width="20" Height="20" />
+                                <span class="ms-2">Collapse</span>
                             }
                             else
                             {
-                                <button class="btn btn-warning animate-scale" disabled>
-                                    In @((stage.Stage.ReleaseDate - DateTime.UtcNow).Days) Days
-                                </button>
+                                <i class="bi bi-chevron-down me-2"></i>
+                                <Icon IconName="expand" Width="20" Height="20" />
+                                <span class="ms-2">Expand to Select</span>
                             }
-
-                            <button @onclick="() => Expand(stage.StageIndex)"
-                                    class="btn btn-border animate-scale">
-                                <i class="bi @(stage.StageIndex == expandedStageId ? "bi-chevron-up" : "bi-chevron-down")"></i>
-                                @(stage.StageIndex == expandedStageId ? "Collapse" : "Expand")
-                            </button>
-                        </div>
+                        </button>
                     </div>
 
                     <p class="card-subtitle text-muted mb-2 mt-4">
@@ -158,6 +147,35 @@
                                     </div>
                                 </div>
                             }
+                        </div>
+                    }
+
+                    @if (stageisActive && stage.StageIndex == expandedStageId)
+                    {
+                        <div class="card-footer text-end mt-4">
+                            <button class="btn @((noCoinsToClaim) ? "btn-border" : "btn-success") animate-scale"
+                                    disabled="@((noCoinsToClaim || !IsCheckboxSelectedForStage(stage.StageIndex)))"
+                                    @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
+                                @if (stage.StageSpinner)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span>Building trx...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    <span>@(investedCount == 0 ? "Claimed" : "Claim Selected Coins")</span>
+                                }
+                            </button>
+                        </div>
+                    }
+                    else if (!stageisActive)
+                    {
+                        <div class="card-footer text-end mt-3 pt-3 border-top">
+                            <button class="btn btn-warning animate-scale" disabled>
+                                <i class="bi bi-clock me-2"></i>
+                                Available in @((stage.Stage.ReleaseDate - DateTime.UtcNow).Days) Days
+                            </button>
                         </div>
                     }
                 </div>
@@ -242,7 +260,7 @@
 }
 
 
-    <div class="card card-body">
+<div class="card card-body slide-up">
         <div class="d-flex justify-content-between">
             <h5 class="card-title">Project Statistics</h5>
         </div>

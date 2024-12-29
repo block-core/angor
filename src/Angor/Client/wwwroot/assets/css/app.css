@@ -1825,7 +1825,10 @@ button:hover:not(:disabled) {
     z-index:9000000;
     position:fixed;
 }
-
+.z-index-notif {
+    z-index: 9000001;
+    position: fixed;
+}
 .form-check {
     display: flex;
     align-items: center;
