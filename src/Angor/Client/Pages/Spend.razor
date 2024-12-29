@@ -355,9 +355,9 @@
                                             @project.ProjectIdentifier
                                         </div>
                                     </div>
-                                    <button class="btn btn-copy ms-2" @onclick="() => CopyTRXToClipboard(project.ProjectIdentifier)">
-                                        <Icon IconName="copy" Height="16" Width="16" />
-                                    </button>
+                                    <i class="ms-2" role="button" @onclick="() => CopyToClipboard(project.ProjectIdentifier)">
+                                        <Icon IconName="copy" Height="24" Width="24" />
+                                    </i>
                                 </div>
                             </div>
                             
@@ -398,27 +398,30 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="selected-utxos-section">
-                            <h6 class="section-title">
-                                <Icon IconName="list" Height="20" Width="20" class="me-2" />
-                                Selected Transactions
-                            </h6>
-                            <div class="utxo-list">
-                                @foreach (var utxo in selectedUtxos.Where(u => u.Value))
-                                {
-                                    var stageIndex = GetStageIndexForUtxo(utxo.Key);
-                                    <div class="utxo-item">
-                                        <div class="stage-badge">Stage @stageIndex</div>
-                                        <div class="transaction-details">
-                                            <small class="text-muted">TX: @utxo.Key.Trxid.Substring(0, 8)...</small>
-                                            <small class="text-muted">Output: @utxo.Key.Outputindex</small>
+                        @if (selectedUtxos.Where(u => u.Value).Count() > 0)
+                        {
+                            <div class="selected-utxos-section">
+                                <h6 class="section-title">
+                                    <Icon IconName="list" Height="20" Width="20" class="me-2" />
+                                    Selected Transactions
+                                </h6>
+                                <div class="utxo-list">
+                                    @foreach (var utxo in selectedUtxos.Where(u => u.Value))
+                                    {
+                                        var stageIndex = GetStageIndexForUtxo(utxo.Key);
+                                        <div class="utxo-item">
+                                            <div class="stage-badge">Stage @stageIndex</div>
+                                            <div class="transaction-details">
+                                                <small class="text-muted">TX: @utxo.Key.Trxid.Substring(0, 8)...</small>
+                                                <small class="text-muted">Output: @utxo.Key.Outputindex</small>
+                                            </div>
                                         </div>
-                                    </div>
-                                }
+                                    }
+                                </div>
                             </div>
-                        </div>
 
+                        }
+               
                         <div class="confirmation-section mt-4 text-center">
                             <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
                             <p class="confirmation-text">
@@ -901,6 +904,12 @@
 
         await _clipboardService.WriteTextAsync(trxData);
         StateHasChanged();
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await _clipboardService.WriteTextAsync(text);
+        notificationComponent.ShowNotificationMessage("Copied to clipboard", 1);
     }
 
     public struct UtxoKey
