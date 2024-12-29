@@ -330,74 +330,125 @@
 
 @if (showCreateModal)
 {
-    <!-- Confirmation Modal -->
     <div class="modal-wrapper">
-        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Confirmation</h5>
-                        <span type="button" @onclick="() => showCreateModal = false">
-                            <Icon IconName="close-circle" />
-                        </span>
+        <div class="modal fade show d-block" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modern-modal">
+                    <div class="modal-header border-0 pb-0">
+                        <div class="d-flex align-items-center">
+                            <Icon IconName="transaction" Height="32" Width="32" class="me-2" />
+                            <h5 class="modal-title">Transaction Confirmation</h5>
+                        </div>
+                        <button class="btn-close-custom" @onclick="() => showCreateModal = false">
+                            <Icon IconName="close-circle" Height="24" Width="24" />
+                        </button>
                     </div>
-                    <div class="modal-body modal-body-scroll">
 
-                        <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
-
-                        <p class="mb-1">The transactions to be spent @signedTransaction.Transaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
-                        <p class="mb-1">Miner fee @Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-
-                        <hr>
-
-                        <div class="mb-3">
-                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                    <div class="modal-body modal-body-scroll py-4">
+                        <div class="transaction-info-section mb-4">
+                            <div class="project-id-card mb-3">
+                                <div class="d-flex align-items-center">
+                                    <Icon IconName="project" Height="24" Width="24" class="me-2" />
+                                    <div class="d-flex flex-column flex-grow-1 overflow-hidden">
+                                        <div class="info-label mb-1">Project ID</div>
+                                        <div class="project-id-value text-truncate" title="@project.ProjectIdentifier">
+                                            @project.ProjectIdentifier
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-copy ms-2" @onclick="() => CopyTRXToClipboard(project.ProjectIdentifier)">
+                                        <Icon IconName="copy" Height="16" Width="16" />
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mb-3">
+                                <div class="info-card flex-grow-1 me-2">
+                                    <div class="info-label">Amount to Spend</div>
+                                    <div class="info-value text-success">
+                                        @signedTransaction.Transaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) @network.CoinTicker
+                                    </div>
+                                </div>
+                                <div class="info-card flex-grow-1 ms-2">
+                                    <div class="info-label">Miner Fee</div>
+                                    <div class="info-value text-warning">
+                                        @Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <hr>
+                        <div class="fee-section mb-4">
+                            <h6 class="section-title">
+                                <Icon IconName="fee" Height="20" Width="20" class="me-2" />
+                                Network Fee Rate
+                            </h6>
+                            <div class="fee-slider-container">
+                                <input type="range" 
+                                       class="form-range custom-range" 
+                                       id="feeRange" 
+                                       @bind="feeData.FeePosition" 
+                                       @oninput="FeeRangeChanged" 
+                                       min="@feeData.FeeMin" 
+                                       max="@feeData.FeeMax">
+                                <div class="fee-info">
+                                    <small class="text-muted">
+                                        Estimated confirmation in @feeData.SelectedFeeEstimation.Confirmations blocks
+                                        (@feeData.SelectedFeeEstimation.FeeRate sats/byte)
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
 
-                        <h6 class="mt-3 mb-2">Stages</h6>
-                        @foreach (var utxo in selectedUtxos)
-                        {
-                            if (utxo.Value) // check if the UTXO is selected
-                            {
-                                var utxoKey = utxo.Key;
+                        <div class="selected-utxos-section">
+                            <h6 class="section-title">
+                                <Icon IconName="list" Height="20" Width="20" class="me-2" />
+                                Selected Transactions
+                            </h6>
+                            <div class="utxo-list">
+                                @foreach (var utxo in selectedUtxos.Where(u => u.Value))
+                                {
+                                    var stageIndex = GetStageIndexForUtxo(utxo.Key);
+                                    <div class="utxo-item">
+                                        <div class="stage-badge">Stage @stageIndex</div>
+                                        <div class="transaction-details">
+                                            <small class="text-muted">TX: @utxo.Key.Trxid.Substring(0, 8)...</small>
+                                            <small class="text-muted">Output: @utxo.Key.Outputindex</small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
 
-                                var stageIndex = GetStageIndexForUtxo(utxoKey);
-
-                                <p style="font-size: 0.7em;" class="mb-1">Stage: @stageIndex, Transaction: @utxoKey.Trxid, Output Index: @utxoKey.Outputindex</p>
-                            }
-                        }
-
-
-                        <hr>
-
-                        <p class="mt-3">Are you sure you want to continue?</p>
-
+                        <div class="confirmation-section mt-4 text-center">
+                            <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
+                            <p class="confirmation-text">
+                                Please review the transaction details carefully before confirming.
+                            </p>
+                        </div>
                     </div>
-                    <div class="modal-footer">
+
+                    <div class="modal-footer border-0 pt-0">
                         <button class="btn btn-border" @onclick="ShowTransactionJsonModal">
-                            Transaction Details
+                             View Details
                         </button>
-                        <button type="button" class="btn btn-border" @onclick="Send" disabled="@spendSpinner">
+                        <button class="btn btn-border-success"
+                                @onclick="Send" 
+                                disabled="@spendSpinner">
                             @if (spendSpinner)
                             {
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <span>Confirm...</span>
+                                <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                                <span>Processing...</span>
                             }
                             else
                             {
-                                <span>Confirm</span>
+                                 <span>Confirm Transaction</span>
                             }
                         </button>
-
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 }
 
 
