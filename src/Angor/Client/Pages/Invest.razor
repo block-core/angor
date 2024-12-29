@@ -289,7 +289,7 @@ else
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4>Waiting for the founder to approve</h4>
                 <div>
-                    <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
+                    <button type="button" class="btn btn-border-danger" @onclick="CancelInvestment">Cancel</button>
                     <button class="btn btn-border" @onclick="RefreshSignatures" disabled="@refreshSpinner">
                         @if (refreshSpinner)
                         {
@@ -316,12 +316,12 @@ else
             <div class="card mt-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>Founder has signed</h4>
-                    <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
+                    <button type="button" class="btn btn-border-danger" @onclick="CancelInvestment">Cancel</button>
                 </div>
                 <div class="card-body">
                     <p class="modal-title">The founder has signed a transaction agreement ensuring that you can recover your funds if the project does not succeed, you may now invest.</p>
                     <br />
-                    <button type="button" class="btn btn-success" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
+                    <button type="button" class="btn btn-border-success" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
                         @if (publishSpinner)
                         {
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>

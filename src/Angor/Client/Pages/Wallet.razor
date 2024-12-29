@@ -516,7 +516,7 @@ else
 
                                     <div class="modal-body modal-body-scroll py-4">
                                         <div class="transaction-info-section mb-4">
-                                            <p>Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                            <p class="pb-4">Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                                             @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AddressesInfo.Union(accountBalanceInfo.AccountInfo.ChangeAddressesInfo))
                                             {
                                                 foreach (var addressUtxoItem in addressInfo.UtxoData)
@@ -544,7 +544,7 @@ else
                                         </div>
                                     </div>
 
-                                    <div class="modal-footer border-0 pt-0">
+                                    <div class="modal-footer border-0">
                                         <button class="btn btn-border-success" @onclick="() => coinControlModal = false">Submit</button>
                                     </div>
                                 </div>

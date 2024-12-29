@@ -138,7 +138,7 @@
                     <!-- Restore the form submit button -->
                     <div class="card card-body mt-4">
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-success" @onclick="() => ChangeTab(2)">
+                            <button type="submit" class="btn btn-border-success" @onclick="() => ChangeTab(2)">
                                 <span>Next</span>
                             </button>
                         </div>
@@ -314,7 +314,7 @@
                 <div class="input-group">
                     <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1" disabled="@nostrApplicationSpecificDataCreated" />
                     <InputDate @bind-Value="stage.ReleaseDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
-                    <button type="button" class="btn btn-danger" @onclick="() => RemoveStage(stage)">Remove</button>
+                    <button type="button" class="btn btn-border-danger" @onclick="() => RemoveStage(stage)">Remove</button>
                 </div>
                 @if (project.ProjectInfo.Stages.IndexOf(stage) > 0)
                 {
@@ -331,11 +331,11 @@
 
             <div class="card card-body mt-4">
                 <div class="d-flex justify-content-between">
-                    <button type="button" class="btn btn-success" @onclick="() => ChangeTab(1)">
+                    <button type="button" class="btn btn-border-success" @onclick="() => ChangeTab(1)">
                         <span>Previous</span>
                     </button>
                     
-                    <button type="submit" class="btn btn-success" @onclick="() => ChangeTab(3)">
+                    <button type="submit" class="btn btn-border-success" @onclick="() => ChangeTab(3)">
                         <span>Next</span>
                     </button>
                 </div>
@@ -409,7 +409,7 @@
                 @GetProgressMessage()
             </div>
         </div>
-        <button class="btn btn-success mt-4 me-3" @onclick="ConfirmFinalizeNostrProfileCreation" disabled="@nostrMetadataCreated">
+        <button class="btn btn-border-success mt-4 me-3" @onclick="ConfirmFinalizeNostrProfileCreation" disabled="@nostrMetadataCreated">
             @if (createProfileSpinner)
             {
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -433,7 +433,7 @@
             }
         </button>
 
-        <button type="button" class="btn btn-success mt-4" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
+        <button type="button" class="btn btn-border-success mt-4" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
             @if (creatProjectSpinner)
             {
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -446,7 +446,7 @@
         </button>
         <div class="card card-body mt-4">
             <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-success" @onclick="() => ChangeTab(2)">
+                <button type="button" class="btn btn-border-success" @onclick="() => ChangeTab(2)">
                     <span>Previous</span>
                 </button>
             </div>

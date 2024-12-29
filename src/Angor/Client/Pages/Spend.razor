@@ -226,14 +226,14 @@
                         </p>
 
                         <div class="d-flex justify-content-between align-items-center flex-wrap">
-                            <h5 class="card-title mb-0">
+                            <h5 class="card-title mb-2">
                                 Stage @stage.StageIndex (@stage.Stage.AmountToRelease%)
                                 <span class="badge bg-primary ms-2">@investedAmount @network.CoinTicker</span>
                                 <span class="badge bg-secondary ms-2">@investedCount trx</span>
                             </h5>
 
                             <button @onclick="() => Expand(stage.StageIndex)"
-                                    class="btn btn-border animate-scale d-flex align-items-center">
+                                    class="btn btn-border animate-scale d-flex align-items-center w-100-m">
                                 @if (stage.StageIndex == expandedStageId)
                                 {
                                     <Icon IconName="collapse" Width="20" Height="20" />
@@ -288,8 +288,8 @@
 
                         @if (stageisActive && stage.StageIndex == expandedStageId)
                         {
-                            <div class="card-footer text-end mt-4">
-                                <button class="btn @((noCoinsToClaim) ? "btn-border" : "btn-success") animate-scale"
+                            <div class="card-footer text-end mt-4 p-0">
+                                <button class="btn @((noCoinsToClaim) ? "btn-border" : "btn-border-success") animate-scale w-100-m"
                                         disabled="@((noCoinsToClaim || !IsCheckboxSelectedForStage(stage.StageIndex)))"
                                         @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
                                     @if (stage.StageSpinner)
@@ -307,8 +307,8 @@
                         }
                         else if (!stageisActive)
                         {
-                            <div class="card-footer text-end mt-4">
-                                <button class="btn btn-warning animate-scale" disabled>
+                            <div class="card-footer text-end mt-4 p-0">
+                                <button class="btn btn-border-warning animate-scale w-100-m" disabled>
                                     <Icon IconName="clock-square" Width="24" Height="24" />
                                     <span class="m-2"> Available in @((stage.Stage.ReleaseDate - DateTime.UtcNow).Days) Days </span>
                                 </button>
