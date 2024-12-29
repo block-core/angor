@@ -914,18 +914,19 @@ else
         if (string.IsNullOrEmpty(newWalletWords))
         {
             walletWordsCreateModal = false;
-            notificationComponent.ShowErrorMessage("New wallet words are null or empty");
+            notificationComponent.ShowErrorMessage("Please enter your wallet words");
             return;
         }
 
         if (string.IsNullOrEmpty(newWalletPassword))
         {
             walletWordsCreateModal = false;
-            notificationComponent.ShowErrorMessage("New wallet password is null or empty");
+            notificationComponent.ShowErrorMessage("Please enter a password");
             return;
         }
 
-        if (!backupConfirmation)
+        // Only check backup confirmation for new wallets, not recovery
+        if (isNewWallet && !backupConfirmation)
         {
             showBackupConfirmationError = true;
             return;
@@ -937,7 +938,13 @@ else
 
         try
         {
-            var data = new WalletWords { Words = newWalletWords, Passphrase = newWalletWordsPassphrase };
+            // Validate wallet words format for recovery
+            if (!isNewWallet && !ValidateWalletWords(newWalletWords))
+            {
+                throw new Exception("Invalid wallet words format. Please check your backup and try again.");
+            }
+
+            var data = new WalletWords { Words = newWalletWords.Trim(), Passphrase = newWalletWordsPassphrase };
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(data);
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
@@ -957,16 +964,29 @@ else
             walletWordsCreateModal = false;
 
             NavMenuState.NotifyStateChanged();
+            
+            notificationComponent.ShowNotificationMessage(isNewWallet ? "Wallet created successfully!" : "Wallet recovered successfully!");
         }
         catch (Exception e)
         {
             walletWordsCreateModal = false;
-            notificationComponent.ShowErrorMessage(e.Message, e);
+            notificationComponent.ShowErrorMessage($"Error: {e.Message}", e);
         }
         finally
         {
             createWalletSpinner = false;
         }
+    }
+
+    private bool ValidateWalletWords(string words)
+    {
+        if (string.IsNullOrWhiteSpace(words))
+            return false;
+
+        var wordsList = words.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        
+        // Most HD wallets use 12 or 24 words
+        return wordsList.Length == 12 || wordsList.Length == 24;
     }
 
     private async Task ShowWords()
