@@ -2491,3 +2491,55 @@ button:hover:not(:disabled) {
         top: -3px; /* Lower the thumb */
     }
 }
+
+.investment-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.stages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.stage-card {
+    background: var(--angor-card-bg, #ffffff);
+    border: 1px solid var(--btn-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.dark .stage-card {
+    background: var(--angor-card-bg-dark, rgba(8, 59, 70, 0.8));
+    border-color: var(--angor-secondary);
+}
+
+.stage-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.stage-body {
+    font-size: 0.9rem;
+    color: var(--angor-text-muted);
+}
+
+.info-section {
+    background: var(--angor-section-bg, rgba(0, 0, 0, 0.02));
+    border-radius: 12px;
+    border: 1px solid var(--btn-border);
+}
+
+.dark .info-section {
+    background: var(--angor-section-bg-dark, rgba(255, 255, 255, 0.05));
+    border-color: var(--angor-secondary);
+}
