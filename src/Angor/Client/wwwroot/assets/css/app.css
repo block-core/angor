@@ -2543,3 +2543,13 @@ button:hover:not(:disabled) {
     background: var(--angor-section-bg-dark, rgba(255, 255, 255, 0.05));
     border-color: var(--angor-secondary);
 }
+
+.custom-input-number {
+    -moz-appearance: textfield;
+}
+
+.custom-input-number::-webkit-outer-spin-button,
+.custom-input-number::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
