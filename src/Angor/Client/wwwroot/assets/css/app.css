@@ -951,7 +951,7 @@ tr[style*="cursor: pointer;"] {
 
     .btn-border-success:hover {
         color: var(--angor-secondary);
-        background-color: rgba(31, 93, 106, 0.6);
+        background-color: rgba(143, 194, 0, 0.6);
     }
 
 
