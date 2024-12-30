@@ -13,11 +13,18 @@ window.angor = {
     },
 
     addDarkBackground: function () {
-         document.body.classList.add('dark');
+        document.body.classList.add('dark');
+        const loader = document.querySelector('.loader-wrapper');
+        if (loader) {
+            loader.classList.add('dark');
+        }
     },
 
     addLightBackground: function () {
         document.body.classList.remove('dark');
-     },
-
+        const loader = document.querySelector('.loader-wrapper');
+        if (loader) {
+            loader.classList.remove('dark');
+        }
+    }
 };

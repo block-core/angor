@@ -19,28 +19,39 @@
 @if (showModal)
 {
     <div class="modal-wrapper">
-        <div class="modal fade show d-block" id="qrcodeModal" tabindex="-1" aria-labelledby="qrcodeModalLabel" aria-hidden="true">
-            <div class="modal-dialog custom-modal-size">
-                <!-- Custom modal size -->
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="coinControlModalLabel">Receive</h5>
-                        <span type="button" data-bs-dismiss="modal" @onclick="HideModal"  data-cy="QR_IMAGE_IN_POPUP">
-                            <Icon IconName="close-circle"></Icon>
-                        </span>
+        <div class="modal fade show d-block" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content modern-modal">
+                    <div class="modal-header border-0 pb-0">
+                        <div class="d-flex align-items-center">
+                            <Icon IconName="receive" Height="24" Width="24" class="me-2" />
+                            <h5 class="modal-title fs-5">Receive Address</h5>
+                        </div>
+                        <button class="btn-close-custom" @onclick="HideModal">
+                            <Icon IconName="close-circle" Height="20" Width="20" />
+                        </button>
                     </div>
-                    <div class="modal-body">
-                        <img src="data:image/png;base64,@base64qrcode" class="qrcode-image" alt="QR Code" />
-                        <div class="address-container">
-                            <div class="d-flex align-items-center">
-                                <p id="receive-address" class="address-text mb-0 overflow-x-auto" data-cy="WALLET_ADRESS_IN_QR_POPUP">@Data</p>
-                                <i @onclick="CopyToClipboard" class="ms-auto cursor-pointer user-select-none">
-                                    <Icon IconName="copy"></Icon>
+                    <div class="modal-body p-3">
+                        <div class="text-center mb-3">
+                            <img src="data:image/png;base64,@base64qrcode" 
+                                 class="qrcode-image img-fluid rounded" 
+                                 width="200" height="200"
+                                 alt="QR Code" />
+                        </div>
+                        <div class="card border p-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="flex-grow-1">
+                                    <small class="text-muted d-block mb-1">Address</small>
+                                    <div class="small text-truncate" title="@Data" data-cy="WALLET_ADRESS_IN_QR_POPUP">
+                                        @Data
+                                    </div>
+                                </div>
+                                <i class="px-2 py-1" @onclick="CopyToClipboard">
+                                    <Icon IconName="copy" Height="32" Width="32" />
                                 </i>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -91,7 +102,8 @@
         using QRCodeGenerator qrGenerator = new QRCodeGenerator();
         using QRCodeData qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.Q);
         using PngByteQRCode pngByteQRCode = new PngByteQRCode(qrCodeData);
-        return Convert.ToBase64String(pngByteQRCode.GetGraphic(10));
+        // Reduced QR code size from 10 to 6
+        return Convert.ToBase64String(pngByteQRCode.GetGraphic(6));
     }
 
     private async Task CopyToClipboard()

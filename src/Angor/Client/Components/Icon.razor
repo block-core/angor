@@ -4,6 +4,7 @@
     [Parameter] public int Width { get; set; } = 32;
     [Parameter] public int Height { get; set; } = 32;
     [Parameter] public string Color { get; set; } = "var(--angor-primary)";
+    [Parameter] public string Class { get; set; } = "";
     private string svgContent;
 
     protected override async Task OnParametersSetAsync()
@@ -14,7 +15,17 @@
 
 @if (!string.IsNullOrEmpty(svgContent))
 {
-    @((MarkupString)svgContent)
+    if (@Class != "")
+    {
+        <i class="@Class">
+            @((MarkupString)svgContent)
+        </i>
+    }
+    else
+    {
+        @((MarkupString)svgContent)
+    }
+
 }
 else
 {
