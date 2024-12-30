@@ -36,7 +36,7 @@
 
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
-<RawTransactionModal RawTransactionJson="@transactionJson" IsVisible="@showTransactionJsonModal" IsVisibleChanged="HandleTransactionJsonModalVisibility"/>
+<RawTransactionModal RawTransactionJson="@transactionJson" IsVisible="@showTransactionJsonModal" IsVisibleChanged="HandleTransactionJsonModalVisibility" />
 
 @if (!hasWallet)
 {
@@ -45,47 +45,36 @@
 }
 
 <div class="row mb-4 slide-up">
-    <div class="card card-body hover-effect">
-
-
-
-        <div class="d-flex align-items-center justify-content-between flex-wrap">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none animate-rotate">
-                    <Icon IconName="invest" Height="42" Width="42" />
+                <span class="user-select-none">
+                    <Icon IconName="portfolio" Height="42" Width="42" />
                 </span>
                 <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
+                    <h5 class="mb-0 font-weight-bolder">
                         Project Investment
                     </h5>
-                    <p class="mb-0 text-sm animate-fade-in-delayed">
-                        @ProjectId
-                    </p>
+
                 </div>
             </div>
+
+
         </div>
+    </div>
+</div>
 
-        <div class="row g-4 mt-4">
-
-
-
-            <div class="info-section mt-4 mb-4">
-                <div class="info-card p-4">
-                    <h6 class="section-title mb-4">
-                        <Icon IconName="info" Height="20" Width="20" class="me-2" />
-                        Investment Information
-                    </h6>
-                    <p class="mb-3">
-                        To invest in this project, the founder must sign a recovery agreement.
-                        This ensures that you can recover your funds if the project does not succeed.
-                    </p>
-                    <a href="view/@ProjectId" class="btn btn-border animate-scale">
-                        <Icon IconName="view" Height="20" Width="20" class="me-2" />
-                        View Project Details
-                    </a>
-                </div>
-            </div>
-
+<div class="row mb-4 slide-up">
+    <div class="card card-body hover-effect">
+        <h6 class="section-title mb-4">
+            <Icon IconName="info" Height="32" Width="32" class="me-2" />
+            Investment Information
+        </h6>
+        <p class="mb-3">
+            To invest in this project, the founder must sign a recovery agreement.
+            This ensures that you can recover your funds if the project does not succeed.
+        </p>
+        <div class="row g-4">
             <div class="col-md-4">
                 <div class="stat-card p-3 rounded-3 border hover-effect">
                     <div class="d-flex justify-content-between">
@@ -94,7 +83,7 @@
                             <h4 class="mb-0">@project.ProjectInfo.TargetAmount @network.CoinTicker</h4>
                         </div>
                         <div class="stat-icon">
-                            <Icon IconName="target" Height="32" Width="32" />
+                            <Icon IconName="balance" Height="32" Width="32" />
                         </div>
                     </div>
                 </div>
@@ -133,7 +122,7 @@
     </div>
 </div>
 
- 
+
 
 @if (invested)
 {
@@ -203,22 +192,22 @@
 
                 <div class="form-group mb-4">
                     <label for="investmentAmount" class="form-label">Investment Amount</label>
-  
- 
+
+
 
                     <div class="input-group">
- 
+
 
                         <InputNumber class="form-control" id="investmentAmount" @bind-Value="@Investment.InvestmentAmount"
                                      @oninput="UpdateStagesBreakdown" />
 
 
-                        <span role="button" class="btn btn-border d-flex align-items-center justify-content-center" >
+                        <span role="button" class="btn btn-border d-flex align-items-center justify-content-center">
                             @network.CoinTicker
                         </span>
                     </div>
 
-                 
+
                 </div>
 
                 <div class="form-group mb-4">
@@ -251,7 +240,7 @@
             {
                 <div class="stages-section mt-4">
                     <h6 class="section-title mb-3">
-                        <Icon IconName="stage" Height="20" Width="20" class="me-2" />
+                        <Icon IconName="stage" Height="32" Width="32" class="me-2" />
                         Investment Stages Breakdown
                     </h6>
                     <div class="stages-grid">
@@ -343,12 +332,12 @@
                                     Network Fee Rate
                                 </h6>
                                 <div class="fee-slider-container">
-                                    <input type="range" 
-                                           class="form-range custom-range" 
-                                           id="feeRange" 
-                                           @bind="feeData.FeePosition" 
-                                           @oninput="FeeRangeChanged" 
-                                           min="@feeData.FeeMin" 
+                                    <input type="range"
+                                           class="form-range custom-range"
+                                           id="feeRange"
+                                           @bind="feeData.FeePosition"
+                                           @oninput="FeeRangeChanged"
+                                           min="@feeData.FeeMin"
                                            max="@feeData.FeeMax">
                                     <div class="fee-info">
                                         <small class="text-muted">
@@ -373,7 +362,7 @@
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <div>
                                                         <div class="info-label">Stage @(++index)</div>
-                                                        <div class="info-value">@StagesBreakdown[index-1].Amount @network.CoinTicker</div>
+                                                        <div class="info-value">@StagesBreakdown[index - 1].Amount @network.CoinTicker</div>
                                                     </div>
                                                     <div class="text-end">
                                                         <div class="info-label">Release Date</div>
@@ -418,35 +407,38 @@
             </div>
         </div>
     }
- 
+
 }
 else
 {
     if (investorProject.WaitingForFounderResponse())
     {
-        <div class="card mt-4 text-center">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h4>Waiting for the founder to approve</h4>
-                <div>
-                    <button type="button" class="btn btn-border-danger" @onclick="CancelInvestment">Cancel</button>
-                    <button class="btn btn-border" @onclick="RefreshSignatures" disabled="@refreshSpinner">
+        <div class="card mt-4 text-center animate-fade-in">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                <h4 class="mb-0">Waiting for the founder to approve</h4>
+                <div class="d-flex mt-2 mt-md-0">
+                    <button type="button" class="btn btn-border-danger me-2 animate-scale" @onclick="CancelInvestment">
+                        <Icon IconName="cancel" Width="20" Height="20" class="me-1" />
+                        <span>Cancel</span>
+                    </button>
+                    <button class="btn btn-border animate-scale" @onclick="RefreshSignatures" disabled="@refreshSpinner">
                         @if (refreshSpinner)
                         {
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            <span>Refresh...</span>
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span>Refreshing...</span>
                         }
                         else
                         {
+                            <Icon IconName="refresh" Width="20" Height="20" class="me-1" />
                             <span>Refresh</span>
                         }
                     </button>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body d-flex justify-content-center align-items-center">
                 <div class="loader-slow"></div>
             </div>
         </div>
-
     }
     else
     {
@@ -526,7 +518,7 @@ else
         }
 
         Project? findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
-        
+
         if (findProject != null)
         {
             var investmentProject = findProject as InvestorProject;
@@ -615,15 +607,15 @@ else
                 var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
                 _SignService.LookupSignatureForInvestmentRequest(
-                    investmentProject.InvestorNPub, 
-                    project.ProjectInfo.NostrPubKey, 
-                    investmentProject.SignaturesInfo!.TimeOfSignatureRequest!.Value, 
+                    investmentProject.InvestorNPub,
+                    project.ProjectInfo.NostrPubKey,
+                    investmentProject.SignaturesInfo!.TimeOfSignatureRequest!.Value,
                     investmentProject.SignaturesInfo!.SignatureRequestEventId!,
                     signatures => HandleSignatureReceivedAsync(nostrPrivateKeyHex, signatures));
             }
             catch (Exception e)
             {
-                notificationComponent.ShowErrorMessage(e.Message,e);
+                notificationComponent.ShowErrorMessage(e.Message, e);
             }
             finally
             {
@@ -698,7 +690,7 @@ else
                 notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minInvestmentAmount} BTC was not reached");
                 return;
             }
-            
+
             if (Investment.InvestmentAmount > maxInvestmentAmount)
             {
                 notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentAmount} BTC on the mainnet");
@@ -756,7 +748,7 @@ else
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
@@ -790,7 +782,7 @@ else
                     var accountInfo = storage.GetAccountInfo(network.Name);
 
                     signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
-                    
+
                     StateHasChanged();
                 }
             }
@@ -859,7 +851,7 @@ else
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
             investorProject.InvestorNPub = NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex;
-            
+
             storage.AddInvestmentProject(investorProject);
 
             foreach (var input in strippedInvestmentTransaction.Inputs)
@@ -878,7 +870,7 @@ else
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
@@ -997,7 +989,7 @@ else
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
@@ -1016,9 +1008,9 @@ else
         Investments investments = new()
             {
                 ProjectIdentifiers = storage.GetInvestmentProjects()
-                        .Where(x => x.InvestedInProject())
-                        .Select(x => new InvestmentState { ProjectIdentifier = x.ProjectInfo.ProjectIdentifier, investorPubKey = x.InvestorPublicKey, InvestmentTransactionHash = x.TransactionId})
-                        .ToList()
+                            .Where(x => x.InvestedInProject())
+                            .Select(x => new InvestmentState { ProjectIdentifier = x.ProjectInfo.ProjectIdentifier, investorPubKey = x.InvestorPublicKey, InvestmentTransactionHash = x.TransactionId })
+                            .ToList()
             };
 
         var encryptedProjectIdList = await encryption.EncryptNostrContentAsync(
@@ -1046,7 +1038,7 @@ else
         public DateTime StageDateTime { get; set; }
         public int DaysFromStartDate { get; set; }
     }
-    
+
     private async Task ShowTransactionJsonModal()
     {
         if (project == null || signedTransaction?.Transaction == null) return;
@@ -1075,11 +1067,11 @@ else
             RawTransaction = signedTransaction.Transaction.ToHex()
         };
 
-        transactionJson = JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions 
-        { 
-            WriteIndented = true 
-        });
-        
+        transactionJson = JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+
         showTransactionJsonModal = true;
         StateHasChanged();
     }
