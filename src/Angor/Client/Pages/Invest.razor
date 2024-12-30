@@ -36,6 +36,7 @@
 
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
+<RawTransactionModal RawTransactionJson="@transactionJson" IsVisible="@showTransactionJsonModal" IsVisibleChanged="HandleTransactionJsonModalVisibility"/>
 
 @if (!hasWallet)
 {
@@ -182,78 +183,139 @@
 
     @if (showCreateModal)
     {
-        <!-- Confirmation Modal -->
-                           
         <div class="modal-wrapper">
-            <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Confirmation</h5>
-                        <span type="button" data-cy="close-show-wallet-words" @onclick="() => showCreateModal = false" aria-label="Close">
-                            <Icon IconName="close-circle" />
-                        </span>
-                    </div>
-                    <div class="modal-body modal-body-scroll">
-                        <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier</p>
-                        <p class="mb-1"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
-
-                        <p class="mb-1"><strong>Target amount:</strong> @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
-
-                        <p class="mb-1"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
-                        <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
-                        <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
-
-                        <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-                        <p class="mb-1"><strong>Angor fee:</strong> @signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-
-                        <hr>
-
-                        <div class="mb-3">
-                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+            <div class="modal fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content modern-modal">
+                        <div class="modal-header border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <Icon IconName="transaction" Height="32" Width="32" class="me-2" />
+                                <h5 class="modal-title">Investment Confirmation</h5>
+                            </div>
+                            <button class="btn-close-custom" @onclick="() => showCreateModal = false">
+                                <Icon IconName="close-circle" Height="24" Width="24" />
+                            </button>
                         </div>
 
-                        <hr>
-
-                        <h6 class="mt-3 mb-2">Stages</h6>
-                        @{
-                            int index = 0;
-                            @foreach (var stage in project.ProjectInfo.Stages)
-                            {
-                                <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
-                                    <p class="mb-1"><strong>Stage amount:</strong> @StagesBreakdown[index++].Amount BTC - @stage.AmountToRelease % </p>
-                                    <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts </p>
+                        <div class="modal-body modal-body-scroll py-4">
+                            <div class="transaction-info-section mb-4">
+                                <div class="project-id-card mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <Icon IconName="project" Height="24" Width="24" class="me-2" />
+                                        <div class="d-flex flex-column flex-grow-1 overflow-hidden">
+                                            <div class="info-label mb-1">Project ID</div>
+                                            <div class="project-id-value text-truncate" title="@project.ProjectInfo.ProjectIdentifier">
+                                                @project.ProjectInfo.ProjectIdentifier
+                                            </div>
+                                        </div>
+                                        <i class="ms-2" role="button" @onclick="() => CopyToClipboard(project.ProjectInfo.ProjectIdentifier)">
+                                            <Icon IconName="copy" Height="24" Width="24" />
+                                        </i>
+                                    </div>
                                 </div>
-                            }
-                        }
-                        <hr>
 
-                        <p class="mt-3">Are you sure you want to continue?</p>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div class="info-card flex-grow-1 me-2">
+                                        <div class="info-label">Amount to Invest</div>
+                                        <div class="info-value text-success">
+                                            @Investment.InvestmentAmount @network.CoinTicker
+                                        </div>
+                                    </div>
+                                    <div class="info-card flex-grow-1 ms-2">
+                                        <div class="info-label">Miner Fee</div>
+                                        <div class="info-value text-warning">
+                                            @Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                        </div>
+                                    </div>
+                                </div>
 
-                    </div>
-                    <div class="modal-footer">
+                                <div class="info-card mb-3">
+                                    <div class="info-label">Angor Fee</div>
+                                    <div class="info-value">
+                                        @signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="fee-section mb-4">
+                                <h6 class="section-title">
+                                    <Icon IconName="fee" Height="20" Width="20" class="me-2" />
+                                    Network Fee Rate
+                                </h6>
+                                <div class="fee-slider-container">
+                                    <input type="range" 
+                                           class="form-range custom-range" 
+                                           id="feeRange" 
+                                           @bind="feeData.FeePosition" 
+                                           @oninput="FeeRangeChanged" 
+                                           min="@feeData.FeeMin" 
+                                           max="@feeData.FeeMax">
+                                    <div class="fee-info">
+                                        <small class="text-muted">
+                                            Estimated confirmation in @feeData.SelectedFeeEstimation.Confirmations blocks
+                                            (@feeData.SelectedFeeEstimation.FeeRate sats/byte)
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="stages-section mb-4">
+                                <h6 class="section-title">
+                                    <Icon IconName="stage" Height="20" Width="20" class="me-2" />
+                                    Investment Stages
+                                </h6>
+                                <div class="stages-list">
+                                    @{
+                                        int index = 0;
+                                        @foreach (var stage in project.ProjectInfo.Stages)
+                                        {
+                                            <div class="info-card mb-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <div class="info-label">Stage @(++index)</div>
+                                                        <div class="info-value">@StagesBreakdown[index-1].Amount @network.CoinTicker</div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <div class="info-label">Release Date</div>
+                                                        <div class="info-value">@stage.ReleaseDate.ToString("dd/MM/yyyy")</div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-muted small mt-2">
+                                                    @stage.AmountToRelease% of investment - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after start
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="confirmation-section mt-4 text-center">
+                                <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
+                                <p class="confirmation-text">
+                                    Please review the investment details carefully before confirming.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer border-0 pt-0">
                             <button class="btn btn-border" @onclick="ShowTransactionJsonModal">
-                                Transaction Details
-                            </button> 
-                            <button type="button" class="btn btn-border" @onclick="Send" disabled="@investSpinner">
-                            @if (investSpinner)
-                            {
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <span>Confirm...</span>
-                            }
-                            else
-                            {
-                                <span>Confirm</span>
-                            }
-                        </button>
+                                View Details
+                            </button>
+                            <button type="button" class="btn btn-border-success" @onclick="Send" disabled="@investSpinner">
+                                @if (investSpinner)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span>Processing...</span>
+                                }
+                                else
+                                {
+                                    <span>Confirm Investment</span>
+                                }
+                            </button>
+                        </div>
                     </div>
-      
-
-                    <RawTransactionModal RawTransactionJson="@transactionJson" IsVisible="@showTransactionJsonModal" IsVisibleChanged="HandleTransactionJsonModalVisibility"/>
                 </div>
             </div>
-        </div>
         </div>
     }
 
@@ -908,40 +970,52 @@ else
         public int DaysFromStartDate { get; set; }
     }
     
-    private async Task PrepareInvestmentTransactionJson()
+    private async Task ShowTransactionJsonModal()
     {
+        if (project == null || signedTransaction?.Transaction == null) return;
+
         var transactionDetails = new
         {
             ProjectIdentifier = project.ProjectInfo.ProjectIdentifier,
             FounderKey = project.ProjectInfo.FounderKey.Substring(0, 10) + "...",
+            InvestmentAmount = Investment.InvestmentAmount,
             TargetAmount = $"{project.ProjectInfo.TargetAmount} {network.CoinTicker}",
             StartDate = project.ProjectInfo.StartDate.ToString("dd/MM/yyyy"),
             ExpiryDate = project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy"),
             PenaltyDays = project.ProjectInfo.PenaltyDays,
-            MinerFee = Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC),
-            AngorFee = signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) ?? 0,
-            FeeRate = $"{feeData.SelectedFeeEstimation.FeeRate} sats",
-            Confirmations = feeData.SelectedFeeEstimation.Confirmations,
-            Stages = project.ProjectInfo.Stages.Select((stage, index) => new
+            MinerFee = Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC),
+            AngorFee = signedTransaction.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC),
+            FeeRate = $"{feeData.SelectedFeeEstimation.FeeRate} sats/byte",
+            EstimatedConfirmation = $"{feeData.SelectedFeeEstimation.Confirmations} blocks",
+            Stages = StagesBreakdown.Select(stage => new
             {
-                StageAmount = $"{StagesBreakdown[index].Amount} BTC - {stage.AmountToRelease}%",
-                StageDate = stage.ReleaseDate.ToString("dd/MM/yyyy"),
-                DaysAfterStart = (stage.ReleaseDate - project.ProjectInfo.StartDate).Days
-            }).ToList()
+                StageNumber = stage.StageNumber,
+                Amount = stage.Amount,
+                ReleaseDate = stage.StageDateTime.ToString("dd/MM/yyyy"),
+                DaysFromStart = stage.DaysFromStartDate,
+                AmountToRelease = project.ProjectInfo.Stages[stage.StageNumber - 1].AmountToRelease
+            }).ToList(),
+            RawTransaction = signedTransaction.Transaction.ToHex()
         };
 
-        transactionJson = JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions { WriteIndented = true });
-    }
-
-    
-    private async Task ShowTransactionJsonModal()
-    {
-        await PrepareInvestmentTransactionJson();
+        transactionJson = JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions 
+        { 
+            WriteIndented = true 
+        });
+        
         showTransactionJsonModal = true;
+        StateHasChanged();
     }
 
     private void HandleTransactionJsonModalVisibility(bool isVisible)
     {
         showTransactionJsonModal = isVisible;
+        StateHasChanged();
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
     }
 }
