@@ -183,9 +183,10 @@
 
 
         }
-        <div class="modal-wrapper">
-            @if (showRecoveryModal)
-            {
+
+        @if (showRecoveryModal)
+        {
+            <div class="modal-wrapper">
                 <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
                     <div class="modal-dialog">
                         <div class="modal-content">
@@ -231,10 +232,12 @@
                         </div>
                     </div>
                 </div>
-            }
+            </div>
+        }
 
-            @if (showRecoveryReleaseModal)
-            {
+        @if (showRecoveryReleaseModal)
+        {
+            <div class="modal-wrapper">
                 <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
                     <div class="modal-dialog">
                         <div class="modal-content">
@@ -278,10 +281,12 @@
                         </div>
                     </div>
                 </div>
-            }
+            </div>
+        }
 
-            @if (showEndOfProjectModal)
-            {
+        @if (showEndOfProjectModal)
+        {
+            <div class="modal-wrapper">
                 <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
                     <div class="modal-dialog">
                         <div class="modal-content">
@@ -326,10 +331,11 @@
                         </div>
                     </div>
                 </div>
-            }
-        </div>
+            </div>
+        }
     </div>
 </div>
+ 
 
 @code {
     [Parameter]

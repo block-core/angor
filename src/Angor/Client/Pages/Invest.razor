@@ -444,34 +444,55 @@ else
     {
         @if (investorProject.ReceivedFounderSignatures() && !investorProject.InvestedInProject())
         {
-            <div class="card mt-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4>Founder has signed</h4>
-                    <button type="button" class="btn btn-border-danger" @onclick="CancelInvestment">Cancel</button>
+            <div class="card mt-4 animate-fade-in">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                    <h4 class="mb-0">Founder has signed</h4>
+                    <button type="button" class="btn btn-border-danger animate-scale mt-2 mt-md-0" @onclick="CancelInvestment">
+                        <Icon IconName="cancel" Width="20" Height="20" class="me-1" />
+                        <span>Cancel</span>
+                    </button>
                 </div>
                 <div class="card-body">
-                    <p class="modal-title">The founder has signed a transaction agreement ensuring that you can recover your funds if the project does not succeed, you may now invest.</p>
-                    <br />
-                    <button type="button" class="btn btn-border-success" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
-                        @if (publishSpinner)
-                        {
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            <span>Confirm...</span>
-                        }
-                        else
-                        {
-                            <span>Invest</span>
-                        }
-                    </button>
+                    <p class="modal-title">
+                        The founder has signed a transaction agreement ensuring that you can recover your funds if the project does not succeed, you may now invest.
+                    </p>
+                    <div class="d-flex justify-content-center mt-4">
+                        <button type="button" class="btn btn-border-success animate-scale" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
+                            @if (publishSpinner)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Confirm...</span>
+                            }
+                            else
+                            {
+                                <Icon IconName="invest" Width="20" Height="20" class="me-1" />
+                                <span>Invest</span>
+                            }
+                        </button>
+                    </div>
 
                     @if (investorProject.SignaturesInfo != null)
                     {
-                        <div class="mt-3">
-                            <h5>Transaction Details</h5>
-                            <div class="mb-1">
-                                <strong>Amount to invest:</strong>  @Money.Satoshis((investorProject.AmountInvested ?? 0)).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                <p><strong>Date:</strong> @investorProject?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("MM/dd/yyyy HH:mm")</p>
-                                <p><strong>Project Name: </strong> @investorProject?.Metadata?.Name</p>
+                        <div class="transaction-details mt-4">
+                            <h5 class="section-title">
+                                <Icon IconName="details" Height="20" Width="20" class="me-2" />
+                                Transaction Details
+                            </h5>
+                            <div class="info-card p-3 rounded-3 border hover-effect">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>Amount to invest:</strong>
+                                        <p>@Money.Satoshis((investorProject.AmountInvested ?? 0)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                    </div>
+                                    <div>
+                                        <strong>Date:</strong>
+                                        <p>@investorProject?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("MM/dd/yyyy HH:mm")</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <strong>Project Name:</strong>
+                                    <p>@investorProject?.Metadata?.Name</p>
+                                </div>
                             </div>
                         </div>
                     }
