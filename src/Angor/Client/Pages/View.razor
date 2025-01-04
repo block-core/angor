@@ -1,4 +1,4 @@
-﻿@page "/view/{ProjectId}"
+﻿﻿@page "/view/{ProjectId}"
 @using System.Text.RegularExpressions
 @using Angor.Client.Models
 @using Angor.Client.Storage
@@ -356,7 +356,7 @@ else
                 <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                 <div class="input-group">
                     <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly/>
-                  @*   <button @onclick="OpenInBrowseAsync" class="btn btn-border">
+                    @*   <button @onclick="OpenInBrowseAsync" class="btn btn-border">
                         <Icon IconName="link"></Icon>
                     </button> *@
                 </div>
@@ -554,18 +554,16 @@ else
                         StateHasChanged();
                     },
                     projectIndexerData.NostrEventId); // Pass the correct IDs
+            }
+            else
+            {
+                findInProgress = false;
+                error = "Project not found...";
+                StateHasChanged();
+            }
+        }
 
 
-                    }
-                    else
-                    {
-                        findInProgress = false;
-                        error = "Project not found...";
-                        StateHasChanged();
-                    }
-                }
-            
-                
         catch (Exception ex)
         {
             error = $"An error occurred: {ex.Message}";
@@ -573,6 +571,23 @@ else
             StateHasChanged();
         }
     }
+
+    private async void OpenInBrowseProfileAsync()
+    {
+        var npub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey);
+
+        if (!string.IsNullOrEmpty(npub))
+        {
+            var url = $"https://profile.angor.io/profile/{npub}";
+
+            await Js.InvokeVoidAsync("window.open", url, "_blank");
+        }
+        else
+        {
+            notificationComponent.ShowNotificationMessage("Public key is not available.", 3);
+        }
+    }
+
 
     private async Task SetProjectLinksAndRefreshBalance()
     {
@@ -624,7 +639,7 @@ else
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage(ex.Message,ex);
+            notificationComponent.ShowErrorMessage(ex.Message, ex);
         }
         finally
         {
@@ -749,19 +764,13 @@ else
         }
     }
 
-    private async void OpenInBrowseAsync()
-    {
-        var url = $"https://hub.angor.io/project/{project.ProjectInfo.ProjectIdentifier}";
 
-        await Js.InvokeVoidAsync("window.open", url, "_blank");
-    }
- 
     public MarkupString ConvertToMarkupString(string input)
     {
         string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
     }
-    
+
     private async Task FetchStages()
     {
         if (project?.ProjectInfo?.ProjectIdentifier == null)
@@ -769,7 +778,7 @@ else
             notificationComponent.ShowErrorMessage("Project identifier is missing.");
             return;
         }
-}
+
 
         try
         {
