@@ -21,6 +21,8 @@
 @inject IHtmlStripperService HtmlStripperService;
 
 @inject IFounderTransactionActions _founderTransactionActions
+@inject IUTXOService UTXOService
+
 <NotificationComponent @ref="notificationComponent"/>
 <PasswordComponent @ref="passwordComponent"/>
 
@@ -858,6 +860,8 @@
 
         try
         {
+            await UTXOService.RefreshUTXOsAsync();
+            notificationComponent.ShowNotificationMessage("UTXOs refreshed successfully!");
             var words = await passwordComponent.GetWalletAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
 
