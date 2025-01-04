@@ -940,6 +940,15 @@
 
             project.CreationTransactionId = transactionId;
             storage.UpdateFounderProject(project);
+            
+            
+            foreach (var stage in project.ProjectInfo.Stages)
+            {
+                if (!stage.IsPublished)
+                {
+                    await PublishStageDuringTransaction(stage);
+                }
+            }
 
             NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
         }
