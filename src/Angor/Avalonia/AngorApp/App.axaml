@@ -1,23 +1,26 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="using:AngorApp"
+             xmlns:misc="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
              x:Class="AngorApp.App"
              RequestedThemeVariant="Light">
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
 
-        <local:ViewLocator />
+        <misc:NamingConventionViewLocator />
+        <misc:DataTemplateInclude Source="avares://Zafiro.Avalonia/Controls/Wizards/WizardTemplate.axaml" />
 
     </Application.DataTemplates>
 
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
+        <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" />
         <StyleInclude Source="Styles.axaml" />
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <StyleInclude Source="Controls/Pane.axaml" />
-        
+        <StyleInclude Source="Controls/Dialog.axaml" />
+        <StyleInclude Source="avares://AvaloniaProgressRing/Styles/ProgressRing.xaml" />
     </Application.Styles>
 
     <Application.Resources>
@@ -28,6 +31,7 @@
                 <MergeResourceInclude Source="Controls/Header.axaml" />
                 <MergeResourceInclude Source="Controls/Frame.axaml" />
                 <MergeResourceInclude Source="Controls/SectionItem.axaml" />
+                <MergeResourceInclude Source="Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
 
         </ResourceDictionary>

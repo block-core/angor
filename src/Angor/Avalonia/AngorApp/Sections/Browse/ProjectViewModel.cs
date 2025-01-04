@@ -1,16 +1,19 @@
+using AngorApp.Model;
 using AngorApp.Sections.Browse.Details;
+using AngorApp.Services;
+using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Controls.Navigation;
 
 namespace AngorApp.Sections.Browse;
 
 public class ProjectViewModel : ReactiveObject
 {
-    private readonly Project project;
+    private readonly IProject project;
 
-    public ProjectViewModel(Project project, INavigator navigator)
+    public ProjectViewModel(Func<Maybe<IWallet>> getWallet, IProject project, INavigator navigator, UIServices uiServices)
     {
         this.project = project;
-        GoToDetails = ReactiveCommand.Create(() => navigator.Go(() => new ProjectDetailsViewModel(project)));
+        GoToDetails = ReactiveCommand.Create(() => navigator.Go(() => new ProjectDetailsViewModel(getWallet, project, uiServices)));
     }
 
     public string Name => project.Name;

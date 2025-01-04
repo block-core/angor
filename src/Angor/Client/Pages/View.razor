@@ -23,7 +23,7 @@
 @inject IJSRuntime Js;
 @inject ILogger<Browse> Logger;
 @inject IHtmlStripperService HtmlStripperService;
-
+@inject IApplicationLogicService applicationLogicService;
 @inject NostrConversionHelper NostrHelper
 
 
@@ -197,31 +197,30 @@ else
 
     <!-- Stages Section -->
 
-<div class="card card-body mt-4">
-    <div class="d-flex align-items-center">
-        <span class="user-select-none">
-            <Icon IconName="stages"></Icon>
-        </span>
-        <div class="h-100 ms-3">
-            <h5 class="mb-0 font-weight-bolder">
-                Stages
-            </h5>
+    <div class="card card-body mt-4">
+        <div class="d-flex align-items-center">
+            <span class="user-select-none">
+                <Icon IconName="stages"></Icon>
+            </span>
+            <div class="h-100 ms-3">
+                <h5 class="mb-0 font-weight-bolder">
+                    Stages
+                </h5>
+            </div>
         </div>
-    </div>
-    <div class="table-responsive form-control mt-4">
-        <table class="table align-items-center mb-0">
-            <thead>
-            <tr>
-                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage</th>
-                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage %</th>
-                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Release Date</th>
-                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Days Until Stage</th>
-                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Amount Per Stage</th>
-            </tr>
-            </thead>
-            <tbody>
-            @if (project?.ProjectInfo?.Stages != null && project.ProjectInfo.Stages.Any())
-            {
+        <div class="table-responsive form-control mt-4">
+            <table class="table align-items-center mb-0">
+                <thead>
+                <tr>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Stage %</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Release Date</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Days Until Stage</th>
+                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Amount Per Stage</th>
+                    <!-- Other headers -->
+                </tr>
+                </thead>
+                <tbody>
                 @for (var index = 0; index < project.ProjectInfo.Stages.Count; index++)
                 {
                     var stage = project.ProjectInfo.Stages[index];
@@ -242,19 +241,13 @@ else
                             }
                         </td>
                         <td>@amountInStage @network.CoinTicker</td>
+                        <!-- Other stage details -->
                     </tr>
                 }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="5" class="text-center">No stages available.</td>
-                </tr>
-            }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
 
     <!-- Seeders Section -->
@@ -312,25 +305,19 @@ else
                     Seize the opportunity to invest in this project.
                 </p>
                 @{
-                    var timeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
-
-                    if (timeLeft <= 0 && network.NetworkType == NetworkType.Testnet)
-                    {
-                        // on testnet we will not disable the ability to invest at all
-                        timeLeft = 1;
-                    }
+                    var canInvest = applicationLogicService.IsInvestmentWindowOpen(project?.ProjectInfo);
                 }
                 <button class="btn btn-border mb-3" data-cy="INVEST_BUTTON"
                         @onclick="InvestInProject"
-                        disabled="@(timeLeft <= 0 ? "disabled" : null)"
-                        title="@(timeLeft <= 0 ? "The investing period is over" : null)">
-                    @if (timeLeft > 0)
+                        disabled="@(!canInvest)">
+
+                    @if (!canInvest)
                     {
-                        <text>Invest Now</text>
+                        <text>The investing period is over</text>
                     }
                     else
                     {
-                        <text>The investing period is over</text>
+                        <text>Invest Now</text>
                     }
                 </button>
             </div>
@@ -369,14 +356,15 @@ else
                 <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                 <div class="input-group">
                     <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly/>
-                    <button @onclick="OpenInBrowseAsync" class="btn btn-border">
+                  @*   <button @onclick="OpenInBrowseAsync" class="btn btn-border">
                         <Icon IconName="link"></Icon>
-                    </button>
+                    </button> *@
                 </div>
 
 
                 @if (founder)
                 {
+                    <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border mt-4 mr-1">Edit project profile</button>
                     <button @onclick="ShowNsecAsync" class="btn btn-border mt-4">Show private key</button>
 
                     @if (isGeneratingNsec)
@@ -509,14 +497,15 @@ else
                 invested = investorProject.InvestedInProject();
                 myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investorProject.TransactionId}";
                 projectStats.Loading = false;
+                SetProjectLinksAndRefreshBalance();
                 return;
             }
 
             project = SessionStorage.GetProjectById(ProjectId);
             if (project != null)
             {
-                await SetProjectLinksAndRefreshBalance();
                 projectStats.Loading = false;
+                SetProjectLinksAndRefreshBalance();
                 await FetchStages();
                 StateHasChanged();
                 return;
@@ -759,6 +748,13 @@ else
             notificationComponent.ShowNotificationMessage("Public key is not available.", 3);
         }
     }
+
+    private async void OpenInBrowseAsync()
+    {
+        var url = $"https://hub.angor.io/project/{project.ProjectInfo.ProjectIdentifier}";
+
+        await Js.InvokeVoidAsync("window.open", url, "_blank");
+    }
  
     public MarkupString ConvertToMarkupString(string input)
     {
@@ -773,6 +769,7 @@ else
             notificationComponent.ShowErrorMessage("Project identifier is missing.");
             return;
         }
+}
 
         try
         {

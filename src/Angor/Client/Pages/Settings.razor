@@ -79,32 +79,22 @@
                                             <h5>This will wipe your wallet!</h5>
                                         </div>
 
-                                        <div class="card">
-                                            <div class="card-header p-2">
-                                                <div class="d-flex align-items-center text-warning">
-                                                    <span>Warning</span>
-                                                </div>
-                                            </div>
-                                            <div class="card-body pb-0 pt-0 ps-3 pe-3">
-                                                <p class="mb-0">By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
-                                            </div>
-                                            <div class="card-footer pb-2 pt-2 ps-3 pe-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
-                                                    <label class="form-check-label mb-0" for="confirmWipeCheckbox">
-                                                        Confirm?
-                                                    </label>
-                                                </div>
-                                                @if (showConfirmWipeMessage)
-                                                {
-                                                    <div class="alert alert-danger text-white mt-2" role="alert">
-                                                        Please tick the box to wipe all storage!
-                                                    </div>
-                                                }
+                                        <div class="alert alert-warning" role="alert">
+                                            <p class="mb-0 text-bl">Warning: By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
 
+                                            <div class="form-check">
+                                                <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                                <label class="form-check-label text-black mb-0" for="confirmWipeCheckbox">
+                                                    Confirm?
+                                                </label>
                                             </div>
+                                            @if (showConfirmWipeMessage)
+                                            {
+                                                <div class="alert alert-danger mt-2 mb-0" role="alert">
+                                                    Please tick the box to wipe all storage!
+                                                </div>
+                                            }
                                         </div>
-
 
                                         <!-- Dropdown for network selection -->
                                         <div class="card card-body mb-3 mt-4">
@@ -122,7 +112,7 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button class="btn btn-danger" @onclick="ChangeNetwork">Change Network</button>
-                                     </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -379,29 +369,21 @@
                                         </span>
                                     </div>
                                     <div class="modal-body modal-body-scroll">
-                                        <div class="card">
-                                            <div class="card-header p-2">
-                                                <div class="d-flex align-items-center text-warning">
-                                                    <span>Warning</span>
+                                        <div class="alert alert-warning" role="alert">
+                                            <p class="mb-0 text-bl">Warning: By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
+
+                                            <div class="form-check">
+                                                <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                                <label class="form-check-label text-black mb-0" for="confirmWipeCheckbox">
+                                                    Confirm?
+                                                </label>
+                                            </div>
+                                            @if (showConfirmWipeMessage)
+                                            {
+                                                <div class="alert alert-danger mt-2 mb-0" role="alert">
+                                                    Please tick the box to wipe all storage!
                                                 </div>
-                                            </div>
-                                            <div class="card-body pb-0 pt-0 ps-3 pe-3">
-                                                <p class="mb-0">By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
-                                            </div>
-                                            <div class="card-footer pb-2 pt-2 ps-3 pe-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
-                                                    <label class="form-check-label mb-0" for="confirmWipeCheckbox">
-                                                        Confirm?
-                                                    </label>
-                                                </div>
-                                                @if (showConfirmWipeMessage)
-                                                {
-                                                    <div class="alert alert-danger text-white mt-2" role="alert">
-                                                        Please tick the box to wipe all storage!
-                                                    </div>
-                                                }
-                                            </div>
+                                            }
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -432,7 +414,7 @@
     private bool confirmWipe = false;
     private bool showConfirmWipeMessage = false;
     private string selectedNetwork = "Main"; // Default to "testnet"
-    
+
     private string selectedCurrency = "BTC"; // Default to BTC
 
     private SettingsInfo settingsInfo;
@@ -446,11 +428,11 @@
         networkType = _networkConfiguration.GetNetwork().Name;
 
         _networkService.OnStatusChanged += UpdateUI;
-        
+
         selectedCurrency = _clientStorage.GetCurrencyDisplaySetting();
 
         selectedNetwork = networkType;
-        
+
         return base.OnInitializedAsync();
     }
 
@@ -472,66 +454,66 @@
             await Refresh(false);
         }
     }
-    
+
     private async Task AddIndexer()
     {
         if (!string.IsNullOrWhiteSpace(newIndexerLink))
+        {
+            if (!Uri.TryCreate(newIndexerLink, UriKind.Absolute, out Uri? uri))
             {
-                if (!Uri.TryCreate(newIndexerLink, UriKind.Absolute, out Uri? uri))
-                    {
-                        notificationComponent.ShowErrorMessage($"Invalid URL: {newIndexerLink}");
-                        return;
-                    }
-    
-        if (uri.Scheme is not ("http" or "https"))
+                notificationComponent.ShowErrorMessage($"Invalid URL: {newIndexerLink}");
+                return;
+            }
+
+            if (uri.Scheme is not ("http" or "https"))
             {
                 notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
                 return;
             }
-    
-        newIndexerLink = $"{uri.Scheme}://{uri.Host}".TrimEnd('/');
-        
-        Logger.LogInformation($"Normalized URL: {newIndexerLink}");
-    
-        if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
-        {
-            notificationComponent.ShowErrorMessage($"URL already exists: {newIndexerLink}");
-            return;
-        }
-            
-        // Check indexer status and fetch genesis block hash
-        var (isOnline, genesisHash) = await _indexerService.CheckIndexerNetwork(newIndexerLink);
-        if (!isOnline)
+
+            newIndexerLink = $"{uri.Scheme}://{uri.Host}".TrimEnd('/');
+
+            Logger.LogInformation($"Normalized URL: {newIndexerLink}");
+
+            if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
+            {
+                notificationComponent.ShowErrorMessage($"URL already exists: {newIndexerLink}");
+                return;
+            }
+
+            // Check indexer status and fetch genesis block hash
+            var (isOnline, genesisHash) = await _indexerService.CheckIndexerNetwork(newIndexerLink);
+            if (!isOnline)
             {
                 notificationComponent.ShowErrorMessage("The indexer is offline or unreachable.");
                 return;
             }
-            
-        var expectedHash = _networkConfiguration.GetGenesisBlockHash();
-        if (!_indexerService.ValidateGenesisBlockHash(genesisHash, expectedHash))
-        {
-            var expectedNetworkName = _networkConfiguration.GetNetwork().Name;
-            var fetchedNetworkName = _networkConfiguration.GetNetworkNameFromGenesisBlockHash(genesisHash);
-            notificationComponent.ShowErrorMessage($"The indexer is not compatible with the selected network. " +
-            $"Expected: {expectedNetworkName}, Provided: {fetchedNetworkName ?? "Unknown"}");
-            return;
+
+            var expectedHash = _networkConfiguration.GetGenesisBlockHash();
+            if (!_indexerService.ValidateGenesisBlockHash(genesisHash, expectedHash))
+            {
+                var expectedNetworkName = _networkConfiguration.GetNetwork().Name;
+                var fetchedNetworkName = _networkConfiguration.GetNetworkNameFromGenesisBlockHash(genesisHash);
+                notificationComponent.ShowErrorMessage($"The indexer is not compatible with the selected network. " +
+                $"Expected: {expectedNetworkName}, Provided: {fetchedNetworkName ?? "Unknown"}");
+                return;
+            }
+
+            // Add indexer to settings
+            settingsInfo.Indexers.Add(new SettingsUrl
+                {
+                    Url = newIndexerLink,
+                    LastCheck = DateTime.UtcNow,
+                    Status = UrlStatus.Online
+                });
+
+            _clientStorage.SetSettingsInfo(settingsInfo);
+            notificationComponent.ShowNotificationMessage("Indexer added successfully.");
+            newIndexerLink = string.Empty;
+
+            await Refresh(false);
         }
-        
-        // Add indexer to settings
-        settingsInfo.Indexers.Add(new SettingsUrl
-        {
-            Url = newIndexerLink,
-            LastCheck = DateTime.UtcNow,
-            Status = UrlStatus.Online
-        });
-        
-        _clientStorage.SetSettingsInfo(settingsInfo);
-        notificationComponent.ShowNotificationMessage("Indexer added successfully.");
-        newIndexerLink = string.Empty;
-    
-        await Refresh(false);
-       }
-    }    
+    }
 
     private async Task AddRelay()
     {

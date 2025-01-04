@@ -1,12 +1,19 @@
+using System.Windows.Input;
+using AngorApp.Model;
+
 namespace AngorApp.Sections.Browse.Details;
 
-public interface IProjectDetailsViewModel : IProject
+public interface IProjectDetailsViewModel
 {
-    string Name { get; }
-    string ShortDescription { get; }
     object Icon { get; }
     object Picture { get; }
-    public IEnumerable<Stage> Stages { get; }
+    public ICommand Invest { get; }
+    public IEnumerable<INostrRelay> Relays { get; }
+    public double TotalDays { get; }
+    public double TotalInvestment { get; }
+    public double CurrentDays { get; }
+    public double CurrentInvestment { get; }
+    public IProject Project { get; }
 }
 
 public class Stage

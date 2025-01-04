@@ -17,6 +17,7 @@
                 <ControlTemplate TargetType="controls1:IconButton">
                     <Button
                         Padding="{TemplateBinding Padding}"
+                        Flyout="{TemplateBinding Flyout}"
                         Margin="{TemplateBinding Margin}"
                         Command="{TemplateBinding Command}"
                         CommandParameter="{TemplateBinding CommandParameter}"
