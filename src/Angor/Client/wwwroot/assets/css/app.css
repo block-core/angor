@@ -978,9 +978,7 @@ tr[style*="cursor: pointer;"] {
 
 input[type="checkbox"] + label {
     display: flex;
-    margin: 0.2em;
     cursor: pointer;
-    padding: 0.2em;
     align-items: center;
 }
 
@@ -2092,7 +2090,7 @@ button:hover:not(:disabled) {
 }
 
 .info-card {
-    background: var(--angor-card-bg, #ffffff);
+    background: var(--angor-section-bg, rgba(0, 0, 0, 0.02));
     padding: 1.25rem;
     border-radius: 10px;
     border: 1px solid var(--btn-border);
@@ -2101,12 +2099,11 @@ button:hover:not(:disabled) {
 }
 
 .dark .info-card {
-    background: var(--angor-card-bg-dark, rgba(8, 59, 70, 0.8));
+    background: var(--angor-section-bg-dark, rgba(255, 255, 255, 0.05));
     border-color: var(--angor-secondary);
 }
 
 .info-card:hover {
-    transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
