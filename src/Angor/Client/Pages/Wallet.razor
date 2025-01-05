@@ -120,7 +120,12 @@
 
                                     <div class="d-flex flex-wrap align-items-center justify-content-between mt-2">
                                         <button class="btn btn-border-success mt-3 w-100 w-md-auto" @onclick="GenerateNewWalletWords">
-                                            Generate New Words
+                                                           <div class="d-flex align-items-center justify-content-center">
+                                                <span class="me-1" data-cy="generate-wallet-words">
+                                                    <Icon IconName="plus" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
+                                                </span>
+                                                <span> Generate Wallet Words</span>
+                                            </div>
                                         </button>
 
                                         <div class="form-check mt-3 w-100 w-md-auto">
@@ -149,17 +154,23 @@
                             }
 
                             <div class="info-card mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" @bind="showPassphraseInput" id="enablePassphrase">
-                                    <label class="form-check-label d-flex align-items-center" for="enablePassphrase">
-                                        Enable Additional Security with Passphrase (optional)
-                                        <span class="ms-2" title="Adding a passphrase provides an extra layer of security for your wallet">
-                                            <Icon IconName="shield" Width="16" Height="16" />
+                                <button class="btn btn-border-success w-100" @onclick="ShowExtraWord">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <span class="me-1" data-cy="generate-wallet-words">
+                                            @if (isShowExtraWord)
+                                            {
+                                                <Icon IconName="shield-minus" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
+                                            }
+                                            else
+                                            {
+                                                <Icon IconName="shield-plus" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
+                                            }
                                         </span>
-                                    </label>
-                                </div>
+                                        <span> Optional extra word</span>
+                                    </div>
+                                </button>
 
-                                @if (showPassphraseInput)
+                                @if (isShowExtraWord)
                                 {
                                     <div class="mt-3">
                                         <div class="info-label d-flex align-items-center">
