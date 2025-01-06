@@ -164,6 +164,14 @@
         {
             isDarkTheme = storedTheme == "dark";
             await UpdateThemeIcon(isDarkTheme);
+            if (isDarkTheme)
+            {
+                await Js.InvokeVoidAsync("angor.addDarkBackground");
+            }
+            else
+            {
+                await Js.InvokeVoidAsync("angor.addLightBackground");
+            }
         }
     }
 
