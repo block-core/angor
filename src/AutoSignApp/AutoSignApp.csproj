@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Blockcore.NBitcoin" Version="1.0.14" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="WebSocketSharp" Version="1.0.3-rc11" />
   </ItemGroup>
 
 </Project>

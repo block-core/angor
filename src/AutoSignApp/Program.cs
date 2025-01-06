@@ -1,36 +1,54 @@
-﻿using WebSocketSharp;
-using Newtonsoft.Json;
+﻿using System;
+using System.Security.Cryptography;
+using System.Text;
 using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.DataEncoders;
+using WebSocketSharp;
 
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
-        string relayUrl = "wss://relay.angor.io"; // Relay URL
-        using (var ws = new WebSocket(relayUrl))
-        {
-            ws.OnMessage += (sender, e) =>
-            {
-                Console.WriteLine($"Message received: {e.Data}");
-                HandleRelayMessage(e.Data);
-            };
+        string relayUrl = "wss://relay.angor.io"; // Replace with actual relay URL
+        Console.WriteLine($"Connecting to relay: {relayUrl}");
 
-            ws.Connect();
+        using var ws = new WebSocket(relayUrl);
+
+        ws.OnMessage += (sender, e) =>
+        {
+            Console.WriteLine($"Message received: {e.Data}");
+            HandleRelayMessage(e.Data);
+        };
+
+        ws.OnOpen += (sender, e) =>
+        {
             Console.WriteLine("Connected to relay.");
-            Console.ReadLine(); // Keep the connection alive
-        }
+        };
+
+        ws.OnClose += (sender, e) =>
+        {
+            Console.WriteLine("Disconnected from relay.");
+        };
+
+        ws.Connect();
+        Console.WriteLine("Listening for messages...");
+        Console.ReadLine(); // Keep the connection alive
     }
 
-    static void HandleRelayMessage(string message)
+    private static void HandleRelayMessage(string message)
     {
         try
         {
-            var signatureRequest = JsonConvert.DeserializeObject<SignatureRequest>(message);
+            var signatureRequest = System.Text.Json.JsonSerializer.Deserialize<SignatureRequest>(message);
 
-            if (signatureRequest != null && !string.IsNullOrEmpty(signatureRequest.TransactionHex))
+            if (signatureRequest != null && !string.IsNullOrEmpty(signatureRequest.EncryptedMessage))
             {
                 Console.WriteLine($"Processing signature request from {signatureRequest.InvestorNostrPubKey}...");
                 AutoSignRequest(signatureRequest);
+            }
+            else
+            {
+                Console.WriteLine("Invalid message or no encrypted content found.");
             }
         }
         catch (Exception ex)
@@ -39,21 +57,25 @@ class Program
         }
     }
 
-    static void AutoSignRequest(SignatureRequest request)
+    private static void AutoSignRequest(SignatureRequest request)
     {
         try
         {
-            // Load the founder's private key securely
-            string founderPrivateKeyHex = "your-private-key"; // Replace with a securely loaded private key
+            string privateKey = "15839d7dc2355aad183c4c4ad6efdced46550146be2a2a5a0b35141bb75123cc"; // Replace with actual private key
+            string decryptedTransactionHex = DecryptNostrContent(privateKey, request.InvestorNostrPubKey, request.EncryptedMessage);
 
-            // Decrypt the request if necessary
-            string transactionHex = DecryptTransaction(request.EncryptedMessage, founderPrivateKeyHex);
+            if (!string.IsNullOrEmpty(decryptedTransactionHex))
+            {
+                Console.WriteLine($"Decrypted Transaction Hex: {decryptedTransactionHex}");
 
-            // Sign the transaction
-            string signedTransaction = SignTransaction(transactionHex, founderPrivateKeyHex);
+                string signedTransaction = SignTransaction(decryptedTransactionHex, privateKey);
 
-            // Send the signed transaction back to the relay
-            SendSignedTransaction(request, signedTransaction);
+                if (!string.IsNullOrEmpty(signedTransaction))
+                {
+                    Console.WriteLine($"Signed Transaction: {signedTransaction}");
+                    SendSignedTransaction(request, signedTransaction);
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -61,30 +83,47 @@ class Program
         }
     }
 
-    static string DecryptTransaction(string encryptedMessage, string privateKeyHex)
+    private static string DecryptNostrContent(string nsec, string npub, string encryptedContent)
     {
-        try
-        {
-            // Implement decryption logic using your cryptography service
-            string decryptedMessage = encryptedMessage; // Replace with actual decryption logic
-            return decryptedMessage;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error decrypting transaction: {ex.Message}");
-            return null;
-        }
+        string sharedSecretHex = GetSharedSecretHexWithoutPrefix(nsec, npub);
+        return DecryptWithSharedSecret(encryptedContent, sharedSecretHex);
     }
 
-    static string SignTransaction(string transactionHex, string privateKeyHex)
+    private static string GetSharedSecretHexWithoutPrefix(string nsec, string npub)
+    {
+        var privateKey = new Key(Encoders.Hex.DecodeData(nsec));
+        var publicKey = new PubKey("02" + npub);
+
+        var sharedSecret = publicKey.GetSharedPubkey(privateKey);
+        return Encoders.Hex.EncodeData(sharedSecret.ToBytes()[1..]);
+    }
+
+    private static string DecryptWithSharedSecret(string encryptedContent, string sharedSecretHex)
+    {
+        var key = Convert.FromHexString(sharedSecretHex);
+        var combined = Convert.FromBase64String(encryptedContent);
+
+        using var aes = Aes.Create();
+        aes.Key = key;
+
+        var iv = new byte[16];
+        var ciphertext = new byte[combined.Length - 16];
+        Array.Copy(combined, 0, iv, 0, 16);
+        Array.Copy(combined, 16, ciphertext, 0, ciphertext.Length);
+
+        aes.IV = iv;
+        using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+        var decryptedBytes = decryptor.TransformFinalBlock(ciphertext, 0, ciphertext.Length);
+        return Encoding.UTF8.GetString(decryptedBytes);
+    }
+
+    private static string SignTransaction(string transactionHex, string privateKeyHex)
     {
         try
         {
-            // Use NBitcoin to sign the transaction
             var key = new Key(Encoders.Hex.DecodeData(privateKeyHex));
             var transaction = Transaction.Parse(transactionHex, Network.Main);
 
-            // Sign and return the transaction
             transaction.Sign(key, true);
             return transaction.ToHex();
         }
@@ -95,38 +134,29 @@ class Program
         }
     }
 
-    static void SendSignedTransaction(SignatureRequest request, string signedTransaction)
+    private static void SendSignedTransaction(SignatureRequest request, string signedTransaction)
     {
-        try
-        {
-            string relayUrl = "wss://relay.angor.io"; // Relay URL
-            using (var ws = new WebSocket(relayUrl))
-            {
-                var response = new
-                {
-                    event = "signed",
-                    signedTransaction,
-                    request.EventId
-                };
+        string relayUrl = "wss://relay.angor.io"; // Replace with actual relay URL
+        using var ws = new WebSocket(relayUrl);
 
-                string jsonResponse = JsonConvert.SerializeObject(response);
-                ws.Connect();
-                ws.Send(jsonResponse);
-                Console.WriteLine($"Signed transaction sent for EventId: {request.EventId}");
-            }
-        }
-        catch (Exception ex)
+        var response = new
         {
-            Console.WriteLine($"Error sending signed transaction: {ex.Message}");
-        }
+            @event = "signed",
+            signedTransaction,
+            request.EventId
+        };
+
+        string jsonResponse = System.Text.Json.JsonSerializer.Serialize(response);
+
+        ws.Connect();
+        ws.Send(jsonResponse);
+        Console.WriteLine($"Signed transaction sent for EventId: {request.EventId}");
     }
 }
 
-// Define the SignatureRequest class
 public class SignatureRequest
 {
     public string InvestorNostrPubKey { get; set; }
     public string EncryptedMessage { get; set; }
-    public string TransactionHex { get; set; }
     public string EventId { get; set; }
 }
