@@ -1,9 +1,11 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
 using AngorApp.Common;
+using AngorApp.Common.Success;
 using AngorApp.Common.TransactionPreview;
 using AngorApp.Model;
 using AngorApp.Sections.Browse.Details.Invest.Amount;
+using AngorApp.Sections.Wallet.NoWallet;
 using AngorApp.Services;
 using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
@@ -12,14 +14,14 @@ using TransactionPreviewViewModel = AngorApp.Common.TransactionPreview.Transacti
 
 namespace AngorApp.Sections.Browse.Details;
 
-public class ProjectDetailsViewModel(Func<Maybe<IWallet>> getWallet, IProject project, UIServices uiServices) : ReactiveObject, IProjectDetailsViewModel
+public class ProjectDetailsViewModel(IWalletProvider walletProvider, IProject project, UIServices uiServices) : ReactiveObject, IProjectDetailsViewModel
 {
     public object Icon => project.Icon;
     public object Picture => project.Picture;
 
     public ICommand Invest { get; } = ReactiveCommand.CreateFromTask(() =>
     {
-        var maybeWallet = getWallet();
+        var maybeWallet = walletProvider.GetWallet();
         return maybeWallet.Match(wallet => DoInvest(wallet, project, uiServices), () => uiServices.NotificationService.Show("You need to create a Wallet before investing", "No wallet"));
     });
 

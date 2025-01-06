@@ -1,8 +1,4 @@
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-
-namespace AngorApp.Common;
+namespace AngorApp.Common.Success;
 
 public partial class SuccessView : UserControl
 {
