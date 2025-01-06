@@ -1,9 +1,22 @@
-﻿using System;
+﻿// Standard namespaces
+using System;
 using System.Security.Cryptography;
 using System.Text;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Net.WebSockets;
+
+// Aliases for resolving conflicts
+using NBitcoinCore = global::NBitcoin; // Alias for NBitcoin
+using BlockcoreNBitcoin = global::Blockcore.NBitcoin; // Alias for Blockcore.NBitcoin
+
+// Specific namespaces from your project
+using Angor.Shared;
+using Angor.Shared.Models;
+using Angor.Shared.Networks;
+
+
+
 
 class Program
 {
@@ -127,14 +140,15 @@ class Program
 {
     try
     {
-        var key = new NBitcoin.Key(NBitcoin.DataEncoders.Encoders.Hex.DecodeData(privateKeyHex));
-        var network = Blockcore.Networks.Networks.Bitcoin.Testnet(); // Replace with the correct network method
+        // Convert the private key hex to a BitcoinSecret
+        var key = new NBitcoinCore.Key(NBitcoinCore.DataEncoders.Encoders.Hex.DecodeData(privateKeyHex));
+        var bitcoinSecret = new NBitcoinCore.BitcoinSecret(key, NBitcoinCore.Network.TestNet);
 
-        var transaction = NBitcoin.Transaction.Parse(transactionHex, network);
+        // Parse the transaction
+        var transaction = NBitcoinCore.Transaction.Parse(transactionHex, NBitcoinCore.Network.TestNet);
 
-        // Adjust this call to match the correct signature
-        transaction.Sign(key, SigHash.All); // For NBitcoin
-        // Or: transaction.Sign(key);       // For Blockcore.NBitcoin, if applicable
+        // Sign the transaction
+        transaction.Sign(bitcoinSecret, new NBitcoinCore.ICoin[0]); // Passing an empty coin array as an example
 
         return transaction.ToHex();
     }
@@ -144,6 +158,10 @@ class Program
         return null;
     }
 }
+
+
+
+
 
 
     private static async Task SendSignedTransaction(SignatureRequest request, string signedTransaction)
@@ -171,7 +189,7 @@ class Program
 
 public class SignatureRequest
 {
-    public string InvestorNostrPubKey { get; set; }
-    public string EncryptedMessage { get; set; }
-    public string EventId { get; set; }
+    public string? InvestorNostrPubKey { get; set; }
+    public string? EncryptedMessage { get; set; }
+    public string? EventId { get; set; }
 }

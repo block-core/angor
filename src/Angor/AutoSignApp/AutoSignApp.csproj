@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Blockcore.NBitcoin" Version="1.0.14" />
     <PackageReference Include="Blockcore.Core" Version="1.1.41" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -16,6 +15,8 @@
     <PackageReference Include="HtmlAgilityPack" Version="1.11.71" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
     <PackageReference Include="WebSocketSharp" Version="1.0.3-rc11" />
+    <ProjectReference Include="../Shared/Angor.Shared.csproj" />
+
   </ItemGroup>
 
 </Project>
