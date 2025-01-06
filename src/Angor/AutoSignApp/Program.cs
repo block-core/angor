@@ -41,39 +41,78 @@ class Program
     }
 
 	static async Task ListenForMessages(ClientWebSocket client)
-    {
-        var buffer = new byte[1024 * 4];
+{
+    var buffer = new byte[1024 * 4];
 
-        while (client.State == WebSocketState.Open)
+    while (client.State == WebSocketState.Open)
+    {
+        Console.WriteLine("Waiting for a message...");
+
+        try
         {
             var result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+
             Console.WriteLine($"Message received: {message}");
-            HandleRelayMessage(message);
+
+            if (result.MessageType == WebSocketMessageType.Text)
+            {
+                HandleRelayMessage(message);
+            }
+            else if (result.MessageType == WebSocketMessageType.Close)
+            {
+                Console.WriteLine("WebSocket connection closed by the server.");
+                break;
+            }
+        }
+        catch (WebSocketException ex)
+        {
+            Console.WriteLine($"WebSocket error: {ex.Message}");
+            break;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error: {ex.Message}");
+            break;
         }
     }
 
-    private static void HandleRelayMessage(string message)
-    {
-        try
-        {
-            var signatureRequest = System.Text.Json.JsonSerializer.Deserialize<SignatureRequest>(message);
+    Console.WriteLine($"Exiting ListenForMessages loop. WebSocket State: {client.State}");
+}
 
-            if (signatureRequest != null && !string.IsNullOrEmpty(signatureRequest.EncryptedMessage))
+
+
+    private static void HandleRelayMessage(string message)
+{
+    try
+    {
+        Console.WriteLine("Handling incoming message...");
+        var signatureRequest = System.Text.Json.JsonSerializer.Deserialize<SignatureRequest>(message);
+
+        if (signatureRequest != null)
+        {
+            Console.WriteLine($"Parsed SignatureRequest: {signatureRequest}");
+            if (!string.IsNullOrEmpty(signatureRequest.EncryptedMessage))
             {
                 Console.WriteLine($"Processing signature request from {signatureRequest.InvestorNostrPubKey}...");
                 AutoSignRequest(signatureRequest);
             }
             else
             {
-                Console.WriteLine("Invalid message or no encrypted content found.");
+                Console.WriteLine("Invalid SignatureRequest: EncryptedMessage is null or empty.");
             }
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine($"Error processing message: {ex.Message}");
+            Console.WriteLine("Failed to parse SignatureRequest.");
         }
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error handling message: {ex.Message}\nMessage Content: {message}");
+    }
+}
+
 
     private static void AutoSignRequest(SignatureRequest request)
     {
@@ -102,10 +141,25 @@ class Program
     }
 
     private static string DecryptNostrContent(string nsec, string npub, string encryptedContent)
+{
+    try
     {
+        Console.WriteLine("Decrypting Nostr content...");
+        Console.WriteLine($"nsec: {nsec}, npub: {npub}, encryptedContent: {encryptedContent}");
+
         string sharedSecretHex = GetSharedSecretHexWithoutPrefix(nsec, npub);
-        return DecryptWithSharedSecret(encryptedContent, sharedSecretHex);
+        string decryptedContent = DecryptWithSharedSecret(encryptedContent, sharedSecretHex);
+
+        Console.WriteLine($"Decrypted Content: {decryptedContent}");
+        return decryptedContent;
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error decrypting Nostr content: {ex.Message}");
+        return null;
+    }
+}
+
 
     private static string GetSharedSecretHexWithoutPrefix(string nsec, string npub)
 	{
@@ -140,17 +194,20 @@ class Program
 {
     try
     {
-        // Convert the private key hex to a BitcoinSecret
+        Console.WriteLine("Signing transaction...");
+        Console.WriteLine($"Transaction Hex: {transactionHex}");
+        Console.WriteLine($"Private Key Hex: {privateKeyHex}");
+
         var key = new NBitcoinCore.Key(NBitcoinCore.DataEncoders.Encoders.Hex.DecodeData(privateKeyHex));
         var bitcoinSecret = new NBitcoinCore.BitcoinSecret(key, NBitcoinCore.Network.TestNet);
-
-        // Parse the transaction
         var transaction = NBitcoinCore.Transaction.Parse(transactionHex, NBitcoinCore.Network.TestNet);
 
-        // Sign the transaction
-        transaction.Sign(bitcoinSecret, new NBitcoinCore.ICoin[0]); // Passing an empty coin array as an example
+        Console.WriteLine("Signing transaction with BitcoinSecret...");
+        transaction.Sign(bitcoinSecret, new NBitcoinCore.ICoin[0]); // Adjust coin array if needed
 
-        return transaction.ToHex();
+        string signedTransactionHex = transaction.ToHex();
+        Console.WriteLine($"Signed Transaction Hex: {signedTransactionHex}");
+        return signedTransactionHex;
     }
     catch (Exception ex)
     {
@@ -166,24 +223,35 @@ class Program
 
     private static async Task SendSignedTransaction(SignatureRequest request, string signedTransaction)
 {
-    string relayUrl = "wss://relay.angor.io";
-
-    using var client = new ClientWebSocket();
-    await client.ConnectAsync(new Uri(relayUrl), CancellationToken.None);
-
-    var response = new
+    try
     {
-        @event = "signed",
-        signedTransaction,
-        request.EventId
-    };
+        Console.WriteLine("Sending signed transaction...");
+        string relayUrl = "wss://relay.angor.io";
 
-    string jsonResponse = System.Text.Json.JsonSerializer.Serialize(response);
-    var buffer = Encoding.UTF8.GetBytes(jsonResponse);
+        using var client = new ClientWebSocket();
+        await client.ConnectAsync(new Uri(relayUrl), CancellationToken.None);
+        Console.WriteLine("Connected to relay for sending transaction.");
 
-    await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
-    Console.WriteLine($"Signed transaction sent for EventId: {request.EventId}");
+        var response = new
+        {
+            @event = "signed",
+            signedTransaction,
+            request.EventId
+        };
+
+        string jsonResponse = System.Text.Json.JsonSerializer.Serialize(response);
+        Console.WriteLine($"JSON Response: {jsonResponse}");
+
+        var buffer = Encoding.UTF8.GetBytes(jsonResponse);
+        await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
+        Console.WriteLine($"Signed transaction sent for EventId: {request.EventId}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error sending signed transaction: {ex.Message}");
+    }
 }
+
 
 }
 
