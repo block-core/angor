@@ -9,30 +9,35 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        string relayUrl = "wss://relay.angor.io"; // Replace with actual relay URL
+        string relayUrl = "wss://relay.angor.io";
         Console.WriteLine($"Connecting to relay: {relayUrl}");
 
-        using var ws = new WebSocket(relayUrl);
+        using var client = new ClientWebSocket();
 
-        ws.OnMessage += (sender, e) =>
+        try
         {
-            Console.WriteLine($"Message received: {e.Data}");
-            HandleRelayMessage(e.Data);
-        };
-
-        ws.OnOpen += (sender, e) =>
-        {
+            await client.ConnectAsync(new Uri(relayUrl), CancellationToken.None);
             Console.WriteLine("Connected to relay.");
-        };
 
-        ws.OnClose += (sender, e) =>
+            await ListenForMessages(client);
+        }
+        catch (Exception ex)
         {
-            Console.WriteLine("Disconnected from relay.");
-        };
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
 
-        ws.Connect();
-        Console.WriteLine("Listening for messages...");
-        Console.ReadLine(); // Keep the connection alive
+	static async Task ListenForMessages(ClientWebSocket client)
+    {
+        var buffer = new byte[1024 * 4];
+
+        while (client.State == WebSocketState.Open)
+        {
+            var result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+            Console.WriteLine($"Message received: {message}");
+            HandleRelayMessage(message);
+        }
     }
 
     private static void HandleRelayMessage(string message)
@@ -90,13 +95,14 @@ class Program
     }
 
     private static string GetSharedSecretHexWithoutPrefix(string nsec, string npub)
-    {
-        var privateKey = new Key(Encoders.Hex.DecodeData(nsec));
-        var publicKey = new PubKey("02" + npub);
+	{
+    	var privateKey = new Blockcore.NBitcoin.Key(Blockcore.NBitcoin.DataEncoders.Encoders.Hex.DecodeData(nsec));
+   		var publicKey = new Blockcore.NBitcoin.PubKey("02" + npub);
 
-        var sharedSecret = publicKey.GetSharedPubkey(privateKey);
-        return Encoders.Hex.EncodeData(sharedSecret.ToBytes()[1..]);
-    }
+ 		var sharedSecret = publicKey.GetSharedPubkey(privateKey);
+    	return Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(sharedSecret.ToBytes()[1..]);
+	}
+
 
     private static string DecryptWithSharedSecret(string encryptedContent, string sharedSecretHex)
     {
@@ -118,40 +124,49 @@ class Program
     }
 
     private static string SignTransaction(string transactionHex, string privateKeyHex)
+{
+    try
     {
-        try
-        {
-            var key = new Key(Encoders.Hex.DecodeData(privateKeyHex));
-            var transaction = Transaction.Parse(transactionHex, Network.Main);
+        var key = new NBitcoin.Key(NBitcoin.DataEncoders.Encoders.Hex.DecodeData(privateKeyHex));
+        var network = Blockcore.Networks.Networks.Bitcoin.Testnet(); // Replace with the correct network method
 
-            transaction.Sign(key, true);
-            return transaction.ToHex();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error signing transaction: {ex.Message}");
-            return null;
-        }
+        var transaction = NBitcoin.Transaction.Parse(transactionHex, network);
+
+        // Adjust this call to match the correct signature
+        transaction.Sign(key, SigHash.All); // For NBitcoin
+        // Or: transaction.Sign(key);       // For Blockcore.NBitcoin, if applicable
+
+        return transaction.ToHex();
     }
-
-    private static void SendSignedTransaction(SignatureRequest request, string signedTransaction)
+    catch (Exception ex)
     {
-        string relayUrl = "wss://relay.angor.io"; // Replace with actual relay URL
-        using var ws = new WebSocket(relayUrl);
-
-        var response = new
-        {
-            @event = "signed",
-            signedTransaction,
-            request.EventId
-        };
-
-        string jsonResponse = System.Text.Json.JsonSerializer.Serialize(response);
-
-        ws.Connect();
-        ws.Send(jsonResponse);
-        Console.WriteLine($"Signed transaction sent for EventId: {request.EventId}");
+        Console.WriteLine($"Error signing transaction: {ex.Message}");
+        return null;
     }
+}
+
+
+    private static async Task SendSignedTransaction(SignatureRequest request, string signedTransaction)
+{
+    string relayUrl = "wss://relay.angor.io";
+
+    using var client = new ClientWebSocket();
+    await client.ConnectAsync(new Uri(relayUrl), CancellationToken.None);
+
+    var response = new
+    {
+        @event = "signed",
+        signedTransaction,
+        request.EventId
+    };
+
+    string jsonResponse = System.Text.Json.JsonSerializer.Serialize(response);
+    var buffer = Encoding.UTF8.GetBytes(jsonResponse);
+
+    await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
+    Console.WriteLine($"Signed transaction sent for EventId: {request.EventId}");
+}
+
 }
 
 public class SignatureRequest
