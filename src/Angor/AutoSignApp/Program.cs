@@ -22,7 +22,7 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        string relayUrl = "wss://relay.angor.io";
+        string relayUrl = "wss://relay.angor.io/";
         Console.WriteLine($"Connecting to relay: {relayUrl}");
 
         using var client = new ClientWebSocket();
@@ -51,17 +51,18 @@ class Program
         try
         {
             var result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-
-            Console.WriteLine($"Message received: {message}");
+            Console.WriteLine($"WebSocket State: {client.State}");
+            Console.WriteLine($"Result Count: {result.Count}");
 
             if (result.MessageType == WebSocketMessageType.Text)
             {
+                string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                Console.WriteLine($"Message received: {message}");
                 HandleRelayMessage(message);
             }
             else if (result.MessageType == WebSocketMessageType.Close)
             {
-                Console.WriteLine("WebSocket connection closed by the server.");
+                Console.WriteLine("WebSocket closed by server.");
                 break;
             }
         }
@@ -77,8 +78,9 @@ class Program
         }
     }
 
-    Console.WriteLine($"Exiting ListenForMessages loop. WebSocket State: {client.State}");
+    Console.WriteLine("Exiting ListenForMessages loop.");
 }
+
 
 
 
@@ -226,7 +228,7 @@ class Program
     try
     {
         Console.WriteLine("Sending signed transaction...");
-        string relayUrl = "wss://relay.angor.io";
+        string relayUrl = "wss://relay.angor.io/";
 
         using var client = new ClientWebSocket();
         await client.ConnectAsync(new Uri(relayUrl), CancellationToken.None);
