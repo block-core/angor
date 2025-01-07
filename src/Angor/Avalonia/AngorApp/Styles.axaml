@@ -1,7 +1,8 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
-        xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia">
+        xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
+        xmlns:wizards="clr-namespace:Zafiro.Avalonia.Controls.Wizards;assembly=Zafiro.Avalonia">
 
     <Styles.Resources>
         <Color x:Key="Level1">#F5FDFF</Color>
@@ -12,6 +13,8 @@
         
         <SolidColorBrush x:Key="SystemRegionBrush" Color="{StaticResource Level3}" />
         <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource Level3}" />
+        <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="{StaticResource Level2}" />
+        <x:Double x:Key="FlyoutThemeMaxWidth">700</x:Double>
 
         <ControlTheme x:Key="Regular" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource Level4}" />
@@ -59,11 +62,15 @@
         </ControlTheme>
 
     </Styles.Resources>
+
+    <Style Selector="TextBlock.SizeSmall">
+        <Setter Property="FontSize" Value="12" />
+    </Style>
     
     <Style Selector="TextBlock.SizeNormal">
         <Setter Property="FontSize" Value="16" />
     </Style>
-    
+
     <Style Selector="TextBlock.SizeBig">
         <Setter Property="FontSize" Value="20" />
     </Style>
@@ -71,9 +78,19 @@
     <Style Selector="avalonia|Icon">
         <Setter Property="Foreground" Value="{StaticResource Level5}" />
     </Style>
-    
+
     <Style Selector=":is(UserControl)">
         <Setter Property="ClipToBounds" Value="False" />
+    </Style>
+
+    <Style Selector="wizards|WizardControl">
+        <Setter Property="Width" Value="500" />
+    </Style>
+    
+    <Style Selector="Separator">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Background" Value="#2B000000" />
+        <Setter Property="Height" Value="2" />
     </Style>
 
     <Design.PreviewWith>

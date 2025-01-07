@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using AngorApp.Model;
 
 namespace AngorApp.Sections.Browse.Details;
 
@@ -13,12 +14,4 @@ public interface IProjectDetailsViewModel
     public double CurrentDays { get; }
     public double CurrentInvestment { get; }
     public IProject Project { get; }
-}
-
-public class Stage
-{
-    public int Index { get; set; }
-    public double Weight { get; set; }
-    public DateTimeOffset ReleaseDate { get; set; }
-    public decimal Amount { get; set; }
 }

@@ -1,6 +1,9 @@
+using System.Diagnostics;
 using AngorApp.Sections.Shell;
 using Avalonia;
 using Avalonia.Data.Converters;
+using Avalonia.Media.Imaging;
+using Avalonia.Svg;
 using Humanizer;
 using Humanizer.DateTimeHumanizeStrategy;
 using Projektanker.Icons.Avalonia;
@@ -52,4 +55,16 @@ public static class MiscConverters
 
     public static string BigBtcFormat = "{0} BTC";
     public static string AmountBtcFormat = "0.0000 0000 BTC";
+
+    public static FuncValueConverter<string, SvgImage> StringToQRCode { get; } = new(s =>
+    {
+        Debug.Assert(s != null, nameof(s) + " != null");
+        return QRGenerator.SvgImageFrom(s);
+    });
+
+    public static FuncValueConverter<ulong, string> SatsToBtc { get; } = new(satoshis =>
+    {
+        var btc = satoshis / 10000_0000;
+        return $"{btc:0.0000 0000}" + " BTC";
+    });
 }

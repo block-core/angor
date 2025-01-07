@@ -13,14 +13,14 @@ public class MainViewModelDesign : IMainViewModel
     {
         Sections =
         [
-            new Section("Home", new HomeViewModel(), "svg:/Assets/angor-icon.svg"),
+            new Section("Home", new HomeSectionViewModel(), "svg:/Assets/angor-icon.svg"),
             new Separator(),
-            new Section("Wallet", new WalletViewModel(), "fa-wallet"),
-            new Section("Browse", new BrowseViewModel(() => new WalletDesign() ,new Navigator(), new UIServices(new NoopLauncherService(), new TestDialog(), new TestNotificationService())), "fa-magnifying-glass"),
-            new Section("Portfolio", new WalletViewModel(), "fa-hand-holding-dollar"),
-            new Section("Founder", new WalletViewModel(), "fa-money-bills"),
+            new Section("Wallet", null, "fa-wallet"),
+            new Section("Browse", null, "fa-magnifying-glass"),
+            new Section("Portfolio", null, "fa-hand-holding-dollar"),
+            new Section("Founder", null, "fa-money-bills"),
             new Separator(),
-            new Section("Settings", new WalletViewModel(), "fa-gear"),
+            new Section("Settings", null, "fa-gear"),
             new CommandSection("Angor Hub", null , "fa-magnifying-glass") { IsPrimary = false }
         ];
     }

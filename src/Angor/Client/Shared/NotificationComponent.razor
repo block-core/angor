@@ -19,7 +19,7 @@
 
 @if (!string.IsNullOrEmpty(notificationMessage))
 {
-    <div class="row">
+    <div class="row z-index-notif">
         <div class="col z-index-4">
             <div class="row justify-content-center">
                 <div class="col-lg-8 col-md-10">
@@ -37,7 +37,7 @@
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
-    <div class="row">
+    <div class="row z-index-notif">
         <div class="col">
             <div class="modal-wrapper">
                 <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">

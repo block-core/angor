@@ -5,13 +5,13 @@ using AngorApp.Sections.Home;
 using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
+using AngorApp.Sections.Wallet.NoWallet;
 using AngorApp.Services;
 using Avalonia.Controls.Notifications;
 using Zafiro.Avalonia.Dialogs;
-using Zafiro.Avalonia.Dialogs.SizingAlgorithms;
-using Zafiro.Avalonia.Notifications;
 using Zafiro.Avalonia.Services;
 using Separator = AngorApp.Sections.Shell.Separator;
+using WalletSectionViewModel = AngorApp.Sections.Wallet.WalletSectionViewModel;
 
 namespace AngorApp;
 
@@ -23,22 +23,24 @@ public class CompositionRoot
         var launcher = new LauncherService(topLevel!.Launcher);
         var uiServices = new UIServices(
             launcher, 
-            new DesktopDialog(algorithm: new AlternateSizingAlgorithm()), 
+            new DesktopDialog(), 
             new NotificationService(new WindowNotificationManager(topLevel)
             {
                 Position = NotificationPosition.BottomRight,
             }));
 
+        var walletStoreDesign = new WalletProviderDesign();
+        
         IEnumerable<SectionBase> sections =
         [
-            new Section("Home", new HomeViewModel(), "svg:/Assets/angor-icon.svg"),
+            new Section("Home", new HomeSectionViewModel(), "svg:/Assets/angor-icon.svg"),
             new Separator(),
-            new Section("Wallet", new WalletViewModel(), "fa-wallet"),
-            new Section("Browse", new NavigationViewModel(navigator => new BrowseViewModel(() => new WalletDesign(), navigator, uiServices)), "fa-magnifying-glass"),
-            new Section("Portfolio", new PortfolioViewModel(), "fa-hand-holding-dollar"),
-            new Section("Founder", new FounderViewModel(), "fa-money-bills"),
+            new Section("Wallet", new WalletSectionViewModel(new WalletFactoryDesign(uiServices), walletStoreDesign, uiServices), "fa-wallet"),
+            new Section("Browse", new NavigationViewModel(navigator => new BrowseSectionViewModel(walletStoreDesign, navigator, uiServices)), "fa-magnifying-glass"),
+            new Section("Portfolio", new PortfolioSectionViewModel(), "fa-hand-holding-dollar"),
+            new Section("Founder", new FounderSectionViewModel(), "fa-money-bills"),
             new Separator(),
-            new Section("Settings", new WalletViewModel(), "fa-gear"),
+            new Section("Settings", null, "fa-gear"),
             new CommandSection("Angor Hub", ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io"))), "fa-magnifying-glass") { IsPrimary = false }
         ];
 
