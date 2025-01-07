@@ -2,8 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:AngorApp.Controls"
-             xmlns:create="clr-namespace:AngorApp.Sections.Wallet.Create"
              xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              xmlns:step3="clr-namespace:AngorApp.Sections.Wallet.Create.Step_3"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -14,8 +12,7 @@
     </Design.DataContext>
 
     <StackPanel Spacing="10">
-        <create:SeedWordsList SeedWords="{Binding SeedWords}" />
-        <TextBlock TextWrapping="Wrap">Please write them down in a secure place. You will need to confirm some of them below:</TextBlock>
+        <TextBlock TextWrapping="Wrap">Please, confirm that you properly wrote down the seed words by confirming some of them:</TextBlock>
         <ItemsControl ItemsSource="{Binding Challenges}" Grid.IsSharedSizeScope="True">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -23,7 +20,7 @@
                         <HeaderedContentControl.Header>
                             <TextBlock VerticalAlignment="Center" Text="{Binding Word.Index, StringFormat='Please, enter word #{0}'}" />
                         </HeaderedContentControl.Header>
-                        <TextBox Text="{Binding Text}" Width="100" HorizontalAlignment="Left">
+                        <TextBox Text="{Binding Text}" Width="200" HorizontalAlignment="Left">
                             <Interaction.Behaviors>
                                 <behaviors:UntouchedClassBehavior />
                             </Interaction.Behaviors>
