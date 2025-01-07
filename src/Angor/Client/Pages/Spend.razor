@@ -20,6 +20,7 @@
 @inject IDerivationOperations _derivationOperations
 @inject IWalletOperations _WalletOperations
 @inject IFounderTransactionActions _founderTransactionActions
+@inject IInvestorTransactionActions _investorTransactionActions
 @inject ILogger<Recover> Logger;
 @inject IClipboardService _clipboardService
 
@@ -62,8 +63,14 @@
     </div>
 </div>
 
-
-
+@if (!targetInvestmentReached && projectDateStarted)
+{
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">Target Not Reached</h4>
+        <p>The target investment amount has not been reached, as founder you can only release the funds back to the investors.</p>
+        <button class="btn btn-primary" @onclick="ReleaseFundsToInvestors">Release Funds to Investors</button>
+    </div>
+}
 
 
 <div class="animate-fade-in">
@@ -479,6 +486,9 @@
     int totalStages;
     TimeSpan? timeUntilNextStage;
 
+    bool targetInvestmentReached = false;
+    bool projectDateStarted = false;
+
     private ProjectInfo project;
 
     private FeeData feeData = new();
@@ -512,8 +522,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-
-
         project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
 
         firstTimeRefreshSpinner = true;
@@ -555,6 +563,9 @@
                 currentWithdrawableAmount += availableInvestedAmount;
             }
         }
+
+        targetInvestmentReached = totalAvailableInvestedAmount >= project.TargetAmount;
+        projectDateStarted = DateTime.UtcNow > project.StartDate;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -699,6 +710,11 @@
 
     protected async Task ClaimCoinsCheckPassword(int stageId)
     {
+        if (!targetInvestmentReached)
+        {
+            throw new InvalidOperationException("Target investment amount has not been reached, you can only release the funds back to the investors.");
+        }
+
         if (passwordComponent.HasPassword())
         {
             await ClaimCoins(stageId);
@@ -968,4 +984,33 @@
     {
         showRawTransactionModal = isVisible;
     }
+
+    private void ReleaseFundsToInvestors(MouseEventArgs e)
+    {
+        foreach (var transaction in transactions)
+        {
+          // todo: in the initial communication between the founder and investor the investor should provide the address to send the funds on a release.
+            string releaseAddress = string.Empty;
+
+            var sigs = SignReleaseOfFunds(transaction.Transaction, project, null, releaseAddress);
+
+            // publish the sigs to the investors pubkey on nostr under a specific tag an investor will know it is a release of funds sig response
+        }
+    }
+
+    private SignatureInfo SignReleaseOfFunds(Transaction investorTrx, ProjectInfo info, string founderSigningPrivateKey, string investorReleaseAddress)
+    {
+        var transactionHex = investorTrx.ToHex();
+
+        // build sigs
+        var recoveryTrx = _investorTransactionActions.BuildReleaseInvestorFundsTransaction(info, investorTrx, investorReleaseAddress);
+        var sig = _founderTransactionActions.SignInvestorRecoveryTransactions(info, transactionHex, recoveryTrx, founderSigningPrivateKey);
+
+        // todo: make a similar method for release funds to investors
+        //if (!_investorTransactionActions.CheckInvestorRecoverySignatures(info, investorTrx, sig))
+        //    throw new InvalidOperationException();
+
+        return sig;
+    }
+
 }
