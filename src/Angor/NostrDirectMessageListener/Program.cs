@@ -1,4 +1,6 @@
-﻿using System;
+﻿extern alias NBitcoinAlias;
+
+using System;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -8,7 +10,7 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
-
+using NBitcoinAlias::NBitcoin; // Use the alias here for NBitcoin
 
 
 class Program
@@ -170,6 +172,9 @@ class Program
                         if (!string.IsNullOrEmpty(decryptedContent))
                         {
                             Console.WriteLine($"Decrypted message: {decryptedContent}");
+
+                            // Decode the Bitcoin transaction
+                            DecodeBitcoinTransaction(decryptedContent);
                         }
                         else
                         {
@@ -207,6 +212,12 @@ class Program
         {
             // Split the content into ciphertext and IV
             var parts = encryptedContent.Split("?iv=");
+            if (parts.Length != 2)
+            {
+                Console.WriteLine("Invalid encrypted content format.");
+                return null;
+            }
+
             var cipherText = Convert.FromBase64String(parts[0]);
             var iv = Convert.FromBase64String(parts[1]);
 
@@ -229,16 +240,72 @@ class Program
         }
     }
 
+
     
     private static string GetSharedSecretHexWithoutPrefix(string recipientPrivateKeyHex, string senderPublicKeyHex)
     {
-        var privateKey = new Blockcore.NBitcoin.Key(
-            Blockcore.NBitcoin.DataEncoders.Encoders.Hex.DecodeData(recipientPrivateKeyHex));
-        var publicKey = new Blockcore.NBitcoin.PubKey(senderPublicKeyHex);
-        var sharedSecret = publicKey.GetSharedPubkey(privateKey);
-        return Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(sharedSecret.ToBytes()[1..]);
+        try
+        {
+            var privateKey = new Blockcore.NBitcoin.Key(
+                Blockcore.NBitcoin.DataEncoders.Encoders.Hex.DecodeData(recipientPrivateKeyHex));
 
+            // Try with '02' prefix first
+            var publicKey = new Blockcore.NBitcoin.PubKey("02" + senderPublicKeyHex);
+
+            // Compute the shared secret
+            var sharedSecret = publicKey.GetSharedPubkey(privateKey);
+            return Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(sharedSecret.ToBytes()[1..]);
+        }
+        catch
+        {
+            // Fallback to '03' prefix if '02' fails
+            var privateKey = new Blockcore.NBitcoin.Key(
+                Blockcore.NBitcoin.DataEncoders.Encoders.Hex.DecodeData(recipientPrivateKeyHex));
+            var publicKey = new Blockcore.NBitcoin.PubKey("03" + senderPublicKeyHex);
+
+            var sharedSecret = publicKey.GetSharedPubkey(privateKey);
+            return Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(sharedSecret.ToBytes()[1..]);
+        }
     }
+
+
+
+    private static void DecodeBitcoinTransaction(string rawTransactionHex)
+    {
+        try
+        {
+            var network = NBitcoinAlias::NBitcoin.Network.Main; // Explicitly use NBitcoin
+            var transaction = NBitcoinAlias::NBitcoin.Transaction.Parse(rawTransactionHex, network);
+
+            Console.WriteLine("Decoded Bitcoin Transaction:");
+            Console.WriteLine($" - Transaction ID: {transaction.GetHash()}");
+            Console.WriteLine($" - Version: {transaction.Version}");
+            Console.WriteLine($" - LockTime: {transaction.LockTime}");
+
+            Console.WriteLine("Inputs:");
+            foreach (var input in transaction.Inputs)
+            {
+                Console.WriteLine($"   - Previous Tx Hash: {input.PrevOut.Hash}");
+                Console.WriteLine($"   - Index: {input.PrevOut.N}");
+                Console.WriteLine($"   - ScriptSig: {input.ScriptSig}");
+            }
+
+            Console.WriteLine("Outputs:");
+            foreach (var output in transaction.Outputs)
+            {
+                Console.WriteLine($"   - Value: {output.Value} (satoshis)");
+                Console.WriteLine($"   - ScriptPubKey: {output.ScriptPubKey}");
+                Console.WriteLine($"   - Address: {output.ScriptPubKey.GetDestinationAddress(network)}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error decoding Bitcoin transaction: {ex.Message}");
+        }
+    }
+
+
+
 
 
 }

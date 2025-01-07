@@ -10,6 +10,9 @@
   <ItemGroup>
     <PackageReference Include="Blockcore.NBitcoin" Version="1.0.14" />
     <PackageReference Include="Blockcore.Core" Version="1.1.41" />
+    <PackageReference Include="NBitcoin" Version="7.0.46">
+      <Aliases>NBitcoinAlias</Aliases>
+    </PackageReference>
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
