@@ -7,13 +7,15 @@ using System.Threading.Tasks;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using System.Security.Cryptography;
+using System.Text.Json.Serialization;
+
 
 
 class Program
 {
     private const string RelayUrl = "wss://relay.angor.io/"; // Replace with your relay
-    private const string RecipientPrivateKey = "15839d7dc2355aad183c4c4ad6efdced46550146be2a2a5a0b35141bb75123cc"; // Your private key
-    private const string RecipientPublicKey = "3f5148bf155a224bd82b66b18e2000b28a73422ef05e0e348ddde22b68b1138d"; // Corresponding public key
+    private const string RecipientPrivateKey = "362f4b51ecac1bc07a3216d9b5da1abfcb42f04f51ebfd659d5ebfc21f62b05d"; // Your private key
+    private const string RecipientPublicKey = "b61f43c4a88d538ee1e74979b75c4d54fd5ff756923f14aef0366bdab9b3cbcc"; // Corresponding public key
 
     static async Task Main(string[] args)
     {
@@ -40,8 +42,7 @@ class Program
 
     private static async Task SubscribeToEncryptedDM(ClientWebSocket client, string publicKey)
     {
-        // Construct the subscription message manually
-        string subscriptionId = Guid.NewGuid().ToString(); // Unique subscription ID
+        string subscriptionId = Guid.NewGuid().ToString();
         string subscriptionMessage = $@"
     [
         ""REQ"",
@@ -52,10 +53,7 @@ class Program
         }}
     ]";
 
-        Console.WriteLine($"Subscribing to Encrypted DMs for public key: {publicKey}");
-        Console.WriteLine($"Subscription JSON: {subscriptionMessage}");
-
-        // Send the JSON message to the relay
+        Console.WriteLine($"Subscribing with JSON: {subscriptionMessage}");
         await client.SendAsync(
             Encoding.UTF8.GetBytes(subscriptionMessage.Trim()),
             WebSocketMessageType.Text,
@@ -63,7 +61,6 @@ class Program
             CancellationToken.None
         );
     }
-
 
 
 
@@ -103,6 +100,8 @@ class Program
     {
         try
         {
+            Console.WriteLine($"Processing message: {message}");
+
             if (message.StartsWith("["))
             {
                 var response = JsonSerializer.Deserialize<object[]>(message);
@@ -118,6 +117,7 @@ class Program
                 switch (eventType)
                 {
                     case "EVENT":
+                        Console.WriteLine("Handling EVENT type...");
                         HandleEventMessage(response);
                         break;
 
@@ -130,7 +130,7 @@ class Program
                         break;
 
                     default:
-                        Console.WriteLine($"Unknown message type: {message}");
+                        Console.WriteLine($"Unknown message type: {eventType}");
                         break;
                 }
             }
@@ -145,6 +145,7 @@ class Program
         }
     }
 
+
     
     private static void HandleEventMessage(object[] response)
     {
@@ -152,22 +153,42 @@ class Program
         {
             if (response.Length > 2 && response[2] is JsonElement eventData)
             {
-                var nostrEvent = JsonSerializer.Deserialize<NostrEvent>(eventData.GetRawText());
-                if (nostrEvent != null && nostrEvent.Kind == 4)
-                {
-                    Console.WriteLine($"Encrypted DM received. Content: {nostrEvent.Content}");
+                Console.WriteLine($"Raw event data: {eventData}");
 
-                    // Decrypt the message
-                    string decryptedContent = DecryptMessage(RecipientPrivateKey, nostrEvent.Content, nostrEvent.Pubkey);
-                    if (!string.IsNullOrEmpty(decryptedContent))
+                try
+                {
+                    var nostrEvent = JsonSerializer.Deserialize<NostrEvent>(eventData.GetRawText());
+                    Console.WriteLine($"NostrEvent: {nostrEvent}");
+                    Console.WriteLine($"NostrEvent Kind: {nostrEvent?.Kind}");
+                    Console.WriteLine($"Raw JSON: {eventData.GetRawText()}");
+
+                    if (nostrEvent != null && nostrEvent.Kind == 4)
                     {
-                        Console.WriteLine($"Decrypted message: {decryptedContent}");
+                        Console.WriteLine($"Encrypted DM received. Content: {nostrEvent.Content}");
+
+                        string decryptedContent = DecryptMessage(RecipientPrivateKey, nostrEvent.Content, nostrEvent.Pubkey);
+                        if (!string.IsNullOrEmpty(decryptedContent))
+                        {
+                            Console.WriteLine($"Decrypted message: {decryptedContent}");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Failed to decrypt the message.");
+                        }
                     }
                     else
                     {
-                        Console.WriteLine("Failed to decrypt the message.");
+                        Console.WriteLine($"NostrEvent deserialized but not of kind 4. Kind: {nostrEvent?.Kind}");
                     }
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error deserializing NostrEvent: {ex.Message}\nRaw JSON: {eventData.GetRawText()}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Event data missing or not a JsonElement.");
             }
         }
         catch (Exception ex)
@@ -175,6 +196,7 @@ class Program
             Console.WriteLine($"Error handling EVENT message: {ex.Message}");
         }
     }
+
 
 
 
@@ -210,15 +232,12 @@ class Program
     
     private static string GetSharedSecretHexWithoutPrefix(string recipientPrivateKeyHex, string senderPublicKeyHex)
     {
-        var privateKey = new Blockcore.NBitcoin.Key(Blockcore.NBitcoin.DataEncoders.Encoders.Hex.DecodeData(recipientPrivateKeyHex));
-        var publicKey = new Blockcore.NBitcoin.PubKey("02" + senderPublicKeyHex); // Add '02' for compressed key format
-
-
-        // Compute the shared secret
+        var privateKey = new Blockcore.NBitcoin.Key(
+            Blockcore.NBitcoin.DataEncoders.Encoders.Hex.DecodeData(recipientPrivateKeyHex));
+        var publicKey = new Blockcore.NBitcoin.PubKey(senderPublicKeyHex);
         var sharedSecret = publicKey.GetSharedPubkey(privateKey);
-
-        // Return the shared secret in hex without prefix
         return Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(sharedSecret.ToBytes()[1..]);
+
     }
 
 
@@ -226,11 +245,24 @@ class Program
 
 public class NostrEvent
 {
+    [JsonPropertyName("id")]
     public string Id { get; set; }
-    public int Kind { get; set; }
+
+    [JsonPropertyName("kind")]
+    public int Kind { get; set; } // Ensure it is an integer and matches the JSON field
+
+    [JsonPropertyName("pubkey")]
     public string Pubkey { get; set; }
+
+    [JsonPropertyName("content")]
     public string Content { get; set; }
+
+    [JsonPropertyName("created_at")]
     public long CreatedAt { get; set; }
+
+    [JsonPropertyName("sig")]
     public string Sig { get; set; }
+
+    [JsonPropertyName("tags")]
     public List<List<string>> Tags { get; set; }
 }
