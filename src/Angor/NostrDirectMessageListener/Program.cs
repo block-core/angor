@@ -173,8 +173,8 @@ class Program
                         {
                             Console.WriteLine($"Decrypted message: {decryptedContent}");
 
-                            // Decode the Bitcoin transaction
-                            DecodeBitcoinTransaction(decryptedContent);
+                            // Decode and sign the Bitcoin transaction
+                            DecodeAndSignBitcoinTransaction(decryptedContent);
                         }
                         else
                         {
@@ -274,7 +274,7 @@ class Program
     {
         try
         {
-            var network = NBitcoinAlias::NBitcoin.Network.Main; // Explicitly use NBitcoin
+            var network = NBitcoinAlias::NBitcoin.Network.TestNet; // Explicitly use NBitcoin
             var transaction = NBitcoinAlias::NBitcoin.Transaction.Parse(rawTransactionHex, network);
 
             Console.WriteLine("Decoded Bitcoin Transaction:");
@@ -303,6 +303,74 @@ class Program
             Console.WriteLine($"Error decoding Bitcoin transaction: {ex.Message}");
         }
     }
+
+        
+    private static void DecodeAndSignBitcoinTransaction(string rawTransactionHex)
+{
+    try
+    {
+        // Parse the transaction
+        var network = NBitcoinAlias::NBitcoin.Network.Main; // Explicitly use NBitcoin
+        var transaction = NBitcoinAlias::NBitcoin.Transaction.Parse(rawTransactionHex, network);
+
+        Console.WriteLine("Decoded Bitcoin Transaction:");
+        Console.WriteLine($" - Transaction ID: {transaction.GetHash()}");
+
+        // Example private key
+        string privateKeyHex = "362f4b51ecac1bc07a3216d9b5da1abfcb42f04f51ebfd659d5ebfc21f62b05d";
+
+        // Example coins (UTXOs)
+        var coins = new List<NBitcoinAlias::NBitcoin.ICoin>
+        {
+            new NBitcoinAlias::NBitcoin.Coin(
+                new NBitcoinAlias::NBitcoin.OutPoint(NBitcoinAlias::NBitcoin.uint256.Parse("previousTransactionHash"), 0), // Use the correct alias
+                new NBitcoinAlias::NBitcoin.TxOut(
+                    NBitcoinAlias::NBitcoin.Money.Coins(0.01m), // Amount in BTC
+                    new NBitcoinAlias::NBitcoin.Script("scriptPubKey") // Replace with actual ScriptPubKey
+                )
+            )
+        };
+
+        // Sign the transaction
+        string signedTransactionHex = SignTransaction(transaction, privateKeyHex, coins, network);
+        Console.WriteLine($"Signed Transaction Hex: {signedTransactionHex}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error decoding or signing Bitcoin transaction: {ex.Message}");
+    }
+}
+
+private static string SignTransaction(
+    NBitcoinAlias::NBitcoin.Transaction transaction,
+    string privateKeyHex,
+    List<NBitcoinAlias::NBitcoin.ICoin> coins,
+    NBitcoinAlias::NBitcoin.Network network)
+{
+    try
+    {
+        // Decode the private key
+        var privateKey = new NBitcoinAlias::NBitcoin.Key(Encoders.Hex.DecodeData(privateKeyHex));
+
+        // Initialize the TransactionBuilder
+        var builder = network.CreateTransactionBuilder();
+
+        // Add coins and private key
+        builder.AddCoins(coins);
+        builder.AddKeys(privateKey);
+
+        // Sign the transaction
+        var signedTransaction = builder.SignTransaction(transaction);
+
+        Console.WriteLine("Transaction successfully signed.");
+        return signedTransaction.ToHex();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error signing transaction: {ex.Message}");
+        return null;
+    }
+}
 
 
 
