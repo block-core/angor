@@ -1415,7 +1415,6 @@ a p {
 
     .tab-card.active {
         border-color: var(--angor-primary);
-        background: var(--angor-accent);
     }
 
 .tab-icon {
