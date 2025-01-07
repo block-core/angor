@@ -20,15 +20,18 @@ namespace AngorApp.Sections.Wallet.Create;
 public class WalletFactory : IWalletFactory
 {
     private readonly UIServices uiServices;
+    private IWalletBuilder walletBuilder;
 
-    public WalletFactory(UIServices uiServices)
+    public WalletFactory(IWalletBuilder walletBuilder, UIServices uiServices)
     {
+        this.walletBuilder = walletBuilder;
         this.uiServices = uiServices;
     }
 
-    public Task<Result<IWallet>> Recover()
+    public async Task<Maybe<Result<IWallet>>> Recover()
     {
-        throw new NotImplementedException();
+        await uiServices.NotificationService.Show("Not implemented yet", "Not implemented yet");
+        return Maybe<Result<IWallet>>.None;
     }
 
     public async Task<Maybe<Result<IWallet>>> Create()
@@ -38,8 +41,8 @@ public class WalletFactory : IWalletFactory
             .Then(prev => new SeedWordsViewModel())
             .Then(prev => new SeedWordsConfirmationViewModel(prev.Words.Value))
             .Then(prev => new PassphraseViewModel(prev.SeedWords))
-            .Then(prev => new EncryptionPasswordViewModel(prev.SeedWords, prev.Passphrase))
-            .Then(prev => new SummaryAndCreationViewModel(prev.Passphrase, prev.SeedWords, prev.Password!, new WalletBuilderDesign()))
+            .Then(prev => new EncryptionPasswordViewModel(prev.SeedWords, prev.Passphrase!))
+            .Then(prev => new SummaryAndCreationViewModel(prev.Passphrase, prev.SeedWords, prev.Password!, walletBuilder))
             .Then(_ => new SuccessViewModel("Wallet created successfully!"))
             .Build();
 
@@ -50,13 +53,5 @@ public class WalletFactory : IWalletFactory
         }
         
         return Maybe<Result<IWallet>>.None;
-    }
-}
-
-public class WalletBuilderDesign : IWalletBuilder
-{
-    public async Task<Result<IWallet>> Create(WordList seedwords, Maybe<string> passphrase, string encryptionKey)
-    {
-        return new WalletDesign();
     }
 }

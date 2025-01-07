@@ -18,7 +18,7 @@ public class WalletFactoryDesign : IWalletFactory
         this.uiServices = uiServices;
     }
     
-    public Task<Result<IWallet>> Recover()
+    public Task<Maybe<Result<IWallet>>> Recover()
     {
         throw new NotImplementedException();
     }

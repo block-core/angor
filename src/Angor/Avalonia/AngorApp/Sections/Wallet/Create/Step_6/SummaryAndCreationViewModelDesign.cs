@@ -1,10 +1,8 @@
 using AngorApp.Model;
 using AngorApp.Sections.Browse;
-using AngorApp.Sections.Wallet.Create.Step_2;
-using AngorApp.Sections.Wallet.Create.Step_6;
 using CSharpFunctionalExtensions;
 
-namespace AngorApp;
+namespace AngorApp.Sections.Wallet.Create.Step_6;
 
 public class SummaryAndCreationViewModelDesign : ISummaryAndCreationViewModel
 {

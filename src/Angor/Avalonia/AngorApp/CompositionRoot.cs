@@ -29,12 +29,13 @@ public class CompositionRoot
             }));
 
         var walletStoreDesign = new WalletProviderDesign();
+        var walletFactory = new WalletFactory(new WalletBuilderDesign(), uiServices);
         
         IEnumerable<SectionBase> sections =
         [
             new Section("Home", new HomeSectionViewModel(), "svg:/Assets/angor-icon.svg"),
             new Separator(),
-            new Section("Wallet", new WalletSectionViewModel(new WalletFactory(uiServices), walletStoreDesign, uiServices), "fa-wallet"),
+            new Section("Wallet", new WalletSectionViewModel(walletFactory, walletStoreDesign, uiServices), "fa-wallet"),
             new Section("Browse", new NavigationViewModel(navigator => new BrowseSectionViewModel(walletStoreDesign, navigator, uiServices)), "fa-magnifying-glass"),
             new Section("Portfolio", new PortfolioSectionViewModel(), "fa-hand-holding-dollar"),
             new Section("Founder", new FounderSectionViewModel(), "fa-money-bills"),

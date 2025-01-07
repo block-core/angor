@@ -19,7 +19,7 @@
             <controls:Pane Title="Setup your wallet" IsTitleVisible="True">
                 <WrapPanel HorizontalAlignment="Center" Margin="-10">
                     <Button Content="Create wallet" Command="{Binding CreateWallet}" />
-                    <Button Content="Recover wallet" />
+                    <Button Content="Recover wallet" Command="{Binding RecoverWallet}" />
                 </WrapPanel>
             </controls:Pane>
         </StackPanel>

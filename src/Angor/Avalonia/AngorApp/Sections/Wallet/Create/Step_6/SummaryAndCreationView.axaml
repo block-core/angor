@@ -2,29 +2,36 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:step6="clr-namespace:AngorApp.Sections.Wallet.Create.Step_6"
-             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
+             xmlns:pr="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
              x:Class="AngorApp.Sections.Wallet.Create.Step_6.SummaryAndCreationView"
              x:DataType="step6:ISummaryAndCreationViewModel">
 
     <Design.DataContext>
-        <angorApp:SummaryAndCreationViewModelDesign />
+        <step6:SummaryAndCreationViewModelDesign />
     </Design.DataContext>
 
-    <StackPanel Grid.IsSharedSizeScope="True" Spacing="20">
-        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Seed words:">
-            <TextBlock TextWrapping="Wrap">12 English words (already confirmed)</TextBlock>
-        </HeaderedContentControl>
-        <HeaderedContentControl Theme="{StaticResource Inline}" Header="BIP39 Passphrase:">
-            <Panel>
-                <TextBlock Text="[Provided]" IsVisible="{Binding Passphrase.HasValue}" />
-                <TextBlock Text="[None]" IsVisible="{Binding Passphrase.HasNoValue}" />
-            </Panel>
-        </HeaderedContentControl>
-        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Encryption Password:">
-            <TextBlock Text="[Set]" />
-        </HeaderedContentControl>
-        <Button Command="{Binding CreateWallet}" Content="Create Wallet" HorizontalAlignment="Center" />
-    </StackPanel>
+    <Panel>
+        <StackPanel Grid.IsSharedSizeScope="True" Spacing="20" Opacity="{Binding !CreateWallet.IsExecuting^, Converter={x:Static converters:BoolOpacityConverters.BoolToOpacity}}">
+            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Seed words:">
+                <TextBlock TextWrapping="Wrap">12 English words (already confirmed)</TextBlock>
+            </HeaderedContentControl>
+            <HeaderedContentControl Theme="{StaticResource Inline}" Header="BIP39 Passphrase:">
+                <Panel>
+                    <TextBlock Text="[Provided]" IsVisible="{Binding Passphrase.HasValue}" />
+                    <TextBlock Text="[None]" IsVisible="{Binding Passphrase.HasNoValue}" />
+                </Panel>
+            </HeaderedContentControl>
+            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Encryption Password:">
+                <TextBlock Text="[Set]" />
+            </HeaderedContentControl>
+            <Button Command="{Binding CreateWallet}" Content="Create Wallet" HorizontalAlignment="Center" />
+        </StackPanel>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" IsVisible="{Binding CreateWallet.IsExecuting^}">
+            <pr:ProgressRing Width="30" Height="30" />
+            <TextBlock Text="Creating wallet..." TextAlignment="Center" />
+        </StackPanel>
+    </Panel>
 </UserControl>
