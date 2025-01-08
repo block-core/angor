@@ -15,7 +15,7 @@
         <SolidColorBrush x:Key="SystemRegionBrush" Color="{StaticResource Level3}" />
         <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource Level3}" />
         <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="{StaticResource Level2}" />
-        <SolidColorBrush x:Key="ThemeAccentBrush" Color="{StaticResource Level4}" />
+        <SolidColorBrush x:Key="SystemControlHighlightAccentBrush" Color="{StaticResource Level4}" />
         
         <x:Double x:Key="FlyoutThemeMaxWidth">700</x:Double>
 
