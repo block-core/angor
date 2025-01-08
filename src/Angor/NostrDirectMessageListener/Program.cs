@@ -1,5 +1,4 @@
-﻿extern alias BlockcoreNBitcoinAlias; // Alias for Blockcore.NBitcoin
-extern alias NBitcoinAlias; // Alias for NBitcoin
+﻿extern alias NBitcoinAlias; // Alias for NBitcoin
 
 using System;
 using System.Net.WebSockets;
@@ -377,7 +376,7 @@ class Program
             {
                 new NBitcoinAlias::NBitcoin.Coin(
                     new NBitcoinAlias::NBitcoin.OutPoint(
-                        BlockcoreNBitcoinAlias::Blockcore.NBitcoin.uint256.Parse("2f492d7850fc289039b4be57f93b704e88add6a1e48f8d860a121286a1aa0611"), // Use Blockcore's uint256
+                        NBitcoinAlias::NBitcoin.uint256.Parse("2f492d7850fc289039b4be57f93b704e88add6a1e48f8d860a121286a1aa0611"), // Use NBitcoin's uint256
                         0 // Index of the UTXO in the transaction outputs
                     ),
                     new NBitcoinAlias::NBitcoin.TxOut(
@@ -444,7 +443,7 @@ class Program
             var ev = new NostrEvent
             {
                 Kind = 4, // Encrypted Direct Message
-                CreatedAt = DateTime.UtcNow.ToUnixTimeSeconds(), // UNIX timestamp
+                CreatedAt = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds(),
                 Content = encryptedSignatureInfo,
                 Tags = new List<List<string>>
                 {
@@ -470,7 +469,7 @@ class Program
             ).Wait();
 
             Console.WriteLine("Signed event successfully sent to relay.");
-            return ev.CreatedAt;
+            return DateTimeOffset.FromUnixTimeSeconds(ev.CreatedAt).UtcDateTime;
         }
         catch (Exception ex)
         {
@@ -479,38 +478,51 @@ class Program
         }
     }
 
-private static NostrEvent SignEvent(NostrEvent nostrEvent, Blockcore.NBitcoin.Key privateKey)
-{
-    try
+    private static NostrEvent SignEvent(NostrEvent nostrEvent, Blockcore.NBitcoin.Key privateKey)
     {
-        // Prepare the event content (convert it to byte array)
-        var eventContent = $"{nostrEvent.Kind}:{new DateTimeOffset(nostrEvent.CreatedAt).ToUnixTimeSeconds()}:{nostrEvent.Content}";
-        
-        // Convert string content to byte array
-        var eventBytes = Encoding.UTF8.GetBytes(eventContent);
+        try
+        {
+            // Prepare the event content (convert it to byte array)
+            var eventContent = $"{nostrEvent.Kind}:{DateTimeOffset.FromUnixTimeSeconds(nostrEvent.CreatedAt).ToUnixTimeSeconds()}:{nostrEvent.Content}";
 
-        // Sign the message and get the signature as ECDSASignature
-        var signature = privateKey.Sign(eventBytes); // This returns an ECDSASignature
+            // Convert string content to byte array
+            var eventBytes = Encoding.UTF8.GetBytes(eventContent);
 
-        // Convert ECDSASignature to byte array using ToDER
-        var signatureBytes = signature.ToDER(); // Converts signature to byte array
+            // Convert the eventBytes to a hex string
+            var eventHex = Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(eventBytes);
 
-        // Encode the byte array to a hex string
-        nostrEvent.Sig = Encoders.Hex.EncodeData(signatureBytes); // Encodes byte[] to hex string
+            // Convert the hex string to a Blockcore.NBitcoin.uint256
+            var eventHash = new Blockcore.NBitcoin.uint256(eventHex);
 
-        // If you are passing the signature hash or any related data as uint256
-        // Example: Convert signatureBytes to uint256 if required
-        uint256 signatureHash = new uint256(signatureBytes);
+            // Sign the hash using the private key
+            var signature = privateKey.Sign(eventHash); // Now using Blockcore.NBitcoin.uint256
 
-        Console.WriteLine("Event successfully signed.");
-        return nostrEvent;
+            // Convert ECDSASignature to byte array using ToDER
+            var signatureBytes = signature.ToDER(); // Converts signature to byte array
+
+            // Convert the byte array to a hex string for the signature
+            var signatureHex = Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(signatureBytes);
+
+            // Set the signature in the NostrEvent
+            nostrEvent.Sig = signatureHex;
+
+            Console.WriteLine("Event successfully signed.");
+            return nostrEvent;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error signing Nostr event: {ex.Message}");
+            throw;
+        }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error signing Nostr event: {ex.Message}");
-        throw;
-    }
-}
+
+
+
+
+
+
+
+
 
 
 
@@ -534,7 +546,7 @@ public class NostrEvent
     public string Content { get; set; } = string.Empty;
 
     [JsonPropertyName("created_at")]
-    public DateTime CreatedAt { get; set; }
+    public long CreatedAt { get; set; } // Change to long for Unix timestamp
 
     [JsonPropertyName("sig")]
     public string Sig { get; set; } = string.Empty;
@@ -542,3 +554,4 @@ public class NostrEvent
     [JsonPropertyName("tags")]
     public List<List<string>> Tags { get; set; } = new();
 }
+

@@ -8,9 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Blockcore.NBitcoin" Version="1.0.14">
-      <Aliases>BlockcoreNBitcoinAlias</Aliases> <!-- Alias for Blockcore NBitcoin -->
-    </PackageReference>
+    <PackageReference Include="Blockcore.NBitcoin" Version="1.0.14"> </PackageReference>
 
     <PackageReference Include="Blockcore.Core" Version="1.1.41" />
     <PackageReference Include="NBitcoin" Version="7.0.46">
