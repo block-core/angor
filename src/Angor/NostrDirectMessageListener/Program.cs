@@ -12,6 +12,8 @@ using Blockcore.NBitcoin.DataEncoders;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 using NBitcoinAlias::NBitcoin; // Use the alias here for NBitcoin
+using Newtonsoft.Json;
+
 
 
 class Program
@@ -113,7 +115,7 @@ class Program
 
             if (message.StartsWith("["))
             {
-                var response = JsonSerializer.Deserialize<object[]>(message);
+                var response = System.Text.Json.JsonSerializer.Deserialize<object[]>(message);
                 if (response == null || response.Length == 0)
                 {
                     Console.WriteLine("Received empty or malformed message.");
@@ -168,7 +170,7 @@ class Program
             {
                 Console.WriteLine($"Raw event data: {eventData}");
 
-                var nostrEvent = JsonSerializer.Deserialize<NostrEvent>(eventData.GetRawText());
+                var nostrEvent = System.Text.Json.JsonSerializer.Deserialize<NostrEvent>(eventData.GetRawText());
                 if (nostrEvent == null)
                 {
                     Console.WriteLine("Deserialized NostrEvent is null.");
@@ -415,57 +417,75 @@ class Program
 
 
     private static void SendSignaturesToInvestor(
-        string encryptedSignatureInfo,
-        string nostrPrivateKeyHex,
-        string investorNostrPubKey,
-        string eventId,
-        ClientWebSocket client)
+    string encryptedSignatureInfo,
+    string nostrPrivateKeyHex,
+    string investorNostrPubKey,
+    string eventId,
+    ClientWebSocket client)
+{
+    if (client == null)
     {
-        if (client == null)
-        {
-            Console.WriteLine("Error: WebSocket client is null.");
-            return;
-        }
-
-        try
-        {
-            var nostrPrivateKey = new Blockcore.NBitcoin.Key(Encoders.Hex.DecodeData(nostrPrivateKeyHex));
-
-            var ev = new NostrEvent
-            {
-                Kind = 4, // Encrypted Direct Message
-                CreatedAt = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds(),
-                Content = encryptedSignatureInfo,
-                Tags = new List<List<string>>
-                {
-                    new List<string> { "p", investorNostrPubKey },
-                    new List<string> { "e", eventId },
-                    new List<string> { "subject", "Re:Investment offer" }
-                }
-            };
-
-            // Sign the event
-            var signedEvent = SignEvent(ev, nostrPrivateKey);
-
-            // Serialize the signed event
-            var signedEventJson = JsonSerializer.Serialize(signedEvent, new JsonSerializerOptions { WriteIndented = true });
-            Console.WriteLine($"Outgoing Signed Event JSON: {signedEventJson}");
-            // Send the event to the relay
-            Console.WriteLine($"Sending signed event to relay...");
-            client.SendAsync(
-                Encoding.UTF8.GetBytes(signedEventJson),
-                WebSocketMessageType.Text,
-                true,
-                CancellationToken.None
-            ).Wait();
-
-            Console.WriteLine("Signed event successfully sent to relay.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error sending signatures to investor: {ex.Message}");
-        }
+        Console.WriteLine("Error: WebSocket client is null.");
+        return;
     }
+
+    try
+    {
+        var nostrPrivateKey = new Blockcore.NBitcoin.Key(Encoders.Hex.DecodeData(nostrPrivateKeyHex));
+
+        var ev = new NostrEvent
+        {
+            Kind = 4, // Encrypted Direct Message
+            CreatedAt = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds(),
+            Content = encryptedSignatureInfo,
+            Tags = new List<List<string>>
+            {
+                new List<string> { "p", investorNostrPubKey },
+                new List<string> { "e", eventId },
+                new List<string> { "subject", "Re:Investment offer" }
+            }
+        };
+
+        // Ensure pubkey is set to the uncompressed format
+        ev.Pubkey = nostrPrivateKey.PubKey.Compress().ToHex();
+
+        // Sign the event
+        ev.Sign(nostrPrivateKey);
+
+        // Validate the signature
+        if (ev.Id == null || ev.Sig == null)
+        {
+            throw new Exception("Event signing failed: ID or Signature is null.");
+        }
+
+        Console.WriteLine("Event ID: " + ev.Id);
+        Console.WriteLine("Event Signature: " + ev.Sig);
+
+        // Serialize and send the signed event
+        var signedEventJson = Newtonsoft.Json.JsonConvert.SerializeObject(ev, Newtonsoft.Json.Formatting.Indented);
+        Console.WriteLine($"Outgoing Signed Event JSON: {signedEventJson}");
+
+        Console.WriteLine($"Sending signed event to relay...");
+        client.SendAsync(
+            Encoding.UTF8.GetBytes(signedEventJson),
+            WebSocketMessageType.Text,
+            true,
+            CancellationToken.None
+        ).Wait();
+
+        Console.WriteLine("Signed event successfully sent to relay.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error sending signatures to investor: {ex.Message}");
+    }
+}
+
+    
+
+
+
+
 
 
     private static NostrEvent SignEvent(NostrEvent nostrEvent, Blockcore.NBitcoin.Key privateKey)
@@ -537,6 +557,58 @@ public class NostrEvent
 
     [JsonPropertyName("tags")]
     public List<List<string>> Tags { get; set; } = new();
+    
+    public void Sign(Blockcore.NBitcoin.Key privateKey)
+    {
+        // Step 1: Compute the ID
+        var serializedEvent = new[]
+        {
+            this.Pubkey,
+            this.CreatedAt.ToString(),
+            this.Kind.ToString(),
+            Newtonsoft.Json.JsonConvert.SerializeObject(this.Tags),
+            this.Content
+        };
+
+        var serializedEventString = Newtonsoft.Json.JsonConvert.SerializeObject(serializedEvent);
+        var hash = Blockcore.NBitcoin.Crypto.Hashes.SHA256(System.Text.Encoding.UTF8.GetBytes(serializedEventString));
+        this.Id = Encoders.Hex.EncodeData(hash);
+
+        // Step 2: Sign the ID
+        var idBytes = Encoders.Hex.DecodeData(this.Id);
+        var signature = privateKey.Sign(new Blockcore.NBitcoin.uint256(idBytes));
+        this.Sig = Encoders.Hex.EncodeData(signature.ToDER());
+
+        // Optional: Log the serialized event and signature for debugging
+        Console.WriteLine("Serialized Event: " + serializedEventString);
+        Console.WriteLine("Computed ID: " + this.Id);
+        Console.WriteLine("Generated Signature: " + this.Sig);
+    }
+
+    
+    private static string ComputeSha256(string input)
+    {
+        using var sha256 = SHA256.Create();
+        var bytes = Encoding.UTF8.GetBytes(input);
+        var hashBytes = sha256.ComputeHash(bytes);
+        return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+    }
+    
+    private string SerializeEventForIdComputation()
+    {
+        var data = new List<object>
+        {
+            0,
+            this.Pubkey,
+            this.CreatedAt,
+            this.Kind,
+            this.Tags,
+            this.Content
+        };
+        return Newtonsoft.Json.JsonConvert.SerializeObject(data);
+    }
+
+
 }
 
 // Create a static class for extensions
