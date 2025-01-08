@@ -1,6 +1,7 @@
 ﻿extern alias NBitcoinAlias; // Alias for NBitcoin
 
 using System;
+using System.Numerics;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -131,8 +132,14 @@ class Program
 
                     case "NOTICE":
                         Console.WriteLine($"Relay notice: {response[1]}");
+                        if (response.Length > 1)
+                        {
+                            string noticeMessage = response[1]?.ToString();
+                            Console.WriteLine($"Relay Notice Details: {noticeMessage}");
+                        }
                         break;
 
+    
                     case "EOSE":
                         Console.WriteLine("End of stored events (EOSE) received.");
                         break;
@@ -154,74 +161,52 @@ class Program
     }
 
     private static void HandleEventMessage(object[] response, ClientWebSocket client)
-{
-    try
     {
-        if (response.Length > 2 && response[2] is JsonElement eventData)
+        try
         {
-            Console.WriteLine($"Raw event data: {eventData}");
-
-            try
+            if (response.Length > 2 && response[2] is JsonElement eventData)
             {
+                Console.WriteLine($"Raw event data: {eventData}");
+
                 var nostrEvent = JsonSerializer.Deserialize<NostrEvent>(eventData.GetRawText());
-                Console.WriteLine($"NostrEvent: {nostrEvent}");
-                Console.WriteLine($"NostrEvent Kind: {nostrEvent?.Kind}");
-                Console.WriteLine($"Raw JSON: {eventData.GetRawText()}");
-
-                if (nostrEvent != null && nostrEvent.Kind == 4) // Encrypted DM
+                if (nostrEvent == null)
                 {
-                    Console.WriteLine($"Encrypted DM received. Content: {nostrEvent.Content}");
+                    Console.WriteLine("Deserialized NostrEvent is null.");
+                    return;
+                }
 
+                Console.WriteLine($"NostrEvent: {nostrEvent}");
+                Console.WriteLine($"NostrEvent Kind: {nostrEvent.Kind}");
+
+                if (nostrEvent.Kind == 4 && !string.IsNullOrEmpty(nostrEvent.Content))
+                {
                     string decryptedContent = DecryptMessage(RecipientPrivateKey, nostrEvent.Content, nostrEvent.Pubkey);
                     if (!string.IsNullOrEmpty(decryptedContent))
                     {
                         Console.WriteLine($"Decrypted message: {decryptedContent}");
 
-                        // Decode and sign the Bitcoin transaction
-                        string signedTransactionHex = DecodeAndSignBitcoinTransaction(decryptedContent,client);
+                        string signedTransactionHex = DecodeAndSignBitcoinTransaction(decryptedContent, client);
                         if (signedTransactionHex != null)
                         {
                             Console.WriteLine($"Signed Transaction Hex: {signedTransactionHex}");
-
-                            // Send the signed transaction back to the investor
                             SendSignaturesToInvestor(
                                 signedTransactionHex,
                                 RecipientPrivateKey,
                                 nostrEvent.Pubkey,
                                 nostrEvent.Id,
-                                null // Replace with your ClientWebSocket instance if needed
+                                client
                             );
                         }
-                        else
-                        {
-                            Console.WriteLine("Failed to decode or sign the transaction.");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Failed to decrypt the message.");
                     }
                 }
-                else
-                {
-                    Console.WriteLine($"NostrEvent deserialized but not of kind 4. Kind: {nostrEvent?.Kind}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error deserializing NostrEvent: {ex.Message}\nRaw JSON: {eventData.GetRawText()}");
             }
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine("Event data missing or not a JsonElement.");
+            Console.WriteLine($"Error handling EVENT message: {ex.Message}");
         }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error handling EVENT message: {ex.Message}");
-    }
-}
+
 
     
     private static void DecodeAndSignBitcoinTransaction(string rawTransactionHex)
@@ -429,13 +414,19 @@ class Program
     }
 
 
-    private static DateTime SendSignaturesToInvestor(
+    private static void SendSignaturesToInvestor(
         string encryptedSignatureInfo,
         string nostrPrivateKeyHex,
         string investorNostrPubKey,
         string eventId,
         ClientWebSocket client)
     {
+        if (client == null)
+        {
+            Console.WriteLine("Error: WebSocket client is null.");
+            return;
+        }
+
         try
         {
             var nostrPrivateKey = new Blockcore.NBitcoin.Key(Encoders.Hex.DecodeData(nostrPrivateKeyHex));
@@ -457,8 +448,8 @@ class Program
             var signedEvent = SignEvent(ev, nostrPrivateKey);
 
             // Serialize the signed event
-            var signedEventJson = JsonSerializer.Serialize(signedEvent);
-
+            var signedEventJson = JsonSerializer.Serialize(signedEvent, new JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine($"Outgoing Signed Event JSON: {signedEventJson}");
             // Send the event to the relay
             Console.WriteLine($"Sending signed event to relay...");
             client.SendAsync(
@@ -469,41 +460,45 @@ class Program
             ).Wait();
 
             Console.WriteLine("Signed event successfully sent to relay.");
-            return DateTimeOffset.FromUnixTimeSeconds(ev.CreatedAt).UtcDateTime;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error sending signatures to investor: {ex.Message}");
-            throw;
         }
     }
+
 
     private static NostrEvent SignEvent(NostrEvent nostrEvent, Blockcore.NBitcoin.Key privateKey)
     {
         try
         {
-            // Prepare the event content (convert it to byte array)
-            var eventContent = $"{nostrEvent.Kind}:{DateTimeOffset.FromUnixTimeSeconds(nostrEvent.CreatedAt).ToUnixTimeSeconds()}:{nostrEvent.Content}";
-
-            // Convert string content to byte array
+            // Prepare the event content
+            var eventContent = $"{nostrEvent.Kind}:{nostrEvent.CreatedAt}:{nostrEvent.Content}";
             var eventBytes = Encoding.UTF8.GetBytes(eventContent);
 
-            // Convert the eventBytes to a hex string
-            var eventHex = Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(eventBytes);
+            // Hash the content
+            using var sha256 = SHA256.Create();
+            var hashedBytes = sha256.ComputeHash(eventBytes);
 
-            // Convert the hex string to a Blockcore.NBitcoin.uint256
-            var eventHash = new Blockcore.NBitcoin.uint256(eventHex);
+            // Convert hash to uint256
+            var hash = new Blockcore.NBitcoin.uint256(hashedBytes);
 
-            // Sign the hash using the private key
-            var signature = privateKey.Sign(eventHash); // Now using Blockcore.NBitcoin.uint256
+            // Sign the hash
+            var ecdsaSignature = privateKey.Sign(hash);
 
-            // Convert ECDSASignature to byte array using ToDER
-            var signatureBytes = signature.ToDER(); // Converts signature to byte array
+            // Ensure signature is in 64-byte raw format (R || S)
+            var signatureRaw = ecdsaSignature.To64ByteArray();
 
-            // Convert the byte array to a hex string for the signature
-            var signatureHex = Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(signatureBytes);
+            // Convert to hex string
+            var signatureHex = Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(signatureRaw);
 
-            // Set the signature in the NostrEvent
+            // Validate the signature length
+            if (signatureHex.Length != 128)
+            {
+                throw new InvalidOperationException($"Invalid signature length: {signatureHex.Length}. Signature: {signatureHex}");
+            }
+
+            // Assign the signature to the Nostr event
             nostrEvent.Sig = signatureHex;
 
             Console.WriteLine("Event successfully signed.");
@@ -515,19 +510,8 @@ class Program
             throw;
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+    
 
 }
 
@@ -554,4 +538,56 @@ public class NostrEvent
     [JsonPropertyName("tags")]
     public List<List<string>> Tags { get; set; } = new();
 }
+
+// Create a static class for extensions
+public static class ECDSASignatureExtensions
+{
+    public static byte[] To64ByteArray(this Blockcore.NBitcoin.Crypto.ECDSASignature signature)
+    {
+        var r = ToBytesUnsigned(signature.R);
+        var s = ToBytesUnsigned(signature.S);
+
+        // Ensure R and S are exactly 32 bytes each
+        var rPadded = new byte[32];
+        var sPadded = new byte[32];
+        Array.Copy(r, 0, rPadded, 32 - r.Length, r.Length);
+        Array.Copy(s, 0, sPadded, 32 - s.Length, s.Length);
+
+        // Concatenate R and S
+        var rawSignature = new byte[64];
+        Array.Copy(rPadded, 0, rawSignature, 0, 32);
+        Array.Copy(sPadded, 0, rawSignature, 32, 32);
+
+        return rawSignature;
+    }
+
+    private static byte[] ToBytesUnsigned(Blockcore.NBitcoin.BouncyCastle.math.BigInteger value)
+    {
+        return value.ToByteArrayUnsigned();
+    }
+
+    
+    private static System.Numerics.BigInteger ConvertToSystemBigInteger(Blockcore.NBitcoin.BouncyCastle.math.BigInteger value)
+    {
+        var bytes = value.ToByteArrayUnsigned();
+        return new System.Numerics.BigInteger(bytes.Reverse().ToArray()); // Ensure proper byte order
+    }
+
+
+
+    private static byte[] ToBytesUnsigned(BigInteger value)
+    {
+        var bytes = value.ToByteArray();
+
+        // Ensure the bytes are unsigned
+        if (bytes[^1] == 0x00) // Remove leading zero byte if present
+        {
+            Array.Resize(ref bytes, bytes.Length - 1);
+        }
+
+        Array.Reverse(bytes); // Reverse for Big-Endian order
+        return bytes;
+    }
+}
+
 
