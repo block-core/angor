@@ -1,5 +1,5 @@
 using AngorApp.Model;
-using AngorApp.Sections.Wallet.Create.Step_2;
+using AngorApp.Sections.Wallet.Create.Step2;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;

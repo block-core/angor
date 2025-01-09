@@ -1,6 +1,6 @@
 using System.Linq;
 using AngorApp.Model;
-using AngorApp.Sections.Wallet.Create.Step_2;
+using AngorApp.Sections.Wallet.Create.Step2;
 
 namespace AngorApp.Sections.Browse;
 
