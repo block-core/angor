@@ -3,10 +3,6 @@
         xmlns:c="clr-namespace:AngorApp.Controls"
         xmlns:avalonia="https://github.com/projektanker/icons.avalonia">
 
-    <Style Selector="c|Pane c|SectionItem avalonia|Icon">
-        <Setter Property="FontSize" Value="36" />
-    </Style>
-
     <Style Selector="c|Pane /template/ TextBlock#PART_Title">
         <Setter Property="FontSize" Value="20" />
     </Style>
@@ -45,15 +41,32 @@
 
                             <DockPanel Margin="{TemplateBinding Padding}" x:Name="TitleAndContent">
 
-                                <c:SectionItem Background="Transparent" x:Name="PART_TitleSection" IsVisible="{TemplateBinding IsTitleVisible}" BorderThickness="0" DockPanel.Dock="Top" LeftContent="{TemplateBinding TitleIcon}"
-                                               RightContent="{TemplateBinding TitleRightContent}">
-                                    <c:SectionItem.Content>
-                                        <StackPanel>
-                                            <TextBlock ToolTip.Tip="{Binding $self.Text}" TextTrimming="CharacterEllipsis" x:Name="PART_Title" Text="{TemplateBinding Title}" />
-                                            <TextBlock ToolTip.Tip="{Binding $self.Text}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" x:Name="PART_Subtitle" Text="{TemplateBinding Subtitle}" IsVisible="{Binding !!$self.Text}" />
-                                        </StackPanel>
-                                    </c:SectionItem.Content>
-                                </c:SectionItem>
+                                <DockPanel IsVisible="{TemplateBinding IsTitleVisible}" DockPanel.Dock="Top">
+                                    <ContentControl VerticalAlignment="Center" Content="{TemplateBinding TitleIcon}" IsVisible="{Binding $parent[c:Pane].TitleIcon, Converter={x:Static ObjectConverters.IsNotNull}}" DockPanel.Dock="Left" Margin="0 0 15 0">
+                                        <ContentControl.Styles>
+                                            <Style Selector="avalonia|Icon">
+                                                <Setter Property="FontSize" Value="36" />
+                                            </Style>
+                                        </ContentControl.Styles>
+                                    </ContentControl>
+                                    <ContentControl VerticalAlignment="Center" Content="{TemplateBinding TitleRightContent}" DockPanel.Dock="Right" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock ToolTip.Tip="{Binding $self.Text}" TextTrimming="CharacterEllipsis" x:Name="PART_Title" Text="{TemplateBinding Title}" />
+                                        <TextBlock ToolTip.Tip="{Binding $self.Text}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" x:Name="PART_Subtitle" Text="{TemplateBinding Subtitle}" IsVisible="{Binding !!$self.Text}" />
+                                    </StackPanel>
+                                </DockPanel>
+                                
+                                <!-- <c:SectionItem Background="Transparent" x:Name="PART_TitleSection" Padding="0 0 0 10" -->
+                                <!--                IsVisible="{TemplateBinding IsTitleVisible}" BorderThickness="0" DockPanel.Dock="Top"  -->
+                                <!--                LeftContent="{TemplateBinding TitleIcon}" -->
+                                <!--                RightContent="{TemplateBinding TitleRightContent}"> -->
+                                <!--     <c:SectionItem.Content> -->
+                                <!--         <StackPanel> -->
+                                <!--             <TextBlock ToolTip.Tip="{Binding $self.Text}" TextTrimming="CharacterEllipsis" x:Name="PART_Title" Text="{TemplateBinding Title}" /> -->
+                                <!--             <TextBlock ToolTip.Tip="{Binding $self.Text}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" x:Name="PART_Subtitle" Text="{TemplateBinding Subtitle}" IsVisible="{Binding !!$self.Text}" /> -->
+                                <!--         </StackPanel> -->
+                                <!--     </c:SectionItem.Content> -->
+                                <!-- </c:SectionItem> -->
 
                                 <ContentPresenter Content="{TemplateBinding Content}" />
                             </DockPanel>
@@ -134,9 +147,13 @@
                 </c:Pane.Icon>
             </c:Pane>
 
-            <c:Pane VerticalAlignment="Top" Title="Title" Subtitle="Subtitle" IsTitleVisible="True" />
+            <c:Pane VerticalAlignment="Top" Title="Title" Subtitle="Subtitle" IsTitleVisible="True">
+                Content
+            </c:Pane>
 
-            <c:Pane Theme="{StaticResource Borderless}" VerticalAlignment="Top" Title="Title" Subtitle="Subtitle" IsTitleVisible="True" />
+            <c:Pane Theme="{StaticResource Borderless}" VerticalAlignment="Top" Title="Title" Subtitle="Subtitle" IsTitleVisible="True">
+                Content
+            </c:Pane>
 
         </StackPanel>
     </Design.PreviewWith>

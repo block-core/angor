@@ -1,8 +1,6 @@
-using System.Threading.Tasks;
 using AngorApp.Model;
-using CSharpFunctionalExtensions;
 
-namespace AngorApp.Sections.Wallet;
+namespace AngorApp.Sections.Wallet.Operate;
 
 public class BroadcastedTransactionDesign : IBroadcastedTransaction
 {

@@ -18,7 +18,7 @@ public class WalletViewModel(IWallet wallet, UIServices uiServices) : ReactiveOb
     {
         var wizard = WizardBuilder.StartWith(() => new AddressAndAmountViewModel(wallet))
             .Then(model => new TransactionPreviewViewModel(wallet, new Destination("Test", model.Amount!.Value, SampleData.TestNetBitcoinAddress), uiServices))
-            .Then(_ => new SuccessViewModel("Transaction sent!"))
+            .Then(_ => new SuccessViewModel("Transaction sent!", "Success"))
             .Build();
 
         return uiServices.Dialog.Show(wizard, "Send", closeable => wizard.OptionsForCloseable(closeable));

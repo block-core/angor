@@ -5,9 +5,9 @@
              xmlns:c="clr-namespace:AngorApp.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:b="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
-             xmlns:send1="clr-namespace:AngorApp.Sections.Wallet.Operate.Send"
+             xmlns:s="clr-namespace:AngorApp.Sections.Wallet.Operate.Send"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.Sections.Wallet.Operate.Send.AddressAndAmountView" x:DataType="send1:IAddressAndAmountViewModel">
+             x:Class="AngorApp.Sections.Wallet.Operate.Send.AddressAndAmountView" x:DataType="s:IAddressAndAmountViewModel">
 
     <StackPanel VerticalAlignment="Center" Spacing="10" MaxWidth="500">
         <StackPanel Spacing="20">
@@ -30,6 +30,5 @@
             </HeaderedContentControl>
         </StackPanel>
     </StackPanel>
-
-
+    
 </UserControl>

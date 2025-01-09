@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+             xmlns:f="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
+             xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
+             xmlns:create="clr-namespace:AngorApp.Sections.Wallet.Create"
+             xmlns:step="clr-namespace:AngorApp.Sections.Wallet.Create.Step2"
+             mc:Ignorable="d" d:DesignWidth="500"
+             x:Class="AngorApp.Sections.Wallet.Create.Step2.GeneratedWords"
+             x:DataType="step:ISeedWordsViewModel">
+
+    <Design.DataContext>
+        <step:SeedWordsViewModelDesign HasWords="True" />
+    </Design.DataContext>
+
+    <Border>
+        <StackPanel Spacing="5">
+            <create:SeedWordsList SeedWords="{Binding Words.Value}" />
+
+            <Border Classes="Alert">
+                <StackPanel Spacing="10">
+                    <TextBlock FontWeight="Bold">Important Security Tips:</TextBlock>
+                    <ItemsControl>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="Auto,*">
+                                    <TextBlock Grid.Column="0" Classes="Bullet" />
+                                    <TextBlock Grid.Column="1" Text="{Binding}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemsSource>
+                            <generic:List x:TypeArguments="x:String">
+                                <x:String>Never share these words with anyone</x:String>
+                                <x:String>Never enter these words on any website</x:String>
+                                <x:String>Store them in a secure, offline location</x:String>
+                                <x:String>Losing these words means losing access to your funds</x:String>
+                            </generic:List>
+                        </ItemsControl.ItemsSource>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Spacing="20" Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Command="{Binding Source={x:Static f:Commands.Instance}, Path=CopyText}" CommandParameter="{Binding Words.Value, Converter={x:Static converters:StringConverters.AsString}}" HorizontalAlignment="Center"
+                        Content="Copy to clipboard" />
+                <Button Command="{Binding GenerateWords}" Content="Regenerate New Seed Words" HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <CheckBox HorizontalAlignment="Right" Content="I've Written Them Down" IsChecked="{Binding AreWordsWrittenDown}" />
+
+        </StackPanel>
+
+    </Border>
+
+
+</UserControl>

@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:noWallet="clr-namespace:AngorApp.Sections.Wallet.NoWallet"
              xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
              xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
@@ -20,7 +19,7 @@
             <controls:Pane Title="Setup your wallet" IsTitleVisible="True">
                 <WrapPanel HorizontalAlignment="Center" Margin="-10">
                     <Button Content="Create wallet" Command="{Binding CreateWallet}" />
-                    <Button Content="Recover wallet" />
+                    <Button Content="Recover wallet" Command="{Binding RecoverWallet}" />
                 </WrapPanel>
             </controls:Pane>
         </StackPanel>

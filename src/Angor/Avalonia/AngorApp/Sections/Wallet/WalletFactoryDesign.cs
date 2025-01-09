@@ -5,6 +5,7 @@ using AngorApp.Sections.Wallet.Operate;
 using AngorApp.Services;
 using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Dialogs;
+using Zafiro.CSharpFunctionalExtensions;
 
 namespace AngorApp.Sections.Wallet;
 
@@ -17,14 +18,14 @@ public class WalletFactoryDesign : IWalletFactory
         this.uiServices = uiServices;
     }
     
-    public Task<Result<IWallet>> Recover()
+    public Task<Maybe<Result<IWallet>>> Recover()
     {
         throw new NotImplementedException();
     }
 
-    public async Task<Result<IWallet>> Create()
+    public async Task<Maybe<Result<IWallet>>> Create()
     {
         await uiServices.Dialog.ShowMessage("Info", "We will create a test wallet");
-        return new WalletDesign();
+        return Result.Success<IWallet>(new WalletDesign());
     }
 }
