@@ -987,30 +987,6 @@
 
     private void ReleaseFundsToInvestors(MouseEventArgs e)
     {
-        foreach (var transaction in transactions)
-        {
-          // todo: in the initial communication between the founder and investor the investor should provide the address to send the funds on a release.
-            string releaseAddress = string.Empty;
-
-            var sigs = SignReleaseOfFunds(transaction.Transaction, project, null, releaseAddress);
-
-            // publish the sigs to the investors pubkey on nostr under a specific tag an investor will know it is a release of funds sig response
-        }
+        NavigationManager.NavigateTo($"/release/{ProjectId}");
     }
-
-    private SignatureInfo SignReleaseOfFunds(Transaction investorTrx, ProjectInfo info, string founderSigningPrivateKey, string investorReleaseAddress)
-    {
-        var transactionHex = investorTrx.ToHex();
-
-        // build sigs
-        var recoveryTrx = _investorTransactionActions.BuildReleaseInvestorFundsTransaction(info, investorTrx, investorReleaseAddress);
-        var sig = _founderTransactionActions.SignInvestorRecoveryTransactions(info, transactionHex, recoveryTrx, founderSigningPrivateKey);
-
-        // todo: make a similar method for release funds to investors
-        //if (!_investorTransactionActions.CheckInvestorRecoverySignatures(info, investorTrx, sig))
-        //    throw new InvalidOperationException();
-
-        return sig;
-    }
-
 }

@@ -1,0 +1,120 @@
+﻿@page "/release/{ProjectIdentifier}"
+@using Angor.Shared
+@using Angor.Client.Storage
+@using Angor.Shared.Models
+@using Angor.Shared.ProtocolNew
+@using Angor.Client.Models
+@using Angor.Shared.Services
+@using Blockcore.Consensus.TransactionInfo
+
+@inject IJSRuntime JS
+
+@inject ILogger<Signatures> Logger
+@inject IDerivationOperations DerivationOperations
+@inject IClientStorage Storage;
+@inject ISignService SignService
+@inject IInvestorTransactionActions InvestorTransactionActions
+@inject IFounderTransactionActions FounderTransactionActions
+@inject ISerializer serializer
+@inject IEncryptionService encryption
+
+@inherits BaseComponent
+
+<NotificationComponent @ref="notificationComponent" />
+<PasswordComponent @ref="passwordComponent" />
+
+@if (!hasWallet)
+{
+    NavigationManager.NavigateTo($"/wallet");
+    return;
+}
+<div class="row">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex col-auto my-auto align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="signature" Height="42" Width="42" />
+                </span>
+                <div class="h-100 ms-3 flex-grow-1">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Release funds 
+                    </h5>
+
+                </div>
+            </div>
+        </div>
+        <p class="mb-0 font-weight-normal text-sm d-flex mt-4">
+            Project ID:
+            <span id="transactionID" class="text-dynamic ms-1">@ProjectIdentifier</span>
+        </p>
+    </div>
+</div>
+
+    
+ 
+
+@code {
+    [Parameter]
+    public string ProjectIdentifier { get; set; }
+
+    public FounderProject FounderProject { get; set; }
+
+    List<(Transaction Transaction, string TrxId)> transactions = new();
+
+
+    bool messagesReceived;
+    bool scanedForApprovals;
+
+    private bool isLoading = false;
+    private bool refreshButtonSpinner = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logger.LogDebug("OnInitializedAsync");
+        if (hasWallet)
+        {
+            FounderProject = Storage.GetFounderProjects()
+                .FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier)
+                             ?? throw new ArgumentException("The project was not found, try to scan in the founder page");
+
+            //await FetchPendingSignatures(FounderProject);
+        }
+        Logger.LogDebug("End of OnInitializedAsync");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Logger.LogDebug("OnAfterRenderAsync");
+       // await FetchSignaturesCheckPassword();
+    }
+
+    
+    private void ReleaseFundsToInvestors(MouseEventArgs e)
+    {
+        foreach (var transaction in transactions)
+        {
+            // todo: in the initial communication between the founder and investor the investor should provide the address to send the funds on a release.
+            string releaseAddress = string.Empty;
+
+            var sigs = SignReleaseOfFunds(transaction.Transaction, FounderProject.ProjectInfo, null, releaseAddress);
+
+            // publish the sigs to the investors pubkey on nostr under a specific tag an investor will know it is a release of funds sig response
+        }
+    }
+
+    
+    private SignatureInfo SignReleaseOfFunds(Transaction investorTrx, ProjectInfo info, string founderSigningPrivateKey, string investorReleaseAddress)
+    {
+        var transactionHex = investorTrx.ToHex();
+
+        // build sigs
+        var recoveryTrx = InvestorTransactionActions.BuildReleaseInvestorFundsTransaction(info, investorTrx, investorReleaseAddress);
+        var sig = FounderTransactionActions.SignInvestorRecoveryTransactions(info, transactionHex, recoveryTrx, founderSigningPrivateKey);
+
+        // todo: make a similar method for release funds to investors
+        //if (!_investorTransactionActions.CheckInvestorRecoverySignatures(info, investorTrx, sig))
+        //    throw new InvalidOperationException();
+
+        return sig;
+    }
+}
