@@ -2588,3 +2588,38 @@ button:hover:not(:disabled) {
         transform: translateY(0);
     }
 }
+
+.word-box-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.word-box {
+    position: relative;
+    padding: 15px;
+    border: 1px solid var(--btn-border);
+    border-radius: 8px;
+    background-color: var(--angor-card-dark);
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.word-number {
+    position: absolute;
+    top: -10px;
+    left: 10px;
+    background-color: var(--angor-section-bg, #046479);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    border: 1px solid var(--btn-border);
+    color: #e2e8f0;
+}
+
+.dark .word-number {
+    background-color: var(--angor-section-bg, aliceblue);
+    border: 1px solid var(--btn-border);
+    color: #333;
+}

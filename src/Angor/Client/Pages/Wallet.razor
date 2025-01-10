@@ -127,7 +127,32 @@
                                                 @if (!string.IsNullOrEmpty(newWalletWords))
                                                 {
                                                     <div class="mt-3">
-                                                        <textarea class="form-control" @bind="newWalletWords" rows="3" readonly></textarea>
+                                                        <div class="word-box-container">
+                                                            @{
+                                                                var words = newWalletWords.Split(' ');
+                                                                for (int i = 0; i < words.Length; i++)
+                                                                {
+                                                                    var index = i;
+                                                                    <div class="word-box">
+                                                                        <span class="word-number">@(index + 1)</span>
+                                                                        @words[index]
+                                                                    </div>
+                                                                }
+                                                            }
+                                                        </div>
+                                                        <div class="d-flex justify-content-between align-items-center mt-3">
+                                                            <button class="btn btn-border" @onclick="CopyWalletWords">
+                                                                <Icon IconName="copy" Height="20" Width="20" class="me-2" />
+                                                                Copy Words
+                                                            </button>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" 
+                                                                       @bind="backupConfirmation" id="backupConfirmation">
+                                                                <label class="form-check-label" for="backupConfirmation">
+                                                                    I have written down my wallet words
+                                                                </label>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 }
                                             </div>
@@ -143,35 +168,65 @@
                                         break;
 
                                     case 2:
-                                        <div class="info-card mb-3 slide-in">
-                                            <div class="info-label">Extra Security (Optional)</div>
-                                            <button class="btn btn-border-success w-100 mb-3" @onclick="ShowExtraWord">
-                                                <div class="d-flex align-items-center justify-content-center">
-                                                    <span class="me-1">
-                                                        <Icon IconName="@(isShowExtraWord ? "shield-minus" : "shield-plus")" 
-                                                              Height="24" Width="24" Color="var(--angor-primary)"></Icon>
-                                                    </span>
-                                                    <span>Optional Passphrase</span>
-                                                </div>
-                                            </button>
-
-                                            @if (isShowExtraWord)
-                                            {
-                                                <div class="mt-3">
-                                                    <div class="info-label d-flex align-items-center">
-                                                        Passphrase
-                                                        <span class="ms-2" title="Your passphrase adds an extra security layer to your wallet">
-                                                            <Icon IconName="key" Width="16" Height="16" />
-                                                        </span>
+                                        @if (isNewWallet)
+                                        {
+                                            <div class="info-card mb-3 slide-in">
+                                                <div class="info-label">Verify Your Wallet Words</div>
+                                                <p class="text-muted mb-3">Please enter the following words from your backup:</p>
+                                                
+                                                @foreach (var (index, _) in selectedWordsToVerify)
+                                                {
+                                                    var currentIndex = index;
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Word #@currentIndex</label>
+                                                        <input type="text" 
+                                                               class="form-control" 
+                                                               @bind="@userVerificationInputs[currentIndex]"
+                                                               @bind:after="ValidateWordInput"
+                                                               placeholder="Enter word #@currentIndex"/>
                                                     </div>
-                                                    <input type="text" class="form-control" @bind="newWalletWordsPassphrase" 
-                                                           placeholder="Enter passphrase (optional)">
-                                                    <small class="form-text text-muted mt-2">
-                                                        Adding a passphrase increases your wallet's security. Make sure to remember it!
-                                                    </small>
-                                                </div>
-                                            }
-                                        </div>
+                                                }
+
+                                                @if (showVerificationError)
+                                                {
+                                                    <div class="alert alert-danger">
+                                                        The words don't match. Please check your backup and try again.
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="info-card mb-3 slide-in">
+                                                <div class="info-label">Extra Security (Optional)</div>
+                                                <button class="btn btn-border-success w-100 mb-3" @onclick="ShowExtraWord">
+                                                    <div class="d-flex align-items-center justify-content-center">
+                                                        <span class="me-1">
+                                                            <Icon IconName="@(isShowExtraWord ? "shield-minus" : "shield-plus")" 
+                                                                  Height="24" Width="24" Color="var(--angor-primary)"></Icon>
+                                                        </span>
+                                                        <span>Optional Passphrase</span>
+                                                    </div>
+                                                </button>
+
+                                                @if (isShowExtraWord)
+                                                {
+                                                    <div class="mt-3">
+                                                        <div class="info-label d-flex align-items-center">
+                                                            Passphrase
+                                                            <span class="ms-2" title="Your passphrase adds an extra security layer to your wallet">
+                                                                <Icon IconName="key" Width="16" Height="16" />
+                                                            </span>
+                                                        </div>
+                                                        <input type="text" class="form-control" @bind="newWalletWordsPassphrase" 
+                                                               placeholder="Enter passphrase (optional)">
+                                                        <small class="form-text text-muted mt-2">
+                                                            Adding a passphrase increases your wallet's security. Make sure to remember it!
+                                                        </small>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
                                         break;
 
                                     case 3:
@@ -875,8 +930,24 @@ else
     private int currentStep = 1;
     private readonly int totalSteps = 3;
 
+    private List<(int index, string word)> selectedWordsToVerify = new();
+    private Dictionary<int, string> userVerificationInputs = new();
+    private bool verificationPassed = false;
+    private bool showVerificationError = false;
+
     private void NextStep()
     {
+        if (currentStep == 1 && isNewWallet)
+        {
+            if (!backupConfirmation)
+            {
+                notificationComponent.ShowNotificationMessage("Please confirm that you have written down your wallet words.");
+                return;
+            }
+            SelectRandomWordsForVerification();
+            showVerificationError = false; // Reset error state
+        }
+        
         if (currentStep < totalSteps)
         {
             currentStep++;
@@ -895,8 +966,9 @@ else
     {
         return currentStep switch
         {
-            1 => !string.IsNullOrWhiteSpace(newWalletWords),
-            2 => true, // Can always proceed from step 2 since passphrase is optional
+            1 => !string.IsNullOrWhiteSpace(newWalletWords) && (isNewWallet ? backupConfirmation : true),
+            2 => isNewWallet ? verificationPassed : true, // Only require verification for new wallets
+            3 => true,
             _ => false
         };
     }
@@ -1555,7 +1627,60 @@ else
         showTransactionJsonModal = isVisible;
     }
 
+    private void SelectRandomWordsForVerification()
+    {
+        if (string.IsNullOrEmpty(newWalletWords)) return;
+        
+        var words = newWalletWords.Split(' ').ToList();
+        selectedWordsToVerify.Clear();
+        userVerificationInputs.Clear();
+        verificationPassed = false;
+        
+        var random = new Random();
+        var indices = Enumerable.Range(0, words.Count)
+                              .OrderBy(x => random.Next())
+                              .Take(2)
+                              .ToList();
+        
+        foreach (var index in indices)
+        {
+            selectedWordsToVerify.Add((index + 1, words[index]));
+            userVerificationInputs[index + 1] = string.Empty; // Initialize the dictionary entry
+        }
+    }
+
+    private bool VerifyWords()
+    {
+        if (!selectedWordsToVerify.Any()) return false;
+        
+        return selectedWordsToVerify.All(word => 
+            userVerificationInputs.ContainsKey(word.index) && 
+            !string.IsNullOrWhiteSpace(userVerificationInputs[word.index]) &&
+            userVerificationInputs[word.index].Trim().ToLower() == word.word.ToLower());
+    }
+
+    private async Task CopyWalletWords()
+    {
+        if (!string.IsNullOrEmpty(newWalletWords))
+        {
+            await _clipboardService.WriteTextAsync(newWalletWords);
+            notificationComponent.ShowNotificationMessage("Words copied to clipboard!", 3);
+        }
+    }
+
+    private void ValidateWordInput()
+    {
+        // Only show error if all words have been entered
+        if (userVerificationInputs.Count == selectedWordsToVerify.Count && 
+            userVerificationInputs.All(x => !string.IsNullOrWhiteSpace(x.Value)))
+        {
+            verificationPassed = VerifyWords();
+            showVerificationError = !verificationPassed;
+        }
+    }
+
 
 
 
 }
+
