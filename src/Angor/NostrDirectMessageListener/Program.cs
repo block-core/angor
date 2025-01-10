@@ -23,28 +23,34 @@ class Program
     private const string RecipientPublicKey = "b61f43c4a88d538ee1e74979b75c4d54fd5ff756923f14aef0366bdab9b3cbcc"; // Corresponding public key
 
     private static async Task Main(string[] args)
+{
+    var relayUrl = Configuration.RelayUrl;
+    var recipientPrivateKey = Configuration.RecipientPrivateKey;
+    var recipientPublicKey = Configuration.RecipientPublicKey;
+
+    using var client = new ClientWebSocket();
+
+    try
     {
-        var relayUrl = Configuration.RelayUrl;
-        var recipientPrivateKey = Configuration.RecipientPrivateKey;
-        var recipientPublicKey = Configuration.RecipientPublicKey;
+        Console.WriteLine($"Connecting to relay: {relayUrl}");
+        await client.ConnectAsync(new Uri(relayUrl), CancellationToken.None);
 
-        using var client = new ClientWebSocket();
-        var messageProcessor = new MessageProcessor(client, recipientPrivateKey);
+        Console.WriteLine("Connected to relay.");
 
-        try
-        {
-            Console.WriteLine($"Connecting to relay: {relayUrl}");
-            await client.ConnectAsync(new Uri(relayUrl), CancellationToken.None);
+        // Subscribe to encrypted messages
+        Console.WriteLine("[INFO] Subscribing to encrypted direct messages...");
+        await SubscribeToEncryptedDM(client, recipientPublicKey);
 
-            Console.WriteLine("Connected to relay.");
-            await messageProcessor.SubscribeToMessages(recipientPublicKey);
-            await messageProcessor.ListenForMessages();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
+        // Start listening for messages
+        Console.WriteLine("[INFO] Starting to listen for messages...");
+        await ListenForMessages(client);
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[ERROR] Exception in Main: {ex.Message}");
+    }
+}
+
 
    private static async Task SubscribeToEncryptedDM(ClientWebSocket client, string publicKey)
 {
