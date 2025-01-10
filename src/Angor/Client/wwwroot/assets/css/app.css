@@ -1439,23 +1439,6 @@ a p {
     }
 }
 
-.animate-grid {
-    opacity: 0;
-    animation: fadeIn 0.6s ease-out forwards;
-}
-
-.animate-card {
-    opacity: 0;
-    transform: translateY(20px);
-    animation: slideUp 0.6s ease-out forwards;
-}
-
-.animate-list .project-card {
-    opacity: 0;
-    transform: translateX(-20px);
-    animation: slideIn 0.6s ease-out forwards;
-}
-
 .hover-effect {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -2288,9 +2271,54 @@ button:hover:not(:disabled) {
     }
 }
 
+@keyframes modalEntry {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .modern-modal {
     animation: modalEntry 0.3s ease-out;
 }
+
+.modal-dialog {
+    max-width: min(95vw, 600px);
+    margin: 1rem auto;
+}
+
+.modal-body-scroll {
+    max-height: calc(90vh - 180px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--angor-secondary) transparent;
+}
+
+    .modal-body-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .modal-body-scroll::-webkit-scrollbar-thumb {
+        background-color: var(--angor-secondary);
+        border-radius: 3px;
+    }
 
 .project-id-card {
     background: var(--angor-card-bg, #ffffff);
@@ -2340,57 +2368,12 @@ button:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.1);
     }
 
-/* Modal Responsive Fixes */
-.modal-dialog {
-    max-width: min(95vw, 600px);
-    margin: 1rem auto;
-}
-
-.modal-body-scroll {
-    max-height: calc(90vh - 180px);
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--angor-secondary) transparent;
-}
-
-    .modal-body-scroll::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .modal-body-scroll::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .modal-body-scroll::-webkit-scrollbar-thumb {
-        background-color: var(--angor-secondary);
-        border-radius: 3px;
-    }
-
-@media (max-width: 576px) {
-    .modal-dialog {
-        margin: 0.5rem;
-    }
-
-    .project-id-card {
-        padding: 0.75rem;
-    }
-
-    .project-id-value {
-        font-size: 0.8rem;
-    }
-
-    .info-label {
-        font-size: 0.75rem;
-    }
-}
-
 .custom-range {
     -webkit-appearance: none;
     width: 100%;
     height: 8px;
     border-radius: 5px;
     background: var(--angor-range-bg, #e2e8f0);
-    outline: none;
     transition: background 0.3s ease;
     position: relative;
 }
@@ -2399,44 +2382,8 @@ button:hover:not(:disabled) {
         background: var(--angor-range-bg-hover, #d1d1d1);
     }
 
-    .custom-range::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: var(--angor-secondary);
-        border: 3px solid var(--angor-range-thumb-border, #ffffff);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        position: relative;
-        top: -4px; /* Lower the thumb */
-    }
-
-        .custom-range::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-    .custom-range::-moz-range-thumb {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: var(--angor-secondary);
-        border: 3px solid var(--angor-range-thumb-border, #ffffff);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        position: relative;
-        top: -4px; /* Lower the thumb */
-    }
-
-        .custom-range::-moz-range-thumb:hover {
-            transform: scale(1.2);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
+    .custom-range::-webkit-slider-thumb,
+    .custom-range::-moz-range-thumb,
     .custom-range::-ms-thumb {
         width: 24px;
         height: 24px;
@@ -2447,64 +2394,15 @@ button:hover:not(:disabled) {
         cursor: pointer;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         position: relative;
-        top: -4px; /* Lower the thumb */
+        top: -4px;
     }
 
+        .custom-range::-webkit-slider-thumb:hover,
+        .custom-range::-moz-range-thumb:hover,
         .custom-range::-ms-thumb:hover {
             transform: scale(1.2);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
-
-    .custom-range::-ms-track {
-        width: 100%;
-        height: 8px;
-        border-radius: 5px;
-        background: transparent;
-        border-color: transparent;
-        color: transparent;
-    }
-
-    .custom-range::-ms-fill-lower {
-        background: var(--angor-range-bg, #e2e8f0);
-        border-radius: 5px;
-    }
-
-    .custom-range::-ms-fill-upper {
-        background: var(--angor-range-bg, #e2e8f0);
-        border-radius: 5px;
-    }
-
-    .custom-range::before {
-        content: attr(min);
-        position: absolute;
-        left: 0;
-        bottom: 20px; /* Move the label to the top */
-        font-size: 0.75rem;
-        color: var(--angor-primary);
-    }
-
-    .custom-range::after {
-        content: attr(max);
-        position: absolute;
-        right: 0;
-        bottom: 20px; /* Move the label to the top */
-        font-size: 0.75rem;
-        color: var(--angor-primary);
-    }
-
-@media (max-width: 768px) {
-    .custom-range {
-        height: 6px;
-    }
-
-        .custom-range::-webkit-slider-thumb,
-        .custom-range::-moz-range-thumb,
-        .custom-range::-ms-thumb {
-            width: 20px;
-            height: 20px;
-            top: -3px; /* Lower the thumb */
-        }
-}
 
 .investment-form {
     max-width: 600px;
@@ -2535,18 +2433,6 @@ button:hover:not(:disabled) {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.stage-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.stage-body {
-    font-size: 0.9rem;
-    color: var(--angor-text-muted);
-}
-
 .info-section {
     background: var(--angor-section-bg, rgba(0, 0, 0, 0.02));
     border-radius: 12px;
@@ -2558,34 +2444,12 @@ button:hover:not(:disabled) {
     border-color: var(--angor-secondary);
 }
 
-.custom-input-number {
-    -moz-appearance: textfield;
-}
-
-    .custom-input-number::-webkit-outer-spin-button,
-    .custom-input-number::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-
 .wallet-wizard {
     position: relative;
 }
 
-.slide-in {
+.slide-in ,.row {
     animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 .word-box-container {
@@ -2617,8 +2481,30 @@ button:hover:not(:disabled) {
     color: #e2e8f0;
 }
 
-.dark .word-number {
-    background-color: var(--angor-section-bg, aliceblue);
-    border: 1px solid var(--btn-border);
-    color: #333;
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .project-id-card {
+        padding: 0.75rem;
+    }
+
+    .project-id-value, .info-label {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .custom-range {
+        height: 6px;
+    }
+
+        .custom-range::-webkit-slider-thumb,
+        .custom-range::-moz-range-thumb,
+        .custom-range::-ms-thumb {
+            width: 20px;
+            height: 20px;
+            top: -3px;
+        }
 }
