@@ -7,13 +7,19 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.NBitcoin.Protocol;
-using Angor.Shared.Networks;
-using Blockcore.NBitcoin.Crypto;
+using Angor.Client.Services;
+using Angor.Shared;
+using Angor.Shared.Models; 
+using Nostr.Client.Client;
+using Blockcore.Networks; 
+
+
 
 
 class Program
@@ -21,35 +27,106 @@ class Program
     private const string RelayUrl = "wss://relay.angor.io/"; // Replace with your relay
     private const string RecipientPrivateKey = "362f4b51ecac1bc07a3216d9b5da1abfcb42f04f51ebfd659d5ebfc21f62b05d"; // Your private key
     private const string RecipientPublicKey = "b61f43c4a88d538ee1e74979b75c4d54fd5ff756923f14aef0366bdab9b3cbcc"; // Corresponding public key
+private static ISignService? _signService;
+private static INetworkConfiguration _networkConfiguration;
+        private readonly INetworkStorage _networkStorage;
 
-    private static async Task Main(string[] args)
+
+	public Program(ISignService signService, INetworkConfiguration networkConfiguration, INetworkStorage networkStorage)
 {
-    var relayUrl = Configuration.RelayUrl;
-    var recipientPrivateKey = Configuration.RecipientPrivateKey;
-    var recipientPublicKey = Configuration.RecipientPublicKey;
+	    _networkStorage = networkStorage;
+    _signService = signService;
+    _networkConfiguration = networkConfiguration;
+}
+
+ /*   private static async Task Main(string[] args)
+{
+    // Configure logging
+    var loggerFactory = LoggerFactory.Create(builder =>
+    {
+        builder.AddConsole();
+        builder.SetMinimumLevel(LogLevel.Debug);
+    });
+    var logger = loggerFactory.CreateLogger<Program>();
+    var clientLogger = loggerFactory.CreateLogger<NostrWebsocketClient>();
+    var factoryLogger = loggerFactory.CreateLogger<NostrCommunicationFactory>();
+    var networkLogger = loggerFactory.CreateLogger<NetworkService>();
+
+    // Ensure necessary services and dependencies are initialized
+    var networkStorage =_networkStorage;
+    var networkConfiguration = _networkConfiguration;
+    _networkConfiguration = networkConfiguration;
+
+    var communicationFactory = new NostrCommunicationFactory(clientLogger, factoryLogger);
+    var networkService = new NetworkService(networkStorage, new HttpClient(), networkLogger, _networkConfiguration);
+    var subscriptionsHandling = new RelaySubscriptionsHandling(logger, communicationFactory, networkService);
+
+    var signService = new SignService(communicationFactory, networkService, subscriptionsHandling);
+    _signService = signService;
 
     using var client = new ClientWebSocket();
 
     try
     {
-        Console.WriteLine($"Connecting to relay: {relayUrl}");
-        await client.ConnectAsync(new Uri(relayUrl), CancellationToken.None);
+        logger.LogInformation("Connecting to relay...");
+        await client.ConnectAsync(new Uri(RelayUrl), CancellationToken.None);
+        logger.LogInformation("Connected to relay.");
 
-        Console.WriteLine("Connected to relay.");
-
-        // Subscribe to encrypted messages
-        Console.WriteLine("[INFO] Subscribing to encrypted direct messages...");
-        await SubscribeToEncryptedDM(client, recipientPublicKey);
-
-        // Start listening for messages
-        Console.WriteLine("[INFO] Starting to listen for messages...");
+        // Subscribe to encrypted direct messages and listen for incoming messages
+        await SubscribeToEncryptedDM(client, RecipientPublicKey);
         await ListenForMessages(client);
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"[ERROR] Exception in Main: {ex.Message}");
+        logger.LogError($"An error occurred: {ex.Message}");
     }
+    finally
+    {
+        if (client.State == WebSocketState.Open || client.State == WebSocketState.Connecting)
+        {
+            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Shutting down", CancellationToken.None);
+        }
+        logger.LogInformation("WebSocket client closed.");
+    }
+}*/
+
+private static async Task Main(string[] args)
+{
+    Console.WriteLine("Initializing application...");
+
+    // WebSocket client setup
+    using var client = new ClientWebSocket();
+
+    try
+    {
+        Console.WriteLine("Connecting to relay...");
+        await client.ConnectAsync(new Uri(RelayUrl), CancellationToken.None);
+        Console.WriteLine("Connected to relay.");
+
+        Console.WriteLine("Subscribing to encrypted DM...");
+        await SubscribeToEncryptedDM(client, RecipientPublicKey);
+
+        Console.WriteLine("Listening for messages...");
+        await ListenForMessages(client);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error occurred: {ex.Message}");
+    }
+    finally
+    {
+        if (client.State == WebSocketState.Open || client.State == WebSocketState.Connecting)
+        {
+            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Shutting down", CancellationToken.None);
+        }
+        Console.WriteLine("WebSocket client closed.");
+    }
+
+    Console.WriteLine("Application exiting...");
 }
+
+
+
 
 
    private static async Task SubscribeToEncryptedDM(ClientWebSocket client, string publicKey)
@@ -278,44 +355,29 @@ private static string DecryptMessage(string recipientPrivateKey, string encrypte
 
 
     private static void SendSignaturesToInvestor(
-    string signedTransactionHex,
-    string recipientPrivateKey,
-    string investorPubKey,
-    string eventId,
-    ClientWebSocket client)
-{
-    try
+        string signedTransactionHex,
+        string recipientPrivateKey,
+        string investorPubKey,
+        string eventId,
+        ClientWebSocket client)
     {
-        var privateKey = new Key(Encoders.Hex.DecodeData(recipientPrivateKey));
-        var nostrEvent = new NostrEvent
+        try
         {
-            Kind = 4,
-            CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            Content = signedTransactionHex,
-            Tags = new List<List<string>>
-            {
-                new() { "p", investorPubKey },
-                new() { "e", eventId }
-            }
-        };
+            // Use SignService to sign and send the transaction
+            var creationTime = _signService.SendSignaturesToInvestor(
+                signedTransactionHex,
+                recipientPrivateKey,
+                investorPubKey,
+                eventId
+            );
 
-        nostrEvent.Sign(privateKey);
-        var serializedEvent = JsonSerializer.Serialize(nostrEvent);
-
-        client.SendAsync(
-            Encoding.UTF8.GetBytes(serializedEvent),
-            WebSocketMessageType.Text,
-            true,
-            CancellationToken.None
-        ).Wait();
-
-        Console.WriteLine("Signed event sent successfully.");
+            Console.WriteLine($"[INFO] Signed event sent successfully at {creationTime}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] Failed to send signed event: {ex.Message}");
+        }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error sending transaction: {ex.Message}");
-    }
-}
 
 }
 
@@ -346,7 +408,7 @@ public static class BitcoinUtils
 {
     try
     {
-        var network = new BitcoinTest();
+var network = Network.Bitcoin.TestNet; // Or Network.Main for mainnet
         var consensusFactory = network.Consensus.ConsensusFactory;
         var transaction = consensusFactory.CreateTransaction(rawTransactionHex);
 

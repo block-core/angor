@@ -18,6 +18,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
     <PackageReference Include="WebSocketSharp" Version="1.0.3-rc11" />
     <ProjectReference Include="..\Shared\Angor.Shared.csproj" />
+    <ProjectReference Include="..\Client\Angor.Client.csproj" />
+
   </ItemGroup>
 
 </Project>
