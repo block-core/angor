@@ -46,14 +46,21 @@ class Program
         }
     }
 
-    private static async Task SubscribeToEncryptedDM(ClientWebSocket client, string publicKey)
+   private static async Task SubscribeToEncryptedDM(ClientWebSocket client, string publicKey)
 {
     if (client == null)
+    {
+        Console.WriteLine("[ERROR] WebSocket client is null.");
         throw new ArgumentNullException(nameof(client));
+    }
+
+    if (string.IsNullOrEmpty(publicKey))
+    {
+        Console.WriteLine("[ERROR] Public key is null or empty.");
+        throw new ArgumentException("Public key cannot be null or empty", nameof(publicKey));
+    }
 
     string subscriptionId = Guid.NewGuid().ToString();
-
-    // Ensure this structure matches the relay's API expectations
     string subscriptionMessage = $@"
     [
         ""REQ"",
@@ -62,93 +69,121 @@ class Program
             ""kinds"": [4],
             ""#p"": [""{publicKey}""]
         }}
-    ]";
+    ]".Trim();
 
-    Console.WriteLine($"Subscribing with JSON: {subscriptionMessage}");
+    Console.WriteLine($"[DEBUG] Subscription ID: {subscriptionId}");
+    Console.WriteLine($"[DEBUG] Subscription JSON: {subscriptionMessage}");
 
-    // Send the message to the relay
-    await client.SendAsync(
-        Encoding.UTF8.GetBytes(subscriptionMessage.Trim()),
-        WebSocketMessageType.Text,
-        true,
-        CancellationToken.None
-    );
+    try
+    {
+        if (client.State != WebSocketState.Open)
+        {
+            Console.WriteLine($"[ERROR] WebSocket is not open. Current state: {client.State}");
+            return;
+        }
+
+        Console.WriteLine("[DEBUG] Sending subscription message...");
+        await client.SendAsync(
+            Encoding.UTF8.GetBytes(subscriptionMessage),
+            WebSocketMessageType.Text,
+            true,
+            CancellationToken.None
+        );
+
+        Console.WriteLine("[DEBUG] Subscription message sent successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[ERROR] Failed to send subscription message: {ex.Message}");
+    }
 }
 
 
 
+
+
     private static async Task ListenForMessages(ClientWebSocket client)
+{
+    var buffer = new byte[1024 * 64]; // 64 KB buffer
+
+    while (client.State == WebSocketState.Open)
     {
-        var buffer = new byte[1024 * 64]; // 64 KB buffer
-
-        while (client.State == WebSocketState.Open)
+        try
         {
-            try
+            Console.WriteLine("[DEBUG] Waiting to receive a message...");
+            var result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+            if (result.MessageType == WebSocketMessageType.Text)
             {
-                var result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                Console.WriteLine($"[DEBUG] Message received (length: {result.Count}): {message}");
 
-                if (result.MessageType == WebSocketMessageType.Text)
-                {
-                    string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    Console.WriteLine($"Message received: {message}");
-
-                    // Process the message
-                    ProcessNostrEvent(message, client);
-                }
-                else if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    Console.WriteLine("WebSocket connection closed.");
-                    break;
-                }
+                // Process the message
+                ProcessNostrEvent(message, client);
             }
-            catch (Exception ex)
+            else if (result.MessageType == WebSocketMessageType.Close)
             {
-                Console.WriteLine($"Error receiving message: {ex.Message}");
+                Console.WriteLine("[INFO] WebSocket connection closed by server.");
                 break;
             }
+            else
+            {
+                Console.WriteLine($"[WARNING] Unsupported WebSocket message type: {result.MessageType}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] Error while receiving message: {ex.Message}");
+            break;
         }
     }
+
+    Console.WriteLine("[INFO] Exiting ListenForMessages loop.");
+}
+
 
     private static void ProcessNostrEvent(string message, ClientWebSocket client)
 {
     try
     {
-        Console.WriteLine($"Processing message: {message}");
+        Console.WriteLine($"[DEBUG] Processing message: {message}");
 
         if (message.StartsWith("["))
         {
             var response = JsonSerializer.Deserialize<object[]>(message);
-            if (response?.Length > 0)
+            if (response != null && response.Length > 0)
             {
                 string eventType = response[0]?.ToString();
-                Console.WriteLine($"Message type: {eventType}");
+                Console.WriteLine($"[DEBUG] Parsed event type: {eventType}");
 
-                switch (eventType)
+                if (eventType == "EVENT")
                 {
-                    case "EVENT":
-                        Console.WriteLine("Handling EVENT type...");
-                        HandleEventMessage(response, client);
-                        break;
-                    case "NOTICE":
-                        Console.WriteLine($"Relay notice: {response[1]}");
-                        break;
-                    case "EOSE":
-                        Console.WriteLine("End of stored events (EOSE) received.");
-                        break;
-                    default:
-                        Console.WriteLine($"Unknown message type: {eventType}");
-                        break;
+                    HandleEventMessage(response, client);
                 }
+                else
+                {
+                    Console.WriteLine($"[INFO] Received non-EVENT message: {eventType}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("[WARNING] Malformed or empty response received.");
             }
         }
         else
         {
-            Console.WriteLine($"Non-array message received: {message}");
+            Console.WriteLine("[INFO] Non-JSON message received.");
         }
+    }
+    catch (JsonException jsonEx)
+    {
+        Console.WriteLine($"[ERROR] JSON parsing error: {jsonEx.Message}");
+        Console.WriteLine($"[DEBUG] Raw message: {message}");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error processing message: {ex.Message}\nRaw Message: {message}");
+        Console.WriteLine($"[ERROR] Unexpected error processing message: {ex.Message}");
+        Console.WriteLine($"[DEBUG] Raw message: {message}");
     }
 }
 
