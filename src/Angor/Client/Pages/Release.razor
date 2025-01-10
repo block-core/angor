@@ -50,7 +50,42 @@
     </div>
 </div>
 
-    
+<div class="row mt-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header pb-0 p-3">
+                <div class="row">
+                    <div class="col-6 d-flex align-items-center">
+                        <h6 class="mb-0">Approved Signatures</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive form-control">
+                    <table class="table align-items-center mb-0">
+                        <thead>
+                        <tr>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investor Public Key</th>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Approved</th>
+                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var approval in approvalsDictionary)
+                        {
+                            <tr>
+                                <td>@approval.Key</td>
+                                <td>@approval.Value.TimeApproved.ToString("g")</td>
+                                <td>@approval.Value.EventId</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
  
 
 @code {
@@ -60,7 +95,8 @@
     public FounderProject FounderProject { get; set; }
 
     List<(Transaction Transaction, string TrxId)> transactions = new();
-
+    Dictionary<string, (DateTime TimeApproved, string EventId)> approvalsDictionary = new();
+   
 
     bool messagesReceived;
     bool scanedForApprovals;
@@ -77,9 +113,45 @@
                 .FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier)
                              ?? throw new ArgumentException("The project was not found, try to scan in the founder page");
 
-            //await FetchPendingSignatures(FounderProject);
+            await FetchApprovedSignatures(FounderProject);
         }
         Logger.LogDebug("End of OnInitializedAsync");
+    }
+
+    private async Task FetchApprovedSignatures(FounderProject founderProject)
+    {
+        // Fetch all approvals
+        SignService.LookupInvestmentRequestApprovals(
+            founderProject.ProjectInfo.NostrPubKey,
+            (investorNostrPubKey, timeApproved, reqEventId) =>
+            {
+                approvalsDictionary[investorNostrPubKey] = (timeApproved, reqEventId);
+            },
+            async () =>
+            {
+                // After fetching approvals, look up all release signatures
+                foreach (var investorNostrPubKey in approvalsDictionary.Keys.ToList())
+                {
+                    SignService.LookupReleaseSigs(
+                        investorNostrPubKey,
+                        founderProject.ProjectInfo.NostrPubKey,
+                        approvalsDictionary[investorNostrPubKey].TimeApproved,
+                        approvalsDictionary[investorNostrPubKey].EventId,
+                        async (releaseSigContent) =>
+                        {
+                            // Mark the item in the dictionary as found
+                            approvalsDictionary[investorNostrPubKey] = (approvalsDictionary[investorNostrPubKey].TimeApproved, "Found");
+                        });
+                }
+
+                // Log the results
+                foreach (var approval in approvalsDictionary)
+                {
+                    Logger.LogDebug($"Investor: {approval.Key}, TimeApproved: {approval.Value.TimeApproved}, Status: {approval.Value.EventId}");
+                }
+
+                StateHasChanged();
+            });
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -87,7 +159,6 @@
         Logger.LogDebug("OnAfterRenderAsync");
        // await FetchSignaturesCheckPassword();
     }
-
     
     private void ReleaseFundsToInvestors(MouseEventArgs e)
     {
