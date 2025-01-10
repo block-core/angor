@@ -1086,9 +1086,13 @@ else
 
     private async Task ShowCreateWalletModal(string type)
     {
-        isNewWallet = type == "new" ? true : false;
-        createWalletTitle = type == "new" ? "Create Wallet" : "Recover Wallet";
-        createWalletDescription = type == "new" ? "Generate a new wallet" : "Paste your wallet words";
+        // Reset all state first
+        ResetWalletCreationState();
+        
+        // Then set new wallet type
+        isNewWallet = type == "new";
+        createWalletTitle = isNewWallet ? "Create Wallet" : "Recover Wallet";
+        createWalletDescription = isNewWallet ? "Generate a new wallet" : "Paste your wallet words";
 
         walletWordsCreateModal = true;
         StateHasChanged();
@@ -1717,6 +1721,27 @@ else
             verificationPassed = VerifyWords();
             showVerificationError = !verificationPassed;
         }
+    }
+
+    private void ResetWalletCreationState()
+    {
+        // Reset wallet form data
+        newWalletWords = null;
+        newWalletWordsPassphrase = null; 
+        newWalletPassword = null;
+        passphraseInput = null;
+
+        // Reset UI state
+        currentStep = 1;
+        isPassphraseEnabled = false;
+        backupConfirmation = false;
+        showBackupConfirmationError = false;
+        
+        // Reset verification state
+        selectedWordsToVerify.Clear();
+        userVerificationInputs.Clear();
+        verificationPassed = false;
+        showVerificationError = false;
     }
 
 
