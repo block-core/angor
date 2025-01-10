@@ -174,13 +174,15 @@
                                                 break;
 
                                             case 3:
-                                                <div class="form-check form-switch mb-3">
-                                                    <input class="form-check-input" type="checkbox" id="passphraseSwitch" 
-                                                           @bind="isPassphraseEnabled">
-                                                    <label class="form-check-label" for="passphraseSwitch">
-                                                        Enable Additional Security
-                                                    </label>
-                                                </div>
+                                                <button class="btn btn-border-success w-100 mb-3" @onclick="ShowExtraWord">
+                                                    <div class="d-flex align-items-center justify-content-center">
+                                                        <span class="me-1">
+                                                            <Icon IconName="@(isPassphraseEnabled ? "shield-minus" : "shield-plus")"
+                                                                  Height="24" Width="24" Color="var(--angor-primary)"></Icon>
+                                                        </span>
+                                                        <span>Optional Passphrase</span>
+                                                    </div>
+                                                </button>
                                                 
                                                 @if (isPassphraseEnabled)
                                                 {
@@ -215,13 +217,17 @@
                                                 break;
 
                                             case 2:
-                                                <div class="form-check form-switch mb-3">
-                                                    <input class="form-check-input" type="checkbox" id="passphraseSwitch" 
-                                                           @bind="isPassphraseEnabled">
-                                                    <label class="form-check-label" for="passphraseSwitch">
-                                                        I used a passphrase
-                                                    </label>
-                                                </div>
+         
+
+                                  <button class="btn btn-border-success w-100 mb-3" @onclick="ShowExtraWord">
+                                      <div class="d-flex align-items-center justify-content-center">
+                                          <span class="me-1">
+                                              <Icon IconName="@(isPassphraseEnabled ? "shield-minus" : "shield-plus")" 
+                                                    Height="24" Width="24" Color="var(--angor-primary)"></Icon>
+                                          </span>
+                                          <span>Optional Passphrase</span>
+                                      </div>
+                                  </button>
                                                 
                                                 @if (isPassphraseEnabled)
                                                 {
@@ -878,8 +884,6 @@ else
     private bool coinControlModal;
     private bool walletWordsModal;
     private bool walletWordsCreateModal;
-
-    private bool isShowExtraWord;
 
     private bool backupConfirmation;
     private bool showBackupConfirmationError;
@@ -1571,7 +1575,7 @@ else
 
     private void ShowExtraWord(MouseEventArgs e)
     {
-        isShowExtraWord = !isShowExtraWord;
+        isPassphraseEnabled = !isPassphraseEnabled;
     }
 
     public async Task<IReadOnlyList<string>> GetBtcValuesInPreferredCurrency(params decimal[] btcBalances)
