@@ -113,7 +113,7 @@
                                     case 1:
                                         if (isNewWallet)
                                         {
-                                            <div class="info-card mb-3 slide-in">
+                                            <div class="info-card slide-in">
                                                 <div class="info-label">Generate New Wallet</div>
                                                 <p class="text-muted mb-3">Click the button below to generate your wallet words</p>
                                                 <button class="btn btn-border-success w-100" @onclick="GenerateNewWalletWords">
@@ -159,7 +159,7 @@
                                         }
                                         else
                                         {
-                                            <div class="info-card mb-3 slide-in">
+                                            <div class="info-card slide-in">
                                                 <div class="info-label">Enter Wallet Words</div>
                                                 <p class="text-muted mb-3">Please enter your existing wallet words to recover your wallet</p>
                                                 <textarea class="form-control" @bind="newWalletWords" rows="3"></textarea>
@@ -170,7 +170,7 @@
                                     case 2:
                                         @if (isNewWallet)
                                         {
-                                            <div class="info-card mb-3 slide-in">
+                                            <div class="info-card slide-in">
                                                 <div class="info-label">Verify Your Wallet Words</div>
                                                 <p class="text-muted mb-3">Please enter the following words from your backup:</p>
                                                 
@@ -197,7 +197,7 @@
                                         }
                                         else
                                         {
-                                            <div class="info-card mb-3 slide-in">
+                                            <div class="info-card slide-in">
                                                 <div class="info-label">Extra Security (Optional)</div>
                                                 <button class="btn btn-border-success w-100 mb-3" @onclick="ShowExtraWord">
                                                     <div class="d-flex align-items-center justify-content-center">
@@ -230,7 +230,7 @@
                                         break;
 
                                     case 3:
-                                        <div class="info-card mb-3 slide-in">
+                                        <div class="info-card slide-in">
                                             <div class="info-label">Set Password</div>
                                             <p class="text-muted mb-3">Create a strong password to protect your wallet</p>
                                             <div class="input-group">
