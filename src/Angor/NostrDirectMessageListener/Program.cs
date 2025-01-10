@@ -1,19 +1,19 @@
-﻿extern alias NBitcoinAlias; // Alias for NBitcoin
-
-using System;
-using System.Numerics;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
-using System.Security.Cryptography;
-using System.Text.Json.Serialization;
-using NBitcoinAlias::NBitcoin; // Use the alias here for NBitcoin
-using Newtonsoft.Json;
-
+using Blockcore.NBitcoin.Protocol;
+using Angor.Shared.Networks;
+using Blockcore.NBitcoin.Crypto;
 
 
 class Program
@@ -22,22 +22,23 @@ class Program
     private const string RecipientPrivateKey = "362f4b51ecac1bc07a3216d9b5da1abfcb42f04f51ebfd659d5ebfc21f62b05d"; // Your private key
     private const string RecipientPublicKey = "b61f43c4a88d538ee1e74979b75c4d54fd5ff756923f14aef0366bdab9b3cbcc"; // Corresponding public key
 
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
-        Console.WriteLine($"Connecting to relay: {RelayUrl}");
+        var relayUrl = Configuration.RelayUrl;
+        var recipientPrivateKey = Configuration.RecipientPrivateKey;
+        var recipientPublicKey = Configuration.RecipientPublicKey;
 
         using var client = new ClientWebSocket();
+        var messageProcessor = new MessageProcessor(client, recipientPrivateKey);
 
         try
         {
-            await client.ConnectAsync(new Uri(RelayUrl), CancellationToken.None);
+            Console.WriteLine($"Connecting to relay: {relayUrl}");
+            await client.ConnectAsync(new Uri(relayUrl), CancellationToken.None);
+
             Console.WriteLine("Connected to relay.");
-
-            // Send a subscription to listen for Encrypted DM messages
-            await SubscribeToEncryptedDM(client, RecipientPublicKey);
-
-            // Listen for incoming messages
-            await ListenForMessages(client);
+            await messageProcessor.SubscribeToMessages(recipientPublicKey);
+            await messageProcessor.ListenForMessages();
         }
         catch (Exception ex)
         {
@@ -54,14 +55,14 @@ class Program
 
         string subscriptionId = Guid.NewGuid().ToString();
         string subscriptionMessage = $@"
-    [
-        ""REQ"",
-        ""{subscriptionId}"",
-        {{
-            ""kinds"": [4],
-            ""#p"": [""{publicKey}""]
-        }}
-    ]";
+        [
+            ""REQ"",
+            ""{subscriptionId}"",
+            {{
+                ""kinds"": [4],
+                ""#p"": [""{publicKey}""]
+            }}
+        ]";
 
         Console.WriteLine($"Subscribing with JSON: {subscriptionMessage}");
         await client.SendAsync(
@@ -71,9 +72,6 @@ class Program
             CancellationToken.None
         );
     }
-
-
-
 
     private static async Task ListenForMessages(ClientWebSocket client)
     {
@@ -91,7 +89,7 @@ class Program
                     Console.WriteLine($"Message received: {message}");
 
                     // Process the message
-                    ProcessNostrEvent(message,client);
+                    ProcessNostrEvent(message, client);
                 }
                 else if (result.MessageType == WebSocketMessageType.Close)
                 {
@@ -107,7 +105,7 @@ class Program
         }
     }
 
-    private static void ProcessNostrEvent(string message,ClientWebSocket client )
+    private static void ProcessNostrEvent(string message, ClientWebSocket client)
     {
         try
         {
@@ -115,7 +113,7 @@ class Program
 
             if (message.StartsWith("["))
             {
-                var response = System.Text.Json.JsonSerializer.Deserialize<object[]>(message);
+                var response = JsonSerializer.Deserialize<object[]>(message);
                 if (response == null || response.Length == 0)
                 {
                     Console.WriteLine("Received empty or malformed message.");
@@ -141,7 +139,6 @@ class Program
                         }
                         break;
 
-    
                     case "EOSE":
                         Console.WriteLine("End of stored events (EOSE) received.");
                         break;
@@ -170,7 +167,7 @@ class Program
             {
                 Console.WriteLine($"Raw event data: {eventData}");
 
-                var nostrEvent = System.Text.Json.JsonSerializer.Deserialize<NostrEvent>(eventData.GetRawText());
+                var nostrEvent = JsonSerializer.Deserialize<NostrEvent>(eventData.GetRawText());
                 if (nostrEvent == null)
                 {
                     Console.WriteLine("Deserialized NostrEvent is null.");
@@ -187,8 +184,8 @@ class Program
                     {
                         Console.WriteLine($"Decrypted message: {decryptedContent}");
 
-                        string signedTransactionHex = DecodeAndSignBitcoinTransaction(decryptedContent, client);
-                        if (signedTransactionHex != null)
+                        string signedTransactionHex = BitcoinUtils.DecodeAndSignTransaction(decryptedContent, RecipientPrivateKey);
+                        if (!string.IsNullOrEmpty(signedTransactionHex))
                         {
                             Console.WriteLine($"Signed Transaction Hex: {signedTransactionHex}");
                             SendSignaturesToInvestor(
@@ -209,48 +206,255 @@ class Program
         }
     }
 
-
-    
-    private static void DecodeAndSignBitcoinTransaction(string rawTransactionHex)
+    private static string DecryptMessage(string recipientPrivateKey, string encryptedContent, string senderPublicKey)
     {
         try
         {
-            var network = NBitcoinAlias::NBitcoin.Network.Main;
-            var transaction = NBitcoinAlias::NBitcoin.Transaction.Parse(rawTransactionHex, network);
-
-            Console.WriteLine("Decoded Bitcoin Transaction:");
-            Console.WriteLine($" - Transaction ID: {transaction.GetHash()}");
-
-            string privateKeyHex = "362f4b51ecac1bc07a3216d9b5da1abfcb42f04f51ebfd659d5ebfc21f62b05d";
-
-            var coins = new List<NBitcoinAlias::NBitcoin.ICoin>
+            var parts = encryptedContent.Split("?iv=");
+            if (parts.Length != 2)
             {
-                new NBitcoinAlias::NBitcoin.Coin(
-                    new NBitcoinAlias::NBitcoin.OutPoint(
-                        NBitcoinAlias::NBitcoin.uint256.Parse("2f492d7850fc289039b4be57f93b704e88add6a1e48f8d860a121286a1aa0611"),
-                        0
-                    ),
-                    new NBitcoinAlias::NBitcoin.TxOut(
-                        NBitcoinAlias::NBitcoin.Money.Coins(0.01m),
-                        NBitcoinAlias::NBitcoin.Script.FromHex("76a91489abcdefabbaabbaabbaabbaabbaabbaabbaabba88ac")
-                    )
-                )
-            };
+                Console.WriteLine("Invalid encrypted content format.");
+                return null;
+            }
 
-            string signedTransactionHex = SignTransaction(transaction, privateKeyHex, coins, network);
-            Console.WriteLine($"Signed Transaction Hex: {signedTransactionHex}");
+            var cipherText = Convert.FromBase64String(parts[0]);
+            var iv = Convert.FromBase64String(parts[1]);
+
+            var privateKey = new Key(Encoders.Hex.DecodeData(recipientPrivateKey));
+            var publicKey = new PubKey("02" + senderPublicKey);
+
+            var sharedSecret = publicKey.GetSharedPubkey(privateKey);
+            var sharedSecretBytes = sharedSecret.ToBytes()[1..];
+
+            using var aes = Aes.Create();
+            aes.Key = sharedSecretBytes;
+            aes.IV = iv;
+
+            using var decryptor = aes.CreateDecryptor();
+            var decryptedBytes = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
+            return Encoding.UTF8.GetString(decryptedBytes);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error decoding or signing Bitcoin transaction: {ex.Message}");
+            Console.WriteLine($"Error decrypting message: {ex.Message}");
+            return null;
         }
     }
 
+    private static void SendSignaturesToInvestor(
+        string signedTransactionHex,
+        string recipientPrivateKey,
+        string investorPubKey,
+        string eventId,
+        ClientWebSocket client)
+    {
+        try
+        {
+            var recipientKey = new Key(Encoders.Hex.DecodeData(recipientPrivateKey));
+            var nostrEvent = new NostrEvent
+            {
+                Kind = 4,
+                CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Content = signedTransactionHex,
+                Tags = new List<List<string>>
+                {
+                    new List<string> { "p", investorPubKey },
+                    new List<string> { "e", eventId }
+                }
+            };
+            nostrEvent.Sign(recipientKey);
 
+            var message = JsonSerializer.Serialize(nostrEvent);
+            client.SendAsync(Encoding.UTF8.GetBytes(message), WebSocketMessageType.Text, true, CancellationToken.None).Wait();
 
+            Console.WriteLine("Signed transaction sent successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending transaction: {ex.Message}");
+        }
+    }
+}
 
+// Classes and Utility Functions:
+public class NostrEvent
+{
+    [JsonPropertyName("id")] public string Id { get; set; }
+    [JsonPropertyName("kind")] public int Kind { get; set; }
+    [JsonPropertyName("pubkey")] public string Pubkey { get; set; }
+    [JsonPropertyName("content")] public string Content { get; set; }
+    [JsonPropertyName("created_at")] public long CreatedAt { get; set; }
+    [JsonPropertyName("tags")] public List<List<string>> Tags { get; set; } = new();
 
-    private static string DecryptMessage(string recipientPrivateKey, string encryptedContent, string senderPublicKey)
+    public void Sign(Key privateKey)
+    {
+        var serializedEvent = $"{Kind}:{CreatedAt}:{Content}";
+        var hash = Blockcore.NBitcoin.Crypto.Hashes.SHA256(Encoding.UTF8.GetBytes(serializedEvent));
+        Id = Encoders.Hex.EncodeData(hash);
+
+        var signature = privateKey.Sign(new uint256(hash));
+        Pubkey = privateKey.PubKey.Compress().ToHex();
+    }
+}
+
+public static class BitcoinUtils
+{
+    public static string DecodeAndSignTransaction(string rawTransactionHex, string privateKeyHex)
+    {
+        try
+        {
+            var network = new BitcoinTest();
+//var transaction = Blockcore.Consensus.TransactionInfo.Transaction.Parse(rawTransactionHex, RawFormat.Default, network);
+// Assuming `network` is an instance of BitcoinTest or a similar network
+			var consensusFactory = network.Consensus.ConsensusFactory;
+			var transaction = consensusFactory.CreateTransaction(rawTransactionHex);
+
+            var privateKey = new Key(Encoders.Hex.DecodeData(privateKeyHex));
+            var builder = new TransactionBuilder(new BitcoinTest());
+            builder.AddCoins(transaction.Outputs.AsCoins());
+            builder.AddKeys(privateKey);
+
+            var signedTransaction = builder.SignTransaction(transaction);
+            return signedTransaction.ToHex();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error signing transaction: {ex.Message}");
+            return null;
+        }
+    }
+}
+
+public static class Configuration
+{
+    public static string RelayUrl => "wss://relay.angor.io/";
+    public static string RecipientPrivateKey => "362f4b51ecac1bc07a3216d9b5da1abfcb42f04f51ebfd659d5ebfc21f62b05d";
+    public static string RecipientPublicKey => "b61f43c4a88d538ee1e74979b75c4d54fd5ff756923f14aef0366bdab9b3cbcc";
+}
+
+public class MessageProcessor
+{
+    private readonly ClientWebSocket _client;
+    private readonly ITransactionService _transactionService;
+
+    public MessageProcessor(ClientWebSocket client, string recipientPrivateKey)
+    {
+        _client = client;
+        _transactionService = new TransactionService(recipientPrivateKey);
+    }
+
+    public async Task SubscribeToMessages(string publicKey)
+    {
+        var subscriptionMessage = MessageUtils.CreateSubscriptionMessage(publicKey);
+        await _client.SendAsync(
+            Encoding.UTF8.GetBytes(subscriptionMessage),
+            WebSocketMessageType.Text,
+            true,
+            CancellationToken.None
+        );
+    }
+
+    public async Task ListenForMessages()
+    {
+        var buffer = new byte[1024 * 64];
+        while (_client.State == WebSocketState.Open)
+        {
+            var result = await _client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+            if (result.MessageType == WebSocketMessageType.Text)
+            {
+                var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                ProcessMessage(message);
+            }
+            else if (result.MessageType == WebSocketMessageType.Close)
+            {
+                Console.WriteLine("Connection closed.");
+                break;
+            }
+        }
+    }
+
+    private void ProcessMessage(string message)
+    {
+        if (MessageUtils.TryParseEventMessage(message, out var nostrEvent))
+        {
+            _transactionService.HandleEvent(nostrEvent);
+        }
+        else
+        {
+            Console.WriteLine($"Unhandled message: {message}");
+        }
+    }
+}
+
+public interface ITransactionService
+{
+    void HandleEvent(NostrEvent nostrEvent);
+}
+
+public class TransactionService : ITransactionService
+{
+    private readonly string _privateKey;
+
+    public TransactionService(string privateKey)
+    {
+        _privateKey = privateKey;
+    }
+
+    public void HandleEvent(NostrEvent nostrEvent)
+    {
+        if (nostrEvent.Kind == 4)
+        {
+            var decryptedContent = EncryptionUtils.DecryptMessage(
+                _privateKey, 
+                nostrEvent.Content, 
+                nostrEvent.Pubkey
+            );
+
+            var signedTransactionHex = BitcoinUtils.DecodeAndSignTransaction(
+                decryptedContent, 
+                _privateKey
+            );
+
+            Console.WriteLine($"Signed Transaction: {signedTransactionHex}");
+        }
+    }
+}
+
+public static class MessageUtils
+{
+    public static string CreateSubscriptionMessage(string publicKey)
+    {
+        var subscriptionId = Guid.NewGuid().ToString();
+        return $@"
+        [
+            ""REQ"",
+            ""{subscriptionId}"",
+            {{
+                ""kinds"": [4],
+                ""#p"": [""{publicKey}""]
+            }}
+        ]";
+    }
+
+    public static bool TryParseEventMessage(string message, out NostrEvent nostrEvent)
+    {
+        try
+        {
+            nostrEvent = JsonSerializer.Deserialize<NostrEvent>(message);
+            return nostrEvent != null;
+        }
+        catch
+        {
+            nostrEvent = null;
+            return false;
+        }
+    }
+}
+
+public static class EncryptionUtils
+{
+    public static string DecryptMessage(string recipientPrivateKey, string encryptedContent, string senderPublicKey)
     {
         try
         {
@@ -284,8 +488,6 @@ class Program
         }
     }
 
-
-    
     private static string GetSharedSecretHexWithoutPrefix(string recipientPrivateKeyHex, string senderPublicKeyHex)
     {
         try
@@ -311,355 +513,5 @@ class Program
             return Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(sharedSecret.ToBytes()[1..]);
         }
     }
-
-
-
-    private static void DecodeBitcoinTransaction(string rawTransactionHex)
-    {
-        try
-        {
-            var network = NBitcoinAlias::NBitcoin.Network.TestNet; // Explicitly use NBitcoin
-            var transaction = NBitcoinAlias::NBitcoin.Transaction.Parse(rawTransactionHex, network);
-
-            Console.WriteLine("Decoded Bitcoin Transaction:");
-            Console.WriteLine($" - Transaction ID: {transaction.GetHash()}");
-            Console.WriteLine($" - Version: {transaction.Version}");
-            Console.WriteLine($" - LockTime: {transaction.LockTime}");
-
-            Console.WriteLine("Inputs:");
-            foreach (var input in transaction.Inputs)
-            {
-                Console.WriteLine($"   - Previous Tx Hash: {input.PrevOut.Hash}");
-                Console.WriteLine($"   - Index: {input.PrevOut.N}");
-                Console.WriteLine($"   - ScriptSig: {input.ScriptSig}");
-            }
-
-            Console.WriteLine("Outputs:");
-            foreach (var output in transaction.Outputs)
-            {
-                Console.WriteLine($"   - Value: {output.Value} (satoshis)");
-                Console.WriteLine($"   - ScriptPubKey: {output.ScriptPubKey}");
-                Console.WriteLine($"   - Address: {output.ScriptPubKey.GetDestinationAddress(network)}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error decoding Bitcoin transaction: {ex.Message}");
-        }
-    }
-
-        
-    private static string DecodeAndSignBitcoinTransaction(string rawTransactionHex, ClientWebSocket client)
-    {
-        try
-        {
-            var network = NBitcoinAlias::NBitcoin.Network.Main;
-            var transaction = NBitcoinAlias::NBitcoin.Transaction.Parse(rawTransactionHex, network);
-
-            string privateKeyHex = "362f4b51ecac1bc07a3216d9b5da1abfcb42f04f51ebfd659d5ebfc21f62b05d";
-
-            // Example coins (UTXOs)
-            var coins = new List<NBitcoinAlias::NBitcoin.ICoin>
-            {
-                new NBitcoinAlias::NBitcoin.Coin(
-                    new NBitcoinAlias::NBitcoin.OutPoint(
-                        NBitcoinAlias::NBitcoin.uint256.Parse("2f492d7850fc289039b4be57f93b704e88add6a1e48f8d860a121286a1aa0611"), // Use NBitcoin's uint256
-                        0 // Index of the UTXO in the transaction outputs
-                    ),
-                    new NBitcoinAlias::NBitcoin.TxOut(
-                        NBitcoinAlias::NBitcoin.Money.Coins(0.01m), // Amount in BTC
-                        NBitcoinAlias::NBitcoin.Script.FromHex("76a91489abcdefabbaabbaabbaabbaabbaabbaabbaabba88ac") // Replace with actual ScriptPubKey
-                    )
-                )
-            };
-
-            return SignTransaction(transaction, privateKeyHex, coins, network);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error decoding or signing Bitcoin transaction: {ex.Message}");
-            return null;
-        }
-    }
-
-
-
-    private static string SignTransaction(
-        NBitcoinAlias::NBitcoin.Transaction transaction,
-        string privateKeyHex,
-        List<NBitcoinAlias::NBitcoin.ICoin> coins,
-        NBitcoinAlias::NBitcoin.Network network)
-    {
-        try
-        {
-            // Decode the private key
-            var privateKey = new NBitcoinAlias::NBitcoin.Key(Encoders.Hex.DecodeData(privateKeyHex));
-
-            // Initialize the TransactionBuilder
-            var builder = network.CreateTransactionBuilder();
-
-            // Add coins and private key
-            builder.AddCoins(coins);
-            builder.AddKeys(privateKey);
-
-            // Sign the transaction
-            var signedTransaction = builder.SignTransaction(transaction);
-
-            Console.WriteLine("Transaction successfully signed.");
-            return signedTransaction.ToHex();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error signing transaction: {ex.Message}");
-            return null;
-        }
-    }
-
-
-    private static void SendSignaturesToInvestor(
-    string encryptedSignatureInfo,
-    string nostrPrivateKeyHex,
-    string investorNostrPubKey,
-    string eventId,
-    ClientWebSocket client)
-{
-    if (client == null)
-    {
-        Console.WriteLine("Error: WebSocket client is null.");
-        return;
-    }
-
-    try
-    {
-        var nostrPrivateKey = new Blockcore.NBitcoin.Key(Encoders.Hex.DecodeData(nostrPrivateKeyHex));
-
-        var ev = new NostrEvent
-        {
-            Kind = 4, // Encrypted Direct Message
-            CreatedAt = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds(),
-            Content = encryptedSignatureInfo,
-            Tags = new List<List<string>>
-            {
-                new List<string> { "p", investorNostrPubKey },
-                new List<string> { "e", eventId },
-                new List<string> { "subject", "Re:Investment offer" }
-            }
-        };
-
-        // Ensure pubkey is set to the uncompressed format
-        ev.Pubkey = nostrPrivateKey.PubKey.Compress().ToHex();
-
-        // Sign the event
-        ev.Sign(nostrPrivateKey);
-
-        // Validate the signature
-        if (ev.Id == null || ev.Sig == null)
-        {
-            throw new Exception("Event signing failed: ID or Signature is null.");
-        }
-
-        Console.WriteLine("Event ID: " + ev.Id);
-        Console.WriteLine("Event Signature: " + ev.Sig);
-
-        // Serialize and send the signed event
-        var signedEventJson = Newtonsoft.Json.JsonConvert.SerializeObject(ev, Newtonsoft.Json.Formatting.Indented);
-        Console.WriteLine($"Outgoing Signed Event JSON: {signedEventJson}");
-
-        Console.WriteLine($"Sending signed event to relay...");
-        client.SendAsync(
-            Encoding.UTF8.GetBytes(signedEventJson),
-            WebSocketMessageType.Text,
-            true,
-            CancellationToken.None
-        ).Wait();
-
-        Console.WriteLine("Signed event successfully sent to relay.");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error sending signatures to investor: {ex.Message}");
-    }
 }
-
-    
-
-
-
-
-
-
-    private static NostrEvent SignEvent(NostrEvent nostrEvent, Blockcore.NBitcoin.Key privateKey)
-    {
-        try
-        {
-            // Prepare the event content
-            var eventContent = $"{nostrEvent.Kind}:{nostrEvent.CreatedAt}:{nostrEvent.Content}";
-            var eventBytes = Encoding.UTF8.GetBytes(eventContent);
-
-            // Hash the content
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(eventBytes);
-
-            // Convert hash to uint256
-            var hash = new Blockcore.NBitcoin.uint256(hashedBytes);
-
-            // Sign the hash
-            var ecdsaSignature = privateKey.Sign(hash);
-
-            // Ensure signature is in 64-byte raw format (R || S)
-            var signatureRaw = ecdsaSignature.To64ByteArray();
-
-            // Convert to hex string
-            var signatureHex = Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(signatureRaw);
-
-            // Validate the signature length
-            if (signatureHex.Length != 128)
-            {
-                throw new InvalidOperationException($"Invalid signature length: {signatureHex.Length}. Signature: {signatureHex}");
-            }
-
-            // Assign the signature to the Nostr event
-            nostrEvent.Sig = signatureHex;
-
-            Console.WriteLine("Event successfully signed.");
-            return nostrEvent;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error signing Nostr event: {ex.Message}");
-            throw;
-        }
-    }
-    
-    
-
-}
-
-public class NostrEvent
-{
-    [JsonPropertyName("id")]
-    public string Id { get; set; } = string.Empty;
-
-    [JsonPropertyName("kind")]
-    public int Kind { get; set; }
-
-    [JsonPropertyName("pubkey")]
-    public string Pubkey { get; set; } = string.Empty;
-
-    [JsonPropertyName("content")]
-    public string Content { get; set; } = string.Empty;
-
-    [JsonPropertyName("created_at")]
-    public long CreatedAt { get; set; } // Change to long for Unix timestamp
-
-    [JsonPropertyName("sig")]
-    public string Sig { get; set; } = string.Empty;
-
-    [JsonPropertyName("tags")]
-    public List<List<string>> Tags { get; set; } = new();
-    
-    public void Sign(Blockcore.NBitcoin.Key privateKey)
-    {
-        // Step 1: Compute the ID
-        var serializedEvent = new[]
-        {
-            this.Pubkey,
-            this.CreatedAt.ToString(),
-            this.Kind.ToString(),
-            Newtonsoft.Json.JsonConvert.SerializeObject(this.Tags),
-            this.Content
-        };
-
-        var serializedEventString = Newtonsoft.Json.JsonConvert.SerializeObject(serializedEvent);
-        var hash = Blockcore.NBitcoin.Crypto.Hashes.SHA256(System.Text.Encoding.UTF8.GetBytes(serializedEventString));
-        this.Id = Encoders.Hex.EncodeData(hash);
-
-        // Step 2: Sign the ID
-        var idBytes = Encoders.Hex.DecodeData(this.Id);
-        var signature = privateKey.Sign(new Blockcore.NBitcoin.uint256(idBytes));
-        this.Sig = Encoders.Hex.EncodeData(signature.ToDER());
-
-        // Optional: Log the serialized event and signature for debugging
-        Console.WriteLine("Serialized Event: " + serializedEventString);
-        Console.WriteLine("Computed ID: " + this.Id);
-        Console.WriteLine("Generated Signature: " + this.Sig);
-    }
-
-    
-    private static string ComputeSha256(string input)
-    {
-        using var sha256 = SHA256.Create();
-        var bytes = Encoding.UTF8.GetBytes(input);
-        var hashBytes = sha256.ComputeHash(bytes);
-        return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
-    }
-    
-    private string SerializeEventForIdComputation()
-    {
-        var data = new List<object>
-        {
-            0,
-            this.Pubkey,
-            this.CreatedAt,
-            this.Kind,
-            this.Tags,
-            this.Content
-        };
-        return Newtonsoft.Json.JsonConvert.SerializeObject(data);
-    }
-
-
-}
-
-// Create a static class for extensions
-public static class ECDSASignatureExtensions
-{
-    public static byte[] To64ByteArray(this Blockcore.NBitcoin.Crypto.ECDSASignature signature)
-    {
-        var r = ToBytesUnsigned(signature.R);
-        var s = ToBytesUnsigned(signature.S);
-
-        // Ensure R and S are exactly 32 bytes each
-        var rPadded = new byte[32];
-        var sPadded = new byte[32];
-        Array.Copy(r, 0, rPadded, 32 - r.Length, r.Length);
-        Array.Copy(s, 0, sPadded, 32 - s.Length, s.Length);
-
-        // Concatenate R and S
-        var rawSignature = new byte[64];
-        Array.Copy(rPadded, 0, rawSignature, 0, 32);
-        Array.Copy(sPadded, 0, rawSignature, 32, 32);
-
-        return rawSignature;
-    }
-
-    private static byte[] ToBytesUnsigned(Blockcore.NBitcoin.BouncyCastle.math.BigInteger value)
-    {
-        return value.ToByteArrayUnsigned();
-    }
-
-    
-    private static System.Numerics.BigInteger ConvertToSystemBigInteger(Blockcore.NBitcoin.BouncyCastle.math.BigInteger value)
-    {
-        var bytes = value.ToByteArrayUnsigned();
-        return new System.Numerics.BigInteger(bytes.Reverse().ToArray()); // Ensure proper byte order
-    }
-
-
-
-    private static byte[] ToBytesUnsigned(BigInteger value)
-    {
-        var bytes = value.ToByteArray();
-
-        // Ensure the bytes are unsigned
-        if (bytes[^1] == 0x00) // Remove leading zero byte if present
-        {
-            Array.Resize(ref bytes, bytes.Length - 1);
-        }
-
-        Array.Reverse(bytes); // Reverse for Big-Endian order
-        return bytes;
-    }
-}
-
 
