@@ -52,17 +52,21 @@ class Program
         throw new ArgumentNullException(nameof(client));
 
     string subscriptionId = Guid.NewGuid().ToString();
+
+    // Ensure this structure matches the relay's API expectations
     string subscriptionMessage = $@"
     [
         ""REQ"",
         ""{subscriptionId}"",
         {{
-            ""kinds"": [4], // Encrypted Direct Messages
+            ""kinds"": [4],
             ""#p"": [""{publicKey}""]
         }}
     ]";
 
     Console.WriteLine($"Subscribing with JSON: {subscriptionMessage}");
+
+    // Send the message to the relay
     await client.SendAsync(
         Encoding.UTF8.GetBytes(subscriptionMessage.Trim()),
         WebSocketMessageType.Text,
@@ -70,6 +74,7 @@ class Program
         CancellationToken.None
     );
 }
+
 
 
     private static async Task ListenForMessages(ClientWebSocket client)
@@ -108,24 +113,45 @@ class Program
 {
     try
     {
+        Console.WriteLine($"Processing message: {message}");
+
         if (message.StartsWith("["))
         {
             var response = JsonSerializer.Deserialize<object[]>(message);
-            if (response?.Length > 0 && response[0]?.ToString() == "EVENT")
+            if (response?.Length > 0)
             {
-                HandleEventMessage(response, client);
+                string eventType = response[0]?.ToString();
+                Console.WriteLine($"Message type: {eventType}");
+
+                switch (eventType)
+                {
+                    case "EVENT":
+                        Console.WriteLine("Handling EVENT type...");
+                        HandleEventMessage(response, client);
+                        break;
+                    case "NOTICE":
+                        Console.WriteLine($"Relay notice: {response[1]}");
+                        break;
+                    case "EOSE":
+                        Console.WriteLine("End of stored events (EOSE) received.");
+                        break;
+                    default:
+                        Console.WriteLine($"Unknown message type: {eventType}");
+                        break;
+                }
             }
         }
         else
         {
-            Console.WriteLine("Non-array message received: {message}");
+            Console.WriteLine($"Non-array message received: {message}");
         }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error processing message: {ex.Message}");
+        Console.WriteLine($"Error processing message: {ex.Message}\nRaw Message: {message}");
     }
 }
+
 
 
     private static void HandleEventMessage(object[] response, ClientWebSocket client)
