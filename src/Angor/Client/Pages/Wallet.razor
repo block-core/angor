@@ -108,151 +108,140 @@
 
                         <div class="modal-body modal-body-scroll py-4">
                             <div class="wallet-wizard">
-                                @switch (currentStep)
-                                {
-                                    case 1:
-                                        if (isNewWallet)
+                                <div class="info-card slide-in">
+                                    <div class="info-label">@stepTitle</div>
+                                    <p class="text-muted mb-3">@stepDescription</p>
+
+                                    @if (isNewWallet)
+                                    {
+                                        @switch (currentStep)
                                         {
-                                            <div class="info-card slide-in">
-                                                <div class="info-label">Generate New Wallet</div>
-                                                <p class="text-muted mb-3">Click the button below to generate your wallet words</p>
-                                                <button class="btn btn-border-success w-100" @onclick="GenerateNewWalletWords">
+                                            case 1:
+                                                <button class="btn btn-border-success w-100 mb-3" @onclick="GenerateNewWalletWords">
                                                     <div class="d-flex align-items-center justify-content-center">
-                                                        <span class="me-1" data-cy="generate-wallet-words">
-                                                            <Icon IconName="plus" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
-                                                        </span>
+                                                        <Icon IconName="plus" Height="24" Width="24" Color="var(--angor-primary)" />
                                                         <span>Generate Wallet Words</span>
                                                     </div>
                                                 </button>
+                                                
                                                 @if (!string.IsNullOrEmpty(newWalletWords))
                                                 {
-                                                    <div class="mt-3">
-                                                        <div class="word-box-container">
-                                                            @{
-                                                                var words = newWalletWords.Split(' ');
-                                                                for (int i = 0; i < words.Length; i++)
-                                                                {
-                                                                    var index = i;
-                                                                    <div class="word-box">
-                                                                        <span class="word-number">@(index + 1)</span>
-                                                                        @words[index]
-                                                                    </div>
-                                                                }
+                                                    <div class="word-box-container">
+                                                        @{
+                                                            var words = newWalletWords.Split(' ');
+                                                            for (int i = 0; i < words.Length; i++)
+                                                            {
+                                                                var index = i;
+                                                                <div class="word-box">
+                                                                    <span class="word-number">@(index + 1)</span>
+                                                                    @words[index]
+                                                                </div>
                                                             }
-                                                        </div>
-                                                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-3">
-                                                            <button class="btn btn-border w-100 w-md-auto" @onclick="CopyWalletWords">
-                                                                <Icon IconName="copy" Height="20" Width="20" class="me-2" />
-                                                                Copy Words
-                                                            </button>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" 
-                                                                       @bind="backupConfirmation" id="backupConfirmation">
-                                                                <label class="form-check-label" for="backupConfirmation">
-                                                                    I have written down my wallet words
-                                                                </label>
-                                                            </div>
+                                                        }
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                                        <button class="btn btn-border" @onclick="CopyWalletWords">
+                                                            <Icon IconName="copy" Height="20" Width="20" class="me-2" />
+                                                            Copy Words
+                                                        </button>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" @bind="backupConfirmation" id="backupCheck">
+                                                            <label class="form-check-label" for="backupCheck">
+                                                                I have written down my wallet words
+                                                            </label>
                                                         </div>
                                                     </div>
                                                 }
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <div class="info-card slide-in">
-                                                <div class="info-label">Enter Wallet Words</div>
-                                                <p class="text-muted mb-3">Please enter your existing wallet words to recover your wallet</p>
-                                                <textarea class="form-control" @bind="newWalletWords" rows="3"></textarea>
-                                            </div>
-                                        }
-                                        break;
+                                                break;
 
-                                    case 2:
-                                        @if (isNewWallet)
-                                        {
-                                            <div class="info-card slide-in">
-                                                <div class="info-label">Verify Your Wallet Words</div>
-                                                <p class="text-muted mb-3">Please enter the following words from your backup:</p>
-                                                
-                                                @foreach (var (index, _) in selectedWordsToVerify)
+                                            case 2:
+                                                @foreach (var (index, word) in selectedWordsToVerify)
                                                 {
-                                                    var currentIndex = index;
                                                     <div class="mb-3">
-                                                        <label class="form-label">Word #@currentIndex</label>
-                                                        <input type="text" 
-                                                               class="form-control" 
-                                                               @bind="@userVerificationInputs[currentIndex]"
+                                                        <label class="form-label">Word #@index</label>
+                                                        <input type="text" class="form-control" 
+                                                               @bind="userVerificationInputs[index]"
                                                                @bind:after="ValidateWordInput"
-                                                               placeholder="Enter word #@currentIndex"/>
+                                                               placeholder="Enter word #@index" />
                                                     </div>
                                                 }
-
                                                 @if (showVerificationError)
                                                 {
                                                     <div class="alert alert-danger">
-                                                        The words don't match. Please check your backup and try again.
+                                                        Words don't match. Please check your backup.
                                                     </div>
                                                 }
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <div class="info-card slide-in">
-                                                <div class="info-label">Extra Security (Optional)</div>
-                                                <button class="btn btn-border-success w-100 mb-3" @onclick="ShowExtraWord">
-                                                    <div class="d-flex align-items-center justify-content-center">
-                                                        <span class="me-1">
-                                                            <Icon IconName="@(isShowExtraWord ? "shield-minus" : "shield-plus")" 
-                                                                  Height="24" Width="24" Color="var(--angor-primary)"></Icon>
-                                                        </span>
-                                                        <span>Optional Passphrase</span>
-                                                    </div>
-                                                </button>
+                                                break;
 
-                                                @if (isShowExtraWord)
+                                            case 3:
+                                                <div class="form-check form-switch mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="passphraseSwitch" 
+                                                           @bind="isPassphraseEnabled">
+                                                    <label class="form-check-label" for="passphraseSwitch">
+                                                        Enable Additional Security
+                                                    </label>
+                                                </div>
+                                                
+                                                @if (isPassphraseEnabled)
                                                 {
-                                                    <div class="mt-3">
-                                                        <div class="info-label d-flex align-items-center">
-                                                            Passphrase
-                                                            <span class="ms-2" title="Your passphrase adds an extra security layer to your wallet">
-                                                                <Icon IconName="key" Width="16" Height="16" />
-                                                            </span>
-                                                        </div>
-                                                        <input type="text" class="form-control" @bind="newWalletWordsPassphrase" 
-                                                               placeholder="Enter passphrase (optional)">
-                                                        <small class="form-text text-muted mt-2">
-                                                            Adding a passphrase increases your wallet's security. Make sure to remember it!
+                                                    <div class="mb-3">
+                                                        <input type="text" class="form-control" placeholder="Enter passphrase"
+                                                               @bind="passphraseInput">
+                                                        <small class="text-muted">
+                                                            A passphrase adds extra security. Make sure to remember it!
                                                         </small>
                                                     </div>
                                                 }
-                                            </div>
-                                        }
-                                        break;
+                                                break;
 
-                                    case 3:
-                                        <div class="info-card slide-in">
-                                            <div class="info-label">Set Password</div>
-                                            <p class="text-muted mb-3">Create a strong password to protect your wallet</p>
-                                            <div class="input-group">
-                                                <input type="@passwordInputType" class="form-control" 
-                                                       @bind="newWalletPassword" placeholder="Enter password">
-                                                <button class="btn btn-border" type="button" @onclick="TogglePasswordVisibility">
-                                                    @passwordToggleText
-                                                </button>
-                                            </div>
-                                            @if (isNewWallet)
-                                            {
-                                                <div class="form-check mt-3">
-                                                    <input class="form-check-input" type="checkbox" 
-                                                           @bind="backupConfirmation" id="backupConfirmation">
-                                                    <label class="form-check-label" for="backupConfirmation">
-                                                        I have safely stored my wallet words
+                                            case 4:
+                                                <div class="input-group">
+                                                    <input type="@passwordInputType" class="form-control" 
+                                                           @bind="newWalletPassword" placeholder="Enter password">
+                                                    <button class="btn btn-border" @onclick="TogglePasswordVisibility">
+                                                        @passwordToggleText
+                                                    </button>
+                                                </div>
+                                                break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        @switch (currentStep)
+                                        {
+                                            case 1:
+                                                <textarea class="form-control" rows="3" placeholder="Enter your wallet words"
+                                                          @bind="newWalletWords"></textarea>
+                                                break;
+
+                                            case 2:
+                                                <div class="form-check form-switch mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="passphraseSwitch" 
+                                                           @bind="isPassphraseEnabled">
+                                                    <label class="form-check-label" for="passphraseSwitch">
+                                                        I used a passphrase
                                                     </label>
                                                 </div>
-                                            }
-                                        </div>
-                                        break;
-                                }
+                                                
+                                                @if (isPassphraseEnabled)
+                                                {
+                                                    <input type="text" class="form-control" placeholder="Enter your passphrase"
+                                                           @bind="passphraseInput">
+                                                }
+                                                break;
+
+                                            case 3:
+                                                <div class="input-group">
+                                                    <input type="@passwordInputType" class="form-control" 
+                                                           @bind="newWalletPassword" placeholder="Enter password">
+                                                    <button class="btn btn-border" @onclick="TogglePasswordVisibility">
+                                                        @passwordToggleText
+                                                    </button>
+                                                </div>
+                                                break;
+                                        }
+                                    }
+                                </div>
                             </div>
                         </div>
 
@@ -261,6 +250,7 @@
                             {
                                 <button class="btn btn-border me-2" @onclick="PreviousStep">Back</button>
                             }
+                            
                             @if (currentStep < totalSteps)
                             {
                                 <button class="btn btn-border-success" @onclick="NextStep" 
@@ -269,16 +259,12 @@
                             else
                             {
                                 <button class="btn btn-border-success" @onclick="CreateWalletAsync" 
-                                        disabled="@(!CanCreateWallet() || createWalletSpinner)">
+                                        disabled="@(!CanCreateWallet())">
                                     @if (createWalletSpinner)
                                     {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                        <span>@(isNewWallet ? "Creating..." : "Recovering...")</span>
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
                                     }
-                                    else
-                                    {
-                                        <span>@(isNewWallet ? "Create Wallet" : "Recover Wallet")</span>
-                                    }
+                                    @(isNewWallet ? "Create Wallet" : "Recover Wallet")
                                 </button>
                             }
                         </div>
@@ -928,12 +914,62 @@ else
     private readonly Dictionary<string, string> fiatValues = new();
 
     private int currentStep = 1;
-    private readonly int totalSteps = 3;
+    private int totalSteps => isNewWallet ? 4 : 3;
+    private bool isPassphraseEnabled;
+    private string? passphraseInput;
+    private string stepTitle => GetStepTitle();
+    private string stepDescription => GetStepDescription();
 
     private List<(int index, string word)> selectedWordsToVerify = new();
     private Dictionary<int, string> userVerificationInputs = new();
-    private bool verificationPassed = false;
-    private bool showVerificationError = false;
+    private bool verificationPassed;
+    private bool showVerificationError;
+
+    private string GetStepTitle()
+    {
+        if (isNewWallet)
+        {
+            return currentStep switch
+            {
+                1 => "Generate Wallet Words",
+                2 => "Verify Your Backup",
+                3 => "Optional Security",
+                4 => "Set Password",
+                _ => string.Empty
+            };
+        }
+        
+        return currentStep switch
+        {
+            1 => "Enter Wallet Words",
+            2 => "Optional Security",
+            3 => "Set Password",
+            _ => string.Empty
+        };
+    }
+
+    private string GetStepDescription()
+    {
+        if (isNewWallet)
+        {
+            return currentStep switch
+            {
+                1 => "Generate and backup your wallet words",
+                2 => "Verify your backed up words",
+                3 => "Add an optional passphrase",
+                4 => "Set a password to protect your wallet",
+                _ => string.Empty
+            };
+        }
+        
+        return currentStep switch
+        {
+            1 => "Enter your existing wallet words",
+            2 => "Enter your passphrase if you used one",
+            3 => "Set a password to protect your wallet",
+            _ => string.Empty
+        };
+    }
 
     private void NextStep()
     {
