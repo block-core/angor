@@ -99,7 +99,7 @@
                         <div class="modal-header border-0 pb-0">
                             <div class="d-flex align-items-center">
                                 <Icon IconName="wallet" Height="32" Width="32" class="me-2" />
-                                <h5 class="modal-title">@createWalletTitle</h5>
+                                <h5 class="modal-title">@createWalletTitle - Step @currentStep of @totalSteps</h5>
                             </div>
                             <button class="btn-close-custom" @onclick="() => walletWordsCreateModal = false">
                                 <Icon IconName="close-circle" Height="24" Width="24" />
@@ -107,109 +107,125 @@
                         </div>
 
                         <div class="modal-body modal-body-scroll py-4">
-@* 
-                            <div class="info-card mb-3">
-                                <div class="info-value">@createWalletDescription</div>
-                            </div> *@
-
-                            @if (isNewWallet)
-                            {
-                                <div class="info-card mb-3">
-                                    <div class="info-label">New Wallet Words</div>
-                                    <textarea class="form-control" @bind="newWalletWords" rows="3" readonly></textarea>
-
-                                    <div class="d-flex flex-wrap align-items-center justify-content-between mt-2">
-                                        <button class="btn btn-border-success mt-3 w-100 w-md-auto" @onclick="GenerateNewWalletWords">
-                                                           <div class="d-flex align-items-center justify-content-center">
-                                                <span class="me-1" data-cy="generate-wallet-words">
-                                                    <Icon IconName="plus" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
-                                                </span>
-                                                <span> Generate Wallet Words</span>
+                            <div class="wallet-wizard">
+                                @switch (currentStep)
+                                {
+                                    case 1:
+                                        if (isNewWallet)
+                                        {
+                                            <div class="info-card mb-3 slide-in">
+                                                <div class="info-label">Generate New Wallet</div>
+                                                <p class="text-muted mb-3">Click the button below to generate your wallet words</p>
+                                                <button class="btn btn-border-success w-100" @onclick="GenerateNewWalletWords">
+                                                    <div class="d-flex align-items-center justify-content-center">
+                                                        <span class="me-1" data-cy="generate-wallet-words">
+                                                            <Icon IconName="plus" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
+                                                        </span>
+                                                        <span>Generate Wallet Words</span>
+                                                    </div>
+                                                </button>
+                                                @if (!string.IsNullOrEmpty(newWalletWords))
+                                                {
+                                                    <div class="mt-3">
+                                                        <textarea class="form-control" @bind="newWalletWords" rows="3" readonly></textarea>
+                                                    </div>
+                                                }
                                             </div>
-                                        </button>
+                                        }
+                                        else
+                                        {
+                                            <div class="info-card mb-3 slide-in">
+                                                <div class="info-label">Enter Wallet Words</div>
+                                                <p class="text-muted mb-3">Please enter your existing wallet words to recover your wallet</p>
+                                                <textarea class="form-control" @bind="newWalletWords" rows="3"></textarea>
+                                            </div>
+                                        }
+                                        break;
 
-                                        <div class="form-check mt-3 w-100 w-md-auto">
-                                            <input class="form-check-input" type="checkbox" @bind="backupConfirmation" id="backupConfirmation">
-                                            <label class="form-check-label" for="backupConfirmation">
-                                                I have written down my wallet words
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
+                                    case 2:
+                                        <div class="info-card mb-3 slide-in">
+                                            <div class="info-label">Extra Security (Optional)</div>
+                                            <button class="btn btn-border-success w-100 mb-3" @onclick="ShowExtraWord">
+                                                <div class="d-flex align-items-center justify-content-center">
+                                                    <span class="me-1">
+                                                        <Icon IconName="@(isShowExtraWord ? "shield-minus" : "shield-plus")" 
+                                                              Height="24" Width="24" Color="var(--angor-primary)"></Icon>
+                                                    </span>
+                                                    <span>Optional Passphrase</span>
+                                                </div>
+                                            </button>
 
-                                @*
-                    @if (showBackupConfirmationError)
-                    {
-                    <div class="alert alert-danger">
-                    Please confirm that you have written down your wallet words.
-                    </div>
-                    } *@
-                            }
-                            else
-                            {
-                                <div class="info-card mb-3">
-                                    <div class="info-label">Wallet Words</div>
-                                    <textarea class="form-control" @bind="newWalletWords" rows="3"></textarea>
-                                </div>
-                            }
-
-                            <div class="info-card mb-3">
-                                <button class="btn btn-border-success w-100" @onclick="ShowExtraWord">
-                                    <div class="d-flex align-items-center justify-content-center">
-                                        <span class="me-1" data-cy="generate-wallet-words">
                                             @if (isShowExtraWord)
                                             {
-                                                <Icon IconName="shield-minus" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
+                                                <div class="mt-3">
+                                                    <div class="info-label d-flex align-items-center">
+                                                        Passphrase
+                                                        <span class="ms-2" title="Your passphrase adds an extra security layer to your wallet">
+                                                            <Icon IconName="key" Width="16" Height="16" />
+                                                        </span>
+                                                    </div>
+                                                    <input type="text" class="form-control" @bind="newWalletWordsPassphrase" 
+                                                           placeholder="Enter passphrase (optional)">
+                                                    <small class="form-text text-muted mt-2">
+                                                        Adding a passphrase increases your wallet's security. Make sure to remember it!
+                                                    </small>
+                                                </div>
                                             }
-                                            else
-                                            {
-                                                <Icon IconName="shield-plus" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
-                                            }
-                                        </span>
-                                        <span> Optional extra word</span>
-                                    </div>
-                                </button>
-
-                                @if (isShowExtraWord)
-                                {
-                                    <div class="mt-3">
-                                        <div class="info-label d-flex align-items-center">
-                                            Passphrase (Optional)
-                                            <span class="ms-2" title="Your passphrase adds an extra security layer to your wallet">
-                                                <Icon IconName="key" Width="16" Height="16" />
-                                            </span>
                                         </div>
-                                        <input type="text" class="form-control" @bind="newWalletWordsPassphrase" placeholder="Enter passphrase (optional)">
-                                        <small class="form-text text-muted mt-2">
-                                            Adding a passphrase increases your wallet's security. Make sure to remember it!
-                                        </small>
-                                    </div>
+                                        break;
+
+                                    case 3:
+                                        <div class="info-card mb-3 slide-in">
+                                            <div class="info-label">Set Password</div>
+                                            <p class="text-muted mb-3">Create a strong password to protect your wallet</p>
+                                            <div class="input-group">
+                                                <input type="@passwordInputType" class="form-control" 
+                                                       @bind="newWalletPassword" placeholder="Enter password">
+                                                <button class="btn btn-border" type="button" @onclick="TogglePasswordVisibility">
+                                                    @passwordToggleText
+                                                </button>
+                                            </div>
+                                            @if (isNewWallet)
+                                            {
+                                                <div class="form-check mt-3">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           @bind="backupConfirmation" id="backupConfirmation">
+                                                    <label class="form-check-label" for="backupConfirmation">
+                                                        I have safely stored my wallet words
+                                                    </label>
+                                                </div>
+                                            }
+                                        </div>
+                                        break;
                                 }
                             </div>
-
-                            <div class="info-card">
-                                <div class="info-label">Password</div>
-                                <div class="input-group">
-                                    <input type="@passwordInputType" class="form-control" @bind="newWalletPassword" placeholder="Enter password">
-                                    <button class="btn btn-border" type="button" @onclick="TogglePasswordVisibility">@passwordToggleText</button>
-                                </div>
-                            </div>
-
-
                         </div>
 
                         <div class="modal-footer border-0 pt-0">
-                            <button class="btn btn-border-success" @onclick="CreateWalletAsync" disabled="@createWalletSpinner">
-                                @if (createWalletSpinner)
-                                {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    <span>@(isNewWallet ? "Creating..." : "Recovering...")</span>
-                                }
-                                else
-                                {
-                                    <span>@(isNewWallet ? "Create Wallet" : "Recover Wallet")</span>
-                                }
-                            </button>
+                            @if (currentStep > 1)
+                            {
+                                <button class="btn btn-border me-2" @onclick="PreviousStep">Back</button>
+                            }
+                            @if (currentStep < totalSteps)
+                            {
+                                <button class="btn btn-border-success" @onclick="NextStep" 
+                                        disabled="@(!CanProceedToNextStep())">Next</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-border-success" @onclick="CreateWalletAsync" 
+                                        disabled="@(!CanCreateWallet() || createWalletSpinner)">
+                                    @if (createWalletSpinner)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>@(isNewWallet ? "Creating..." : "Recovering...")</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@(isNewWallet ? "Create Wallet" : "Recover Wallet")</span>
+                                    }
+                                </button>
+                            }
                         </div>
                     </div>
                 </div>
@@ -855,6 +871,46 @@ else
     readonly Dictionary<string, bool> collapseStates = new();
     private string btcBalanceInUsd;
     private readonly Dictionary<string, string> fiatValues = new();
+
+    private int currentStep = 1;
+    private readonly int totalSteps = 3;
+
+    private void NextStep()
+    {
+        if (currentStep < totalSteps)
+        {
+            currentStep++;
+        }
+    }
+
+    private void PreviousStep()
+    {
+        if (currentStep > 1)
+        {
+            currentStep--;
+        }
+    }
+
+    private bool CanProceedToNextStep()
+    {
+        return currentStep switch
+        {
+            1 => !string.IsNullOrWhiteSpace(newWalletWords),
+            2 => true, // Can always proceed from step 2 since passphrase is optional
+            _ => false
+        };
+    }
+
+    private bool CanCreateWallet()
+    {
+        if (string.IsNullOrWhiteSpace(newWalletPassword))
+            return false;
+
+        if (isNewWallet && !backupConfirmation)
+            return false;
+
+        return true;
+    }
 
     protected override async Task OnInitializedAsync()
     {
