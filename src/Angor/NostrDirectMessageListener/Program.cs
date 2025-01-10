@@ -47,31 +47,30 @@ class Program
     }
 
     private static async Task SubscribeToEncryptedDM(ClientWebSocket client, string publicKey)
-    {
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
+{
+    if (client == null)
+        throw new ArgumentNullException(nameof(client));
 
-        string subscriptionId = Guid.NewGuid().ToString();
-        string subscriptionMessage = $@"
-        [
-            ""REQ"",
-            ""{subscriptionId}"",
-            {{
-                ""kinds"": [4],
-                ""#p"": [""{publicKey}""]
-            }}
-        ]";
+    string subscriptionId = Guid.NewGuid().ToString();
+    string subscriptionMessage = $@"
+    [
+        ""REQ"",
+        ""{subscriptionId}"",
+        {{
+            ""kinds"": [4], // Encrypted Direct Messages
+            ""#p"": [""{publicKey}""]
+        }}
+    ]";
 
-        Console.WriteLine($"Subscribing with JSON: {subscriptionMessage}");
-        await client.SendAsync(
-            Encoding.UTF8.GetBytes(subscriptionMessage.Trim()),
-            WebSocketMessageType.Text,
-            true,
-            CancellationToken.None
-        );
-    }
+    Console.WriteLine($"Subscribing with JSON: {subscriptionMessage}");
+    await client.SendAsync(
+        Encoding.UTF8.GetBytes(subscriptionMessage.Trim()),
+        WebSocketMessageType.Text,
+        true,
+        CancellationToken.None
+    );
+}
+
 
     private static async Task ListenForMessages(ClientWebSocket client)
     {
@@ -106,58 +105,28 @@ class Program
     }
 
     private static void ProcessNostrEvent(string message, ClientWebSocket client)
+{
+    try
     {
-        try
+        if (message.StartsWith("["))
         {
-            Console.WriteLine($"Processing message: {message}");
-
-            if (message.StartsWith("["))
+            var response = JsonSerializer.Deserialize<object[]>(message);
+            if (response?.Length > 0 && response[0]?.ToString() == "EVENT")
             {
-                var response = JsonSerializer.Deserialize<object[]>(message);
-                if (response == null || response.Length == 0)
-                {
-                    Console.WriteLine("Received empty or malformed message.");
-                    return;
-                }
-
-                string eventType = response[0]?.ToString();
-                Console.WriteLine($"Message type: {eventType}");
-
-                switch (eventType)
-                {
-                    case "EVENT":
-                        Console.WriteLine("Handling EVENT type...");
-                        HandleEventMessage(response, client);
-                        break;
-
-                    case "NOTICE":
-                        Console.WriteLine($"Relay notice: {response[1]}");
-                        if (response.Length > 1)
-                        {
-                            string noticeMessage = response[1]?.ToString();
-                            Console.WriteLine($"Relay Notice Details: {noticeMessage}");
-                        }
-                        break;
-
-                    case "EOSE":
-                        Console.WriteLine("End of stored events (EOSE) received.");
-                        break;
-
-                    default:
-                        Console.WriteLine($"Unknown message type: {eventType}");
-                        break;
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Non-array message received: {message}");
+                HandleEventMessage(response, client);
             }
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine($"Error processing message: {ex.Message}\nRaw Message: {message}");
+            Console.WriteLine("Non-array message received: {message}");
         }
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error processing message: {ex.Message}");
+    }
+}
+
 
     private static void HandleEventMessage(object[] response, ClientWebSocket client)
     {
@@ -206,74 +175,81 @@ class Program
         }
     }
 
-    private static string DecryptMessage(string recipientPrivateKey, string encryptedContent, string senderPublicKey)
+private static string DecryptMessage(string recipientPrivateKey, string encryptedContent, string senderPublicKey)
+{
+    try
     {
-        try
+        var parts = encryptedContent.Split("?iv=");
+        if (parts.Length != 2)
         {
-            var parts = encryptedContent.Split("?iv=");
-            if (parts.Length != 2)
-            {
-                Console.WriteLine("Invalid encrypted content format.");
-                return null;
-            }
-
-            var cipherText = Convert.FromBase64String(parts[0]);
-            var iv = Convert.FromBase64String(parts[1]);
-
-            var privateKey = new Key(Encoders.Hex.DecodeData(recipientPrivateKey));
-            var publicKey = new PubKey("02" + senderPublicKey);
-
-            var sharedSecret = publicKey.GetSharedPubkey(privateKey);
-            var sharedSecretBytes = sharedSecret.ToBytes()[1..];
-
-            using var aes = Aes.Create();
-            aes.Key = sharedSecretBytes;
-            aes.IV = iv;
-
-            using var decryptor = aes.CreateDecryptor();
-            var decryptedBytes = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
-            return Encoding.UTF8.GetString(decryptedBytes);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error decrypting message: {ex.Message}");
+            Console.WriteLine("Invalid encrypted content format.");
             return null;
         }
+
+        var cipherText = Convert.FromBase64String(parts[0]);
+        var iv = Convert.FromBase64String(parts[1]);
+
+        var privateKey = new Key(Encoders.Hex.DecodeData(recipientPrivateKey));
+        var publicKey = new PubKey("02" + senderPublicKey);
+
+        var sharedSecret = publicKey.GetSharedPubkey(privateKey).ToBytes()[1..]; // Drop the prefix byte
+
+        using var aes = Aes.Create();
+        aes.Key = sharedSecret;
+        aes.IV = iv;
+
+        using var decryptor = aes.CreateDecryptor();
+        var decryptedBytes = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
+        return Encoding.UTF8.GetString(decryptedBytes);
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error decrypting message: {ex.Message}");
+        return null;
+    }
+}
+
 
     private static void SendSignaturesToInvestor(
-        string signedTransactionHex,
-        string recipientPrivateKey,
-        string investorPubKey,
-        string eventId,
-        ClientWebSocket client)
+    string signedTransactionHex,
+    string recipientPrivateKey,
+    string investorPubKey,
+    string eventId,
+    ClientWebSocket client)
+{
+    try
     {
-        try
+        var privateKey = new Key(Encoders.Hex.DecodeData(recipientPrivateKey));
+        var nostrEvent = new NostrEvent
         {
-            var recipientKey = new Key(Encoders.Hex.DecodeData(recipientPrivateKey));
-            var nostrEvent = new NostrEvent
+            Kind = 4,
+            CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            Content = signedTransactionHex,
+            Tags = new List<List<string>>
             {
-                Kind = 4,
-                CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                Content = signedTransactionHex,
-                Tags = new List<List<string>>
-                {
-                    new List<string> { "p", investorPubKey },
-                    new List<string> { "e", eventId }
-                }
-            };
-            nostrEvent.Sign(recipientKey);
+                new() { "p", investorPubKey },
+                new() { "e", eventId }
+            }
+        };
 
-            var message = JsonSerializer.Serialize(nostrEvent);
-            client.SendAsync(Encoding.UTF8.GetBytes(message), WebSocketMessageType.Text, true, CancellationToken.None).Wait();
+        nostrEvent.Sign(privateKey);
+        var serializedEvent = JsonSerializer.Serialize(nostrEvent);
 
-            Console.WriteLine("Signed transaction sent successfully.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error sending transaction: {ex.Message}");
-        }
+        client.SendAsync(
+            Encoding.UTF8.GetBytes(serializedEvent),
+            WebSocketMessageType.Text,
+            true,
+            CancellationToken.None
+        ).Wait();
+
+        Console.WriteLine("Signed event sent successfully.");
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error sending transaction: {ex.Message}");
+    }
+}
+
 }
 
 // Classes and Utility Functions:
@@ -299,30 +275,30 @@ public class NostrEvent
 
 public static class BitcoinUtils
 {
-    public static string DecodeAndSignTransaction(string rawTransactionHex, string privateKeyHex)
+   public static string DecodeAndSignTransaction(string rawTransactionHex, string privateKeyHex)
+{
+    try
     {
-        try
-        {
-            var network = new BitcoinTest();
-//var transaction = Blockcore.Consensus.TransactionInfo.Transaction.Parse(rawTransactionHex, RawFormat.Default, network);
-// Assuming `network` is an instance of BitcoinTest or a similar network
-			var consensusFactory = network.Consensus.ConsensusFactory;
-			var transaction = consensusFactory.CreateTransaction(rawTransactionHex);
+        var network = new BitcoinTest();
+        var consensusFactory = network.Consensus.ConsensusFactory;
+        var transaction = consensusFactory.CreateTransaction(rawTransactionHex);
 
-            var privateKey = new Key(Encoders.Hex.DecodeData(privateKeyHex));
-            var builder = new TransactionBuilder(new BitcoinTest());
-            builder.AddCoins(transaction.Outputs.AsCoins());
-            builder.AddKeys(privateKey);
+        var privateKey = new Key(Encoders.Hex.DecodeData(privateKeyHex));
+        var builder = new TransactionBuilder(network);
 
-            var signedTransaction = builder.SignTransaction(transaction);
-            return signedTransaction.ToHex();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error signing transaction: {ex.Message}");
-            return null;
-        }
+        builder.AddCoins(transaction.Outputs.AsCoins());
+        builder.AddKeys(privateKey);
+
+        var signedTransaction = builder.SignTransaction(transaction);
+        return signedTransaction.ToHex();
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error decoding or signing transaction: {ex.Message}");
+        return null;
+    }
+}
+
 }
 
 public static class Configuration
