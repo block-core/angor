@@ -108,15 +108,14 @@
 
                         <div class="modal-body modal-body-scroll py-4">
                             <div class="wallet-wizard">
-                                <div class="info-card slide-in">
-                                    <div class="info-label">@stepTitle</div>
-                                    <p class="text-muted mb-3">@stepDescription</p>
-
-                                    @if (isNewWallet)
+                                @if (isNewWallet)
+                                {
+                                    @switch (currentStep)
                                     {
-                                        @switch (currentStep)
-                                        {
-                                            case 1:
+                                        case 1:
+                                            <div class="info-card slide-in">
+                                                
+                                                <p class="text-muted mb-3">@stepDescription</p>
                                                 <button class="btn btn-border-success w-100 mb-3" @onclick="GenerateNewWalletWords">
                                                     <div class="d-flex align-items-center justify-content-center">
                                                         <Icon IconName="plus" Height="24" Width="24" Color="var(--angor-primary)" />
@@ -152,9 +151,13 @@
                                                         </div>
                                                     </div>
                                                 }
-                                                break;
+                                            </div>
+                                            break;
 
-                                            case 2:
+                                        case 2:
+                                            <div class="info-card slide-in">
+                                                
+                                                <p class="text-muted mb-3">@stepDescription</p>
                                                 @foreach (var (index, word) in selectedWordsToVerify)
                                                 {
                                                     <div class="mb-3">
@@ -171,9 +174,13 @@
                                                         Words don't match. Please check your backup.
                                                     </div>
                                                 }
-                                                break;
+                                            </div>
+                                            break;
 
-                                            case 3:
+                                        case 3:
+                                            <div class="info-card slide-in">
+                                                
+                                                <p class="text-muted mb-3">@stepDescription</p>
                                                 <button class="btn btn-border-success w-100 mb-3" @onclick="ShowExtraWord">
                                                     <div class="d-flex align-items-center justify-content-center">
                                                         <span class="me-1">
@@ -194,9 +201,13 @@
                                                         </small>
                                                     </div>
                                                 }
-                                                break;
+                                            </div>
+                                            break;
 
-                                            case 4:
+                                        case 4:
+                                            <div class="info-card slide-in">
+                                                
+                                                <p class="text-muted mb-3">@stepDescription</p>
                                                 <div class="input-group">
                                                     <input type="@passwordInputType" class="form-control" 
                                                            @bind="newWalletPassword" placeholder="Enter password">
@@ -204,39 +215,49 @@
                                                         @passwordToggleText
                                                     </button>
                                                 </div>
-                                                break;
-                                        }
+                                            </div>
+                                            break;
                                     }
-                                    else
+                                }
+                                else
+                                {
+                                    @switch (currentStep)
                                     {
-                                        @switch (currentStep)
-                                        {
-                                            case 1:
+                                        case 1:
+                                            <div class="info-card slide-in">
+                                                
+                                                <p class="text-muted mb-3">@stepDescription</p>
                                                 <textarea class="form-control" rows="3" placeholder="Enter your wallet words"
                                                           @bind="newWalletWords"></textarea>
-                                                break;
+                                            </div>
+                                            break;
 
-                                            case 2:
-         
-
-                                  <button class="btn btn-border-success w-100 mb-3" @onclick="ShowExtraWord">
-                                      <div class="d-flex align-items-center justify-content-center">
-                                          <span class="me-1">
-                                              <Icon IconName="@(isPassphraseEnabled ? "shield-minus" : "shield-plus")" 
-                                                    Height="24" Width="24" Color="var(--angor-primary)"></Icon>
-                                          </span>
-                                          <span>Optional Passphrase</span>
-                                      </div>
-                                  </button>
+                                        case 2:
+                                            <div class="info-card slide-in">
+                                                
+                                                <p class="text-muted mb-3">@stepDescription</p>
+                                                <button class="btn btn-border-success w-100 mb-3" @onclick="ShowExtraWord">
+                                                    <div class="d-flex align-items-center justify-content-center">
+                                                        <span class="me-1">
+                                                            <Icon IconName="@(isPassphraseEnabled ? "shield-minus" : "shield-plus")" 
+                                                                  Height="24" Width="24" Color="var(--angor-primary)"></Icon>
+                                                        </span>
+                                                        <span>Optional Passphrase</span>
+                                                    </div>
+                                                </button>
                                                 
                                                 @if (isPassphraseEnabled)
                                                 {
                                                     <input type="text" class="form-control" placeholder="Enter your passphrase"
                                                            @bind="passphraseInput">
                                                 }
-                                                break;
+                                            </div>
+                                            break;
 
-                                            case 3:
+                                        case 3:
+                                            <div class="info-card slide-in">
+                                                
+                                                <p class="text-muted mb-3">@stepDescription</p>
                                                 <div class="input-group">
                                                     <input type="@passwordInputType" class="form-control" 
                                                            @bind="newWalletPassword" placeholder="Enter password">
@@ -244,10 +265,10 @@
                                                         @passwordToggleText
                                                     </button>
                                                 </div>
-                                                break;
-                                        }
+                                            </div>
+                                            break;
                                     }
-                                </div>
+                                }
                             </div>
                         </div>
 
