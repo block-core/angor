@@ -19,10 +19,17 @@ using Angor.Shared.Models;
 using Nostr.Client.Client;
 using Blockcore.Networks; 	
 using Angor.Shared.Networks;
+using Angor.Shared.Services;
+using Angor.Client.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Angor.Client;
-
+using Blazored.LocalStorage;
+using Microsoft.JSInterop;
+using System.Text.Json;
+using Angor.Client.Models;
+using Angor.Shared;
+using Angor.Shared.Models;
 
 
 
@@ -55,10 +62,21 @@ public Program(ISignService signService, INetworkConfiguration networkConfigurat
         .ConfigureServices((_, services) =>
         {
             services.AddScoped<ISignService, SignService>();
+            services.AddSingleton<INetworkService, NetworkService>();
             services.AddSingleton<INetworkConfiguration, NetworkConfiguration>();
+            services.AddSingleton<INostrCommunicationFactory, NostrCommunicationFactory>();
+            services.AddSingleton<INetworkStorage, ClientStorage>(); // Register ClientStorage for INetworkStorage
+            services.AddSingleton<IClientStorage, ClientStorage>(); // Register ClientStorage for IClientStorage
+services.AddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
+
+services.AddBlazoredLocalStorage();
             services.AddLogging();
+            services.AddHttpClient(); // Adds HttpClient support
             services.AddSingleton<Program>();
         });
+
+
+
 
 
     public async Task RunAsync()
@@ -599,6 +617,255 @@ public static class EncryptionUtils
             var sharedSecret = publicKey.GetSharedPubkey(privateKey);
             return Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(sharedSecret.ToBytes()[1..]);
         }
+    }
+}
+
+
+public class ClientStorage : IClientStorage, INetworkStorage
+{
+    private const string CurrencyDisplaySettingKey = "currencyDisplaySetting";
+    private const string StorageFilePath = "localstorage.json";
+    private readonly Dictionary<string, object> _storage;
+
+    public ClientStorage()
+    {
+        if (File.Exists(StorageFilePath))
+        {
+            var json = File.ReadAllText(StorageFilePath);
+            _storage = JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? new Dictionary<string, object>();
+        }
+        else
+        {
+            _storage = new Dictionary<string, object>();
+        }
+    }
+
+    private void SaveChanges()
+    {
+        var json = JsonSerializer.Serialize(_storage);
+        File.WriteAllText(StorageFilePath, json);
+    }
+
+    private T? GetItem<T>(string key)
+    {
+        if (_storage.TryGetValue(key, out var value) && value is JsonElement element)
+        {
+            return JsonSerializer.Deserialize<T>(element.GetRawText());
+        }
+        return default;
+    }
+
+    private void SetItem<T>(string key, T value)
+    {
+        _storage[key] = JsonSerializer.Serialize(value);
+        SaveChanges();
+    }
+
+    private void RemoveItem(string key)
+    {
+        if (_storage.ContainsKey(key))
+        {
+            _storage.Remove(key);
+            SaveChanges();
+        }
+    }
+
+    private void ClearStorage()
+    {
+        _storage.Clear();
+        SaveChanges();
+    }
+
+    public AccountInfo GetAccountInfo(string network)
+    {
+        return GetItem<AccountInfo>(string.Format("utxo:{0}", network));
+    }
+
+    public void SetAccountInfo(string network, AccountInfo items)
+    {
+        SetItem(string.Format("utxo:{0}", network), items);
+    }
+
+    public void DeleteAccountInfo(string network)
+    {
+        RemoveItem(string.Format("utxo:{0}", network));
+    }
+
+    public void AddInvestmentProject(InvestorProject project)
+    {
+        var projects = GetInvestmentProjects();
+
+        if (projects.Any(a => a.ProjectInfo?.ProjectIdentifier == project.ProjectInfo?.ProjectIdentifier))
+            return;
+
+        projects.Add(project);
+        SetItem("projects", projects);
+    }
+
+    public void UpdateInvestmentProject(InvestorProject project)
+    {
+        var projects = GetInvestmentProjects();
+
+        var existing = projects.FirstOrDefault(a => a.ProjectInfo?.ProjectIdentifier == project.ProjectInfo?.ProjectIdentifier);
+        if (existing != null)
+        {
+            projects.Remove(existing);
+        }
+
+        projects.Add(project);
+        SetItem("projects", projects);
+    }
+
+    public void RemoveInvestmentProject(string projectId)
+    {
+        var projects = GetInvestmentProjects();
+        var project = projects.FirstOrDefault(a => a.ProjectInfo?.ProjectIdentifier == projectId);
+
+        if (project != null)
+        {
+            projects.Remove(project);
+            SetItem("projects", projects);
+        }
+    }
+
+    public List<InvestorProject> GetInvestmentProjects()
+    {
+        return GetItem<List<InvestorProject>>("projects") ?? new List<InvestorProject>();
+    }
+
+    public void AddFounderProject(params FounderProject[] projects)
+    {
+        var existingProjects = GetFounderProjects();
+        existingProjects.AddRange(projects);
+        SetItem("founder-projects", existingProjects.OrderBy(p => p.ProjectIndex).ToList());
+    }
+
+    public List<FounderProject> GetFounderProjects()
+    {
+        return GetItem<List<FounderProject>>("founder-projects") ?? new List<FounderProject>();
+    }
+
+    public FounderProject? GetFounderProjects(string projectIdentifier)
+    {
+        var projects = GetFounderProjects();
+        return projects.FirstOrDefault(p => p.ProjectInfo?.ProjectIdentifier == projectIdentifier);
+    }
+
+    public void UpdateFounderProject(FounderProject project)
+    {
+        var projects = GetFounderProjects();
+
+        var existingProject = projects.FirstOrDefault(p => p.ProjectInfo?.ProjectIdentifier == project.ProjectInfo?.ProjectIdentifier);
+        if (existingProject != null)
+        {
+            projects.Remove(existingProject);
+        }
+
+        projects.Add(project);
+        SetItem("founder-projects", projects.OrderBy(p => p.ProjectIndex).ToList());
+    }
+
+    public void DeleteFounderProjects()
+    {
+        RemoveItem("founder-projects");
+    }
+
+    public SettingsInfo GetSettingsInfo()
+    {
+        return GetItem<SettingsInfo>("settings-info") ?? new SettingsInfo();
+    }
+
+    public void SetSettingsInfo(SettingsInfo settingsInfo)
+    {
+        SetItem("settings-info", settingsInfo);
+    }
+
+    public void WipeStorage()
+    {
+        ClearStorage();
+    }
+
+    public void SetNostrPublicKeyPerProject(string projectId, string nostrPubKey)
+    {
+        SetItem($"project:{projectId}:nostrKey", nostrPubKey);
+    }
+
+    public string GetNostrPublicKeyPerProject(string projectId)
+    {
+        return GetItem<string>($"project:{projectId}:nostrKey") ?? string.Empty;
+    }
+
+    public string GetCurrencyDisplaySetting()
+    {
+        return GetItem<string>(CurrencyDisplaySettingKey) ?? "BTC";
+    }
+
+    public void SetCurrencyDisplaySetting(string setting)
+    {
+        SetItem(CurrencyDisplaySettingKey, setting);
+    }
+
+    public SettingsInfo GetSettings()
+    {
+        return GetSettingsInfo();
+    }
+
+    public void SetSettings(SettingsInfo settingsInfo)
+    {
+        SetSettingsInfo(settingsInfo);
+    }
+
+    public void SetNetwork(string network)
+    {
+        SetItem("network", network);
+    }
+
+    public string GetNetwork()
+    {
+        return GetItem<string>("network") ?? string.Empty;
+    }
+
+    public void DeleteInvestmentProjects()
+    {
+        RemoveItem("projects");
+    }
+
+    public void AddOrUpdateSignatures(SignatureInfo signatureInfo)
+    {
+        var signatures = GetSignatures();
+        var existing = signatures.FirstOrDefault(s => s.ProjectIdentifier == signatureInfo.ProjectIdentifier);
+
+        if (existing != null)
+        {
+            signatures.Remove(existing);
+        }
+
+        signatures.Add(signatureInfo);
+        SetItem("recovery-signatures", signatures);
+    }
+
+    public List<SignatureInfo> GetSignatures()
+    {
+        return GetItem<List<SignatureInfo>>("recovery-signatures") ?? new List<SignatureInfo>();
+    }
+
+    public void RemoveSignatures(SignatureInfo signatureInfo)
+    {
+        var signatures = GetSignatures();
+        var existing = signatures.FirstOrDefault(s => s.ProjectIdentifier == signatureInfo.ProjectIdentifier);
+
+        if (existing != null)
+        {
+            signatures.Remove(existing);
+            SetItem("recovery-signatures", signatures);
+        }
+    }
+
+    public void DeleteSignatures()
+    {
+        var signatures = GetSignatures();
+        SetItem($"recovery-signatures-{DateTime.UtcNow.Ticks}", signatures);
+        RemoveItem("recovery-signatures");
     }
 }
 
