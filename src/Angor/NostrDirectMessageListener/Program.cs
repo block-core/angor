@@ -43,19 +43,29 @@ private static ISignService _signService;
 private readonly INostrCommunicationFactory _communicationFactory;
 private readonly INetworkService _networkService;
 private static IEncryptionService encryption;
+private static  IInvestorTransactionActions InvestorTransactionActions;
+private static  IFounderTransactionActions FounderTransactionActions;
+private static IDerivationOperations DerivationOperations;
+
 
 public Program(
     ISignService signService,
     INetworkConfiguration networkConfiguration,
     INostrCommunicationFactory communicationFactory,
     INetworkService networkService,
-    IEncryptionService encryptionPass)
+    IEncryptionService encryptionPass,
+	IInvestorTransactionActions investorTransactionActions,
+	IFounderTransactionActions founderTransactionActions,
+	IDerivationOperations derivationOperations)
 {
     _signService = signService ?? throw new ArgumentNullException(nameof(signService));
     _networkConfiguration = networkConfiguration ?? throw new ArgumentNullException(nameof(networkConfiguration));
     _communicationFactory = communicationFactory ?? throw new ArgumentNullException(nameof(communicationFactory));
     _networkService = networkService ?? throw new ArgumentNullException(nameof(networkService));
     encryption = encryptionPass ?? throw new ArgumentNullException(nameof(encryptionPass));
+	InvestorTransactionActions = investorTransactionActions ?? throw new ArgumentNullException(nameof(investorTransactionActions));
+	FounderTransactionActions = founderTransactionActions ?? throw new ArgumentNullException(nameof(founderTransactionActions));
+	DerivationOperations = derivationOperations ?? throw new ArgumentNullException(nameof(derivationOperations));
 }
 
 
@@ -79,6 +89,9 @@ public Program(
             services.AddSingleton<INetworkStorage, ClientStorage>(); // Register ClientStorage for INetworkStorage
             services.AddSingleton<IClientStorage, ClientStorage>(); // Register ClientStorage for IClientStorage
 services.AddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
+services.AddSingleton<IInvestorTransactionActions, InvestorTransactionActions>();
+services.AddSingleton<IFounderTransactionActions, FounderTransactionActions>();
+services.AddSingleton<IDerivationOperations, DerivationOperations>();
 services.AddScoped<IEncryptionService>(provider =>
 {
     var jsRuntime = provider.GetService<IJSRuntime>();
@@ -265,8 +278,8 @@ services.AddBlazoredLocalStorage();
                     Console.WriteLine($"Decrypted message: {decryptedContent}");
 
                     // Use encryptionService
-					string signedTransactionHex = BitcoinUtils.DecodeAndSignTransaction(decryptedContent, RecipientPrivateKey);
-                    
+					//string signedTransactionHex = BitcoinUtils.DecodeAndSignTransaction(decryptedContent, RecipientPrivateKey);
+                    var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex);
                     string encryptedContent = await encryptionService.EncryptNostrContentAsync(RecipientPrivateKey, investorPubKey, nostrEvent.Content);
 
                     Console.WriteLine($"[DEBUG] Encrypted Content: {encryptedContent}");
@@ -408,7 +421,7 @@ private static async Task<string> DecryptMessageAsync(IEncryptionService encrypt
         }
 
         // Use the encryption service to decrypt the content
-        string decryptedContent = await encryption.DecryptNostrContentAsync(recipientPrivateKey, senderPublicKey, encryptedContent);
+        string decryptedContent = await encryptionService.DecryptNostrContentAsync(recipientPrivateKey, senderPublicKey, encryptedContent);
 
         if (string.IsNullOrEmpty(decryptedContent))
         {
