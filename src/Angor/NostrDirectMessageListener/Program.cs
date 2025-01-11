@@ -4,7 +4,6 @@ using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -16,7 +15,6 @@ using Blockcore.NBitcoin.Protocol;
 using Angor.Client.Services;
 using Angor.Shared;
 using Angor.Shared.Models; 
-using Nostr.Client.Client;
 using Blockcore.Networks; 	
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
@@ -26,11 +24,12 @@ using Microsoft.Extensions.Hosting;
 using Angor.Client;
 using Blazored.LocalStorage;
 using Microsoft.JSInterop;
-using System.Text.Json;
 using Angor.Client.Models;
 using Angor.Shared;
 using Angor.Shared.Models;
-
+using System.Text.Json.Serialization;
+using Nostr.Client;
+using Nostr.Client.Requests; // Adjust based on your library
 
 
 
@@ -41,13 +40,21 @@ class Program
     private const string RecipientPublicKey = "b61f43c4a88d538ee1e74979b75c4d54fd5ff756923f14aef0366bdab9b3cbcc"; // Corresponding public key
 private static ISignService _signService;
     private readonly INetworkConfiguration _networkConfiguration;
+private readonly INostrCommunicationFactory _communicationFactory;
+private readonly INetworkService _networkService;
 
-
-public Program(ISignService signService, INetworkConfiguration networkConfiguration)
+public Program(
+    ISignService signService,
+    INetworkConfiguration networkConfiguration,
+    INostrCommunicationFactory communicationFactory,
+    INetworkService networkService)
 {
     _signService = signService ?? throw new ArgumentNullException(nameof(signService));
-    _networkConfiguration = networkConfiguration ?? throw new ArgumentNullException(nameof(networkConfiguration));
+    _networkConfiguration = networkConfiguration;
+    _communicationFactory = communicationFactory;
+    _networkService = networkService;
 }
+
 
 
     public static async Task Main(string[] args)
@@ -212,7 +219,69 @@ services.AddBlazoredLocalStorage();
 }
 
 
-    private static void ProcessNostrEvent(string message, ClientWebSocket client)
+    private static void HandleEventMessage(object[] response, ClientWebSocket client, ISignService signService)
+{
+    try
+    {
+        if (response.Length > 2 && response[2] is JsonElement eventData)
+        {
+            Console.WriteLine($"Raw event data: {eventData}");
+
+            if (JsonSerializer.Deserialize<NostrEvent>(eventData.GetRawText()) is not { } nostrEvent)
+            {
+                Console.WriteLine("Deserialized NostrEvent is null.");
+                return;
+            }
+
+            Console.WriteLine($"NostrEvent: {nostrEvent}");
+            Console.WriteLine($"NostrEvent Kind: {nostrEvent.Kind}");
+
+            if (nostrEvent.Kind == 4 && !string.IsNullOrEmpty(nostrEvent.Content))
+            {
+                string decryptedContent = DecryptMessage(RecipientPrivateKey, nostrEvent.Content, nostrEvent.Pubkey);
+                if (!string.IsNullOrEmpty(decryptedContent))
+                {
+                    Console.WriteLine($"Decrypted message: {decryptedContent}");
+
+                    // Log the fields before calling the method
+                    string signedTransactionHex = BitcoinUtils.DecodeAndSignTransaction(decryptedContent, RecipientPrivateKey);
+                    string investorPubKey = nostrEvent.Pubkey;
+                    string eventId = nostrEvent.Id;
+
+                    Console.WriteLine($"[DEBUG] Encrypted Signature Info (signedTransactionHex): {signedTransactionHex}");
+                    Console.WriteLine($"[DEBUG] Recipient Private Key: {RecipientPrivateKey}");
+                    Console.WriteLine($"[DEBUG] Investor Public Key: {investorPubKey}");
+                    Console.WriteLine($"[DEBUG] Event ID: {eventId}");
+
+                    if (!string.IsNullOrEmpty(signedTransactionHex))
+                    {
+                        Console.WriteLine($"Signed Transaction Hex: {signedTransactionHex}");
+
+                        // Call SendSignaturesToInvestor
+                        DateTime sentTimestamp = signService.SendSignaturesToInvestor(
+                            signedTransactionHex,  // The encrypted signature info
+                            RecipientPrivateKey,   // Recipient's private key
+                            investorPubKey,        // Investor's public key
+                            eventId                // Event ID of the original event
+                        );
+
+                        Console.WriteLine($"[INFO] Signatures sent successfully at: {sentTimestamp}");
+                    }
+                }
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error handling EVENT message: {ex.Message}");
+    }
+}
+
+
+
+
+
+private static void ProcessNostrEvent(string message, ClientWebSocket client)
 {
     try
     {
@@ -257,55 +326,46 @@ HandleEventMessage(response, client, _signService);
     }
 }
 
+   
 
 
-    private static void HandleEventMessage(object[] response, ClientWebSocket client, ISignService signService)
+string ExtractInvestorPubKeyFromEvent(NostrEvent nostrEvent)
+{
+    var investorTag = nostrEvent.Tags.FirstOrDefault(tag => tag.Count > 0 && tag[0] == "p");
+    return investorTag != null && investorTag.Count > 1 ? investorTag[1] : null;
+}
+
+string ExtractInvestorPubKeyFromDecryptedMessage(string decryptedMessage)
 {
     try
     {
-        if (response.Length > 2 && response[2] is JsonElement eventData)
+        var jsonDoc = JsonDocument.Parse(decryptedMessage);
+        if (jsonDoc.RootElement.TryGetProperty("investorPubKey", out var pubKeyElement))
         {
-            Console.WriteLine($"Raw event data: {eventData}");
-
-            var nostrEvent = JsonSerializer.Deserialize<NostrEvent>(eventData.GetRawText());
-            if (nostrEvent == null)
-            {
-                Console.WriteLine("Deserialized NostrEvent is null.");
-                return;
-            }
-
-            Console.WriteLine($"NostrEvent: {nostrEvent}");
-            Console.WriteLine($"NostrEvent Kind: {nostrEvent.Kind}");
-
-            if (nostrEvent.Kind == 4 && !string.IsNullOrEmpty(nostrEvent.Content))
-            {
-                string decryptedContent = DecryptMessage(RecipientPrivateKey, nostrEvent.Content, nostrEvent.Pubkey);
-                if (!string.IsNullOrEmpty(decryptedContent))
-                {
-                    Console.WriteLine($"Decrypted message: {decryptedContent}");
-
-                    string signedTransactionHex = BitcoinUtils.DecodeAndSignTransaction(decryptedContent, RecipientPrivateKey);
-                    if (!string.IsNullOrEmpty(signedTransactionHex))
-                    {
-                        Console.WriteLine($"Signed Transaction Hex: {signedTransactionHex}");
-                        SendSignaturesToInvestor(
-    signedTransactionHex,
-    RecipientPrivateKey,
-    nostrEvent.Pubkey,
-    nostrEvent.Id,
-    client,
-    _signService // Pass the instance
-);
-                    }
-                }
-            }
+            return pubKeyElement.GetString();
         }
     }
-    catch (Exception ex)
+    catch (JsonException ex)
     {
-        Console.WriteLine($"Error handling EVENT message: {ex.Message}");
+        Console.WriteLine($"[ERROR] Failed to parse decrypted message: {ex.Message}");
     }
+    return null;
 }
+
+string GetInvestorPubKey(NostrEvent nostrEvent, string decryptedMessage)
+{
+    // Try extracting from the event tags first
+var investorPubKey = ExtractInvestorPubKeyFromEvent(nostrEvent) 
+                     ?? throw new ArgumentException("Investor public key is missing.");    if (!string.IsNullOrEmpty(investorPubKey))
+    {
+        return investorPubKey;
+    }
+
+    // Fallback to extracting from the decrypted message
+    return ExtractInvestorPubKeyFromDecryptedMessage(decryptedMessage);
+}
+
+
 
 
 private static string DecryptMessage(string recipientPrivateKey, string encryptedContent, string senderPublicKey)
@@ -343,36 +403,21 @@ private static string DecryptMessage(string recipientPrivateKey, string encrypte
 }
 
 
-    private static void SendSignaturesToInvestor(
-    string signedTransactionHex,
-    string recipientPrivateKey,
+  /*  public static void SendSignaturesToInvestor(
+    string encryptedSignatureInfo,
     string investorPubKey,
     string eventId,
-    ClientWebSocket client,
     ISignService signService)
 {
-    if (signService == null)
-    {
-        Console.WriteLine("[ERROR] SignService is not initialized. Unable to send signatures.");
-        return;
-    }
+    // Use ISignService to process the event
+    signService.SendSignaturesToInvestor(encryptedSignatureInfo,RecipientPrivateKey , investorPubKey, eventId);
 
-    try
-    {
-        var creationTime = signService.SendSignaturesToInvestor(
-            signedTransactionHex,
-            recipientPrivateKey,
-            investorPubKey,
-            eventId
-        );
-
-        Console.WriteLine($"[INFO] Signed event sent successfully at {creationTime}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[ERROR] Failed to send signed event: {ex.Message}");
-    }
+    Console.WriteLine($"[INFO] Signatures sent successfully for Event ID: {eventId}");
 }
+
+*/
+
+
 
 
 
@@ -869,3 +914,12 @@ public class ClientStorage : IClientStorage, INetworkStorage
     }
 }
 
+public class NostrEventRequest
+{
+    public NostrEvent Event { get; }
+
+    public NostrEventRequest(NostrEvent nostrEvent)
+    {
+        Event = nostrEvent;
+    }
+}
