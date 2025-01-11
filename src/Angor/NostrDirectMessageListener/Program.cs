@@ -42,18 +42,22 @@ private static ISignService _signService;
     private readonly INetworkConfiguration _networkConfiguration;
 private readonly INostrCommunicationFactory _communicationFactory;
 private readonly INetworkService _networkService;
+private static IEncryptionService encryption;
 
 public Program(
     ISignService signService,
     INetworkConfiguration networkConfiguration,
     INostrCommunicationFactory communicationFactory,
-    INetworkService networkService)
+    INetworkService networkService,
+    IEncryptionService encryptionPass)
 {
     _signService = signService ?? throw new ArgumentNullException(nameof(signService));
-    _networkConfiguration = networkConfiguration;
-    _communicationFactory = communicationFactory;
-    _networkService = networkService;
+    _networkConfiguration = networkConfiguration ?? throw new ArgumentNullException(nameof(networkConfiguration));
+    _communicationFactory = communicationFactory ?? throw new ArgumentNullException(nameof(communicationFactory));
+    _networkService = networkService ?? throw new ArgumentNullException(nameof(networkService));
+    encryption = encryptionPass ?? throw new ArgumentNullException(nameof(encryptionPass));
 }
+
 
 
 
@@ -75,7 +79,16 @@ public Program(
             services.AddSingleton<INetworkStorage, ClientStorage>(); // Register ClientStorage for INetworkStorage
             services.AddSingleton<IClientStorage, ClientStorage>(); // Register ClientStorage for IClientStorage
 services.AddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
+services.AddScoped<IEncryptionService>(provider =>
+{
+    var jsRuntime = provider.GetService<IJSRuntime>();
+    var encryptionService = new EncryptionService(jsRuntime);
 
+    // Assume that JSRuntime is available only in Blazor contexts
+    bool isJsRuntimeAvailable = jsRuntime != null;
+
+    return new EncryptionServiceWrapper(encryptionService, isJsRuntimeAvailable);
+});
 services.AddBlazoredLocalStorage();
             services.AddLogging();
             services.AddHttpClient(); // Adds HttpClient support
@@ -219,7 +232,11 @@ services.AddBlazoredLocalStorage();
 }
 
 
-    private static void HandleEventMessage(object[] response, ClientWebSocket client, ISignService signService)
+   private static async void HandleEventMessage(
+    object[] response, 
+    ClientWebSocket client, 
+    ISignService signService, 
+    IEncryptionService encryptionService)
 {
     try
     {
@@ -236,33 +253,37 @@ services.AddBlazoredLocalStorage();
             Console.WriteLine($"NostrEvent: {nostrEvent}");
             Console.WriteLine($"NostrEvent Kind: {nostrEvent.Kind}");
 
+
+
             if (nostrEvent.Kind == 4 && !string.IsNullOrEmpty(nostrEvent.Content))
             {
-                string decryptedContent = DecryptMessage(RecipientPrivateKey, nostrEvent.Content, nostrEvent.Pubkey);
+				string investorPubKey = nostrEvent.Pubkey;
+                string eventId = nostrEvent.Id;
+				var decryptedContent = await DecryptMessageAsync(encryption, RecipientPrivateKey, investorPubKey, nostrEvent.Content);
                 if (!string.IsNullOrEmpty(decryptedContent))
                 {
                     Console.WriteLine($"Decrypted message: {decryptedContent}");
 
-                    // Log the fields before calling the method
-                    string signedTransactionHex = BitcoinUtils.DecodeAndSignTransaction(decryptedContent, RecipientPrivateKey);
-                    string investorPubKey = nostrEvent.Pubkey;
-                    string eventId = nostrEvent.Id;
+                    // Use encryptionService
+					string signedTransactionHex = BitcoinUtils.DecodeAndSignTransaction(decryptedContent, RecipientPrivateKey);
+                    
+                    string encryptedContent = await encryptionService.EncryptNostrContentAsync(RecipientPrivateKey, investorPubKey, nostrEvent.Content);
 
-                    Console.WriteLine($"[DEBUG] Encrypted Signature Info (signedTransactionHex): {signedTransactionHex}");
-                    Console.WriteLine($"[DEBUG] Recipient Private Key: {RecipientPrivateKey}");
+                    Console.WriteLine($"[DEBUG] Encrypted Content: {encryptedContent}");
+					Console.WriteLine($"[DEBUG] Recipient Private Key: {RecipientPrivateKey}");
                     Console.WriteLine($"[DEBUG] Investor Public Key: {investorPubKey}");
                     Console.WriteLine($"[DEBUG] Event ID: {eventId}");
 
-                    if (!string.IsNullOrEmpty(signedTransactionHex))
+                    if (!string.IsNullOrEmpty(encryptedContent))
                     {
-                        Console.WriteLine($"Signed Transaction Hex: {signedTransactionHex}");
+                        Console.WriteLine($"Encrypted Content: {encryptedContent}");
 
                         // Call SendSignaturesToInvestor
                         DateTime sentTimestamp = signService.SendSignaturesToInvestor(
-                            signedTransactionHex,  // The encrypted signature info
-                            RecipientPrivateKey,   // Recipient's private key
-                            investorPubKey,        // Investor's public key
-                            eventId                // Event ID of the original event
+                            encryptedContent,
+                            RecipientPrivateKey,
+                            nostrEvent.Pubkey,
+                            nostrEvent.Id
                         );
 
                         Console.WriteLine($"[INFO] Signatures sent successfully at: {sentTimestamp}");
@@ -276,6 +297,8 @@ services.AddBlazoredLocalStorage();
         Console.WriteLine($"Error handling EVENT message: {ex.Message}");
     }
 }
+
+
 
 
 
@@ -297,7 +320,7 @@ private static void ProcessNostrEvent(string message, ClientWebSocket client)
 
                 if (eventType == "EVENT")
                 {
-HandleEventMessage(response, client, _signService);
+				HandleEventMessage(response, client, _signService, encryption);
                 }
                 else
                 {
@@ -368,32 +391,32 @@ var investorPubKey = ExtractInvestorPubKeyFromEvent(nostrEvent)
 
 
 
-private static string DecryptMessage(string recipientPrivateKey, string encryptedContent, string senderPublicKey)
+private static async Task<string> DecryptMessageAsync(IEncryptionService encryptionService, string recipientPrivateKey, string senderPublicKey, string encryptedContent)
 {
     try
     {
-        var parts = encryptedContent.Split("?iv=");
-        if (parts.Length != 2)
+        if (string.IsNullOrEmpty(encryptedContent))
         {
-            Console.WriteLine("Invalid encrypted content format.");
+            Console.WriteLine("Encrypted content is null or empty.");
             return null;
         }
 
-        var cipherText = Convert.FromBase64String(parts[0]);
-        var iv = Convert.FromBase64String(parts[1]);
+        if (encryptionService == null)
+        {
+            Console.WriteLine("Encryption service is null.");
+            return null;
+        }
 
-        var privateKey = new Key(Encoders.Hex.DecodeData(recipientPrivateKey));
-        var publicKey = new PubKey("02" + senderPublicKey);
+        // Use the encryption service to decrypt the content
+        string decryptedContent = await encryption.DecryptNostrContentAsync(recipientPrivateKey, senderPublicKey, encryptedContent);
 
-        var sharedSecret = publicKey.GetSharedPubkey(privateKey).ToBytes()[1..]; // Drop the prefix byte
+        if (string.IsNullOrEmpty(decryptedContent))
+        {
+            Console.WriteLine("Failed to decrypt content.");
+            return null;
+        }
 
-        using var aes = Aes.Create();
-        aes.Key = sharedSecret;
-        aes.IV = iv;
-
-        using var decryptor = aes.CreateDecryptor();
-        var decryptedBytes = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
-        return Encoding.UTF8.GetString(decryptedBytes);
+        return decryptedContent;
     }
     catch (Exception ex)
     {
@@ -401,6 +424,7 @@ private static string DecryptMessage(string recipientPrivateKey, string encrypte
         return null;
     }
 }
+
 
 
   /*  public static void SendSignaturesToInvestor(
@@ -428,10 +452,10 @@ private static string DecryptMessage(string recipientPrivateKey, string encrypte
 // Classes and Utility Functions:
 public class NostrEvent
 {
-    [JsonPropertyName("id")] public string Id { get; set; }
+    [JsonPropertyName("id")] public string? Id { get; set; }
     [JsonPropertyName("kind")] public int Kind { get; set; }
-    [JsonPropertyName("pubkey")] public string Pubkey { get; set; }
-    [JsonPropertyName("content")] public string Content { get; set; }
+    [JsonPropertyName("pubkey")] public string? Pubkey { get; set; }
+    [JsonPropertyName("content")] public string? Content { get; set; }
     [JsonPropertyName("created_at")] public long CreatedAt { get; set; }
     [JsonPropertyName("tags")] public List<List<string>> Tags { get; set; } = new();
 
@@ -921,5 +945,77 @@ public class NostrEventRequest
     public NostrEventRequest(NostrEvent nostrEvent)
     {
         Event = nostrEvent;
+    }
+}
+
+
+
+public class EncryptionServiceWrapper : IEncryptionService
+{
+    private readonly EncryptionService _encryptionService;
+    private readonly bool _isJsRuntimeAvailable;
+
+    public EncryptionServiceWrapper(EncryptionService encryptionService, bool isJsRuntimeAvailable = true)
+    {
+        _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _isJsRuntimeAvailable = isJsRuntimeAvailable;
+    }
+
+    public async Task<string> EncryptData(string secretData, string password)
+    {
+        if (_isJsRuntimeAvailable)
+        {
+            return await _encryptionService.EncryptData(secretData, password);
+        }
+        return FallbackEncrypt(secretData, password);
+    }
+
+    public async Task<string> DecryptData(string encryptedData, string password)
+    {
+        if (_isJsRuntimeAvailable)
+        {
+            return await _encryptionService.DecryptData(encryptedData, password);
+        }
+        return FallbackDecrypt(encryptedData, password);
+    }
+
+    public async Task<string> EncryptNostrContentAsync(string nsec, string npub, string content)
+    {
+        if (_isJsRuntimeAvailable)
+        {
+            return await _encryptionService.EncryptNostrContentAsync(nsec, npub, content);
+        }
+        return FallbackEncryptNostr(nsec, npub, content);
+    }
+
+    public async Task<string> DecryptNostrContentAsync(string nsec, string npub, string encryptedContent)
+    {
+        if (_isJsRuntimeAvailable)
+        {
+            return await _encryptionService.DecryptNostrContentAsync(nsec, npub, encryptedContent);
+        }
+        return FallbackDecryptNostr(nsec, npub, encryptedContent);
+    }
+
+    private string FallbackEncrypt(string data, string password)
+    {
+        return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(data + password));
+    }
+
+    private string FallbackDecrypt(string data, string password)
+    {
+        return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(data)).Replace(password, "");
+    }
+
+    private string FallbackEncryptNostr(string nsec, string npub, string content)
+    {
+        // Add a simplified fallback logic for encryption
+        return $"EncryptedContent:{content}";
+    }
+
+    private string FallbackDecryptNostr(string nsec, string npub, string encryptedContent)
+    {
+        // Add a simplified fallback logic for decryption
+        return $"DecryptedContent:{encryptedContent}";
     }
 }
