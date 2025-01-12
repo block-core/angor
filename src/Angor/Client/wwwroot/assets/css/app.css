@@ -605,10 +605,6 @@ tr[style*="cursor: pointer;"]:hover {
     padding: 10px;
 }
 
-.modal-body {
-    padding: 10px;
-}
-
 .qrcode-image {
     width: 100%;
     height: auto;
