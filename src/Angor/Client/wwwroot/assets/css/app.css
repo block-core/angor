@@ -932,243 +932,6 @@ tr[style*="cursor: pointer;"] {
     animation: rotate 2s linear infinite;
 }
 
-.btn-border {
-    border: 1px solid var(--btn-border) !important;
-    background-color: rgba(16, 90, 106, 0.3); /* Dark Gray */
-    color: var(--angor-primary) !important;
-}
-
-    .btn-border:hover {
-        color: var(--angor-secondary);
-        background-color: rgba(16, 90, 106, 0.6); /* Dark Gray */
-    }
-
-.btn-border-success {
-    border: 1px solid var(--btn-border) !important;
-    background-color: rgba(40, 167, 69, 0.4); /* Green */
-    color: var(--angor-primary) !important;
-}
-
-    .btn-border-success:hover {
-        color: var(--angor-secondary);
-        background-color: rgba(40, 167, 69, 0.8); /* Green */
-    }
-
-.btn-border-warning {
-    border: 1px solid var(--btn-border) !important;
-    background-color: rgba(255, 193, 7, 0.4); /* Yellow */
-    color: var(--angor-primary) !important;
-}
-
-    .btn-border-warning:hover {
-        color: var(--angor-secondary);
-        background-color: rgba(255, 193, 7, 0.8); /* Yellow */
-    }
-
-.btn-border-danger {
-    border: 1px solid var(--btn-border) !important;
-    background-color: rgba(220, 53, 69, 0.4); /* Red */
-    color: var(--angor-primary) !important;
-}
-
-    .btn-border-danger:hover {
-        color: var(--angor-secondary);
-        background-color: rgba(220, 53, 69, 0.8); /* Red */
-    }
-
-    .btn-border, .btn-border-success, btn-border-warning, btn-border-danger {
-        padding: 0.75rem 1.5rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-
-/* Button Base Styles */
-.btn-border,
-.btn-border-success,
-.btn-border-warning,
-.btn-border-danger {
-    position: relative;
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
-    border-radius: 8px;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    outline: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-}
-
-/* Pure CSS Ripple Effect */
-.btn-border::after,
-.btn-border-success::after,
-.btn-border-warning::after,
-.btn-border-danger::after {
-    content: '';
-    position: absolute;
-    width: 100px;
-    height: 100px;
-    top: 50%;
-    left: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
-    border-radius: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 0;
-}
-
-.btn-border:active::after,
-.btn-border-success:active::after,
-.btn-border-warning:active::after,
-.btn-border-danger:active::after {
-    animation: ripple 0.5s ease-out;
-}
-
-@keyframes ripple {
-    0% {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(4);
-        opacity: 0;
-    }
-}
-
-/* Button Styles */
-.btn-border {
-    border: 1px solid var(--btn-border);
-    background: linear-gradient(135deg, rgba(16, 90, 106, 0.3), rgba(8, 59, 70, 0.3));
-    color: var(--angor-primary) !important;
-}
-
-.btn-border-success {
-    border: 1px solid var(--btn-border);
-    background: linear-gradient(135deg, rgba(40, 167, 69, 0.3), rgba(34, 139, 58, 0.3));
-    color: var(--angor-primary) !important;
-}
-
-.btn-border-warning {
-    border: 1px solid var(--btn-border);
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(224, 168, 0, 0.3));
-    color: var(--angor-primary) !important;
-}
-
-.btn-border-danger {
-    border: 1px solid var(--btn-border);
-    background: linear-gradient(135deg, rgba(220, 53, 69, 0.3), rgba(189, 45, 59, 0.3));
-    color: var(--angor-primary) !important;
-}
-
-/* Hover States */
-.btn-border:hover,
-.btn-border-success:hover,
-.btn-border-warning:hover,
-.btn-border-danger:hover {
-    transform: translateY(-1px);
-}
-
-/* Active States */
-.btn-border:active,
-.btn-border-success:active,
-.btn-border-warning:active,
-.btn-border-danger:active {
-    transform: translateY(1px);
-}
-
-/* Dark Theme */
-.dark .btn-border,
-.dark .btn-border-success,
-.dark .btn-border-warning,
-.dark .btn-border-danger {
-    border-color: var(--angor-secondary);
-}
-
-/* ...rest of existing code... */
-
-/* Default Button */
-.btn-border {
-    border: 1px solid var(--btn-border);
-    background: linear-gradient(135deg, rgba(16, 90, 106, 0.3), rgba(8, 59, 70, 0.3));
-    color: var(--angor-primary) !important;
-    box-shadow: 0 2px 4px rgba(16, 90, 106, 0.1);
-}
-
-.btn-border:hover {
-    background: linear-gradient(135deg, rgba(16, 90, 106, 0.4), rgba(8, 59, 70, 0.4));
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(16, 90, 106, 0.2);
-}
-
-/* Success Button */
-.btn-border-success {
-    border: 1px solid var(--btn-border);
-    background: linear-gradient(135deg, rgba(40, 167, 69, 0.3), rgba(34, 139, 58, 0.3));
-    color: var(--angor-primary) !important;
-    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.1);
-}
-
-.btn-border-success:hover {
-    background: linear-gradient(135deg, rgba(40, 167, 69, 0.4), rgba(34, 139, 58, 0.4));
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
-}
-
-/* Warning Button */
-.btn-border-warning {
-    border: 1px solid var(--btn-border);
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(224, 168, 0, 0.3));
-    color: var(--angor-primary) !important;
-    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.1);
-}
-
-.btn-border-warning:hover {
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.4), rgba(224, 168, 0, 0.4));
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.2);
-}
-
-/* Danger Button */
-.btn-border-danger {
-    border: 1px solid var(--btn-border);
-    background: linear-gradient(135deg, rgba(220, 53, 69, 0.3), rgba(189, 45, 59, 0.3));
-    color: var(--angor-primary) !important;
-    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.1);
-}
-
-.btn-border-danger:hover {
-    background: linear-gradient(135deg, rgba(220, 53, 69, 0.4), rgba(189, 45, 59, 0.4));
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
-}
-
-/* Active State */
-.btn-border:active,
-.btn-border-success:active,
-.btn-border-warning:active,
-.btn-border-danger:active {
-    transform: translateY(1px);
-    box-shadow: none;
-}
-
-/* Disabled State */
-.btn-border:disabled,
-.btn-border-success:disabled,
-.btn-border-warning:disabled,
-.btn-border-danger:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-/* Dark Theme Adjustments */
-.dark .btn-border,
-.dark .btn-border-success,
-.dark .btn-border-warning,
-.dark .btn-border-danger {
-    border-color: var(--angor-secondary);
-}
-
 input[type="checkbox"] + label {
     display: flex;
     cursor: pointer;
@@ -1555,7 +1318,6 @@ a p {
     background-color: rgba(255, 71, 87, 0.8) !important;
     color: white;
 }
-
 
 .feature-box {
     transition: all 0.3s ease;
@@ -2744,3 +2506,140 @@ button:hover:not(:disabled) {
             max-width: 800px;
         }
     }
+
+/* Enhanced Button Styles */
+.btn-border,
+.btn-border-success,
+.btn-border-warning,
+.btn-border-danger {
+    position: relative;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border-radius: 8px;
+    color: var(--angor-primary) !important;
+    overflow: hidden;
+    cursor: pointer;
+    outline: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Button Variants */
+.btn-border {
+    background: linear-gradient(135deg, rgba(16, 90, 106, 0.2), rgba(8, 59, 70, 0.2));
+    box-shadow: 0 2px 4px rgba(16, 90, 106, 0.1);
+    border:2px solid rgba(16, 90, 106, 0.1);
+}
+
+.dark .btn-border {
+    background: linear-gradient(135deg, rgba(16, 90, 106, 0.5), rgba(8, 59, 70, 0.5));
+    box-shadow: 0 2px 4px rgba(16, 90, 106, 0.1);
+    border:2px solid rgba(16, 90, 106, 0.3);
+}
+
+.btn-border-success {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.5), rgba(34, 139, 58, 0.5));
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.1);
+    border:2px solid rgba(40, 167, 69, 0.3);
+}
+
+.btn-border-warning {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.5), rgba(224, 168, 0, 0.5));
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.1);
+    border:2px solid rgba(255, 193, 7, 0.3);
+}
+
+.btn-border-danger {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.5), rgba(189, 45, 59, 0.5));
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.1);
+    border:2px solid rgba(220, 53, 69, 0.3);
+}
+
+/* Hover Effects */
+.btn-border:hover { 
+    background: linear-gradient(135deg, rgba(16, 90, 106, 0.4), rgba(8, 59, 70, 0.4)); 
+    border-color: rgba(16, 90, 106, 0.6);
+}
+.btn-border-success:hover { 
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.4), rgba(34, 139, 58, 0.4)); 
+    border-color: rgba(40, 167, 69, 0.6);
+}
+.btn-border-warning:hover { 
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.4), rgba(224, 168, 0, 0.4)); 
+    border-color: rgba(255, 193, 7, 0.6);
+}
+.btn-border-danger:hover { 
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.4), rgba(189, 45, 59, 0.4)); 
+    border-color: rgba(220, 53, 69, 0.6);
+}
+
+/* Common Hover Animation */
+[class^="btn-border"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Ripple Effect */
+[class^="btn-border"]::after {
+    content: '';
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    top: 50%;
+    left: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    pointer-events: none;
+}
+
+[class^="btn-border"]:active::after {
+    animation: ripple 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Active State */
+[class^="btn-border"]:active {
+    transform: translateY(1px);
+    box-shadow: none;
+}
+
+/* Disabled State */
+[class^="btn-border"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Button Animations */
+@keyframes ripple {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+    }
+    60% {
+        transform: translate(-50%, -50%) scale(3);
+        opacity: 0.5;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(4);
+        opacity: 0;
+    }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Add pulse animation on focus */
+[class^="btn-border"]:focus:not(:active) {
+    animation: pulse 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.navbar-vertical .navbar-nav > .nav-item .nav-link.active {
+    background-color: var(--angor-accent);
+}
