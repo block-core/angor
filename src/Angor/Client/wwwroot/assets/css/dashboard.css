@@ -5629,6 +5629,7 @@ fieldset:disabled .btn {
 .btn .badge {
     position: relative;
     top: -1px;
+    font-size: x-small;
 }
 
 .alert {
@@ -10452,6 +10453,9 @@ fieldset:disabled .btn {
 
 .text-end {
     text-align: right !important;
+    display: flex !important;
+    justify-content: end !important;
+    align-items: center !important;
 }
 
 .text-center {

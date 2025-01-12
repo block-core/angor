@@ -309,7 +309,8 @@
                     </i>
                     <h3 class="mt-4 text-success">Project Owner Dashboard</h3>
                     <p class="action-text">Manage your project funds and approve transactions</p>
-                    <div class="action-buttons">
+                    <div class="action-buttons d-flex justify-content-center item-center mt-4">
+                                             
                         <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border text-white animate-scale">
                             <i class="me-2">
                                 <Icon IconName="wallet" />
@@ -345,11 +346,13 @@
                         You are part of this project's success!
                         <a href="@myProjectExplorerLink" target="_blank" class="d-block mt-2">View Transaction Details</a>
                     </p>
+                    <div class="d-flex justify-content-center item-center mt-4">
 
                     <button class="btn btn-border animate-scale" @onclick="RecoverFunds">
                         <Icon IconName="recover" Class="me-2" />
                          Manage Investment
                     </button>
+                     </div>
                 </div>
             }
             else
@@ -366,7 +369,8 @@
                     @{
                         var canInvest = applicationLogicService.IsInvestmentWindowOpen(project?.ProjectInfo);
                     }
-                    <button class="btn btn-border-success animate-scale"
+                    <div class="d-flex justify-content-center item-center mt-4">
+                       <button class="btn btn-border-success animate-scale"
                             data-cy="INVEST_BUTTON"
                             @onclick="InvestInProject"
                             disabled="@(!canInvest)">
@@ -381,7 +385,8 @@
                         {
                             <span>Invest Now</span>
                         }
-                    </button>
+                       </button>
+                     </div>
                 </div>
             }
         </div>

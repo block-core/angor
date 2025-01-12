@@ -412,7 +412,7 @@
         <button class="btn btn-border-success mt-4 me-3" @onclick="ConfirmFinalizeNostrProfileCreation" disabled="@nostrMetadataCreated">
             @if (createProfileSpinner)
             {
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 <span>Creating Nostr Profile...</span>
             }
             else
@@ -424,7 +424,7 @@
         <button class="btn btn-primary mt-4" @onclick="ConfirmFinalizeProjectInfoCreation" disabled="@(!nostrMetadataCreated || nostrApplicationSpecificDataCreated)">
             @if (createApplicationDataSpinner)
             {
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 <span>Creating Project Info...</span>
             }
             else
@@ -436,7 +436,7 @@
         <button type="button" class="btn btn-border-success mt-4" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
             @if (creatProjectSpinner)
             {
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 <span>Create Project...</span>
             }
             else
@@ -517,7 +517,7 @@
                     <button type="button" class="btn btn-border" @onclick="Send" disabled="@publishProjectSpinner">
                         @if (publishProjectSpinner)
                         {
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                             <span>Confirm...</span>
                         }
                         else
