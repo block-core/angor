@@ -2643,3 +2643,10 @@ button:hover:not(:disabled) {
 .navbar-vertical .navbar-nav > .nav-item .nav-link.active {
     background-color: var(--angor-accent);
 }
+
+.stage-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}

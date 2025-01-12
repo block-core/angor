@@ -366,7 +366,7 @@
                     @{
                         var canInvest = applicationLogicService.IsInvestmentWindowOpen(project?.ProjectInfo);
                     }
-                    <button class="btn btn-border animate-scale"
+                    <button class="btn btn-border-success animate-scale"
                             data-cy="INVEST_BUTTON"
                             @onclick="InvestInProject"
                             disabled="@(!canInvest)">
