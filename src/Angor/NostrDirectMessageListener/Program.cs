@@ -40,6 +40,8 @@ class Program
     private const string RelayUrl = "wss://relay.angor.io/"; // Replace with your relay
     private const string RecipientPrivateKey = "362f4b51ecac1bc07a3216d9b5da1abfcb42f04f51ebfd659d5ebfc21f62b05d"; // Your private key
     private const string RecipientPublicKey = "b61f43c4a88d538ee1e74979b75c4d54fd5ff756923f14aef0366bdab9b3cbcc"; // Corresponding public key
+private const string SettingsFilePath = "settings.json";
+
 private static ISignService _signService;
     private readonly INetworkConfiguration _networkConfiguration;
 private readonly INostrCommunicationFactory _communicationFactory;
@@ -163,15 +165,30 @@ services.AddBlazoredLocalStorage();
 {
     Console.WriteLine("Initializing application...");
 
-    using var client = new ClientWebSocket();
+    if (!_walletStorage.HasWallet())
+    {
+        Console.WriteLine("[INFO] No wallet found. Creating a new wallet with hard-coded words...");
+        CreateAndSaveHardCodedWallet();
+    }
+
+    var network = Networks.Bitcoin.Testnet();
+    Console.WriteLine($"[INFO] Setting network to: {network.Name} ({network.NetworkType})");
+    _networkConfiguration.SetNetwork(network);
 
     try
     {
+        network = _networkConfiguration.GetNetwork();
+        Console.WriteLine($"[INFO] Network in use: {network.Name}");
+        Console.WriteLine($"[INFO] Network type in use: {network.NetworkType}");
+
+        var indexerUrl = _networkConfiguration.GetIndexerUrl();
+        Console.WriteLine($"[INFO] Indexer URL in use: {indexerUrl.Url}");
+
+        using var client = new ClientWebSocket();
         Console.WriteLine("Connecting to relay...");
         await client.ConnectAsync(new Uri(RelayUrl), CancellationToken.None);
         Console.WriteLine("Connected to relay.");
 
-        // Initialize dependencies
         var storage = new ClientStorage();
         var founderProjects = new List<FounderProject>();
 
@@ -179,31 +196,79 @@ services.AddBlazoredLocalStorage();
         await LookupProjectKeysOnIndexerAsync(_walletStorage, _IndexerService, RelayService, serializer, storage, founderProjects);
         Console.WriteLine("Finished looking up founder projects.");
 
-        Console.WriteLine("Subscribing to encrypted DM...");
-        await SubscribeToEncryptedDM(client, RecipientPublicKey);
-
         Console.WriteLine("Listening for messages...");
         await ListenForMessages(client);
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error occurred: {ex.Message}");
+        Console.WriteLine($"[ERROR] An error occurred: {ex.Message}");
     }
     finally
     {
-        if (client.State == WebSocketState.Open || client.State == WebSocketState.Connecting)
-        {
-            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Shutting down", CancellationToken.None);
-        }
-        Console.WriteLine("WebSocket client closed.");
+        Console.WriteLine("Application exiting...");
     }
-
-    Console.WriteLine("Application exiting...");
 }
 
 
 
+private void CreateAndSaveHardCodedWallet()
+{
+    var hardCodedWords = "custom multiply swarm wish salmon coast face foam alert matrix recycle inspire";
 
+    var founderKeys = new FounderKeyCollection
+{
+    Keys = new List<FounderKeys>
+    {
+        new FounderKeys { NostrPubKey = "pubkey1", ProjectIdentifier = "project1" },
+        new FounderKeys { NostrPubKey = "pubkey2", ProjectIdentifier = "project2" }
+    }
+};
+
+
+    // Create and save the wallet
+    var wallet = new Wallet
+    {
+        FounderKeys = founderKeys,
+        //EncryptedData = EncryptMnemonic(hardCodedWords) // Optional: Encrypt the mnemonic if necessary
+    };
+
+    _walletStorage.SaveWalletWords(wallet);
+    Console.WriteLine("[INFO] Hard-coded wallet created and saved.");
+}
+
+private string LoadIndexerUrlFromSettings()
+{
+    if (!File.Exists(SettingsFilePath))
+        return null;
+
+    var settingsJson = File.ReadAllText(SettingsFilePath);
+    var settings = JsonSerializer.Deserialize<Dictionary<string, string>>(settingsJson);
+    return settings != null && settings.ContainsKey("IndexerUrl") ? settings["IndexerUrl"] : null;
+}
+
+private void SaveIndexerUrlToSettings(string url)
+{
+    Dictionary<string, string> settings;
+
+    // Load existing settings
+    if (File.Exists(SettingsFilePath))
+    {
+        var settingsJson = File.ReadAllText(SettingsFilePath);
+        settings = JsonSerializer.Deserialize<Dictionary<string, string>>(settingsJson) ?? new Dictionary<string, string>();
+    }
+    else
+    {
+        settings = new Dictionary<string, string>();
+    }
+
+    // Update indexer URL
+    settings["IndexerUrl"] = url;
+
+    // Save updated settings
+    var updatedSettingsJson = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
+    File.WriteAllText(SettingsFilePath, updatedSettingsJson);
+    Console.WriteLine($"[INFO] Saved indexer URL to settings: {url}");
+}
 
 
 
@@ -1314,5 +1379,6 @@ public class WalletStorage : IWalletStorage
         return GetWallet().FounderKeys;
     }
 }
+
 
 
