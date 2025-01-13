@@ -28,8 +28,8 @@
     <PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.0.17" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.1" />
     <PackageVersion Include="Zafiro" Version="14.0.7" />
-    <PackageVersion Include="Zafiro.Avalonia" Version="20.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia" Version="20.0.7" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.4.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="20.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="20.0.7" />
   </ItemGroup>
 </Project>

@@ -13,7 +13,7 @@ public class MainViewModelDesign : IMainViewModel
     {
         Sections =
         [
-            new Section("Home", new HomeSectionViewModel(), "svg:/Assets/angor-icon.svg"),
+            new Section("Home", new HomeSectionViewModelDesign(), "svg:/Assets/angor-icon.svg"),
             new Separator(),
             new Section("Wallet", null, "fa-wallet"),
             new Section("Browse", null, "fa-magnifying-glass"),

@@ -33,7 +33,7 @@ public class CompositionRoot
         
         IEnumerable<SectionBase> sections =
         [
-            new Section("Home", new HomeSectionViewModel(), "svg:/Assets/angor-icon.svg"),
+            new Section("Home", new HomeSectionViewModel(walletStoreDesign), "svg:/Assets/angor-icon.svg"),
             new Separator(),
             new Section("Wallet", new WalletSectionViewModel(walletFactory, walletStoreDesign, uiServices), "fa-wallet"),
             new Section("Browse", new NavigationViewModel(navigator => new BrowseSectionViewModel(walletStoreDesign, navigator, uiServices)), "fa-magnifying-glass"),

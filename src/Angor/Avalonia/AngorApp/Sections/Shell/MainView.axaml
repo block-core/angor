@@ -15,7 +15,6 @@
     <DockPanel Margin="10">
         <shell:Sidebar Margin="10 20 10 20" />
         <shell:Network DockPanel.Dock="Top" Margin="10 20 10 10" />
-        <!-- <ListBox DisplayMemberBinding="{Binding Name}" ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}" /> -->
         <ScrollViewer Margin="0 0 0 10">
             <Interaction.Behaviors>
                 <behaviors:NestedScrollViewerBehavior />
