@@ -12,6 +12,11 @@
         <Color x:Key="Level4">#1F5D6A</Color>
         <Color x:Key="Level5">#022229</Color>
         
+        <x:Double x:Key="FontSizeLarge">24</x:Double>
+        <x:Double x:Key="FontSizeBig">20</x:Double>
+        <x:Double x:Key="FontSizeNormal">16</x:Double>
+        <x:Double x:Key="FontSizeSmall">12</x:Double>
+        
         <SolidColorBrush x:Key="SystemRegionBrush" Color="{StaticResource Level3}" />
         <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource Level3}" />
         <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="{StaticResource Level2}" />
@@ -67,15 +72,15 @@
     </Styles.Resources>
 
     <Style Selector="TextBlock.SizeSmall">
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
     </Style>
     
     <Style Selector="TextBlock.SizeNormal">
-        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
     </Style>
 
     <Style Selector="TextBlock.SizeBig">
-        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
     </Style>
 
     <Style Selector="avalonia|Icon">
