@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:seedWordsGeneration="clr-namespace:AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsGeneration"
+             mc:Ignorable="d" d:DesignWidth="500" 
+             x:Class="AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsGeneration.SeedWordsView"
+             x:DataType="seedWordsGeneration:ISeedWordsViewModel">
+
+    <Design.DataContext>
+        <seedWordsGeneration:SeedWordsViewModelDesign HasWords="True" />
+    </Design.DataContext>
+
+    <Panel>
+        <seedWordsGeneration:Empty IsVisible="{Binding Words.HasNoValue}" />
+        <seedWordsGeneration:GeneratedWords IsVisible="{Binding Words.HasValue}" />
+    </Panel>
+
+</UserControl>

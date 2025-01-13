@@ -1,0 +1,27 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="using:AngorApp.Controls"
+        xmlns:avalonia="https://github.com/projektanker/icons.avalonia">
+    <Design.PreviewWith>
+        <c:IconLabel Classes="Warning" Icon="fa-triangle-exclamation">Important Security Tips:</c:IconLabel>
+    </Design.PreviewWith>
+
+    <Style Selector="c|IconLabel.Warning">
+        <Setter Property="IconBrush" Value="Orange" />
+    </Style>
+
+    <Styles.Resources>
+        <ControlTheme x:Key="{x:Type c:IconLabel}" TargetType="c:IconLabel">
+            <Setter Property="IconBrush" Value="Black" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <DockPanel>
+                        <avalonia:Icon Value="{TemplateBinding Icon}" Foreground="{TemplateBinding IconBrush}" Margin="0 0 8 0" />
+                        <TextBlock TextWrapping="Wrap" Text="{TemplateBinding Text}" />
+                    </DockPanel>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </Styles.Resources>
+
+</Styles>

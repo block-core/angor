@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:createWelcome="clr-namespace:AngorApp.Sections.Wallet.CreateAndRecover.Steps.CreateWelcome"
+             xmlns:c="clr-namespace:AngorApp.Controls"
+             xmlns:z="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
+             x:Class="AngorApp.Sections.Wallet.CreateAndRecover.Steps.CreateWelcome.WelcomeView"
+             x:DataType="createWelcome:WelcomeViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.Alert">
+            <Setter Property="Background" Value="#fff3cd" />
+            <Setter Property="BorderBrush" Value="#ffeeba" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Margin" Value="0,16" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <CheckBox Name="ConfirmationCheckbox"
+                  DockPanel.Dock="Bottom"
+                  IsChecked="{Binding IsUserAware}"
+                  Content="I understand that I must keep my seed words in a safe place and that they are the only way to recover my wallet." />
+        <StackPanel Spacing="16">
+            <TextBlock TextWrapping="Wrap"
+                       Text="This wizard will guide you through the process of creating a new Bitcoin wallet securely." />
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <avalonia:Icon Value="fa-clock" />
+                <TextBlock Text="Estimated time: 5 minutes" />
+            </StackPanel>
+
+            <Border Classes="Alert">
+                <c:List>
+                    <c:List.Header>
+                        <c:IconLabel Classes="Warning" Icon="fa-triangle-exclamation">Important Security Tips:</c:IconLabel>
+                    </c:List.Header>
+                    <z:Strings>
+                        <x:String>Make sure you are in a private and secure location</x:String>
+                        <x:String>You will need to write down 12 seed words that are the only way to recover your wallet</x:String>
+                    </z:Strings>
+                </c:List>
+            </Border>
+
+        </StackPanel>
+    </DockPanel>
+</UserControl>
