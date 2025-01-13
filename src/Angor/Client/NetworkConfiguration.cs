@@ -31,51 +31,71 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public void SetNetwork(Network network)
     {
+        if (network == null)
+            throw new ArgumentNullException(nameof(network));
+
         currentNetwork = network;
+        Console.WriteLine($"[INFO] Network set to: {currentNetwork.Name} ({currentNetwork.NetworkType})");
     }
+
 
     public Network GetNetwork()
     {
         if (currentNetwork == null)
-        {
-            throw new ApplicationException("Network not set");
-        }
+            throw new ApplicationException("Network not set. Please call SetNetwork() before attempting to use it.");
 
         return currentNetwork;
     }
 
+
     public SettingsUrl GetIndexerUrl()
     {
+        if (currentNetwork == null)
+        {
+            throw new ApplicationException("Network is not initialized. Please ensure SetNetwork() is called before using GetIndexerUrl().");
+        }
+
         if (currentNetwork.NetworkType == NetworkType.Mainnet)
         {
-            return new SettingsUrl { Name = "", Url = "https://btc.indexer.angor.io/api" };
+            return new SettingsUrl { Name = "Mainnet Indexer", Url = "https://btc.indexer.angor.io/api" };
         }
 
         if (currentNetwork.NetworkType == NetworkType.Testnet)
         {
             if (currentNetwork.Name == "Angornet")
             {
-                return new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io/api" };
+                return new SettingsUrl { Name = "Angornet Testnet Indexer", Url = "https://tbtc.indexer.angor.io/api" };
+            }
+            //adding for the programs.cs
+            if (currentNetwork.Name == "TestNet")
+            {
+                return new SettingsUrl { Name = "Angornet Testnet Indexer", Url = "https://tbtc.indexer.angor.io/api" };
             }
 
             if (currentNetwork.Name == "Testnet")
             {
-                // todo find indexer url
+                // Replace with actual indexer URL when available
+                throw new ApplicationException("Indexer URL for 'Testnet' is not configured. Please provide the URL.");
             }
 
             if (currentNetwork.Name == "Testnet4")
             {
-                // todo find indexer url
+                // Replace with actual indexer URL when available
+                throw new ApplicationException("Indexer URL for 'Testnet4' is not configured. Please provide the URL.");
             }
 
             if (currentNetwork.Name == "Signet")
             {
-                // todo find indexer url
+                // Replace with actual indexer URL when available
+                throw new ApplicationException("Indexer URL for 'Signet' is not configured. Please provide the URL.");
             }
+
+            throw new ApplicationException($"Unsupported Testnet name: {currentNetwork.Name}");
         }
 
-        throw new ApplicationException("Network not set");
+        throw new ApplicationException($"Unsupported NetworkType: {currentNetwork.NetworkType}");
     }
+
 
     public SettingsUrl GetExplorerUrl()
     {

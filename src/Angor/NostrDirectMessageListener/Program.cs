@@ -165,30 +165,43 @@ services.AddBlazoredLocalStorage();
 {
     Console.WriteLine("Initializing application...");
 
+    // Ensure a wallet exists
     if (!_walletStorage.HasWallet())
     {
         Console.WriteLine("[INFO] No wallet found. Creating a new wallet with hard-coded words...");
         CreateAndSaveHardCodedWallet();
     }
 
+    // Set the network
     var network = Networks.Bitcoin.Testnet();
     Console.WriteLine($"[INFO] Setting network to: {network.Name} ({network.NetworkType})");
     _networkConfiguration.SetNetwork(network);
 
+    // Retrieve and verify network configuration
     try
     {
-        network = _networkConfiguration.GetNetwork();
-        Console.WriteLine($"[INFO] Network in use: {network.Name}");
-        Console.WriteLine($"[INFO] Network type in use: {network.NetworkType}");
+        var currentNetwork = _networkConfiguration.GetNetwork();
+        Console.WriteLine($"[INFO] Network in use: {currentNetwork.Name}");
+        Console.WriteLine($"[INFO] Network type in use: {currentNetwork.NetworkType}");
 
         var indexerUrl = _networkConfiguration.GetIndexerUrl();
         Console.WriteLine($"[INFO] Indexer URL in use: {indexerUrl.Url}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[ERROR] An error occurred: {ex.Message}");
+        return;
+    }
 
-        using var client = new ClientWebSocket();
+    // Continue with relay connection
+    using var client = new ClientWebSocket();
+    try
+    {
         Console.WriteLine("Connecting to relay...");
         await client.ConnectAsync(new Uri(RelayUrl), CancellationToken.None);
         Console.WriteLine("Connected to relay.");
 
+        // Process founder projects
         var storage = new ClientStorage();
         var founderProjects = new List<FounderProject>();
 
@@ -196,18 +209,26 @@ services.AddBlazoredLocalStorage();
         await LookupProjectKeysOnIndexerAsync(_walletStorage, _IndexerService, RelayService, serializer, storage, founderProjects);
         Console.WriteLine("Finished looking up founder projects.");
 
+        // Listen for messages
         Console.WriteLine("Listening for messages...");
         await ListenForMessages(client);
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"[ERROR] An error occurred: {ex.Message}");
+        Console.WriteLine($"[ERROR] Error during relay connection: {ex.Message}");
     }
     finally
     {
-        Console.WriteLine("Application exiting...");
+        if (client.State == WebSocketState.Open || client.State == WebSocketState.Connecting)
+        {
+            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Shutting down", CancellationToken.None);
+        }
+        Console.WriteLine("WebSocket client closed.");
     }
+
+    Console.WriteLine("Application exiting...");
 }
+
 
 
 
