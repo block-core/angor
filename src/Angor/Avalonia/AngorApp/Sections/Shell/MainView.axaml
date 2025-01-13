@@ -19,7 +19,7 @@
             <Interaction.Behaviors>
                 <behaviors:NestedScrollViewerBehavior />
             </Interaction.Behaviors>
-            <ContentControl Margin="10 10 10 10" Content="{Binding SelectedSection.ViewModel}" ClipToBounds="False" />
+            <ContentControl MinWidth="300" MinHeight="300" Margin="10 10 10 10" Content="{Binding SelectedSection.ViewModel}" ClipToBounds="False" />
         </ScrollViewer>
     </DockPanel>
 </UserControl>

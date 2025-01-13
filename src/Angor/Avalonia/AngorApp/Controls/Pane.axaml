@@ -72,6 +72,7 @@
         </ControlTheme>
         
         <ControlTheme x:Key="Card" TargetType="c:Pane" BasedOn="{StaticResource {x:Type c:Pane}}">
+            <Setter Property="Padding" Value="30" />
             <Style Selector="^ /template/ TextBlock#PART_Title">
                 <Setter Property="FontWeight" Value="Bold" />
                 <Setter Property="TextWrapping" Value="Wrap" />

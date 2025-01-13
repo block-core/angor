@@ -24,6 +24,7 @@
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Padding" Value="0" />
+            <Setter Property="TextBlock.FontWeight" Value="Normal" />
         </Style>
 
     </UserControl.Styles>
@@ -37,19 +38,19 @@
             </StackPanel>
         </c:Pane>
         <UniformGrid Margin="-20">
-            <Button Margin="20">
+            <Button Command="{Binding GoToWalletSection}" Margin="20">
                 <c:Pane IsVisible="{Binding !IsWalletSetup}" Theme="{StaticResource Card}" Title="Setup Wallet" IsTitleVisible="True">
                     <TextBlock TextWrapping="Wrap">
                         <Bold>Create</Bold> or <Bold>recover</Bold> your existing wallet to get started with Angor
                     </TextBlock>
                 </c:Pane>
             </Button>
-            <Button Margin="20">
+            <Button Margin="20" Command="{Binding OpenHub}">
                 <c:Pane Theme="{StaticResource Card}" Title="Discover Projects" IsTitleVisible="True">
                     <TextBlock TextWrapping="Wrap">Browse through innovative projects on <Bold>Angor Hub</Bold> and find your next investment</TextBlock>
                 </c:Pane>
             </Button>
-            <Button Margin="20">
+            <Button Margin="20" IsHitTestVisible="False">
                 <c:Pane Theme="{StaticResource Card}" Title="Launch or Invest" IsTitleVisible="True">
                     <TextBlock TextWrapping="Wrap">Start your fundraising journey or invest in promising projects</TextBlock>
                 </c:Pane>

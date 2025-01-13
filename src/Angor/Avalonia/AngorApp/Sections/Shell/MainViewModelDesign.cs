@@ -28,4 +28,7 @@ public class MainViewModelDesign : IMainViewModel
     public ReactiveCommand<Unit, Unit> OpenHub { get; }
     public IEnumerable<SectionBase> Sections { get; }
     public Section SelectedSection { get; set; }
+    public void GoToSection(string sectionName)
+    {
+    }
 }
