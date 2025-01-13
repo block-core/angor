@@ -1,16 +1,13 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
-using AngorApp.Common;
-using AngorApp.Common.Success;
-using AngorApp.Common.TransactionPreview;
 using AngorApp.Model;
 using AngorApp.Sections.Browse.Details.Invest.Amount;
-using AngorApp.Sections.Wallet.NoWallet;
 using AngorApp.Services;
+using AngorApp.UI.Controls.Common.Success;
+using AngorApp.UI.Controls.Common.TransactionPreview;
 using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
-using TransactionPreviewViewModel = AngorApp.Common.TransactionPreview.TransactionPreviewViewModel;
 
 namespace AngorApp.Sections.Browse.Details;
 
@@ -51,7 +48,7 @@ public class ProjectDetailsViewModel(IWalletProvider walletProvider, IProject pr
                 var destination = new Destination(project.Name, viewModel.Amount!.Value, project.BitcoinAddress);
                 return new TransactionPreviewViewModel(wallet, destination, uiServices);
             })
-            .Then(prev => new SuccessViewModel("Transaction confirmed!", "Success"))
+            .Then(_ => new SuccessViewModel("Transaction confirmed!", "Success"))
             .Build();
 
         await uiServices.Dialog.Show(wizard, @$"Invest in ""{project}""", closeable => wizard.OptionsForCloseable(closeable));

@@ -2,9 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:c="clr-namespace:AngorApp.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Wallet.Operate.Balance" x:DataType="operate:IWalletViewModel">
     
@@ -12,20 +12,20 @@
         <operate:WalletViewModelDesign />
     </Design.DataContext>
     
-    <c:Pane IsTitleVisible="True">
-        <c:Pane.Title>
+    <controls:Pane IsTitleVisible="True">
+        <controls:Pane.Title>
             <Binding Path="Wallet.Balance" 
-                     Converter="{x:Static c:MiscConverters.SatsToBtc}" />
-        </c:Pane.Title>
-        <c:Pane.TitleRightContent>
+                     Converter="{x:Static controls:MiscConverters.SatsToBtc}" />
+        </controls:Pane.Title>
+        <controls:Pane.TitleRightContent>
             <StackPanel Orientation="Horizontal" Spacing="20">
                 <Button DockPanel.Dock="Right" i:Attached.Icon="fa-rotate" />
             </StackPanel>
-        </c:Pane.TitleRightContent>
-        <c:Pane.TitleIcon>
+        </controls:Pane.TitleRightContent>
+        <controls:Pane.TitleIcon>
             <i:Icon Value="fa-database" />
-        </c:Pane.TitleIcon>
+        </controls:Pane.TitleIcon>
 
-    </c:Pane>
+    </controls:Pane>
 
 </UserControl>

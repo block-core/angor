@@ -14,7 +14,7 @@ public static class SampleData
                 Name = "GHJ-TGH-56",
                 Picture = new Uri("https://img.freepik.com/premium-photo/shoot-blue-nebula-with-purple-parts-deep-space-colorful-generative-ai-aig15_31965-139737.jpg"),
                 Icon = new Uri("https://img.freepik.com/premium-photo/shoot-blue-nebula-with-purple-parts-deep-space-colorful-generative-ai-aig15_31965-139737.jpg"),
-                ShortDescription = "Short Description",
+                ShortDescription = "This is a very big description that came out of my mind. Its purpose is to see how the layout behaves when content is too be to fit the item container",
                 Id = "angor1qmd8kazm8uzk7s0gddf4amjx4mzj3n5wzgn3mde"
             },
             new()

@@ -3,9 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
-             xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Browse.Details.Stages" x:DataType="dt:IProjectDetailsViewModel">
     

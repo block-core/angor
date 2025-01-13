@@ -1,7 +1,6 @@
 using System.Reactive.Linq;
 using System.Windows.Input;
 using AngorApp.Model;
-using AngorApp.Sections.Wallet.NoWallet;
 using AngorApp.Sections.Wallet.Operate;
 using AngorApp.Services;
 using CSharpFunctionalExtensions;

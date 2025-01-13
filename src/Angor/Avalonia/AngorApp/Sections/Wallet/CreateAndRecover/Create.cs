@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
-using AngorApp.Common.Success;
 using AngorApp.Model;
 using AngorApp.Sections.Wallet.CreateAndRecover.Steps.Passphrase.Create;
 using AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsConfirmation;
 using AngorApp.Sections.Wallet.Operate;
 using AngorApp.Services;
+using AngorApp.UI.Controls.Common.Success;
 using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
@@ -36,7 +36,7 @@ public class Create
             .Then(prev => new EncryptionPasswordViewModel(prev.SeedWords, prev.Passphrase!))
             .Then(prev => new SummaryAndCreationViewModel(prev.Passphrase, prev.SeedWords, prev.Password!, walletBuilder)
             {
-                 IsRecovery = true,
+                 IsRecovery = false,
             })
             .Then(_ => new SuccessViewModel("Wallet created successfully!", "Done"))
             .Build();

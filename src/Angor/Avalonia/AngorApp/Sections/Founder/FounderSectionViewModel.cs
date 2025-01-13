@@ -1,16 +1,18 @@
-using System.Collections.ObjectModel;
-using System.Linq;
 using AngorApp.Model;
-using AngorApp.Sections.Browse;
+using DynamicData;
 
 namespace AngorApp.Sections.Founder;
 
 public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel
 {
-    public FounderSectionViewModel()
+    public FounderSectionViewModel(IProjectService projectService)
     {
-        Projects = new ReadOnlyCollection<IProject>(SampleData.GetProjects().ToList());
+        // projectService.Connect()
+        //     .Bind(out var projects)
+        //     .Subscribe();
+        //
+        // Projects = projects;
     }
 
-    public IReadOnlyCollection<IProject> Projects { get; set; }
+    public IReadOnlyCollection<IProject> Projects { get;  }
 }

@@ -2,10 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
              xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Wallet.Operate.HistoryView"
              x:DataType="operate:IWalletViewModel">

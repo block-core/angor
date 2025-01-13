@@ -1,12 +1,12 @@
 using System.Windows.Input;
-using AngorApp.Common.Success;
 using AngorApp.Model;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Wallet.Operate.Send;
 using AngorApp.Services;
+using AngorApp.UI.Controls.Common.Success;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
-using TransactionPreviewViewModel = AngorApp.Common.TransactionPreview.TransactionPreviewViewModel;
+using TransactionPreviewViewModel = AngorApp.UI.Controls.Common.TransactionPreview.TransactionPreviewViewModel;
 
 namespace AngorApp.Sections.Wallet.Operate;
 

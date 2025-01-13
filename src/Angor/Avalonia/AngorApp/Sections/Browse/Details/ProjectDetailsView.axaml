@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
-             xmlns:controls="clr-namespace:AngorApp.Controls"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
 
@@ -11,7 +11,7 @@
         <dt:ProjectDetailsViewModelDesign />
     </Design.DataContext>
 
-    <Grid ColumnDefinitions="1* 5* 1*" ClipToBounds="False">
+    <Grid ColumnDefinitions="1* 5* 1*">
         <StackPanel Grid.Column="1" Spacing="20">
             <Panel>
                 <dt:ProjectSummary />
