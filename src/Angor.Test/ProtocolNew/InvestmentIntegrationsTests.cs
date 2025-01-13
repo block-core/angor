@@ -635,5 +635,83 @@ namespace Angor.Test
                     investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
             }
         }
+
+        [Fact]
+        public void SpendInvestorReleaseTest()
+        {
+            var network = Networks.Bitcoin.Testnet();
+
+            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
+
+            // Create the investor params
+            var investorKey = new Key();
+            var investorChangeKey = new Key();
+
+            var funderKey = _derivationOperations.DeriveFounderKey(words, 1);
+            var angorKey = _derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
+            var founderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
+            var funderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
+            var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
+
+            var investorContext = new InvestorContext
+            {
+                ProjectInfo = new ProjectInfo
+                {
+                    TargetAmount = 3,
+                    StartDate = DateTime.UtcNow,
+                    ExpiryDate = DateTime.UtcNow.AddDays(5),
+                    PenaltyDays = 5,
+                    Stages = new List<Stage>
+                    {
+                        new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                        new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                        new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+                    },
+                    FounderKey = funderKey,
+                    FounderRecoveryKey = founderRecoveryKey,
+                    ProjectIdentifier = angorKey,
+                    ProjectSeeders = new ProjectSeeders()
+                },
+                InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
+                ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString()
+            };
+
+            var investorReleaseKey = new Key();
+            var investorReleasePubKey = Encoders.Hex.EncodeData(investorReleaseKey.PubKey.ToBytes());
+
+            // Create the investment transaction
+            var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(investorContext.ProjectInfo, investorContext.InvestorKey,
+                Money.Coins(investorContext.ProjectInfo.TargetAmount).Satoshi);
+
+            investorContext.TransactionHex = investmentTransaction.ToHex();
+
+            // Build the release transaction
+            var releaseTransaction = _investorTransactionActions.BuildReleaseInvestorFundsTransaction(investorContext.ProjectInfo, investmentTransaction, investorReleasePubKey);
+
+            // Sign the release transaction
+            var founderSignatures = _founderTransactionActions.SignInvestorRecoveryTransactions(investorContext.ProjectInfo,
+                investmentTransaction.ToHex(), releaseTransaction,
+                Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+
+            var signedReleaseTransaction = _investorTransactionActions.AddSignaturesToReleaseFundsTransaction(investorContext.ProjectInfo,
+                investmentTransaction, founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()), investorReleasePubKey);
+
+            // Validate the signatures
+            var sigCheckResult = _investorTransactionActions.CheckInvestorReleaseSignatures(investorContext.ProjectInfo, investmentTransaction, founderSignatures, investorReleasePubKey);
+            Assert.True(sigCheckResult, "Failed to validate the founder's signatures");
+
+            List<Coin> coins = new();
+            foreach (var indexedTxOut in investmentTransaction.Outputs.AsIndexedOutputs().Where(w => !w.TxOut.ScriptPubKey.IsUnspendable))
+            {
+                coins.Add(new Blockcore.NBitcoin.Coin(indexedTxOut));
+                coins.Add(new Blockcore.NBitcoin.Coin(Blockcore.NBitcoin.uint256.Zero, 0, new Blockcore.NBitcoin.Money(1000),
+                    new Script("4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); // Adding fee inputs
+            }
+
+            signedReleaseTransaction.Inputs.Add(new Blockcore.Consensus.TransactionInfo.TxIn(
+                new Blockcore.Consensus.TransactionInfo.OutPoint(Blockcore.NBitcoin.uint256.Zero, 0), null)); // Add fee to the transaction
+
+            TransactionValidation.ThanTheTransactionHasNoErrors(signedReleaseTransaction, coins);
+        }
     }
 }
