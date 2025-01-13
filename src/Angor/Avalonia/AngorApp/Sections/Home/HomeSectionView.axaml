@@ -6,15 +6,26 @@
              xmlns:home="clr-namespace:AngorApp.Sections.Home"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Home.HomeSectionView" x:DataType="home:IHomeSectionViewModel">
-    
+
     <Design.DataContext>
-        <home:HomeSectionViewModelDesign IsWalletSetup="True" />
+        <home:HomeSectionViewModelDesign IsWalletSetup="False" />
     </Design.DataContext>
 
     <UserControl.Styles>
         <Style Selector="Svg">
             <Setter Property="Height" Value="100" />
         </Style>
+
+        <Style Selector="Button">
+            <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
     </UserControl.Styles>
 
     <StackPanel Margin="50" Spacing="40">
@@ -26,17 +37,23 @@
             </StackPanel>
         </c:Pane>
         <UniformGrid Margin="-20">
-            <c:Pane IsVisible="{Binding !IsWalletSetup}" Margin="20" Theme="{StaticResource Card}" Title="Setup Wallet" IsTitleVisible="True">
-                <TextBlock TextWrapping="Wrap">
-                    <Bold>Create</Bold> or <Bold>recover</Bold> your existing wallet to get started with Angor
-                </TextBlock>
-            </c:Pane>
-            <c:Pane Margin="20" Theme="{StaticResource Card}" Title="Discover Projects" IsTitleVisible="True" >
-                <TextBlock TextWrapping="Wrap">Browse through innovative projects on <Bold>Angor Hub</Bold> and find your next investment</TextBlock>
-            </c:Pane>
-            <c:Pane Margin="20" Theme="{StaticResource Card}" Title="Launch or Invest" IsTitleVisible="True">
-                <TextBlock TextWrapping="Wrap">Start your fundraising journey or invest in promising projects</TextBlock>
-            </c:Pane>
+            <Button Margin="20">
+                <c:Pane IsVisible="{Binding !IsWalletSetup}" Theme="{StaticResource Card}" Title="Setup Wallet" IsTitleVisible="True">
+                    <TextBlock TextWrapping="Wrap">
+                        <Bold>Create</Bold> or <Bold>recover</Bold> your existing wallet to get started with Angor
+                    </TextBlock>
+                </c:Pane>
+            </Button>
+            <Button Margin="20">
+                <c:Pane Theme="{StaticResource Card}" Title="Discover Projects" IsTitleVisible="True">
+                    <TextBlock TextWrapping="Wrap">Browse through innovative projects on <Bold>Angor Hub</Bold> and find your next investment</TextBlock>
+                </c:Pane>
+            </Button>
+            <Button Margin="20">
+                <c:Pane Theme="{StaticResource Card}" Title="Launch or Invest" IsTitleVisible="True">
+                    <TextBlock TextWrapping="Wrap">Start your fundraising journey or invest in promising projects</TextBlock>
+                </c:Pane>
+            </Button>
             <Interaction.Behaviors>
                 <AdaptiveBehavior>
                     <AdaptiveClassSetter MinWidth="0" MaxWidth="600" ClassName="Vertical" />
