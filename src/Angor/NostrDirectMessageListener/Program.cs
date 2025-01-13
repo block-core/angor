@@ -29,9 +29,11 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using System.Text.Json.Serialization;
 using Nostr.Client;
-using Nostr.Client.Requests; // Adjust based on your library
-
-
+using Nostr.Client.Messages;
+using Nostr.Client.Requests; 
+using Angor.Shared.ProtocolNew;
+using Angor.Shared.ProtocolNew.Scripts;
+using Angor.Shared.ProtocolNew.TransactionBuilders;
 
 class Program
 {
@@ -42,11 +44,22 @@ private static ISignService _signService;
     private readonly INetworkConfiguration _networkConfiguration;
 private readonly INostrCommunicationFactory _communicationFactory;
 private readonly INetworkService _networkService;
+private readonly IInvestmentScriptBuilder _investmentScriptBuilder;
+private readonly ISeederScriptTreeBuilder _seederScriptTreeBuilder;
+private readonly IProjectScriptsBuilder _projectScriptsBuilder;
+private readonly IHdOperations _hdOperations;
+private readonly ISpendingTransactionBuilder _spendingTransactionBuilder;
+private readonly IInvestmentTransactionBuilder _investmentTransactionBuilder;
+private readonly ITaprootScriptBuilder _taprootScriptBuilder;
 private static IEncryptionService encryption;
 private static  IInvestorTransactionActions InvestorTransactionActions;
 private static  IFounderTransactionActions FounderTransactionActions;
 private static IDerivationOperations DerivationOperations;
+private static IWalletStorage _walletStorage = new WalletStorage();
+private static ISerializer serializer;
 
+private static IIndexerService _IndexerService; 
+private static IRelayService RelayService;
 
 public Program(
     ISignService signService,
@@ -56,7 +69,18 @@ public Program(
     IEncryptionService encryptionPass,
 	IInvestorTransactionActions investorTransactionActions,
 	IFounderTransactionActions founderTransactionActions,
-	IDerivationOperations derivationOperations)
+	IDerivationOperations derivationOperations,
+	    IWalletStorage walletStorage,
+	    ISerializer _serializer,
+	    IIndexerService indexerService,
+	    IRelayService relayService,
+		IInvestmentScriptBuilder investmentScriptBuilder,
+		ISeederScriptTreeBuilder seederScriptTreeBuilder, 
+		IProjectScriptsBuilder  projectScriptsBuilder, 
+IHdOperations 	    hdOperations,
+ISpendingTransactionBuilder spendingTransactionBuilder,
+IInvestmentTransactionBuilder investmentTransactionBuilder,
+ITaprootScriptBuilder taprootScriptBuilder)
 {
     _signService = signService ?? throw new ArgumentNullException(nameof(signService));
     _networkConfiguration = networkConfiguration ?? throw new ArgumentNullException(nameof(networkConfiguration));
@@ -66,6 +90,18 @@ public Program(
 	InvestorTransactionActions = investorTransactionActions ?? throw new ArgumentNullException(nameof(investorTransactionActions));
 	FounderTransactionActions = founderTransactionActions ?? throw new ArgumentNullException(nameof(founderTransactionActions));
 	DerivationOperations = derivationOperations ?? throw new ArgumentNullException(nameof(derivationOperations));
+	_walletStorage = walletStorage ?? throw new ArgumentNullException(nameof(walletStorage));
+	serializer = _serializer ?? throw new ArgumentNullException(nameof(serializer));
+	_IndexerService = indexerService ?? throw new ArgumentNullException(nameof(indexerService));
+	RelayService = relayService ?? throw new ArgumentNullException(nameof(relayService));
+	_investmentScriptBuilder = investmentScriptBuilder ?? throw new ArgumentNullException(nameof(investmentScriptBuilder));
+	_seederScriptTreeBuilder = seederScriptTreeBuilder ?? throw new ArgumentNullException(nameof(seederScriptTreeBuilder));
+	_projectScriptsBuilder = projectScriptsBuilder ?? throw new ArgumentNullException(nameof(projectScriptsBuilder));
+	_hdOperations = hdOperations ?? throw new ArgumentNullException(nameof(hdOperations));
+	_spendingTransactionBuilder = spendingTransactionBuilder ?? throw new ArgumentNullException(nameof(spendingTransactionBuilder));
+   	
+_taprootScriptBuilder = taprootScriptBuilder ?? throw new ArgumentNullException(nameof(taprootScriptBuilder));
+	    _investmentTransactionBuilder = investmentTransactionBuilder ?? throw new ArgumentNullException(nameof(investmentTransactionBuilder));
 }
 
 
@@ -89,6 +125,17 @@ public Program(
             services.AddSingleton<INetworkStorage, ClientStorage>(); // Register ClientStorage for INetworkStorage
             services.AddSingleton<IClientStorage, ClientStorage>(); // Register ClientStorage for IClientStorage
 services.AddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
+services.AddSingleton<IRelayService, RelayService>();
+services.AddSingleton<IIndexerService, IndexerService>();
+services.AddSingleton<ISerializer, Serializer>();
+services.AddSingleton<IWalletStorage, WalletStorage>();
+services.AddSingleton<IInvestmentScriptBuilder, InvestmentScriptBuilder>();
+services.AddSingleton<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
+services.AddSingleton<IProjectScriptsBuilder, ProjectScriptsBuilder>();
+services.AddSingleton<IHdOperations, HdOperations>();
+services.AddSingleton<ISpendingTransactionBuilder, SpendingTransactionBuilder>();
+services.AddSingleton<IInvestmentTransactionBuilder, InvestmentTransactionBuilder>();
+services.AddSingleton<ITaprootScriptBuilder, TaprootScriptBuilder>();
 services.AddSingleton<IInvestorTransactionActions, InvestorTransactionActions>();
 services.AddSingleton<IFounderTransactionActions, FounderTransactionActions>();
 services.AddSingleton<IDerivationOperations, DerivationOperations>();
@@ -113,38 +160,49 @@ services.AddBlazoredLocalStorage();
 
 
     public async Task RunAsync()
+{
+    Console.WriteLine("Initializing application...");
+
+    using var client = new ClientWebSocket();
+
+    try
     {
-        Console.WriteLine("Initializing application...");
+        Console.WriteLine("Connecting to relay...");
+        await client.ConnectAsync(new Uri(RelayUrl), CancellationToken.None);
+        Console.WriteLine("Connected to relay.");
 
-        using var client = new ClientWebSocket();
+        // Initialize dependencies
+        var storage = new ClientStorage();
+        var founderProjects = new List<FounderProject>();
 
-        try
-        {
-            Console.WriteLine("Connecting to relay...");
-            await client.ConnectAsync(new Uri(RelayUrl), CancellationToken.None);
-            Console.WriteLine("Connected to relay.");
+        Console.WriteLine("Looking up founder projects...");
+        await LookupProjectKeysOnIndexerAsync(_walletStorage, _IndexerService, RelayService, serializer, storage, founderProjects);
+        Console.WriteLine("Finished looking up founder projects.");
 
-            Console.WriteLine("Subscribing to encrypted DM...");
-            await SubscribeToEncryptedDM(client, RecipientPublicKey);
+        Console.WriteLine("Subscribing to encrypted DM...");
+        await SubscribeToEncryptedDM(client, RecipientPublicKey);
 
-            Console.WriteLine("Listening for messages...");
-            await ListenForMessages(client);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error occurred: {ex.Message}");
-        }
-        finally
-        {
-            if (client.State == WebSocketState.Open || client.State == WebSocketState.Connecting)
-            {
-                await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Shutting down", CancellationToken.None);
-            }
-            Console.WriteLine("WebSocket client closed.");
-        }
-
-        Console.WriteLine("Application exiting...");
+        Console.WriteLine("Listening for messages...");
+        await ListenForMessages(client);
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error occurred: {ex.Message}");
+    }
+    finally
+    {
+        if (client.State == WebSocketState.Open || client.State == WebSocketState.Connecting)
+        {
+            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Shutting down", CancellationToken.None);
+        }
+        Console.WriteLine("WebSocket client closed.");
+    }
+
+    Console.WriteLine("Application exiting...");
+}
+
+
+
 
 
 
@@ -279,7 +337,7 @@ services.AddBlazoredLocalStorage();
 
                     // Use encryptionService
 					//string signedTransactionHex = BitcoinUtils.DecodeAndSignTransaction(decryptedContent, RecipientPrivateKey);
-                    var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex);
+                    //var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex); // TODO add this later
                     string encryptedContent = await encryptionService.EncryptNostrContentAsync(RecipientPrivateKey, investorPubKey, nostrEvent.Content);
 
                     Console.WriteLine($"[DEBUG] Encrypted Content: {encryptedContent}");
@@ -453,7 +511,173 @@ private static async Task<string> DecryptMessageAsync(IEncryptionService encrypt
 }
 
 */
+private static async Task LookupProjectKeysOnIndexerAsync(
+    IWalletStorage walletStorage,
+    IIndexerService indexerService,
+    IRelayService relayService,
+    ISerializer serializer,
+    ClientStorage storage, // Use ClientStorage here
+    List<FounderProject> founderProjects)
+{
+    Console.WriteLine("Starting lookup of founder projects...");
 
+    try
+    {
+        var founderKeys = walletStorage.GetFounderKeys();
+        var projectsToLookup = new Dictionary<string, ProjectIndexerData>();
+
+        foreach (var key in founderKeys.Keys)
+        {
+            if (founderProjects.Any(project => project.ProjectInfo.ProjectIdentifier == key.ProjectIdentifier))
+            {
+                Console.WriteLine($"Project with identifier {key.ProjectIdentifier} already exists, skipping.");
+                continue;
+            }
+
+            var indexerProject = await indexerService.GetProjectByIdAsync(key.ProjectIdentifier);
+            if (indexerProject != null)
+            {
+                projectsToLookup.Add(key.NostrPubKey, indexerProject);
+            }
+            else
+            {
+                Console.WriteLine($"Project with identifier {key.ProjectIdentifier} could not be found.");
+            }
+        }
+
+        if (!projectsToLookup.Any())
+        {
+            Console.WriteLine("No new projects to look up.");
+            return;
+        }
+
+        relayService.RequestProjectCreateEventsByPubKey(
+            eventResponse =>
+            {
+                switch (eventResponse.Kind)
+                {
+                    case NostrKind.Metadata:
+                        ProcessMetadataEvent(eventResponse, projectsToLookup, founderProjects, serializer);
+                        break;
+
+                    case NostrKind.ApplicationSpecificData:
+                        ProcessApplicationSpecificDataEvent(eventResponse, projectsToLookup, founderProjects, serializer);
+                        break;
+
+
+
+                    default:
+                        Console.WriteLine($"Unsupported event kind: {eventResponse.Kind}");
+                        break;
+                }
+            },
+            () =>
+            {
+                Console.WriteLine("Finished processing project creation events.");
+
+                foreach (var project in founderProjects)
+                {
+                    var existingProject = storage.GetFounderProjects()
+                        .FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
+
+                    if (existingProject == null)
+                    {
+                        storage.AddFounderProject(new[] { project });
+                        Console.WriteLine($"Added new project: {project.ProjectInfo.ProjectIdentifier}");
+                    }
+                    else
+                    {
+                        storage.UpdateFounderProject(project);
+                        Console.WriteLine($"Updated existing project: {project.ProjectInfo.ProjectIdentifier}");
+                    }
+                }
+            },
+            projectsToLookup.Keys.ToArray()
+        );
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error during project lookup: {ex.Message}");
+    }
+}
+
+
+
+private static void ProcessMetadataEvent(
+    Nostr.Client.Messages.NostrEvent eventResponse,
+    Dictionary<string, ProjectIndexerData> projectsToLookup,
+    List<FounderProject> founderProjects,
+    ISerializer serializer)
+{
+    var metadata = serializer.Deserialize<ProjectMetadata>(eventResponse.Content);
+    var existingProject = founderProjects.FirstOrDefault(p => p.ProjectInfo.NostrPubKey == eventResponse.Pubkey);
+
+    if (existingProject != null)
+    {
+        existingProject.Metadata ??= metadata;
+        Console.WriteLine($"Updated metadata for project with public key: {eventResponse.Pubkey}");
+    }
+    else
+    {
+        var newProject = CreateFounderProject(projectsToLookup, eventResponse);
+        newProject.Metadata = metadata;
+        founderProjects.Add(newProject);
+        Console.WriteLine($"Added new project with public key: {eventResponse.Pubkey}");
+    }
+}
+
+
+
+private static void ProcessApplicationSpecificDataEvent(
+    Nostr.Client.Messages.NostrEvent eventResponse,
+    Dictionary<string, ProjectIndexerData> projectsToLookup,
+    List<FounderProject> founderProjects,
+    ISerializer serializer)
+{
+    if (!projectsToLookup.TryGetValue(eventResponse.Pubkey, out var indexerData) ||
+        eventResponse.Id != indexerData.NostrEventId)
+    {
+        Console.WriteLine($"Event mismatch or invalid ID for public key: {eventResponse.Pubkey}");
+        return;
+    }
+
+    var projectInfo = serializer.Deserialize<ProjectInfo>(eventResponse.Content);
+    var existingProject = founderProjects.FirstOrDefault(p => p.ProjectInfo.NostrPubKey == eventResponse.Pubkey);
+
+    if (existingProject != null)
+    {
+        if (string.IsNullOrEmpty(existingProject.ProjectInfo.ProjectIdentifier))
+        {
+            existingProject.ProjectInfo = projectInfo;
+            Console.WriteLine($"Updated project info for public key: {eventResponse.Pubkey}");
+        }
+    }
+    else
+    {
+        var newProject = CreateFounderProject(projectsToLookup, eventResponse, projectInfo);
+        founderProjects.Add(newProject);
+        Console.WriteLine($"Added new project with public key: {eventResponse.Pubkey}");
+    }
+}
+
+
+private static FounderProject CreateFounderProject(
+    Dictionary<string, ProjectIndexerData> projectsToLookup,
+    Nostr.Client.Messages.NostrEvent eventResponse,
+    ProjectInfo? projectInfo = null)
+{
+    var indexerData = projectsToLookup[eventResponse.Pubkey];
+    return new FounderProject
+    {
+        ProjectInfo = projectInfo ?? new ProjectInfo
+        {
+            ProjectIdentifier = indexerData.ProjectIdentifier,
+            NostrPubKey = eventResponse.Pubkey,
+        },
+        Metadata = null,
+        ProjectIndex = (int)indexerData.CreatedOnBlock,
+    };
+}
 
 
 
@@ -700,7 +924,11 @@ public static class EncryptionUtils
             return Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(sharedSecret.ToBytes()[1..]);
         }
     }
+
+
+
 }
+
 
 
 public class ClientStorage : IClientStorage, INetworkStorage
@@ -1032,3 +1260,59 @@ public class EncryptionServiceWrapper : IEncryptionService
         return $"DecryptedContent:{encryptedContent}";
     }
 }
+
+
+public class WalletStorage : IWalletStorage
+{
+    private readonly Dictionary<string, object> _storage = new();
+
+    private const string WalletKey = "wallet";
+
+    public bool HasWallet()
+    {
+        return _storage.ContainsKey(WalletKey);
+    }
+
+    public void SaveWalletWords(Wallet wallet)
+    {
+        if (_storage.ContainsKey(WalletKey))
+        {
+            throw new ArgumentNullException("Wallet already exists!");
+        }
+
+        _storage[WalletKey] = wallet;
+    }
+
+    public void DeleteWallet()
+    {
+        if (_storage.ContainsKey(WalletKey))
+        {
+            _storage.Remove(WalletKey);
+        }
+    }
+
+    public Wallet GetWallet()
+    {
+        if (_storage.TryGetValue(WalletKey, out var wallet) && wallet is Wallet castedWallet)
+        {
+            return castedWallet;
+        }
+
+        throw new ArgumentNullException("Wallet not found!");
+    }
+
+    public void SetFounderKeys(FounderKeyCollection founderPubKeys)
+    {
+        var wallet = GetWallet();
+        wallet.FounderKeys = founderPubKeys;
+
+        _storage[WalletKey] = wallet;
+    }
+
+    public FounderKeyCollection GetFounderKeys()
+    {
+        return GetWallet().FounderKeys;
+    }
+}
+
+
