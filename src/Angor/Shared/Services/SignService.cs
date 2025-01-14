@@ -55,6 +55,7 @@ namespace Angor.Client.Services
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == projectNostrPubKey)
                     .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
                     .Subscribe(_ => { action.Invoke(_.Event.Content); });
 
                 _subscriptionsHanding.TryAddRelaySubscription(projectNostrPubKey, subscription);
@@ -82,6 +83,7 @@ namespace Angor.Client.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Investment offer")
                     .Select(_ => _.Event)
                     .Subscribe(nostrEvent =>
                     {
@@ -116,6 +118,7 @@ namespace Angor.Client.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
                     .Select(_ => _.Event)
                     .Subscribe(nostrEvent =>
                     {
