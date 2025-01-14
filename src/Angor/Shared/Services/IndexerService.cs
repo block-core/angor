@@ -54,6 +54,33 @@ namespace Angor.Shared.Services
 
             return await response.Content.ReadFromJsonAsync<ProjectIndexerData>();
         }
+        
+        public async Task<ProjectIndexerData?> GetProjectByIdAsyncConsole(string projectId)
+        {
+            if (string.IsNullOrEmpty(projectId))
+            {
+                return null;
+            }
+
+            if (projectId.Length <= 1)
+            {
+                return null;
+            }
+
+            const string testnetIndexerUrl = "https://tbtc.indexer.angor.io";
+
+            var requestUrl = $"{testnetIndexerUrl}/api/query/Angor/projects/{projectId}";
+
+            var response = await _httpClient.GetAsync(requestUrl);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<ProjectIndexerData>();
+        }
+
 
         public async Task<ProjectStats?> GetProjectStatsAsync(string projectId)
         {

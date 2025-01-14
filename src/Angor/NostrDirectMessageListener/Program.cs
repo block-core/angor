@@ -43,9 +43,9 @@ class Program
 private const string SettingsFilePath = "settings.json";
 
 private static ISignService _signService;
-    private readonly INetworkConfiguration _networkConfiguration;
+    private static INetworkConfiguration _networkConfiguration;
 private readonly INostrCommunicationFactory _communicationFactory;
-private readonly INetworkService _networkService;
+private static INetworkService _networkService;
 private readonly IInvestmentScriptBuilder _investmentScriptBuilder;
 private readonly ISeederScriptTreeBuilder _seederScriptTreeBuilder;
 private readonly IProjectScriptsBuilder _projectScriptsBuilder;
@@ -59,7 +59,8 @@ private static  IFounderTransactionActions FounderTransactionActions;
 private static IDerivationOperations DerivationOperations;
 private static IWalletStorage _walletStorage = new WalletStorage();
 private static ISerializer serializer;
-
+private static HttpClient _httpClient;
+private static INetworkStorage _networkStorage;
 private static IIndexerService _IndexerService; 
 private static IRelayService RelayService;
 
@@ -82,7 +83,9 @@ public Program(
 IHdOperations 	    hdOperations,
 ISpendingTransactionBuilder spendingTransactionBuilder,
 IInvestmentTransactionBuilder investmentTransactionBuilder,
-ITaprootScriptBuilder taprootScriptBuilder)
+ITaprootScriptBuilder taprootScriptBuilder,
+HttpClient httpClient,
+INetworkStorage networkStorage)
 {
     _signService = signService ?? throw new ArgumentNullException(nameof(signService));
     _networkConfiguration = networkConfiguration ?? throw new ArgumentNullException(nameof(networkConfiguration));
@@ -101,8 +104,9 @@ ITaprootScriptBuilder taprootScriptBuilder)
 	_projectScriptsBuilder = projectScriptsBuilder ?? throw new ArgumentNullException(nameof(projectScriptsBuilder));
 	_hdOperations = hdOperations ?? throw new ArgumentNullException(nameof(hdOperations));
 	_spendingTransactionBuilder = spendingTransactionBuilder ?? throw new ArgumentNullException(nameof(spendingTransactionBuilder));
-   	
+    _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 _taprootScriptBuilder = taprootScriptBuilder ?? throw new ArgumentNullException(nameof(taprootScriptBuilder));
+_networkStorage = networkStorage ?? throw new ArgumentNullException(nameof(networkStorage));
 	    _investmentTransactionBuilder = investmentTransactionBuilder ?? throw new ArgumentNullException(nameof(investmentTransactionBuilder));
 }
 
@@ -180,12 +184,20 @@ services.AddBlazoredLocalStorage();
     // Retrieve and verify network configuration
     try
     {
+
         var currentNetwork = _networkConfiguration.GetNetwork();
         Console.WriteLine($"[INFO] Network in use: {currentNetwork.Name}");
         Console.WriteLine($"[INFO] Network type in use: {currentNetwork.NetworkType}");
 
         var indexerUrl = _networkConfiguration.GetIndexerUrl();
         Console.WriteLine($"[INFO] Indexer URL in use: {indexerUrl.Url}");
+		
+		_IndexerService = new IndexerService(_networkConfiguration, _httpClient, _networkService);
+
+		var settings = _networkStorage.GetSettings();
+		settings.Indexers.Add(new SettingsUrl { Name = "TestNet", Url = "https://tbtc.indexer.angor.io/api" });
+		_networkStorage.SetSettings(settings);
+		_networkService = new NetworkService(_networkStorage, _httpClient, null, _networkConfiguration);
     }
     catch (Exception ex)
     {
@@ -208,7 +220,11 @@ services.AddBlazoredLocalStorage();
         Console.WriteLine("Looking up founder projects...");
         await LookupProjectKeysOnIndexerAsync(_walletStorage, _IndexerService, RelayService, serializer, storage, founderProjects);
         Console.WriteLine("Finished looking up founder projects.");
-
+		
+		//sign signatures -- temp disabled
+		//Console.WriteLine("Signing signatures..."); 
+		//await SubscribeToEncryptedDM(client, RecipientPublicKey);
+		
         // Listen for messages
         Console.WriteLine("Listening for messages...");
         await ListenForMessages(client);
@@ -263,6 +279,8 @@ private string LoadIndexerUrlFromSettings()
         return null;
 
     var settingsJson = File.ReadAllText(SettingsFilePath);
+	Console.WriteLine($"[DEBUG] Raw settings JSON: {settingsJson}");
+
     var settings = JsonSerializer.Deserialize<Dictionary<string, string>>(settingsJson);
     return settings != null && settings.ContainsKey("IndexerUrl") ? settings["IndexerUrl"] : null;
 }
@@ -620,7 +638,7 @@ private static async Task LookupProjectKeysOnIndexerAsync(
                 continue;
             }
 
-            var indexerProject = await indexerService.GetProjectByIdAsync(key.ProjectIdentifier);
+            var indexerProject = await indexerService.GetProjectByIdAsyncConsole(key.ProjectIdentifier);
             if (indexerProject != null)
             {
                 projectsToLookup.Add(key.NostrPubKey, indexerProject);
@@ -1028,6 +1046,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
         if (File.Exists(StorageFilePath))
         {
             var json = File.ReadAllText(StorageFilePath);
+			Console.WriteLine($"[DEBUG] Raw JSON: {json}");
             _storage = JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? new Dictionary<string, object>();
         }
         else
@@ -1043,13 +1062,29 @@ public class ClientStorage : IClientStorage, INetworkStorage
     }
 
     private T? GetItem<T>(string key)
+{
+    if (_storage.TryGetValue(key, out var value))
     {
-        if (_storage.TryGetValue(key, out var value) && value is JsonElement element)
+        if (value is JsonElement element)
         {
-            return JsonSerializer.Deserialize<T>(element.GetRawText());
+            // Decode the stringified JSON if it exists
+            var rawJson = element.GetRawText();
+            Console.WriteLine($"[DEBUG] JSON for key '{key}': {rawJson}");
+
+            if (rawJson.StartsWith("\"") && rawJson.EndsWith("\""))
+            {
+                // Unescape the JSON string
+                rawJson = JsonSerializer.Deserialize<string>(rawJson);
+                Console.WriteLine($"[DEBUG] Unescaped JSON: {rawJson}");
+            }
+
+            return JsonSerializer.Deserialize<T>(rawJson);
         }
-        return default;
     }
+    return default;
+}
+
+
 
     private void SetItem<T>(string key, T value)
     {

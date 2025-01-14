@@ -21,4 +21,5 @@ public interface IIndexerService
     Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId);
     Task<(bool IsOnline, string? GenesisHash)> CheckIndexerNetwork(string indexerUrl);
     bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash);
+    Task<ProjectIndexerData?> GetProjectByIdAsyncConsole(string projectId);
 }
