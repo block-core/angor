@@ -36,6 +36,8 @@ builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
 builder.Services.AddScoped<NavMenuState>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ICurrencyRateService, CurrencyRateService>();
+builder.Services.AddScoped<IUTXOService, UTXOService>();
+
 
 builder.Services.AddScoped<IIndexerService, IndexerService>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
