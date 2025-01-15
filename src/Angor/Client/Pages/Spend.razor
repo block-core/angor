@@ -11,6 +11,7 @@
 @using Angor.Shared.Utilities
 @using ITransactionSignature = NBitcoin.ITransactionSignature
 @using System.Text.Json
+@using Angor.Client.Models
 
 
 @inject IClientStorage storage;
@@ -75,7 +76,7 @@
     }
     else
     {
-        @if (!targetInvestmentReached && projectDateStarted)
+        @if (!founderProject.TargetInvestmentReached() && founderProject.ProjectDateStarted())
         {
             <div class="alert alert-warning" role="alert">
                 <h4 class="alert-heading">Target Not Reached</h4>
@@ -485,10 +486,8 @@
     int totalStages;
     TimeSpan? timeUntilNextStage;
 
-    bool targetInvestmentReached = false;
-    bool projectDateStarted = false;
-
     private ProjectInfo project;
+    private FounderProject founderProject;
 
     private FeeData feeData = new();
 
@@ -521,7 +520,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
+        founderProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+        project = founderProject?.ProjectInfo;
 
         firstTimeRefreshSpinner = true;
 
@@ -563,8 +563,11 @@
             }
         }
 
-        targetInvestmentReached = totalAvailableInvestedAmount >= project.TargetAmount;
-        projectDateStarted = DateTime.UtcNow > project.StartDate;
+        if (totalAvailableInvestedAmount != founderProject.TotalAvailableInvestedAmount)
+        {
+            founderProject.TotalAvailableInvestedAmount = totalAvailableInvestedAmount;
+            storage.UpdateFounderProject(founderProject);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -709,7 +712,7 @@
 
     protected async Task ClaimCoinsCheckPassword(int stageId)
     {
-        if (!targetInvestmentReached)
+        if (!founderProject.TargetInvestmentReached())
         {
             notificationComponent.ShowErrorMessage("Target investment amount has not been reached, you can only release the funds back to the investors");
             return;
@@ -987,6 +990,6 @@
 
     private void ReleaseFundsToInvestors(MouseEventArgs e)
     {
-        NavigationManager.NavigateTo($"/release/{ProjectId}");
+        NavigationManager.NavigateTo($"/signatures/{ProjectId}");
     }
 }
