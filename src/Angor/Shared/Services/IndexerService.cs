@@ -59,27 +59,57 @@ namespace Angor.Shared.Services
         {
             if (string.IsNullOrEmpty(projectId))
             {
+                Console.WriteLine("[DEBUG] Project ID is null or empty.");
                 return null;
             }
 
             if (projectId.Length <= 1)
             {
+                Console.WriteLine("[DEBUG] Project ID length is too short.");
                 return null;
             }
 
             const string testnetIndexerUrl = "https://tbtc.indexer.angor.io";
-
             var requestUrl = $"{testnetIndexerUrl}/api/query/Angor/projects/{projectId}";
+            Console.WriteLine($"[DEBUG] Requesting project data from URL: {requestUrl}");
 
-            var response = await _httpClient.GetAsync(requestUrl);
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
+            try
             {
+                var response = await _httpClient.GetAsync(requestUrl);
+                Console.WriteLine($"[DEBUG] HTTP Status Code: {response.StatusCode}");
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine($"[DEBUG] Project with ID {projectId} not found.");
+                    return null;
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[DEBUG] Response content: {content}");
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                var projectData = await response.Content.ReadFromJsonAsync<ProjectIndexerData>(options);
+                if (projectData == null)
+                {
+                    Console.WriteLine($"[WARNING] Deserialized project data is null for project ID: {projectId}");
+                }
+                else
+                {
+                    Console.WriteLine($"[DEBUG] Successfully deserialized project data for project ID: {projectId}");
+                }
+
+                return projectData;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Exception occurred while fetching project data for ID {projectId}: {ex.Message}");
                 return null;
             }
-
-            return await response.Content.ReadFromJsonAsync<ProjectIndexerData>();
         }
+
 
 
         public async Task<ProjectStats?> GetProjectStatsAsync(string projectId)

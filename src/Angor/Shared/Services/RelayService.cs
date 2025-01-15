@@ -89,6 +89,8 @@ namespace Angor.Shared.Services
                 Kinds = [NostrKind.ApplicationSpecificData, NostrKind.Metadata],
             }));
         }
+        
+        
 
         public Task LookupSignaturesDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction)
         {

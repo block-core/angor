@@ -221,6 +221,13 @@ services.AddBlazoredLocalStorage();
         await LookupProjectKeysOnIndexerAsync(_walletStorage, _IndexerService, RelayService, serializer, storage, founderProjects);
         Console.WriteLine("Finished looking up founder projects.");
 		
+		//print founderProjects info
+		foreach (var project in founderProjects)
+        {
+            Console.WriteLine($"Project: {project.ProjectInfo.ProjectIdentifier}");
+			Console.WriteLine($"Project: {project.ProjectInfo.NostrPubKey}");
+			Console.WriteLine($"Project: {project.Metadata}");
+        }
 		//sign signatures -- temp disabled
 		//Console.WriteLine("Signing signatures..."); 
 		//await SubscribeToEncryptedDM(client, RecipientPublicKey);
@@ -256,8 +263,7 @@ private void CreateAndSaveHardCodedWallet()
 {
     Keys = new List<FounderKeys>
     {
-        new FounderKeys { NostrPubKey = "pubkey1", ProjectIdentifier = "project1" },
-        new FounderKeys { NostrPubKey = "pubkey2", ProjectIdentifier = "project2" }
+        new FounderKeys { NostrPubKey = "npub1kc05839g34fcac08f9umwhzd2n74la6kjgl3fthsxe4a4wdne0xq7flejc", ProjectIdentifier = "angor1qmyg7n9s8guywa9tm496h7mskgtdj7pkvjruzy3" },
     }
 };
 
@@ -639,6 +645,7 @@ private static async Task LookupProjectKeysOnIndexerAsync(
             }
 
             var indexerProject = await indexerService.GetProjectByIdAsyncConsole(key.ProjectIdentifier);
+			Console.WriteLine($"Project with identifier {indexerProject.ProjectIdentifier} found.");
             if (indexerProject != null)
             {
                 projectsToLookup.Add(key.NostrPubKey, indexerProject);
@@ -712,7 +719,8 @@ private static void ProcessMetadataEvent(
     Dictionary<string, ProjectIndexerData> projectsToLookup,
     List<FounderProject> founderProjects,
     ISerializer serializer)
-{
+{	
+ 	Console.WriteLine($"Processing metadata event for public key: {eventResponse.Pubkey}");
     var metadata = serializer.Deserialize<ProjectMetadata>(eventResponse.Content);
     var existingProject = founderProjects.FirstOrDefault(p => p.ProjectInfo.NostrPubKey == eventResponse.Pubkey);
 
@@ -738,6 +746,7 @@ private static void ProcessApplicationSpecificDataEvent(
     List<FounderProject> founderProjects,
     ISerializer serializer)
 {
+	    Console.WriteLine($"Processing application-specific data event for public key: {eventResponse.Pubkey}");
     if (!projectsToLookup.TryGetValue(eventResponse.Pubkey, out var indexerData) ||
         eventResponse.Id != indexerData.NostrEventId)
     {
