@@ -55,6 +55,7 @@ namespace Angor.Client.Services
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == projectNostrPubKey)
                     .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
                     .Subscribe(_ => { action.Invoke(_.Event.Content); });
 
                 _subscriptionsHanding.TryAddRelaySubscription(projectNostrPubKey, subscription);
@@ -82,6 +83,7 @@ namespace Angor.Client.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Investment offer")
                     .Select(_ => _.Event)
                     .Subscribe(nostrEvent =>
                     {
@@ -116,6 +118,7 @@ namespace Angor.Client.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
                     .Select(_ => _.Event)
                     .Subscribe(nostrEvent =>
                     {
@@ -157,6 +160,58 @@ namespace Angor.Client.Services
             nostrClient.Send(new NostrEventRequest(signed));
 
             return ev.CreatedAt.Value;
+        }
+
+        public DateTime SendReleaseSigsToInvestor(string encryptedReleaseSigInfo, string nostrPrivateKeyHex, string investorNostrPubKey, string eventId)
+        {
+            var nostrPrivateKey = NostrPrivateKey.FromHex(nostrPrivateKeyHex);
+
+            var ev = new NostrEvent
+            {
+                Kind = NostrKind.EncryptedDm,
+                CreatedAt = DateTime.UtcNow,
+                Content = encryptedReleaseSigInfo,
+                Tags = new NostrEventTags(new[]
+                {
+                    NostrEventTag.Profile(investorNostrPubKey),
+                    NostrEventTag.Event(eventId),
+                    new NostrEventTag("subject", "Release transaction signatures"),
+                })
+            };
+
+            var signed = ev.Sign(nostrPrivateKey);
+
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            nostrClient.Send(new NostrEventRequest(signed));
+
+            return ev.CreatedAt.Value;
+        }
+
+        public void LookupReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime releaseRequestSentTime, string releaseRequestEventId, Func<string, Task> action)
+        {
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            var subscriptionKey = projectNostrPubKey + "release_sigs";
+
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Release transaction signatures")
+                    .Subscribe(_ => { action.Invoke(_.Event.Content); });
+
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                Authors = new[] { projectNostrPubKey }, // From founder
+                P = new[] { investorNostrPubKey }, // To investor
+                Kinds = new[] { NostrKind.EncryptedDm },
+                Since = releaseRequestSentTime,
+                E = new[] { releaseRequestEventId },
+                Limit = 1,
+            }));
         }
 
         public void CloseConnection()

@@ -11,6 +11,7 @@
 @using Angor.Shared.Utilities
 @using ITransactionSignature = NBitcoin.ITransactionSignature
 @using System.Text.Json
+@using Angor.Client.Models
 
 
 @inject IClientStorage storage;
@@ -20,6 +21,7 @@
 @inject IDerivationOperations _derivationOperations
 @inject IWalletOperations _WalletOperations
 @inject IFounderTransactionActions _founderTransactionActions
+@inject IInvestorTransactionActions _investorTransactionActions
 @inject ILogger<Recover> Logger;
 @inject IClipboardService _clipboardService
 
@@ -74,6 +76,15 @@
     }
     else
     {
+        @if (!founderProject.TargetInvestmentReached() && founderProject.ProjectDateStarted())
+        {
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">Target Not Reached</h4>
+                <p>The target investment amount has not been reached, as founder you can only release the funds back to the investors.</p>
+                <button class="btn btn-primary" @onclick="ReleaseFundsToInvestors">Release Funds to Investors</button>
+            </div>
+        }
+
         <div class="card card-body slide-up">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="card-title d-flex align-items-center">
@@ -476,6 +487,7 @@
     TimeSpan? timeUntilNextStage;
 
     private ProjectInfo project;
+    private FounderProject founderProject;
 
     private FeeData feeData = new();
 
@@ -508,9 +520,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-
-
-        project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
+        founderProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+        project = founderProject?.ProjectInfo;
 
         firstTimeRefreshSpinner = true;
 
@@ -550,6 +561,12 @@
             {
                 currentWithdrawableAmount += availableInvestedAmount;
             }
+        }
+
+        if (totalAvailableInvestedAmount != founderProject.TotalAvailableInvestedAmount)
+        {
+            founderProject.TotalAvailableInvestedAmount = totalAvailableInvestedAmount;
+            storage.UpdateFounderProject(founderProject);
         }
     }
 
@@ -695,6 +712,12 @@
 
     protected async Task ClaimCoinsCheckPassword(int stageId)
     {
+        if (!founderProject.TargetInvestmentReached())
+        {
+            notificationComponent.ShowErrorMessage("Target investment amount has not been reached, you can only release the funds back to the investors");
+            return;
+        }
+
         if (passwordComponent.HasPassword())
         {
             await ClaimCoins(stageId);
@@ -963,5 +986,10 @@
     private void HandleRawTransactionModalVisibility(bool isVisible)
     {
         showRawTransactionModal = isVisible;
+    }
+
+    private void ReleaseFundsToInvestors(MouseEventArgs e)
+    {
+        NavigationManager.NavigateTo($"/signatures/{ProjectId}");
     }
 }

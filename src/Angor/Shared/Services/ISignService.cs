@@ -15,4 +15,8 @@ public interface ISignService
 
     DateTime SendSignaturesToInvestor(string encryptedSignatureInfo, string nostrPrivateKey,
         string investorNostrPubKey, string eventId);
+
+    DateTime SendReleaseSigsToInvestor(string encryptedReleaseSigInfo, string nostrPrivateKeyHex, string investorNostrPubKey, string eventId);
+
+    void LookupReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime releaseRequestSentTime, string releaseRequestEventId, Func<string, Task> action);
 }
