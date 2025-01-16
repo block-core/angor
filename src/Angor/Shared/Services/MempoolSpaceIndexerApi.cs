@@ -183,15 +183,16 @@ public class MempoolSpaceIndexerApi : IIndexerService
     {
         var indexer = _networkService.GetPrimaryIndexer();
 
-        var response = await _httpClient.PostAsync($"{indexer.Url}/api/tx", new StringContent(trxHex));
+        var response = await _httpClient.PostAsync($"{indexer.Url}{MempoolApiRoute}/tx", new StringContent(trxHex));
+        
         _networkService.CheckAndHandleError(response);
             
         if (response.IsSuccessStatusCode)
-        {    var txId = await response.Content.ReadAsStringAsync(); //The txId
+        {    
+            var txId = await response.Content.ReadAsStringAsync(); //The txId
             _logger.LogInformation("trx " + txId + "posted ");
             return string.Empty;
         }
-        
 
         var content = await response.Content.ReadAsStringAsync();
 
