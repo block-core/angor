@@ -2,10 +2,6 @@ namespace AngorApp.Model;
 
 public class SeedWord
 {
-    public SeedWord()
-    {
-    }
-    
     public SeedWord(int index, string text)
     {
         Index = index;

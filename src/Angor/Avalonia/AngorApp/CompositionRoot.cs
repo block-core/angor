@@ -5,7 +5,7 @@ using AngorApp.Sections.Home;
 using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
-using AngorApp.Sections.Wallet.Create;
+using AngorApp.Sections.Wallet.CreateAndRecover;
 using AngorApp.Services;
 using Avalonia.Controls.Notifications;
 using Zafiro.Avalonia.Dialogs;

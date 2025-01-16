@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:pr="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:cv="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
+             xmlns:summaryAndCreation="clr-namespace:AngorApp.Sections.Wallet.CreateAndRecover.Steps.SummaryAndCreation"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
+             x:Class="AngorApp.Sections.Wallet.CreateAndRecover.Steps.SummaryAndCreation.SummaryAndCreationView"
+             x:DataType="summaryAndCreation:ISummaryAndCreationViewModel">
+
+    <Design.DataContext>
+        <summaryAndCreation:SummaryAndCreationViewModelDesign IsRecovery="True" />
+    </Design.DataContext>
+
+    <Panel>
+        <StackPanel Grid.IsSharedSizeScope="True" Spacing="20" Opacity="{Binding !CreateWallet.IsExecuting^, Converter={x:Static cv:OpacityConverters.BoolToOpacity}}">
+            <TextBlock Classes="SizeBig" TextAlignment="Center" Text="{Binding TitleText}" />
+            <TextBlock>Here's a short summary of the information you provided:</TextBlock>
+            <HeaderedContentControl Theme="{StaticResource Inline}" IsVisible="{Binding !IsRecovery}" Header="Seed words:">
+                <TextBlock TextWrapping="Wrap">12 English words (already confirmed)</TextBlock>
+            </HeaderedContentControl>
+            <HeaderedContentControl Theme="{StaticResource Inline}" Header="BIP39 Passphrase:">
+                <Panel>
+                    <TextBlock Text="[Provided]" IsVisible="{Binding Passphrase.HasValue}" />
+                    <TextBlock Text="[None]" IsVisible="{Binding Passphrase.HasNoValue}" />
+                </Panel>
+            </HeaderedContentControl>
+            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Encryption Password:">
+                <TextBlock Text="[Set]" />
+            </HeaderedContentControl>
+            <Button Command="{Binding CreateWallet}" Content="{Binding CreateWalletText}" HorizontalAlignment="Center" />
+        </StackPanel>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" IsVisible="{Binding CreateWallet.IsExecuting^}">
+            <pr:ProgressRing Width="30" Height="30" />
+            <TextBlock Text="{Binding CreatingWalletText}" TextAlignment="Center" />
+        </StackPanel>
+    </Panel>
+</UserControl>
