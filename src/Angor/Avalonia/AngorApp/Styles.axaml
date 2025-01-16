@@ -93,6 +93,7 @@
 
     <Style Selector="wizards|WizardControl">
         <Setter Property="Width" Value="500" />
+        <Setter Property="MinHeight" Value="300" />
     </Style>
     
     <Style Selector="Separator">
@@ -101,24 +102,17 @@
         <Setter Property="Height" Value="2" />
     </Style>
     
+    <Style Selector="TextBlock.Dimmed">
+        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+    </Style>
+    
     <Style Selector="Border.Alert">
         <Setter Property="Background" Value="#fff3cd" />
         <Setter Property="BorderBrush" Value="#ffeeba" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="4" />
-        <Setter Property="Padding" Value="16" />
+        <Setter Property="Padding" Value="10 16" />
         <Setter Property="Margin" Value="0,16" />
-    </Style>
-    
-    <Style Selector="TextBlock.Dimmed">
-        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-    </Style>
-    
-    <Style Selector="TextBlock.Bullet">
-        <Setter Property="Text" Value="•"/>
-        <Setter Property="Margin" Value="0,0,8,0"/>
-        <Setter Property="VerticalAlignment" Value="Top"/>
-        <Setter Property="FontSize" Value="14"/>
     </Style>
     
     <Style Selector="controls|StepIndicator">

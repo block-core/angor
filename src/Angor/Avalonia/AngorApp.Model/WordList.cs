@@ -4,18 +4,22 @@ using Zafiro.Mixins;
 namespace AngorApp.Model;
 
 
-public class WordList : Collection<SeedWord>
+public class SeedWords : Collection<SeedWord>
 {
-    public WordList()
+    public SeedWords()
     {
     }
     
-    public WordList(IEnumerable<SeedWord> wordList) : base(wordList.ToList())
+    public SeedWords(IEnumerable<SeedWord> wordList) : base(wordList.ToList())
+    {
+    }
+
+    public SeedWords(string rawWordList) : this(rawWordList.Split(" ").Select((s, i) => new SeedWord(i, s)).ToList())
     {
     }
 
     public override string ToString()
     {
-        return Items.JoinWithCommas();
+        return Items.Join(" ");
     }
 }
