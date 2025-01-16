@@ -20,17 +20,17 @@ namespace Angor.Client.Services
             _subscriptionsHanding = subscriptionsHanding;
         }
 
-        public (DateTime,string) RequestInvestmentSigs(SignRecoveryRequest signRecoveryRequest)
+        public (DateTime,string) RequestInvestmentSigs(string encryptedContent, string investorNostrPrivateKey, string founderNostrPubKey)
         {
-            var sender = NostrPrivateKey.FromHex(signRecoveryRequest.InvestorNostrPrivateKey);
+            var sender = NostrPrivateKey.FromHex(investorNostrPrivateKey);
 
             var ev = new NostrEvent
             {
                 Kind = NostrKind.EncryptedDm,
                 CreatedAt = DateTime.UtcNow,
-                Content = signRecoveryRequest.EncryptedContent,
+                Content = encryptedContent,
                 Tags = new NostrEventTags(
-                    NostrEventTag.Profile(signRecoveryRequest.NostrPubKey),
+                    NostrEventTag.Profile(founderNostrPubKey),
                     new NostrEventTag("subject","Investment offer"))
             };
 

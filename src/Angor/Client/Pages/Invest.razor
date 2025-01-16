@@ -853,21 +853,25 @@ else
 
             var words = await passwordComponent.GetWalletAsync();
 
-            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
+            var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
+            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
 
-            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+            var releaseAddress = accountInfo.GetNextReceiveAddress();
+
+            SignRecoveryRequest signRecoveryRequest = new()
+            {
+                ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
+                InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                ReleaseAddress = releaseAddress
+            };
+
+            var sigJson = serializer.Serialize(signRecoveryRequest);
 
             var encryptedContent = await encryption.EncryptNostrContentAsync(
                 nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey,
-                strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory));
+                sigJson);
 
-            var investmentSigsRequest = _SignService.RequestInvestmentSigs(new SignRecoveryRequest
-                {
-                    ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
-                    EncryptedContent = encryptedContent,
-                    NostrPubKey = investorProject.ProjectInfo.NostrPubKey,
-                    InvestorNostrPrivateKey = nostrPrivateKeyHex
-                });
+            var investmentSigsRequest = _SignService.RequestInvestmentSigs(encryptedContent, nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey);
 
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;

@@ -71,8 +71,17 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
 
     public Transaction BuildUpfrontReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, int penaltyDays, string investorReleaseKey)
     {
-        // for the release we just send to a regular witness address
-        var spendingScript = new PubKey(investorReleaseKey).WitHash.ScriptPubKey;
+        // the release may be an address or a pubkey, first check if it is an address
+        Script spendingScript = null;
+        if (BitcoinWitPubKeyAddress.IsValid(investorReleaseKey, _networkConfiguration.GetNetwork(), out Exception _))
+        {
+            spendingScript = new BitcoinWitPubKeyAddress(investorReleaseKey, _networkConfiguration.GetNetwork()).ScriptPubKey;
+        }
+        else  // if it is not an address, then it is a pubkey
+        {
+            // for the release we just send to a regular witness address
+            spendingScript = new PubKey(investorReleaseKey).WitHash.ScriptPubKey;
+        }
 
         var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
 
