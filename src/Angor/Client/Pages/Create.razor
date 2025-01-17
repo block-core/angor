@@ -113,30 +113,29 @@
                 <EditForm Model="project.Metadata">
                     <div class="mb-3">
                         <label for="NostrMetadataName" class="form-label">Project name</label>
-                        <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated"/>
+                        <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" />
                     </div>
 
                     <div class="mb-3">
                         <label for="NostrMetadataAbout" class="form-label">About</label>
-                        <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated"/>
+                        <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated" />
                     </div>
 
                     <div class="mb-3">
                         <label for="NostrMetadataWebsite" class="form-label">Project website</label>
-                        <InputText id="NostrMetadataWebsite" autocomplete="off" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the URL of the project website" disabled="@nostrMetadataCreated"/>
+                        <InputText id="NostrMetadataWebsite" autocomplete="off" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the URL of the project website" disabled="@nostrMetadataCreated" />
                     </div>
 
                     <div class="mb-3">
                         <label for="NostrMetadataBanner" class="form-label">Banner</label>
-                        <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated"/>
+                        <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated" />
                     </div>
 
                     <div class="mb-3">
                         <label for="NostrMetadataPicture" class="form-label">Image</label>
-                        <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated"/>
+                        <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated" />
                     </div>
 
-                    <!-- Restore the form submit button -->
                     <div class="card card-body mt-4">
                         <div class="d-flex justify-content-end">
                             <button type="submit" class="btn btn-border-success" @onclick="() => SetActiveTab(2)">
@@ -147,7 +146,6 @@
                 </EditForm>
             </div>
 
-            <!-- Project Preview Section -->
             <div class="col-lg-5 col-12">
                 <div class="d-flex align-items-stretch">
                     <div class="card w-100 project-card me-0 ms-0">
@@ -156,20 +154,20 @@
                             <div class="banner-container">
                                 @if (string.IsNullOrEmpty(project.Metadata?.Banner))
                                 {
-                                    <img class="banner-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
+                                    <img class="banner-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                 }
                                 else
                                 {
-                                    <img class="banner-image" src="@project.Metadata.Banner" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
+                                    <img class="banner-image" src="@project.Metadata.Banner" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                 }
                                 <div class="profile-container">
                                     @if (string.IsNullOrEmpty(project.Metadata?.Picture))
                                     {
-                                        <img class="profile-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
+                                        <img class="profile-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                     }
                                     else
                                     {
-                                        <img class="profile-image" src="@project.Metadata.Picture" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
+                                        <img class="profile-image" src="@project.Metadata.Picture" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                     }
                                 </div>
                             </div>
@@ -194,15 +192,14 @@
                                 </div>
                             </div>
 
-                                @if (string.IsNullOrEmpty(project.Metadata?.About))
-                                {
-                                    <p class="mb-0 line-clamp-3">About</p>
-                                }
-                                else
-                                {
-                                    <p class="mb-0 line-clamp-3">@ConvertToMarkupString(project.Metadata.About)</p>
-                                }
-
+                            @if (string.IsNullOrEmpty(project.Metadata?.About))
+                            {
+                                <p class="mb-0 line-clamp-3">About</p>
+                            }
+                            else
+                            {
+                                <p class="mb-0 line-clamp-3">@ConvertToMarkupString(project.Metadata.About)</p>
+                            }
                         </div>
                         <div class="card-footer pt-0">
                             <hr class="horizontal light mt-3">
