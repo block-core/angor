@@ -187,7 +187,7 @@ namespace Angor.Client.Services
             return ev.CreatedAt.Value;
         }
 
-        public void LookupReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime releaseRequestSentTime, string releaseRequestEventId, Func<string, Task> action)
+        public void LookupReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Func<string, Task> action)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
             var subscriptionKey = projectNostrPubKey + "release_sigs";

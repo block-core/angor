@@ -143,10 +143,9 @@
                         Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
                         var nostrPubKey = project.ProjectInfo.NostrPubKey;
                         investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
+                        releaseRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentReleaseRequests);
 
                         <div class="col">
-
-          
 
                             <div class="card card-body">
                                 <div class="d-flex align-items-center">
@@ -230,6 +229,12 @@
                                         <strong class="text-danger">Pending</strong>
                                     }
                                 </div>
+                                @if (hasInvestmentReleaseRequests)
+                                {
+                                    <div class="mb-3 d-flex justify-content-between">
+                                        <span>Founder Released Funds</span>
+                                    </div>
+                                }
                                 <div class="card-footer">
                                     <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border w-100">
                                         View Project
@@ -263,6 +268,7 @@
     long TotalInRecovery = 0;
 
     private Dictionary<string, bool> investmentRequestsMap = new Dictionary<string, bool>();
+    private Dictionary<string, bool> releaseRequestsMap = new Dictionary<string, bool>();
 
     public Dictionary<string, ProjectStats> Stats = new();
 
@@ -289,6 +295,7 @@
 
             var refreshTask = RefreshBalance();
             CheckSignatureFromFounder();
+            CheckReleaseFromFounder();
             await refreshTask;
         }
     }
@@ -345,6 +352,17 @@
         return Task.CompletedTask;
     }
 
+    private Task HandleReleaseSignatureReceivedAsync(string nostrPubKey, string signatureContent)
+    {
+        if (releaseRequestsMap.ContainsKey(nostrPubKey))
+        {
+            releaseRequestsMap[nostrPubKey] = true;
+            StateHasChanged();
+        }
+
+        return Task.CompletedTask;
+    }
+
     private void CheckSignatureFromFounder()
     {
         foreach (var project in projects)
@@ -361,6 +379,21 @@
         }
     }
 
+    private void CheckReleaseFromFounder()
+    {
+        foreach (var project in projects)
+        {
+            releaseRequestsMap[project.ProjectInfo.NostrPubKey] = false;
+
+            _SignService.LookupReleaseSigs(
+                project.InvestorNPub,
+                project.ProjectInfo.NostrPubKey,
+                null,
+                project.SignaturesInfo.SignatureRequestEventId,
+                signatureContent => HandleReleaseSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
+                );
+        }
+    }
 
     private async Task RefreshBalance()
     {

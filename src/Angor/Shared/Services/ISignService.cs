@@ -18,5 +18,5 @@ public interface ISignService
 
     DateTime SendReleaseSigsToInvestor(string encryptedReleaseSigInfo, string nostrPrivateKeyHex, string investorNostrPubKey, string eventId);
 
-    void LookupReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime releaseRequestSentTime, string releaseRequestEventId, Func<string, Task> action);
+    void LookupReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Func<string, Task> action);
 }
