@@ -14,7 +14,7 @@ using Separator = AngorApp.Sections.Shell.Separator;
 
 namespace AngorApp;
 
-public class CompositionRoot
+public static class CompositionRoot
 {
     public static MainViewModel CreateMainViewModel(Control control)
     {
@@ -30,10 +30,12 @@ public class CompositionRoot
 
         var walletStoreDesign = new WalletProviderDesign();
         var walletFactory = new WalletFactory(new WalletBuilderDesign(), uiServices);
+
+        MainViewModel mainViewModel = null!;
         
         IEnumerable<SectionBase> sections =
         [
-            new Section("Home", new HomeSectionViewModel(), "svg:/Assets/angor-icon.svg"),
+            new Section("Home", new HomeSectionViewModel(walletStoreDesign, uiServices, () => mainViewModel), "svg:/Assets/angor-icon.svg"),
             new Separator(),
             new Section("Wallet", new WalletSectionViewModel(walletFactory, walletStoreDesign, uiServices), "fa-wallet"),
             new Section("Browse", new NavigationViewModel(navigator => new BrowseSectionViewModel(walletStoreDesign, navigator, uiServices)), "fa-magnifying-glass"),
@@ -41,9 +43,11 @@ public class CompositionRoot
             new Section("Founder", new FounderSectionViewModel(), "fa-money-bills"),
             new Separator(),
             new Section("Settings", null, "fa-gear"),
-            new CommandSection("Angor Hub", ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io"))), "fa-magnifying-glass") { IsPrimary = false }
+            new CommandSection("Angor Hub", ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(Constants.AngorHubUri)), "fa-magnifying-glass") { IsPrimary = false }
         ];
 
-        return new MainViewModel(sections, uiServices);
+        mainViewModel = new MainViewModel(sections, uiServices);
+        
+        return mainViewModel;
     }
 }
