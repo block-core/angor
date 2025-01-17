@@ -198,7 +198,7 @@
                     <div class="input-group">
 
 
-                        <InputNumber class="form-control" id="investmentAmount" @bind-Value="@Investment.InvestmentAmount"
+                        <InputNumber class="form-control" id="investmentAmount" @bind-Value="@Investment.InvestmentAmountBtc"
                                      @oninput="UpdateStagesBreakdown" />
 
 
@@ -214,7 +214,7 @@
                     <label for="investmentSlider" class="form-label mb-4">Select Investment Amount</label>
                     <input type="range" class="form-range custom-range" id="investmentSlider"
                            min="0.001" max="@project.ProjectInfo.TargetAmount" step="0.001"
-                           @bind="Investment.InvestmentAmount"
+                           @bind="Investment.InvestmentAmountBtc"
                            @oninput="UpdateStagesBreakdown" />
                     <div class="d-flex justify-content-between">
                         <small>0.001 @network.CoinTicker</small>
@@ -307,7 +307,7 @@
                                     <div class="info-card flex-grow-1 me-2">
                                         <div class="info-label">Amount to Invest</div>
                                         <div class="info-value text-success">
-                                            @Investment.InvestmentAmount @network.CoinTicker
+                                            @Investment.InvestmentAmountBtc @network.CoinTicker
                                         </div>
                                     </div>
                                     <div class="info-card flex-grow-1 ms-2">
@@ -517,7 +517,7 @@ else
     private bool showTransactionJsonModal = false;
     private string transactionJson;
 
-    public InvestmentModel Investment { get; set; } = new InvestmentModel { InvestmentAmount = 10 };
+    public InvestmentModel Investment { get; set; } = new InvestmentModel { InvestmentAmountBtc = 0.01m };
     private bool IsSeederTimePassed { get; set; }
     private List<StageBreakdown> StagesBreakdown { get; set; } = new();
     bool founder = false;
@@ -576,7 +576,7 @@ else
 
         await CheckIfSeederTimeHasPassed();
 
-        UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
+        UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmountBtc });
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -665,9 +665,10 @@ else
 
     private void UpdateStagesBreakdown(ChangeEventArgs e)
     {
-        if (decimal.TryParse(e.Value.ToString(), out decimal amount))
+        if (decimal.TryParse(e.Value.ToString(), out decimal amountBtc))
         {
-            Investment.InvestmentAmount = (long)amount;
+            Investment.InvestmentAmountBtc = amountBtc;
+            Investment.InvestmentAmount = (long)(amountBtc * 100_000_000); // Convert BTC to satoshis
 
             StagesBreakdown.Clear();
             int index = 1;
@@ -677,7 +678,7 @@ else
                 var insert = new StageBreakdown
                     {
                         StageNumber = index++,
-                        Amount = Investment.InvestmentAmount * (stage.AmountToRelease / 100),
+                        Amount = Investment.InvestmentAmountBtc * (stage.AmountToRelease / 100),
                         StageDateTime = stage.ReleaseDate,
                         DaysFromStartDate = (stage.ReleaseDate - project.ProjectInfo.StartDate).Days
                     };
@@ -706,13 +707,13 @@ else
             bool isTestnet = network.NetworkType == NetworkType.Testnet;
             decimal maxInvestmentAmount = isTestnet ? decimal.MaxValue : 0.1m; // 0.1 BTC for mainnet, unlimited for testnet
             decimal minInvestmentAmount = 0.001m; // Minimum investment for all networks
-            if (Investment.InvestmentAmount < minInvestmentAmount)
+            if (Investment.InvestmentAmountBtc < minInvestmentAmount)
             {
                 notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minInvestmentAmount} BTC was not reached");
                 return;
             }
 
-            if (Investment.InvestmentAmount > maxInvestmentAmount)
+            if (Investment.InvestmentAmountBtc > maxInvestmentAmount)
             {
                 notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentAmount} BTC on the mainnet");
                 return;
@@ -720,7 +721,7 @@ else
         }
         else
         {
-            if (Investment.InvestmentAmount < (decimal)0.001)
+            if (Investment.InvestmentAmountBtc < 0.001m)
             {
                 notificationComponent.ShowErrorMessage($"Investor minimum investment amount is {0.001} BTC");
                 return;
@@ -761,7 +762,7 @@ else
                 var seederHash = _derivationOperations.DeriveSeederSecretHash(words, project.ProjectInfo.FounderKey);
             }
 
-            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
+            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Satoshis((long)(Investment.InvestmentAmountBtc * 100_000_000)));
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
@@ -834,7 +835,7 @@ else
                     Metadata = project.Metadata,
                     SignedTransactionHex = signedTransaction!.Transaction!.ToHex(),
                     CreationTransactionId = project.CreationTransactionId,
-                    AmountInvested = new Money(Investment.InvestmentAmount, MoneyUnit.BTC).Satoshi,
+                    AmountInvested = new Money(Investment.InvestmentAmountBtc, MoneyUnit.BTC).Satoshi,
                     InvestorPublicKey = InvestorPubKey ?? throw new ArgumentNullException("The investor pub key is not populated")
                 };
 
@@ -1048,7 +1049,8 @@ else
 
     public class InvestmentModel
     {
-        public long InvestmentAmount { get; set; }
+        public long InvestmentAmount { get; set; } // Amount in satoshis
+        public decimal InvestmentAmountBtc { get; set; } // Amount in BTC
         public bool IsSeeder { get; set; }
     }
 
@@ -1068,7 +1070,7 @@ else
         {
             ProjectIdentifier = project.ProjectInfo.ProjectIdentifier,
             FounderKey = project.ProjectInfo.FounderKey.Substring(0, 10) + "...",
-            InvestmentAmount = Investment.InvestmentAmount,
+            InvestmentAmount = Investment.InvestmentAmountBtc,
             TargetAmount = $"{project.ProjectInfo.TargetAmount} {network.CoinTicker}",
             StartDate = project.ProjectInfo.StartDate.ToString("dd/MM/yyyy"),
             ExpiryDate = project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy"),
