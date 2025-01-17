@@ -36,7 +36,7 @@ public class CurrencyService : ICurrencyService
         };
     }
 
-    public async Task<IReadOnlyList<string>> GetBtcValuesInPreferredCurrency(params decimal[] btcBalances)
+    public async Task<IReadOnlyList<string>> GetBtcValuesInPreferredCurrency(params long[] btcBalances)
     {
         if (btcBalances == null || btcBalances.Length == 0)
         {
@@ -90,9 +90,9 @@ public class CurrencyService : ICurrencyService
         }
     }
 
-    private string CalculateFormattedValue(decimal btcBalance, decimal rate, string currencySymbol, CultureInfo cultureInfo)
+    private string CalculateFormattedValue(long btcBalance, decimal rate, string currencySymbol, CultureInfo cultureInfo)
     {
-        var value = btcBalance * rate;
+        var value = btcBalance * rate / 100_000_000; // Convert satoshis to BTC tbt
         return value.ToString("C2", cultureInfo).Replace(cultureInfo.NumberFormat.CurrencySymbol, currencySymbol);
     }
 

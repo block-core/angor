@@ -936,7 +936,7 @@ else
 
     readonly Dictionary<string, bool> collapseStates = new();
     private string btcBalanceInUsd;
-    private readonly Dictionary<string, string> fiatValues = new();
+    private readonly Dictionary<string, long> fiatValues = new();
 
     private int currentStep = 1;
     private int totalSteps => isNewWallet ? 4 : 3;
@@ -1052,7 +1052,7 @@ else
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
             accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
-            btcBalanceInUsd = await GetBtcValueInPreferredCurrency(Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC));
+            btcBalanceInUsd = await GetBtcValueInPreferredCurrency((long)Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC));
             await PrecomputeFiatValues();
         }
 
@@ -1603,12 +1603,12 @@ else
         isPassphraseEnabled = !isPassphraseEnabled;
     }
 
-    public async Task<IReadOnlyList<string>> GetBtcValuesInPreferredCurrency(params decimal[] btcBalances)
+    public async Task<IReadOnlyList<string>> GetBtcValuesInPreferredCurrency(params long[] btcBalances)
     {
         return await _currencyService.GetBtcValuesInPreferredCurrency(btcBalances);
     }
 
-    public async Task<string> GetBtcValueInPreferredCurrency(decimal btcBalance)
+    public async Task<string> GetBtcValueInPreferredCurrency(long btcBalance)
     {
         var results = await GetBtcValuesInPreferredCurrency(btcBalance);
         return results.FirstOrDefault() ?? "Error fetching value";
@@ -1619,7 +1619,7 @@ else
     {
         fiatValues.Clear();
 
-        var btcBalance = Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC);
+        var btcBalance = accountBalanceInfo.TotalBalance;
 
         var fiatValuesList = await _currencyService.GetBtcValuesInPreferredCurrency(btcBalance);
 
@@ -1629,7 +1629,7 @@ else
             return;
         }
 
-        fiatValues["TotalBalance"] = fiatValuesList.First();
+        fiatValues["TotalBalance"] = btcBalance;
 
         Logger.LogInformation($"Fiat value for total balance: {fiatValuesList.First()}");
     }

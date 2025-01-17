@@ -667,7 +667,7 @@ else
     {
         if (decimal.TryParse(e.Value.ToString(), out decimal amount))
         {
-            Investment.InvestmentAmount = amount;
+            Investment.InvestmentAmount = (long)amount;
 
             StagesBreakdown.Clear();
             int index = 1;
@@ -1048,7 +1048,7 @@ else
 
     public class InvestmentModel
     {
-        public decimal InvestmentAmount { get; set; }
+        public long InvestmentAmount { get; set; }
         public bool IsSeeder { get; set; }
     }
 
