@@ -138,11 +138,11 @@ public class WalletOperations : IWalletOperations
         }
 
         var builder = new TransactionBuilder(network)
-            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), Money.Coins(sendInfo.SendAmount))
+            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), Money.Satoshis(sendInfo.SendAmountSat))
             .AddCoins(coins)
             .AddKeys(keys.ToArray())
             .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network))
-            .SendEstimatedFees(new FeeRate(Money.Coins(sendInfo.FeeRate)));
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(sendInfo.FeeRateSat)));
 
         var signedTransaction = builder.BuildTransaction(true);
 
@@ -552,7 +552,7 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    public decimal CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, long feeRate)
+    public decimal CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, decimal feeRate)
     {
         var network = _networkConfiguration.GetNetwork();
 

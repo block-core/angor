@@ -5,9 +5,9 @@ namespace Angor.Shared.Models;
 public class SendInfo
 {
     public string SendToAddress { get; set; }
-    public decimal SendAmount { get; set; }
+    public long SendAmount { get; set; }
+    public long SendAmountSat => SendAmount;
     public decimal SendFee { get; set; }
-    public long SendAmountSat => Money.Coins(SendAmount).Satoshi;
     public long SendFeeSat
     {
         get => Money.Coins(SendFee).Satoshi;

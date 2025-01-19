@@ -244,7 +244,7 @@ public class WalletOperationsTest : AngorTestData
         string scriptHex = GenerateScriptHex(address, network);
         var sendInfo = new SendInfo
         {
-            SendAmount = 0.01m,
+            SendAmount = Money.Coins(0.01m).Satoshi,
             SendUtxos = new Dictionary<string, UtxoDataWithPath>
         {
             {
@@ -297,7 +297,7 @@ public class WalletOperationsTest : AngorTestData
         {
             SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
             ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
-            SendAmount = 0.01m,
+            SendAmount = Money.Coins(0.01m).Satoshi,
             SendUtxos = new Dictionary<string, UtxoDataWithPath>
         {
             {
@@ -390,7 +390,7 @@ public class WalletOperationsTest : AngorTestData
         {
             SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
             ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
-            SendAmount = 0.0001m,  // Lower amount for successful fee calculation
+            SendAmount = Money.Coins(0.0001m).Satoshi,  // Lower amount for successful fee calculation
             SendUtxos = new Dictionary<string, UtxoDataWithPath>
         {
             {
@@ -421,7 +421,7 @@ public class WalletOperationsTest : AngorTestData
         {
             SendToAddress = sendInfoSufficientFunds.SendToAddress,
             ChangeAddress = sendInfoSufficientFunds.ChangeAddress,
-            SendAmount = 10000m,  // High amount to trigger insufficient funds
+            SendAmount = Money.Coins(10000m).Satoshi,  // High amount to trigger insufficient funds
             SendUtxos = new Dictionary<string, UtxoDataWithPath>
         {
             {

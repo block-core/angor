@@ -576,50 +576,48 @@ else
                     <div class="row mt-4">
 
                         <form>
-                            <form>
-                                <div class="mb-3">
-                                    <label for="sendToAddress" class="form-label">Send to Address</label>
-                                    <div class="input-group">
-                                        <span role="button" class="btn btn-border" @onclick="PasteFromClipboard">
-                                            <Icon IconName="paste" />
-                                        </span>
+                            <div class="mb-3">
+                                <label for="sendToAddress" class="form-label">Send to Address</label>
+                                <div class="input-group">
+                                    <span role="button" class="btn btn-border" @onclick="PasteFromClipboard">
+                                        <Icon IconName="paste" />
+                                    </span>
 
-                                        <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
+                                    <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
 
 
-                                        <span role="button" class="btn btn-border" @onclick="ClearAddress">
-                                            <Icon IconName="remove" />
-                                        </span>
-                                    </div>
+                                    <span role="button" class="btn btn-border" @onclick="ClearAddress">
+                                        <Icon IconName="remove" />
+                                    </span>
                                 </div>
+                            </div>
 
-                                <div class="mb-3">
-                                    <label for="sendAmount" class="form-label">Amount</label>
-                                    <input type="text" class="form-control" id="sendAmount" @bind="_sendInfo.SendAmount" placeholder="Enter amount">
-                                </div>
-                                <button type="button" class="btn btn-border" @onclick="() => coinControlModal = true">
-                                    Select UTXOs
+                            <div class="mb-3">
+                                <label for="sendAmount" class="form-label">Amount</label>
+                                <input type="number" class="form-control" id="sendAmount" @bind-value="sendAmount" @bind-value:event="oninput" placeholder="Enter amount">
+                            </div>
+                            <button type="button" class="btn btn-border" @onclick="() => coinControlModal = true">
+                                Select UTXOs
 
-                                    @if (_sendInfo.SendUtxos.Any())
-                                    {
-                                        <span class="badge text-bg-warning">@_sendInfo.SendUtxos.Count</span>
-                                    }
-                                </button>
+                                @if (_sendInfo.SendUtxos.Any())
+                                {
+                                    <span class="badge text-bg-warning">@_sendInfo.SendUtxos.Count</span>
+                                }
+                            </button>
 
-                                <!-- New Send button that triggers a confirmation dialog -->
-                                <button type="button" class="btn btn-border" data-cy="send-button" @onclick="AskPassword" disabled="@sendLoadSpinner">
-                                    @if (sendLoadSpinner)
-                                    {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                        <span>Sending...</span>
-                                    }
-                                    else
-                                    {
-                                        <span>Send</span>
-                                    }
-                                </button>
+                            <!-- New Send button that triggers a confirmation dialog -->
+                            <button type="button" class="btn btn-border" data-cy="send-button" @onclick="AskPassword" disabled="@sendLoadSpinner">
+                                @if (sendLoadSpinner)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span>Sending...</span>
+                                }
+                                else
+                                {
+                                    <span>Send</span>
+                                }
+                            </button>
 
-                            </form>
                         </form>
 
                     </div>
@@ -1763,6 +1761,20 @@ else
         userVerificationInputs.Clear();
         verificationPassed = false;
         showVerificationError = false;
+    }
+
+    private void ConvertAmountToSatoshis(ChangeEventArgs e)
+    {
+        if (decimal.TryParse(e.Value?.ToString(), out var amount))
+        {
+            _sendInfo.SendAmount = Money.Coins(amount).Satoshi;
+        }
+    }
+
+    private decimal sendAmount
+    {
+        get => Money.Satoshis(_sendInfo.SendAmount).ToUnit(MoneyUnit.BTC);
+        set => _sendInfo.SendAmount = Money.Coins(value).Satoshi;
     }
 
 
