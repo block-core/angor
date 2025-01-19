@@ -40,12 +40,29 @@
     --angor-modal-title-line-height: 1.5;
     --angor-modal-footer-gap: 0.5rem;
     --btn-border: #cccccc;
+    --form-bg: #ffffff;
+    --form-border: #cccccc;
+    --form-text: #333333;
+    --form-label: #555555;
+    --form-disabled-bg: #e9ecef;
+    --form-disabled-text: #6c757d;
+    --form-focus-border: #086c81;
+    --form-focus-shadow: rgba(8, 108, 129, 0.25);
+   
 }
 
 .dark {
     --angor-primary: var(--angor-light) !important;
     --angor-accent: var(--angor-dark) !important;
     --btn-border: #046479;
+    --form-bg: #083b46;
+    --form-border: #046479;
+    --form-text: #e3f8fc;
+    --form-label: #cbdde1;
+    --form-disabled-bg: #062a32;
+    --form-disabled-text: #85a5ac;
+    --form-focus-border: #0a8ca7;
+    --form-focus-shadow: rgba(10, 140, 167, 0.25);
 }
 
 .col-form-label {
@@ -852,11 +869,6 @@ tr[style*="cursor: pointer;"]:hover {
     color: var(--angor-primary) !important;
 }
 
-.project-card {
-    margin-left: 0.75rem;
-    margin-right: 0.75rem;
-}
-
 .project-wrapper {
     margin-left: -0.5rem;
     margin-right: -0.5rem;
@@ -1245,7 +1257,6 @@ a {
 input.form-control,
 textarea.form-control {
     border-radius: 8px;
-    padding: 12px 15px;
     font-size: 16px;
     transition: all 0.3s ease;
 }
@@ -1256,9 +1267,74 @@ textarea.form-control:focus {
     outline: none;
 }
 
-input.form-control:disabled,
-textarea.form-control:disabled {
-    background-color: #e9ecef;
+/* Form Controls */
+.form-control,
+.stage-form-input {
+  background-color: var(--form-bg);
+  border: 1px solid var(--form-border);
+  color: var(--form-text);
+  transition: all 0.3s ease;
+}
+
+.form-label,
+.stage-form-label {
+  color: var(--form-label);
+  font-weight: 500;
+}
+
+/* Disabled States */
+.form-control:disabled,
+.form-control[readonly],
+.stage-form-input:disabled {
+  background-color: var(--form-disabled-bg);
+  color: var(--form-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) sepia(1) saturate(5) hue-rotate(180deg);
+    background: none;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) sepia(1) saturate(5) hue-rotate(180deg);
+    background: none;
+}
+
+
+
+/* Focus & Hover States */
+.form-control:focus,
+.stage-form-input:focus {
+  border-color: var(--form-focus-border);
+  box-shadow: 0 0 0 0.2rem var(--form-focus-shadow);
+  outline: none;
+}
+
+.form-control:hover:not(:disabled),
+.stage-form-input:hover:not(:disabled) {
+  border-color: var(--form-focus-border);
+}
+
+/* Placeholder Colors */
+.form-control::placeholder,
+.stage-form-input::placeholder {
+  color: var(--form-disabled-text);
+  opacity: 0.7;
+}
+
+/* Dark Mode Specific Overrides */
+.dark .form-control,
+.dark .stage-form-input {
+  background-color: var(--form-bg);
+  border-color: var(--form-border);
+  color: var(--form-text);
+}
+
+.dark .form-control:disabled,
+.dark .stage-form-input:disabled {
+  background-color: var(--form-disabled-bg);
 }
 
 textarea.form-control {
@@ -2043,7 +2119,7 @@ button:hover:not(:disabled) {
 }
 
 .info-card {
-    background: var(--angor-section-bg, rgba(0, 0, 0, 0.02));
+    background: var(--angor-section-bg, rgba(0, 0, 0, 0.05));
     padding: 1.25rem;
     border-radius: 10px;
     border: 1px solid var(--btn-border);
@@ -2681,4 +2757,55 @@ button:hover:not(:disabled) {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+}
+
+.stage-form-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.stage-form-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.stage-form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.stage-form-input {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--btn-border);
+}
+
+.stage-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stage-days-info {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    color: var(--angor-secondary);
+}
+
+@media (max-width: 768px) {
+    .stage-form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .stage-form-group {
+        width: 100%;
+    }
 }
