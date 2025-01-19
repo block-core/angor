@@ -17,7 +17,7 @@
 @inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
 @inject INetworkConfiguration _NetworkConfiguration
-@inject IDerivationOperations _derivationOperations
+@inject IDerivationOperations _derivationOperations 
 @inject IWalletOperations _WalletOperations
 @inject IFounderTransactionActions _founderTransactionActions
 @inject ILogger<Recover> Logger;
@@ -93,7 +93,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="text-muted">Total Investment</h6>
-                                <h4 class="mb-0">@(totalAvailableInvestedAmount + totalSpentAmount) @network.CoinTicker</h4>
+                                <h4 class="mb-0">@((totalAvailableInvestedAmount + totalSpentAmount) / 100_000_000m) @network.CoinTicker</h4>
                             </div>
                             <div class="stat-icon">
                                 <Icon IconName="investment" Height="32" Width="32" />
@@ -107,7 +107,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="text-muted">Available Balance</h6>
-                                <h4 class="mb-0">@totalAvailableInvestedAmount @network.CoinTicker</h4>
+                                <h4 class="mb-0">@totalAvailableInvestedAmount / 100_000_000m @network.CoinTicker</h4>
                             </div>
                             <div class="stat-icon">
                                 <Icon IconName="wallet" Height="32" Width="32" />
@@ -121,7 +121,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="text-muted">Withdrawable</h6>
-                                <h4 class="mb-0">@currentWithdrawableAmount @network.CoinTicker</h4>
+                                <h4 class="mb-0">@currentWithdrawableAmount / 100_000_000m @network.CoinTicker</h4>
                             </div>
                             <div class="stat-icon">
                                 <Icon IconName="withdraw" Height="32" Width="32" />
@@ -266,7 +266,7 @@
                                                        @onchange="(e) => HandleCheckboxChange(transaction.Trxid, transaction.Outputindex)"
                                                        id="@($"utxo_{transaction.Trxid}_{transaction.Outputindex}")" />
                                                 <label class="form-check-label" for="@($"utxo_{transaction.Trxid}_{transaction.Outputindex}")">
-                                                    <span>@transaction.Amount @network.CoinTicker</span>
+                                                    <span>@transaction.Amount / 100_000_000m @network.CoinTicker</span>
                                                 </label>
                                             </div>
                                         </div>
@@ -467,11 +467,11 @@
     private bool firstTimeRefreshSpinner = false;
     private bool spendSpinner = false;
 
-    decimal totalAvailableInvestedAmount = 0.0m;
+    long totalAvailableInvestedAmount = 0;
     int totalInvestedTransactions = 0;
-    decimal totalSpentAmount = 0.0m;
+    long totalSpentAmount = 0;
     int totalSpentTransactions = 0;
-    decimal currentWithdrawableAmount = 0.0m;
+    long currentWithdrawableAmount = 0;
     int totalStages;
     TimeSpan? timeUntilNextStage;
 
@@ -496,7 +496,7 @@
         public string Trxid;
         public int Outputindex;
         public string OutputAddress;
-        public decimal Amount;
+        public long Amount;
         public bool IsSpent;
     }
 
@@ -527,11 +527,11 @@
                                 .OrderBy(stage => stage.Stage.ReleaseDate)
                                 .FirstOrDefault();
         timeUntilNextStage = nextStage != null ? nextStage.Stage.ReleaseDate - DateTime.UtcNow : (TimeSpan?)null;
-        totalAvailableInvestedAmount = 0.0m;
+        totalAvailableInvestedAmount = 0;
         totalInvestedTransactions = 0;
-        totalSpentAmount = 0.0m;
+        totalSpentAmount = 0;
         totalSpentTransactions = 0;
-        currentWithdrawableAmount = 0.0m;
+        currentWithdrawableAmount = 0;
 
         foreach (var stage in stageDatas)
         {
@@ -643,7 +643,7 @@
                         Trxid = item.TrxId,
                         OutputAddress = item.Transaction.Outputs[stageItem.StageIndex + 1].ScriptPubKey.WitHash.GetAddress(network).ToString(),
                         Outputindex = stageItem.StageIndex + 1,
-                        Amount = item.Transaction.Outputs[stageItem.StageIndex + 1].Value.ToUnit(MoneyUnit.BTC),
+                        Amount = item.Transaction.Outputs[stageItem.StageIndex + 1].Value.Satoshi,
                     };
 
                 stageItem.Items.Add(insert);
