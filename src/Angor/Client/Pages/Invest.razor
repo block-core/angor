@@ -764,7 +764,7 @@ else
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Satoshis(Investment.InvestmentAmount));
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
             showCreateModal = true;
         }
@@ -803,7 +803,7 @@ else
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
 
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
                     StateHasChanged();
                 }

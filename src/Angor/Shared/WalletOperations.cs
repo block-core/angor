@@ -40,7 +40,7 @@ public class WalletOperations : IWalletOperations
     }
     
     public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
+        WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -55,7 +55,7 @@ public class WalletOperations : IWalletOperations
             .AddKeys(coins.keys.ToArray())
             .SetChange(BitcoinAddress.Create(changeAddress, network))
             .ContinueToBuild(transaction)
-            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate.FeeRate)))
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
             .CoverTheRest();
 
         var signTransaction = builder.BuildTransaction(true);
@@ -77,7 +77,7 @@ public class WalletOperations : IWalletOperations
     }
 
     public TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
+        WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -86,7 +86,7 @@ public class WalletOperations : IWalletOperations
         var changeOutput = clonedTransaction.AddOutput(Money.Zero, BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
 
         var virtualSize = clonedTransaction.GetVirtualSize(4);
-        var fee = new FeeRate(Money.Satoshis(feeRate.FeeRate)).GetFee(virtualSize);
+        var fee = new FeeRate(Money.Satoshis(feeRate)).GetFee(virtualSize);
         
         var utxoDataWithPaths = FindOutputsForTransaction((long)fee, accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
@@ -552,7 +552,7 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    public decimal CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, decimal feeRate)
+    public decimal CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, long feeRate)
     {
         var network = _networkConfiguration.GetNetwork();
 

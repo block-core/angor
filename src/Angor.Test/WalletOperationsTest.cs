@@ -122,7 +122,7 @@ public class WalletOperationsTest : AngorTestData
         recoveryTransaction.Outputs.RemoveAt(0);
         recoveryTransaction.Inputs.RemoveAt(0);
 
-        var recoveryTransactions = _sut.AddFeeAndSignTransaction(changeAddress, recoveryTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
+        var recoveryTransactions = _sut.AddFeeAndSignTransaction(changeAddress, recoveryTransaction, words, accountInfo, 3000L);
 
         // add the inputs of the investment trx
         List<Blockcore.NBitcoin.Coin> coins = new();
@@ -174,7 +174,7 @@ public class WalletOperationsTest : AngorTestData
         var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, projectInfo.FounderKey);
 
         var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investorKey, Money.Coins(investmentAmount).Satoshi);
-        var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
+        var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, 3000L);
         var strippedInvestmentTransaction = network.CreateTransaction(signedInvestmentTransaction.Transaction.ToHex());
         strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
         Assert.Equal(signedInvestmentTransaction.Transaction.GetHash(), strippedInvestmentTransaction.GetHash());
@@ -190,7 +190,7 @@ public class WalletOperationsTest : AngorTestData
         recoveryTransaction.Outputs.RemoveAt(0);
         recoveryTransaction.Inputs.RemoveAt(0);
 
-        var signedRecoveryTransaction = _sut.AddFeeAndSignTransaction(accountInfo.GetNextReceiveAddress(), recoveryTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
+        var signedRecoveryTransaction = _sut.AddFeeAndSignTransaction(accountInfo.GetNextReceiveAddress(), recoveryTransaction, words, accountInfo, 3000L);
 
         // add the inputs of the investment trx
         List<Blockcore.NBitcoin.Coin> coins = new();
@@ -262,7 +262,8 @@ public class WalletOperationsTest : AngorTestData
                     HdPath = "your_hd_path_here"
                 }
             }
-        }
+        },
+            FeeRate = 3000L,
         };
 
         // Act & Assert
@@ -315,7 +316,8 @@ public class WalletOperationsTest : AngorTestData
                     HdPath = "m/0/0"
                 }
             }
-        }
+        },
+            FeeRate = 3000L,
         };
 
         // Act
@@ -383,7 +385,7 @@ public class WalletOperationsTest : AngorTestData
         var address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
         var scriptHex = "0014b7d165bb8b25f567f05c57d3b484159582ac2827";  
         var accountInfo = new AccountInfo(); 
-        long feeRate = 10; 
+        long feeRate = 10L; 
 
         // Scenario 1: Sufficient funds
         var sendInfoSufficientFunds = new SendInfo

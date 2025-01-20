@@ -698,7 +698,7 @@
             foreach (var txIn in removeTxin) unsignedRecoveryTransaction.Inputs.Remove(txIn);
 
             // add fee to the recovery trx
-            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
             Logger.LogInformation($"recoveryTransaction={recoveryTransaction.Transaction.GetHash().ToString()}");
 
@@ -739,7 +739,7 @@
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
 
-                    recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+                    recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
                     StateHasChanged();
                 }

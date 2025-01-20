@@ -15,12 +15,12 @@ public class SendInfo
     }
     public int FeeBlockCount { get; set; } = 1;
 
-    public decimal FeeRate { get; set; } = 0;
+    public long FeeRate { get; set; } = 0;
 
     public long FeeRateSat
     {
-        get => Money.Coins(FeeRate).Satoshi;
-        set => FeeRate = Money.Satoshis(value).ToUnit(MoneyUnit.BTC);
+        get => FeeRate;
+        set => FeeRate = value;
     }
 
     public string ChangeAddress { get; set; }
