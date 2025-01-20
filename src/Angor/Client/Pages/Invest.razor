@@ -876,6 +876,7 @@ else
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
             investorProject.InvestorNPub = NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex;
+            investorProject.ReleaseAddress = releaseAddress;
 
             storage.AddInvestmentProject(investorProject);
 
@@ -993,7 +994,6 @@ else
 
             storage.UpdateInvestmentProject(investorProject);
 
-            await SaveInvestmentsListToNostrAsync();
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
@@ -1009,6 +1009,9 @@ else
             SessionStorage.SetUnconfirmedInboundFunds(unspentInfo);
 
             notificationComponent.ShowNotificationMessage("Invested in project", 5);
+
+            // this will publish to Nostr so we call it last.
+            await SaveInvestmentsListToNostrAsync();
 
             NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
         }
@@ -1034,7 +1037,14 @@ else
             {
                 ProjectIdentifiers = storage.GetInvestmentProjects()
                             .Where(x => x.InvestedInProject())
-                            .Select(x => new InvestmentState { ProjectIdentifier = x.ProjectInfo.ProjectIdentifier, investorPubKey = x.InvestorPublicKey, InvestmentTransactionHash = x.TransactionId })
+                            .Select(x => new InvestmentState
+                            {
+                                ProjectIdentifier = x.ProjectInfo.ProjectIdentifier, 
+                                investorPubKey = x.InvestorPublicKey, 
+                                InvestmentTransactionHash = x.TransactionId, 
+                                ReleaseAddress = x.ReleaseAddress,
+
+                            })
                             .ToList()
             };
 

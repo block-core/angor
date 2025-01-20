@@ -20,6 +20,7 @@
 @inject IWalletOperations _WalletOperations
 @inject IInvestorTransactionActions _InvestorTransactionActions
 @inject ILogger<Recover> Logger;
+@inject IWalletUIService _walletUIService;
 
 @inherits BaseComponent
 
@@ -609,20 +610,6 @@
         StageInfo.EndOfProject = project.ProjectInfo.ExpiryDate < DateTime.Now;
     }
 
-    private void AddTransactionToPending(Transaction transaction)
-    {
-        var accountInfo = storage.GetAccountInfo(network.Name);
-        var unconfirmedInbound = _cacheStorage.GetUnconfirmedInboundFunds();
-        var unconfirmedOutbound = _cacheStorage.GetUnconfirmedOutboundFunds();
-
-        unconfirmedInbound.AddRange(_WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, transaction));
-        unconfirmedOutbound.AddRange(transaction.Inputs.Select(_ => new Outpoint(_.PrevOut.Hash.ToString(), (int)_.PrevOut.N)));
-
-        storage.SetAccountInfo(network.Name, accountInfo);
-        _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInbound);
-        _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
-    }
-
     private async Task PrepareToRecoverCoinsCheckPassword()
     {
         if (!passwordComponent.HasPassword())
@@ -748,7 +735,7 @@
 
             storage.UpdateInvestmentProject(project);
 
-            AddTransactionToPending(recoveryTransaction.Transaction);
+            _walletUIService.AddTransactionToPending(recoveryTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
 
@@ -877,7 +864,7 @@
             project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.Transaction.GetHash().ToString();
             storage.UpdateInvestmentProject(project);
 
-            AddTransactionToPending(releaseRecoveryTransaction.Transaction);
+            _walletUIService.AddTransactionToPending(releaseRecoveryTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
 
@@ -1002,7 +989,7 @@
             project.EndOfProjectTransactionId = endOfProjectTransaction.Transaction.GetHash().ToString();
             storage.UpdateInvestmentProject(project);
 
-            AddTransactionToPending(endOfProjectTransaction.Transaction);
+            _walletUIService.AddTransactionToPending(endOfProjectTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
         }

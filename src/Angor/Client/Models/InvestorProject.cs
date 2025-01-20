@@ -18,6 +18,9 @@ public class InvestorProject : Project
     public string InvestorPublicKey { get; set; }
     public string InvestorNPub { get; set; }
 
+    public string ReleaseAddress { get; set; }
+    public string ReleaseTransactionId { get; set; }
+
     public bool WaitingForFounderResponse()
     {
         return ReceivedFounderSignatures() == false && SignaturesInfo?.TimeOfSignatureRequest != null;
