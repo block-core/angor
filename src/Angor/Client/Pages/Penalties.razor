@@ -93,7 +93,7 @@ else
                         {
                             <tr>
                                 <td>@penalty.ProjectIdentifier</td>
-                                <td>@penalty.Amount @network.CoinTicker</td>
+                                <td>@penalty.AmountInBTC @network.CoinTicker</td>
                                 <td>
                                     @if (penalty.IsExpired)
                                     {
@@ -132,8 +132,10 @@ else
         public string RecoveryTransactionId;
         public bool IsReleased;
         public bool IsExpired;
-        public decimal Amount;
+        public long AmountInSatoshis;
         public int DaysLeftForPenalty;
+
+        public decimal AmountInBTC => Money.Satoshis(AmountInSatoshis).ToUnit(MoneyUnit.BTC);
     }
 
     private bool refreshSpinner = false;
@@ -179,7 +181,7 @@ else
                 var recoveryTansaction = await _IndexerService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
 
                 var totalsats = recoveryTansaction.Outputs.Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);
-                penaltyProject.Amount = Money.Satoshis(totalsats).ToUnit(MoneyUnit.BTC);
+                penaltyProject.AmountInSatoshis = totalsats;
 
                 var project = projects.First(p => p.ProjectInfo.ProjectIdentifier == penaltyProject.ProjectIdentifier);
 
