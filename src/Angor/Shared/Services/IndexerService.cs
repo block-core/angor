@@ -28,7 +28,8 @@ namespace Angor.Shared.Services
             var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects?offset={offset}&limit={limit}");
             _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>();
+            
+            return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>() ?? new List<ProjectIndexerData>();
         }
 
         public async Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId)
