@@ -12,10 +12,15 @@ public partial class MainViewModel : ReactiveObject, IMainViewModel
     {
         Sections = sections;
         SelectedSection = Sections.OfType<Section>().Skip(0).First();
-        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io")));
+        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(Constants.AngorHubUri));
     }
 
-    public ReactiveCommand<Unit,Unit> OpenHub { get; set; }
+    public ReactiveCommand<Unit,Unit> OpenHub { get; }
 
     public IEnumerable<SectionBase> Sections { get; }
+
+    public void GoToSection(string sectionName)
+    {
+        SelectedSection = Sections.OfType<Section>().First(x => x.Name == sectionName);
+    }
 }

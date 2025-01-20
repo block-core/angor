@@ -88,7 +88,7 @@
                             <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
                                 @if (PrepareToRecoverCoinsModalSpinner)
                                 {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                     <span>Recover Funds...</span>
                                 }
                                 else
@@ -103,7 +103,7 @@
                             <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
                                 @if (PrepareToReleaseCoinsModalSpinner)
                                 {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                     <span>Release Funds...</span>
                                 }
                                 else
@@ -118,7 +118,7 @@
                             <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
                                 @if (PrepareEndOfProjectCoinsModalSpinner)
                                 {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                     <span>End of project...</span>
                                 }
                                 else
@@ -134,7 +134,7 @@
                     <button class="btn btn-border" @onclick="RefreshInvestments" disabled="@refreshSpinner">
                         @if (refreshSpinner)
                         {
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                             <span>Refresh...</span>
                         }
                         else
@@ -236,7 +236,7 @@
                                 <button type="button" class="btn btn-border" @onclick="RecoverCoins" disabled="@PrepareToRecoverCoinsConfirmSpinner">
                                     @if (PrepareToRecoverCoinsConfirmSpinner)
                                     {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                         <span>Confirm...</span>
                                     }
                                     else
@@ -288,7 +288,7 @@
                                 <button type="button" class="btn btn-border" @onclick="ReleaseCoins" disabled="@PrepareToReleaseCoinsConfirmSpinner">
                                     @if (PrepareToReleaseCoinsConfirmSpinner)
                                     {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                         <span>Confirm...</span>
                                     }
                                     else
@@ -339,7 +339,7 @@
                                 <button type="button" class="btn btn-border" @onclick="EndOfProjectCoins" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">
                                     @if (PrepareEndOfProjectCoinsConfirmSpinner)
                                     {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                         <span>Confirm...</span>
                                     }
                                     else

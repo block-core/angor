@@ -43,7 +43,7 @@
             @if (hasWallet)
             {
                 <div>
-                    <button type="button" class="btn btn-border mb-0" @onclick="() => walletWordsModal = true" data-cy="wallet-words">Wallet Words</button>
+                    <button type="button" class="btn btn-border-danger mb-0" @onclick="() => walletWordsModal = true" data-cy="wallet-words">Wallet Words</button>
                 </div>
             }
 
@@ -350,7 +350,7 @@
                             <button class="btn btn-border-success w-100 w-md-auto" @onclick="ShowWords" disabled="@createWalletSpinner">
                                 @if (createWalletSpinner)
                                 {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                     <span>Loading...</span>
                                 }
                                 else
@@ -372,12 +372,12 @@ else
 
         <div class="card card-body position-relative z-index-1">
             <div class="d-flex align-items-center justify-content-between">
-                <div class="mt-2 mb-2 pb-2 d-flex flex-wrap align-items-center">
+                <div class="d-flex flex-wrap align-items-center">
                     <div class="d-flex flex-wrap align-items-center">
 
                         <div class="d-flex align-items-center">
-                            <span class="user-select-none">
-                                <Icon IconName="balance" Width="72" Height="72"></Icon>
+                            <span class="user-select-none me-3">
+                                <Icon IconName="balance" Width="42" Height="42"></Icon>
                             </span>
                             <div>
                                 <BalanceDisplay BtcBalance="@Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC)"
@@ -421,14 +421,14 @@ else
             <div class="d-flex">
                 @if (accountBalanceInfo.TotalUnconfirmedBalance > 0)
                 {
-                    <div class="mb-4 me-4">
+                    <div class="mt-4 me-4">
                         <p class="text-sm opacity-8 mb-0" data-cy="confirmed-balance">Unconfirmed balance</p>
                         <h6 class="mb-0">@Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
                     </div>
                 }
                 @if (accountBalanceInfo.TotalBalanceReserved > 0)
                 {
-                    <div class="mb-4 me-4">
+                    <div class="mt-4 me-4">
                         <p class="text-sm opacity-8 mb-0">Reserved balance</p>
                         <h6 class="mb-0">@Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
                     </div>
@@ -498,7 +498,7 @@ else
                             </div>
 
                             <div class="modal-footer border-0 pt-0">
-                                <button class="btn btn-warning" @onclick="ShowWords" data-cy="wallet-words-in-popup">Show Words</button>
+                                <button class="btn btn-border-danger" @onclick="ShowWords" data-cy="wallet-words-in-popup">Show Words</button>
                             </div>
                         </div>
                     </div>
@@ -518,8 +518,8 @@ else
                     <div class="card tab-card h-100 @(activeTab == 1 ? "active" : "")"
                          @onclick="() => SetActiveTab(1)"
                          data-cy="send-tab">
-                        <div class="card-body py-4">
-                            <div class="tab-icon mb-3 @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
+                        <div class="card-body py-4 d-flex align-items-center justify-content-center">
+                            <div class="tab-icon me-3 @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
                                 <Icon IconName="send" Height="42" Width="42" />
                             </div>
                             <h5 class="mb-0">Send</h5>
@@ -531,8 +531,8 @@ else
                     <div class="card tab-card h-100 @(activeTab == 2 ? "active" : "")"
                          @onclick="() => SetActiveTab(2)"
                          data-cy="receive-tab">
-                        <div class="card-body py-4">
-                            <div class="tab-icon mb-3 @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
+                        <div class="card-body py-4 d-flex align-items-center justify-content-center">
+                            <div class="tab-icon me-3 @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
                                 <Icon IconName="receive" Height="42" Width="42" />
                             </div>
                             <h5 class="mb-0">Receive</h5>
@@ -544,8 +544,8 @@ else
                     <div class="card tab-card h-100 @(activeTab == 3 ? "active" : "")"
                          @onclick="() => SetActiveTab(3)"
                          data-cy="history-tab">
-                        <div class="card-body py-4">
-                            <div class="tab-icon mb-3 @(activeTab == 3 ? "heartbeat" : "")" aria-hidden="true">
+                        <div class="card-body py-4 d-flex align-items-center justify-content-center">
+                            <div class="tab-icon me-3 @(activeTab == 3 ? "heartbeat" : "")" aria-hidden="true">
                                 <Icon IconName="calculator" Height="42" Width="42" />
                             </div>
                             <h5 class="mb-0">Addresses</h5>
@@ -720,7 +720,7 @@ else
                                         <button type="button" class="btn btn-border" @onclick="SendCoins" disabled="@sendConfirmSpinner">
                                             @if (sendConfirmSpinner)
                                             {
-                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                                 <span>Sending...</span>
                                             }
                                             else
@@ -790,7 +790,7 @@ else
                             </h5>
                         </div>
                     </div>
-                    <div class="table-responsive form-control mt-4">
+                    <div class="table-responsive form-control mt-4 slide-in">
                         @if (accountBalanceInfo.AccountInfo.AllAddresses().Any(address => address.Balance > 0))
                         {
                             <table class="table align-items-center mb-0">
