@@ -126,7 +126,7 @@
                                             @foreach (var signature in signaturesRequests.Where(_ => _ is { TransactionHex: not null, AmountToInvest: not null }))
                                             {
                                                 <tr>
-                                                    <td>@Money.Coins(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                                    <td>@Money.Satoshis(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
                                                     <td>@signature.TimeArrived.ToString("g")</td>
                                                     @if (signature.TimeApproved is null)
                                                     {
@@ -295,8 +295,8 @@
 
                     var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.TransactionHex);
 
-                    pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3) //Todo get the actual outputs with taproot type
-                        .Sum(_ => _.TxOut.Value.ToUnit(MoneyUnit.BTC));
+                    pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3)
+                        .Sum(_ => _.TxOut.Value.Satoshi);
                 }
                 catch (FormatException fe)
                 {
@@ -563,7 +563,7 @@
     {
         public string investorNostrPubKey { get; set; }
 
-        public decimal? AmountToInvest { get; set; }
+        public long? AmountToInvest { get; set; }
 
         public DateTime TimeArrived { get; set; }
         public DateTime? TimeApproved { get; set; }
