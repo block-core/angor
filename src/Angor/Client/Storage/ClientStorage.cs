@@ -8,6 +8,8 @@ namespace Angor.Client.Storage;
 public class ClientStorage : IClientStorage, INetworkStorage
 {
     private const string CurrencyDisplaySettingKey = "currencyDisplaySetting";
+    private const string InvestmentStatsKeyPattern = "project:{0}:stats";
+
 
     private const string utxoKey = "utxo:{0}";
     private readonly ISyncLocalStorageService _storage;
@@ -222,6 +224,21 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         _storage.RemoveItem("recovery-signatures");
     }
-
     
+    public void SaveInvestmentStats(string projectId, ProjectStats stats)
+    {
+        _storage.SetItem(string.Format(InvestmentStatsKeyPattern, projectId), stats);
+    }
+
+    public void ClearInvestmentStats(string projectId)
+    {
+        _storage.RemoveItem(string.Format(InvestmentStatsKeyPattern, projectId));
+    }
+    
+    public ProjectStats? GetInvestmentStats(string projectIdentifier)
+    {
+        var projects = GetFounderProjects();
+        return projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == projectIdentifier)?.Stats;
+    }
+
 }
