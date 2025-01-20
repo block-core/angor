@@ -23,8 +23,8 @@
 
 @inherits BaseComponent
 
-<NotificationComponent @ref="notificationComponent" />
-<PasswordComponent @ref="passwordComponent" />
+<NotificationComponent @ref="notificationComponent"/>
+<PasswordComponent @ref="passwordComponent"/>
 
 
 @if (!hasWallet)
@@ -37,7 +37,7 @@
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex col-auto my-auto align-items-center">
                 <span class="user-select-none">
-                    <Icon IconName="recovery" Height="42" Width="42" />
+                    <Icon IconName="recovery" Height="42" Width="42"/>
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
@@ -151,35 +151,33 @@
             <div class="table-responsive form-control mt-4">
                 <table class="table align-items-center mb-0">
                     <thead>
-                        <tr>
-                            <th>Stage </th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                        </tr>
+                    <tr>
+                        <th>Stage </th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in StageInfo.Items)
-                        {
-                            <tr>
-                                <td>@(item.StageIndex + 1)</td>
-                                <td>@item.Amount @network.CoinTicker</td>
-                                <td>
-                                    @if (item.IsSpent)
-                                    {
-                                        <span class="text-primary">@item.SpentTo</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-success">Not Spent</span>
-                                    }
-                                </td>
-                            </tr>
-                        }
+                    @foreach (var item in StageInfo.Items)
+                    {
+                        <tr>
+                            <td>@(item.StageIndex + 1)</td>
+                            <td>@item.GetAmountInBTC() @network.CoinTicker</td>
+                            <td>
+                                @if (item.IsSpent)
+                                {
+                                    <span class="text-primary">@item.SpentTo</span>
+                                }
+                                else
+                                {
+                                    <span class="text-success">Not Spent</span>
+                                }
+                            </td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>
-
-
         }
 
         @if (showRecoveryModal)
@@ -191,11 +189,11 @@
 
                             <div class="modal-header border-0 pb-0">
                                 <div class="d-flex align-items-center">
-                                    <Icon IconName="wallet" Height="32" Width="32" class="me-2" />
+                                    <Icon IconName="wallet" Height="32" Width="32" class="me-2"/>
                                     <h5 class="modal-title">Recovery Confirmation</h5>
                                 </div>
                                 <button class="btn-close-custom" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner">
-                                    <Icon IconName="close-circle" Height="24" Width="24" />
+                                    <Icon IconName="close-circle" Height="24" Width="24"/>
                                 </button>
                             </div>
 
@@ -203,11 +201,22 @@
 
                                 <p class="mb-1">The number of stages to be recovered is @StageInfo.Items.Count(s => !s.IsSpent) </p>
 
-                                <p class="mb-1">The amount to be recovered in to a penalty = @StageInfo.Items.Where(s => !s.IsSpent).Sum(s => s.Amount) @network.CoinTicker</p>
+                                @{
+                                    var totalAmount = StageInfo.Items
+                                        .Where(s => !s.IsSpent)
+                                        .Sum(s => Money.Satoshis(s.Amount).ToUnit(MoneyUnit.BTC));
+
+                                    var coinTicker = network.CoinTicker;
+                                }
+                                <p class="mb-1">
+                                    The amount to be recovered into a penalty = @totalAmount @coinTicker
+                                </p>
 
                                 <p class="mb-1">The penalty duration is @project.ProjectInfo.PenaltyDays days </p>
 
-                                <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(recoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                <p class="mb-1">
+                                    <strong>Miner fee:</strong> @Money.Satoshis(recoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                </p>
 
                                 <hr>
 
@@ -220,8 +229,8 @@
 
                                 <p class="mt-3">Are you sure you want to recover these funds?</p>
                             </div>
-                         
-                            
+
+
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-border" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner">Cancel</button>
                                 <button type="button" class="btn btn-border" @onclick="RecoverCoins" disabled="@PrepareToRecoverCoinsConfirmSpinner">
@@ -236,7 +245,7 @@
                                     }
                                 </button>
                             </div>
-                       
+
                         </div>
                     </div>
                 </div>
@@ -259,7 +268,9 @@
 
                                 <p class="mb-1">Send to @releaseRecoveryTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
 
-                                <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(releaseRecoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                <p class="mb-1">
+                                    <strong>Miner fee:</strong> @Money.Satoshis(releaseRecoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                </p>
 
                                 <hr>
 
@@ -308,7 +319,9 @@
 
                                 <p class="mb-1">Send to @endOfProjectTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
 
-                                <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(endOfProjectTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                <p class="mb-1">
+                                    <strong>Miner fee:</strong> @Money.Satoshis(endOfProjectTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                </p>
 
                                 <hr>
 
@@ -343,11 +356,10 @@
         }
     </div>
 </div>
- 
+
 
 @code {
-    [Parameter]
-    public string ProjectId { get; set; }
+    [Parameter] public string ProjectId { get; set; }
     private InvestorProject project;
 
     private bool showRecoveryModal = false;
@@ -378,6 +390,7 @@
 
     private bool trxNotFound = false;
     private long amount;
+
     public class StageData
     {
         public string Trxid;
@@ -398,11 +411,16 @@
 
         public int Outputindex;
         public string OutputAddress;
-        public decimal Amount;
+        public long Amount; // Store amount in satoshis
         public bool IsSpent;
         public string SpentTo;
 
         public ProjectScriptType ProjectScriptType;
+
+        public decimal GetAmountInBTC()
+        {
+            return Money.Satoshis(Amount).ToUnit(MoneyUnit.BTC);
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -492,14 +510,13 @@
             var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
 
             var insert = new StageDataTrx
-                {
-                    OutputAddress = output.Address,
-                    Outputindex = stageIndex + 2,
-                    Amount = Money.Satoshis(output.Balance).ToUnit(MoneyUnit.BTC),
-                    StageIndex = stageIndex,
-                    IsSpent = false,
-
-                };
+            {
+                OutputAddress = output.Address,
+                Outputindex = stageIndex + 2,
+                Amount = output.Balance, // Store balance in satoshis
+                StageIndex = stageIndex,
+                IsSpent = false,
+            };
 
             StageInfo.Items.Add(insert);
 
@@ -508,6 +525,7 @@
     }
 
     DateTime lastCheck = DateTime.UtcNow;
+
     private async Task CheckSpentFund()
     {
         if (StageInfo.TransactionInfo == null)
@@ -546,7 +564,7 @@
 
         foreach (var item in StageInfo.Items)
         {
-            if (LinqExtension.Contains(unconfirmedOutbound, new Outpoint(StageInfo.Trxid, item.Outputindex)))
+            if (LinqExtension.Contains(unconfirmedOutbound, new Outpoint(StageInfo.TransactionInfo.TransactionId, item.Outputindex)))
             {
                 item.IsSpent = true;
                 item.SpentTo = "pending confirmations";
@@ -580,7 +598,7 @@
                     // try to resolve the destination
                     var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
 
-                    var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == StageInfo.Trxid && input.InputIndex == item.Outputindex);
+                    var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == StageInfo.TransactionInfo.TransactionId && input.InputIndex == item.Outputindex);
 
                     if (input != null && investmentTransaction != null)
                     {
@@ -589,22 +607,22 @@
                         switch (item.ProjectScriptType.ScriptType)
                         {
                             case ProjectScriptTypeEnum.Founder:
-                                {
-                                    item.SpentTo = "Spent by founder";
-                                    break;
-                                }
+                            {
+                                item.SpentTo = "Spent by founder";
+                                break;
+                            }
                             case ProjectScriptTypeEnum.InvestorWithPenalty:
-                                {
-                                    var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
-                                    item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
-                                    break;
-                                }
+                            {
+                                var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                                item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
+                                break;
+                            }
                             case ProjectScriptTypeEnum.EndOfProject:
                             case ProjectScriptTypeEnum.InvestorNoPenalty:
-                                {
-                                    item.SpentTo = $"Spent by investor";
-                                    break;
-                                }
+                            {
+                                item.SpentTo = $"Spent by investor";
+                                break;
+                            }
                         }
                     }
                 }
@@ -760,7 +778,6 @@
             AddTransactionToPending(recoveryTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
-
         }
         catch (Exception e)
         {
@@ -889,7 +906,6 @@
             AddTransactionToPending(releaseRecoveryTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
-
         }
         catch (Exception e)
         {
@@ -1025,4 +1041,5 @@
             passwordComponent.ClearPassword();
         }
     }
+
 }
