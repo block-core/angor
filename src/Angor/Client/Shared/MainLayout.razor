@@ -34,22 +34,22 @@
                 <div class="navbar-collapse">
                     <ul class="navbar-nav user-select-none">
                         <li class="nav-item d-xl-none">
-                            <span role="button" id="iconNavbarSidenav" @onclick="ToggleSidenav">
+                            <span role="button" id="iconNavbarSidenav" @onclick="ToggleSidenav" data-tooltip="Toggle navigation">
                                 <Icon IconName="hamburger-menu" />
                             </span>
                         </li>
                         <li class="nav-item d-none" id="updateButton">
-                            <span role="button" @onclick="UpdateApp" data-tooltip="Get latest version">
+                            <span role="button" @onclick="UpdateApp" data-tooltip="Update application">
                                 <Icon IconName="update" />
                             </span>
                         </li>
                         <li class="nav-item" id="dark" @onclick="ToggleTheme">
-                            <span role="button" id="theme-icon">
+                            <span role="button" id="theme-icon" data-tooltip="Switch theme">
                                 <Icon IconName=@themeIcon />
                             </span>
                         </li>
                         <li class="nav-item d-none" id="installButton">
-                            <span role="button" @onclick="InstallApp" data-tooltip="Install app">
+                            <span role="button" @onclick="InstallApp" data-tooltip="Install application">
                                 <Icon IconName="install" />
                             </span>
                         </li>
