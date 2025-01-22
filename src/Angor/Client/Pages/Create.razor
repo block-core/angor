@@ -1362,7 +1362,7 @@
                 StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
                 PenaltyDays = 90,
                 ExpiryDate = DateTime.UtcNow.AddDays(120),
-                TargetAmount = 50L
+                TargetAmount = Money.Coins(50).Satoshi
             }
         };
     }

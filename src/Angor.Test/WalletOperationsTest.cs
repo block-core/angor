@@ -263,7 +263,7 @@ public class WalletOperationsTest : AngorTestData
                 }
             }
         },
-            FeeRate = 3000L,
+            FeeRate = Money.Coins(3000).Satoshi,
         };
 
         // Act & Assert
@@ -317,7 +317,7 @@ public class WalletOperationsTest : AngorTestData
                 }
             }
         },
-            FeeRate = 3000L,
+            FeeRate = Money.Coins(3000).Satoshi,
         };
 
         // Act
@@ -385,7 +385,7 @@ public class WalletOperationsTest : AngorTestData
         var address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
         var scriptHex = "0014b7d165bb8b25f567f05c57d3b484159582ac2827";  
         var accountInfo = new AccountInfo(); 
-        long feeRate = 10L; 
+        long feeRate = Money.Coins(10).Satoshi; 
 
         // Scenario 1: Sufficient funds
         var sendInfoSufficientFunds = new SendInfo
