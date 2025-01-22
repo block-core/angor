@@ -2809,3 +2809,72 @@ button:hover:not(:disabled) {
         width: 100%;
     }
 }
+
+.navbar .container-fluid {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    gap: 1rem;
+}
+
+.navbar nav {
+    flex: 1;
+    min-width: 0;
+}
+
+.navbar .text-sm {
+    width: 100%;
+}
+
+.navbar .text-sm h6 {
+    font-size: clamp(0.75rem, 2vw, 1rem);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.navbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    justify-content: end;
+}
+
+.nav-item {
+    align-items: center;
+    padding: 0.25rem;
+}
+
+.nav-item span[role="button"] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-item span[role="button"]:hover {
+    background-color: rgba(var(--angor-secondary-rgb), 0.1);
+    transform: scale(1.1);
+}
+
+@media (max-width: 576px) {
+    .navbar .container-fluid {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .nav-item span[role="button"] {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .navbar .text-sm h6 {
+        max-width: none;
+    }
+}
