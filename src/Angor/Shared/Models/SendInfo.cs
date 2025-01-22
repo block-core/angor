@@ -8,11 +8,6 @@ public class SendInfo
     public long SendAmount { get; set; }
     public long SendAmountSat => SendAmount;
     public decimal SendFee { get; set; }
-    public long SendFeeSat
-    {
-        get => Money.Coins(SendFee).Satoshi;
-        set => SendFee = Money.Satoshis(value).ToUnit(MoneyUnit.BTC);
-    }
     public int FeeBlockCount { get; set; } = 1;
 
     public long FeeRate { get; set; } = 0;
