@@ -2,16 +2,12 @@
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
-@using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
 @using Angor.Client.Models
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
-@using System.Text.Json
 @using Angor.Shared.Services
 @using System.Security.Cryptography
-
-@inject IJSRuntime JS
 
 @inject ILogger<Signatures> Logger
 @inject IDerivationOperations DerivationOperations
@@ -95,11 +91,6 @@
                                         <h6 class="mb-0">Signatures</h6>
                                     </div>
                                     <div class="col-6 d-flex justify-content-end">
-                                        @if (!FounderProject.TargetInvestmentReached() && FounderProject.ProjectDateStarted())
-                                        {
-                                             <div>@FounderProject.ReleaseSignaturesTime.HasValue ? "release at " + FounderProject.ReleaseSignaturesTime  : "not released yet"</div>
-                                            <button class="btn btn-sm btn-warning" @onclick="ReleaseAllSignatures">Release All</button>
-                                        }
                                         <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">Approve All</button>
                                         <button class="btn btn-sm btn-border ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
                                             @if (refreshButtonSpinner)
@@ -572,98 +563,7 @@
 
         return sig;
     }
-
-    private async Task ReleaseAllSignatures()
-    {
-        if (passwordComponent.HasPassword())
-        {
-            await ProcessReleaseSignatures();
-        }
-        else
-        {
-            passwordComponent.ShowPassword(async () =>
-            {
-                await ProcessReleaseSignatures();
-            });
-        }
-    }
-
-    private async Task ProcessReleaseSignatures()
-    {
-        isLoading = true;
-        StateHasChanged();
-
-        try
-        {
-            var releaseSignatures = signaturesRequests.Where(s => s.SignRecoveryRequest?.InvestmentTransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null).ToList();
-            numOfSignatureToSign = releaseSignatures.Count;
-            numOfSignaturesSigned = 0;
-        
-            var words = await passwordComponent.GetWalletAsync();
-        
-            foreach (var signature in releaseSignatures)
-            {
-                await PerformReleaseSignature(signature, words);
-                numOfSignaturesSigned++;
-                StateHasChanged();
-            }
-        }
-        catch (Exception e)
-        {
-            notificationComponent.ShowErrorMessage(e.Message,e);
-        }
-        finally
-        {
-            isLoading = false;
-            passwordComponent.ClearPassword();
-        }
-        
-        StateHasChanged();
-    }
-
-    private async Task<OperationResult> PerformReleaseSignature(SignatureItem signature, WalletWords words)
-    {
-        try
-        {
-            var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex);
-            var signatureInfo = CreateReleaseSignatures(signature.SignRecoveryRequest?.InvestmentTransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()), signature.SignRecoveryRequest?.ReleaseAddress ?? signature.SignRecoveryRequest.ReleaseKey);
-
-            var sigJson = serializer.Serialize(signatureInfo);
-
-            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
-            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
-
-            var encryptedContent = await encryption.EncryptNostrContentAsync(
-                nostrPrivateKeyHex, signature.investorNostrPubKey, sigJson);
-
-            FounderProject.ReleaseSignaturesTime = SignService.SendReleaseSigsToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
-
-            Storage.UpdateFounderProject(FounderProject);
-            
-            return new OperationResult { Success = true };
-        }
-        catch (Exception ex)
-        {
-            return new OperationResult { Success = false, Message = $"An error occurred: {ex.Message}" };
-        }
-    }
-
-    private SignatureInfo CreateReleaseSignatures(string transactionHex, ProjectInfo info, string founderSigningPrivateKey, string investorReleaseAddress)
-    {
-        var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
-
-        // build sigs
-        var recoveryTrx = InvestorTransactionActions.BuildReleaseInvestorFundsTransaction(info, investorTrx, investorReleaseAddress);
-        var sig = FounderTransactionActions.SignInvestorRecoveryTransactions(info, transactionHex, recoveryTrx, founderSigningPrivateKey);
-
-        if (!InvestorTransactionActions.CheckInvestorReleaseSignatures(info, investorTrx, sig, investorReleaseAddress))
-           throw new InvalidOperationException();
-
-        sig.SignatureType = "release";
-
-        return sig;
-    }
-
+  
     public class SignatureItem
     {
         public string investorNostrPubKey { get; set; }

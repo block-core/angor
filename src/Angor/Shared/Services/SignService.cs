@@ -214,6 +214,35 @@ namespace Angor.Client.Services
             }));
         }
 
+        public void LookupSignedReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Action<string, DateTime, string> action, Action onAllMessagesReceived)
+        {
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            var subscriptionKey = projectNostrPubKey + "release_approved_sigs";
+
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Release transaction signatures")
+                    .Select(_ => _.Event)
+                    .Subscribe(nostrEvent =>
+                    {
+                        action.Invoke(nostrEvent.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier), nostrEvent.CreatedAt.Value, nostrEvent.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier));
+                    });
+
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
+
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                Authors = new[] { projectNostrPubKey }, // From founder
+                Kinds = new[] { NostrKind.EncryptedDm },
+              }));
+        }
+
         public void CloseConnection()
         {
             _subscriptionsHanding.Dispose();
