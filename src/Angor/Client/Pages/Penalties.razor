@@ -134,7 +134,6 @@ else
         public bool IsExpired;
         public long AmountInSatoshis;
         public int DaysLeftForPenalty;
-        public decimal AmountInBTC => Money.Satoshis(AmountInSatoshis).ToUnit(MoneyUnit.BTC);
     }
 
     private bool refreshSpinner = false;
