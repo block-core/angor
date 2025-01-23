@@ -93,7 +93,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="text-muted">Total Investment</h6>
-                                <h4 class="mb-0">@((totalAvailableInvestedAmount + totalSpentAmount) / 100_000_000m) @network.CoinTicker</h4>
+                                <h4 class="mb-0">@(Money.Satoshis((totalAvailableInvestedAmount + totalSpentAmount)).ToUnit(MoneyUnit.BTC)) @network.CoinTicker</h4>
                             </div>
                             <div class="stat-icon">
                                 <Icon IconName="investment" Height="32" Width="32" />
@@ -107,7 +107,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="text-muted">Available Balance</h6>
-                                <h4 class="mb-0">@(totalAvailableInvestedAmount / 100_000_000m) @network.CoinTicker</h4>
+                                <h4 class="mb-0">@Money.Satoshis(totalAvailableInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h4>
                             </div>
                             <div class="stat-icon">
                                 <Icon IconName="wallet" Height="32" Width="32" />
@@ -121,7 +121,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="text-muted">Withdrawable</h6>
-                                <h4 class="mb-0">@(currentWithdrawableAmount / 100_000_000m) @network.CoinTicker</h4>
+                                <h4 class="mb-0">@Money.Satoshis(currentWithdrawableAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h4>
                             </div>
                             <div class="stat-icon">
                                 <Icon IconName="withdraw" Height="32" Width="32" />
@@ -223,8 +223,7 @@
 
                         <div class="d-flex justify-content-between align-items-center flex-wrap">
                             <h5 class="card-title mb-2">
-                                Stage @stage.StageIndex (@stage.Stage.AmountToRelease%)
-                                <span class="badge bg-primary ms-2">@((investedAmount / 100_000_000m)) @network.CoinTicker</span>
+                                Stage @stage.StageIndex (<span class="badge bg-primary ms-2">@Money.Satoshis(investedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>)
                                 <span class="badge bg-secondary ms-2">@investedCount trx</span>
                             </h5>
 
@@ -266,7 +265,7 @@
                                                        @onchange="(e) => HandleCheckboxChange(transaction.Trxid, transaction.Outputindex)"
                                                        id="@($"utxo_{transaction.Trxid}_{transaction.Outputindex}")" />
                                                 <label class="form-check-label" for="@($"utxo_{transaction.Trxid}_{transaction.Outputindex}")">
-                                                    <span>@(transaction.Amount / 100_000_000m) @network.CoinTicker</span>
+                                                    <span>@Money.Satoshis(transaction.Amount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
                                                 </label>
                                             </div>
                                         </div>

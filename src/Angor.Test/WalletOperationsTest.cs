@@ -122,7 +122,7 @@ public class WalletOperationsTest : AngorTestData
         recoveryTransaction.Outputs.RemoveAt(0);
         recoveryTransaction.Inputs.RemoveAt(0);
 
-        var recoveryTransactions = _sut.AddFeeAndSignTransaction(changeAddress, recoveryTransaction, words, accountInfo, 3000L);
+        var recoveryTransactions = _sut.AddFeeAndSignTransaction(changeAddress, recoveryTransaction, words, accountInfo, 3000300);
 
         // add the inputs of the investment trx
         List<Blockcore.NBitcoin.Coin> coins = new();
@@ -174,7 +174,7 @@ public class WalletOperationsTest : AngorTestData
         var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, projectInfo.FounderKey);
 
         var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investorKey, Money.Coins(investmentAmount).Satoshi);
-        var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, 3000L);
+        var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, 3000);
         var strippedInvestmentTransaction = network.CreateTransaction(signedInvestmentTransaction.Transaction.ToHex());
         strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
         Assert.Equal(signedInvestmentTransaction.Transaction.GetHash(), strippedInvestmentTransaction.GetHash());
@@ -190,7 +190,7 @@ public class WalletOperationsTest : AngorTestData
         recoveryTransaction.Outputs.RemoveAt(0);
         recoveryTransaction.Inputs.RemoveAt(0);
 
-        var signedRecoveryTransaction = _sut.AddFeeAndSignTransaction(accountInfo.GetNextReceiveAddress(), recoveryTransaction, words, accountInfo, 3000L);
+        var signedRecoveryTransaction = _sut.AddFeeAndSignTransaction(accountInfo.GetNextReceiveAddress(), recoveryTransaction, words, accountInfo, 3000);
 
         // add the inputs of the investment trx
         List<Blockcore.NBitcoin.Coin> coins = new();

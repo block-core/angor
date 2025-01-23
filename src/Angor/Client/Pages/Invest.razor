@@ -668,7 +668,7 @@ else
         if (decimal.TryParse(e.Value.ToString(), out decimal amountBtc))
         {
             Investment.InvestmentAmountBtc = amountBtc;
-            Investment.InvestmentAmount = (long)(amountBtc * 100_000_000); // Convert BTC to satoshis
+            Investment.InvestmentAmount = Money.Coins(amountBtc).Satoshi; // Convert BTC to satoshis
 
             StagesBreakdown.Clear();
             int index = 1;
