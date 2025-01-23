@@ -154,12 +154,12 @@ else
     }
     else
     {
-        <div class="project-wrapper g-4">
+        <div class="project-wrapper">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
                
-                    <div class="card project-card slide-in hover-effect">
-                        <div class="row g-0">
+                    <div class="card project-card slide-in hover-effect mx-2 mb-4">
+                        <div class="row">
                             <div class="col-md-4 position-relative card-zoom">
                                 <div class="banner-container-list">
                                     @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
