@@ -593,7 +593,7 @@ progress {
 .container-lg,
 .container-xl,
 .container-xxl {
-    --angor-gutter-x: 1.5rem;
+    --angor-gutter-x: 3rem;
     --angor-gutter-y: 0;
     width: 100%;
     padding-right: calc(var(--angor-gutter-x) * .5);
@@ -4715,11 +4715,6 @@ fieldset:disabled .btn {
         color: var(--angor-navbar-active-color);
     }
 
-.navbar-collapse {
-    flex-basis: 100%;
-    flex-grow: 1;
-    align-items: center;
-}
 
 .navbar-toggler {
     padding: var(--angor-navbar-toggler-padding-y) var(--angor-navbar-toggler-padding-x);
