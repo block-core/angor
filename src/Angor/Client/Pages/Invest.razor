@@ -307,7 +307,7 @@
                                     <div class="info-card flex-grow-1 me-2">
                                         <div class="info-label">Amount to Invest</div>
                                         <div class="info-value text-success">
-                                            @Investment.InvestmentAmountBtc @network.CoinTicker
+                                            @(Money.Satoshis(Investment.InvestmentAmount).ToUnit(MoneyUnit.BTC)) @network.CoinTicker
                                         </div>
                                     </div>
                                     <div class="info-card flex-grow-1 ms-2">
@@ -705,15 +705,15 @@ else
         if (Investment.IsSeeder)
         {
             bool isTestnet = network.NetworkType == NetworkType.Testnet;
-            decimal maxInvestmentAmount = isTestnet ? decimal.MaxValue : 0.1m; // 0.1 BTC for mainnet, unlimited for testnet
-            decimal minInvestmentAmount = 0.001m; // Minimum investment for all networks
-            if (Investment.InvestmentAmountBtc < minInvestmentAmount)
+            long maxInvestmentAmount = isTestnet ? long.MaxValue : Money.Satoshis(0.1m) ; // 0.1 BTC for mainnet, unlimited for testnet
+            long minInvestmentAmount = Money.Satoshis(0.001m) ; // Minimum investment for all networks
+            if (Investment.InvestmentAmount < minInvestmentAmount)
             {
                 notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minInvestmentAmount} BTC was not reached");
                 return;
             }
 
-            if (Investment.InvestmentAmountBtc > maxInvestmentAmount)
+            if (Investment.InvestmentAmount > maxInvestmentAmount)
             {
                 notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentAmount} BTC on the mainnet");
                 return;
@@ -721,7 +721,7 @@ else
         }
         else
         {
-            if (Investment.InvestmentAmountBtc < 0.001m)
+            if (Investment.InvestmentAmount < Money.Satoshis(0.001m))
             {
                 notificationComponent.ShowErrorMessage($"Investor minimum investment amount is {0.001} BTC");
                 return;
@@ -835,7 +835,7 @@ else
                     Metadata = project.Metadata,
                     SignedTransactionHex = signedTransaction!.Transaction!.ToHex(),
                     CreationTransactionId = project.CreationTransactionId,
-                    AmountInvested = new Money(Investment.InvestmentAmountBtc, MoneyUnit.BTC).Satoshi,
+                    AmountInvested = Investment.InvestmentAmount,
                     InvestorPublicKey = InvestorPubKey ?? throw new ArgumentNullException("The investor pub key is not populated")
                 };
 

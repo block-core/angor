@@ -93,7 +93,7 @@ else
                         {
                             <tr>
                                 <td>@penalty.ProjectIdentifier</td>
-                                <td>@penalty.AmountInBTC @network.CoinTicker</td>
+                                <td>@Money.Satoshis(penalty.AmountInSatoshis).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
                                 <td>
                                     @if (penalty.IsExpired)
                                     {
@@ -134,7 +134,6 @@ else
         public bool IsExpired;
         public long AmountInSatoshis;
         public int DaysLeftForPenalty;
-
         public decimal AmountInBTC => Money.Satoshis(AmountInSatoshis).ToUnit(MoneyUnit.BTC);
     }
 

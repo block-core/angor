@@ -92,8 +92,8 @@ public class CurrencyService : ICurrencyService
 
     private string CalculateFormattedValue(long btcBalance, decimal rate, string currencySymbol, CultureInfo cultureInfo)
     {
-        var value = btcBalance * rate / 100_000_000; // Convert satoshis to BTC tbt
-        return value.ToString("C2", cultureInfo).Replace(cultureInfo.NumberFormat.CurrencySymbol, currencySymbol);
+        var value = ToBtc(btcBalance); // Use ToBtc extension method
+        return (value * rate).ToString("C2", cultureInfo).Replace(cultureInfo.NumberFormat.CurrencySymbol, currencySymbol);
     }
 
     private static string GetCultureCode(string currencyCode)
@@ -114,5 +114,16 @@ public class CurrencyService : ICurrencyService
     private static List<string> GenerateEmptyStringList(int length)
     {
         return Enumerable.Repeat(string.Empty, length).ToList();
+    }
+
+    // Add ToBtc and ToLong methods
+    public decimal ToBtc(long satoshis)
+    {
+        return satoshis / 100_000_000m; // Convert satoshis to BTC
+    }
+
+    public long ToLong(decimal btcAmount)
+    {
+        return (long)(btcAmount * 100_000_000m); // Convert BTC to satoshis
     }
 }
