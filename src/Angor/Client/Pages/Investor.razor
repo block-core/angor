@@ -38,7 +38,7 @@
         <div class="d-flex align-items-center justify-content-between flex-wrap">
             <div class="d-flex col-auto my-auto align-items-center">
                 <span class="user-select-none">
-                    <Icon IconName="portfolio" Height="42" Width="42" />
+                    <Icon IconName="portfolio" Height="42" Width="42"/>
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
@@ -71,11 +71,10 @@
 </div>
 
 
-
 <div class="mt-4">
 
-    <NotificationComponent @ref="notificationComponent" />
-    <PasswordComponent @ref="passwordComponent" />
+    <NotificationComponent @ref="notificationComponent"/>
+    <PasswordComponent @ref="passwordComponent"/>
 
     <!-- Summary Statistics -->
     <div class="row g-4 mb-4">
@@ -83,7 +82,7 @@
             <div class="card feature-box py-0 text-white">
                 <div class="card-body text-center">
                     <span class="user-select-none animate-rotate">
-                        <Icon IconName="founder" Height="42" Width="42" />
+                        <Icon IconName="founder" Height="42" Width="42"/>
                     </span>
                     <h5 class="card-title mt-4">Funded Projects</h5>
                     <p class="card-text">@TotalFundedProjects</p>
@@ -94,7 +93,7 @@
             <div class="card feature-box py-0 text-white">
                 <div class="card-body text-center">
                     <span class="user-select-none animate-rotate">
-                        <Icon IconName="btc" Height="42" Width="42" />
+                        <Icon IconName="btc" Height="42" Width="42"/>
                     </span>
                     <h5 class="card-title mt-4">Total invested</h5>
                     <p class="card-text">@Money.Satoshis(TotalInvested).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -105,7 +104,7 @@
             <div class="card feature-box py-0 text-white">
                 <div class="card-body text-center">
                     <span class="user-select-none animate-rotate">
-                        <Icon IconName="wallet" Height="42" Width="42" />
+                        <Icon IconName="wallet" Height="42" Width="42"/>
                     </span>
                     <h5 class="card-title mt-4">Wallet</h5>
                     <p class="card-text">@Money.Satoshis(TotalWallet).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -116,7 +115,7 @@
             <div class="card feature-box py-0 text-white">
                 <div class="card-body text-center">
                     <span class="user-select-none animate-rotate">
-                        <Icon IconName="recovery" Height="42" Width="42" />
+                        <Icon IconName="recovery" Height="42" Width="42"/>
                     </span>
                     <h5 class="card-title mt-4">In Recovery</h5>
                     <p class="card-text">@Money.Satoshis(TotalInRecovery).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -154,7 +153,6 @@
 
                         <div class="col">
 
-          
 
                             <div class="card card-body">
                                 <div class="d-flex align-items-center">
@@ -205,11 +203,11 @@
                                                     <Icon IconName="clock-square" Width="24" Height="24"></Icon>
                                                 </i>
                                             </a>
-                                         }     
+                                        }
                                         <strong>@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
 
                                     </div>
-           
+
                                 </div>
 
                                 <div class="mb-3 d-flex justify-content-between">
@@ -245,7 +243,6 @@
                                 </div>
                             </div>
 
-            
 
                         </div>
                     }
@@ -258,6 +255,7 @@
 
 
 </div>
+
 @code {
 
     bool RefreshBalanceTriggered;
@@ -339,7 +337,6 @@
 
             await RefreshBalance();
         }
-
     }
 
     private Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
@@ -377,7 +374,7 @@
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage(ex.Message,ex);
+            notificationComponent.ShowErrorMessage(ex.Message, ex);
         }
     }
 
@@ -444,7 +441,7 @@
             }, rootNostrPubKeyHex);
     }
 
-    
+
     //TODO David check if we should replace the logic to get all projects first and then get signatures for them?
     private void FetchProjectsData(params string[] eventIds)
     {
@@ -464,20 +461,24 @@
                     (projectNpub, metadata) =>
                     {
                         var project = projects.FirstOrDefault(x => x.ProjectInfo.NostrPubKey == projectNpub);
-                        if (project is { Metadata: null }) { project.Metadata = metadata; }
-                    }, 
+                        if (project is { Metadata: null })
+                        {
+                            project.Metadata = metadata;
+                        }
+                    },
                     () =>
                     {
                         if (eventIds.Length != projects.Count)
                         {
                             notificationComponent.ShowErrorMessage("Unable to pull the information for all projects invested (try adding relays)");
                         }
+
                         StateHasChanged();
                     },
                     projects.Select(x => x.ProjectInfo.NostrPubKey).ToArray());
-            },eventIds);
+            }, eventIds);
     }
-    
+
     private async Task GetInvestmentProjectDataAsync(InvestmentState investmentState)
     {
         var projectIndexerData = await _IndexerService.GetProjectByIdAsync(investmentState.ProjectIdentifier);
@@ -573,15 +574,17 @@
         var words = await passwordComponent.GetWalletAsync();
         var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1);
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
-        var rootNostrPubKeyHex = _DerivationOperations.DeriveNostrPubKey(words, 0);
-        
+        NostrDMPrivateKeyHex = "362f4b51ecac1bc07a3216d9b5da1abfcb42f04f51ebfd659d5ebfc21f62b05d";
         foreach (var kvp in investmentRequestsMap)
         {
             try
             {
-                _Logger.LogInformation($"Decrypting content for key: {kvp.Key}");
+                _Logger.LogInformation($"NostrDMPrivateKeyHex :    {NostrDMPrivateKeyHex}");
+                _Logger.LogInformation($"key :    {kvp.Key}");
+                _Logger.LogInformation($"value :    {kvp.Value}");
+
                 var decryptedContent = await _encryptionService.DecryptNostrContentAsync(
-                    NostrDMPrivateKeyHex, rootNostrPubKeyHex, kvp.Value
+                    NostrDMPrivateKeyHex, kvp.Key, kvp.Value
                 );
                 decryptedSignatures[kvp.Key] = decryptedContent;
             }
