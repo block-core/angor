@@ -28,7 +28,7 @@
 @inject IApplicationLogicService applicationLogicService;
 @inject ISignService _SignService;
 @inject IRelayService _RelayService;
-
+@inject IUTXOService _UTXOService;
 @inject IInvestorTransactionActions _InvestorTransactionActions;
 
 @inject ISerializer serializer
@@ -592,6 +592,7 @@ else
 
         try
         {
+            await _UTXOService.RefreshUTXOsAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
@@ -673,6 +674,7 @@ else
 
         try
         {
+            await _UTXOService.RefreshUTXOsAsync();
             Debug.Assert(project != null, nameof(project) + " != null");
 
             project = new InvestorProject

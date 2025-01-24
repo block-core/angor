@@ -20,6 +20,7 @@
 @inject IWalletOperations _WalletOperations
 @inject IInvestorTransactionActions _InvestorTransactionActions
 @inject ILogger<Recover> Logger;
+@inject IUTXOService _utxoService;
 
 @inherits BaseComponent
 
@@ -636,6 +637,8 @@
 
         try
         {
+            await _utxoService.RefreshUTXOsAsync();
+            notificationComponent.ShowNotificationMessage("UTXOs refreshed successfully!");
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
