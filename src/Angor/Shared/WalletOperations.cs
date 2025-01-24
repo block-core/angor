@@ -539,7 +539,7 @@ public class WalletOperations : IWalletOperations
             var feeEstimations = await _indexerService.GetFeeEstimationAsync(blocks);
 
             if (feeEstimations == null || (!feeEstimations.Fees?.Any() ?? true))
-                return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRate = 10000 / _});
+                return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRate = 10000 / _}); // default to 1 satoshi per byte for 10 blocks and 10 satoshi for 1 block  
 
             _logger.LogInformation($"fee estimation is {string.Join(", ", feeEstimations.Fees.Select(f => f.Confirmations.ToString() + "-" + f.FeeRate))}");
 

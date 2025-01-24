@@ -334,17 +334,17 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
         var feeEstimations = await response.Content.ReadFromJsonAsync<RecommendedFees>(new JsonSerializerOptions()
         {
-            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
-
+        
         return new FeeEstimations
         {
             Fees = new List<FeeEstimation>
             {
-                new() { FeeRate = feeEstimations.FastestFee, Confirmations = 1 }, //TODO this is an estimation
-                new() { FeeRate = feeEstimations.HalfHourFee, Confirmations = 3 },
-                new() { FeeRate = feeEstimations.HourFee, Confirmations = 6 },
-                new() { FeeRate = feeEstimations.EconomyFee, Confirmations = 18 }, //TODO this is an estimation
+                new() { FeeRate = feeEstimations.FastestFee * 1000, Confirmations = 1 }, //TODO this is an estimation
+                new() { FeeRate = feeEstimations.HalfHourFee * 1000, Confirmations = 3 },
+                new() { FeeRate = feeEstimations.HourFee * 1000, Confirmations = 6 },
+                new() { FeeRate = feeEstimations.EconomyFee * 1000, Confirmations = 18 }, //TODO this is an estimation
             }
         };
     }
