@@ -1,4 +1,5 @@
 ﻿@page "/investor"
+@using System.Text
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Blockcore.NBitcoin
@@ -7,6 +8,7 @@
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin.DataEncoders
 @using Nostr.Client.Messages
+@using System.Text.Json;
 
 @inject ILogger<Investor> _Logger
 @inject IClientStorage storage;
@@ -56,6 +58,12 @@
                         <Icon IconName="sad-circle" Width="24" Height="24"></Icon>
                     </i>
                     <span class="nav-link-text ms-1">Penalties</span>
+                </button>
+                <button class="btn btn-border w-100 w-lg-auto me-3 mb-lg-0" @onclick="DownloadSignaturesAsJson">
+                    <i>
+                        <Icon IconName="download" Width="24" Height="24"></Icon>
+                    </i>
+                    <span class="nav-link-text ms-1">Download Signatures</span>
                 </button>
             </div>
         </div>
@@ -142,7 +150,7 @@
                     {
                         Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
                         var nostrPubKey = project.ProjectInfo.NostrPubKey;
-                        investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
+                        investmentRequestsMap.TryGetValue(nostrPubKey, out string signatureContent);
 
                         <div class="col">
 
@@ -221,7 +229,7 @@
 
                                 <div class="mb-3 d-flex justify-content-between">
                                     <span>Founder Approval:</span>
-                                    @if (hasInvestmentRequests)
+                                    @if (!string.IsNullOrEmpty(signatureContent))
                                     {
                                         <strong class="text-primary">Approved</strong>
                                     }
@@ -262,7 +270,7 @@
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
 
-    private Dictionary<string, bool> investmentRequestsMap = new Dictionary<string, bool>();
+    private Dictionary<string, string> investmentRequestsMap = new Dictionary<string, string>();
 
     public Dictionary<string, ProjectStats> Stats = new();
 
@@ -336,12 +344,8 @@
 
     private Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
     {
-        if (investmentRequestsMap.ContainsKey(nostrPubKey))
-        {
-            investmentRequestsMap[nostrPubKey] = true;
-            StateHasChanged();
-        }
-
+        investmentRequestsMap[nostrPubKey] = signatureContent;
+        StateHasChanged();
         return Task.CompletedTask;
     }
 
@@ -349,7 +353,7 @@
     {
         foreach (var project in projects)
         {
-            investmentRequestsMap[project.ProjectInfo.NostrPubKey] = false;
+            investmentRequestsMap[project.ProjectInfo.NostrPubKey] = string.Empty;
 
             _SignService.LookupSignatureForInvestmentRequest(
                 project.InvestorNPub,
@@ -561,5 +565,35 @@
     private void NavigateToPenalties()
     {
         NavigationManager.NavigateTo("/penalties");
+    }
+
+    private async Task DownloadSignaturesAsJson()
+    {
+        var decryptedSignatures = new Dictionary<string, string>();
+        var words = await passwordComponent.GetWalletAsync();
+        var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1);
+        var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
+        var rootNostrPubKeyHex = _DerivationOperations.DeriveNostrPubKey(words, 0);
+        
+        foreach (var kvp in investmentRequestsMap)
+        {
+            try
+            {
+                _Logger.LogInformation($"Decrypting content for key: {kvp.Key}");
+                var decryptedContent = await _encryptionService.DecryptNostrContentAsync(
+                    NostrDMPrivateKeyHex, rootNostrPubKeyHex, kvp.Value
+                );
+                decryptedSignatures[kvp.Key] = decryptedContent;
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogError(ex, $"Failed to decrypt content for key: {kvp.Key}");
+            }
+        }
+
+        var json = JsonSerializer.Serialize(decryptedSignatures);
+        var bytes = Encoding.UTF8.GetBytes(json);
+        var fileName = "signatures.json";
+        await JS.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(bytes));
     }
 }
