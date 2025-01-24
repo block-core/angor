@@ -40,7 +40,7 @@
     </div>
 </div>
 
-<div class="row mt-4">
+<div class="row mt-4 mb-4">
     <div class="card card-body">
         <div class="d-flex align-items-center">
             <!-- Search Section -->
@@ -56,14 +56,16 @@
 
 @if (searchInProgress)
 {
-    <div class="d-flex justify-content-center mt-4">
-        <div class="loader"></div>
+    <div class="row card card-body">
+        <div class="d-flex justify-content-center">
+            <div class="loader"></div>
+        </div>
     </div>
 }
 
 @if (!projects.Any() && !searchInProgress && noProject)
 {
-    <div class="row mt-4">
+    <div class="row mt-4 mb-4">
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center">
                 <span class="me-3 user-select-none">
@@ -78,19 +80,19 @@ else
 {
     @if (isGridView)
     {
-        <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper" data-cy="project-grid">
+        <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper g-4" data-cy="project-grid">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
                 <div class="col d-flex align-items-stretch">
-                    <div class="card mt-4 w-100 project-card">
-                        <a class="d-block">
+                    <div class="card  w-100 project-card hover-effect">
+                        <a class="d-block card-zoom">
                             @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                             {
                                 var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                 <div class="banner-container">
-                                    <img class="banner-image" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                    <div class="profile-container">
-                                        <img class="profile-image" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    <img class="banner-image fade-in" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    <div class="profile-container slide-up">
+                                        <img class="profile-image pulse" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                     </div>
                                 </div>
                             }
@@ -152,80 +154,82 @@ else
     }
     else
     {
-        <div class="project-wrapper">
+        <div class="project-wrapper g-4">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
-                <div class="card mt-4 project-card">
-                    <div class="row g-0">
-                        <div class="col-md-4 position-relative">
-                            <div class="banner-container-list">
-                                @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
-                                {
-                                    var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                    <img class="banner-image" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                    <div class="profile-container">
-                                        <img class="profile-image" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Image" />
-                                    </div>
-                                }
+               
+                    <div class="card project-card slide-in hover-effect">
+                        <div class="row g-0">
+                            <div class="col-md-4 position-relative card-zoom">
+                                <div class="banner-container-list">
+                                    @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                                    {
+                                        var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                        <img class="banner-image fade-in" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                        <div class="profile-container slide-up">
+                                            <img class="profile-image" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Image" />
+                                        </div>
+                                    }
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-8 d-flex align-items-center">
-                            <div class="card-body">
-                                @if (nostrSearchInProgress)
-                                {
-                                    <div class="p-3">
-                                        <div class="loader-small m-auto"></div>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="project-list">
-                                        <div>
-                                            @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
-                                            {
-                                                var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                                if (project?.Metadata != null)
+                            <div class="col-md-8 d-flex align-items-center">
+                                <div class="card-body">
+                                    @if (nostrSearchInProgress)
+                                    {
+                                        <div class="p-3">
+                                            <div class="loader-small m-auto"></div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="project-list">
+                                            <div>
+                                                @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                                                 {
+                                                    var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                                    if (project?.Metadata != null)
+                                                    {
 
-                                                    <div class="d-flex align-items-center mb-4">
-                                                        <span class="user-select-none">
-                                                            <Icon IconName="view" Height="24" Width="24"></Icon>
-                                                        </span>
-                                                        <div class="h-100 ms-3">
-                                                            <h5 class="mb-0 font-weight-bolder" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                                                <a href="/view/@project.ProjectInfo.ProjectIdentifier"> @project.Metadata.Name</a>
-                                                            </h5>
+                                                        <div class="d-flex align-items-center mb-4">
+                                                            <span class="user-select-none">
+                                                                <Icon IconName="view" Height="24" Width="24"></Icon>
+                                                            </span>
+                                                            <div class="h-100 ms-3">
+                                                                <h5 class="mb-0 font-weight-bolder" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                                                    <a href="/view/@project.ProjectInfo.ProjectIdentifier"> @project.Metadata.Name</a>
+                                                                </h5>
+                                                            </div>
                                                         </div>
-                                                    </div>
 
-                                                    <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@ConvertToMarkupString(project.Metadata.About)</p>
+                                                        <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@ConvertToMarkupString(project.Metadata.About)</p>
+                                                    }
                                                 }
-                                            }
-                                            else
-                                            {
-                                                <p class="text-warning-emphasis">Project not found in any relay!</p>
-                                            }
-                                        </div>
-                                        <hr class="horizontal light m-only">
-
-                                        <div role="button" class="d-flex align-items-center btn btn-border vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                            <span class="user-select-none">
-                                                <Icon IconName="view-project" Height="24" Width="24"></Icon>
-                                            </span>
-                                            <div class="h-100 mt-3">
-                                                <span class="mb-0 font-weight-bolder">
-                                                    View Project
-                                                </span>
+                                                else
+                                                {
+                                                    <p class="text-warning-emphasis">Project not found in any relay!</p>
+                                                }
                                             </div>
+                                            <hr class="horizontal light m-only">
+
+                                            <div role="button" class="d-flex align-items-center btn btn-border vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                                <span class="user-select-none">
+                                                    <Icon IconName="view-project" Height="24" Width="24"></Icon>
+                                                </span>
+                                                <div class="h-100 mt-3">
+                                                    <span class="mb-0 font-weight-bolder">
+                                                        View Project
+                                                    </span>
+                                                </div>
+                                            </div>
+
+
                                         </div>
-
-
-                                    </div>
-                                }
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                
             }
         </div>
 
@@ -243,6 +247,8 @@ else
         </a>
     </div>
 }
+
+
 
 @code {
     private NotificationComponent notificationComponent;
@@ -384,7 +390,7 @@ else
                 var projectNpub = string.Empty;
                 _RelayService.LookupProjectsInfoByEventIds<ProjectInfo>(p =>
                     {
-                        if (SessionStorage.IsProjectInStorageById(p.ProjectIdentifier)) 
+                        if (SessionStorage.IsProjectInStorageById(p.ProjectIdentifier))
                             return;
                         SessionStorage.StoreProject(new Project { ProjectInfo = p, CreationTransactionId = findProject.TrxId });
                         projectNpub = p.NostrPubKey;
@@ -513,7 +519,7 @@ else
     {
         searchQuery = e.Value.ToString();
     }
- 
+
 
     public MarkupString ConvertToMarkupString(string input)
     {

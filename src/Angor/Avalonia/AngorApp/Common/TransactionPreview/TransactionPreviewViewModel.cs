@@ -12,7 +12,7 @@ namespace AngorApp.Common.TransactionPreview;
 
 public partial class TransactionPreviewViewModel : ReactiveValidationObject, ITransactionPreviewViewModel
 {
-    [Reactive] private decimal feerate = 1m;
+    [Reactive] private ulong feerate = 1;
     [ObservableAsProperty] private IUnsignedTransaction? transaction;
 
     public TransactionPreviewViewModel(IWallet wallet, Destination destination, UIServices services)

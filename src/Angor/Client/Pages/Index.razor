@@ -1,16 +1,60 @@
 ﻿@page "/"
 <PageTitle>Angor</PageTitle>
+
 <div class="card">
     <div class="row g-0">
         <div class=" d-flex align-items-center justify-content-center position-relative">
             <!-- Loader for Card -->
-            <div class="card-body card-loader loading text-center">
-                 <span class="main-logo mb-3">
+            <div class="card-body card-loader loading text-center py-5">
+                <span class="main-logo mb-3">
                     <Icon IconName="angor-logo" Width="72" Height="72" />
                 </span>
                 <h5 class="card-title text-center">Welcome to Angor</h5>
                 <p class="card-text text-center">A P2P funding protocol built on Bitcoin and Nostr</p>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="container mt-4 slide-in px-0">
+    <div class="row g-4">
+        <div class="col-12 col-md-4">
+            <div class="feature-box card">
+                <i class="bi bi-wallet2 feature-icon"></i>
+                <h3 class="feature-title">Setup Wallet</h3>
+                <p class="feature-text">Create a new <a href="/wallet">wallet</a> or recover your existing one to get started with Angor</p>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="feature-box card">
+                <i class="bi bi-search feature-icon"></i>
+                <h3 class="feature-title">Discover Projects</h3>
+                <p class="feature-text">Browse through innovative projects on <a href="https://hub.angor.io" target="_blank">Angor Hub</a> and find your next investment</p>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="feature-box card">
+                <i class="bi bi-rocket-takeoff feature-icon"></i>
+                <h3 class="feature-title">Launch or Invest</h3>
+                <p class="feature-text">Start your fundraising journey or invest in promising projects</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4 d-flex justify-content-center">
+        <a href="https://docs.angor.io" target="_blank" class="btn btn-border" style="width: fit-content;">
+            <div class="d-flex align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="info" Height="24" Width="24"></Icon>
+                </span>
+                <div class="ms-3">
+                    <span class="mb-0 font-weight-bolder text-primary">
+                        Learn More ...
+                    </span>
+                </div>
+            </div>
+        </a>
     </div>
 </div>

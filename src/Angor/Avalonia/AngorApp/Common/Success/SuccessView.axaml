@@ -3,11 +3,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
-             xmlns:common="clr-namespace:AngorApp.Common"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.Common.SuccessView" x:DataType="common:SuccessViewModel">
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+             xmlns:success="clr-namespace:AngorApp.Common.Success"
+             mc:Ignorable="d" d:DesignHeight="450"
+             x:Class="AngorApp.Common.Success.SuccessView" x:DataType="success:SuccessViewModel">
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="240" MaxWidth="400">
         <avalonia:Icon Value="fa-solid fa-check" Foreground="Green" FontSize="20" Margin="10" />
-        <TextBlock Text="{Binding Message}" VerticalAlignment="Center" />
+        <TextBlock Text="{Binding Message}" VerticalAlignment="Center" TextWrapping="Wrap" />
     </StackPanel>
 </UserControl>

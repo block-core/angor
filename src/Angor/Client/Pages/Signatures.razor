@@ -99,7 +99,7 @@
                                         <button class="btn btn-sm btn-border ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
                                             @if (refreshButtonSpinner)
                                             {
-                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                                 <span>Refreshing...</span>
                                             }
                                             else
@@ -131,10 +131,10 @@
                                                     @if (signature.TimeApproved is null)
                                                     {
                                                         <td>
-                                                            <button class="btn btn-success" @onclick="() => ApproveSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.Any()">
+                                                            <button class="btn btn-border-success" @onclick="() => ApproveSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.Any()">
                                                                 @if (signaturesRequestsApproving.ContainsKey(signature))
                                                                 {
-                                                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                                                     <span>Approving...</span>
                                                                 }
                                                                 else
@@ -179,7 +179,7 @@
 
     private bool CanApproveAllSignatures => signaturesRequests != null && signaturesRequests.Any(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null);
 
-    private string ApproveButtonClass => CanApproveAllSignatures ? "btn-success" : "btn-border";
+    private string ApproveButtonClass => CanApproveAllSignatures ? "btn-border-success" : "btn-border";
 
     private bool ApproveButtonDisabled => !CanApproveAllSignatures;
 
