@@ -3,16 +3,21 @@ using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.JSInterop;
 using NBitcoin.Crypto;
+using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Client.Services
 {
     public class EncryptionService : IEncryptionService
     {
         private readonly IJSRuntime _jsRuntime;
+        private readonly ILogger<EncryptionService> _logger;
 
-        public EncryptionService(IJSRuntime jsRuntime)
+        public EncryptionService(IJSRuntime jsRuntime, ILogger<EncryptionService> logger)
         {
             _jsRuntime = jsRuntime;
+            _logger = logger;
         }
 
         public async Task<string> EncryptData(string secretData, string password)
@@ -33,8 +38,23 @@ namespace Angor.Client.Services
 
         public async Task<string> DecryptNostrContentAsync(string nsec, string npub, string encryptedContent)
         {
-            var secertHex = GetSharedSecretHexWithoutPrefix(nsec, npub);
-            return await _jsRuntime.InvokeAsync<string>("decryptNostr", secertHex, encryptedContent);
+            try
+            {
+                _logger.LogInformation($"Decrypting content with nsec: {nsec}, npub: {npub}, encryptedContent: {encryptedContent}");
+                var decryptedContent = await _jsRuntime.InvokeAsync<string>("decryptNostrContent", nsec, npub, encryptedContent);
+                _logger.LogInformation($"Decrypted content: {decryptedContent}");
+                return decryptedContent;
+            }
+            catch (JSException jsEx)
+            {
+                _logger.LogError(jsEx, "JavaScript decryption failed");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Decryption failed");
+                throw;
+            }
         }
 
         private static string GetSharedSecretHexWithoutPrefix(string nsec, string npub)

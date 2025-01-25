@@ -337,13 +337,36 @@
 
             await RefreshBalance();
         }
+
     }
 
-    private Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
+    private async Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
     {
-        investmentRequestsMap[nostrPubKey] = signatureContent;
+        var words = await passwordComponent.GetWalletAsync();
+        var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1);
+        var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
+
+        try
+        {
+            _Logger.LogInformation($"Attempting to decrypt content for key: {nostrPubKey}");
+            _Logger.LogInformation($"NostrDMPrivateKeyHex: {NostrDMPrivateKeyHex}");
+            _Logger.LogInformation($"SignatureContent: {signatureContent}");
+
+            var decryptedContent = await _encryptionService.DecryptNostrContentAsync(
+                NostrDMPrivateKeyHex, nostrPubKey, signatureContent
+            );
+
+            _Logger.LogInformation($"Decrypted content for key: {nostrPubKey} - {decryptedContent}");
+
+            investmentRequestsMap[nostrPubKey] = decryptedContent;
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogError(ex, $"Failed to decrypt content for key: {nostrPubKey}");
+            investmentRequestsMap[nostrPubKey] = string.Empty;
+        }
+
         StateHasChanged();
-        return Task.CompletedTask;
     }
 
     private void CheckSignatureFromFounder()
@@ -570,31 +593,7 @@
 
     private async Task DownloadSignaturesAsJson()
     {
-        var decryptedSignatures = new Dictionary<string, string>();
-        var words = await passwordComponent.GetWalletAsync();
-        var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1);
-        var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
-        NostrDMPrivateKeyHex = "362f4b51ecac1bc07a3216d9b5da1abfcb42f04f51ebfd659d5ebfc21f62b05d";
-        foreach (var kvp in investmentRequestsMap)
-        {
-            try
-            {
-                _Logger.LogInformation($"NostrDMPrivateKeyHex :    {NostrDMPrivateKeyHex}");
-                _Logger.LogInformation($"key :    {kvp.Key}");
-                _Logger.LogInformation($"value :    {kvp.Value}");
-
-                var decryptedContent = await _encryptionService.DecryptNostrContentAsync(
-                    NostrDMPrivateKeyHex, kvp.Key, kvp.Value
-                );
-                decryptedSignatures[kvp.Key] = decryptedContent;
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError(ex, $"Failed to decrypt content for key: {kvp.Key}");
-            }
-        }
-
-        var json = JsonSerializer.Serialize(decryptedSignatures);
+        var json = JsonSerializer.Serialize(investmentRequestsMap);
         var bytes = Encoding.UTF8.GetBytes(json);
         var fileName = "signatures.json";
         await JS.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(bytes));
