@@ -35,7 +35,7 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-<div class="row mb-4 slide-up">
+<div class="row slide-in">
     <div class="card card-body hover-effect">
         <div class="d-flex align-items-center justify-content-between flex-wrap">
             <div class="d-flex col-auto my-auto align-items-center">
@@ -62,7 +62,7 @@
     </div>
 </div>
 
-<div class="animate-fade-in">
+<div class="animate-fade-in mt-4">
 
     @if (firstTimeRefreshSpinner && refreshSpinner)
     {
@@ -74,7 +74,7 @@
     }
     else
     {
-        <div class="card card-body slide-up">
+        <div class="card card-body slide-up mt-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="card-title d-flex align-items-center">
                     <span class="user-select-none animate-rotate">
