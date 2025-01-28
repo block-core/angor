@@ -15,7 +15,7 @@
     <controls:Pane IsTitleVisible="True">
         <controls:Pane.Title>
             <Binding Path="Wallet.Balance" 
-                     Converter="{x:Static controls:MiscConverters.SatsToBtc}" />
+                     Converter="{x:Static controls:MiscConverters.SatsToBtcString}" />
         </controls:Pane.Title>
         <controls:Pane.TitleRightContent>
             <StackPanel Orientation="Horizontal" Spacing="20">

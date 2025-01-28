@@ -19,6 +19,9 @@
                     <Button Command="{Binding Invest}">INVEST NOW</Button>
                 </Border>
             </Panel>
+            
+            <dt:Stages />
+            
             <controls:Pane>
                 <StackPanel HorizontalAlignment="Center" Spacing="20">
                     <PathIcon Height="100" Width="200" Data="{StaticResource ShieldStar}" />

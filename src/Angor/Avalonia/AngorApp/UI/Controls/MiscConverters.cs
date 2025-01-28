@@ -61,7 +61,7 @@ public static class MiscConverters
         return QRGenerator.SvgImageFrom(s);
     });
 
-    public static FuncValueConverter<long, string> SatsToBtc { get; } = new(satoshis =>
+    public static FuncValueConverter<long, string> SatsToBtcString { get; } = new(satoshis =>
     {
         var btc = satoshis / 10000_0000;
         return $"{btc:0.0000 0000}" + " BTC";
@@ -75,5 +75,11 @@ public static class MiscConverters
         }
 
         return "";
+    });
+
+    public static FuncValueConverter<long, decimal> SatsToBtc { get; } = new(satoshis =>
+    {
+        var btc = satoshis / 1_0000_0000;
+        return btc;
     });
 }

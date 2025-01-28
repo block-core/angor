@@ -24,7 +24,7 @@
                 <z:Column Header="STAGE %" Binding="{Binding Weight, StringFormat={}{0:P0}}" />
                 <z:Column Header="RELEASE DATE" Binding="{Binding ReleaseDate, StringFormat=d}" />
                 <z:Column Header="DAYS UNTIL STAGE" Binding="{Binding ReleaseDate, Converter={x:Static controls:MiscConverters.TimeLeft}}" />
-                <z:Column Header="AMOUNT PER STAGE" Binding="{Binding Amount, StringFormat={}{0} TBTC}" />
+                <z:Column Header="AMOUNT PER STAGE" Binding="{Binding Amount, Converter={x:Static controls:MiscConverters.SatsToBtc}, StringFormat={}{0} TBTC}" />
             </z:SlimDataGrid.Columns>
         </z:SlimDataGrid>
     </controls:Pane>

@@ -54,11 +54,9 @@ public static class ProjectMapper
             .Select((stage, index) => new Stage
             {
                 ReleaseDate = DateOnly.FromDateTime(stage.ReleaseDate),
-                Amount = (uint)stage.AmountToRelease,
+                Amount = (long)(stage.AmountToRelease/100 * data.ProjectInfo.TargetAmount * 1_0000_0000),
                 Index = index + 1,
-                Weight = project.TargetAmount > 0
-                    ? (double)(stage.AmountToRelease / project.TargetAmount)
-                    : 0.0
+                Weight = (double)(stage.AmountToRelease / 100)
             })
             .Cast<IStage>()
             .ToList();
