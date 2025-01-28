@@ -1,4 +1,4 @@
-using AngorApp.Model;
+using Angor.UI.Model;
 using CSharpFunctionalExtensions;
 
 namespace AngorApp.Design;

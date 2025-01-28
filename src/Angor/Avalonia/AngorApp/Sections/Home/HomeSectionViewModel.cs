@@ -1,6 +1,6 @@
 using System.Windows.Input;
+using Angor.UI.Model;
 using AngorApp.Core;
-using AngorApp.Model;
 using AngorApp.Sections.Shell;
 using AngorApp.Services;
 

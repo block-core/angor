@@ -40,8 +40,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Angor.Model.Implementation\Angor.Model.Implementation.csproj" />
-      <ProjectReference Include="..\Angor.Model\Angor.Model.csproj" />
+      <ProjectReference Include="..\Angor.UI.Model.Implementation\Angor.UI.Model.Implementation.csproj" />
+      <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj" />
     </ItemGroup>
 
     <ItemGroup>

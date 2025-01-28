@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using AngorApp.Model;
+using Angor.UI.Model;
 using AngorApp.Sections.Wallet.CreateAndRecover;
 using CSharpFunctionalExtensions;
 

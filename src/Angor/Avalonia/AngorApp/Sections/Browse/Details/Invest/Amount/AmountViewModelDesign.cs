@@ -1,6 +1,6 @@
 using System.Reactive.Linq;
 using System.Windows.Input;
-using AngorApp.Model;
+using Angor.UI.Model;
 
 namespace AngorApp.Sections.Browse.Details.Invest.Amount;
 

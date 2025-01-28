@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
         xmlns:seedWordsGeneration="clr-namespace:AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsGeneration"
-        xmlns:model="clr-namespace:AngorApp.Model;assembly=Angor.Model"
+        xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
         mc:Ignorable="d">
 
     <Design.PreviewWith>

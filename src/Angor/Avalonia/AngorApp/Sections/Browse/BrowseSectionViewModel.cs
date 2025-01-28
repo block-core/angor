@@ -1,5 +1,5 @@
 using System.Reactive.Linq;
-using AngorApp.Model;
+using Angor.UI.Model;
 using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.Services;
 using CSharpFunctionalExtensions;

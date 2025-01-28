@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
-using AngorApp.Model;
+using Angor.UI.Model;
 using AngorApp.Sections.Browse.Details.Invest.Amount;
 using AngorApp.Services;
 using AngorApp.UI.Controls.Common.Success;

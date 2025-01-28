@@ -12,13 +12,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Angor\Avalonia\Directory.Packages.props = Angor\Avalonia\Directory.Packages.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Model", "Angor\Avalonia\Angor.Model\Angor.Model.csproj", "{BCCAC388-AC7D-4BA4-9C1E-58D3FAF5D0D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.UI.Model", "Angor\Avalonia\Angor.UI.Model\Angor.UI.Model.csproj", "{BCCAC388-AC7D-4BA4-9C1E-58D3FAF5D0D5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Shared", "Angor\Shared\Angor.Shared.csproj", "{700DF0C4-C965-4662-A91F-CD3BE043AC9E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Model.Implementation", "Angor\Avalonia\Angor.Model.Implementation\Angor.Model.Implementation.csproj", "{539B4D21-F2A9-46A6-84F1-9A51884A62E9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.UI.Model.Implementation", "Angor\Avalonia\Angor.UI.Model.Implementation\Angor.UI.Model.Implementation.csproj", "{539B4D21-F2A9-46A6-84F1-9A51884A62E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Model.Implementation.Tests", "Angor\Avalonia\Angor.Model.Implementation.Tests\Angor.Model.Implementation.Tests.csproj", "{B84751C6-1B82-4DE8-9FBE-F0A67D981C43}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.UI.Model.Implementation.Tests", "Angor\Avalonia\Angor.UI.Model.Implementation.Tests\Angor.UI.Model.Implementation.Tests.csproj", "{B84751C6-1B82-4DE8-9FBE-F0A67D981C43}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}"
 EndProject

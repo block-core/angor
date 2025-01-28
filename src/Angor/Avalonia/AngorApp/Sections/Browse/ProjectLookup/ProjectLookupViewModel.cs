@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Windows.Input;
-using AngorApp.Model;
+using Angor.UI.Model;
 using AngorApp.Services;
 using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;

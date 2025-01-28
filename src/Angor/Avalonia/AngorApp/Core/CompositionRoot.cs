@@ -1,9 +1,8 @@
 using System.Linq;
 using System.Threading.Tasks;
-using Angor.Model.Implementation;
-using Angor.Model.Implementation.Projects;
+using Angor.UI.Model.Implementation;
+using Angor.UI.Model.Implementation.Projects;
 using AngorApp.Design;
-using AngorApp.Model;
 using AngorApp.Sections;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder;

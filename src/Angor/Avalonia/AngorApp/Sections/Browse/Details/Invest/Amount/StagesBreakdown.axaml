@@ -3,8 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:amount="clr-namespace:AngorApp.Sections.Browse.Details.Invest.Amount"
-             xmlns:model1="clr-namespace:AngorApp.Model;assembly=Angor.Model"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Browse.Details.Invest.Amount.StagesBreakdown" x:DataType="amount:IAmountViewModel">
 
@@ -15,7 +15,7 @@
 
     <ItemsControl ItemsSource="{Binding Project.Stages}">
         <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="model1:IStage">
+            <DataTemplate DataType="model:IStage">
                 <controls:SectionItem Margin="6" Padding="10">
                     <TextBlock DockPanel.Dock="Top">
                         <TextBlock.Text>

@@ -1,4 +1,4 @@
-using AngorApp.Model;
+using Angor.UI.Model;
 
 namespace AngorApp.Sections.Browse;
 
