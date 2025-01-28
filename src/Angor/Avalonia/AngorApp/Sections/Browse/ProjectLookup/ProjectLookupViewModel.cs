@@ -42,13 +42,9 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
             }
         );
 
-        lookupResultsHelper = Lookup
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .ToProperty(this, x => x.LookupResults);
+        lookupResultsHelper = Lookup.ToProperty(this, x => x.LookupResults);
 
-        IsBusy = Lookup
-            .IsExecuting
-            .ObserveOn(RxApp.MainThreadScheduler);
+        IsBusy = Lookup.IsExecuting;
 
         this.WhenAnyValue(x => x.ProjectId)
             .Where(pid => !string.IsNullOrWhiteSpace(pid))
