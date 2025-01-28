@@ -4,6 +4,6 @@ namespace AngorApp.Model;
 
 public interface IUnsignedTransaction
 {
-    public ulong TotalFee { get; set; }
+    public long TotalFee { get; set; }
     Task<Result<IBroadcastedTransaction>> Broadcast();
 }

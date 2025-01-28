@@ -12,7 +12,7 @@ namespace AngorApp.UI.Controls.Common.TransactionPreview;
 
 public partial class TransactionPreviewViewModel : ReactiveValidationObject, ITransactionPreviewViewModel
 {
-    [Reactive] private ulong feerate = 1;
+    [Reactive] private long feerate = 1;
     [ObservableAsProperty] private IUnsignedTransaction? transaction;
 
     public TransactionPreviewViewModel(IWallet wallet, Destination destination, UIServices services)
@@ -26,7 +26,7 @@ public partial class TransactionPreviewViewModel : ReactiveValidationObject, ITr
 
         Confirm.HandleErrorsWith(services.NotificationService, "Could not confirm transaction");
 
-        this.WhenAnyValue<TransactionPreviewViewModel, ulong>(x => x.Feerate).ToSignal().InvokeCommand(CreateTransaction);
+        this.WhenAnyValue(x => x.Feerate).ToSignal().InvokeCommand(CreateTransaction);
     }
 
 

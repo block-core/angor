@@ -21,7 +21,7 @@ public class AmountControl : TemplatedControl, IModifiable
     public static readonly StyledProperty<decimal?> ValueProperty = AvaloniaProperty.Register<AmountControl, decimal?>(
         nameof(Value), enableDataValidation: true);
 
-    public static readonly StyledProperty<ulong?> SatoshisProperty = AvaloniaProperty.Register<AmountControl, ulong?>(
+    public static readonly StyledProperty<long?> SatoshisProperty = AvaloniaProperty.Register<AmountControl, long?>(
         nameof(Satoshis), defaultBindingMode: BindingMode.TwoWay, enableDataValidation: true);
 
     public static readonly StyledProperty<decimal?> BitcoinProperty = AvaloniaProperty.Register<AmountControl, decimal?>(
@@ -63,7 +63,7 @@ public class AmountControl : TemplatedControl, IModifiable
         set => SetValue(ValueProperty, value);
     }
 
-    public ulong? Satoshis
+    public long? Satoshis
     {
         get => GetValue(SatoshisProperty);
         set => SetValue(SatoshisProperty, value);
@@ -112,12 +112,12 @@ public class AmountControl : TemplatedControl, IModifiable
         if (isBtc)
         {
             Bitcoin = d;
-            Satoshis = (ulong?)(d * 1_0000_0000);
+            Satoshis = (long?)(d * 1_0000_0000);
         }
         else
         {
             Bitcoin = d / 1_0000_0000;
-            Satoshis = (ulong?)d;
+            Satoshis = (long?)d;
         }
 
         Value = IsBitcoin ? Bitcoin : Satoshis;

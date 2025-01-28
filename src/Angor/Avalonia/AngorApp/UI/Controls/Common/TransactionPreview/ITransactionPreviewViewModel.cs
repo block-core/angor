@@ -11,5 +11,5 @@ public interface ITransactionPreviewViewModel : IStep
     ReactiveCommand<Unit, Result<IUnsignedTransaction>> CreateTransaction { get; }
     public IObservable<bool> TransactionConfirmed { get; }
     public Destination Destination { get; }
-    public ulong Feerate { get; set; }
+    public long Feerate { get; set; }
 }

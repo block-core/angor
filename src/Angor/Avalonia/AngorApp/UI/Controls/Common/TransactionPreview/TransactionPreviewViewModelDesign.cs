@@ -22,7 +22,7 @@ public class TransactionPreviewViewModelDesign : ITransactionPreviewViewModel
     public ReactiveCommand<Unit, Result<IUnsignedTransaction>> CreateTransaction { get; }
     public IObservable<bool> TransactionConfirmed { get; }
     public Destination Destination { get; } = new("Sample Destination", 1000, "mzHrLAR3WWLE4eCpq82BDCKmLeYRyYXPtm");
-    public ulong Feerate { get; set; } = 1;
+    public long Feerate { get; set; } = 1;
     public IObservable<bool> IsValid { get; }
     public bool AutoAdvance => false;
 }

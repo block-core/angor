@@ -8,7 +8,7 @@ namespace AngorApp.Sections.Browse.Details.Invest.Amount;
 
 public partial class AmountViewModel : ReactiveValidationObject, IAmountViewModel
 {
-    [Reactive] private ulong? amount;
+    [Reactive] private long? amount;
 
     public AmountViewModel(IWallet wallet, IProject project)
     {

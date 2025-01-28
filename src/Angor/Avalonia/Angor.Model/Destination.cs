@@ -2,7 +2,7 @@ namespace AngorApp.Model;
 
 public class Destination
 {
-    public Destination(string name, ulong amount, string bitcoinAddress)
+    public Destination(string name, long amount, string bitcoinAddress)
     {
         Name = name;
         Amount = amount;
@@ -10,6 +10,6 @@ public class Destination
     }
 
     public string Name { get; }
-    public ulong Amount { get; }
+    public long Amount { get; }
     public string BitcoinAddress { get; }
 }

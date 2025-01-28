@@ -16,11 +16,11 @@ public class WalletDesign : IWallet
         new BroadcastedTransactionDesign { Address = "someaddress4", Amount = 30000, UtxoCount = 15, Path = "path", ViewRawJson = "json" }
     ];
 
-    public ulong? Balance { get; set; } = 5_0000_0000;
+    public long? Balance { get; set; } = 5_0000_0000;
 
     public string ReceiveAddress { get; } = SampleData.TestNetBitcoinAddress;
 
-    public async Task<Result<IUnsignedTransaction>> CreateTransaction(ulong amount, string address, ulong feerate)
+    public async Task<Result<IUnsignedTransaction>> CreateTransaction(long amount, string address, long feerate)
     {
         await Task.Delay(1000);
 
