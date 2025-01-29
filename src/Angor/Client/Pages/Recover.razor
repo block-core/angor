@@ -21,6 +21,7 @@
 @inject IInvestorTransactionActions _InvestorTransactionActions
 @inject ILogger<Recover> Logger;
 @inject IWalletUIService _walletUIService;
+@inject ISignService SignService
 
 @inherits BaseComponent
 
@@ -56,7 +57,6 @@
 
     <div class="card card-body position-relative z-index-1">
 
-
         <p style="margin-bottom: 20px;">
             Transaction ID: <span id="transactionID">@StageInfo.Trxid</span> |
             <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
@@ -79,56 +79,63 @@
         {
             <div class="d-flex justify-content-between">
                 <div>
-                    @if (!refreshSpinner)
+                    @if (releaseSigsfound)
                     {
-                        @if (StageInfo.CanRelease)
+                        <button class="btn btn-border me-2 btn-primary" @onclick="NavigatetoReleaseSigs">Target not met go to Release Funds</button>
+                    }
+                    else
+                    {
+                        @if (!refreshSpinner)
                         {
-                            <p>Total funds in penalty = @StageInfo.TotalInPenalty @network.CoinTicker</p>
-                        }
+                            @if (StageInfo.CanRelease)
+                            {
+                                <p>Total funds in penalty = @StageInfo.TotalInPenalty @network.CoinTicker</p>
+                            }
 
-                        @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
-                        {
-                            <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
-                                @if (PrepareToRecoverCoinsModalSpinner)
-                                {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    <span>Recover Funds...</span>
-                                }
-                                else
-                                {
-                                    <span>Recover Funds</span>
-                                }
-                            </button>
-                        }
+                            @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
+                            {
+                                <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
+                                    @if (PrepareToRecoverCoinsModalSpinner)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>Recover Funds...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Recover Funds</span>
+                                    }
+                                </button>
+                            }
 
-                        @if (StageInfo.CanRelease)
-                        {
-                            <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
-                                @if (PrepareToReleaseCoinsModalSpinner)
-                                {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    <span>Release Funds...</span>
-                                }
-                                else
-                                {
-                                    <span>Release Funds</span>
-                                }
-                            </button>
-                        }
+                            @if (StageInfo.CanRelease)
+                            {
+                                <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
+                                    @if (PrepareToReleaseCoinsModalSpinner)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>Release Funds...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Release Funds</span>
+                                    }
+                                </button>
+                            }
 
-                        @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
-                        {
-                            <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
-                                @if (PrepareEndOfProjectCoinsModalSpinner)
-                                {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    <span>End of project...</span>
-                                }
-                                else
-                                {
-                                    <span>End of project</span>
-                                }
-                            </button>
+                            @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
+                            {
+                                <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
+                                    @if (PrepareEndOfProjectCoinsModalSpinner)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>End of project...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>End of project</span>
+                                    }
+                                </button>
+                            }
                         }
                     }
                 </div>
@@ -364,6 +371,8 @@
     private TransactionInfo? releaseRecoveryTransaction;
     private TransactionInfo? endOfProjectTransaction;
 
+    private bool releaseSigsfound = false;
+
     StageData StageInfo = new();
     string explorerLink;
 
@@ -423,6 +432,8 @@
 
         try
         {
+            CheckReleaseSignatures();
+
             await FindInvestments();
 
             await CheckSpentFund();
@@ -439,6 +450,21 @@
 
         StateHasChanged();
         await Task.Delay(10);
+    }
+
+    protected void CheckReleaseSignatures()
+    {
+        SignService.LookupReleaseSigs(
+            project.InvestorNPub,
+            project.ProjectInfo.NostrPubKey,
+            null,
+            project.SignaturesInfo?.SignatureRequestEventId!,
+            _ =>
+            {
+                releaseSigsfound = true;
+                StateHasChanged();
+                return Task.CompletedTask;
+            });
     }
 
     private async Task FindInvestments()
@@ -1003,4 +1029,10 @@
             passwordComponent.ClearPassword();
         }
     }
+
+    private void NavigatetoReleaseSigs()
+    {
+        NavigationManager.NavigateTo($"/release/{ProjectId}");
+    }
+
 }

@@ -125,141 +125,114 @@ else
 {
     // handle founder
 
-    @if (!signaturesReleaseItems.Any())
-    {
-        <div class="row mt-4">
-            <div class="card card-body angor-alert-info pt-2 pb-2">
-                <div class="d-flex align-items-center">
-                    <span class="me-3 user-select-none">
-                        <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
-                    </span>
-                    <span class="text-white" data-cy="projectsGrid">No pending signatures yet...</span>
-                </div>
-            </div>
-        </div>
-    }
-    else
-    {
-        <!-- Signatures Details Section -->
-        <div class="row mt-4">
-            <div class="col">
+    <div class="row mt-4">
+        <div class="col">
 
-                @if (!FounderProject.ProjectDateStarted())
+            @if (!FounderProject.ProjectDateStarted())
+            {
+                <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+                    <div class="text-center mb-3">
+
+                        <h6 class="mb-0">Project didn't start yet</h6>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @if (TargetInvestmentReached())
                 {
                     <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
                         <div class="text-center mb-3">
 
-                            <h6 class="mb-0">Project didn't start yet</h6>
+                            <h6 class="mb-0">Target reached</h6>
                         </div>
                     </div>
                 }
                 else
                 {
-                    @if (TargetInvestmentReached())
-                    {
-                        <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
-                            <div class="text-center mb-3">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header pb-0 p-3">
+                                <div class="row">
+                                    <div class="col-6 d-flex align-items-center">
+                                        <h6 class="mb-0">Signatures</h6>
+                                    </div>
+                                    <div class="col-6 d-flex justify-content-end">
+                                        <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ReleaseAllSignatures" disabled="@ApproveButtonDisabled">
+                                            @if (releasingAll)
+                                            {
+                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                <span>Releasing...</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Release All</span>
+                                            }
+                                        </button>
+                                        <button class="btn btn-sm btn-border ml-2" @onclick="RefreshSignaturesInternal" disabled="@isRefreshing">
+                                            @if (isRefreshing)
+                                            {
+                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                <span>Refreshing...</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Refresh</span>
+                                            }
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
 
-                                <h6 class="mb-0">Target reached</h6>
+
+                                <div class="table-responsive form-control">
+                                    <table class="table align-items-center mb-0">
+                                        <thead>
+                                        <tr>
+                                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Arrived</th>
+                                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Approved</th>
+                                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Released</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        @foreach (var signature in signaturesReleaseItems.Where(_ => _.SignRecoveryRequest?.InvestmentTransactionHex != null))
+                                        {
+                                            <tr>
+                                                <td>@signature.TimeArrived.ToString("g")</td>
+                                                <td>@signature.TimeApproved?.ToString("g")</td>
+                                                @if (signature.TimeReleased is null)
+                                                {
+                                                    <td>
+                                                        <button class="btn btn-border-success" @onclick="() => ApproveReleaseSignatureCheckPassword(signature)" disabled="@signaturesReleaseApproving.Any()">
+                                                            @if (signaturesReleaseApproving.ContainsKey(signature))
+                                                            {
+                                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                                <span>Releasing...</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span>Release</span>
+                                                            }
+                                                        </button>
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td>@signature.TimeReleased.ToString()</td>
+                                                }
+                                            </tr>
+                                        }
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    }
-                    else
-                    {
-                        @if (messagesReceived || isLoading)
-                        {
-                            <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
-                                <div class="text-center mb-3">
-                                    @if (isLoading)
-                                    {
-                                        <h6 class="mb-0">Creating Release Signatures... @numOfSignaturesSigned / @numOfSignatureToSign</h6>
-                                    }
-                                    <div class="loader"></div>
-                                </div>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="col-md-12">
-                                <div class="card">
-                                    <div class="card-header pb-0 p-3">
-                                        <div class="row">
-                                            <div class="col-6 d-flex align-items-center">
-                                                <h6 class="mb-0">Signatures</h6>
-                                            </div>
-                                            <div class="col-6 d-flex justify-content-end">
-                                                @if (!FounderProject.TargetInvestmentReached() && FounderProject.ProjectDateStarted())
-                                                {
-                                                    <div>@FounderProject.ReleaseSignaturesTime.HasValue ? "release at " + FounderProject.ReleaseSignaturesTime : "not released yet"</div>
-                                                    <button class="btn btn-sm btn-warning" @onclick="ReleaseAllSignatures">Release All</button>
-                                                }
-                                                <button class="btn btn-sm btn-border ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
-                                                    @if (refreshButtonSpinner)
-                                                    {
-                                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                        <span>Refreshing...</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span>Refresh</span>
-                                                    }
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-
-
-                                        <div class="table-responsive form-control">
-                                            <table class="table align-items-center mb-0">
-                                                <thead>
-                                                <tr>
-                                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investment amount</th>
-                                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received at</th>
-                                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                @foreach (var signature in signaturesReleaseItems.Where(_ => _ is { SignRecoveryRequest.InvestmentTransactionHex: not null }))
-                                                {
-                                                    <tr>
-                                                        <td>@signature.TimeArrived.ToString("g")</td>
-                                                        @if (signature.TimeApproved is null)
-                                                        {
-                                                            <td>
-                                                                <button class="btn btn-border-success" @onclick="() => ApproveReleaseSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.Any()">
-                                                                    @if (signaturesRequestsApproving.ContainsKey(signature))
-                                                                    {
-                                                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                                        <span>Approving...</span>
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        <span>Approve</span>
-                                                                    }
-                                                                </button>
-                                                            </td>
-                                                        }
-                                                        else
-                                                        {
-                                                            <td>Approved on - @signature.TimeApproved.ToString()</td>
-                                                        }
-                                                    </tr>
-                                                }
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        }
-                    }
+                    </div>
                 }
-            </div>
+            }
         </div>
-
-    }
+    </div>
 }
  
 
@@ -278,9 +251,8 @@ else
 
     private FeeData feeData = new();
 
-    private Dictionary<SignatureReleaseItem, string> signaturesRequestsApproving = new();
+    private Dictionary<SignatureReleaseItem, string> signaturesReleaseApproving = new();
 
-    bool messagesReceived;
     bool scanedForApprovals;
     bool scanedReleaseApprovals;
 
@@ -291,16 +263,24 @@ else
 
     ProjectStats? projectStats;
 
-    private bool CanApproveAllSignatures => signaturesReleaseItems != null && signaturesReleaseItems.Any(s => s.TimeApproved == null);
+    private bool CanApproveAllSignatures => signaturesReleaseItems?.Any(s => s.TimeReleased == null) ?? false;
 
     private string ApproveButtonClass => CanApproveAllSignatures ? "btn-border-success" : "btn-border";
 
     private bool ApproveButtonDisabled => !CanApproveAllSignatures;
+    private bool releasingAll = false;
     private bool showReleaseModal = false;
-    private bool isLoading = false;
+    private bool receivingMessages = false;
     private bool refreshButtonSpinner = false;
-    private int numOfSignatureToSign = 0;
-    private int numOfSignaturesSigned = 0;
+
+    private bool isRefreshing
+    {
+        get
+        {
+            return refreshButtonSpinner == true || receivingMessages == true;
+
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -323,21 +303,29 @@ else
             }
 
             projectStats = await _IndexerService.GetProjectStatsAsync(ProjectIdentifier);
+
+            Logger.LogInformation($"Fetching project stats  stats AmountInvested = {projectStats?.AmountInvested} InvestorCount = {projectStats?.InvestorCount}");
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (IsFounder)
+        if (firstRender)
         {
-            if (FounderProject!.ProjectDateStarted())
+            if (hasWallet)
             {
-                await RefreshSignaturesInternal();
+                if (IsFounder)
+                {
+                    if (FounderProject!.ProjectDateStarted())
+                    {
+                        await RefreshSignaturesInternal();
+                    }
+                }
+                else
+                {
+                    await FetchInvestorCheckPassword();
+                }
             }
-        }
-        else
-        {
-            await FetchInvestorCheckPassword();
         }
     }
 
@@ -345,8 +333,14 @@ else
     {
         if (projectStats != null)
         {
-            return projectStats?.AmountInvested >= Money.Coins(FounderProject.ProjectInfo.TargetAmount).Satoshi;
+            var targetReached = projectStats?.AmountInvested >= Money.Coins(FounderProject.ProjectInfo.TargetAmount).Satoshi;
+
+            Logger.LogInformation($"Indexer stats for target reached = {targetReached} AmountInvested = {projectStats?.AmountInvested} TargetAmount = {Money.Coins(FounderProject.ProjectInfo.TargetAmount).Satoshi}");
+
+            return targetReached;
         }
+
+        Logger.LogInformation($"None indexer stats for target reached = {FounderProject.TargetInvestmentReached()} AmountInvested = {FounderProject.TotalAvailableInvestedAmount} TargetAmount = {Money.Coins(FounderProject.ProjectInfo.TargetAmount).Satoshi}");
 
         return FounderProject.TargetInvestmentReached();
     }
@@ -367,44 +361,45 @@ else
 
     protected async Task FetchInvestorReleaseSignatures()
     {
+        if (!passwordComponent.HasPassword())
+        {
+            notificationComponent.ShowErrorMessage("no wallet password");
+            return;
+        }
+
+        var words = await passwordComponent.GetWalletAsync();
+        var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
+        var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+
         SignService.LookupReleaseSigs(
             InvestorProject.InvestorNPub,
             InvestorProject.ProjectInfo.NostrPubKey,
             null,
             InvestorProject.SignaturesInfo.SignatureRequestEventId,
-            signatureContent => HandleReleaseInvestorSignatureReceivedAsync(InvestorProject.ProjectInfo.NostrPubKey, signatureContent)
-            );
-    }
+            signatureContent =>
+            {
+                InvokeAsync(async () =>
+                {
+                    var signatureJson = await encryption.DecryptNostrContentAsync(
+                        nostrPrivateKeyHex, InvestorProject.ProjectInfo.NostrPubKey, signatureContent);
 
-    private async Task HandleReleaseInvestorSignatureReceivedAsync(string nostrPubKey, string signatureContent)
-    {
-        if (!passwordComponent.HasPassword())
-        {
-            passwordComponent.ShowPassword(() => HandleReleaseInvestorSignatureReceivedAsync(nostrPubKey, signatureContent));
-            return;
-        }
+                    Logger.LogInformation("signature : " + signatureJson);
 
-        var words = await passwordComponent.GetWalletAsync();
+                    InvestorReleaseSigInfo = serializer.Deserialize<SignatureInfo>(signatureJson);
 
-        var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
+                    if (InvestorReleaseSigInfo?.SignatureType != "release")
+                    {
+                        notificationComponent.ShowErrorMessage("Incorrect signatures received");
+                        Logger.LogError("Incorrect signatures received");
+                        InvestorReleaseSigInfo = null;
+                    }
 
-        var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+                    StateHasChanged();
 
-        var signatureJson = await encryption.DecryptNostrContentAsync(
-            nostrPrivateKeyHex, InvestorProject.ProjectInfo.NostrPubKey, signatureContent);
+                });
 
-        Logger.LogInformation("signature : " + signatureJson);
-
-        InvestorReleaseSigInfo = serializer.Deserialize<SignatureInfo>(signatureJson);
-
-        if (InvestorReleaseSigInfo?.SignatureType != "release")
-        {
-            notificationComponent.ShowErrorMessage("Incorrect signatures received");
-            Logger.LogError("Incorrect signatures received");
-            InvestorReleaseSigInfo = null;
-        }
-
-        StateHasChanged();
+                return Task.CompletedTask;
+            });
     }
 
     private async Task ClaimInvestorCoinsPasswordAsync()
@@ -576,9 +571,11 @@ else
 
         try
         {
-            await FetchAndDecryptSignatureRequests();
+            await FetchSignatureRequests();
 
             projectStats = await _IndexerService.GetProjectStatsAsync(ProjectIdentifier);
+
+            Logger.LogInformation($"Fetching project stats  stats AmountInvested = {projectStats?.AmountInvested} InvestorCount = {projectStats?.InvestorCount}");
 
             await Task.Delay(1000);
         }
@@ -594,11 +591,13 @@ else
         }
     }
 
-    private async Task FetchAndDecryptSignatureRequests()
+    private async Task FetchSignatureRequests()
     {
         var words = await passwordComponent.GetWalletAsync();
-        var nostrPrivateKey = DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex).Result;
+        var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
         var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+
+        receivingMessages = true;
 
         await SignService.LookupInvestmentRequestsAsync(FounderProject.ProjectInfo.NostrPubKey, null, null,
             (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
@@ -622,8 +621,6 @@ else
 
                 Logger.LogDebug($"Sig request event received is new");
 
-                messagesReceived = true;
-
                 var signatureReleaseItem = new SignatureReleaseItem
                 {
                     investorNostrPubKey = investorNostrPubKey,
@@ -634,56 +631,70 @@ else
 
                 signaturesReleaseItems.Add(signatureReleaseItem);
                 Logger.LogDebug($"Added to pendingSignatures");
-
-                // decrypt the message
-
-                try
-                {
-                    var sigResJson = encryption.DecryptNostrContentAsync(
-                        nostrPrivateKeyHex, signatureReleaseItem.investorNostrPubKey, signatureReleaseItem.EncryptedSignRecoveryMessage).Result;
-
-                    signatureReleaseItem.SignRecoveryRequest = serializer.Deserialize<SignRecoveryRequest>(sigResJson);
-
-                    if (signatureReleaseItem.SignRecoveryRequest is null)
-                    {
-                        throw new Exception("Error deserializing signature request");
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.LogError("Error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", signatureReleaseItem?.SignRecoveryRequest?.InvestmentTransactionHex, e.Message);
-                    signatureReleaseItem.SignRecoveryRequest = null;
-                }
             },
             () =>
             {
                 Logger.LogDebug($"End of messages");
 
-                if (!messagesReceived)
-                    return;
+                // we cannot directly call a method that needs to be awaited 
+                // so we do it inside the InvokeAsync delegate.
+
+                // decrypt the message
+                InvokeAsync(async () => { await DecryptMessages(nostrPrivateKeyHex); });
+
+                receivingMessages = false;
 
                 // fetch all the approvals
-                FetchFounderApprovalsSignatures();
-                FetchFounderReleaseSignatures();
+                FetchFounderApprovalsSignatures(nostrPrivateKeyHex);
+                FetchFounderReleaseSignatures(nostrPrivateKeyHex);
 
                 Logger.LogDebug($"Calling StateHasChanged in EOSE");
                 StateHasChanged();
             });
     }
 
-    private void FetchFounderApprovalsSignatures()
+    private async Task DecryptMessages(string nostrPrivateKeyHex)
+    {
+        foreach (var signatureReleaseItem in signaturesReleaseItems)
+        {
+            try
+            {
+                Logger.LogInformation($"Decrypting recovery request for key {signatureReleaseItem.investorNostrPubKey}");
+
+                var sigResJson = await encryption.DecryptNostrContentAsync(nostrPrivateKeyHex, signatureReleaseItem.investorNostrPubKey, signatureReleaseItem.EncryptedSignRecoveryMessage);
+
+                signatureReleaseItem.SignRecoveryRequest = serializer.Deserialize<SignRecoveryRequest>(sigResJson);
+
+                Logger.LogInformation($"Decrypted recovery request for key {signatureReleaseItem.investorNostrPubKey} content = {sigResJson}");
+
+                if (signatureReleaseItem.SignRecoveryRequest is null)
+                {
+                    throw new Exception("Error deserializing signature request");
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogError("Error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", signatureReleaseItem?.SignRecoveryRequest?.InvestmentTransactionHex, e.Message);
+                signatureReleaseItem.SignRecoveryRequest = null;
+            }
+        }
+        
+        StateHasChanged();
+    }
+
+    private void FetchFounderApprovalsSignatures(string nostrPrivateKeyHex)
     {
         SignService.LookupInvestmentRequestApprovals(FounderProject.ProjectInfo.NostrPubKey,
-            (investorNostrPubKey, timeApproved, reqEventId) =>
+            (investorNostrPubKey, timeEventCreated, reqEventId) =>
             {
-                Logger.LogDebug($"Sig response event received investorNostrPubKey: {investorNostrPubKey} - timeApproved: {timeApproved} - reqEventId: {reqEventId}");
+                Logger.LogDebug($"Sig response event received investorNostrPubKey: {investorNostrPubKey} - timeApproved: {timeEventCreated} - reqEventId: {reqEventId}");
 
                 var signatureRequest = signaturesReleaseItems.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
 
                 if (signatureRequest is null)
-                    return; //multiple relays could mean the same massage multiple times
+                    return; // ignore it could be a fake message
 
-                if (signatureRequest.TimeArrived > timeApproved)
+                if (signatureRequest.TimeArrived > timeEventCreated)
                 {
                     Logger.LogDebug($"The event received is replaced by time");
                     return; // sig of an old request
@@ -697,7 +708,7 @@ else
 
                 Logger.LogDebug($"The event received is new");
 
-                signatureRequest.TimeApproved = timeApproved;
+                signatureRequest.TimeApproved = timeEventCreated;
 
                 Logger.LogDebug($"Added to pendingSignatures");
             },
@@ -711,28 +722,25 @@ else
             });
     }
 
-    protected void FetchFounderReleaseSignatures()
+    protected void FetchFounderReleaseSignatures(string nostrPrivateKeyHex)
     {
-        SignService.LookupSignedReleaseSigs(
-            InvestorProject.InvestorNPub,
-            InvestorProject.ProjectInfo.NostrPubKey,
-            null,
-            InvestorProject.SignaturesInfo.SignatureRequestEventId, (investorNostrPubKey, timeReleased, reqEventId) =>
+        SignService.LookupSignedReleaseSigs(FounderProject.ProjectInfo.NostrPubKey,
+            (item) =>
             {
-                Logger.LogDebug($"Sig release response event received investorNostrPubKey: {investorNostrPubKey} - timeReleased: {timeReleased} - reqEventId: {reqEventId}");
+                Logger.LogDebug($"Sig release response event received investorNostrPubKey: {item.ProfileIdentifier} - timeReleased: {item.EventCreatedAt} - reqEventId: {item.EventIdentifier}");
 
-                var signatureRequest = signaturesReleaseItems.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
+                var signatureRequest = signaturesReleaseItems.FirstOrDefault(_ => _.investorNostrPubKey == item.ProfileIdentifier);
 
                 if (signatureRequest is null)
-                    return; //multiple relays could mean the same massage multiple times
+                    return; // ignore it could be a message we do not recognize
 
-                if (signatureRequest.TimeReleased > timeReleased)
+                if (signatureRequest.TimeReleased > item.EventCreatedAt)
                 {
                     Logger.LogDebug($"The event received is replaced by time");
                     return; // sig of an old request
                 }
 
-                if (reqEventId != null && signatureRequest.EventId != reqEventId)
+                if (item.EventIdentifier != null && signatureRequest.EventId != item.EventIdentifier)
                 {
                     Logger.LogDebug($"The event received is replaced by eventid");
                     return; // sig of an old request
@@ -740,16 +748,15 @@ else
 
                 Logger.LogDebug($"The event received is new");
 
-                signatureRequest.TimeReleased = timeReleased;
+                signatureRequest.TimeReleased = item.EventCreatedAt;
 
-                Logger.LogDebug($"Added to pendingSignatures");
+                Logger.LogDebug($"signatureRequest.TimeReleased was updated to {signatureRequest.TimeReleased}");
             }, () =>
             {
                 scanedReleaseApprovals = true;
 
                 StateHasChanged();
             });
-
     }
 
     protected async Task ApproveReleaseSignatureCheckPassword(SignatureReleaseItem signature)
@@ -769,7 +776,7 @@ else
 
     private async Task ApproveReleaseSignature(SignatureReleaseItem signature)
     {
-        signaturesRequestsApproving.Add(signature, string.Empty);
+        signaturesReleaseApproving.Add(signature, string.Empty);
         StateHasChanged();
 
         try
@@ -789,7 +796,7 @@ else
         }
         finally
         {
-            signaturesRequestsApproving.Remove(signature);
+            signaturesReleaseApproving.Remove(signature);
         }
 
         StateHasChanged();
@@ -812,21 +819,18 @@ else
 
     private async Task ProcessReleaseSignatures()
     {
-        isLoading = true;
+        releasingAll = true;
         StateHasChanged();
 
         try
         {
             var releaseSignatures = signaturesReleaseItems.Where(s =>  s.TimeReleased == null).ToList();
-            numOfSignatureToSign = releaseSignatures.Count;
-            numOfSignaturesSigned = 0;
         
             var words = await passwordComponent.GetWalletAsync();
         
             foreach (var signature in releaseSignatures)
             {
                 await PerformReleaseSignature(signature, words);
-                numOfSignaturesSigned++;
                 StateHasChanged();
             }
         }
@@ -836,7 +840,7 @@ else
         }
         finally
         {
-            isLoading = false;
+            releasingAll = false;
             passwordComponent.ClearPassword();
         }
         
@@ -858,9 +862,7 @@ else
             var encryptedContent = await encryption.EncryptNostrContentAsync(
                 nostrPrivateKeyHex, signature.investorNostrPubKey, sigJson);
 
-            FounderProject.ReleaseSignaturesTime = SignService.SendReleaseSigsToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
-
-            Storage.UpdateFounderProject(FounderProject);
+            signature.TimeReleased = SignService.SendReleaseSigsToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
             
             return new OperationResult { Success = true };
         }
@@ -895,6 +897,8 @@ else
         public DateTime? TimeReleased { get; set; }
 
         public SignRecoveryRequest? SignRecoveryRequest { get; set; }
+
+        public SignatureInfo? InvestorRecoverySigInfo { get; set; }
 
         public SignatureInfo? InvestorReleaseSigInfo { get; set; }
 

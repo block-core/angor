@@ -190,7 +190,7 @@ namespace Angor.Client.Services
         public void LookupReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Func<string, Task> action)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            var subscriptionKey = projectNostrPubKey + "release_sigs";
+            var subscriptionKey = projectNostrPubKey.Substring(0, 20) + "rel_sigs";
 
             if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
             {
@@ -214,10 +214,10 @@ namespace Angor.Client.Services
             }));
         }
 
-        public void LookupSignedReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Action<string, DateTime, string> action, Action onAllMessagesReceived)
+        public void LookupSignedReleaseSigs(string projectNostrPubKey, Action<SignServiceLookupItem> action, Action onAllMessagesReceived)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            var subscriptionKey = projectNostrPubKey + "release_approved_sigs";
+            var subscriptionKey = projectNostrPubKey.Substring(0, 20) + "sing_sigs";
 
             if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
             {
@@ -228,7 +228,13 @@ namespace Angor.Client.Services
                     .Select(_ => _.Event)
                     .Subscribe(nostrEvent =>
                     {
-                        action.Invoke(nostrEvent.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier), nostrEvent.CreatedAt.Value, nostrEvent.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier));
+                        action.Invoke(new SignServiceLookupItem
+                        {
+                            NostrEvent = nostrEvent,
+                            ProfileIdentifier = nostrEvent.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier),
+                            EventCreatedAt = nostrEvent.CreatedAt.Value,
+                            EventIdentifier = nostrEvent.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier)
+                        });
                     });
 
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
@@ -247,5 +253,16 @@ namespace Angor.Client.Services
         {
             _subscriptionsHanding.Dispose();
         }
+    }
+
+    public class SignServiceLookupItem
+    {
+        public DateTime EventCreatedAt { get; set; }
+
+        public string ProfileIdentifier { get; set; }
+
+        public string EventIdentifier { get; set; }
+
+        public NostrEvent NostrEvent { get; set; }
     }
 }
