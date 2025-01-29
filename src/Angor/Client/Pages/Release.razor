@@ -378,26 +378,30 @@ else
             InvestorProject.SignaturesInfo.SignatureRequestEventId,
             signatureContent =>
             {
-                InvokeAsync(async () =>
+                if (InvestorReleaseSigInfo != null)
                 {
-                    var signatureJson = await encryption.DecryptNostrContentAsync(
-                        nostrPrivateKeyHex, InvestorProject.ProjectInfo.NostrPubKey, signatureContent);
+                    // if we already decrypted the message from another relay just ignore it
 
-                    Logger.LogInformation("signature : " + signatureJson);
-
-                    InvestorReleaseSigInfo = serializer.Deserialize<SignatureInfo>(signatureJson);
-
-                    if (InvestorReleaseSigInfo?.SignatureType != "release")
+                    InvokeAsync(async () =>
                     {
-                        notificationComponent.ShowErrorMessage("Incorrect signatures received");
-                        Logger.LogError("Incorrect signatures received");
-                        InvestorReleaseSigInfo = null;
-                    }
+                        var signatureJson = await encryption.DecryptNostrContentAsync(
+                            nostrPrivateKeyHex, InvestorProject.ProjectInfo.NostrPubKey, signatureContent);
 
-                    StateHasChanged();
+                        Logger.LogInformation("signature : " + signatureJson);
 
-                });
+                        InvestorReleaseSigInfo = serializer.Deserialize<SignatureInfo>(signatureJson);
 
+                        if (InvestorReleaseSigInfo?.SignatureType != "release")
+                        {
+                            notificationComponent.ShowErrorMessage("Incorrect signatures received");
+                            Logger.LogError("Incorrect signatures received");
+                            InvestorReleaseSigInfo = null;
+                        }
+
+                        StateHasChanged();
+
+                    });
+                }
                 return Task.CompletedTask;
             });
     }
