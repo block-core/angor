@@ -479,18 +479,27 @@
                     <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                     <div class="input-group">
                         <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                        @*   <button @onclick="OpenInHUBAsync" class="btn btn-border">
-                <Icon IconName="link"></Icon>
-                </button> *@
+                     @*<button @onclick="OpenInHUBAsync" class="btn btn-border">
+                           <Icon IconName="link"></Icon>
+                       </button> *@
                     </div>
 
 
                     @if (founder)
                     {
                         <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                            <button @onclick="OpenInHUBAsync" class="btn btn-border-success mt-4 mr-1">Open in Angor HUB</button>
-                            <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning mt-4 mr-1">Edit project profile</button>
-                            <button @onclick="ShowNsecAsync" class="btn btn-border-danger mt-4">Show private key</button>
+                            <button @onclick="OpenInHUBAsync" class="btn btn-border-success mt-4 mr-1">
+                                <Icon IconName="link" Class="me-2" />
+                                Open in Angor HUB
+                            </button>
+                            <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning mt-4 mr-1">
+                                <Icon IconName="edit" Class="me-2" />
+                                Edit project profile
+                            </button>
+                            <button @onclick="ShowNsecAsync" class="btn btn-border-danger mt-4">
+                                <Icon IconName="shield" Class="me-2" />
+                                Show private key
+                            </button>
                         </div>
 
 

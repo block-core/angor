@@ -219,7 +219,7 @@
                             </td>
                             <td class="text-end">
                                 <button class="btn btn-border-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">
-                                    <Icon IconName="remove" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
+                                    <Icon IconName="delete" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
                                 </button>
                             </td>
                         </tr>
@@ -295,7 +295,7 @@
                             </td>
                             <td class="text-end">
                                 <button class="btn btn-border-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">
-                                    <Icon IconName="remove" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
+                                    <Icon IconName="delete" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
                                 </button>
                             </td>
                         </tr>
@@ -348,7 +348,7 @@
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
                 <div class="settings-icon-wrapper">
-                    <Icon IconName="remove" Height="42" Width="42" />
+                    <Icon IconName="delete" Height="42" Width="42" />
                 </div>
                 <div class="ms-3">
                     <h5 class="mb-0 text-danger">Danger Zone</h5>
@@ -356,7 +356,7 @@
                 </div>
             </div>
             <button class="btn btn-border-danger" @onclick="() => showWipeallModal = true">
-                <Icon IconName="remove" Height="24" Width="24" />
+                <Icon IconName="delete" Height="24" Width="24" />
                 <span class="ms-2 d-none d-md-inline">Wipe Data</span>
             </button>
         </div>
