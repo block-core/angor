@@ -341,10 +341,22 @@
 
     }
 
+    private Dictionary<string, string> DeserializeInvestmentMap(string json)
+    {
+        return JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+    }
+
     private async Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
     {
+        if (string.IsNullOrEmpty(signatureContent))
+        {
+            _Logger.LogWarning($"Received empty signature content for key: {nostrPubKey}");
+            investmentRequestsMap[nostrPubKey] = string.Empty;
+            return;
+        }
+
         var words = await passwordComponent.GetWalletAsync();
-        var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1);
+        var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 0);
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
 
         try
@@ -357,17 +369,25 @@
                 NostrDMPrivateKeyHex, nostrPubKey, signatureContent
             );
 
-            _Logger.LogInformation($"Decrypted content for key: {nostrPubKey} - {decryptedContent}");
+            if (string.IsNullOrEmpty(decryptedContent))
+            {
+                _Logger.LogWarning($"Decrypted content is empty for key: {nostrPubKey}");
+                investmentRequestsMap[nostrPubKey] = string.Empty;
+            }
+            else
+            {
+                _Logger.LogInformation($"Decrypted content for key: {nostrPubKey} - {decryptedContent}");
+                investmentRequestsMap[nostrPubKey] = decryptedContent;
+            }
 
-            investmentRequestsMap[nostrPubKey] = decryptedContent;
+            StateHasChanged();
         }
         catch (Exception ex)
         {
             _Logger.LogError(ex, $"Failed to decrypt content for key: {nostrPubKey}");
+            _Logger.LogError($"Decryption failed with NostrDMPrivateKeyHex: {NostrDMPrivateKeyHex}, nostrPubKey: {nostrPubKey}, signatureContent: {signatureContent}");
             investmentRequestsMap[nostrPubKey] = string.Empty;
         }
-
-        StateHasChanged();
     }
 
     private void CheckSignatureFromFounder()
@@ -375,6 +395,12 @@
         foreach (var project in projects)
         {
             investmentRequestsMap[project.ProjectInfo.NostrPubKey] = string.Empty;
+
+            _Logger.LogInformation($"Checking signature for project: {project.ProjectInfo.ProjectIdentifier}");
+            _Logger.LogInformation($"InvestorNPub: {project.InvestorNPub}");
+            _Logger.LogInformation($"NostrPubKey: {project.ProjectInfo.NostrPubKey}");
+            _Logger.LogInformation($"TimeOfSignatureRequest: {project.SignaturesInfo.TimeOfSignatureRequest}");
+            _Logger.LogInformation($"SignatureRequestEventId: {project.SignaturesInfo.SignatureRequestEventId}");
 
             _SignService.LookupSignatureForInvestmentRequest(
                 project.InvestorNPub,
@@ -385,7 +411,6 @@
             );
         }
     }
-
 
     private async Task RefreshBalance()
     {
