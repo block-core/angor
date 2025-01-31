@@ -368,7 +368,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     {
         var indexer = _networkService.GetPrimaryIndexer();
 
-        var url = $"{MempoolApiRoute}/tx/{transactionId}/hex";
+        var url = $"{MempoolApiRoute}/tx/{transactionId}";
             
         var response = await _httpClient.GetAsync(indexer.Url + url);
         _networkService.CheckAndHandleError(response);
