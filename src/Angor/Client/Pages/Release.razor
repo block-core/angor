@@ -42,7 +42,7 @@
                 </span>
                 <div class="h-100 ms-3 flex-grow-1">
                     <h5 class="mb-0 font-weight-bolder">
-                        Release Funds 
+                        Claim released funds without a penalty
                     </h5>
 
                 </div>
@@ -55,252 +55,167 @@
     </div>
 </div>
 
-@if (!IsFounder)
-{
-    // handle investor
-
-    @if (InvestorReleaseSigInfo != null)
-    {
-        <button class="btn btn-sm btn-border ml-2" @onclick="ClaimInvestorCoinsPasswordAsync" disabled="@refreshButtonSpinner">
-            @if (refreshButtonSpinner)
-            {
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                <span>Claiming coins...</span>
-            }
-            else
-            {
-                <span>Claim coins</span>
-            }
-        </button>
-    }
+<div class="card mt-4 text-center animate-fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+        <h4 class="mb-0">Waiting for the founder to approve</h4>
+        <div class="d-flex mt-2 mt-md-0">
+            <button class="btn btn-border animate-scale" @onclick="FetchInvestorCheckPassword" disabled="@refreshSpinner">
+                @if (refreshSpinner)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    <span>Refreshing...</span>
+                }
+                else
+                {
+                    <Icon IconName="refresh" Width="20" Height="20" class="me-1" />
+                    <span>Refresh</span>
+                }
+            </button>
+        </div>
+    </div>
     
-    @if (showReleaseModal)
+    @if (InvestorProject.ReleaseTransactionId != null)
     {
-        <div class="modal-wrapper">
-            <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Recovery Confirmation</h5>
-                            <button type="button" class="btn-close" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner"></button>
+        <p style="margin-bottom: 20px;">
+            Transaction ID: <span id="transactionID">@InvestorProject.ReleaseTransactionId</span> |
+            <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
+        </p>
+
+        <p class="modal-title">
+            Coin have already been release .
+        </p>
+    }
+    else
+    {
+        @if (InvestorReleaseSigInfo == null)
+        {
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <div class="loader-slow"></div>
+            </div>
+        }
+        else
+        {
+            <p class="modal-title">
+                The founder has signed a transaction that allows the investor to take back the coins without a penalty, you may claim back your coins.
+            </p>
+            @if (totalInvested != null)
+            {
+                <p class="modal-title">
+                    Total coins to claim is @Money.Satoshis(totalInvested.Value).ToUnit(MoneyUnit.BTC) @network.CoinTicker 
+                </p>
+            }
+            <br/>
+            <button class="btn btn-sm btn-border ml-2" @onclick="ClaimInvestorCoinsPasswordAsync" disabled="@claimCoinSpinner">
+                @if (claimCoinSpinner)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Claiming coins...</span>
+                }
+                else
+                {
+                    <span>Claim coins</span>
+                }
+            </button>
+        }
+    }
+</div>
+    
+@if (showReleaseModal)
+{
+    <div class="modal-wrapper">
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Recovery Confirmation</h5>
+                        <button type="button" class="btn-close" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner"></button>
+                    </div>
+                    <div class="modal-body modal-body-scroll">
+
+                        <p class="mb-1">Claim back your investment without a penalty </p>
+
+                        <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(releaseTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="ReleaseInvestorFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
                         </div>
-                        <div class="modal-body modal-body-scroll">
 
-                            <p class="mb-1">Claim back your investment without a penalty </p>
+                        <hr>
 
-                            <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(releaseTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-
-                            <hr>
-
-                            <div class="mb-3">
-                                <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                                <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="ReleaseInvestorFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
-                            </div>
-
-                            <hr>
-
-                            <p class="mt-3">Are you sure you want to claim back these funds?</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-border" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">Cancel</button>
-                            <button type="button" class="btn btn-border" @onclick="ReleaseInvestorCoins" disabled="@prepareToReleaseCoinsConfirmSpinner">
-                                @if (prepareToReleaseCoinsConfirmSpinner)
-                                {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    <span>Confirming...</span>
-                                }
-                                else
-                                {
-                                    <span>Confirm</span>
-                                }
-                            </button>
-                        </div>
+                        <p class="mt-3">Are you sure you want to claim back these funds?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-border" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">Cancel</button>
+                        <button type="button" class="btn btn-border" @onclick="ReleaseInvestorCoins" disabled="@prepareToReleaseCoinsConfirmSpinner">
+                            @if (prepareToReleaseCoinsConfirmSpinner)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Confirming...</span>
+                            }
+                            else
+                            {
+                                <span>Confirm</span>
+                            }
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-    }
-}
-else
-{
-    // handle founder
-
-    <div class="row mt-4">
-        <div class="col">
-
-            @if (!FounderProject.ProjectDateStarted())
-            {
-                <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
-                    <div class="text-center mb-3">
-
-                        <h6 class="mb-0">Project didn't start yet</h6>
-                    </div>
-                </div>
-            }
-            else
-            {
-                @if (TargetInvestmentReached())
-                {
-                    <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
-                        <div class="text-center mb-3">
-
-                            <h6 class="mb-0">Target reached</h6>
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header pb-0 p-3">
-                                <div class="row">
-                                    <div class="col-6 d-flex align-items-center">
-                                        <h6 class="mb-0">Signatures</h6>
-                                    </div>
-                                    <div class="col-6 d-flex justify-content-end">
-                                        <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ReleaseAllSignatures" disabled="@ApproveButtonDisabled">
-                                            @if (releasingAll)
-                                            {
-                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                <span>Releasing...</span>
-                                            }
-                                            else
-                                            {
-                                                <span>Release All</span>
-                                            }
-                                        </button>
-                                        <button class="btn btn-sm btn-border ml-2" @onclick="RefreshSignaturesInternal" disabled="@isRefreshing">
-                                            @if (isRefreshing)
-                                            {
-                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                <span>Refreshing...</span>
-                                            }
-                                            else
-                                            {
-                                                <span>Refresh</span>
-                                            }
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-body">
-
-
-                                <div class="table-responsive form-control">
-                                    <table class="table align-items-center mb-0">
-                                        <thead>
-                                        <tr>
-                                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Arrived</th>
-                                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Approved</th>
-                                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Released</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        @foreach (var signature in signaturesReleaseItems.Where(_ => _.SignRecoveryRequest?.InvestmentTransactionHex != null))
-                                        {
-                                            <tr>
-                                                <td>@signature.TimeArrived.ToString("g")</td>
-                                                <td>@signature.TimeApproved?.ToString("g")</td>
-                                                @if (signature.TimeReleased is null)
-                                                {
-                                                    <td>
-                                                        <button class="btn btn-border-success" @onclick="() => ApproveReleaseSignatureCheckPassword(signature)" disabled="@signaturesReleaseApproving.Any()">
-                                                            @if (signaturesReleaseApproving.ContainsKey(signature))
-                                                            {
-                                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                                <span>Releasing...</span>
-                                                            }
-                                                            else
-                                                            {
-                                                                <span>Release</span>
-                                                            }
-                                                        </button>
-                                                    </td>
-                                                }
-                                                else
-                                                {
-                                                    <td>@signature.TimeReleased.ToString()</td>
-                                                }
-                                            </tr>
-                                        }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
-            }
-        </div>
     </div>
 }
- 
 
 @code {
     [Parameter]
     public string ProjectIdentifier { get; set; }
 
-    public FounderProject FounderProject { get; set; }
     public InvestorProject InvestorProject { get; set; }
-
-    public bool IsFounder { get; set; }
 
     public SignatureInfo? InvestorReleaseSigInfo;
 
-    private List<SignatureReleaseItem> signaturesReleaseItems = new();
-
     private FeeData feeData = new();
 
-    private Dictionary<SignatureReleaseItem, string> signaturesReleaseApproving = new();
-
-    bool scanedForApprovals;
-    bool scanedReleaseApprovals;
-
-    bool releaseCoinsSpinner = false;
     bool prepareToReleaseCoinsConfirmSpinner = false;
     private Transaction? unsignedReleaseTransaction;
     private TransactionInfo? releaseTransaction;
 
     ProjectStats? projectStats;
 
-    private bool CanApproveAllSignatures => signaturesReleaseItems?.Any(s => s.TimeReleased == null) ?? false;
-
-    private string ApproveButtonClass => CanApproveAllSignatures ? "btn-border-success" : "btn-border";
-
-    private bool ApproveButtonDisabled => !CanApproveAllSignatures;
-    private bool releasingAll = false;
     private bool showReleaseModal = false;
-    private bool receivingMessages = false;
-    private bool refreshButtonSpinner = false;
+    private bool claimCoinSpinner = false;
+    private bool refreshSpinner = false;
 
-    private bool isRefreshing
-    {
-        get
-        {
-            return refreshButtonSpinner == true || receivingMessages == true;
-
-        }
-    }
+    private long? totalInvested = null;
+    string signedTransactionHex;
+    string explorerLink;
 
     protected override async Task OnInitializedAsync()
     {
         if (hasWallet)
         {
-            FounderProject = Storage.GetFounderProjects().FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier);
+            InvestorProject = Storage.GetInvestmentProjects().FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier);
 
-            if (FounderProject is not null)
+            if (InvestorProject is null)
             {
-                IsFounder = true;
+                throw new ArgumentException("The project is not founder or investor");
             }
-            else
-            {
-                InvestorProject = Storage.GetInvestmentProjects().FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier);
 
-                if (InvestorProject is null)
-                {
-                    throw new ArgumentException("The project is not founder or investor");
-                }
+            if (InvestorProject.ReleaseTransactionId != null)
+            {
+                explorerLink = _networkConfiguration.GetExplorerUrl().Url + $"/transaction/{InvestorProject.ReleaseTransactionId}";
             }
+
+            signedTransactionHex = InvestorProject.SignedTransactionHex;
+
+            if (signedTransactionHex is null)
+            {
+                signedTransactionHex = await _IndexerService.GetTransactionHexByIdAsync(InvestorProject.TransactionId);
+            }
+
+            var investmentTransaction = _networkConfiguration.GetNetwork().CreateTransaction(signedTransactionHex);
+            totalInvested = investmentTransaction.Outputs.Skip(2).Take(InvestorProject.ProjectInfo.Stages.Count).Sum(_ => _.Value);
 
             projectStats = await _IndexerService.GetProjectStatsAsync(ProjectIdentifier);
 
@@ -314,38 +229,10 @@ else
         {
             if (hasWallet)
             {
-                if (IsFounder)
-                {
-                    if (FounderProject!.ProjectDateStarted())
-                    {
-                        await RefreshSignaturesInternal();
-                    }
-                }
-                else
-                {
-                    await FetchInvestorCheckPassword();
-                }
+                await FetchInvestorCheckPassword();
             }
         }
     }
-
-    public bool TargetInvestmentReached()
-    {
-        if (projectStats != null)
-        {
-            var targetReached = projectStats?.AmountInvested >= Money.Coins(FounderProject.ProjectInfo.TargetAmount).Satoshi;
-
-            Logger.LogInformation($"Indexer stats for target reached = {targetReached} AmountInvested = {projectStats?.AmountInvested} TargetAmount = {Money.Coins(FounderProject.ProjectInfo.TargetAmount).Satoshi}");
-
-            return targetReached;
-        }
-
-        Logger.LogInformation($"None indexer stats for target reached = {FounderProject.TargetInvestmentReached()} AmountInvested = {FounderProject.TotalAvailableInvestedAmount} TargetAmount = {Money.Coins(FounderProject.ProjectInfo.TargetAmount).Satoshi}");
-
-        return FounderProject.TargetInvestmentReached();
-    }
-
-    // ==== code for the investor ====
 
     protected async Task FetchInvestorCheckPassword()
     {
@@ -367,8 +254,11 @@ else
             return;
         }
 
+        refreshSpinner = true;
+        StateHasChanged();
+
         var words = await passwordComponent.GetWalletAsync();
-        var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
+        var nostrPrivateKey = DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, InvestorProject.ProjectInfo.ProjectIdentifier);
         var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
         SignService.LookupReleaseSigs(
@@ -378,12 +268,18 @@ else
             InvestorProject.SignaturesInfo.SignatureRequestEventId,
             signatureContent =>
             {
-                if (InvestorReleaseSigInfo != null)
+                Logger.LogInformation($"LookupReleaseSigs received a message {signatureContent}");
+
+                if (InvestorReleaseSigInfo == null)
                 {
+                    Logger.LogInformation($"InvestorReleaseSigInfo is null");
+
                     // if we already decrypted the message from another relay just ignore it
 
                     InvokeAsync(async () =>
                     {
+                        Logger.LogInformation($"decrypting");
+
                         var signatureJson = await encryption.DecryptNostrContentAsync(
                             nostrPrivateKeyHex, InvestorProject.ProjectInfo.NostrPubKey, signatureContent);
 
@@ -393,16 +289,19 @@ else
 
                         if (InvestorReleaseSigInfo?.SignatureType != "release")
                         {
-                            notificationComponent.ShowErrorMessage("Incorrect signatures received");
-                            Logger.LogError("Incorrect signatures received");
+                            notificationComponent.ShowErrorMessage("Incorrect signature types received");
+                            Logger.LogError("Incorrect signature types received");
                             InvestorReleaseSigInfo = null;
                         }
-
+                      
                         StateHasChanged();
 
                     });
                 }
-                return Task.CompletedTask;
+            }, () =>
+            {
+                refreshSpinner = false;
+                StateHasChanged();
             });
     }
 
@@ -423,7 +322,7 @@ else
 
     private async Task PrepareToReleaseInvestorCoinsAsync()
     {
-        releaseCoinsSpinner = true;
+        claimCoinSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
 
@@ -439,11 +338,16 @@ else
 
             var investorPrivateKey = DerivationOperations.DeriveInvestorPrivateKey(words, InvestorProject.ProjectInfo.FounderKey);
 
-            string signedTransactionHex = InvestorProject.SignedTransactionHex;
-
             if (signedTransactionHex is null)
             {
-                signedTransactionHex = await _IndexerService.GetTransactionHexByIdAsync(InvestorProject.TransactionId);
+                if (InvestorProject.SignedTransactionHex != null)
+                {
+                    signedTransactionHex = InvestorProject.SignedTransactionHex;
+                }
+                else
+                {
+                    signedTransactionHex = await _IndexerService.GetTransactionHexByIdAsync(InvestorProject.TransactionId);
+                }
             }
 
             var investmentTransaction = _networkConfiguration.GetNetwork().CreateTransaction(signedTransactionHex);
@@ -460,6 +364,8 @@ else
             // add fee to the recovery trx
             releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedReleaseTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
+            explorerLink = _networkConfiguration.GetExplorerUrl().Url + $"/transaction/{InvestorProject.ReleaseTransactionId}";
+
             Logger.LogInformation($"recoveryTransaction={releaseTransaction.Transaction.GetHash().ToString()}");
 
             showReleaseModal = true;
@@ -470,7 +376,7 @@ else
         }
         finally
         {
-            releaseCoinsSpinner = false;
+            claimCoinSpinner = false;
         }
     }
 
@@ -532,7 +438,6 @@ else
             _walletUIService.AddTransactionToPending(releaseTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
-
         }
         catch (Exception e)
         {
@@ -543,355 +448,11 @@ else
             prepareToReleaseCoinsConfirmSpinner = false;
             passwordComponent.ClearPassword();
         }
-    }
-
-    // ==== code for the founder ====
-
-    private async Task RefreshSignaturesInternal()
-    {
-        if (passwordComponent.HasPassword())
-        {
-            await RefreshSignatures();
-        }
-        else
-        {
-            passwordComponent.ShowPassword(async () =>
-            {
-                await RefreshSignatures();
-            });
-        }
-    }
-
-    private async Task RefreshSignatures()
-    {
-        refreshButtonSpinner = true;
-        StateHasChanged();
-        
-        if (!passwordComponent.HasPassword())
-        {
-            notificationComponent.ShowErrorMessage("no wallet password");
-            return;
-        }
-
-        try
-        {
-            await FetchSignatureRequests();
-
-            projectStats = await _IndexerService.GetProjectStatsAsync(ProjectIdentifier);
-
-            Logger.LogInformation($"Fetching project stats  stats AmountInvested = {projectStats?.AmountInvested} InvestorCount = {projectStats?.InvestorCount}");
-
-            await Task.Delay(1000);
-        }
-        catch (Exception e)
-        {
-            Logger.LogError($"Error fetching signatures: {e.Message}");
-        }
-        finally
-        {
-            
-            refreshButtonSpinner = false;
-            StateHasChanged();
-        }
-    }
-
-    private async Task FetchSignatureRequests()
-    {
-        var words = await passwordComponent.GetWalletAsync();
-        var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
-        var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
-
-        receivingMessages = true;
-
-        await SignService.LookupInvestmentRequestsAsync(FounderProject.ProjectInfo.NostrPubKey, null, null,
-            (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
-            {
-                Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
-
-                var sigReq = signaturesReleaseItems.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
-
-                if (sigReq != null)
-                {
-                    if (sigReq.TimeArrived >= timeArrived)
-                    {
-                        return; //multiple relays could mean the same massage multiple times
-                    }
-
-                    Logger.LogDebug($"Sig request event received is replaced");
-
-                    // this is a newer sig request so replace it
-                    signaturesReleaseItems.Remove(sigReq);
-                }
-
-                Logger.LogDebug($"Sig request event received is new");
-
-                var signatureReleaseItem = new SignatureReleaseItem
-                {
-                    investorNostrPubKey = investorNostrPubKey,
-                    TimeArrived = timeArrived,
-                    EncryptedSignRecoveryMessage = encryptedMessage, //To be encrypted after js interop is loaded
-                    EventId = eventId
-                };
-
-                signaturesReleaseItems.Add(signatureReleaseItem);
-                Logger.LogDebug($"Added to pendingSignatures");
-            },
-            () =>
-            {
-                Logger.LogDebug($"End of messages");
-
-                // we cannot directly call a method that needs to be awaited 
-                // so we do it inside the InvokeAsync delegate.
-
-                // decrypt the message
-                InvokeAsync(async () => { await DecryptMessages(nostrPrivateKeyHex); });
-
-                receivingMessages = false;
-
-                // fetch all the approvals
-                FetchFounderApprovalsSignatures(nostrPrivateKeyHex);
-                FetchFounderReleaseSignatures(nostrPrivateKeyHex);
-
-                Logger.LogDebug($"Calling StateHasChanged in EOSE");
-                StateHasChanged();
-            });
-    }
-
-    private async Task DecryptMessages(string nostrPrivateKeyHex)
-    {
-        foreach (var signatureReleaseItem in signaturesReleaseItems)
-        {
-            try
-            {
-                Logger.LogInformation($"Decrypting recovery request for key {signatureReleaseItem.investorNostrPubKey}");
-
-                var sigResJson = await encryption.DecryptNostrContentAsync(nostrPrivateKeyHex, signatureReleaseItem.investorNostrPubKey, signatureReleaseItem.EncryptedSignRecoveryMessage);
-
-                signatureReleaseItem.SignRecoveryRequest = serializer.Deserialize<SignRecoveryRequest>(sigResJson);
-
-                Logger.LogInformation($"Decrypted recovery request for key {signatureReleaseItem.investorNostrPubKey} content = {sigResJson}");
-
-                if (signatureReleaseItem.SignRecoveryRequest is null)
-                {
-                    throw new Exception("Error deserializing signature request");
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.LogError("Error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", signatureReleaseItem?.SignRecoveryRequest?.InvestmentTransactionHex, e.Message);
-                signatureReleaseItem.SignRecoveryRequest = null;
-            }
-        }
-        
-        StateHasChanged();
-    }
-
-    private void FetchFounderApprovalsSignatures(string nostrPrivateKeyHex)
-    {
-        SignService.LookupInvestmentRequestApprovals(FounderProject.ProjectInfo.NostrPubKey,
-            (investorNostrPubKey, timeEventCreated, reqEventId) =>
-            {
-                Logger.LogDebug($"Sig response event received investorNostrPubKey: {investorNostrPubKey} - timeApproved: {timeEventCreated} - reqEventId: {reqEventId}");
-
-                var signatureRequest = signaturesReleaseItems.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
-
-                if (signatureRequest is null)
-                    return; // ignore it could be a fake message
-
-                if (signatureRequest.TimeArrived > timeEventCreated)
-                {
-                    Logger.LogDebug($"The event received is replaced by time");
-                    return; // sig of an old request
-                }
-
-                if (reqEventId != null && signatureRequest.EventId != reqEventId)
-                {
-                    Logger.LogDebug($"The event received is replaced by eventid");
-                    return; // sig of an old request
-                }
-
-                Logger.LogDebug($"The event received is new");
-
-                signatureRequest.TimeApproved = timeEventCreated;
-
-                Logger.LogDebug($"Added to pendingSignatures");
-            },
-            () =>
-            {
-                scanedForApprovals = true;
-
-                Logger.LogDebug($"Calling StateHasChanged in EOSE");
-                StateHasChanged();
-                Logger.LogDebug($"End of messages on EOSE");
-            });
-    }
-
-    protected void FetchFounderReleaseSignatures(string nostrPrivateKeyHex)
-    {
-        SignService.LookupSignedReleaseSigs(FounderProject.ProjectInfo.NostrPubKey,
-            (item) =>
-            {
-                Logger.LogDebug($"Sig release response event received investorNostrPubKey: {item.ProfileIdentifier} - timeReleased: {item.EventCreatedAt} - reqEventId: {item.EventIdentifier}");
-
-                var signatureRequest = signaturesReleaseItems.FirstOrDefault(_ => _.investorNostrPubKey == item.ProfileIdentifier);
-
-                if (signatureRequest is null)
-                    return; // ignore it could be a message we do not recognize
-
-                if (signatureRequest.TimeReleased > item.EventCreatedAt)
-                {
-                    Logger.LogDebug($"The event received is replaced by time");
-                    return; // sig of an old request
-                }
-
-                if (item.EventIdentifier != null && signatureRequest.EventId != item.EventIdentifier)
-                {
-                    Logger.LogDebug($"The event received is replaced by eventid");
-                    return; // sig of an old request
-                }
-
-                Logger.LogDebug($"The event received is new");
-
-                signatureRequest.TimeReleased = item.EventCreatedAt;
-
-                Logger.LogDebug($"signatureRequest.TimeReleased was updated to {signatureRequest.TimeReleased}");
-            }, () =>
-            {
-                scanedReleaseApprovals = true;
-
-                StateHasChanged();
-            });
-    }
-
-    protected async Task ApproveReleaseSignatureCheckPassword(SignatureReleaseItem signature)
-    {
-        if (passwordComponent.HasPassword())
-        {
-            await ApproveReleaseSignature(signature);
-        }
-        else
-        {
-            passwordComponent.ShowPassword(async () =>
-            {
-                await ApproveReleaseSignature(signature);
-            });
-        }
-    }
-
-    private async Task ApproveReleaseSignature(SignatureReleaseItem signature)
-    {
-        signaturesReleaseApproving.Add(signature, string.Empty);
-        StateHasChanged();
-
-        try
-        {
-            var words = await passwordComponent.GetWalletAsync();
-
-            var operationResult = await PerformReleaseSignature(signature, words);
-
-            if (!operationResult.Success)
-            {
-                notificationComponent.ShowErrorMessage(operationResult.Message);
-            }
-        }
-        catch (Exception e)
-        {
-            notificationComponent.ShowErrorMessage(e.Message,e);
-        }
-        finally
-        {
-            signaturesReleaseApproving.Remove(signature);
-        }
 
         StateHasChanged();
     }
- 
-    private async Task ReleaseAllSignatures()
-    {
-        if (passwordComponent.HasPassword())
-        {
-            await ProcessReleaseSignatures();
-        }
-        else
-        {
-            passwordComponent.ShowPassword(async () =>
-            {
-                await ProcessReleaseSignatures();
-            });
-        }
-    }
 
-    private async Task ProcessReleaseSignatures()
-    {
-        releasingAll = true;
-        StateHasChanged();
-
-        try
-        {
-            var releaseSignatures = signaturesReleaseItems.Where(s =>  s.TimeReleased == null).ToList();
-        
-            var words = await passwordComponent.GetWalletAsync();
-        
-            foreach (var signature in releaseSignatures)
-            {
-                await PerformReleaseSignature(signature, words);
-                StateHasChanged();
-            }
-        }
-        catch (Exception e)
-        {
-            notificationComponent.ShowErrorMessage(e.Message,e);
-        }
-        finally
-        {
-            releasingAll = false;
-            passwordComponent.ClearPassword();
-        }
-        
-        StateHasChanged();
-    }
-
-    private async Task<OperationResult> PerformReleaseSignature(SignatureReleaseItem signature, WalletWords words)
-    {
-        try
-        {
-            var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex);
-            var signatureInfo = CreateReleaseSignatures(signature.SignRecoveryRequest?.InvestmentTransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()), signature.SignRecoveryRequest?.ReleaseAddress ?? signature.SignRecoveryRequest.ReleaseKey);
-
-            var sigJson = serializer.Serialize(signatureInfo);
-
-            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
-            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
-
-            var encryptedContent = await encryption.EncryptNostrContentAsync(
-                nostrPrivateKeyHex, signature.investorNostrPubKey, sigJson);
-
-            signature.TimeReleased = SignService.SendReleaseSigsToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
-            
-            return new OperationResult { Success = true };
-        }
-        catch (Exception ex)
-        {
-            return new OperationResult { Success = false, Message = $"An error occurred: {ex.Message}" };
-        }
-    }
-
-    private SignatureInfo CreateReleaseSignatures(string transactionHex, ProjectInfo info, string founderSigningPrivateKey, string investorReleaseAddress)
-    {
-        var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
-
-        // build sigs
-        var recoveryTrx = InvestorTransactionActions.BuildReleaseInvestorFundsTransaction(info, investorTrx, investorReleaseAddress);
-        var sig = FounderTransactionActions.SignInvestorRecoveryTransactions(info, transactionHex, recoveryTrx, founderSigningPrivateKey);
-
-        if (!InvestorTransactionActions.CheckInvestorReleaseSignatures(info, investorTrx, sig, investorReleaseAddress))
-           throw new InvalidOperationException();
-
-        sig.SignatureType = "release";
-
-        return sig;
-    }
-
+   
     public class SignatureReleaseItem
     {
         public string investorNostrPubKey { get; set; }

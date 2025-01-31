@@ -18,8 +18,16 @@ public class InvestorProject : Project
     public string InvestorPublicKey { get; set; }
     public string InvestorNPub { get; set; }
 
+    /// <summary>
+    /// The address to release the funds to if the project did not reach the target.
+    /// This will be used by the founder when signing the release outputs
+    /// </summary>
     public string ReleaseAddress { get; set; }
-    public string ReleaseTransactionId { get; set; }
+
+    /// <summary>
+    /// The trxid of an unfunded project that the investor has released the funds without a penalty 
+    /// </summary>
+    public string ReleaseTransactionId { get; set; } 
 
     public bool WaitingForFounderResponse()
     {

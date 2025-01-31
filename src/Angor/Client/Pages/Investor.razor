@@ -229,12 +229,24 @@
                                         <strong class="text-danger">Pending</strong>
                                     }
                                 </div>
-                                @if (hasInvestmentReleaseRequests)
-                                {
-                                    <div class="mb-3 d-flex justify-content-between">
-                                        <span>Founder Released Funds</span>
-                                    </div>
-                                }
+
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Founder Released Funds</span>
+                                    @if (hasInvestmentReleaseRequests)
+                                    {
+                                        @if (project.ReleaseTransactionId == null)
+                                        {
+                                            <a href=@($"/release/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-sm btn-border ms-2" title="Pending">
+                                                <strong class="text-danger">Release funds</strong>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <strong class="text-primary">Funds released</strong>
+                                        }
+                                    }
+                                </div>
+                                
                                 <div class="card-footer">
                                     <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border w-100">
                                         View Project
@@ -352,15 +364,13 @@
         return Task.CompletedTask;
     }
 
-    private Task HandleReleaseSignatureReceivedAsync(string nostrPubKey, string signatureContent)
+    private void HandleReleaseSignatureReceivedAsync(string nostrPubKey, string signatureContent)
     {
         if (releaseRequestsMap.ContainsKey(nostrPubKey))
         {
             releaseRequestsMap[nostrPubKey] = true;
             StateHasChanged();
         }
-
-        return Task.CompletedTask;
     }
 
     private void CheckSignatureFromFounder()
@@ -391,7 +401,7 @@
                 null,
                 project.SignaturesInfo.SignatureRequestEventId,
                 signatureContent => HandleReleaseSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
-                );
+                , () => {});
         }
     }
 

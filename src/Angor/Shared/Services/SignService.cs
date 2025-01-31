@@ -67,7 +67,7 @@ namespace Angor.Client.Services
                 Authors = new[] { projectNostrPubKey }, //From founder
                 P = new[] { investorNostrPubKey }, // To investor
                 Kinds = new[] { NostrKind.EncryptedDm },
-                Since = sigRequestSentTime,
+                //Since = sigRequestSentTime,
                 E = new [] { sigRequestEventId },
                 Limit = 1,
             }));
@@ -187,7 +187,7 @@ namespace Angor.Client.Services
             return ev.CreatedAt.Value;
         }
 
-        public void LookupReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Func<string, Task> action)
+        public void LookupReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Action<string> action, Action onAllMessagesReceived)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
             var subscriptionKey = projectNostrPubKey.Substring(0, 20) + "rel_sigs";
@@ -203,12 +203,14 @@ namespace Angor.Client.Services
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
             }
 
+            _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
+
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 Authors = new[] { projectNostrPubKey }, // From founder
                 P = new[] { investorNostrPubKey }, // To investor
-                Kinds = new[] { NostrKind.EncryptedDm },
-                Since = releaseRequestSentTime,
+                Kinds = new[] { NostrKind.EncryptedDm }, 
+                // Since = releaseRequestSentTime,
                 E = new[] { releaseRequestEventId },
                 Limit = 1,
             }));

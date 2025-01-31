@@ -463,8 +463,7 @@
             {
                 releaseSigsfound = true;
                 StateHasChanged();
-                return Task.CompletedTask;
-            });
+            }, () => {});
     }
 
     private async Task FindInvestments()
