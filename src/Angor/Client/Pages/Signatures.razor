@@ -9,6 +9,7 @@
 @using Blockcore.NBitcoin.DataEncoders
 @using System.Text.Json
 @using Angor.Shared.Services
+@using System.Security.Cryptography
 
 @inject IJSRuntime JS
 
@@ -98,7 +99,7 @@
                                         <button class="btn btn-sm btn-border ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
                                             @if (refreshButtonSpinner)
                                             {
-                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                                 <span>Refreshing...</span>
                                             }
                                             else
@@ -130,10 +131,10 @@
                                                     @if (signature.TimeApproved is null)
                                                     {
                                                         <td>
-                                                            <button class="btn btn-success" @onclick="() => ApproveSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.Any()">
+                                                            <button class="btn btn-border-success" @onclick="() => ApproveSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.Any()">
                                                                 @if (signaturesRequestsApproving.ContainsKey(signature))
                                                                 {
-                                                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                                                     <span>Approving...</span>
                                                                 }
                                                                 else
@@ -178,7 +179,7 @@
 
     private bool CanApproveAllSignatures => signaturesRequests != null && signaturesRequests.Any(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null);
 
-    private string ApproveButtonClass => CanApproveAllSignatures ? "btn-success" : "btn-border";
+    private string ApproveButtonClass => CanApproveAllSignatures ? "btn-border-success" : "btn-border";
 
     private bool ApproveButtonDisabled => !CanApproveAllSignatures;
 
@@ -296,12 +297,21 @@
                     pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3) //Todo get the actual outputs with taproot type
                         .Sum(_ => _.TxOut.Value.ToUnit(MoneyUnit.BTC));
                 }
-                catch (Exception e)
+                catch (FormatException fe)
                 {
-                    Logger.LogError(pendingSignature?.TransactionHex ?? e.Message, e);
+                    Logger.LogError("Format error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", pendingSignature?.TransactionHex, fe.Message);
                     pendingSignature.TransactionHex = null;
                 }
-            }
+                catch (CryptographicException ce)
+                {
+                    Logger.LogError("Cryptographic error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", pendingSignature?.TransactionHex, ce.Message);
+                    pendingSignature.TransactionHex = null;
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError("Error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", pendingSignature?.TransactionHex, e.Message);
+                    pendingSignature.TransactionHex = null;
+                }            }
             Logger.LogDebug($"Calling StateHasChanged in OnAfterRenderAsync");
             messagesReceived = false;
             StateHasChanged();

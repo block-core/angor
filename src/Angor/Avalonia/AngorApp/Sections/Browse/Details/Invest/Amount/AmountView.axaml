@@ -4,12 +4,21 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:amount="clr-namespace:AngorApp.Sections.Browse.Details.Invest.Amount"
              xmlns:controls="clr-namespace:AngorApp.Controls"
+             xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
+             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d"
+             d:DesignWidth="500"
              x:Class="AngorApp.Sections.Browse.Details.Invest.Amount.AmountView" x:DataType="amount:IAmountViewModel">
 
     <Design.DataContext>
         <amount:AmountViewModelDesign />
     </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
 
     <StackPanel Spacing="20">
         <TextBlock TextWrapping="Wrap">
@@ -19,7 +28,7 @@
                 </Run>
                 <Run>You can view more details about the project </Run>
                 <InlineUIContainer>
-                    <HyperlinkButton Content="here" Padding="0" NavigateUri="http://www.google.com" />
+                    <HyperlinkButton Content="here" Padding="0" NavigateUri="{Binding Project.InformationUri}" />
                 </InlineUIContainer>
             </TextBlock.Inlines>
         </TextBlock>
@@ -28,9 +37,27 @@
             This agreement ensures that in the event the project does not succeed, you will be able to recover your funds.
             This provides a safety net for your investment, giving you peace of mind that your financial contribution is protected.
         </TextBlock>
-        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Project Id:" Content="{Binding Project.Id}"/>
-        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Target Amount:" Content="{Binding Project.TargetAmount, StringFormat={x:Static controls:MiscConverters.BigBtcFormat} }"/>
-        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Starting in:" Content="{Binding Project.StartingDate}"/>
-        <NumericUpDown Watermark="Amount" ShowButtonSpinner="False" Value="{Binding Amount, Mode=TwoWay}" />
+        <Separator />
+        <StackPanel Spacing="10" Grid.IsSharedSizeScope="True">
+            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Project Id:" Content="{Binding Project.Id}" />
+            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Target Amount:" Content="{Binding Project.TargetAmount, StringFormat={x:Static controls:MiscConverters.BigBtcFormat} }" />
+            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Starting in:" Content="{Binding Project.StartingDate}" />
+            <Separator />
+            <controls:AmountControl Satoshis="{Binding Amount}">
+                <Interaction.Behaviors>
+                    <behaviors:UntouchedClassBehavior />
+                </Interaction.Behaviors>
+            </controls:AmountControl>
+            <controls:IconButton HorizontalAlignment="Right" Content="Stages breakdown" IsVisible="{Binding !!Amount}">
+                <controls:IconButton.Icon>
+                    <avalonia:Icon Value="fa-info" />
+                </controls:IconButton.Icon>
+                <controls:IconButton.Flyout>
+                    <Flyout Placement="BottomEdgeAlignedLeft">
+                        <amount:StagesBreakdown />
+                    </Flyout>
+                </controls:IconButton.Flyout>
+            </controls:IconButton>
+        </StackPanel>
     </StackPanel>
 </UserControl>

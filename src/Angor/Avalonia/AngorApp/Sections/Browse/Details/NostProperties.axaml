@@ -4,11 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:c="clr-namespace:AngorApp.Controls"
              xmlns:p="https://github.com/projektanker/icons.avalonia"
-             xmlns:a="clr-namespace:AngorApp"
              xmlns:conv="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
              xmlns:misc="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="650" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Browse.Details.NostProperties" x:DataType="dt:IProjectDetailsViewModel">
     
     <Design.DataContext>
@@ -31,11 +30,9 @@
         <StackPanel Spacing="20">
             <HeaderedContentControl Header="Project NOSTR public key">
                 <c:SectionItem>
-                    <c:SectionItem.LeftContent>
-                        <TextBox Text="{Binding Project.NpubKey}" />
-                    </c:SectionItem.LeftContent>
+                    <TextBox Text="{Binding Project.NpubKey}" />
                     <c:SectionItem.RightContent>
-                        <Button Command="{x:Static misc:Commands.LaunchUri}">
+                        <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}">
                             <Button.CommandParameter>
                                 <MultiBinding Converter="{x:Static conv:StringConverters.Concat}">
                                     <Binding>
@@ -55,11 +52,9 @@
             </HeaderedContentControl>
             <HeaderedContentControl Header="Project NOSTR public key">
                 <c:SectionItem>
-                    <c:SectionItem.LeftContent>
-                        <TextBox Text="{Binding Project.NpubKeyHex}" />
-                    </c:SectionItem.LeftContent>
+                    <TextBox Text="{Binding Project.NpubKeyHex}" />
                     <c:SectionItem.RightContent>
-                        <Button Command="{x:Static misc:Commands.LaunchUri}">
+                        <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}">
                             <Button.CommandParameter>
                                 <MultiBinding Converter="{x:Static conv:StringConverters.Concat}">
                                     <Binding>

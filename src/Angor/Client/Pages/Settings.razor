@@ -58,60 +58,67 @@
             </div>
             <div>
 
-                <button class="btn btn-warning" @onclick="() => showChangeNetworkModal = true">
-                    <Icon IconName="change" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
+                <button class="btn btn-border" @onclick="() => showChangeNetworkModal = true">
+                    <Icon IconName="change" Height="24" Width="24" />
+                    <span class="ms-2 d-none d-md-inline">Change Network</span>
                 </button>
 
                 @if (showChangeNetworkModal)
                 {
                     <div class="modal-wrapper">
-                        <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="coinControlModalLabel">Change Network</h5>
-                                        <span type="button" data-bs-dismiss="modal" @onclick="() => showChangeNetworkModal = false" aria-label="Close">
-                                            <Icon IconName="close-circle" />
-                                        </span>
-                                    </div>
-                                    <div class="modal-body modal-body-scroll">
-                                        <div class="alert alert-danger" role="alert">
-                                            <h5>This will wipe your wallet!</h5>
+                        <div class="modal fade show d-block" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content modern-modal">
+                                    <div class="modal-header border-0 pb-0">
+                                        <div class="d-flex align-items-center">
+                                            <Icon IconName="network" Height="32" Width="32" class="me-2" />
+                                            <h5 class="modal-title">Change Network</h5>
                                         </div>
+                                        <button class="btn-close-custom" @onclick="() => showChangeNetworkModal = false">
+                                            <Icon IconName="close-circle" Height="24" Width="24" />
+                                        </button>
+                                    </div>
 
-                                        <div class="alert alert-warning" role="alert">
-                                            <p class="mb-0 text-bl">Warning: By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
-
-                                            <div class="form-check">
-                                                <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
-                                                <label class="form-check-label text-black mb-0" for="confirmWipeCheckbox">
-                                                    Confirm?
-                                                </label>
+                                    <div class="modal-body modal-body-scroll py-4">
+                                        <div class="transaction-info-section">
+                                            <div class="alert alert-danger" role="alert">
+                                                <p>This will wipe your wallet!</p>
                                             </div>
-                                            @if (showConfirmWipeMessage)
-                                            {
-                                                <div class="alert alert-danger mt-2 mb-0" role="alert">
-                                                    Please tick the box to wipe all storage!
+
+                                            <div class="" role="alert">
+                                                <p class="mb-0 text-bl">Warning: By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
+                                                <div class="form-check mt-4 mb-4">
+                                                    <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                                    <label class="form-check-label mb-0" for="confirmWipeCheckbox">
+                                                        Confirm?
+                                                    </label>
                                                 </div>
-                                            }
-                                        </div>
+                                                @if (showConfirmWipeMessage)
+                                                {
+                                                    <div class="alert alert-danger mb-4" role="alert">
+                                                        Please tick the box to wipe all storage!
+                                                    </div>
+                                                }
+                                            </div>
 
-                                        <!-- Dropdown for network selection -->
-                                        <div class="card card-body mb-3 mt-4">
-                                            <label for="networkSelection">Select Network:</label>
-                                            <select class="form-control mt-2" id="networkSelection" @bind="selectedNetwork">
-                                                <option value="Angornet" selected>Angornet</option>
-                                                <option value="TestNet4" disabled selected>Testnet4</option>
-                                                <option value="Signet" disabled selected>Signet</option>
-                                                <option value="TestNet" disabled selected>Testnet</option>
-                                                <option value="Main">Mainnet</option>
-                                                <option value="Liquid" disabled>Liquid</option>
-                                            </select>
+                                            <div class="info-card mb-3">
+                                                <label for="networkSelection" class="info-label m-0">Select Network:</label>
+                                                <select class="form-control mt-2" id="networkSelection" @bind="selectedNetwork">
+                                                    <option value="Angornet" selected>Angornet</option>
+                                                    <option value="TestNet4" disabled selected>Testnet4</option>
+                                                    <option value="Signet" disabled selected>Signet</option>
+                                                    <option value="TestNet" disabled selected>Testnet</option>
+                                                    <option value="Main">Mainnet</option>
+                                                    <option value="Liquid" disabled>Liquid</option>
+                                                </select>
+                                            </div>
                                         </div>
-
                                     </div>
-                                    <div class="modal-footer">
-                                        <button class="btn btn-danger" @onclick="ChangeNetwork">Change Network</button>
+
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button class="btn btn-border-success w-100 w-md-auto" @onclick="ChangeNetwork">
+                                            Change Network
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -141,7 +148,7 @@
                 </div>
             </div>
             <div>
-                <a class="btn btn-success" href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">
+                <a class="btn btn-border-success" href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">
                     <Icon IconName="link" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
                 </a>
             </div>
@@ -166,7 +173,7 @@
 
                 </div>
             </div>
-            <button class="btn btn-success" @onclick="Refresh" disabled="@refreshSpinner">
+            <button class="btn btn-border-success" @onclick="Refresh" disabled="@refreshSpinner">
                 <span role="status" aria-hidden="true" class="@(refreshSpinner ? "rotate-icon" : "")">
                     <Icon IconName="refresh" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
                 </span>
@@ -211,7 +218,7 @@
                                 }
                             </td>
                             <td class="text-end">
-                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">
+                                <button class="btn btn-border-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">
                                     <Icon IconName="remove" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
                                 </button>
                             </td>
@@ -238,7 +245,7 @@
                     </h5>
                 </div>
             </div>
-            <button class="btn btn-success" @onclick="Refresh" disabled="@refreshSpinner">
+            <button class="btn btn-border-success" @onclick="Refresh" disabled="@refreshSpinner">
                 <span role="status" aria-hidden="true" class="@(refreshSpinner ? "rotate-icon" : "")">
                     <Icon IconName="refresh" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
                 </span>
@@ -287,7 +294,7 @@
                                 }
                             </td>
                             <td class="text-end">
-                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">
+                                <button class="btn btn-border-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">
                                     <Icon IconName="remove" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
                                 </button>
                             </td>
@@ -340,65 +347,74 @@
     <div class="card card-body border-danger border-3">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="remove" Height="42" Width="42"></Icon>
-                </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Wipe Storage
-                    </h5>
-                    <p class="mb-0 mt-2 font-weight-normal text-sm">
-                        This will wipe your wallet!
-                    </p>
+                <div class="settings-icon-wrapper">
+                    <Icon IconName="remove" Height="42" Width="42" />
+                </div>
+                <div class="ms-3">
+                    <h5 class="mb-0 text-danger">Danger Zone</h5>
+                    <p class="text-muted mb-0">Irreversible actions</p>
                 </div>
             </div>
-            <div>
-                <button class="btn btn-danger" @onclick="() => showWipeallModal = true">
-                    <Icon IconName="remove" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
-                </button>
-                @if (showWipeallModal)
-                {
-                    <div class="modal-wrapper">
-                        <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="coinControlModalLabel">Wipe Storage</h5>
-                                        <span type="button" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false" aria-label="Close">
-                                            <Icon IconName="close-circle" />
-                                        </span>
-                                    </div>
-                                    <div class="modal-body modal-body-scroll">
-                                        <div class="alert alert-warning" role="alert">
-                                            <p class="mb-0 text-bl">Warning: By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
+            <button class="btn btn-border-danger" @onclick="() => showWipeallModal = true">
+                <Icon IconName="remove" Height="24" Width="24" />
+                <span class="ms-2 d-none d-md-inline">Wipe Data</span>
+            </button>
+        </div>
+    </div>
 
-                                            <div class="form-check">
-                                                <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
-                                                <label class="form-check-label text-black mb-0" for="confirmWipeCheckbox">
-                                                    Confirm?
-                                                </label>
-                                            </div>
-                                            @if (showConfirmWipeMessage)
-                                            {
-                                                <div class="alert alert-danger mt-2 mb-0" role="alert">
-                                                    Please tick the box to wipe all storage!
-                                                </div>
-                                            }
+    @if (showWipeallModal)
+    {
+        <div class="modal-wrapper">
+            <div class="modal fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content modern-modal">
+                        <div class="modal-header border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <Icon IconName="remove" Height="32" Width="32" class="me-2" />
+                                <h5 class="modal-title">Wipe Storage</h5>
+                            </div>
+                            <button class="btn-close-custom" @onclick="() => showWipeallModal = false">
+                                <Icon IconName="close-circle" Height="24" Width="24" />
+                            </button>
+                        </div>
+
+                        <div class="modal-body modal-body-scroll py-4">
+                            <div class="transaction-info-section">
+                                <div class="mb-0" role="alert">
+                                    <div class="alert alert-danger" role="alert">
+                                        <p>This will wipe your wallet!</p>
+                                    </div>
+                                    <p class="mb-0 text-bl">Warning: By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input border" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                        <label class="form-check-label" for="confirmWipeCheckbox">
+                                            Confirm?
+                                        </label>
+                                    </div>
+                                    @if (showConfirmWipeMessage)
+                                    {
+                                        <div class="alert alert-danger mt-4 mb-0" role="alert">
+                                            Please tick the box to wipe all storage!
                                         </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button class="btn btn-danger" @onclick="WipeAllData">Wipe Storage</button>
-                                    </div>
+                                    }
                                 </div>
                             </div>
                         </div>
-                    </div>
-                }
 
+                        <div class="modal-footer border-0 pt-0">
+                            <button class="btn btn-border-success w-100 w-md-auto" @onclick="WipeAllData">
+                                Wipe Storage
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    }
+
 </div>
+
+
 
 @code {
     private string newIndexerLink;
