@@ -62,6 +62,14 @@
     <script src="/assets/js/appUpdate.js?v=1"></script>
     <script src="/assets/js/app.js?v=1"></script>
     <script src="_framework/blazor.webassembly.js?v=1"></script>
+    <script>
+        function downloadFile(filename, base64) {
+            const link = document.createElement('a');
+            link.href = 'data:application/octet-stream;base64,' + base64;
+            link.download = filename;
+            link.click();
+        }
+    </script>
 </body>
 
 </html>

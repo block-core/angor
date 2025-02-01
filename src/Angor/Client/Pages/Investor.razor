@@ -57,6 +57,12 @@
                     </i>
                     <span class="nav-link-text ms-1">Penalties</span>
                 </button>
+                <button class="btn btn-border w-100 w-lg-auto me-3 mb-lg-0" @onclick="DownloadSignatureInfoAsJson">
+                    <i>
+                        <Icon IconName="download" Width="24" Height="24"></Icon>
+                    </i>
+                    <span class="nav-link-text ms-1">Download Signatures</span>
+                </button>
             </div>
         </div>
     </div>
@@ -142,7 +148,8 @@
                     {
                         Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
                         var nostrPubKey = project.ProjectInfo.NostrPubKey;
-                        investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
+                        investmentRequestsMap.TryGetValue(nostrPubKey, out var signatureInfo);
+                        bool hasInvestmentRequests = signatureInfo != null;
 
                         <div class="col">
 
@@ -262,7 +269,7 @@
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
 
-    private Dictionary<string, bool> investmentRequestsMap = new Dictionary<string, bool>();
+    private Dictionary<string, SignatureInfo> investmentRequestsMap = new Dictionary<string, SignatureInfo>();
 
     public Dictionary<string, ProjectStats> Stats = new();
 
@@ -334,29 +341,35 @@
 
     }
 
-    private Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
+    private async Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
     {
-        if (investmentRequestsMap.ContainsKey(nostrPubKey))
+        _Logger.LogInformation($"Received signature for {nostrPubKey}: {signatureContent}");
+        var signatureInfo = serializer.Deserialize<SignatureInfo>(signatureContent);
+        if (signatureInfo != null)
         {
-            investmentRequestsMap[nostrPubKey] = true;
+            investmentRequestsMap[nostrPubKey] = signatureInfo;
+            _Logger.LogInformation($"Updated investmentRequestsMap for {nostrPubKey} with {signatureInfo}");
             StateHasChanged();
         }
-
-        return Task.CompletedTask;
+        else
+        {
+            _Logger.LogWarning($"Failed to deserialize signature content for {nostrPubKey}");
+        }
     }
 
     private void CheckSignatureFromFounder()
     {
         foreach (var project in projects)
         {
-            investmentRequestsMap[project.ProjectInfo.NostrPubKey] = false;
+            investmentRequestsMap[project.ProjectInfo.NostrPubKey] = null;
+            _Logger.LogInformation($"Checking signature for project {project.ProjectInfo.ProjectIdentifier}");
 
             _SignService.LookupSignatureForInvestmentRequest(
                 project.InvestorNPub,
                 project.ProjectInfo.NostrPubKey,
                 project.SignaturesInfo.TimeOfSignatureRequest.Value,
                 project.SignaturesInfo.SignatureRequestEventId,
-                signatureContent => HandleSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
+                async signatureContent => await HandleSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
             );
         }
     }
@@ -561,5 +574,16 @@
     private void NavigateToPenalties()
     {
         NavigationManager.NavigateTo("/penalties");
+    }
+
+    private async Task DownloadSignatureInfoAsJson()
+    {
+        var validSignatures = investmentRequestsMap.Values.Where(v => v != null).ToList();
+        _Logger.LogInformation($"Valid signatures count: {validSignatures.Count}");
+        var json = serializer.Serialize(validSignatures);
+        _Logger.LogInformation($"Downloading signatures: {json}");
+        var bytes = System.Text.Encoding.UTF8.GetBytes(json);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadFile", "signatures.json", base64);
     }
 }
