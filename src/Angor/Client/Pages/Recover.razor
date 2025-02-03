@@ -91,49 +91,50 @@
                                 <p>Total funds in penalty = @StageInfo.TotalInPenalty @network.CoinTicker</p>
                             }
 
-                        @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
-                        {
-                            <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
-                                @if (PrepareToRecoverCoinsModalSpinner)
-                                {
-                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Recover Funds...</span>
-                                }
-                                else
-                                {
-                                    <span>Recover Funds</span>
-                                }
-                            </button>
-                        }
+                            @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
+                            {
+                                <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
+                                    @if (PrepareToRecoverCoinsModalSpinner)
+                                    {
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Recover Funds...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Recover Funds</span>
+                                    }
+                                </button>
+                            }
 
-                        @if (StageInfo.CanRelease)
-                        {
-                            <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
-                                @if (PrepareToReleaseCoinsModalSpinner)
-                                {
-                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Release Funds...</span>
-                                }
-                                else
-                                {
-                                    <span>Release Funds</span>
-                                }
-                            </button>
-                        }
+                            @if (StageInfo.CanRelease)
+                            {
+                                <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
+                                    @if (PrepareToReleaseCoinsModalSpinner)
+                                    {
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Release Funds...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Release Funds</span>
+                                    }
+                                </button>
+                            }
 
-                        @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
-                        {
-                            <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
-                                @if (PrepareEndOfProjectCoinsModalSpinner)
-                                {
-                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>End of project...</span>
-                                }
-                                else
-                                {
-                                    <span>End of project</span>
-                                }
-                            </button>
+                            @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
+                            {
+                                <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
+                                    @if (PrepareEndOfProjectCoinsModalSpinner)
+                                    {
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>End of project...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>End of project</span>
+                                    }
+                                </button>
+                            }
                         }
                     }
                 </div>
