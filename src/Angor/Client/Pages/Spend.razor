@@ -212,7 +212,7 @@ else
         {
             bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
             var investedCount = stage.Items.Count(c => c.IsSpent == false);
-            var investedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
+            var unspentInvestedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
             bool noCoinsToClaim = investedCount == 0 || stage.StageSpinner == true;
 
             <div class="col-12 mb-4 animate-card">
@@ -226,8 +226,8 @@ else
                             Stage @stage.StageIndex
                             <span
                                 class="badge bg-primary ms-2"
-                                title="Amount left to spend: @Money.Satoshis(investedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker">
-                                @Money.Satoshis(investedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                title="Amount left to spend: @Money.Satoshis(unspentInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker">
+                                @Money.Satoshis(unspentInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker
                             </span>
                             <span class="badge bg-secondary ms-2">@investedCount trx</span>
                         </h5>

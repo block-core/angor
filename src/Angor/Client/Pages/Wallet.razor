@@ -948,7 +948,7 @@ else
 
     readonly Dictionary<string, bool> collapseStates = new();
     private string btcBalanceInUsd;
-    private readonly Dictionary<string, long> fiatValues = new();
+    private readonly Dictionary<string, string> fiatValues = new();
 
     private int currentStep = 1;
     private int totalSteps => isNewWallet ? 4 : 3;
@@ -1642,7 +1642,7 @@ else
             return;
         }
 
-        fiatValues["TotalBalance"] = btcBalance;
+        fiatValues["TotalBalance"] = fiatValuesList.First(); ;
 
         Logger.LogInformation($"Fiat value for total balance: {fiatValuesList.First()}");
     }
@@ -1777,20 +1777,10 @@ else
         verificationPassed = false;
         showVerificationError = false;
     }
-
-    private void ConvertAmountToSatoshis(ChangeEventArgs e)
-    {
-        if (decimal.TryParse(e.Value?.ToString(), out var amount))
-        {
-            _sendInfo.SendAmount = Money.Coins(amount).Satoshi;
-        }
-    }
-
+    
     private decimal sendAmount
     {
         get => Money.Satoshis(_sendInfo.SendAmount).ToUnit(MoneyUnit.BTC);
         set => _sendInfo.SendAmount = Money.Coins(value).Satoshi;
     }
-
-
 }

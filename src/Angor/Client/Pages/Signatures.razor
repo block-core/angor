@@ -187,7 +187,6 @@
     private bool refreshButtonSpinner = false;
     private int numOfSignatureToSign = 0;
     private int numOfSignaturesSigned = 0;
-    private long amount;
 
     protected override async Task OnInitializedAsync()
     {
@@ -295,6 +294,7 @@
 
                     var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.TransactionHex);
 
+                    //Todo get the actual outputs with taproot type
                     pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3)
                         .Sum(_ => _.TxOut.Value.Satoshi);
                 }

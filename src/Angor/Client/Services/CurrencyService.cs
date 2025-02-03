@@ -1,6 +1,7 @@
 using System.Globalization;
 using Angor.Client.Storage;
 using Angor.Shared;
+using Blockcore.NBitcoin;
 
 public class CurrencyService : ICurrencyService
 {
@@ -36,9 +37,9 @@ public class CurrencyService : ICurrencyService
         };
     }
 
-    public async Task<IReadOnlyList<string>> GetBtcValuesInPreferredCurrency(params long[] btcBalances)
+    public async Task<IReadOnlyList<string>> GetBtcValuesInPreferredCurrency(params long[] satBalances)
     {
-        if (btcBalances == null || btcBalances.Length == 0)
+        if (satBalances == null || satBalances.Length == 0)
         {
             _logger.LogWarning("No BTC balances provided.");
             return new List<string> { "No balances provided" };
@@ -47,7 +48,7 @@ public class CurrencyService : ICurrencyService
         // Check if the current network is Bitcoin (BTC)
         if (!_networkConfiguration.GetNetwork().CoinTicker.Equals("BTC", StringComparison.OrdinalIgnoreCase))
         {
-            return GenerateEmptyStringList(btcBalances.Length);
+            return GenerateEmptyStringList(satBalances.Length);
         }
 
         string currencyCode;
@@ -62,7 +63,7 @@ public class CurrencyService : ICurrencyService
             // If preferred currency is BTC, return empty strings
             if (currencyCode.Equals("BTC", StringComparison.OrdinalIgnoreCase))
             {
-                return GenerateEmptyStringList(btcBalances.Length);
+                return GenerateEmptyStringList(satBalances.Length);
             }
 
             // Get exchange rate, symbol, and culture info
@@ -78,9 +79,9 @@ public class CurrencyService : ICurrencyService
 
         try
         {
-            return btcBalances
+            return satBalances
                 .AsParallel()
-                .Select(btcBalance => CalculateFormattedValue(btcBalance, rate, currencySymbol, cultureInfo))
+                .Select(satsBalance => CalculateFormattedValue(satsBalance, rate, currencySymbol, cultureInfo))
                 .ToList();
         }
         catch (Exception ex)
@@ -90,10 +91,11 @@ public class CurrencyService : ICurrencyService
         }
     }
 
-    private string CalculateFormattedValue(long btcBalance, decimal rate, string currencySymbol, CultureInfo cultureInfo)
+    private string CalculateFormattedValue(long satsBalance, decimal rate, string currencySymbol, CultureInfo cultureInfo)
     {
-        var value = ToBtc(btcBalance); // Use ToBtc extension method
-        return (value * rate).ToString("C2", cultureInfo).Replace(cultureInfo.NumberFormat.CurrencySymbol, currencySymbol);
+        var btcBalance = ToBtc(satsBalance); // Use ToBtc extension method
+        var value = btcBalance * rate;
+        return value.ToString("C2", cultureInfo).Replace(cultureInfo.NumberFormat.CurrencySymbol, currencySymbol);
     }
 
     private static string GetCultureCode(string currencyCode)
@@ -116,14 +118,14 @@ public class CurrencyService : ICurrencyService
         return Enumerable.Repeat(string.Empty, length).ToList();
     }
 
-    // Add ToBtc and ToLong methods
+    // Add ToBtc and ToSatoshi methods
     public decimal ToBtc(long satoshis)
     {
-        return satoshis / 100_000_000m; // Convert satoshis to BTC
+        return Money.Satoshis(satoshis).ToUnit(MoneyUnit.BTC); // Convert satoshis to BTC
     }
 
-    public long ToLong(decimal btcAmount)
+    public long ToSatoshi(decimal btcAmount)
     {
-        return (long)(btcAmount * 100_000_000m); // Convert BTC to satoshis
+        return Money.Coins(btcAmount).Satoshi; // Convert BTC to satoshis
     }
 }

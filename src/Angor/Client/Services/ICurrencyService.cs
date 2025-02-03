@@ -1,7 +1,7 @@
 public interface ICurrencyService
 {
-    Task<IReadOnlyList<string>> GetBtcValuesInPreferredCurrency(params long[] btcBalances);
+    Task<IReadOnlyList<string>> GetBtcValuesInPreferredCurrency(params long[] satBalances);
     string GetCurrencySymbol(string currencyCode);
     decimal ToBtc(long satoshis);
-    long ToLong(decimal btcAmount);
+    long ToSatoshi(decimal btcAmount);
 }

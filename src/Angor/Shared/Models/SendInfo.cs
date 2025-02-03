@@ -6,7 +6,6 @@ public class SendInfo
 {
     public string SendToAddress { get; set; }
     public long SendAmount { get; set; }
-    public long SendAmountSat => SendAmount;
     public decimal SendFee { get; set; }
     public int FeeBlockCount { get; set; } = 1;
 

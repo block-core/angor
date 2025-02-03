@@ -57,7 +57,7 @@
 
     <div class="card card-body position-relative">
         <p style="margin-bottom: 20px;">
-            Transaction ID: <span id="transactionID">@StageInfo.Trxid</span> |
+            Transaction ID: <span id="transactionID">@StageInfo.TransactionInfo?.TransactionId</span> |
             <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
         </p>
 
@@ -391,12 +391,9 @@
     private FeeData feeData = new();
 
     private bool trxNotFound = false;
-    private long amount;
 
     public class StageData
     {
-        public string Trxid;
-
         public QueryTransaction? TransactionInfo;
         public decimal TotalSpendable;
         public decimal TotalInPenalty;
@@ -493,7 +490,6 @@
 
         var trxInfo = await _IndexerService.GetTransactionInfoByIdAsync(trx.TransactionId);
 
-        StageInfo.Trxid = trx.TransactionId;
         StageInfo.TransactionInfo = trxInfo;
         lastCheck = DateTime.UtcNow;
 
