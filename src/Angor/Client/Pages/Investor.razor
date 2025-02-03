@@ -386,58 +386,11 @@
             return;
         }
 
-        var words = await passwordComponent.GetWalletAsync();
-        var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 0);
-        var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
+        // Store the encrypted signature content directly without decryption
+        investmentRequestsMap[nostrPubKey] = signatureContent;
+        _Logger.LogInformation($"Stored encrypted content for key: {nostrPubKey}");
 
-        try
-        {
-            _Logger.LogInformation($"Attempting to decrypt content for key: {nostrPubKey}");
-
-            var decryptedContent = await _encryptionService.DecryptNostrContentAsync(
-                NostrDMPrivateKeyHex, nostrPubKey, signatureContent
-            );
-
-            if (string.IsNullOrEmpty(decryptedContent))
-            {
-                _Logger.LogWarning($"Decrypted content is empty for key: {nostrPubKey}");
-                investmentRequestsMap[nostrPubKey] = string.Empty;
-            }
-            else
-            {
-                _Logger.LogInformation($"Decrypted content for key: {nostrPubKey} - {decryptedContent}");
-
-                if (IsValidJson(decryptedContent))
-                {
-                    // Attempt deserialization if it's valid JSON
-                    try
-                    {
-                        var deserializedMap = DeserializeInvestmentMap(decryptedContent);
-                        foreach (var kvp in deserializedMap)
-                        {
-                            investmentRequestsMap[kvp.Key] = kvp.Value;
-                        }
-                    }
-                    catch (JsonException jsonEx)
-                    {
-                        _Logger.LogError(jsonEx, "Failed to deserialize the decrypted signature content. Storing raw content.");
-                        investmentRequestsMap[nostrPubKey] = decryptedContent; // Fallback to raw content
-                    }
-                }
-                else
-                {
-                    _Logger.LogWarning($"Decrypted content is not valid JSON for key: {nostrPubKey}");
-                    investmentRequestsMap[nostrPubKey] = decryptedContent; // Store raw content if not valid JSON
-                }
-            }
-
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            _Logger.LogError(ex, $"Failed to decrypt content for key: {nostrPubKey}");
-            investmentRequestsMap[nostrPubKey] = string.Empty;
-        }
+        StateHasChanged();
     }
 
     private void CheckSignatureFromFounder()
@@ -669,15 +622,51 @@
 
     private async Task DownloadSignaturesAsJson()
     {
+        var decryptedMap = new Dictionary<string, string>();
+
+        foreach (var kvp in investmentRequestsMap)
+        {
+            if (string.IsNullOrEmpty(kvp.Value))
+            {
+                decryptedMap[kvp.Key] = string.Empty;
+                continue;
+            }
+
+            try
+            {
+                var words = await passwordComponent.GetWalletAsync();
+                var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 0);
+                var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
+
+                var decryptedContent = await _encryptionService.DecryptNostrContentAsync(
+                    NostrDMPrivateKeyHex, kvp.Key, kvp.Value);
+
+                decryptedMap[kvp.Key] = decryptedContent;
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogError(ex, $"Failed to decrypt content for key: {kvp.Key}");
+                decryptedMap[kvp.Key] = string.Empty;
+            }
+        }
+
         // Base64 encode all binary data
-        var base64EncodedMap = investmentRequestsMap
+        var base64EncodedMap = decryptedMap
             .ToDictionary(kvp => kvp.Key, kvp => Convert.ToBase64String(Encoding.UTF8.GetBytes(kvp.Value ?? "")));
 
-        var json = serializer.Serialize(base64EncodedMap);
+        // Use options to avoid escaping characters like '+', '/'
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true, // Optional: makes the JSON pretty-printed
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
+        var json = JsonSerializer.Serialize(base64EncodedMap, options);
         var bytes = Encoding.UTF8.GetBytes(json);
         var fileName = "signatures.json";
 
         await JS.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(bytes));
     }
+
 
 }
