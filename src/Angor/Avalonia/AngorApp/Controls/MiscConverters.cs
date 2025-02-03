@@ -7,6 +7,7 @@ using Avalonia.Svg;
 using Humanizer;
 using Humanizer.DateTimeHumanizeStrategy;
 using Projektanker.Icons.Avalonia;
+using Zafiro.Mixins;
 using Separator = AngorApp.Sections.Shell.Separator;
 
 namespace AngorApp.Controls;
@@ -66,5 +67,15 @@ public static class MiscConverters
     {
         var btc = satoshis / 10000_0000;
         return $"{btc:0.0000 0000}" + " BTC";
+    });
+
+    public static FuncValueConverter<IEnumerable<string>, string> JoinWithSpaces { get; } = new(enumerable =>
+    {
+        if (enumerable != null)
+        {
+            return enumerable.JoinWith(" ");
+        }
+
+        return "";
     });
 }

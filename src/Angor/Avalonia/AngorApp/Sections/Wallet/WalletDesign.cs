@@ -1,9 +1,10 @@
 using System.Threading.Tasks;
 using AngorApp.Model;
 using AngorApp.Sections.Browse;
+using AngorApp.Sections.Wallet.Operate;
 using CSharpFunctionalExtensions;
 
-namespace AngorApp.Sections.Wallet.Operate;
+namespace AngorApp.Sections.Wallet;
 
 public class WalletDesign : IWallet
 {

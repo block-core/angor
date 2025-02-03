@@ -95,7 +95,7 @@
                                         <button class="btn btn-sm btn-border ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
                                             @if (refreshButtonSpinner)
                                             {
-                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                                 <span>Refreshing...</span>
                                             }
                                             else
@@ -130,7 +130,7 @@
                                                             <button class="btn btn-border-success" @onclick="() => ApproveSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.Any()">
                                                                 @if (signaturesRequestsApproving.ContainsKey(signature))
                                                                 {
-                                                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                                                     <span>Approving...</span>
                                                                 }
                                                                 else

@@ -40,7 +40,7 @@
     </div>
 </div>
 
-<div class="row mt-4">
+<div class="row mt-4 mb-4">
     <div class="card card-body">
         <div class="d-flex align-items-center">
             <!-- Search Section -->
@@ -56,7 +56,7 @@
 
 @if (searchInProgress)
 {
-    <div class="card card-body hover-effect b-shadow slide-up mt-4">
+    <div class="row card card-body">
         <div class="d-flex justify-content-center">
             <div class="loader"></div>
         </div>
@@ -65,7 +65,7 @@
 
 @if (!projects.Any() && !searchInProgress && noProject)
 {
-    <div class="row mt-4">
+    <div class="row mt-4 mb-4">
         <div class="card card-body angor-alert-info pt-2 pb-2">
             <div class="d-flex align-items-center">
                 <span class="me-3 user-select-none">
@@ -80,11 +80,11 @@ else
 {
     @if (isGridView)
     {
-        <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper animate-grid" data-cy="project-grid">
+        <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper g-4" data-cy="project-grid">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
-                <div class="col d-flex align-items-stretch animate-card">
-                    <div class="card mt-4 w-100 project-card hover-effect">
+                <div class="col d-flex align-items-stretch">
+                    <div class="card  w-100 project-card hover-effect">
                         <a class="d-block card-zoom">
                             @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                             {
@@ -154,11 +154,11 @@ else
     }
     else
     {
-        <div class="project-wrapper animate-grid">
+        <div class="project-wrapper g-4">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
-                <div class="animate-card">
-                    <div class="card mt-4 project-card slide-in hover-effect">
+               
+                    <div class="card project-card slide-in hover-effect">
                         <div class="row g-0">
                             <div class="col-md-4 position-relative card-zoom">
                                 <div class="banner-container-list">
@@ -229,7 +229,7 @@ else
                             </div>
                         </div>
                     </div>
-                </div>
+                
             }
         </div>
 

@@ -55,8 +55,7 @@
 </div>
 <div class="row mt-4">
 
-    <div class="card card-body position-relative z-index-1">
-
+    <div class="card card-body position-relative">
         <p style="margin-bottom: 20px;">
             Transaction ID: <span id="transactionID">@StageInfo.Trxid</span> |
             <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
@@ -92,50 +91,49 @@
                                 <p>Total funds in penalty = @StageInfo.TotalInPenalty @network.CoinTicker</p>
                             }
 
-                            @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
-                            {
-                                <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
-                                    @if (PrepareToRecoverCoinsModalSpinner)
-                                    {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                        <span>Recover Funds...</span>
-                                    }
-                                    else
-                                    {
-                                        <span>Recover Funds</span>
-                                    }
-                                </button>
-                            }
+                        @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
+                        {
+                            <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
+                                @if (PrepareToRecoverCoinsModalSpinner)
+                                {
+                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Recover Funds...</span>
+                                }
+                                else
+                                {
+                                    <span>Recover Funds</span>
+                                }
+                            </button>
+                        }
 
-                            @if (StageInfo.CanRelease)
-                            {
-                                <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
-                                    @if (PrepareToReleaseCoinsModalSpinner)
-                                    {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                        <span>Release Funds...</span>
-                                    }
-                                    else
-                                    {
-                                        <span>Release Funds</span>
-                                    }
-                                </button>
-                            }
+                        @if (StageInfo.CanRelease)
+                        {
+                            <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
+                                @if (PrepareToReleaseCoinsModalSpinner)
+                                {
+                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Release Funds...</span>
+                                }
+                                else
+                                {
+                                    <span>Release Funds</span>
+                                }
+                            </button>
+                        }
 
-                            @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
-                            {
-                                <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
-                                    @if (PrepareEndOfProjectCoinsModalSpinner)
-                                    {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                        <span>End of project...</span>
-                                    }
-                                    else
-                                    {
-                                        <span>End of project</span>
-                                    }
-                                </button>
-                            }
+                        @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
+                        {
+                            <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
+                                @if (PrepareEndOfProjectCoinsModalSpinner)
+                                {
+                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>End of project...</span>
+                                }
+                                else
+                                {
+                                    <span>End of project</span>
+                                }
+                            </button>
                         }
                     }
                 </div>
@@ -144,7 +142,7 @@
                     <button class="btn btn-border" @onclick="RefreshInvestments" disabled="@refreshSpinner">
                         @if (refreshSpinner)
                         {
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                             <span>Refresh...</span>
                         }
                         else
@@ -195,13 +193,20 @@
         @if (showRecoveryModal)
         {
             <div class="modal-wrapper">
-                <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Recovery Confirmation</h5>
-                                <button type="button" class="btn-close" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner"></button>
+                <div class="modal fade show d-block" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content modern-modal">
+
+                            <div class="modal-header border-0 pb-0">
+                                <div class="d-flex align-items-center">
+                                    <Icon IconName="wallet" Height="32" Width="32" class="me-2" />
+                                    <h5 class="modal-title">Recovery Confirmation</h5>
+                                </div>
+                                <button class="btn-close-custom" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner">
+                                    <Icon IconName="close-circle" Height="24" Width="24" />
+                                </button>
                             </div>
+
                             <div class="modal-body modal-body-scroll">
 
                                 <p class="mb-1">The number of stages to be recovered is @StageInfo.Items.Count(s => !s.IsSpent) </p>
@@ -223,12 +228,14 @@
 
                                 <p class="mt-3">Are you sure you want to recover these funds?</p>
                             </div>
+                         
+                            
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-border" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner">Cancel</button>
                                 <button type="button" class="btn btn-border" @onclick="RecoverCoins" disabled="@PrepareToRecoverCoinsConfirmSpinner">
                                     @if (PrepareToRecoverCoinsConfirmSpinner)
                                     {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                         <span>Confirm...</span>
                                     }
                                     else
@@ -237,6 +244,7 @@
                                     }
                                 </button>
                             </div>
+                       
                         </div>
                     </div>
                 </div>
@@ -277,7 +285,7 @@
                                 <button type="button" class="btn btn-border" @onclick="ReleaseCoins" disabled="@PrepareToReleaseCoinsConfirmSpinner">
                                     @if (PrepareToReleaseCoinsConfirmSpinner)
                                     {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                         <span>Confirm...</span>
                                     }
                                     else
@@ -326,7 +334,7 @@
                                 <button type="button" class="btn btn-border" @onclick="EndOfProjectCoins" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">
                                     @if (PrepareEndOfProjectCoinsConfirmSpinner)
                                     {
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                         <span>Confirm...</span>
                                     }
                                     else

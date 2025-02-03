@@ -14,7 +14,7 @@
     </Design.DataContext>
 
     <StackPanel>
-        <TextBlock Text="Use this address receive funds in this wallet" TextAlignment="Center" />
+        <TextBlock Text="Use this address to receive funds in this wallet:" TextAlignment="Center" />
         <c:SectionItem Theme="{StaticResource Basic}" Content="{Binding Wallet.ReceiveAddress}">
             <c:SectionItem.RightContent>
                 <Button CommandParameter="{Binding Wallet.ReceiveAddress}" Command="{Binding Source={x:Static s:Commands.Instance}, Path=CopyText}">

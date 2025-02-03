@@ -1,11 +1,9 @@
-using System.Threading.Tasks;
-using AngorApp.Model;
 using CSharpFunctionalExtensions;
 
-namespace AngorApp.Sections.Wallet.NoWallet;
+namespace AngorApp.Model;
 
 public interface IWalletFactory
 {
-    public Task<Result<IWallet>> Recover();
-    public Task<Result<IWallet>> Create();
+    public Task<Maybe<Result<IWallet>>> Recover();
+    public Task<Maybe<Result<IWallet>>> Create();
 }

@@ -9,7 +9,7 @@
         <Company>Angor</Company>
         <Product>Angor</Product>
         <AssemblyName>Angor</AssemblyName>
-        <RootNamespace>Angor</RootNamespace>
+        <RootNamespace>AngorApp.Desktop</RootNamespace>
     </PropertyGroup>
 
     <PropertyGroup>

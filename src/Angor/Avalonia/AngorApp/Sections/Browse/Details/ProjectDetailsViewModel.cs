@@ -51,7 +51,7 @@ public class ProjectDetailsViewModel(IWalletProvider walletProvider, IProject pr
                 var destination = new Destination(project.Name, viewModel.Amount!.Value, project.BitcoinAddress);
                 return new TransactionPreviewViewModel(wallet, destination, uiServices);
             })
-            .Then(prev => new SuccessViewModel("Transaction confirmed!"))
+            .Then(prev => new SuccessViewModel("Transaction confirmed!", "Success"))
             .Build();
 
         await uiServices.Dialog.Show(wizard, @$"Invest in ""{project}""", closeable => wizard.OptionsForCloseable(closeable));

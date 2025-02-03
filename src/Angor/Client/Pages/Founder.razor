@@ -35,18 +35,21 @@
                 </div>
             </div>
             <div class="tooltip-container" data-bs-toggle="tooltip" title="@GetCreateButtonTooltip()">
-                <button
-                    class="btn btn-border"
-                    @onclick="NavigateToCreateProject"
-                    disabled="@(scanningForProjects || (founderProjects.Count >= 14) ? true : null)">                    <i>
-                        <Icon IconName="add"></Icon>
-                    </i>
-                    <span class="nav-link-text ms-1">
-                        @(scanningForProjects ? "Scanning..." : "Create Project")
-                    </span>
+                <button class="btn btn-border-success d-flex align-items-center"
+                        @onclick="NavigateToCreateProject"
+                        disabled="@(scanningForProjects || (founderProjects.Count >= 14) ? true : null)">
+                    @if (scanningForProjects)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Scanning...</span>
+                    }
+                    else
+                    {
+                        <Icon IconName="add" Width="24" Height="24" class="me-2" />
+                        <span>Create Project</span>
+                    }
                 </button>
             </div>
-
         </div>
         <p class="mb-0 font-weight-normal text-sm mt-4">
             To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required.
