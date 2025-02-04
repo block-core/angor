@@ -61,7 +61,12 @@
             <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
         </p>
 
-        <p>Total funds to recover = @StageInfo.TotalSpendable @network.CoinTicker</p>
+        @{
+            var totalSpendable = StageInfo.TotalSpendable;
+            var btcValue = totalSpendable / 100_000_000;
+        }
+        <p>Total funds to recover = @btcValue @network.CoinTicker</p>
+
 
         @if (trxNotFound)
         {
@@ -82,7 +87,8 @@
                     {
                         @if (StageInfo.CanRelease)
                         {
-                            <p>Total funds in penalty = @StageInfo.TotalInPenalty @network.CoinTicker</p>
+                            
+                            <p>Total funds in penalty = @(StageInfo.TotalInPenalty / 100_000_000) @network.CoinTicker</p>
                         }
 
                         @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
