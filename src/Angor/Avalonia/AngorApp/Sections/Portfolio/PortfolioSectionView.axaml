@@ -2,12 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Portfolio.PortfolioSectionView"
              xmlns:founder="clr-namespace:AngorApp.Sections.Portfolio"
-             x:DataType="founder:IPortfolioSectionViewModel" ClipToBounds="False">
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             x:DataType="founder:IPortfolioSectionViewModel" >
 
     <Design.DataContext>
         <founder:PortfolioSectionViewModelDesign />

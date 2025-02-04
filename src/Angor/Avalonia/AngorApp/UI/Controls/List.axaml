@@ -1,0 +1,44 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:av="https://github.com/projektanker/icons.avalonia"
+        xmlns:avalonia="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
+        xmlns:c="clr-namespace:AngorApp"
+        xmlns:controls="clr-namespace:AngorApp.UI.Controls">
+    <Design.PreviewWith>
+        <controls:List>
+            <controls:List.ItemsSource>
+                <avalonia:Strings>
+                    <x:String>hola</x:String>
+                </avalonia:Strings>
+            </controls:List.ItemsSource>
+            <controls:List.Header>
+                <DockPanel>
+                    <av:Icon Foreground="Orange" Margin="0 0 8 0" Value="fa-triangle-exclamation" />
+                    <TextBlock>
+                        <Bold>Important Security Tips:</Bold>
+                    </TextBlock>
+                </DockPanel>
+            </controls:List.Header>
+        </controls:List>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|List">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <HeaderedContentControl Header="{TemplateBinding Header}">
+                    <ItemsControl ItemsSource="{TemplateBinding ItemsSource}" TextBlock.TextWrapping="Wrap">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel>
+                                    <TextBlock xml:space="preserve"> • </TextBlock>
+                                    <ContentControl Content="{Binding}" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </HeaderedContentControl>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    
+</Styles>

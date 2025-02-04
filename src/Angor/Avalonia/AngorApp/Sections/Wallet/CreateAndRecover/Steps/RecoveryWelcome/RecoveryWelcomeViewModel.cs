@@ -11,5 +11,5 @@ public class RecoveryWelcomeViewModel : ReactiveValidationObject, IStep
     public IObservable<bool> IsValid => this.IsValid();
     public IObservable<bool> IsBusy => Observable.Return(false);
     public bool AutoAdvance => false;
-    public Maybe<string> Title => "Wallet recovery";
+    public Maybe<string> Title => "Wallet Recovery";
 }

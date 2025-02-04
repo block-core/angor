@@ -1,19 +1,38 @@
-using System.Linq;
-using AngorApp.Sections.Wallet.NoWallet;
+using System.Reactive.Linq;
+using Angor.UI.Model;
+using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.Services;
+using CSharpFunctionalExtensions;
+using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Controls.Navigation;
+using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.Reactive;
 
 namespace AngorApp.Sections.Browse;
 
-public class BrowseSectionViewModel : ReactiveObject, IBrowseSectionViewModel
+public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionViewModel
 {
-    public BrowseSectionViewModel(IWalletProvider walletProvider, INavigator navigator, UIServices uiServices)
+    [Reactive] private string? projectId;
+
+    [ObservableAsProperty] private IList<IProjectViewModel>? projects;
+
+    public BrowseSectionViewModel(IWalletProvider walletProvider, IProjectService projectService, INavigator navigator, UIServices uiServices)
     {
-        Projects = SampleData.GetProjects().Select(project => new ProjectViewModel(walletProvider, project, navigator, uiServices)).ToList();
+        ProjectLookupViewModel = new ProjectLookupViewModel(projectService, walletProvider, navigator, uiServices);
+        
+        LoadLatestProjects = ReactiveCommand.CreateFromObservable(() => Observable.FromAsync(projectService.Latest)
+            .Flatten()
+            .Select(IProjectViewModel (project) => new ProjectViewModel(walletProvider, project, navigator, uiServices))
+            .ToList());
+
         OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io")));
+        projectsHelper = LoadLatestProjects.ToProperty(this, x => x.Projects);
+        LoadLatestProjects.Execute().Subscribe();
     }
 
-    public ReactiveCommand<Unit, Unit> OpenHub { get; set; }
+    public IProjectLookupViewModel ProjectLookupViewModel { get; }
 
-    public IReadOnlyCollection<ProjectViewModel> Projects { get; set; }
+    public ReactiveCommand<Unit, IList<IProjectViewModel>> LoadLatestProjects { get; }
+
+    public ReactiveCommand<Unit, Unit> OpenHub { get; set; }
 }

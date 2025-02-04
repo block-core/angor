@@ -1,5 +1,5 @@
 using System.Reactive.Linq;
-using AngorApp.Model;
+using Angor.UI.Model;
 using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;

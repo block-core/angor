@@ -2,11 +2,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:c="clr-namespace:AngorApp.Controls"
              xmlns:p="https://github.com/projektanker/icons.avalonia"
              xmlns:conv="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
              xmlns:misc="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="650" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Browse.Details.NostProperties" x:DataType="dt:IProjectDetailsViewModel">
     
@@ -22,16 +22,16 @@
         </Style>
     </UserControl.Styles>
     
-    <c:Pane IsTitleVisible="True" Title="Nostr">
-        <c:Pane.TitleIcon>
+    <controls:Pane IsTitleVisible="True" Title="Nostr">
+        <controls:Pane.TitleIcon>
             <p:Icon Value="fa-regular fa-message" />
-        </c:Pane.TitleIcon>
+        </controls:Pane.TitleIcon>
 
         <StackPanel Spacing="20">
             <HeaderedContentControl Header="Project NOSTR public key">
-                <c:SectionItem>
+                <controls:SectionItem>
                     <TextBox Text="{Binding Project.NpubKey}" />
-                    <c:SectionItem.RightContent>
+                    <controls:SectionItem.RightContent>
                         <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}">
                             <Button.CommandParameter>
                                 <MultiBinding Converter="{x:Static conv:StringConverters.Concat}">
@@ -47,13 +47,13 @@
                                 <p:Icon Value="fa-solid fa-up-right-from-square" />
                             </Button.Content>
                         </Button>
-                    </c:SectionItem.RightContent>
-                </c:SectionItem>
+                    </controls:SectionItem.RightContent>
+                </controls:SectionItem>
             </HeaderedContentControl>
             <HeaderedContentControl Header="Project NOSTR public key">
-                <c:SectionItem>
+                <controls:SectionItem>
                     <TextBox Text="{Binding Project.NpubKeyHex}" />
-                    <c:SectionItem.RightContent>
+                    <controls:SectionItem.RightContent>
                         <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}">
                             <Button.CommandParameter>
                                 <MultiBinding Converter="{x:Static conv:StringConverters.Concat}">
@@ -69,8 +69,8 @@
                                 <p:Icon Value="fa-solid fa-up-right-from-square" />
                             </Button.Content>
                         </Button>
-                    </c:SectionItem.RightContent>
-                </c:SectionItem>
+                    </controls:SectionItem.RightContent>
+                </controls:SectionItem>
             </HeaderedContentControl>
             <HeaderedContentControl Header="Relays">
                 <ItemsControl ItemsSource="{Binding Relays}">
@@ -81,17 +81,17 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <c:SectionItem Content="{Binding Uri}">
-                                <c:SectionItem.LeftContent>
+                            <controls:SectionItem Content="{Binding Uri}">
+                                <controls:SectionItem.LeftContent>
                                     <p:Icon Value="fa-solid fa-arrow-right" />
-                                </c:SectionItem.LeftContent>
-                            </c:SectionItem>
+                                </controls:SectionItem.LeftContent>
+                            </controls:SectionItem>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </HeaderedContentControl>
         </StackPanel>
 
-    </c:Pane>
+    </controls:Pane>
 
 </UserControl>
