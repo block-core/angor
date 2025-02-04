@@ -398,7 +398,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
                 Balance = x.Value,
                 Index = i,
                 ScriptPubKey = x.Scriptpubkey,
-                SpentInTransaction = trx.Txid
+                OutputType = x.ScriptpubkeyType,
+                ScriptPubKeyAsm = x.ScriptpubkeyAsm
             })
         };
     }
