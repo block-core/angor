@@ -74,10 +74,10 @@
         </div>
     </div>
     
-    @if (InvestorProject.ReleaseTransactionId != null)
+    @if (InvestorProject.UnfundedReleaseTransactionId != null)
     {
         <p style="margin-bottom: 20px;">
-            Transaction ID: <span id="transactionID">@InvestorProject.ReleaseTransactionId</span> |
+            Transaction ID: <span id="transactionID">@InvestorProject.UnfundedReleaseTransactionId</span> |
             <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
         </p>
 
@@ -202,9 +202,9 @@
                 throw new ArgumentException("The project is not founder or investor");
             }
 
-            if (InvestorProject.ReleaseTransactionId != null)
+            if (InvestorProject.UnfundedReleaseTransactionId != null)
             {
-                explorerLink = _networkConfiguration.GetExplorerUrl().Url + $"/transaction/{InvestorProject.ReleaseTransactionId}";
+                explorerLink = _networkConfiguration.GetExplorerUrl().Url + $"/transaction/{InvestorProject.UnfundedReleaseTransactionId}";
             }
 
             signedTransactionHex = InvestorProject.SignedTransactionHex;
@@ -353,10 +353,10 @@
             var investmentTransaction = _networkConfiguration.GetNetwork().CreateTransaction(signedTransactionHex);
 
             // Sign the release transaction
-            unsignedReleaseTransaction = InvestorTransactionActions.AddSignaturesToReleaseFundsTransaction(InvestorProject.ProjectInfo, investmentTransaction, InvestorReleaseSigInfo, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), InvestorProject.ReleaseAddress);
+            unsignedReleaseTransaction = InvestorTransactionActions.AddSignaturesToUnfundedReleaseFundsTransaction(InvestorProject.ProjectInfo, investmentTransaction, InvestorReleaseSigInfo, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), InvestorProject.UnfundedReleaseAddress);
 
             // Validate the signatures
-            var sigCheckResult = InvestorTransactionActions.CheckInvestorReleaseSignatures(InvestorProject.ProjectInfo, investmentTransaction, InvestorReleaseSigInfo, InvestorProject.ReleaseAddress);
+            var sigCheckResult = InvestorTransactionActions.CheckInvestorUnfundedReleaseSignatures(InvestorProject.ProjectInfo, investmentTransaction, InvestorReleaseSigInfo, InvestorProject.UnfundedReleaseAddress);
 
             if (!sigCheckResult)
                 throw new Exception("Failed to validate signatures");
@@ -364,7 +364,7 @@
             // add fee to the recovery trx
             releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedReleaseTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
 
-            explorerLink = _networkConfiguration.GetExplorerUrl().Url + $"/transaction/{InvestorProject.ReleaseTransactionId}";
+            explorerLink = _networkConfiguration.GetExplorerUrl().Url + $"/transaction/{InvestorProject.UnfundedReleaseTransactionId}";
 
             Logger.LogInformation($"recoveryTransaction={releaseTransaction.Transaction.GetHash().ToString()}");
 
@@ -431,7 +431,7 @@
                 return;
             }
 
-            InvestorProject.ReleaseTransactionId = releaseTransaction.Transaction.GetHash().ToString();
+            InvestorProject.UnfundedReleaseTransactionId = releaseTransaction.Transaction.GetHash().ToString();
 
             Storage.UpdateInvestmentProject(InvestorProject);
 

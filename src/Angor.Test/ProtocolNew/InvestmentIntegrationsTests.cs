@@ -686,18 +686,18 @@ namespace Angor.Test
             investorContext.TransactionHex = investmentTransaction.ToHex();
 
             // Build the release transaction
-            var releaseTransaction = _investorTransactionActions.BuildReleaseInvestorFundsTransaction(investorContext.ProjectInfo, investmentTransaction, investorReleasePubKey);
+            var releaseTransaction = _investorTransactionActions.BuildUnfundedReleaseInvestorFundsTransaction(investorContext.ProjectInfo, investmentTransaction, investorReleasePubKey);
 
             // Sign the release transaction
             var founderSignatures = _founderTransactionActions.SignInvestorRecoveryTransactions(investorContext.ProjectInfo,
                 investmentTransaction.ToHex(), releaseTransaction,
                 Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
-            var signedReleaseTransaction = _investorTransactionActions.AddSignaturesToReleaseFundsTransaction(investorContext.ProjectInfo,
+            var signedReleaseTransaction = _investorTransactionActions.AddSignaturesToUnfundedReleaseFundsTransaction(investorContext.ProjectInfo,
                 investmentTransaction, founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()), investorReleasePubKey);
 
             // Validate the signatures
-            var sigCheckResult = _investorTransactionActions.CheckInvestorReleaseSignatures(investorContext.ProjectInfo, investmentTransaction, founderSignatures, investorReleasePubKey);
+            var sigCheckResult = _investorTransactionActions.CheckInvestorUnfundedReleaseSignatures(investorContext.ProjectInfo, investmentTransaction, founderSignatures, investorReleasePubKey);
             Assert.True(sigCheckResult, "Failed to validate the founder's signatures");
 
             List<Coin> coins = new();

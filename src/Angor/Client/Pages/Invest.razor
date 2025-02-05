@@ -876,7 +876,7 @@ else
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
             investorProject.InvestorNPub = NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex;
-            investorProject.ReleaseAddress = releaseAddress;
+            investorProject.UnfundedReleaseAddress = releaseAddress;
 
             storage.AddInvestmentProject(investorProject);
 
@@ -1042,7 +1042,7 @@ else
                                 ProjectIdentifier = x.ProjectInfo.ProjectIdentifier, 
                                 investorPubKey = x.InvestorPublicKey, 
                                 InvestmentTransactionHash = x.TransactionId, 
-                                ReleaseAddress = x.ReleaseAddress,
+                                ReleaseAddress = x.UnfundedReleaseAddress,
 
                             })
                             .ToList()

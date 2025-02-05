@@ -22,12 +22,12 @@ public class InvestorProject : Project
     /// The address to release the funds to if the project did not reach the target.
     /// This will be used by the founder when signing the release outputs
     /// </summary>
-    public string ReleaseAddress { get; set; }
+    public string UnfundedReleaseAddress { get; set; }
 
     /// <summary>
     /// The trxid of an unfunded project that the investor has released the funds without a penalty 
     /// </summary>
-    public string ReleaseTransactionId { get; set; } 
+    public string UnfundedReleaseTransactionId { get; set; } 
 
     public bool WaitingForFounderResponse()
     {

@@ -76,7 +76,7 @@
     }
     else
     {
-        @if (!founderProject.TargetInvestmentReached() && founderProject.ProjectDateStarted())
+        @if (!founderProject.TargetInvestmentReached() && founderProject.ProjectHasStarted())
         {
             <div class="alert alert-warning" role="alert">
                 <h4 class="alert-heading">Target Not Reached</h4>

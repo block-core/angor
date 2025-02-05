@@ -69,7 +69,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         return transaction;
     }
 
-    public Transaction BuildUpfrontReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, int penaltyDays, string investorReleaseKey)
+    public Transaction BuildUpfrontUnfundedReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, string investorReleaseKey)
     {
         // the release may be an address or a pubkey, first check if it is an address
         Script spendingScript = null;

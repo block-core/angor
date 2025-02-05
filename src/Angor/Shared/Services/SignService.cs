@@ -46,7 +46,7 @@ namespace Angor.Client.Services
             return (signed.CreatedAt!.Value, signed.Id);
         }
 
-        public void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime sigRequestSentTime, string sigRequestEventId, Func<string, Task> action)
+        public void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
@@ -67,7 +67,7 @@ namespace Angor.Client.Services
                 Authors = new[] { projectNostrPubKey }, //From founder
                 P = new[] { investorNostrPubKey }, // To investor
                 Kinds = new[] { NostrKind.EncryptedDm },
-                //Since = sigRequestSentTime,
+                Since = sigRequestSentTime,
                 E = new [] { sigRequestEventId },
                 Limit = 1,
             }));
@@ -210,7 +210,7 @@ namespace Angor.Client.Services
                 Authors = new[] { projectNostrPubKey }, // From founder
                 P = new[] { investorNostrPubKey }, // To investor
                 Kinds = new[] { NostrKind.EncryptedDm }, 
-                // Since = releaseRequestSentTime,
+                Since = releaseRequestSentTime,
                 E = new[] { releaseRequestEventId },
                 Limit = 1,
             }));
@@ -255,16 +255,5 @@ namespace Angor.Client.Services
         {
             _subscriptionsHanding.Dispose();
         }
-    }
-
-    public class SignServiceLookupItem
-    {
-        public DateTime EventCreatedAt { get; set; }
-
-        public string ProfileIdentifier { get; set; }
-
-        public string EventIdentifier { get; set; }
-
-        public NostrEvent NostrEvent { get; set; }
     }
 }

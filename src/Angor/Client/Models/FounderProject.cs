@@ -28,7 +28,7 @@ public class FounderProject : Project
         return TotalAvailableInvestedAmount >= ProjectInfo.TargetAmount;
     }
 
-    public bool ProjectDateStarted()
+    public bool ProjectHasStarted()
     {
         return DateTime.UtcNow > ProjectInfo.StartDate;
     }

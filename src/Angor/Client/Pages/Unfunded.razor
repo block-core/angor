@@ -59,7 +59,7 @@
 <div class="row mt-4">
     <div class="col">
 
-        @if (!FounderProject.ProjectDateStarted())
+        @if (!FounderProject.ProjectHasStarted())
         {
             <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
                 <div class="text-center mb-3">
@@ -238,7 +238,7 @@
         {
             if (hasWallet)
             {
-                if (FounderProject!.ProjectDateStarted())
+                if (FounderProject!.ProjectHasStarted())
                 {
                     await RefreshSignaturesInternal();
                 }
@@ -600,10 +600,10 @@
         var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
 
         // build sigs
-        var recoveryTrx = InvestorTransactionActions.BuildReleaseInvestorFundsTransaction(info, investorTrx, investorReleaseAddress);
+        var recoveryTrx = InvestorTransactionActions.BuildUnfundedReleaseInvestorFundsTransaction(info, investorTrx, investorReleaseAddress);
         var sig = FounderTransactionActions.SignInvestorRecoveryTransactions(info, transactionHex, recoveryTrx, founderSigningPrivateKey);
 
-        if (!InvestorTransactionActions.CheckInvestorReleaseSignatures(info, investorTrx, sig, investorReleaseAddress))
+        if (!InvestorTransactionActions.CheckInvestorUnfundedReleaseSignatures(info, investorTrx, sig, investorReleaseAddress))
            throw new InvalidOperationException();
 
         sig.SignatureType = "release";

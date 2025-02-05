@@ -12,6 +12,6 @@ public interface IInvestmentTransactionBuilder
     Transaction BuildUpfrontRecoverFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, int penaltyDays,
         string investorKey);
 
-    Transaction BuildUpfrontReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, int penaltyDays, 
+    Transaction BuildUpfrontUnfundedReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, 
         string investorReleaseKey);
 }

@@ -234,7 +234,7 @@
                                     <span>Founder Released Funds</span>
                                     @if (hasInvestmentReleaseRequests)
                                     {
-                                        @if (project.ReleaseTransactionId == null)
+                                        @if (project.UnfundedReleaseTransactionId == null)
                                         {
                                             <a href=@($"/release/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-sm btn-border ms-2" title="Pending">
                                                 <strong class="text-danger">Release funds</strong>
