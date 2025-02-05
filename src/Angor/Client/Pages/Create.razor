@@ -583,6 +583,12 @@
         { "preset3", (new[] { 60, 20, 20 }, 15) }
     };
     
+    private decimal targetAmountInBTC
+    {
+        get => Money.Coins(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC);
+        set => project.ProjectInfo.TargetAmount = (long)Money.Satoshis(value);
+    }
+    
 
     private int activeTab = 1;
     
@@ -1252,9 +1258,5 @@
         }
     }
 
-    private decimal targetAmountInBTC
-    {
-        get => Money.Coins(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC);
-        set => project.ProjectInfo.TargetAmount = (long)Money.Satoshis(value);
-    }
+    
 }

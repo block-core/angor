@@ -961,6 +961,12 @@ else
     private Dictionary<int, string> userVerificationInputs = new();
     private bool verificationPassed;
     private bool showVerificationError;
+    
+    private decimal sendAmount
+    {
+        get => Money.Satoshis(_sendInfo.SendAmount).ToUnit(MoneyUnit.BTC);
+        set => _sendInfo.SendAmount = Money.Coins(value).Satoshi;
+    }
 
     private string GetStepTitle()
     {
@@ -1778,9 +1784,5 @@ else
         showVerificationError = false;
     }
     
-    private decimal sendAmount
-    {
-        get => Money.Satoshis(_sendInfo.SendAmount).ToUnit(MoneyUnit.BTC);
-        set => _sendInfo.SendAmount = Money.Coins(value).Satoshi;
-    }
+    
 }
