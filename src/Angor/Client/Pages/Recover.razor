@@ -61,7 +61,7 @@
             <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
         </p>
         
-        <p>Total funds to recover = @Money.Satoshis(StageInfo.TotalSpendable).ToUnit(MoneyUnit.BTC) btcValue @network.CoinTicker</p>
+        <p>Total funds to recover = @Money.Satoshis(StageInfo.TotalSpendable).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
         @if (trxNotFound)
         {
