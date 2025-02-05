@@ -451,26 +451,4 @@
 
         StateHasChanged();
     }
-
-   
-    public class SignatureReleaseItem
-    {
-        public string investorNostrPubKey { get; set; }
-
-        public DateTime TimeArrived { get; set; }
-        public DateTime? TimeApproved { get; set; }
-        public DateTime? TimeReleased { get; set; }
-
-        public SignRecoveryRequest? SignRecoveryRequest { get; set; }
-
-        public SignatureInfo? InvestorRecoverySigInfo { get; set; }
-
-        public SignatureInfo? InvestorReleaseSigInfo { get; set; }
-
-        public string? EncryptedSignRecoveryMessage { get; set; }
-
-        public string? EncryptedSignReleaseMessage { get; set; }
-
-        public string EventId { get; set; }
-    }
 }
