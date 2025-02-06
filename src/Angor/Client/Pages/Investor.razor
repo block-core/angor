@@ -161,7 +161,7 @@
 
                                 <div class="mb-3 mt-4 d-flex justify-content-between">
                                     <span>Funding Target:</span>
-                                    <strong>@project.ProjectInfo.TargetAmount @network.CoinTicker</strong>
+                                    <strong>@Money.Satoshis(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
                                 </div>
 
                                 <div class="mb-3 d-flex justify-content-between">
@@ -171,7 +171,7 @@
 
                                 <div class="mb-3 d-flex justify-content-between">
                                     <span>Raised (% Target):</span>
-                                    <strong>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</strong>
+                                    <strong>@((stats?.AmountInvested ?? 0) * 100 / project.ProjectInfo.TargetAmount) %</strong>
                                 </div>
 
                                 <div class="mb-3 d-flex justify-content-between">

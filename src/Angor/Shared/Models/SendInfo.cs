@@ -11,12 +11,6 @@ public class SendInfo
 
     public long FeeRate { get; set; } = 0;
 
-    public long FeeRateSat
-    {
-        get => FeeRate;
-        set => FeeRate = value;
-    }
-
     public string ChangeAddress { get; set; }
 
     public Dictionary<string, UtxoDataWithPath> SendUtxos { get; set; } = new();

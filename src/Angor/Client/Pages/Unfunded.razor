@@ -250,14 +250,14 @@
     {
         if (projectStats != null)
         {
-            var targetReached = projectStats?.AmountInvested >= Money.Coins(FounderProject.ProjectInfo.TargetAmount).Satoshi;
+            var targetReached = projectStats?.AmountInvested >= FounderProject.ProjectInfo.TargetAmount;
 
-            Logger.LogInformation($"Indexer stats for target reached = {targetReached} AmountInvested = {projectStats?.AmountInvested} TargetAmount = {Money.Coins(FounderProject.ProjectInfo.TargetAmount).Satoshi}");
+            Logger.LogInformation($"Indexer stats for target reached = {targetReached} AmountInvested = {projectStats?.AmountInvested} TargetAmount = {FounderProject.ProjectInfo.TargetAmount}");
 
             return targetReached;
         }
 
-        Logger.LogInformation($"None indexer stats for target reached = {FounderProject.TargetInvestmentReached()} AmountInvested = {FounderProject.TotalAvailableInvestedAmount} TargetAmount = {Money.Coins(FounderProject.ProjectInfo.TargetAmount).Satoshi}");
+        Logger.LogInformation($"None indexer stats for target reached = {FounderProject.TargetInvestmentReached()} AmountInvested = {FounderProject.TotalAvailableInvestedAmount} TargetAmount = {FounderProject.ProjectInfo.TargetAmount}");
 
         return FounderProject.TargetInvestmentReached();
     }

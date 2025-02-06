@@ -1337,7 +1337,7 @@ else
     {
         // refresh fee if last refresh was 60 seconds ago
 
-        if (_sendInfo.FeeRateSat == 0 || _lastFeeRefresh.AddSeconds(60) < DateTime.UtcNow)
+        if (_sendInfo.FeeRate == 0 || _lastFeeRefresh.AddSeconds(60) < DateTime.UtcNow)
         {
             var fees = await _walletOperations.GetFeeEstimationAsync();
 
@@ -1350,7 +1350,7 @@ else
             if (feeItem != null)
             {
                 _sendInfo.FeeBlockCount = feeItem.Confirmations;
-                _sendInfo.FeeRateSat = feeItem.FeeRate;
+                _sendInfo.FeeRate = feeItem.FeeRate;
             }
 
             _lastFeeRefresh = DateTime.UtcNow;
@@ -1412,7 +1412,7 @@ else
             FeePosition = 1;
 
             _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
-            _sendInfo.FeeRateSat = estimationsFee.FeeRate;
+            _sendInfo.FeeRate = estimationsFee.FeeRate;
 
             if (string.IsNullOrEmpty(_sendInfo.ChangeAddress))
             {
@@ -1516,7 +1516,7 @@ else
                     var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
-                    _sendInfo.FeeRateSat = estimationsFee.FeeRate;
+                    _sendInfo.FeeRate = estimationsFee.FeeRate;
                     var accountInfo = storage.GetAccountInfo(network.Name);
 
                     _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);

@@ -994,6 +994,7 @@ else
 
             storage.UpdateInvestmentProject(investorProject);
 
+            await SaveInvestmentsListToNostrAsync();
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
@@ -1009,9 +1010,6 @@ else
             SessionStorage.SetUnconfirmedInboundFunds(unspentInfo);
 
             notificationComponent.ShowNotificationMessage("Invested in project", 5);
-
-            // this will publish to Nostr so we call it last.
-            await SaveInvestmentsListToNostrAsync();
 
             NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
         }

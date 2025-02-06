@@ -320,7 +320,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             .ToArray();
 
         // todo: David change to Enumerable.Range 
-        bool failedValidation = false;
+        bool validationgPassed = true;
         for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
         {
             var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
@@ -333,13 +333,11 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
             _logger.LogInformation($"verifying sig for project={projectInfo.ProjectIdentifier}; success = {result}; founder-recovery-pubkey={projectInfo.FounderRecoveryKey}; stage={stageIndex}; hash={hash}; signature-hex={sig}");
 
+            // if even one sig failed we fail all the validation
             if (result == false)
-                failedValidation = true;
+                validationgPassed = false;
         }
 
-        if (failedValidation)
-            throw new Exception("Invalid signatures provided by founder");
-
-        return true;
+        return validationgPassed;
     }
 }

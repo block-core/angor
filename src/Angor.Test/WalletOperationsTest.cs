@@ -122,7 +122,7 @@ public class WalletOperationsTest : AngorTestData
         recoveryTransaction.Outputs.RemoveAt(0);
         recoveryTransaction.Inputs.RemoveAt(0);
 
-        var recoveryTransactions = _sut.AddFeeAndSignTransaction(changeAddress, recoveryTransaction, words, accountInfo, 3000300);
+        var recoveryTransactions = _sut.AddFeeAndSignTransaction(changeAddress, recoveryTransaction, words, accountInfo, 3000);
 
         // add the inputs of the investment trx
         List<Blockcore.NBitcoin.Coin> coins = new();
@@ -182,7 +182,8 @@ public class WalletOperationsTest : AngorTestData
         var unsignedRecoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInfo, strippedInvestmentTransaction);
         var recoverySigs = _founderTransactionActions.SignInvestorRecoveryTransactions(projectInfo, strippedInvestmentTransaction.ToHex(), unsignedRecoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
-        _investorTransactionActions.CheckInvestorRecoverySignatures(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs);
+        var sigCheckResult  = _investorTransactionActions.CheckInvestorRecoverySignatures(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs);
+        Assert.True(sigCheckResult, "failed to validate the founders signatures");
 
         var recoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
@@ -299,25 +300,25 @@ public class WalletOperationsTest : AngorTestData
             SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
             ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
             SendAmount = Money.Coins(0.01m).Satoshi,
+            FeeRate = Money.Satoshis(3000).Satoshi,
             SendUtxos = new Dictionary<string, UtxoDataWithPath>
-        {
             {
-                "key", new UtxoDataWithPath
                 {
-                    UtxoData = new UtxoData
+                    "key", new UtxoDataWithPath
                     {
-                        value = 1500000, // Sufficient to cover the send amount and estimated fees
-                        address = address,
-                        scriptHex = scriptHex,
-                        outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
-                        blockIndex = 1,
-                        PendingSpent = false
-                    },
-                    HdPath = "m/0/0"
+                        UtxoData = new UtxoData
+                        {
+                            value = 1500000, // Sufficient to cover the send amount and estimated fees
+                            address = address,
+                            scriptHex = scriptHex,
+                            outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
+                            blockIndex = 1,
+                            PendingSpent = false
+                        },
+                        HdPath = "m/0/0"
+                    }
                 }
-            }
-        },
-            FeeRate = Money.Coins(3000).Satoshi,
+            },
         };
 
         // Act
@@ -385,32 +386,32 @@ public class WalletOperationsTest : AngorTestData
         var address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
         var scriptHex = "0014b7d165bb8b25f567f05c57d3b484159582ac2827";  
         var accountInfo = new AccountInfo(); 
-        long feeRate = Money.Coins(10).Satoshi; 
+        long feeRate = Money.Satoshis(10).Satoshi; 
 
         // Scenario 1: Sufficient funds
         var sendInfoSufficientFunds = new SendInfo
         {
             SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
             ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
-            SendAmount = Money.Coins(0.0001m).Satoshi,  // Lower amount for successful fee calculation
+            SendAmount = Money.Coins(0.0001m).Satoshi, // Lower amount for successful fee calculation
             SendUtxos = new Dictionary<string, UtxoDataWithPath>
-        {
             {
-                "key", new UtxoDataWithPath
                 {
-                    UtxoData = new UtxoData
+                    "key", new UtxoDataWithPath
                     {
-                        value = 150000000, // Sufficient to cover the send amount and estimated fees
-                        address = address,
-                        scriptHex = scriptHex,
-                        outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
-                        blockIndex = 1,
-                        PendingSpent = false
-                    },
-                    HdPath = "m/0/0"
+                        UtxoData = new UtxoData
+                        {
+                            value = 150000000, // Sufficient to cover the send amount and estimated fees
+                            address = address,
+                            scriptHex = scriptHex,
+                            outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
+                            blockIndex = 1,
+                            PendingSpent = false
+                        },
+                        HdPath = "m/0/0"
+                    }
                 }
             }
-        }
         };
 
         // Act & Assert for sufficient funds
