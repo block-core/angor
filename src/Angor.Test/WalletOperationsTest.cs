@@ -153,7 +153,7 @@ public class WalletOperationsTest : AngorTestData
         var network = _networkConfiguration.Object.GetNetwork();
 
         var projectInfo = new ProjectInfo();
-        projectInfo.TargetAmount = 3;
+        projectInfo.TargetAmount = Money.Coins(3).Satoshi;
         projectInfo.StartDate = DateTime.UtcNow;
         projectInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
         projectInfo.PenaltyDays = 10;

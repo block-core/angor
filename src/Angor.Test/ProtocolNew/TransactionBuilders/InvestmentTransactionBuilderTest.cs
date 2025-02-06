@@ -16,7 +16,6 @@ public class InvestmentTransactionBuilderTest : AngorTestData
 
     private readonly Mock<IProjectScriptsBuilder> _projectScriptsBuilder;
     private readonly Mock<IInvestmentScriptBuilder> _investmentScriptBuilder;
-
     public InvestmentTransactionBuilderTest()
     {
         _projectScriptsBuilder = new Mock<IProjectScriptsBuilder>();
@@ -38,28 +37,27 @@ public class InvestmentTransactionBuilderTest : AngorTestData
         return expectedScript;
     }
 
-    
     [Fact]
     public void SeederInvestmentTransactionCreation_addsAngorKeyScript()
-        {
-            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
+    {
+        var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
-            var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
-            
-            var expectedScript = GivenTheAngorFeeScript(projectInvestmentInfo);
+        var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
 
-            var opReturnScript = new Key().ScriptPubKey;
-            
-            var seederInvestmentTransaction = _sut.BuildInvestmentTransaction(projectInvestmentInfo,opReturnScript,
-                new List<ProjectScripts>(){},
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+        var expectedScript = GivenTheAngorFeeScript(projectInvestmentInfo);
 
-            var expectedoutput = seederInvestmentTransaction.Outputs.First();
-            
-            Assert.True(expectedoutput.ScriptPubKey.Equals(expectedScript));
-            Assert.Equal(projectInvestmentInfo.TargetAmount / 100,expectedoutput.Value.ToDecimal(MoneyUnit.BTC));
-        }
-    
+        var opReturnScript = new Key().ScriptPubKey;
+
+        var seederInvestmentTransaction = _sut.BuildInvestmentTransaction(projectInvestmentInfo, opReturnScript,
+            new List<ProjectScripts>() { },
+            projectInvestmentInfo.TargetAmount);
+
+        var expectedoutput = seederInvestmentTransaction.Outputs.First();
+
+        Assert.True(expectedoutput.ScriptPubKey.Equals(expectedScript));
+        Assert.Equal(projectInvestmentInfo.TargetAmount / 100, expectedoutput.Value.Satoshi);
+    }
+
     [Fact]
     public void SeederInvestmentTransactionCreation_addsOpReturnWithProjectData()
     {
@@ -73,7 +71,7 @@ public class InvestmentTransactionBuilderTest : AngorTestData
             
         var seederInvestmentTransaction = _sut.BuildInvestmentTransaction(projectInvestmentInfo, opReturnScript,
             new List<ProjectScripts>(){},
-            Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            projectInvestmentInfo.TargetAmount);
 
         var expectedoutput = seederInvestmentTransaction.Outputs[1];
             
@@ -100,7 +98,7 @@ public class InvestmentTransactionBuilderTest : AngorTestData
         };
         
         var seederInvestmentTransaction = _sut.BuildInvestmentTransaction(projectInvestmentInfo, opReturnScript, 
-            stageScripts, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            stageScripts, projectInvestmentInfo.TargetAmount);
 
         for (int i = 0; i < seederInvestmentTransaction.Outputs.Count(); i++)
         {

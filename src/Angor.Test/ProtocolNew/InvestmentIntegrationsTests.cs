@@ -112,7 +112,7 @@ namespace Angor.Test
             var funderReceiveCoinsKey = new Key();
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount = 3;
+            projectInvestmentInfo.TargetAmount  = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -194,35 +194,35 @@ namespace Angor.Test
             // create seeder1 investment transaction
 
             var seeder1InvTrx = _seederTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
-                seeder1Context.InvestorKey, new uint256(seeder1Context.InvestorSecretHash), Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                seeder1Context.InvestorKey, new uint256(seeder1Context.InvestorSecretHash), projectInvestmentInfo.TargetAmount);
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder1InvTrx.ToHex());
 
             // create seeder2 investment transaction
 
             var seeder2InvTrx = _seederTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
-                seeder2Context.InvestorKey, new uint256(seeder2Context.InvestorSecretHash), Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                seeder2Context.InvestorKey, new uint256(seeder2Context.InvestorSecretHash), projectInvestmentInfo.TargetAmount);
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder2InvTrx.ToHex());
 
             // create seeder3 investment transaction
 
             var seeder3InvTrx = _seederTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
-                seeder3Context.InvestorKey, new uint256(seeder3Context.InvestorSecretHash), Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                seeder3Context.InvestorKey, new uint256(seeder3Context.InvestorSecretHash), projectInvestmentInfo.TargetAmount);
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder3InvTrx.ToHex());
 
             // create investor 1 investment transaction
 
             var investor1InvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
-                investor1Context.InvestorKey, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                investor1Context.InvestorKey, projectInvestmentInfo.TargetAmount);
 
             founderContext.InvestmentTrasnactionsHex.Add(investor1InvTrx.ToHex());
 
             // create investor 2 investment transaction
 
             var investor2InvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
-                investor2Context.InvestorKey, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                investor2Context.InvestorKey, projectInvestmentInfo.TargetAmount);
 
             founderContext.InvestmentTrasnactionsHex.Add(investor2InvTrx.ToHex());
 
@@ -246,7 +246,7 @@ namespace Angor.Test
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount = 3;
+            projectInvestmentInfo.TargetAmount  = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -277,7 +277,7 @@ namespace Angor.Test
             // create the investment transaction
 
             var seeder1InvTrx = _seederTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,seeder1Context.InvestorKey,
-                new uint256(seeder1Context.InvestorSecretHash), Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                new uint256(seeder1Context.InvestorSecretHash), projectInvestmentInfo.TargetAmount);
 
             var seeder1Expierytrx  = _seederTransactionActions.RecoverEndOfProjectFunds(seeder1InvTrx.ToHex(), projectInvestmentInfo,
                 1, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
@@ -301,7 +301,7 @@ namespace Angor.Test
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount = 3;
+            projectInvestmentInfo.TargetAmount  = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -329,7 +329,7 @@ namespace Angor.Test
             // create the investment transaction
 
             var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,seeder1Context.InvestorKey,
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
 
             var investor1Expierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
                 projectInvestmentInfo,
@@ -354,7 +354,7 @@ namespace Angor.Test
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount = 3;
+            projectInvestmentInfo.TargetAmount  = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -387,7 +387,7 @@ namespace Angor.Test
             // create the investment transaction
 
             var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,investorPubKey,
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
 
             var investorExpierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
                 projectInvestmentInfo, 1, investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
@@ -422,7 +422,7 @@ namespace Angor.Test
             {
                 ProjectInfo = new ProjectInfo
                 {
-                    TargetAmount = 3,
+                    TargetAmount  = Money.Coins(3).Satoshi,
                     StartDate = DateTime.UtcNow,
                     ExpiryDate = DateTime.UtcNow.AddDays(5),
                     Stages = new List<Stage>
@@ -444,7 +444,7 @@ namespace Angor.Test
             // create the investment transaction
 
             var investmentTransaction = _seederTransactionActions.CreateInvestmentTransaction(investorContext.ProjectInfo,investorContext.InvestorKey,
-                Hashes.Hash256(seederSecret.ToBytes()),Money.Coins(investorContext.ProjectInfo.TargetAmount).Satoshi);
+                Hashes.Hash256(seederSecret.ToBytes()), investorContext.ProjectInfo.TargetAmount);
 
             investorContext.TransactionHex = investmentTransaction.ToHex();
 
@@ -491,7 +491,7 @@ namespace Angor.Test
             {
                 ProjectInfo = new ProjectInfo
                 {
-                    TargetAmount = 3,
+                    TargetAmount  = Money.Coins(3).Satoshi,
                     StartDate = DateTime.UtcNow,
                     ExpiryDate = DateTime.UtcNow.AddDays(5),
                     PenaltyDays = 5,
@@ -513,7 +513,7 @@ namespace Angor.Test
             // create the investment transaction
 
             var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(investorContext.ProjectInfo,investorContext.InvestorKey,
-                Money.Coins(investorContext.ProjectInfo.TargetAmount).Satoshi);
+                investorContext.ProjectInfo.TargetAmount);
 
             investorContext.TransactionHex = investmentTransaction.ToHex();
 
@@ -578,7 +578,7 @@ namespace Angor.Test
             
             var projectInvestmentInfo = new ProjectInfo
             {
-                TargetAmount = 3,
+                TargetAmount  = Money.Coins(3).Satoshi,
                 StartDate = DateTime.UtcNow,
                 ExpiryDate = DateTime.UtcNow.AddDays(5),
                 Stages = new List<Stage>
@@ -608,7 +608,7 @@ namespace Angor.Test
 
             var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
                 Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
             
             var secrets = new List<byte[]>
             {
@@ -621,7 +621,6 @@ namespace Angor.Test
             {
                 var partSecrets = secrets.Where((_, index) => index != i)
                     .ToList();
-                
 
                 var investorRecoverFundsNoPenalty = _investorTransactionActions.RecoverRemainingFundsWithOutPenalty(
                     investorInvTrx.ToHex(), projectInvestmentInfo, stageIndex,
@@ -657,7 +656,7 @@ namespace Angor.Test
             {
                 ProjectInfo = new ProjectInfo
                 {
-                    TargetAmount = 3,
+                    TargetAmount  = Money.Coins(3).Satoshi,
                     StartDate = DateTime.UtcNow,
                     ExpiryDate = DateTime.UtcNow.AddDays(5),
                     PenaltyDays = 5,
@@ -681,7 +680,7 @@ namespace Angor.Test
 
             // Create the investment transaction
             var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(investorContext.ProjectInfo, investorContext.InvestorKey,
-                Money.Coins(investorContext.ProjectInfo.TargetAmount).Satoshi);
+                investorContext.ProjectInfo.TargetAmount);
 
             investorContext.TransactionHex = investmentTransaction.ToHex();
 
