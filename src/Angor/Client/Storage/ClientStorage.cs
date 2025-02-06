@@ -43,7 +43,11 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _logger.LogDebug("Attempting to add investment project with ID {ProjectId}", project.ProjectInfo.ProjectIdentifier);
         var ret = GetInvestmentProjects();
 
-        if (ret.Any(a => a.ProjectInfo?.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier)) return;
+        if (ret.Any(a => a.ProjectInfo?.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier))
+        {
+            _logger.LogWarning("Investment project with ID {ProjectId} already exists", project.ProjectInfo.ProjectIdentifier);
+            return;
+        }
 
         ret.Add(project);
 
@@ -58,9 +62,13 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         var item = ret.FirstOrDefault(_ => _.ProjectInfo?.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
 
-        if (!ret.Remove(item))
-            throw new InvalidOperationException();
+        if (item == null)
+        {
+            _logger.LogWarning("Investment project with ID {ProjectId} not found for update", project.ProjectInfo.ProjectIdentifier);
+            return;
+        }
 
+        ret.Remove(item);
         ret.Add(project);
 
         _storage.SetItem("projects", ret);
@@ -73,6 +81,12 @@ public class ClientStorage : IClientStorage, INetworkStorage
         var ret = GetInvestmentProjects();
 
         var item = ret.FirstOrDefault(_ => _.ProjectInfo?.ProjectIdentifier == projectId);
+
+        if (item == null)
+        {
+            _logger.LogWarning("Investment project with ID {ProjectId} not found for removal", projectId);
+            return;
+        }
 
         ret.Remove(item);
 
