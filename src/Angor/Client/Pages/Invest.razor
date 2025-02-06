@@ -829,22 +829,22 @@ else
             Debug.Assert(project != null, nameof(project) + " != null");
 
             project = new InvestorProject
-                {
-                    ProjectInfo = project.ProjectInfo,
-                    Metadata = project.Metadata,
-                    SignedTransactionHex = signedTransaction!.Transaction!.ToHex(),
-                    CreationTransactionId = project.CreationTransactionId,
-                    AmountInvested = new Money(Investment.InvestmentAmount, MoneyUnit.BTC).Satoshi,
-                    InvestorPublicKey = InvestorPubKey ?? throw new ArgumentNullException("The investor pub key is not populated")
-                };
+            {
+                ProjectInfo = project.ProjectInfo,
+                Metadata = project.Metadata,
+                SignedTransactionHex = signedTransaction!.Transaction!.ToHex(),
+                CreationTransactionId = project.CreationTransactionId,
+                AmountInvested = new Money(Investment.InvestmentAmount, MoneyUnit.BTC).Satoshi,
+                InvestorPublicKey = InvestorPubKey ?? throw new ArgumentNullException("The investor pub key is not populated")
+            };
 
             var investorProject = (InvestorProject)project;
 
             // remove signatures when requesting founder to sign
             investorProject.SignaturesInfo = new()
-                {
-                    ProjectIdentifier = investorProject!.ProjectInfo.ProjectIdentifier,
-                };
+            {
+                ProjectIdentifier = investorProject!.ProjectInfo.ProjectIdentifier,
+            };
 
             var strippedInvestmentTransaction = network.CreateTransaction(investorProject.SignedTransactionHex);
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
@@ -862,12 +862,12 @@ else
                 strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory));
 
             var investmentSigsRequest = _SignService.RequestInvestmentSigs(new SignRecoveryRequest
-                {
-                    ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
-                    EncryptedContent = encryptedContent,
-                    NostrPubKey = investorProject.ProjectInfo.NostrPubKey,
-                    InvestorNostrPrivateKey = nostrPrivateKeyHex
-                });
+            {
+                ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
+                EncryptedContent = encryptedContent,
+                NostrPubKey = investorProject.ProjectInfo.NostrPubKey,
+                InvestorNostrPrivateKey = nostrPrivateKeyHex
+            });
 
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;

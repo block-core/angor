@@ -2,6 +2,7 @@ using Angor.Client.Models;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Blazored.LocalStorage;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Client.Storage;
 
@@ -11,10 +12,12 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
     private const string utxoKey = "utxo:{0}";
     private readonly ISyncLocalStorageService _storage;
+    private readonly ILogger<ClientStorage> _logger;
 
-    public ClientStorage(ISyncLocalStorageService storage)
+    public ClientStorage(ISyncLocalStorageService storage, ILogger<ClientStorage> logger)
     {
         _storage = storage;
+        _logger = logger;
     }
 
     public AccountInfo GetAccountInfo(string network)
@@ -34,6 +37,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
     public void AddInvestmentProject(InvestorProject project)
     {
+        _logger.LogDebug("Attempting to add investment project with ID {ProjectId}", project.ProjectInfo.ProjectIdentifier);
         var ret = GetInvestmentProjects();
 
         if (ret.Any(a => a.ProjectInfo?.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier)) return;
@@ -41,13 +45,15 @@ public class ClientStorage : IClientStorage, INetworkStorage
         ret.Add(project);
 
         _storage.SetItem("projects", ret);
+        _logger.LogInformation($"Added investment project with ID {project.ProjectInfo.ProjectIdentifier}. Total projects: {ret.Count}");
     }
 
     public void UpdateInvestmentProject(InvestorProject project)
     {
+        _logger.LogDebug("Attempting to update investment project with ID {ProjectId}", project.ProjectInfo.ProjectIdentifier);
         var ret = GetInvestmentProjects();
 
-        var item = ret.First(_ => _.ProjectInfo?.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
+        var item = ret.FirstOrDefault(_ => _.ProjectInfo?.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
 
         if (!ret.Remove(item))
             throw new InvalidOperationException();
@@ -55,24 +61,27 @@ public class ClientStorage : IClientStorage, INetworkStorage
         ret.Add(project);
 
         _storage.SetItem("projects", ret);
+        _logger.LogInformation($"Updated investment project with ID {project.ProjectInfo.ProjectIdentifier}. Total projects: {ret.Count}");
     }
-
 
     public void RemoveInvestmentProject(string projectId)
     {
+        _logger.LogDebug("Attempting to remove investment project with ID {ProjectId}", projectId);
         var ret = GetInvestmentProjects();
 
-        var item = ret.First(_ => _.ProjectInfo?.ProjectIdentifier == projectId);
+        var item = ret.FirstOrDefault(_ => _.ProjectInfo?.ProjectIdentifier == projectId);
 
         ret.Remove(item);
 
         _storage.SetItem("projects", ret);
+        _logger.LogInformation($"Removed investment project with ID {projectId}. Total projects: {ret.Count}");
     }
 
     public List<InvestorProject> GetInvestmentProjects()
     {
+        _logger.LogDebug("Fetching investment projects from storage");
         var ret = _storage.GetItem<List<InvestorProject>>("projects");
-
+        _logger.LogInformation($"Fetched {ret?.Count ?? 0} investment projects from storage.");
         return ret ?? new List<InvestorProject>();
     }
 

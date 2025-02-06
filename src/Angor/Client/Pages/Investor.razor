@@ -278,6 +278,7 @@
             var unconfirmedInfo = SessionStorage.GetUnconfirmedInboundFunds();
 
             projects = storage.GetInvestmentProjects();
+            _Logger.LogInformation($"Fetched {projects.Count} investment projects from storage.");
 
             var abi = new AccountBalanceInfo();
             abi.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
@@ -404,7 +405,6 @@
 
         var rootNostrPubKeyHex = _DerivationOperations.DeriveNostrPubKey(words, 0);
 
-
         await _RelayService.LookupDirectMessagesForPubKeyAsync(NostrDMPrivateKey.PubKey.ToHex()[2..], null, 1,
             async x =>
             {
@@ -438,6 +438,12 @@
                     _Logger.LogError(e, "failed to get handle investment list event from relay");
                 }
             }, rootNostrPubKeyHex);
+
+        // Fetch and add projects to storage
+        foreach (var investment in scannedInvestments.ProjectIdentifiers)
+        {
+            await GetInvestmentProjectDataAsync(investment);
+        }
     }
 
     
@@ -446,7 +452,7 @@
     {
         _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(x =>
             {
-                var projectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
+                var projectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ?? 
                                   throw new Exception("The project info must be in the application specific data event");
 
                 if (projects.Any(x => x.ProjectInfo.ProjectIdentifier == projectInfo.ProjectIdentifier))
@@ -505,7 +511,7 @@
             {
                 if (investorProject.ProjectInfo == null)
                 {
-                    investorProject.ProjectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
+                    investorProject.ProjectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ?? 
                                                   throw new Exception("The project info must be in the application specific data event");
                 }
             },
