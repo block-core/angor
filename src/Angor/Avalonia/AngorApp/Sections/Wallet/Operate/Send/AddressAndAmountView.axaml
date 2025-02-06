@@ -2,10 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:c="clr-namespace:AngorApp.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:b="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              xmlns:s="clr-namespace:AngorApp.Sections.Wallet.Operate.Send"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Wallet.Operate.Send.AddressAndAmountView" x:DataType="s:IAddressAndAmountViewModel">
 
@@ -22,11 +22,11 @@
                 </TextBox>
             </HeaderedContentControl>
             <HeaderedContentControl Header="Amount">
-                <c:AmountControl Padding="0" Satoshis="{Binding Amount}">
+                <controls:AmountControl Padding="0" Satoshis="{Binding Amount}">
                     <Interaction.Behaviors>
                         <b:UntouchedClassBehavior />
                     </Interaction.Behaviors>
-                </c:AmountControl>
+                </controls:AmountControl>
             </HeaderedContentControl>
         </StackPanel>
     </StackPanel>

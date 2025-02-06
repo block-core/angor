@@ -256,8 +256,8 @@
 
             <!-- Target Amount -->
             <div class="mb-3">
-                <label for="targetAmount" class="form-label">Target Amount</label>
-                <InputNumber id="targetAmount" @bind-Value="project.ProjectInfo.TargetAmount" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated"/>
+                <label for="targetAmount" class="form-label">Target Amount (BTC)</label>
+                <InputNumber id="targetAmount" @bind-Value="targetAmountInBTC" class="form-control" placeholder="Enter target amount in BTC" disabled="@nostrApplicationSpecificDataCreated"/>
             </div>
 
             <!-- Presets for Stages -->
@@ -368,7 +368,7 @@
         <div class="form-control mt-1 d-flex align-items-center">
             <Icon IconName="balance"></Icon>
             <p class="card-text ms-2">
-                <strong>Target amount:</strong> @project.ProjectInfo.TargetAmount @network.CoinTicker
+                <strong>Target amount:</strong> @targetAmountInBTC @network.CoinTicker
             </p>
         </div>
         <div class="form-control mt-1 d-flex align-items-center">
@@ -582,6 +582,12 @@
         { "preset2", (new[] { 25, 25, 25, 25 }, 10) },
         { "preset3", (new[] { 60, 20, 20 }, 15) }
     };
+    
+    private decimal targetAmountInBTC
+    {
+        get => Money.Coins(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC);
+        set => project.ProjectInfo.TargetAmount = (long)Money.Satoshis(value);
+    }
     
 
     private int activeTab = 1;
@@ -879,7 +885,7 @@
 
             unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), NetworkConfiguration.AngorCreateFeeSats, NetworkConfiguration.NostrEventIdKeyType, project.ProjectInfoEventId);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
             showCreateModal = true;
         }
@@ -918,7 +924,7 @@
                     var accountInfo = storage.GetAccountInfo(network.Name);
                     var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
                     StateHasChanged();
                 }
@@ -1231,7 +1237,7 @@
                 StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
                 PenaltyDays = 90,
                 ExpiryDate = DateTime.UtcNow.AddDays(120),
-                TargetAmount = 50
+                TargetAmount =  50
             }
         };
     }
@@ -1251,4 +1257,6 @@
             project.Metadata.Picture = spacePhotos[random.Next(spacePhotos.Length)];
         }
     }
+
+    
 }

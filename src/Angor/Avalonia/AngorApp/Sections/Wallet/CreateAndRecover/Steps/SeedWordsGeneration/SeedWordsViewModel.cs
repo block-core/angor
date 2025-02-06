@@ -1,6 +1,6 @@
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using AngorApp.Model;
+using Angor.UI.Model;
 using AngorApp.Sections.Browse;
 using AngorApp.Services;
 using CSharpFunctionalExtensions;

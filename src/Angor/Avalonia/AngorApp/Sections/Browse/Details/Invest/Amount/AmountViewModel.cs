@@ -1,5 +1,5 @@
 using System.Reactive.Linq;
-using AngorApp.Model;
+using Angor.UI.Model;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
@@ -8,7 +8,7 @@ namespace AngorApp.Sections.Browse.Details.Invest.Amount;
 
 public partial class AmountViewModel : ReactiveValidationObject, IAmountViewModel
 {
-    [Reactive] private ulong? amount;
+    [Reactive] private long? amount;
 
     public AmountViewModel(IWallet wallet, IProject project)
     {

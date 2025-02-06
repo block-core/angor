@@ -362,7 +362,7 @@
                 throw new Exception("Failed to validate signatures");
 
             // add fee to the recovery trx
-            releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedReleaseTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+            releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedReleaseTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
             explorerLink = _networkConfiguration.GetExplorerUrl().Url + $"/transaction/{InvestorProject.UnfundedReleaseTransactionId}";
 
@@ -403,7 +403,7 @@
 
                     var accountInfo = Storage.GetAccountInfo(network.Name);
 
-                    releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedReleaseTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+                    releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedReleaseTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
                     StateHasChanged();
                 }

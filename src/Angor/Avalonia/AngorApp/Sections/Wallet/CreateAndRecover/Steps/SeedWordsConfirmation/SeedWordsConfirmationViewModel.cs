@@ -1,6 +1,6 @@
 using System.Linq;
 using System.Reactive.Linq;
-using AngorApp.Model;
+using Angor.UI.Model;
 using CSharpFunctionalExtensions;
 using ReactiveUI.Validation.Extensions;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
