@@ -5,6 +5,7 @@
 @using Angor.Shared.Models
 @using Angor.Shared.ProtocolNew
 @using Angor.Shared.Services
+@using Angor.Shared.Utilities
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.Networks
@@ -474,7 +475,7 @@
                     <p class="mb-1"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
 
                     <p class="mb-1">
-                        <strong>Target amount:</strong> @project.ProjectInfo.TargetAmount @network.CoinTicker
+                        <strong>Target amount:</strong> @project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker
                     </p>
 
                     <p class="mb-1"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
@@ -516,7 +517,7 @@
                         @if (publishProjectSpinner)
                         {
                             <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            <span>Confirm...</span>
+                            <span>Confirming...</span>
                         }
                         else
                         {
@@ -551,8 +552,6 @@
         </div>
     </div>
 }
-
-
 
 </div>
 

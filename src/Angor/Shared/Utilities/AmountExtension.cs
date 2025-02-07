@@ -10,4 +10,9 @@ public static class AmountExtension
     {
         return Money.Satoshis(amount).ToUnit(MoneyUnit.BTC);
     }
+
+    public static long ToUnitSatoshi(this decimal amount)
+    {
+        return Money.Coins(amount).Satoshi;
+    }
 }

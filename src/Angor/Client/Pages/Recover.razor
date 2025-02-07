@@ -599,49 +599,57 @@
             {
                 item.IsSpent = true;
 
-                if (output.SpentInTransaction == project.RecoveryTransactionId)
+                if (output.SpentInTransaction == project.UnfundedReleaseTransactionId)
                 {
-                    if (!string.IsNullOrEmpty(project.RecoveryReleaseTransactionId))
-                    {
-                        item.SpentTo = "Recovered after penalty";
-                        item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Unknown };
-                    }
-                    else
-                    {
-                        item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty };
-                        var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
-                        item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
-                    }
+                    item.SpentTo = "Project Unfunded, Spent back to investor";
+                    item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorNoPenalty };
                 }
                 else
                 {
-                    // try to resolve the destination
-                    var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
-
-                    var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == StageInfo.TransactionInfo.TransactionId && input.InputIndex == item.Outputindex);
-
-                    if (input != null && investmentTransaction != null)
+                    if (output.SpentInTransaction == project.RecoveryTransactionId)
                     {
-                        item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project.ProjectInfo, investmentTransaction, item.StageIndex, input.WitScript);
-
-                        switch (item.ProjectScriptType.ScriptType)
+                        if (!string.IsNullOrEmpty(project.RecoveryReleaseTransactionId))
                         {
-                            case ProjectScriptTypeEnum.Founder:
+                            item.SpentTo = "Recovered after penalty";
+                            item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Unknown };
+                        }
+                        else
+                        {
+                            item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty };
+                            var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                            item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
+                        }
+                    }
+                    else
+                    {
+                        // try to resolve the destination
+                        var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+
+                        var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == StageInfo.TransactionInfo.TransactionId && input.InputIndex == item.Outputindex);
+
+                        if (input != null && investmentTransaction != null)
+                        {
+                            item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project.ProjectInfo, investmentTransaction, item.StageIndex, input.WitScript);
+
+                            switch (item.ProjectScriptType.ScriptType)
                             {
-                                item.SpentTo = "Spent by founder";
-                                break;
-                            }
-                            case ProjectScriptTypeEnum.InvestorWithPenalty:
-                            {
-                                var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
-                                item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
-                                break;
-                            }
-                            case ProjectScriptTypeEnum.EndOfProject:
-                            case ProjectScriptTypeEnum.InvestorNoPenalty:
-                            {
-                                item.SpentTo = $"Spent by investor";
-                                break;
+                                case ProjectScriptTypeEnum.Founder:
+                                {
+                                    item.SpentTo = "Spent by founder";
+                                    break;
+                                }
+                                case ProjectScriptTypeEnum.InvestorWithPenalty:
+                                {
+                                    var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                                    item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
+                                    break;
+                                }
+                                case ProjectScriptTypeEnum.EndOfProject:
+                                case ProjectScriptTypeEnum.InvestorNoPenalty:
+                                {
+                                    item.SpentTo = $"Spent by investor";
+                                    break;
+                                }
                             }
                         }
                     }

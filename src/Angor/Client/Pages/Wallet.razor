@@ -5,6 +5,7 @@
 @using Angor.Client.Storage
 @using Angor.Shared
 @using Angor.Shared.Models
+@using Angor.Shared.Utilities
 @using Blockcore.NBitcoin
 @using Blockcore.Networks
 @inherits BaseComponent
@@ -709,7 +710,7 @@ else
                                     </span>
                                 </div>
                                 <div class="modal-body modal-body-scroll">
-                                    <p>Are you sure you want to send @_sendInfo.SendAmount to @_sendInfo.SendToAddress?</p>
+                                    <p>Are you sure you want to send @_sendInfo.SendAmount.ToUnitBtc() @network.CoinTicker to @_sendInfo.SendToAddress?</p>
                                     <p>Fees: @_sendInfo.SendFee</p>
 
                                     <div class="mb-3">
