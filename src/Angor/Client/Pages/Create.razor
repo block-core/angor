@@ -265,7 +265,7 @@
                 <!-- Target Amount -->
                 <div class="mb-3">
                     <label for="targetAmount" class="form-label">Target Amount</label>
-                    <InputNumber id="targetAmount" @bind-Value="project.ProjectInfo.TargetAmount" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated" />
+                    <InputNumber id="targetAmount" @bind-Value="targetAmountInBTC" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated" />
                 </div>
 
                 <!-- Presets for Stages -->
@@ -490,7 +490,7 @@
         {
             return new List<(string, string, string, string)>
     {
-    ("balance", "Target amount", $"{project.ProjectInfo.TargetAmount} {network.CoinTicker}","text-success"),
+    ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}","text-success"),
     ("calendar", "Start date", $"{project.ProjectInfo.StartDate:dd/MM/yyyy} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days","text-warning"),
     ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate:dd/MM/yyyy} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days","text-warning"),
     ("sad-circle", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days","text-warning")
@@ -546,7 +546,7 @@
                                     <div class="info-card flex-grow-1 me-2">
                                         <div class="info-label">Target Amount</div>
                                         <div class="info-value text-success">
-                                            @project.ProjectInfo.TargetAmount @network.CoinTicker
+                                            @targetAmountInBTC @network.CoinTicker
                                         </div>
                                     </div>
                                     <div class="info-card flex-grow-1 ms-2">
@@ -692,7 +692,7 @@
                                     <div class="info-card flex-grow-1 me-2">
                                         <div class="info-label">Target Amount</div>
                                         <div class="info-value text-success">
-                                            @project.ProjectInfo.TargetAmount @network.CoinTicker
+                                            @targetAmountInBTC @network.CoinTicker
                                         </div>
                                     </div>
                                     <div class="info-card flex-grow-1 ms-2">
@@ -825,6 +825,11 @@
         { "preset3", (new[] { 60, 20, 20 }, 15) }
     };
 
+    private decimal targetAmountInBTC
+    {
+        get => Money.Coins(targetAmountInBTC).ToUnit(MoneyUnit.BTC);
+        set => targetAmountInBTC = (long)Money.Satoshis(value);
+    }
 
     private int activeTab = 1;
 
@@ -1311,7 +1316,7 @@
                 return false;
             }
 
-            if (project.ProjectInfo.TargetAmount < (decimal)0.1)
+            if (targetAmountInBTC < (decimal)0.1)
             {
                 // temporary limit to not allow users to put too much in an Angor contract
 
