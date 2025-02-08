@@ -14,7 +14,7 @@ public class ProjectInfo
     public DateTime StartDate { get; set; }
     public int PenaltyDays { get; set; }
     public DateTime ExpiryDate { get; set; }
-    public decimal TargetAmount { get; set; }
+    public long TargetAmount { get; set; }
     public List<Stage> Stages { get; set; } = new();
     public ProjectSeeders ProjectSeeders { get; set; } = new();
 }

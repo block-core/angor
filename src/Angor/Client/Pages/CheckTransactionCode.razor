@@ -217,7 +217,7 @@ else
 
         founderTransaction = founderTransactionRes.Transaction;
 
-        transactionInfo = _walletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transactionInfo.Transaction, walletWords, localAccountInfo, fee.First());
+        transactionInfo = _walletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transactionInfo.Transaction, walletWords, localAccountInfo, fee.First().FeeRate);
         
         ShowTransaction = true;
     }
