@@ -827,8 +827,8 @@
 
     private decimal targetAmountInBTC
     {
-        get => Money.Coins(targetAmountInBTC).ToUnit(MoneyUnit.BTC);
-        set => targetAmountInBTC = (long)Money.Satoshis(value);
+        get => Money.Coins(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC);
+        set => project.ProjectInfo.TargetAmount = (long)Money.Satoshis(value);
     }
 
     private int activeTab = 1;
