@@ -32,137 +32,190 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-<div class="row">
+
+<div class="row slide-in">
     <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
             <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="signature" Height="42" Width="42" />
+                <span class="user-select-none animate-rotate">
+                    <Icon IconName="signature" Height="42" Width="42"/>
                 </span>
-                <div class="h-100 ms-3 flex-grow-1">
-                    <h5 class="mb-0 font-weight-bolder">
+                <div class="ms-3">
+                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
                         Pending Signatures
                     </h5>
-
                 </div>
             </div>
+            <button class="btn btn-border mb-0 animate-scale" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
+                <i class="@(refreshButtonSpinner ? "rotate-icon" : "")">
+                    <Icon IconName="refresh" Width="24" Height="24"></Icon>
+                </i>
+                <span class="nav-link-text ms-1">Refresh</span>
+            </button>
         </div>
-        <p class="mb-0 font-weight-normal text-sm d-flex mt-4">
-            Project ID:
-            <span id="transactionID" class="text-dynamic ms-1">@ProjectIdentifier</span>
+        <p class="mb-0 font-weight-normal text-sm text-truncate mt-4 animate-fade-in-delayed">
+            Project ID: @ProjectIdentifier
         </p>
     </div>
 </div>
 
+<div class="slide-in mt-4">
     @if (!signaturesRequests.Any())
     {
-            <div class="row mt-4">
+        <div class="row mt-4">
             <div class="card card-body angor-alert-info pt-2 pb-2">
                 <div class="d-flex align-items-center">
                     <span class="me-3 user-select-none">
-                        <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
+                        <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)"/>
                     </span>
                     <span class="text-white" data-cy="projectsGrid">No pending signatures yet...</span>
                 </div>
             </div>
         </div>
-     }
+    }
     else
     {
-        <!-- Signatures Details Section -->
-        <div class="row mt-4">
-            <div class="col">
-                @if (messagesReceived || isLoading)
-                {
-                    <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
-                        <div class="text-center mb-3">
-                            @if (isLoading)
-                            {
-                                <h6 class="mb-0">Approving Signatures... @numOfSignaturesSigned / @numOfSignatureToSign</h6>
-                            }
-                            <div class="loader"></div>
+        @if (messagesReceived || isLoading)
+        {
+            <div class="card card-body slide-in mt-4">
+                <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+                    <div class="text-center">
+                        @if (isLoading)
+                        {
+                            <h6 class="mb-3">Approving Signatures... @numOfSignaturesSigned / @numOfSignatureToSign</h6>
+                        }
+                        <div class="loader"></div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                <!-- Statistics Cards -->
+                <div class="col-md-4">
+                    <div class="card card-body p-3 rounded-3 border hover-effect">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="text-muted">Total Requests</h6>
+                                <h4 class="mb-0">@signaturesRequests.Count</h4>
+                            </div>
+                            <div class="stat-icon">
+                                <Icon IconName="signature" Height="32" Width="32"/>
+                            </div>
                         </div>
                     </div>
-                }
-                
-                else
-                {
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header pb-0 p-3">
-                                <div class="row">
-                                    <div class="col-6 d-flex align-items-center">
-                                        <h6 class="mb-0">Signatures</h6>
-                                    </div>
-                                    <div class="col-6 d-flex justify-content-end">
-                                        <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">Approve All</button>
-                                        <button class="btn btn-sm btn-border ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
-                                            @if (refreshButtonSpinner)
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card card-body p-3 rounded-3 border hover-effect">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="text-muted">Pending</h6>
+                                <h4 class="mb-0">@signaturesRequests.Count(s => s.TimeApproved == null)</h4>
+                            </div>
+                            <div class="stat-icon">
+                                <Icon IconName="pending" Height="32" Width="32"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card card-body p-3 rounded-3 border hover-effect">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="text-muted">Approved</h6>
+                                <h4 class="mb-0">@signaturesRequests.Count(s => s.TimeApproved != null)</h4>
+                            </div>
+                            <div class="stat-icon">
+                                <Icon IconName="approved" Height="32" Width="32"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-body slide-in mt-4 hover-effect">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title mb-0">Signature Requests</h5>
+                    <button class="btn @(CanApproveAllSignatures ? "btn-border-success" : "btn-border") animate-scale"
+                            @onclick="ApproveAllSignatures" 
+                            disabled="@ApproveButtonDisabled">
+                        <Icon IconName="approve-all" Width="20" Height="20" class="me-2"/>
+                        Approve All
+                    </button>
+                </div>
+
+                <div class="table-responsive form-control slide-in">
+                    <div class="table-container">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 px-2">Amount</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 px-2">Received</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 px-2">Status</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 px-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var signature in signaturesRequests.Where(_ => _ is { TransactionHex: not null, AmountToInvest: not null }))
+                                {
+                                    <tr>
+                                        <td class="align-middle px-2">
+                                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                                <Icon IconName="bitcoin" Width="24" Height="24"/>
+                                                <span class="text-break">@Money.Satoshis(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle px-2">
+                                            <span class="text-break">@signature.TimeArrived.ToString("g")</span>
+                                        </td>
+                                        <td class="align-middle">
+                                            @if (signature.TimeApproved is null)
                                             {
-                                                <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                <span>Refreshing...</span>
+                                                <span class="badge bg-warning">Pending</span>
                                             }
                                             else
                                             {
-                                                 <span>Refresh</span>
+                                                <span class="badge bg-success">Approved</span>
                                             }
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                
-                                
-                                <div class="table-responsive form-control">
-                                    <table class="table align-items-center mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investment amount</th>
-                                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received at</th>
-                                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var signature in signaturesRequests.Where(_ => _ is { TransactionHex: not null, AmountToInvest: not null }))
+                                        </td>
+                                        <td class="align-middle">
+                                            @if (signature.TimeApproved is null)
                                             {
-                                                <tr>
-                                                    <td>@Money.Satoshis(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                                    <td>@signature.TimeArrived.ToString("g")</td>
-                                                    @if (signature.TimeApproved is null)
+                                                <button class="btn btn-border-success btn-sm animate-scale" 
+                                                        @onclick="() => ApproveSignatureCheckPassword(signature)" 
+                                                        disabled="@signaturesRequestsApproving.Any()">
+                                                    @if (signaturesRequestsApproving.ContainsKey(signature))
                                                     {
-                                                        <td>
-                                                            <button class="btn btn-border-success" @onclick="() => ApproveSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.Any()">
-                                                                @if (signaturesRequestsApproving.ContainsKey(signature))
-                                                                {
-                                                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                                    <span>Approving...</span>
-                                                                }
-                                                                else
-                                                                {
-                                                                    <span>Approve</span>
-                                                                }
-                                                            </button>
-                                                        </td>
+                                                        <span class="spinner-border spinner-border-sm me-2"/>
+                                                        <span>Processing...</span>
                                                     }
                                                     else
                                                     {
-                                                        <td>Approved on - @signature.TimeApproved.ToString()</td>
+                                                        <Icon IconName="approve" Width="16" Height="16" class="me-2"/>
+                                                        <span>Approve</span>
                                                     }
-                                                </tr>
+                                                </button>
                                             }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                                            else
+                                            {
+                                                <small class="text-muted">
+                                                    Approved on @signature.TimeApproved?.ToString("g")
+                                                </small>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
-
-                }
+                </div>
             </div>
-        </div>
-
+        }
     }
- 
+</div>
 
 @code {
     [Parameter]
