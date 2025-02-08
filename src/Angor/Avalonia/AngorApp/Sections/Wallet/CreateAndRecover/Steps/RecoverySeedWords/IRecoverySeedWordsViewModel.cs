@@ -1,4 +1,4 @@
-using AngorApp.Model;
+using Angor.UI.Model;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 
 namespace AngorApp.Sections.Wallet.CreateAndRecover.Steps.RecoverySeedWords;

@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              xmlns:seedWordsGeneration="clr-namespace:AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsGeneration"
-             xmlns:c="clr-namespace:AngorApp.Controls"
              xmlns:z="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
              x:Class="AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsGeneration.Empty" x:DataType="seedWordsGeneration:ISeedWordsViewModel">
 
@@ -20,17 +20,17 @@
                 You are about to generate 12 seed words. These words are the master key to your wallet - without them, you cannot recover your funds if something happens to your device.
             </TextBlock>
             <Border Classes="Alert" Margin="0 20">
-                <c:List>
-                    <c:List.Header>
+                <controls:List>
+                    <controls:List.Header>
                         <TextBlock>Before generating your seed words, ensure:</TextBlock>
-                    </c:List.Header>
+                    </controls:List.Header>
                     <z:Strings>
                         <x:String>You are in a private space</x:String>
                         <x:String>No one can see your screen</x:String>
                         <x:String>You have paper and pen ready</x:String>
                         <x:String>You have time to write them down carefully</x:String>
                     </z:Strings>
-                </c:List>
+                </controls:List>
             </Border>
         </StackPanel>
     </DockPanel>

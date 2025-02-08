@@ -1,5 +1,5 @@
 using System.Windows.Input;
-using AngorApp.Model;
+using Angor.UI.Model;
 
 namespace AngorApp.Sections.Wallet.Operate;
 

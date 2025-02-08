@@ -13,11 +13,11 @@ public partial class WelcomeViewModel : ReactiveValidationObject, IStep
     
     public WelcomeViewModel()
     {
-        this.ValidationRule<WelcomeViewModel, bool>(x => x.IsUserAware, x => x == true, "You cannot continue unless you understand the risks");
+        this.ValidationRule(x => x.IsUserAware, x => x, "You cannot continue unless you understand the risks");
     }
     
     public IObservable<bool> IsValid => this.IsValid();
     public IObservable<bool> IsBusy => Observable.Return(false);
     public bool AutoAdvance => false;
-    public Maybe<string> Title => "Welcome to the Wallet Creation Wizard!";
+    public Maybe<string> Title => "Create New Wallet";
 }

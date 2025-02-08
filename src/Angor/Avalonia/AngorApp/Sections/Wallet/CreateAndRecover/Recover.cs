@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
-using AngorApp.Common.Success;
-using AngorApp.Model;
+using Angor.UI.Model;
 using AngorApp.Sections.Wallet.CreateAndRecover.Steps.EncryptionPassword;
 using AngorApp.Sections.Wallet.CreateAndRecover.Steps.Passphrase;
 using AngorApp.Sections.Wallet.CreateAndRecover.Steps.Passphrase.Create;
@@ -9,6 +8,7 @@ using AngorApp.Sections.Wallet.CreateAndRecover.Steps.RecoverySeedWords;
 using AngorApp.Sections.Wallet.CreateAndRecover.Steps.RecoveryWelcome;
 using AngorApp.Sections.Wallet.CreateAndRecover.Steps.SummaryAndCreation;
 using AngorApp.Services;
+using AngorApp.UI.Controls.Common.Success;
 using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;

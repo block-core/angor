@@ -1121,7 +1121,7 @@
 
             unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), NetworkConfiguration.AngorCreateFeeSats, NetworkConfiguration.NostrEventIdKeyType, project.ProjectInfoEventId);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
             showCreateModal = true;
         }
@@ -1160,7 +1160,7 @@
                     var accountInfo = storage.GetAccountInfo(network.Name);
                     var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
                     StateHasChanged();
                 }
