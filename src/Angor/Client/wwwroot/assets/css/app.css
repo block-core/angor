@@ -2881,3 +2881,24 @@ button:hover:not(:disabled) {
 .ms--4{
     margin-right:-4px;
 }
+
+.table-container {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .table td, .table th {
+        min-width: 120px;
+    }
+    
+    .text-break {
+        word-break: break-word;
+    }
+}
