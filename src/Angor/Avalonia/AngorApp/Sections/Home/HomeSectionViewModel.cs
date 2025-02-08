@@ -1,6 +1,7 @@
 using System.Windows.Input;
+using Angor.UI.Model;
+using AngorApp.Core;
 using AngorApp.Sections.Shell;
-using AngorApp.Sections.Wallet.NoWallet;
 using AngorApp.Services;
 
 namespace AngorApp.Sections.Home;

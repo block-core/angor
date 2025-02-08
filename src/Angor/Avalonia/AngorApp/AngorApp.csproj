@@ -33,12 +33,56 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Serilog.Extensions.Logging" />
+        <PackageReference Include="Serilog.Sinks.Console" />
         <PackageReference Include="Zafiro.Avalonia" />
         <PackageReference Include="Zafiro.Avalonia.Dialogs" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\AngorApp.Model\AngorApp.Model.csproj" />
+      <ProjectReference Include="..\Angor.UI.Model.Implementation\Angor.UI.Model.Implementation.csproj" />
+      <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Sections\Browse\ProjectLookup\ProjectLookupView.axaml.cs">
+        <DependentUpon>ProjectLookup.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <UpToDateCheckInput Remove="Common\Success\SuccessView.axaml" />
+      <UpToDateCheckInput Remove="Common\TransactionPreview\Summary.axaml" />
+      <UpToDateCheckInput Remove="Common\TransactionPreview\TransactionPreviewView.axaml" />
+      <UpToDateCheckInput Remove="Controls\AmountControl.axaml" />
+      <UpToDateCheckInput Remove="Controls\Button.axaml" />
+      <UpToDateCheckInput Remove="Controls\Dialog.axaml" />
+      <UpToDateCheckInput Remove="Controls\Frame.axaml" />
+      <UpToDateCheckInput Remove="Controls\Header.axaml" />
+      <UpToDateCheckInput Remove="Controls\IconButton.axaml" />
+      <UpToDateCheckInput Remove="Controls\IconLabel.axaml" />
+      <UpToDateCheckInput Remove="Controls\List.axaml" />
+      <UpToDateCheckInput Remove="Controls\Pane.axaml" />
+      <UpToDateCheckInput Remove="Controls\SectionItem.axaml" />
+      <UpToDateCheckInput Remove="Controls\TextBox.axaml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="UI\Controls\AmountControl.axaml" />
+      <AdditionalFiles Include="UI\Controls\Button.axaml" />
+      <AdditionalFiles Include="UI\Controls\Common\Success\SuccessView.axaml" />
+      <AdditionalFiles Include="UI\Controls\Common\TransactionPreview\Summary.axaml" />
+      <AdditionalFiles Include="UI\Controls\Common\TransactionPreview\TransactionPreviewView.axaml" />
+      <AdditionalFiles Include="UI\Controls\Dialog.axaml" />
+      <AdditionalFiles Include="UI\Controls\Frame.axaml" />
+      <AdditionalFiles Include="UI\Controls\Header.axaml" />
+      <AdditionalFiles Include="UI\Controls\IconButton.axaml" />
+      <AdditionalFiles Include="UI\Controls\IconLabel.axaml" />
+      <AdditionalFiles Include="UI\Controls\List.axaml" />
+      <AdditionalFiles Include="UI\Controls\Pane.axaml" />
+      <AdditionalFiles Include="UI\Controls\SectionItem.axaml" />
+      <AdditionalFiles Include="UI\Controls\TextBox.axaml" />
     </ItemGroup>
     
 </Project>

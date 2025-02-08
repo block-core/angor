@@ -2,15 +2,17 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:c="clr-namespace:AngorApp.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
-             mc:Ignorable="d" d:DesignWidth="800"
+             xmlns:designTime="clr-namespace:Zafiro.Avalonia.DesignTime;assembly=Zafiro.Avalonia"
+             xmlns:lk="clr-namespace:AngorApp.Sections.Browse.ProjectLookup"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="500"
              x:Class="AngorApp.Sections.Browse.BrowseSectionView"
-             x:DataType="browse:IBrowseSectionViewModel" ClipToBounds="False">
+             x:DataType="browse:IBrowseSectionViewModel">
 
     <Design.DataContext>
-        <browse:BrowseSectionViewModelDesign />
+        <browse:BrowseSectionViewModelDesign IsBusy="{designTime:Return True}" />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -25,57 +27,78 @@
 
     <StackPanel Spacing="20">
 
-        <c:Pane Title="Browse" IsTitleVisible="True" Subtitle="Browse Projects">
-            <c:Pane.TitleIcon>
+        <controls:Pane Title="Browse" IsTitleVisible="True" Subtitle="Browse Projects">
+            <controls:Pane.TitleIcon>
                 <i:Icon Value="fa-wallet" />
-            </c:Pane.TitleIcon>
-        </c:Pane>
+            </controls:Pane.TitleIcon>
+        </controls:Pane>
 
-        <c:Pane>
-            <TextBox Watermark="Enter Angor project identifier">
-                <TextBox.InnerRightContent>
-                    <i:Icon Value="fa-magnifying-glass" Margin="10" />
-                </TextBox.InnerRightContent>
-            </TextBox>
-        </c:Pane>
+        <controls:Pane>
+           <lk:ProjectLookupView DataContext="{Binding ProjectLookupViewModel}" />
+        </controls:Pane>
 
-        <ItemsControl ItemsSource="{Binding Projects}" Margin="-20 -20">
+        <ItemsControl ItemsSource="{Binding Projects}" Margin="-15  0 -5 0">
             <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <c:Pane Margin="20" IsHeaderVisible="True"
-                            HeaderBackground="{Binding Picture}"
-                            HeaderIcon="{Binding Icon}"
-                            Title="{Binding Name}"
-                            Subtitle="{Binding ShortDescription}"
+                <DataTemplate DataType="browse:IProjectViewModel">
+                    <controls:Pane Margin="20" IsHeaderVisible="True" MaxHeight="600"
+                            HeaderBackground="{Binding Project.Picture}"
+                            HeaderIcon="{Binding Project.Icon}"
+                            Title="{Binding Project.Name}"
                             IsTitleVisible="True">
-                        <c:Pane.TitleIcon>
+                        <controls:Pane.TitleIcon>
                             <i:Icon Value="fa-wallet" FontSize="20" />
-                        </c:Pane.TitleIcon>
+                        </controls:Pane.TitleIcon>
                         <DockPanel>
-                            <StackPanel VerticalAlignment="Center" DockPanel.Dock="Bottom">
-                                <Separator Margin="0 10" />
-                                <c:IconButton Command="{Binding GoToDetails}" HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
-                                    <c:IconButton.Icon>
-                                        <i:Icon Value="fa-folder" />
-                                    </c:IconButton.Icon>
-                                </c:IconButton>
-                            </StackPanel>
+                            <controls:IconButton DockPanel.Dock="Bottom" Command="{Binding GoToDetails}" HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
+                                <controls:IconButton.Icon>
+                                    <i:Icon Value="fa-folder" />
+                                </controls:IconButton.Icon>
+                            </controls:IconButton>
+                            <Separator DockPanel.Dock="Bottom" Margin="0 10" />
+                            <TextBlock Margin="0 20" MaxLines="3" TextWrapping="Wrap" Text="{Binding Project.ShortDescription}" TextTrimming="CharacterEllipsis" />
                         </DockPanel>
-                    </c:Pane>
+                    </controls:Pane>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <WrapPanel ItemWidth="400" ItemHeight="400" />
+                    <UniformGrid Columns="4">
+                        <Interaction.Behaviors>
+                            <AdaptiveBehavior>
+                                <AdaptiveClassSetter MinWidth="0" MaxWidth="500" ClassName="Narrow" />
+                                <AdaptiveClassSetter MinWidth="500" MaxWidth="800" ClassName="Regular" />
+                                <AdaptiveClassSetter MinWidth="800" MaxWidth="1200" ClassName="Wide" />
+                                <AdaptiveClassSetter MinWidth="1600" MaxWidth="1800" ClassName="SuperWide" />
+                                <AdaptiveClassSetter MinWidth="1800" MaxWidth="Infinity" ClassName="Infinite" />
+                            </AdaptiveBehavior>
+                        </Interaction.Behaviors>
+                        <UniformGrid.Styles>
+                            <Style Selector="UniformGrid.Narrow">
+                                <Setter Property="Columns" Value="1" />
+                            </Style>
+                            <Style Selector="UniformGrid.Regular">
+                                <Setter Property="Columns" Value="2" />
+                            </Style>
+                            <Style Selector="UniformGrid.Wide">
+                                <Setter Property="Columns" Value="3" />
+                            </Style>
+                            <Style Selector="UniformGrid.SuperWide">
+                                <Setter Property="Columns" Value="4" />
+                            </Style>
+                            <Style Selector="UniformGrid.Infinite">
+                                <Setter Property="Columns" Value="5" />
+                            </Style>
+                        </UniformGrid.Styles>
+                    </UniformGrid>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
         </ItemsControl>
 
-        <c:IconButton Command="{Binding OpenHub}" Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="ANGOR HUB">
-            <c:IconButton.Icon>
+        <controls:IconButton Command="{Binding OpenHub}" Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="ANGOR HUB">
+            <controls:IconButton.Icon>
                 <i:Icon Value="fa-magnifying-glass" />
-            </c:IconButton.Icon>
-        </c:IconButton>
+            </controls:IconButton.Icon>
+        </controls:IconButton>
 
     </StackPanel>
 </UserControl>

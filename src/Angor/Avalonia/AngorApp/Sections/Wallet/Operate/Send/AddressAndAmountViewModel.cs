@@ -1,5 +1,5 @@
 using System.Reactive.Linq;
-using AngorApp.Model;
+using Angor.UI.Model;
 using AngorApp.Sections.Browse;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Extensions;
@@ -10,7 +10,7 @@ namespace AngorApp.Sections.Wallet.Operate.Send;
 public partial class AddressAndAmountViewModel : ReactiveValidationObject, IAddressAndAmountViewModel
 {
     [Reactive] private string? address = SampleData.TestNetBitcoinAddress;
-    [Reactive] private ulong? amount;
+    [Reactive] private long? amount;
 
     public AddressAndAmountViewModel(IWallet wallet)
     {

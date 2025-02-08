@@ -3,9 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:amount="clr-namespace:AngorApp.Sections.Browse.Details.Invest.Amount"
-             xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d"
              d:DesignWidth="500"
              x:Class="AngorApp.Sections.Browse.Details.Invest.Amount.AmountView" x:DataType="amount:IAmountViewModel">

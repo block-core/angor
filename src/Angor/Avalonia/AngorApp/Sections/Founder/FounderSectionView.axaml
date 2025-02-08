@@ -2,13 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:c="clr-namespace:AngorApp.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.FounderSectionView"
              xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
              xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
-             x:DataType="browse:IBrowseSectionViewModel" ClipToBounds="False">
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             x:DataType="browse:IBrowseSectionViewModel" >
 
     <Design.DataContext>
         <founder:FounderSectionViewModel />
@@ -34,25 +34,25 @@
 
     <StackPanel Spacing="20">
 
-        <c:Pane Title="Founder" IsTitleVisible="True" Subtitle="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required">
-            <c:Pane.TitleRightContent>
-                <c:IconButton DockPanel.Dock="Right" VerticalAlignment="Top">
+        <controls:Pane Title="Founder" IsTitleVisible="True" Subtitle="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required">
+            <controls:Pane.TitleRightContent>
+                <controls:IconButton DockPanel.Dock="Right" VerticalAlignment="Top">
                     CREATE PROJECT
-                    <c:IconButton.Icon>
+                    <controls:IconButton.Icon>
                         <i:Icon Value="fa-plus" FontSize="20" />
-                    </c:IconButton.Icon>
-                </c:IconButton>
-            </c:Pane.TitleRightContent>
-            <c:Pane.TitleIcon>
+                    </controls:IconButton.Icon>
+                </controls:IconButton>
+            </controls:Pane.TitleRightContent>
+            <controls:Pane.TitleIcon>
                 <i:Icon Value="fa-magnifying-glass" />
-            </c:Pane.TitleIcon>
-        </c:Pane>
+            </controls:Pane.TitleIcon>
+        </controls:Pane>
 
-        <c:IconButton Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="SCAN FOR FOUNDER PROJECTS">
-            <c:IconButton.Icon>
+        <controls:IconButton Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="SCAN FOR FOUNDER PROJECTS">
+            <controls:IconButton.Icon>
                 <i:Icon Value="fa-magnifying-glass" />
-            </c:IconButton.Icon>
-        </c:IconButton>
+            </controls:IconButton.Icon>
+        </controls:IconButton>
 
     </StackPanel>
 </UserControl>

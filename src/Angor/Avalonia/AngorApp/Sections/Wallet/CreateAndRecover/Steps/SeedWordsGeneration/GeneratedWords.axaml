@@ -7,8 +7,8 @@
              xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
              xmlns:seedWordsGeneration="clr-namespace:AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsGeneration"
              xmlns:av="https://github.com/projektanker/icons.avalonia"
-             xmlns:c="clr-namespace:AngorApp.Controls"
              xmlns:avalonia="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="500"
              x:Class="AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsGeneration.GeneratedWords"
              x:DataType="seedWordsGeneration:ISeedWordsViewModel">
@@ -21,27 +21,27 @@
         <StackPanel Spacing="">
 
             <Border Classes="Alert">
-                <c:List>
-                    <c:List.Header>
-                        <c:IconLabel Classes="Warning" Icon="fa-triangle-exclamation">Important Security Tips:</c:IconLabel>
-                    </c:List.Header>
+                <controls:List>
+                    <controls:List.Header>
+                        <controls:IconLabel Classes="Warning" Icon="fa-triangle-exclamation">Important Security Tips:</controls:IconLabel>
+                    </controls:List.Header>
                     <avalonia:Strings>
                         <x:String>Never share these words with anyone</x:String>
                         <x:String>Never enter these words on any website</x:String>
                         <x:String>Store them in a secure, offline location</x:String>
                         <x:String>Losing these words means losing access to your funds</x:String>
                     </avalonia:Strings>
-                </c:List>
+                </controls:List>
             </Border>
 
             <StackPanel Spacing="15">
                 <seedWordsGeneration:SeedWordsList SeedWords="{Binding Words.Value}" />
                 <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                    <c:IconButton HorizontalAlignment="Stretch" Content="Copy All" Command="{Binding Source={x:Static f:Commands.Instance}, Path=CopyText}" CommandParameter="{Binding Words.Value, Converter={x:Static converters:StringConverters.AsString}}">
-                        <c:IconButton.Icon>
+                    <controls:IconButton HorizontalAlignment="Stretch" Content="Copy All" Command="{Binding Source={x:Static f:Commands.Instance}, Path=CopyText}" CommandParameter="{Binding Words.Value, Converter={x:Static converters:StringConverters.AsString}}">
+                        <controls:IconButton.Icon>
                             <av:Icon Value="fa-copy" />
-                        </c:IconButton.Icon>
-                    </c:IconButton>
+                        </controls:IconButton.Icon>
+                    </controls:IconButton>
                     <Button Command="{Binding GenerateWords}" Content="Generate New" HorizontalAlignment="Stretch"  />
                 </StackPanel>
             </StackPanel>

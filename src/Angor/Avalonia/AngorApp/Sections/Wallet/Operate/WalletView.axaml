@@ -3,10 +3,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             xmlns:controls="clr-namespace:AngorApp.Controls"
              xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="800"
-             x:Class="AngorApp.Sections.Wallet.Operate.WalletView" ClipToBounds="False" x:DataType="operate:IWalletViewModel">
+             x:Class="AngorApp.Sections.Wallet.Operate.WalletView"  x:DataType="operate:IWalletViewModel">
 
     <Design.DataContext>
         <operate:WalletViewModelDesign />
