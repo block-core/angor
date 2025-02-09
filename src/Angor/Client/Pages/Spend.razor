@@ -35,14 +35,14 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-<div class="row mb-4 slide-up">
+<div class="row slide-in">
     <div class="card card-body hover-effect">
         <div class="d-flex align-items-center justify-content-between flex-wrap">
             <div class="d-flex col-auto my-auto align-items-center">
                 <span class="user-select-none animate-rotate">
                     <Icon IconName="spend" Height="42" Width="42"/>
                 </span>
-                <div class="h-100 ms-3">
+                <div class="ms-3">
                     <h5 class="mb-0 font-weight-bolder animate-fade-in">
                         Founder Stage Claim
                     </h5>
@@ -62,7 +62,7 @@
     </div>
 </div>
 
-<div class="animate-fade-in">
+<div class="slide-in mt-4">
 
     @if (firstTimeRefreshSpinner && refreshSpinner)
     {
