@@ -36,7 +36,7 @@
         <div class="d-flex align-items-center justify-content-between flex-wrap">
             <div class="d-flex col-auto my-auto align-items-center">
                 <span class="user-select-none">
-                    <Icon IconName="portfolio" Height="42" Width="42" />
+                    <Icon IconName="portfolio" Height="42" Width="42"/>
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
@@ -63,11 +63,10 @@
 </div>
 
 
-
 <div class="mt-4">
 
-    <NotificationComponent @ref="notificationComponent" />
-    <PasswordComponent @ref="passwordComponent" />
+    <NotificationComponent @ref="notificationComponent"/>
+    <PasswordComponent @ref="passwordComponent"/>
 
     <!-- Summary Statistics -->
     <div class="row g-4 mb-4">
@@ -75,7 +74,7 @@
             <div class="card feature-box py-0 text-white">
                 <div class="card-body text-center">
                     <span class="user-select-none animate-rotate">
-                        <Icon IconName="founder" Height="42" Width="42" />
+                        <Icon IconName="founder" Height="42" Width="42"/>
                     </span>
                     <h5 class="card-title mt-4">Funded Projects</h5>
                     <p class="card-text">@TotalFundedProjects</p>
@@ -86,7 +85,7 @@
             <div class="card feature-box py-0 text-white">
                 <div class="card-body text-center">
                     <span class="user-select-none animate-rotate">
-                        <Icon IconName="btc" Height="42" Width="42" />
+                        <Icon IconName="btc" Height="42" Width="42"/>
                     </span>
                     <h5 class="card-title mt-4">Total invested</h5>
                     <p class="card-text">@Money.Satoshis(TotalInvested).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -97,7 +96,7 @@
             <div class="card feature-box py-0 text-white">
                 <div class="card-body text-center">
                     <span class="user-select-none animate-rotate">
-                        <Icon IconName="wallet" Height="42" Width="42" />
+                        <Icon IconName="wallet" Height="42" Width="42"/>
                     </span>
                     <h5 class="card-title mt-4">Wallet</h5>
                     <p class="card-text">@Money.Satoshis(TotalWallet).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -108,7 +107,7 @@
             <div class="card feature-box py-0 text-white">
                 <div class="card-body text-center">
                     <span class="user-select-none animate-rotate">
-                        <Icon IconName="recovery" Height="42" Width="42" />
+                        <Icon IconName="recovery" Height="42" Width="42"/>
                     </span>
                     <h5 class="card-title mt-4">In Recovery</h5>
                     <p class="card-text">@Money.Satoshis(TotalInRecovery).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
@@ -146,7 +145,6 @@
 
                         <div class="col">
 
-          
 
                             <div class="card card-body">
                                 <div class="d-flex align-items-center">
@@ -197,11 +195,11 @@
                                                     <Icon IconName="clock-square" Width="24" Height="24"></Icon>
                                                 </i>
                                             </a>
-                                         }     
+                                        }
                                         <strong>@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
 
                                     </div>
-           
+
                                 </div>
 
                                 <div class="mb-3 d-flex justify-content-between">
@@ -237,7 +235,6 @@
                                 </div>
                             </div>
 
-            
 
                         </div>
                     }
@@ -250,6 +247,7 @@
 
 
 </div>
+
 @code {
 
     bool RefreshBalanceTriggered;
@@ -332,7 +330,6 @@
 
             await RefreshBalance();
         }
-
     }
 
     private Task HandleSignatureReceivedAsync(string nostrPubKey, string signatureContent)
@@ -374,7 +371,7 @@
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage(ex.Message,ex);
+            notificationComponent.ShowErrorMessage(ex.Message, ex);
         }
     }
 
@@ -396,6 +393,7 @@
         }
 
         RefreshBalanceTriggered = true;
+
         var words = await passwordComponent.GetWalletAsync();
         var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1);
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
@@ -405,15 +403,36 @@
 
         var rootNostrPubKeyHex = _DerivationOperations.DeriveNostrPubKey(words, 0);
 
+        // Fetch encrypted messages from the relay
         await _RelayService.LookupDirectMessagesForPubKeyAsync(NostrDMPrivateKey.PubKey.ToHex()[2..], null, 1,
             async x =>
             {
                 try
                 {
+                    if (string.IsNullOrEmpty(x.Content))
+                    {
+                        _Logger.LogWarning("Received empty content from relay.");
+                        return;
+                    }
+
+                    // Decrypt the content
                     var decryptedString = await _encryptionService.DecryptNostrContentAsync(
                         NostrDMPrivateKeyHex, rootNostrPubKeyHex, x.Content);
 
+                    if (string.IsNullOrWhiteSpace(decryptedString))
+                    {
+                        _Logger.LogError("Decryption resulted in an empty string. Possible key mismatch.");
+                        return;
+                    }
+
+                    // Deserialize the decrypted JSON
                     var projectIdList = serializer.Deserialize<Investments>(decryptedString);
+
+                    if (projectIdList == null || projectIdList.ProjectIdentifiers == null)
+                    {
+                        _Logger.LogError("Deserialization failed: Received null or empty investment list.");
+                        return;
+                    }
 
                     bool foundNewProjects = false;
                     foreach (var investment in projectIdList.ProjectIdentifiers)
@@ -426,6 +445,7 @@
                         foundNewProjects = true;
                     }
 
+                    // If new projects were found, refresh UI and state
                     if (foundNewProjects)
                     {
                         addedProjectsFromEvent = true;
@@ -435,7 +455,7 @@
                 }
                 catch (Exception e)
                 {
-                    _Logger.LogError(e, "failed to get handle investment list event from relay");
+                    _Logger.LogError(e, "Failed to retrieve and decrypt investment list from relay");
                 }
             }, rootNostrPubKeyHex);
 
@@ -446,7 +466,7 @@
         }
     }
 
-    
+
     //TODO David check if we should replace the logic to get all projects first and then get signatures for them?
     private void FetchProjectsData(params string[] eventIds)
     {
@@ -466,22 +486,34 @@
                     (projectNpub, metadata) =>
                     {
                         var project = projects.FirstOrDefault(x => x.ProjectInfo.NostrPubKey == projectNpub);
-                        if (project is { Metadata: null }) { project.Metadata = metadata; }
-                    }, 
+                        if (project is { Metadata: null })
+                        {
+                            project.Metadata = metadata;
+                        }
+                    },
                     () =>
                     {
                         if (eventIds.Length != projects.Count)
                         {
                             notificationComponent.ShowErrorMessage("Unable to pull the information for all projects invested (try adding relays)");
                         }
+
                         StateHasChanged();
                     },
                     projects.Select(x => x.ProjectInfo.NostrPubKey).ToArray());
-            },eventIds);
+            }, eventIds);
     }
-    
+
     private async Task GetInvestmentProjectDataAsync(InvestmentState investmentState)
     {
+        
+        if (investmentState == null || string.IsNullOrEmpty(investmentState.ProjectIdentifier))
+        {
+            _Logger.LogError("Investment state is null or missing ProjectIdentifier.");
+            return;
+        }
+        
+        
         var projectIndexerData = await _IndexerService.GetProjectByIdAsync(investmentState.ProjectIdentifier);
 
         if (projectIndexerData == null)
@@ -511,6 +543,12 @@
             {
                 if (investorProject.ProjectInfo == null)
                 {
+                    if (string.IsNullOrEmpty(x.Content))
+                    {
+                        _Logger.LogError("Received empty content from relay.");
+                        return;
+                    }
+
                     investorProject.ProjectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ?? 
                                                   throw new Exception("The project info must be in the application specific data event");
                 }
@@ -568,4 +606,5 @@
     {
         NavigationManager.NavigateTo("/penalties");
     }
+
 }
