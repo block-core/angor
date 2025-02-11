@@ -76,7 +76,7 @@
     }
     else
     {
-        @if (!founderProject.TargetInvestmentReached() && founderProject.ProjectHasStarted())
+        @if (totalInvestedAmount <= founderProject.ProjectInfo.TargetAmount && founderProject.ProjectHasStarted())
         {
             <div class="alert alert-warning" role="alert">
                 <h4 class="alert-heading">Target Not Reached</h4>
@@ -475,6 +475,7 @@
     private bool spendSpinner = false;
 
     long totalAvailableInvestedAmount = 0;
+    long totalInvestedAmount = 0;
     int totalInvestedTransactions = 0;
     long totalSpentAmount = 0;
     int totalSpentTransactions = 0;
@@ -539,17 +540,20 @@
         totalSpentAmount = 0;
         totalSpentTransactions = 0;
         currentWithdrawableAmount = 0;
+        totalInvestedAmount = 0;
 
         foreach (var stage in stageDatas)
         {
             var stageIsActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
             var totalStageTransactions = stage.Items.Count();
+            var investedAmount = stage.Items.Sum(c => c.Amount);
             var availableInvestedAmount = stage.Items.Where(c => !c.IsSpent).Sum(c => c.Amount);
             var spentStageAmount = stage.Items.Where(c => c.IsSpent).Sum(c => c.Amount);
             var spentStageTransactions = stage.Items.Count(c => c.IsSpent);
             var daysUntilRelease = (stage.Stage.ReleaseDate - DateTime.UtcNow).Days;
             var stageReleasePercentage = stage.Stage.AmountToRelease;
 
+            totalInvestedAmount += investedAmount;
             totalAvailableInvestedAmount += availableInvestedAmount;
             totalInvestedTransactions += totalStageTransactions;
             totalSpentAmount += spentStageAmount;
@@ -559,12 +563,6 @@
             {
                 currentWithdrawableAmount += availableInvestedAmount;
             }
-        }
-
-        if (totalAvailableInvestedAmount != founderProject.TotalAvailableInvestedAmount)
-        {
-            founderProject.TotalAvailableInvestedAmount = totalAvailableInvestedAmount;
-            storage.UpdateFounderProject(founderProject);
         }
     }
 
@@ -709,7 +707,7 @@
 
     protected async Task ClaimCoinsCheckPassword(int stageId)
     {
-        if (!founderProject.TargetInvestmentReached())
+        if (totalInvestedAmount <= founderProject.ProjectInfo.TargetAmount)
         {
             notificationComponent.ShowErrorMessage("Target investment amount has not been reached, you can only release the funds back to the investors");
             return;
