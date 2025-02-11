@@ -8,21 +8,23 @@ public class MainViewModelDesign : IMainViewModel
     {
         Sections =
         [
-            new Section("Home", () => new HomeSectionViewModelDesign(), "svg:/Assets/angor-icon.svg"),
+            Section.Create("Home", () => new HomeSectionViewModelDesign(), "svg:/Assets/angor-icon.svg"),
             new Separator(),
-            new Section("Wallet", null, "fa-wallet"),
-            new Section("Browse", null, "fa-magnifying-glass"),
-            new Section("Portfolio", null, "fa-hand-holding-dollar"),
-            new Section("Founder", null, "fa-money-bills"),
+            Section.Create("Wallet", () => new object(), "fa-wallet"),
+            Section.Create("Browse", () => new object(), "fa-magnifying-glass"),
+            Section.Create("Portfolio", () => new object(), "fa-hand-holding-dollar"),
+            Section.Create("Founder", () => new object(), "fa-money-bills"),
             new Separator(),
-            new Section("Settings", null, "fa-gear"),
-            new CommandSection("Angor Hub", null , "fa-magnifying-glass") { IsPrimary = false }
+            Section.Create("Settings", () => new object(), "fa-gear"),
+            new CommandSection("Angor Hub", ReactiveCommand.Create(() => { }), "fa-magnifying-glass")
+                { IsPrimary = false }
         ];
     }
 
     public ReactiveCommand<Unit, Unit> OpenHub { get; }
     public IEnumerable<SectionBase> Sections { get; }
-    public Section SelectedSection { get; set; }
+    public IContentSection SelectedSection { get; set; }
+
     public void GoToSection(string sectionName)
     {
     }

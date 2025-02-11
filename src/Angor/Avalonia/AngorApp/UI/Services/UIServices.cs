@@ -2,7 +2,7 @@ using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Services;
 using Zafiro.UI;
 
-namespace AngorApp.Services;
+namespace AngorApp.UI.Services;
 
 public class UIServices
 {
@@ -11,7 +11,8 @@ public class UIServices
     public INotificationService NotificationService { get; }
     public IActiveWallet ActiveWallet { get; }
 
-    public UIServices(ILauncherService launcherService, IDialog dialog, INotificationService notificationService, IActiveWallet activeWallet)
+    public UIServices(ILauncherService launcherService, IDialog dialog, INotificationService notificationService,
+        IActiveWallet activeWallet)
     {
         LauncherService = launcherService;
         Dialog = dialog;

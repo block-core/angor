@@ -1,7 +1,7 @@
 using System.Reactive.Linq;
 using Angor.UI.Model;
 using AngorApp.Sections.Browse.ProjectLookup;
-using AngorApp.Services;
+using AngorApp.UI.Services;
 using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Controls.Navigation;
@@ -16,16 +16,18 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
 
     [ObservableAsProperty] private IList<IProjectViewModel>? projects;
 
-    public BrowseSectionViewModel(IWalletProvider walletProvider, IProjectService projectService, INavigator navigator, UIServices uiServices)
+    public BrowseSectionViewModel(IWalletProvider walletProvider, IProjectService projectService, INavigator navigator,
+        UIServices uiServices)
     {
         ProjectLookupViewModel = new ProjectLookupViewModel(projectService, walletProvider, navigator, uiServices);
-        
+
         LoadLatestProjects = ReactiveCommand.CreateFromObservable(() => Observable.FromAsync(projectService.Latest)
             .Flatten()
             .Select(IProjectViewModel (project) => new ProjectViewModel(walletProvider, project, navigator, uiServices))
             .ToList());
 
-        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io")));
+        OpenHub = ReactiveCommand.CreateFromTask(() =>
+            uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io")));
         projectsHelper = LoadLatestProjects.ToProperty(this, x => x.Projects);
         LoadLatestProjects.Execute().Subscribe();
     }

@@ -17,7 +17,6 @@
         <x:Double x:Key="CollapsedWidth">85</x:Double>
         <x:Double x:Key="ExpandedWidth">200</x:Double>
         <x:TimeSpan x:Key="ExpandToggleDuration">0:0:0.2</x:TimeSpan>
-        <SolidColorBrush x:Key="SystemControlHighlightAccentBrush" Color="{StaticResource Level3}" />
     </UserControl.Resources>
 
     <UserControl.Styles>
@@ -33,7 +32,7 @@
         </Style>
         <Style Selector="controls|Pane">
             <Setter Property="Width" Value="{StaticResource CollapsedWidth}" />
-            <Setter Property="Padding" Value="10"></Setter>
+            <Setter Property="Padding" Value="10" />
             <Setter Property="Transitions">
                 <Setter.Value>
                     <Transitions>
@@ -70,14 +69,17 @@
             </ListBox.ItemsPanel>
 
             <ListBox.DataTemplates>
-                <DataTemplate DataType="shell:Section">
+                <DataTemplate DataType="shell:IContentSection">
                     <DockPanel Margin="8">
-                        <ContentControl Margin="10 0 10 0" Content="{Binding Icon, Converter={x:Static controls:MiscConverters.StringToIcon}}" />
+                        <ContentControl Margin="10 0 10 0"
+                                        Content="{Binding Icon, Converter={x:Static controls:MiscConverters.StringToIcon}}" />
                         <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
                     </DockPanel>
                 </DataTemplate>
                 <DataTemplate DataType="shell:CommandSection">
-                    <controls:IconButton Command="{Binding Command}" Background="Transparent" HorizontalAlignment="Stretch" Icon="{Binding Icon, Converter={x:Static controls:MiscConverters.StringToIcon}}">
+                    <controls:IconButton Command="{Binding Command}" Background="Transparent"
+                                         HorizontalAlignment="Stretch"
+                                         Icon="{Binding Icon, Converter={x:Static controls:MiscConverters.StringToIcon}}">
                         <controls:IconButton.Content>
                             <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
                         </controls:IconButton.Content>
@@ -88,16 +90,19 @@
                 </DataTemplate>
             </ListBox.DataTemplates>
 
-                <ListBox.ItemContainerTheme>
-                    <ControlTheme x:DataType="shell:SectionBase" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
-                        <Setter Property="CornerRadius" Value="10" />
-                        <Setter Property="Margin" Value="2" />
-                        <Setter Property="Padding" Value="0" />
-                        <Setter Property="DockPanel.Dock" Value="{Binding IsPrimary, Converter={x:Static controls:MiscConverters.IsPrimaryToDock}}" />
-                        <Setter Property="IsHitTestVisible" Value="{Binding Converter={x:Static controls:MiscConverters.IsActivatable}}" />
-                    </ControlTheme>
-                </ListBox.ItemContainerTheme>
-            </ListBox>
+            <ListBox.ItemContainerTheme>
+                <ControlTheme x:DataType="shell:SectionBase" TargetType="ListBoxItem"
+                              BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                    <Setter Property="CornerRadius" Value="10" />
+                    <Setter Property="Margin" Value="2" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="DockPanel.Dock"
+                            Value="{Binding IsPrimary, Converter={x:Static controls:MiscConverters.IsPrimaryToDock}}" />
+                    <Setter Property="IsHitTestVisible"
+                            Value="{Binding Converter={x:Static controls:MiscConverters.IsActivatable}}" />
+                </ControlTheme>
+            </ListBox.ItemContainerTheme>
+        </ListBox>
 
     </controls:Pane>
 

@@ -8,7 +8,6 @@ public class LoggerConfig
 {
     public static ILoggerFactory CreateFactory()
     {
-        // Configurar Serilog
         var logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
@@ -17,10 +16,8 @@ public class LoggerConfig
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
 
-        // Crear el factory
         var factory = new LoggerFactory();
         
-        // Agregar Serilog al factory
         factory.AddSerilog(logger);
 
         return factory;
