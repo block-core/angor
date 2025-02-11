@@ -1,8 +1,9 @@
 using System.Reactive.Linq;
 using Angor.UI.Model;
-using AngorApp.Sections.Browse;
+using AngorApp.Core;
 using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
+using SampleData = AngorApp.Sections.Browse.SampleData;
 
 namespace AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsGeneration;
 
@@ -13,7 +14,7 @@ public partial class SeedWordsViewModelDesign : ReactiveObject, ISeedWordsViewMo
     public IObservable<bool> IsBusy { get; } = Observable.Return(false);
     public bool AutoAdvance => false; 
     
-    [Reactive] private Maybe<SeedWords> words = Maybe<SeedWords>.None;
+    [Reactive] private SafeMaybe<SeedWords> words = new(Maybe<SeedWords>.None);
 
     public bool HasWords
     {
@@ -25,11 +26,11 @@ public partial class SeedWordsViewModelDesign : ReactiveObject, ISeedWordsViewMo
 
             if (value)
             {
-                Words = SampleData.Seedwords.AsMaybe();                
+                Words = SampleData.Seedwords.AsSafeMaybe();                
             }
             else
             {
-                Words = Maybe<SeedWords>.None;
+                Words = Maybe<SeedWords>.None.AsSafeMaybe();
             }
 
             hasWords = value;
@@ -38,6 +39,6 @@ public partial class SeedWordsViewModelDesign : ReactiveObject, ISeedWordsViewMo
         }
     }
 
-    public ReactiveCommand<Unit, Maybe<SeedWords>> GenerateWords { get; }
+    public ReactiveCommand<Unit, SafeMaybe<SeedWords>> GenerateWords { get; }
     [Reactive] private bool areWordsWrittenDown;
 }
