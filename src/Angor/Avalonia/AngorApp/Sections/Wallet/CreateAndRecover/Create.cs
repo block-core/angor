@@ -34,7 +34,7 @@ public class Create
             .Then(prev => new SeedWordsConfirmationViewModel(prev.Words.Value))
             .Then(prev => new PassphraseCreateViewModel(prev.SeedWords))
             .Then(prev => new EncryptionPasswordViewModel(prev.SeedWords, prev.Passphrase!))
-            .Then(prev => new SummaryAndCreationViewModel(prev.Passphrase, prev.SeedWords, prev.Password!, walletBuilder)
+            .Then(prev => new SummaryAndCreationViewModel(prev.Passphrase, prev.SeedWords, prev.Password!, walletBuilder, uiServices)
             {
                  IsRecovery = false,
             })

@@ -1,8 +1,8 @@
 namespace AngorApp.Sections.Shell;
 
-public class Section(string name, object viewModel, object? icon = null) : SectionBase
+public class Section(string name, Func<object> getViewModel, object? icon = null) : SectionBase
 {
     public string Name { get; } = name;
-    public object ViewModel { get; } = viewModel;
+    public Func<object> GetViewModel { get; } = getViewModel;
     public object? Icon { get; } = icon;
 }
