@@ -1,6 +1,8 @@
 ﻿using System.Reactive.Linq;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using Newtonsoft.Json;
+using Nostr.Client.Json;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 using Nostr.Client.Requests;
@@ -244,16 +246,24 @@ namespace Angor.Client.Services
 
             _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
 
-            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilterWithSubject
             {
                 Authors = new[] { projectNostrPubKey }, // From founder
                 Kinds = new[] { NostrKind.EncryptedDm },
-              }));
+                //Subject =  "Release transaction signatures"
+            }));
         }
 
         public void CloseConnection()
         {
             _subscriptionsHanding.Dispose();
         }
+    }
+    
+    public class NostrFilterWithSubject : NostrFilter
+    {
+        /// <summary>A list of subjects to filter by, corresponding to the "subject" tag</summary>
+        [JsonProperty("#subject")]
+        public string? Subject { get; set; }
     }
 }
