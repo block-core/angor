@@ -16,11 +16,9 @@ public class HomeSectionViewModel(
 
     public bool IsWalletSetup => activeWallet.Current.HasValue;
 
-    public ICommand GoToWalletSection { get; } =
-        ReactiveCommand.Create(() => getMainViewModel().GoToSection("Wallet"), activeWallet.HasWallet);
+    public ICommand GoToWalletSection { get; } = ReactiveCommand.Create(() => getMainViewModel().GoToSection("Wallet"), activeWallet.HasWallet);
 
     public ICommand GoToFounderSection { get; }
 
-    public ICommand OpenHub { get; } =
-        ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(Constants.AngorHubUri));
+    public ICommand OpenHub { get; } = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(Constants.AngorHubUri));
 }

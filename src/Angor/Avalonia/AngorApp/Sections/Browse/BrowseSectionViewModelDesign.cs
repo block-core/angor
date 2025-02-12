@@ -10,8 +10,7 @@ public class BrowseSectionViewModelDesign : IBrowseSectionViewModel
 {
     public BrowseSectionViewModelDesign()
     {
-        Projects = SampleData.GetProjects().Select(IProjectViewModel (project) => new ProjectViewModelDesign(project))
-            .ToList();
+        Projects = SampleData.GetProjects().Select(IProjectViewModel (project) => new ProjectViewModelDesign(project)).ToList();
     }
 
     public IList<IProjectViewModel> Projects { get; }
