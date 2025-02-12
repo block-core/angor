@@ -1,4 +1,4 @@
-namespace AngorApp.Sections.Shell;
+namespace AngorApp.Sections.Shell.Sections;
 
 public class SectionBase
 {

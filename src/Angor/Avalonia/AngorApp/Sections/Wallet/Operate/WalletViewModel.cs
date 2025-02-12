@@ -2,8 +2,8 @@ using System.Windows.Input;
 using Angor.UI.Model;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Wallet.Operate.Send;
-using AngorApp.Services;
 using AngorApp.UI.Controls.Common.Success;
+using AngorApp.UI.Services;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
 using TransactionPreviewViewModel = AngorApp.UI.Controls.Common.TransactionPreview.TransactionPreviewViewModel;
@@ -17,7 +17,8 @@ public class WalletViewModel(IWallet wallet, UIServices uiServices) : ReactiveOb
     public ICommand Send => ReactiveCommand.CreateFromTask<bool>(() =>
     {
         var wizard = WizardBuilder.StartWith(() => new AddressAndAmountViewModel(wallet))
-            .Then(model => new TransactionPreviewViewModel(wallet, new Destination("Test", model.Amount!.Value, SampleData.TestNetBitcoinAddress), uiServices))
+            .Then(model => new TransactionPreviewViewModel(wallet,
+                new Destination("Test", model.Amount!.Value, SampleData.TestNetBitcoinAddress), uiServices))
             .Then(_ => new SuccessViewModel("Transaction sent!", "Success"))
             .Build();
 

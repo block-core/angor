@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using Angor.UI.Model;
-using AngorApp.Services;
+using AngorApp.UI.Services;
 using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;
@@ -16,7 +16,8 @@ public partial class SummaryAndCreationViewModel : ReactiveValidationObject, ISt
     private readonly UIServices uiServices;
     [ObservableAsProperty] private IWallet? wallet;
 
-    public SummaryAndCreationViewModel(Maybe<string> passphrase, SeedWords seedwords, string encryptionKey, IWalletBuilder walletBuilder, UIServices uiServices)
+    public SummaryAndCreationViewModel(Maybe<string> passphrase, SeedWords seedwords, string encryptionKey,
+        IWalletBuilder walletBuilder, UIServices uiServices)
     {
         this.walletBuilder = walletBuilder;
         this.uiServices = uiServices;
@@ -24,7 +25,7 @@ public partial class SummaryAndCreationViewModel : ReactiveValidationObject, ISt
         CreateWallet = ReactiveCommand.CreateFromTask(() => CreateAndSet(seedwords, encryptionKey, encryptionKey));
         walletHelper = CreateWallet.Successes().ToProperty(this, x => x.Wallet);
     }
-    
+
     private Task<Result<IWallet>> CreateAndSet(SeedWords seedwords, Maybe<string> passphrase, string encryptionKey)
     {
         return walletBuilder.Create(seedwords, passphrase, encryptionKey)
@@ -33,10 +34,15 @@ public partial class SummaryAndCreationViewModel : ReactiveValidationObject, ISt
 
     public string CreateWalletText => IsRecovery ? "Recover Wallet" : "Create Wallet";
     public string CreatingWalletText => IsRecovery ? "Recovering Wallet..." : "Creating Wallet...";
-    public string TitleText => IsRecovery ? "You are all set to recover your wallet" : "You are all set to create your wallet";
+
+    public string TitleText =>
+        IsRecovery ? "You are all set to recover your wallet" : "You are all set to create your wallet";
+
     public required bool IsRecovery { get; init; }
-    
-    public IObservable<bool> IsValid => this.WhenAnyValue<SummaryAndCreationViewModel, IWallet>(x => x.Wallet).NotNull();
+
+    public IObservable<bool> IsValid =>
+        this.WhenAnyValue<SummaryAndCreationViewModel, IWallet>(x => x.Wallet).NotNull();
+
     public IObservable<bool> IsBusy => CreateWallet.IsExecuting;
     public bool AutoAdvance => true;
     public ReactiveCommand<Unit, Result<IWallet>> CreateWallet { get; }

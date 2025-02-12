@@ -4,7 +4,7 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using Angor.UI.Model;
 using AngorApp.Core;
-using AngorApp.Services;
+using AngorApp.UI.Services;
 using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using Serilog;
@@ -29,7 +29,7 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
         UIServices uiServices)
     {
         lookupResults = new SafeMaybe<IList<IProjectViewModel>>(Maybe<IList<IProjectViewModel>>.None);
-        
+
         Lookup = ReactiveCommand.CreateFromTask<string, SafeMaybe<IList<IProjectViewModel>>>(
             async pid =>
             {
@@ -54,9 +54,11 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
             .Do(pid => Log.Debug("Search for ProjectId {ProjectId}", pid))
             .InvokeCommand(Lookup!);
 
-        this.WhenAnyValue(x => x.LookupResults).Select(x => x.Maybe).Values().Do(x => SelectedProject = x.FirstOrDefault()).Subscribe();
+        this.WhenAnyValue(x => x.LookupResults).Select(x => x.Maybe).Values()
+            .Do(x => SelectedProject = x.FirstOrDefault()).Subscribe();
 
-        goToSelectedProjectHelper = this.WhenAnyValue(x => x.SelectedProject!.GoToDetails).ToProperty(this, x => x.GoToSelectedProject);
+        goToSelectedProjectHelper = this.WhenAnyValue(x => x.SelectedProject!.GoToDetails)
+            .ToProperty(this, x => x.GoToSelectedProject);
     }
 
     public ReactiveCommand<string, SafeMaybe<IList<IProjectViewModel>>> Lookup { get; }

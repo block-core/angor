@@ -2,7 +2,6 @@ using System.Linq;
 using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
-using AngorApp.Services;
 using CSharpFunctionalExtensions;
 
 namespace AngorApp.Sections.Browse;
