@@ -397,9 +397,8 @@
         var words = await passwordComponent.GetWalletAsync();
         var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1);
         var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
-        var NostrDMPubkey = _DerivationOperations.DeriveNostrPubKey(words, 1);
 
-        CheckSignatureFromFounder();
+        CheckSignatureFromFounder(); // TODO: Itai - Check if we need to check for new signatures before fetching our investments
 
         var rootNostrPubKeyHex = _DerivationOperations.DeriveNostrPubKey(words, 0);
 
@@ -418,7 +417,7 @@
                     // Decrypt the content
                     var decryptedString = await _encryptionService.DecryptNostrContentAsync(
                         NostrDMPrivateKeyHex, rootNostrPubKeyHex, x.Content);
-
+                    Console.WriteLine(decryptedString);                   
                     if (string.IsNullOrWhiteSpace(decryptedString))
                     {
                         _Logger.LogError("Decryption resulted in an empty string. Possible key mismatch.");
@@ -559,6 +558,7 @@
                     (_, metadata) => { investorProject.Metadata ??= metadata; },
                     () =>
                     {
+                        // TODO: David :) Should we pull this data now on or the recover page at the point when the investor wants to bail out? 
                         _SignService.LookupInvestmentRequestsAsync(investorProject.ProjectInfo.NostrPubKey, investorProject.InvestorNPub, null,
                             (id, publisherPubKey, content, eventTime) =>
                             {
