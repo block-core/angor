@@ -850,7 +850,7 @@ else
             {
                 ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
                 InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
-                ReleaseAddress = releaseAddress
+                UnfundedReleaseAddress = releaseAddress
             };
 
             var sigJson = serializer.Serialize(signRecoveryRequest);

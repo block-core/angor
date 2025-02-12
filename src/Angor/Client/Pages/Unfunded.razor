@@ -569,7 +569,7 @@
         try
         {
             var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex);
-            var signatureInfo = CreateReleaseSignatures(signature.SignRecoveryRequest?.InvestmentTransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()), signature.SignRecoveryRequest?.ReleaseAddress ?? signature.SignRecoveryRequest.ReleaseKey);
+            var signatureInfo = CreateReleaseSignatures(signature.SignRecoveryRequest?.InvestmentTransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()), signature.SignRecoveryRequest?.UnfundedReleaseAddress ?? signature.SignRecoveryRequest.UnfundedReleaseKey);
 
             var sigJson = serializer.Serialize(signatureInfo);
 
