@@ -4,10 +4,11 @@ using AngorApp.Sections.Founder;
 using AngorApp.Sections.Home;
 using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Shell;
+using AngorApp.Sections.Shell.Sections;
 using AngorApp.Sections.Wallet;
 using AngorApp.UI.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Separator = AngorApp.Sections.Shell.Separator;
+using Separator = AngorApp.Sections.Shell.Sections.Separator;
 
 namespace AngorApp.Composition;
 

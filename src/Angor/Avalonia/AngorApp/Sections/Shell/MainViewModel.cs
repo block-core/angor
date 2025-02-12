@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Reactive.Linq;
 using AngorApp.Core;
+using AngorApp.Sections.Shell.Sections;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 

@@ -1,4 +1,5 @@
 using AngorApp.Sections.Shell;
+using AngorApp.Sections.Shell.Sections;
 
 namespace AngorApp.Composition;
 

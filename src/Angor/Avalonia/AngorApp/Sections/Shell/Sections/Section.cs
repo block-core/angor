@@ -1,6 +1,4 @@
-using Zafiro.UI;
-
-namespace AngorApp.Sections.Shell;
+namespace AngorApp.Sections.Shell.Sections;
 
 public class Section<T>(string name, Func<T> getViewModel, object? icon = null) : SectionBase, IContentSection
 {
@@ -18,11 +16,4 @@ public class Section
     {
         return new Section<T>(name, getViewModel, icon);
     }
-}
-
-public interface IContentSection
-{
-    public string Name { get; }
-    public Func<object?> GetViewModel { get; }
-    public object? Icon { get; }
 }

@@ -1,12 +1,13 @@
 using System.Diagnostics;
 using AngorApp.Sections.Shell;
+using AngorApp.Sections.Shell.Sections;
 using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Svg;
 using Humanizer;
 using Projektanker.Icons.Avalonia;
 using Zafiro.Mixins;
-using Separator = AngorApp.Sections.Shell.Separator;
+using Separator = AngorApp.Sections.Shell.Sections.Separator;
 
 namespace AngorApp.UI.Controls;
 

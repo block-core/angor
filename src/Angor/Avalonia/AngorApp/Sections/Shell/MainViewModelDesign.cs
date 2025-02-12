@@ -1,4 +1,6 @@
 using AngorApp.Sections.Home;
+using AngorApp.Sections.Shell.Sections;
+using Separator = AngorApp.Sections.Shell.Sections.Separator;
 
 namespace AngorApp.Sections.Shell;
 
