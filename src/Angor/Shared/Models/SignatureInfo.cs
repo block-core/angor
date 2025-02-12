@@ -10,5 +10,11 @@ public class SignatureInfo
     /// <summary>
     /// Specify whether this a release or recovery signature type.
     /// </summary>
-    public string SignatureType { get; set; }
+    public SignatureInfoType SignatureType { get; set; }
+}
+
+public enum SignatureInfoType
+{
+    Release,
+    Recovery
 }

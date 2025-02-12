@@ -560,7 +560,7 @@
         if (!InvestorTransactionActions.CheckInvestorRecoverySignatures(info, investorTrx, sig))
             throw new InvalidOperationException();
 
-        sig.SignatureType = "recover";
+        sig.SignatureType = SignatureInfoType.Recovery;
 
         return sig;
     }

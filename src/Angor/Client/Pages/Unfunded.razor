@@ -600,7 +600,7 @@
         if (!InvestorTransactionActions.CheckInvestorUnfundedReleaseSignatures(info, investorTrx, sig, investorReleaseAddress))
            throw new InvalidOperationException();
 
-        sig.SignatureType = "release";
+        sig.SignatureType = SignatureInfoType.Release;
 
         return sig;
     }

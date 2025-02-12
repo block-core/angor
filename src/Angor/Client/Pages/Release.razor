@@ -287,7 +287,7 @@
 
                         InvestorReleaseSigInfo = serializer.Deserialize<SignatureInfo>(signatureJson);
 
-                        if (InvestorReleaseSigInfo?.SignatureType != "release")
+                        if (InvestorReleaseSigInfo?.SignatureType != SignatureInfoType.Release)
                         {
                             notificationComponent.ShowErrorMessage("Incorrect signature types received");
                             Logger.LogError("Incorrect signature types received");
