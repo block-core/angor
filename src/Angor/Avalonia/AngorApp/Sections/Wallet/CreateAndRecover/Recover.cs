@@ -33,7 +33,7 @@ namespace AngorApp.Sections.Wallet.CreateAndRecover
                 .Then(_ => new RecoverySeedWordsViewModel())
                 .Then(seedwords => new PassphraseRecoverViewModel(seedwords.SeedWords))
                 .Then(passphrase => new EncryptionPasswordViewModel(passphrase.SeedWords, passphrase.Passphrase!))
-                .Then(passphrase => new SummaryAndCreationViewModel(passphrase.Passphrase, passphrase.SeedWords, passphrase.Password!, walletBuilder)
+                .Then(passphrase => new SummaryAndCreationViewModel(passphrase.Passphrase, passphrase.SeedWords, passphrase.Password!, walletBuilder, uiServices)
                 {
                     IsRecovery = true
                 })

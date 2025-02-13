@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using AngorApp.Core;
 using CSharpFunctionalExtensions;
 
 namespace AngorApp.Sections.Browse.ProjectLookup;
@@ -9,7 +10,7 @@ public interface IProjectLookupViewModel
     public IProjectViewModel SelectedProject { get; set; }
     public IObservable<bool> IsBusy { get; }
 
-    ReactiveCommand<string, Maybe<IList<IProjectViewModel>>> Lookup { get; }
-    Maybe<IList<IProjectViewModel>> LookupResults { get; }
+    ReactiveCommand<string, SafeMaybe<IList<IProjectViewModel>>> Lookup { get; }
+    SafeMaybe<IList<IProjectViewModel>> LookupResults { get; }
     public ICommand GoToSelectedProject { get; }
 }

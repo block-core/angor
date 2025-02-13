@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Angor.UI.Model;
+using AngorApp.Core;
 using AngorApp.Services;
 using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
@@ -16,7 +17,7 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
 {
     [ObservableAsProperty] private ICommand? goToSelectedProject;
 
-    [ObservableAsProperty] private Maybe<IList<IProjectViewModel>> lookupResults;
+    [ObservableAsProperty] private SafeMaybe<IList<IProjectViewModel>> lookupResults;
 
     [Reactive] private string? projectId;
     [Reactive] private IProjectViewModel? selectedProject;
@@ -27,7 +28,9 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
         INavigator navigator,
         UIServices uiServices)
     {
-        Lookup = ReactiveCommand.CreateFromTask<string, Maybe<IList<IProjectViewModel>>>(
+        lookupResults = new SafeMaybe<IList<IProjectViewModel>>(Maybe<IList<IProjectViewModel>>.None);
+        
+        Lookup = ReactiveCommand.CreateFromTask<string, SafeMaybe<IList<IProjectViewModel>>>(
             async pid =>
             {
                 var maybeProject = await projectService.FindById(pid);
@@ -37,7 +40,7 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
                 {
                     var vm = new ProjectViewModel(walletProvider, project, navigator, uiServices);
                     return new List<IProjectViewModel> { vm };
-                });
+                }).AsSafeMaybe();
             }
         );
 
@@ -51,12 +54,12 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
             .Do(pid => Log.Debug("Search for ProjectId {ProjectId}", pid))
             .InvokeCommand(Lookup!);
 
-        this.WhenAnyValue(x => x.LookupResults).Values().Do(x => SelectedProject = x.FirstOrDefault()).Subscribe();
+        this.WhenAnyValue(x => x.LookupResults).Select(x => x.Maybe).Values().Do(x => SelectedProject = x.FirstOrDefault()).Subscribe();
 
         goToSelectedProjectHelper = this.WhenAnyValue(x => x.SelectedProject!.GoToDetails).ToProperty(this, x => x.GoToSelectedProject);
     }
 
-    public ReactiveCommand<string, Maybe<IList<IProjectViewModel>>> Lookup { get; }
+    public ReactiveCommand<string, SafeMaybe<IList<IProjectViewModel>>> Lookup { get; }
 
     public IObservable<bool> IsBusy { get; }
 }
