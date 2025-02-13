@@ -693,29 +693,28 @@ else
         if (Investment.IsSeeder)
         {
             bool isTestnet = network.NetworkType == NetworkType.Testnet;
-            long maxInvestmentAmount = isTestnet ? long.MaxValue : Money.Satoshis(0.1m) ; // 0.1 BTC for mainnet, unlimited for testnet
-            long minInvestmentAmount = Money.Satoshis(0.001m) ; // Minimum investment for all networks
-            long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+            decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.1m; // 0.1 BTC for mainnet, unlimited for testnet
+            decimal minInvestmentBtc = 0.001m; // Minimum investment for all networks
 
-            if (Investment.InvestmentAmountBtc < minInvestmentAmount)
+            if (Investment.InvestmentAmountBtc < minInvestmentBtc)
             {
-                notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minInvestmentAmount} BTC was not reached");
+                notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minInvestmentBtc} BTC was not reached");
                 return;
             }
 
-            if (investmentAmount > maxInvestmentAmount)
+            if (Investment.InvestmentAmountBtc > maxInvestmentBtc)
             {
-                notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentAmount} BTC on the mainnet");
+                notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentBtc} BTC on the mainnet");
                 return;
             }
         }
         else
         {
-            long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+            decimal minInvestmentBtc = 0.001m;
 
-            if (investmentAmount < Money.Satoshis(0.001m))
+            if (Investment.InvestmentAmountBtc < minInvestmentBtc)
             {
-                notificationComponent.ShowErrorMessage($"Investor minimum investment amount is {0.001} BTC");
+                notificationComponent.ShowErrorMessage($"Investor minimum investment amount is {minInvestmentBtc} BTC");
                 return;
             }
         }

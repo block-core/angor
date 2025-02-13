@@ -169,10 +169,10 @@ else
     public string ProjectIdentifier { get; set; }
 
     public FounderProject FounderProject { get; set; }
-    private List<SignatureRequest> signaturesRequests = new();
+    private List<SignatureItem> signaturesRequests = new();
 
 
-    private Dictionary<SignatureRequest, string> signaturesRequestsApproving = new();
+    private Dictionary<SignatureItem, string> signaturesRequestsApproving = new();
 
     bool messagesReceived;
     bool scanedForApprovals;
@@ -349,7 +349,7 @@ else
 
                 messagesReceived = true;
 
-                var signatureRequest = new SignatureRequest
+                var SignatureItem = new SignatureItem
                     {
                         investorNostrPubKey = investorNostrPubKey,
                         TimeArrived = timeArrived,
@@ -357,7 +357,7 @@ else
                         EventId = eventId
                     };
 
-                signaturesRequests.Add(signatureRequest);
+                signaturesRequests.Add(SignatureItem);
                 Logger.LogDebug($"Added to pendingSignatures");
             },
             () =>
@@ -425,7 +425,7 @@ else
             });
     }
 
-    protected async Task ApproveSignatureCheckPassword(SignatureRequest signature)
+    protected async Task ApproveSignatureCheckPassword(SignatureItem signature)
     {
         if (passwordComponent.HasPassword())
         {
@@ -440,7 +440,7 @@ else
         }
     }
 
-    private async Task ApproveSignature(SignatureRequest signature)
+    private async Task ApproveSignature(SignatureItem signature)
     {
         signaturesRequestsApproving.Add(signature, string.Empty);
         StateHasChanged();
@@ -516,7 +516,7 @@ else
         StateHasChanged();
     }
 
-    private async Task<OperationResult> PerformSignatureApproval(SignatureRequest signature, WalletWords words)
+    private async Task<OperationResult> PerformSignatureApproval(SignatureItem signature, WalletWords words)
     {
         try
         {
@@ -560,7 +560,7 @@ else
         return sig;
     }
 
-    public class SignatureRequest
+    public class SignatureItem
     {
         public string investorNostrPubKey { get; set; }
 
