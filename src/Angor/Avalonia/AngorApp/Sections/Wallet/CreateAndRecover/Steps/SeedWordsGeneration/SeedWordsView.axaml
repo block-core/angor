@@ -13,7 +13,7 @@
 
     <Panel>
         <seedWordsGeneration:Empty IsVisible="{Binding Words.HasNoValue}" />
-        <!-- <seedWordsGeneration:GeneratedWords IsVisible="{Binding Words.HasValue}" /> -->
+        <seedWordsGeneration:GeneratedWords IsVisible="{Binding Words.HasValue}" />
     </Panel>
 
 </UserControl>
