@@ -1,3 +1,4 @@
+using AngorApp.Composition.Registrations;
 using AngorApp.Sections.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,10 +10,10 @@ public static class CompositionRoot
     {
         var services = new ServiceCollection();
 
-        services
-            .AddUIServices(topLevelView)
-            .AddUIModelServices()
-            .AddViewModels();
+        AngorServices.Register(services);
+        ModelServices.Register(services);
+        ViewModels.Register(services);
+        UIServices.Register(services, topLevelView);
 
         var serviceProvider = services.BuildServiceProvider();
         return serviceProvider.GetRequiredService<IMainViewModel>();
