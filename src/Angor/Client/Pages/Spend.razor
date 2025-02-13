@@ -75,7 +75,15 @@
     </div>
 }
 else
-{
+    {       
+        @if (totalInvestedAmount <= founderProject.ProjectInfo.TargetAmount && founderProject.ProjectHasStarted())
+        {
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">Target Not Reached</h4>
+                <p>The target investment amount has not been reached, as founder you can only release the funds back to the investors.</p>
+                <button class="btn btn-primary" @onclick="ReleaseFundsToInvestors">Release Funds to Investors</button>
+            </div>
+        }
     <div class="card card-body slide-up">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h5 class="card-title d-flex align-items-center">

@@ -1031,10 +1031,9 @@ else
                                 .Select(x => new InvestmentState
                                 {
                                     ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
-                                    investorPubKey = x.InvestorPublicKey,
+                                    InvestorPubKey = x.InvestorPublicKey,
                                     InvestmentTransactionHash = x.TransactionId,
-                                    ReleaseAddress = x.UnfundedReleaseAddress,
-
+                                    UnfundedReleaseAddress = x.UnfundedReleaseAddress,
                                 })
                                 .ToList()
             };
