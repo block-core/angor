@@ -172,7 +172,7 @@
                             <i class="me-2">
                                 <Icon IconName="balance" />
                             </i>
-                            <p class="card-text ms-2">Target Amount: <b>@project.ProjectInfo.TargetAmount @network.CoinTicker</b></p>
+                            <p class="card-text ms-2">Target Amount: <b>@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</b></p>
                         </div>
                         <div class="form-control mt-1 d-flex align-items-center">
                             <i class="me-2">
@@ -771,8 +771,7 @@
                     }
 
                     // Calculate funding progress as a percentage of the target amount
-                    var targetSat = Money.Coins(project.ProjectInfo.TargetAmount).Satoshi;
-                    projectStats.FundingProgressPercent = (int)(projectStats.TotalRaised * 100 / targetSat);
+                    projectStats.FundingProgressPercent = (int)(projectStats.TotalRaised * 100 / project.ProjectInfo.TargetAmount);
                 }
             }
         }

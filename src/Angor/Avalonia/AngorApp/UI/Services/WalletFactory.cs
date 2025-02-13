@@ -3,7 +3,7 @@ using Angor.UI.Model;
 using AngorApp.Sections.Wallet.CreateAndRecover;
 using CSharpFunctionalExtensions;
 
-namespace AngorApp.Services;
+namespace AngorApp.UI.Services;
 
 public class WalletFactory : IWalletFactory
 {

@@ -1,6 +1,6 @@
 using System.Reactive.Linq;
 using Angor.UI.Model;
-using AngorApp.Services;
+using AngorApp.UI.Services;
 using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;
@@ -18,9 +18,12 @@ public partial class TransactionPreviewViewModel : ReactiveValidationObject, ITr
     public TransactionPreviewViewModel(IWallet wallet, Destination destination, UIServices services)
     {
         Destination = destination;
-        CreateTransaction = ReactiveCommand.CreateFromTask<Result<IUnsignedTransaction>>(() => wallet.CreateTransaction(destination.Amount, destination.BitcoinAddress, Feerate));
+        CreateTransaction = ReactiveCommand.CreateFromTask<Result<IUnsignedTransaction>>(() =>
+            wallet.CreateTransaction(destination.Amount, destination.BitcoinAddress, Feerate));
         transactionHelper = CreateTransaction.Successes().ToProperty(this, x => x.Transaction);
-        Confirm = ReactiveCommand.CreateFromTask<Result<IBroadcastedTransaction>>(() => Transaction!.Broadcast(), this.WhenAnyValue<TransactionPreviewViewModel, IUnsignedTransaction>(x => x.Transaction).Null().CombineLatest(CreateTransaction.IsExecuting, (a, b) => !a && !b));
+        Confirm = ReactiveCommand.CreateFromTask<Result<IBroadcastedTransaction>>(() => Transaction!.Broadcast(),
+            this.WhenAnyValue<TransactionPreviewViewModel, IUnsignedTransaction>(x => x.Transaction).Null()
+                .CombineLatest(CreateTransaction.IsExecuting, (a, b) => !a && !b));
         TransactionConfirmed = Confirm.Successes().Select(_ => true).StartWith(false);
         IsBusy = CreateTransaction.IsExecuting.CombineLatest(Confirm.IsExecuting, (a, b) => a | b);
 

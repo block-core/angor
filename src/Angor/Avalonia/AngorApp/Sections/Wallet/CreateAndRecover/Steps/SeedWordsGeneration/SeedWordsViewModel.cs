@@ -2,7 +2,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Angor.UI.Model;
 using AngorApp.Core;
-using AngorApp.Services;
+using AngorApp.UI.Services;
 using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;

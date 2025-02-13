@@ -5,6 +5,7 @@
 @using Angor.Client.Storage
 @using Angor.Shared
 @using Angor.Shared.Models
+@using Angor.Shared.Utilities
 @using Blockcore.NBitcoin
 @using Blockcore.Networks
 @inherits BaseComponent
@@ -730,7 +731,7 @@ else
                                     </span>
                                 </div>
                                 <div class="modal-body modal-body-scroll">
-                                    <p>Are you sure you want to send @_sendInfo.SendAmount to @_sendInfo.SendToAddress?</p>
+                                    <p>Are you sure you want to send @_sendInfo.SendAmount.ToUnitBtc() @network.CoinTicker to @_sendInfo.SendToAddress?</p>
                                     <p>Fees: @_sendInfo.SendFee</p>
 
                                     <div class="mb-3">
@@ -1358,7 +1359,7 @@ else
     {
         // refresh fee if last refresh was 60 seconds ago
 
-        if (_sendInfo.FeeRateSat == 0 || _lastFeeRefresh.AddSeconds(60) < DateTime.UtcNow)
+        if (_sendInfo.FeeRate == 0 || _lastFeeRefresh.AddSeconds(60) < DateTime.UtcNow)
         {
             var fees = await _walletOperations.GetFeeEstimationAsync();
 
@@ -1371,7 +1372,7 @@ else
             if (feeItem != null)
             {
                 _sendInfo.FeeBlockCount = feeItem.Confirmations;
-                _sendInfo.FeeRateSat = feeItem.FeeRate;
+                _sendInfo.FeeRate = feeItem.FeeRate;
             }
 
             _lastFeeRefresh = DateTime.UtcNow;
@@ -1433,7 +1434,7 @@ else
             FeePosition = 1;
 
             _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
-            _sendInfo.FeeRateSat = estimationsFee.FeeRate;
+            _sendInfo.FeeRate = estimationsFee.FeeRate;
 
             if (string.IsNullOrEmpty(_sendInfo.ChangeAddress))
             {
@@ -1537,7 +1538,7 @@ else
                     var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
                     _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
-                    _sendInfo.FeeRateSat = estimationsFee.FeeRate;
+                    _sendInfo.FeeRate = estimationsFee.FeeRate;
                     var accountInfo = storage.GetAccountInfo(network.Name);
 
                     _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);

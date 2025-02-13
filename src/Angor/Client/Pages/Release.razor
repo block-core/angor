@@ -1,0 +1,454 @@
+﻿@page "/release/{ProjectIdentifier}"
+@using Angor.Shared
+@using Angor.Client.Storage
+@using Angor.Shared.Models
+@using Angor.Shared.ProtocolNew
+@using Angor.Client.Models
+@using Blockcore.NBitcoin
+@using Blockcore.NBitcoin.DataEncoders
+@using Angor.Shared.Services
+@using System.Security.Cryptography
+@using Blockcore.Consensus.TransactionInfo
+
+@inject ILogger<Release> Logger
+@inject IDerivationOperations DerivationOperations
+@inject IClientStorage Storage;
+@inject ISignService SignService
+@inject IInvestorTransactionActions InvestorTransactionActions
+@inject IFounderTransactionActions FounderTransactionActions
+@inject ISerializer serializer
+@inject IEncryptionService encryption
+@inject IIndexerService _IndexerService
+@inject IWalletOperations _WalletOperations
+@inject IWalletUIService _walletUIService;
+
+@inherits BaseComponent
+
+<NotificationComponent @ref="notificationComponent" />
+<PasswordComponent @ref="passwordComponent" />
+
+@if (!hasWallet)
+{
+    NavigationManager.NavigateTo($"/wallet");
+    return;
+}
+
+<div class="row">
+    <div class="card card-body">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex col-auto my-auto align-items-center">
+                <span class="user-select-none">
+                    <Icon IconName="signature" Height="42" Width="42" />
+                </span>
+                <div class="h-100 ms-3 flex-grow-1">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Claim released funds without a penalty
+                    </h5>
+
+                </div>
+            </div>
+        </div>
+        <p class="mb-0 font-weight-normal text-sm d-flex mt-4">
+            Project ID:
+            <span id="transactionID" class="text-dynamic ms-1">@ProjectIdentifier</span>
+        </p>
+    </div>
+</div>
+
+<div class="card mt-4 text-center animate-fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+        <h4 class="mb-0">Waiting for the founder to approve</h4>
+        <div class="d-flex mt-2 mt-md-0">
+            <button class="btn btn-border animate-scale" @onclick="FetchInvestorCheckPassword" disabled="@refreshSpinner">
+                @if (refreshSpinner)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    <span>Refreshing...</span>
+                }
+                else
+                {
+                    <Icon IconName="refresh" Width="20" Height="20" class="me-1" />
+                    <span>Refresh</span>
+                }
+            </button>
+        </div>
+    </div>
+    
+    @if (InvestorProject.UnfundedReleaseTransactionId != null)
+    {
+        <p style="margin-bottom: 20px;">
+            Transaction ID: <span id="transactionID">@InvestorProject.UnfundedReleaseTransactionId</span> |
+            <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
+        </p>
+
+        <p class="modal-title">
+            Coin have already been release .
+        </p>
+    }
+    else
+    {
+        @if (InvestorReleaseSigInfo == null)
+        {
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <div class="loader-slow"></div>
+            </div>
+        }
+        else
+        {
+            <p class="modal-title">
+                The founder has signed a transaction that allows the investor to take back the coins without a penalty, you may claim back your coins.
+            </p>
+            @if (totalInvested != null)
+            {
+                <p class="modal-title">
+                    Total coins to claim is @Money.Satoshis(totalInvested.Value).ToUnit(MoneyUnit.BTC) @network.CoinTicker 
+                </p>
+            }
+            <br/>
+            <button class="btn btn-sm btn-border ml-2" @onclick="ClaimInvestorCoinsPasswordAsync" disabled="@claimCoinSpinner">
+                @if (claimCoinSpinner)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Claiming coins...</span>
+                }
+                else
+                {
+                    <span>Claim coins</span>
+                }
+            </button>
+        }
+    }
+</div>
+    
+@if (showReleaseModal)
+{
+    <div class="modal-wrapper">
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Recovery Confirmation</h5>
+                        <button type="button" class="btn-close" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner"></button>
+                    </div>
+                    <div class="modal-body modal-body-scroll">
+
+                        <p class="mb-1">Claim back your investment without a penalty </p>
+
+                        <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(releaseTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="ReleaseInvestorFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                        </div>
+
+                        <hr>
+
+                        <p class="mt-3">Are you sure you want to claim back these funds?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-border" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">Cancel</button>
+                        <button type="button" class="btn btn-border" @onclick="ReleaseInvestorCoins" disabled="@prepareToReleaseCoinsConfirmSpinner">
+                            @if (prepareToReleaseCoinsConfirmSpinner)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Confirming...</span>
+                            }
+                            else
+                            {
+                                <span>Confirm</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string ProjectIdentifier { get; set; }
+
+    public InvestorProject InvestorProject { get; set; }
+
+    public SignatureInfo? InvestorReleaseSigInfo;
+
+    private FeeData feeData = new();
+
+    bool prepareToReleaseCoinsConfirmSpinner = false;
+    private Transaction? unsignedReleaseTransaction;
+    private TransactionInfo? releaseTransaction;
+
+    ProjectStats? projectStats;
+
+    private bool showReleaseModal = false;
+    private bool claimCoinSpinner = false;
+    private bool refreshSpinner = false;
+
+    private long? totalInvested = null;
+    string signedTransactionHex;
+    string explorerLink;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (hasWallet)
+        {
+            InvestorProject = Storage.GetInvestmentProjects().FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier);
+
+            if (InvestorProject is null)
+            {
+                throw new ArgumentException("The project is not founder or investor");
+            }
+
+            if (InvestorProject.UnfundedReleaseTransactionId != null)
+            {
+                explorerLink = _networkConfiguration.GetExplorerUrl().Url + $"/transaction/{InvestorProject.UnfundedReleaseTransactionId}";
+            }
+
+            signedTransactionHex = InvestorProject.SignedTransactionHex;
+
+            if (signedTransactionHex is null)
+            {
+                signedTransactionHex = await _IndexerService.GetTransactionHexByIdAsync(InvestorProject.TransactionId);
+            }
+
+            var investmentTransaction = _networkConfiguration.GetNetwork().CreateTransaction(signedTransactionHex);
+            totalInvested = investmentTransaction.Outputs.Skip(2).Take(InvestorProject.ProjectInfo.Stages.Count).Sum(_ => _.Value);
+
+            projectStats = await _IndexerService.GetProjectStatsAsync(ProjectIdentifier);
+
+            Logger.LogInformation($"Fetching project stats  stats AmountInvested = {projectStats?.AmountInvested} InvestorCount = {projectStats?.InvestorCount}");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (hasWallet)
+            {
+                await FetchInvestorCheckPassword();
+            }
+        }
+    }
+
+    protected async Task FetchInvestorCheckPassword()
+    {
+        if (passwordComponent.HasPassword())
+        {
+            await FetchInvestorReleaseSignatures();
+        }
+        else
+        {
+            passwordComponent.ShowPassword(FetchInvestorReleaseSignatures);
+        }
+    }
+
+    protected async Task FetchInvestorReleaseSignatures()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            notificationComponent.ShowErrorMessage("no wallet password");
+            return;
+        }
+
+        refreshSpinner = true;
+        StateHasChanged();
+
+        var words = await passwordComponent.GetWalletAsync();
+        var nostrPrivateKey = DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, InvestorProject.ProjectInfo.ProjectIdentifier);
+        var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+
+        SignService.LookupReleaseSigs(
+            InvestorProject.InvestorNPub,
+            InvestorProject.ProjectInfo.NostrPubKey,
+            null,
+            InvestorProject.SignaturesInfo.SignatureRequestEventId,
+            signatureContent =>
+            {
+                Logger.LogInformation($"LookupReleaseSigs received a message {signatureContent}");
+
+                if (InvestorReleaseSigInfo == null)
+                {
+                    Logger.LogInformation($"InvestorReleaseSigInfo is null");
+
+                    // if we already decrypted the message from another relay just ignore it
+
+                    InvokeAsync(async () =>
+                    {
+                        Logger.LogInformation($"decrypting");
+
+                        var signatureJson = await encryption.DecryptNostrContentAsync(
+                            nostrPrivateKeyHex, InvestorProject.ProjectInfo.NostrPubKey, signatureContent);
+
+                        Logger.LogInformation("signature : " + signatureJson);
+
+                        InvestorReleaseSigInfo = serializer.Deserialize<SignatureInfo>(signatureJson);
+
+                        if (InvestorReleaseSigInfo?.SignatureType != SignatureInfoType.Release)
+                        {
+                            notificationComponent.ShowErrorMessage("Incorrect signature types received");
+                            Logger.LogError("Incorrect signature types received");
+                            InvestorReleaseSigInfo = null;
+                        }
+                      
+                        StateHasChanged();
+
+                    });
+                }
+            }, () =>
+            {
+                refreshSpinner = false;
+                StateHasChanged();
+            });
+    }
+
+    private async Task ClaimInvestorCoinsPasswordAsync()
+    {
+        if (passwordComponent.HasPassword())
+        {
+            await PrepareToReleaseInvestorCoinsAsync();
+        }
+        else
+        {
+            passwordComponent.ShowPassword(async () =>
+            {
+                await PrepareToReleaseInvestorCoinsAsync();
+            });
+        }
+    }
+
+    private async Task PrepareToReleaseInvestorCoinsAsync()
+    {
+        claimCoinSpinner = true;
+        StateHasChanged();
+        await Task.Delay(10);
+
+        try
+        {
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+
+            var accountInfo = Storage.GetAccountInfo(network.Name);
+            var words = await passwordComponent.GetWalletAsync();
+
+            var investorPrivateKey = DerivationOperations.DeriveInvestorPrivateKey(words, InvestorProject.ProjectInfo.FounderKey);
+
+            if (signedTransactionHex is null)
+            {
+                if (InvestorProject.SignedTransactionHex != null)
+                {
+                    signedTransactionHex = InvestorProject.SignedTransactionHex;
+                }
+                else
+                {
+                    signedTransactionHex = await _IndexerService.GetTransactionHexByIdAsync(InvestorProject.TransactionId);
+                }
+            }
+
+            var investmentTransaction = _networkConfiguration.GetNetwork().CreateTransaction(signedTransactionHex);
+
+            // Sign the release transaction
+            unsignedReleaseTransaction = InvestorTransactionActions.AddSignaturesToUnfundedReleaseFundsTransaction(InvestorProject.ProjectInfo, investmentTransaction, InvestorReleaseSigInfo, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), InvestorProject.UnfundedReleaseAddress);
+
+            // Validate the signatures
+            var sigCheckResult = InvestorTransactionActions.CheckInvestorUnfundedReleaseSignatures(InvestorProject.ProjectInfo, investmentTransaction, InvestorReleaseSigInfo, InvestorProject.UnfundedReleaseAddress);
+
+            if (!sigCheckResult)
+                throw new Exception("Failed to validate signatures");
+
+            // add fee to the recovery trx
+            releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedReleaseTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+
+            explorerLink = _networkConfiguration.GetExplorerUrl().Url + $"/transaction/{InvestorProject.UnfundedReleaseTransactionId}";
+
+            Logger.LogInformation($"recoveryTransaction={releaseTransaction.Transaction.GetHash().ToString()}");
+
+            showReleaseModal = true;
+        }
+        catch (Exception e)
+        {
+            notificationComponent.ShowErrorMessage(e.Message, e);
+        }
+        finally
+        {
+            claimCoinSpinner = false;
+        }
+    }
+
+    private async Task ReleaseInvestorFeeRangeChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+
+        if (selected != null)
+        {
+            if (int.TryParse(selected, out int res))
+            {
+                if (res <= feeData.FeeEstimations.Fees.Count)
+                {
+                    if (!passwordComponent.HasPassword())
+                    {
+                        showReleaseModal = false;
+                        notificationComponent.ShowErrorMessage("Wallet password expired");
+                        return;
+                    }
+
+                    var words = await passwordComponent.GetWalletAsync();
+
+                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+
+                    var accountInfo = Storage.GetAccountInfo(network.Name);
+
+                    releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedReleaseTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task ReleaseInvestorCoins()
+    {
+        prepareToReleaseCoinsConfirmSpinner = true;
+        StateHasChanged();
+        await Task.Delay(10);
+
+        try
+        {
+            showReleaseModal = false;
+
+            Storage.UpdateInvestmentProject(InvestorProject);
+
+            var response = await _WalletOperations.PublishTransactionAsync(network, releaseTransaction.Transaction);
+
+            if (!response.Success)
+            {
+                notificationComponent.ShowErrorMessage(response.Message);
+                return;
+            }
+
+            InvestorProject.UnfundedReleaseTransactionId = releaseTransaction.Transaction.GetHash().ToString();
+
+            Storage.UpdateInvestmentProject(InvestorProject);
+
+            _walletUIService.AddTransactionToPending(releaseTransaction.Transaction);
+
+            notificationComponent.ShowNotificationMessage("Done", 1);
+        }
+        catch (Exception e)
+        {
+            notificationComponent.ShowErrorMessage(e.Message, e);
+        }
+        finally
+        {
+            prepareToReleaseCoinsConfirmSpinner = false;
+            passwordComponent.ClearPassword();
+        }
+
+        StateHasChanged();
+    }
+}

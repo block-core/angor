@@ -1,7 +1,7 @@
 using Angor.UI.Model;
 using CSharpFunctionalExtensions;
 
-namespace AngorApp.Services;
+namespace AngorApp.UI.Services;
 
 public interface IActiveWallet
 {

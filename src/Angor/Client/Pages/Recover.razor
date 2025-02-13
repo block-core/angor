@@ -20,6 +20,8 @@
 @inject IWalletOperations _WalletOperations
 @inject IInvestorTransactionActions _InvestorTransactionActions
 @inject ILogger<Recover> Logger;
+@inject IWalletUIService _walletUIService;
+@inject ISignService SignService
 @inject ICurrencyService _currencyService
 
 
@@ -78,56 +80,63 @@
         {
             <div class="d-flex justify-content-between">
                 <div>
-                    @if (!refreshSpinner)
+                    @if (releaseSigsfound)
                     {
-                        @if (StageInfo.CanRelease)
+                        <button class="btn btn-border me-2 btn-primary" @onclick="NavigatetoReleaseSigs">Target not met go to Release Funds</button>
+                    }
+                    else
+                    {
+                        @if (!refreshSpinner)
                         {
-                            <p>Total funds in penalty = @(Money.Satoshis(StageInfo.TotalInPenalty).ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
-                        }
+                            @if (StageInfo.CanRelease)
+                            {
+                                <p>Total funds in penalty = @(Money.Satoshis(StageInfo.TotalInPenalty).ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
+                            }
 
-                        @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
-                        {
-                            <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
-                                @if (PrepareToRecoverCoinsModalSpinner)
-                                {
-                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Recover Funds...</span>
-                                }
-                                else
-                                {
-                                    <span>Recover Funds</span>
-                                }
-                            </button>
-                        }
+                            @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
+                            {
+                                <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
+                                    @if (PrepareToRecoverCoinsModalSpinner)
+                                    {
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Recover Funds...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Recover Funds</span>
+                                    }
+                                </button>
+                            }
 
-                        @if (StageInfo.CanRelease)
-                        {
-                            <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
-                                @if (PrepareToReleaseCoinsModalSpinner)
-                                {
-                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Release Funds...</span>
-                                }
-                                else
-                                {
-                                    <span>Release Funds</span>
-                                }
-                            </button>
-                        }
+                            @if (StageInfo.CanRelease)
+                            {
+                                <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
+                                    @if (PrepareToReleaseCoinsModalSpinner)
+                                    {
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Release Funds...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Release Funds</span>
+                                    }
+                                </button>
+                            }
 
-                        @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
-                        {
-                            <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
-                                @if (PrepareEndOfProjectCoinsModalSpinner)
-                                {
-                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>End of project...</span>
-                                }
-                                else
-                                {
-                                    <span>End of project</span>
-                                }
-                            </button>
+                            @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
+                            {
+                                <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
+                                    @if (PrepareEndOfProjectCoinsModalSpinner)
+                                    {
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>End of project...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>End of project</span>
+                                    }
+                                </button>
+                            }
                         }
                     }
                 </div>
@@ -385,6 +394,8 @@
     private TransactionInfo? releaseRecoveryTransaction;
     private TransactionInfo? endOfProjectTransaction;
 
+    private bool releaseSigsfound = false;
+
     StageData StageInfo = new();
     string explorerLink;
 
@@ -443,6 +454,8 @@
 
         try
         {
+            CheckReleaseSignatures();
+
             await FindInvestments();
 
             await CheckSpentFund();
@@ -459,6 +472,20 @@
 
         StateHasChanged();
         await Task.Delay(10);
+    }
+
+    protected void CheckReleaseSignatures()
+    {
+        SignService.LookupReleaseSigs(
+            project.InvestorNPub,
+            project.ProjectInfo.NostrPubKey,
+            null,
+            project.SignaturesInfo?.SignatureRequestEventId!,
+            _ =>
+            {
+                releaseSigsfound = true;
+                StateHasChanged();
+            }, () => {});
     }
 
     private async Task FindInvestments()
@@ -572,49 +599,57 @@
             {
                 item.IsSpent = true;
 
-                if (output.SpentInTransaction == project.RecoveryTransactionId)
+                if (output.SpentInTransaction == project.UnfundedReleaseTransactionId)
                 {
-                    if (!string.IsNullOrEmpty(project.RecoveryReleaseTransactionId))
-                    {
-                        item.SpentTo = "Recovered after penalty";
-                        item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Unknown };
-                    }
-                    else
-                    {
-                        item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty };
-                        var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
-                        item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
-                    }
+                    item.SpentTo = "Project Unfunded, Spent back to investor";
+                    item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorNoPenalty };
                 }
                 else
                 {
-                    // try to resolve the destination
-                    var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
-
-                    var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == StageInfo.TransactionInfo.TransactionId && input.InputIndex == item.Outputindex);
-
-                    if (input != null && investmentTransaction != null)
+                    if (output.SpentInTransaction == project.RecoveryTransactionId)
                     {
-                        item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project.ProjectInfo, investmentTransaction, item.StageIndex, input.WitScript);
-
-                        switch (item.ProjectScriptType.ScriptType)
+                        if (!string.IsNullOrEmpty(project.RecoveryReleaseTransactionId))
                         {
-                            case ProjectScriptTypeEnum.Founder:
+                            item.SpentTo = "Recovered after penalty";
+                            item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Unknown };
+                        }
+                        else
+                        {
+                            item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty };
+                            var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                            item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
+                        }
+                    }
+                    else
+                    {
+                        // try to resolve the destination
+                        var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+
+                        var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == StageInfo.TransactionInfo.TransactionId && input.InputIndex == item.Outputindex);
+
+                        if (input != null && investmentTransaction != null)
+                        {
+                            item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project.ProjectInfo, investmentTransaction, item.StageIndex, input.WitScript);
+
+                            switch (item.ProjectScriptType.ScriptType)
                             {
-                                item.SpentTo = "Spent by founder";
-                                break;
-                            }
-                            case ProjectScriptTypeEnum.InvestorWithPenalty:
-                            {
-                                var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
-                                item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
-                                break;
-                            }
-                            case ProjectScriptTypeEnum.EndOfProject:
-                            case ProjectScriptTypeEnum.InvestorNoPenalty:
-                            {
-                                item.SpentTo = $"Spent by investor";
-                                break;
+                                case ProjectScriptTypeEnum.Founder:
+                                {
+                                    item.SpentTo = "Spent by founder";
+                                    break;
+                                }
+                                case ProjectScriptTypeEnum.InvestorWithPenalty:
+                                {
+                                    var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                                    item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
+                                    break;
+                                }
+                                case ProjectScriptTypeEnum.EndOfProject:
+                                case ProjectScriptTypeEnum.InvestorNoPenalty:
+                                {
+                                    item.SpentTo = $"Spent by investor";
+                                    break;
+                                }
                             }
                         }
                     }
@@ -627,20 +662,6 @@
         StageInfo.CanRelease = (StageInfo.Items.Any(a => a.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && DateTime.UtcNow > penaltyExpieryDate);
         StageInfo.TotalInPenalty = StageInfo.Items.Where(t => t.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty).Sum(t => t.Amount);
         StageInfo.EndOfProject = project.ProjectInfo.ExpiryDate < DateTime.Now;
-    }
-
-    private void AddTransactionToPending(Transaction transaction)
-    {
-        var accountInfo = storage.GetAccountInfo(network.Name);
-        var unconfirmedInbound = _cacheStorage.GetUnconfirmedInboundFunds();
-        var unconfirmedOutbound = _cacheStorage.GetUnconfirmedOutboundFunds();
-
-        unconfirmedInbound.AddRange(_WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, transaction));
-        unconfirmedOutbound.AddRange(transaction.Inputs.Select(_ => new Outpoint(_.PrevOut.Hash.ToString(), (int)_.PrevOut.N)));
-
-        storage.SetAccountInfo(network.Name, accountInfo);
-        _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInbound);
-        _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
     }
 
     private async Task PrepareToRecoverCoinsCheckPassword()
@@ -768,7 +789,7 @@
 
             storage.UpdateInvestmentProject(project);
 
-            AddTransactionToPending(recoveryTransaction.Transaction);
+            _walletUIService.AddTransactionToPending(recoveryTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
         }
@@ -896,7 +917,7 @@
             project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.Transaction.GetHash().ToString();
             storage.UpdateInvestmentProject(project);
 
-            AddTransactionToPending(releaseRecoveryTransaction.Transaction);
+            _walletUIService.AddTransactionToPending(releaseRecoveryTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
         }
@@ -1020,7 +1041,7 @@
             project.EndOfProjectTransactionId = endOfProjectTransaction.Transaction.GetHash().ToString();
             storage.UpdateInvestmentProject(project);
 
-            AddTransactionToPending(endOfProjectTransaction.Transaction);
+            _walletUIService.AddTransactionToPending(endOfProjectTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
         }
@@ -1033,6 +1054,11 @@
             PrepareEndOfProjectCoinsConfirmSpinner = false;
             passwordComponent.ClearPassword();
         }
+    }
+
+    private void NavigatetoReleaseSigs()
+    {
+        NavigationManager.NavigateTo($"/release/{ProjectId}");
     }
 
 }

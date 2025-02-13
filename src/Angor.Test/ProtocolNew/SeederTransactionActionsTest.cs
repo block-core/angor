@@ -62,7 +62,7 @@ public class SeederTransactionActionsTest : AngorTestData
                 .Returns(expectedTransaction);
 
             var seederInvestmentTransaction = _sut.CreateInvestmentTransaction(projectInvestmentInfo, investorKey, investorSecret,
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
 
             Assert.Same(expectedTransaction,seederInvestmentTransaction);
         }
@@ -93,7 +93,7 @@ public class SeederTransactionActionsTest : AngorTestData
             .Returns(expectedTransaction);
 
         var seederInvestmentTransaction = _sut.CreateInvestmentTransaction(projectInvestmentInfo, investorKey, investorSecret,
-            Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            projectInvestmentInfo.TargetAmount);
 
         Assert.Same(expectedTransaction,seederInvestmentTransaction);
     }

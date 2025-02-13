@@ -4,7 +4,7 @@ using Angor.UI.Model;
 using CSharpFunctionalExtensions;
 using Zafiro.CSharpFunctionalExtensions;
 
-namespace AngorApp.Services;
+namespace AngorApp.UI.Services;
 
 public class ActiveWallet : IActiveWallet
 {
