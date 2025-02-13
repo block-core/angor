@@ -11,6 +11,7 @@
 @using Angor.Shared.Utilities
 @using ITransactionSignature = NBitcoin.ITransactionSignature
 @using System.Text.Json
+@using Angor.Client.Models
 
 
 @inject IClientStorage storage;
@@ -20,6 +21,7 @@
 @inject IDerivationOperations _derivationOperations 
 @inject IWalletOperations _WalletOperations
 @inject IFounderTransactionActions _founderTransactionActions
+@inject IInvestorTransactionActions _investorTransactionActions
 @inject ILogger<Recover> Logger;
 @inject IClipboardService _clipboardService
 
@@ -64,22 +66,31 @@
 
 <div class="animate-fade-in">
 
-@if (firstTimeRefreshSpinner && refreshSpinner)
-{
-    <div class="row card card-body">
-        <div class="d-flex justify-content-center">
-            <div class="loader"></div>
+    @if (firstTimeRefreshSpinner && refreshSpinner)
+    {
+        <div class="row card card-body">
+            <div class="d-flex justify-content-center">
+                <div class="loader"></div>
+            </div>
         </div>
-    </div>
-}
-else
-{
-    <div class="card card-body slide-up">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="card-title d-flex align-items-center">
-                <span class="user-select-none animate-rotate">
-                    <Icon IconName="statistics" Height="42" Width="42"/>
-                </span>
+    }
+    else
+    {
+        @if (totalInvestedAmount <= founderProject.ProjectInfo.TargetAmount && founderProject.ProjectHasStarted())
+        {
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">Target Not Reached</h4>
+                <p>The target investment amount has not been reached, as founder you can only release the funds back to the investors.</p>
+                <button class="btn btn-primary" @onclick="ReleaseFundsToInvestors">Release Funds to Investors</button>
+            </div>
+        }
+
+        <div class="card card-body slide-up">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="card-title d-flex align-items-center">
+                    <span class="user-select-none animate-rotate">
+                        <Icon IconName="statistics" Height="42" Width="42" />
+                    </span>
 
                 <div class="h-100 ms-3">
                     Project Statistics
@@ -464,6 +475,7 @@ else
     private bool spendSpinner = false;
 
     long totalAvailableInvestedAmount = 0;
+    long totalInvestedAmount = 0;
     int totalInvestedTransactions = 0;
     long totalSpentAmount = 0;
     int totalSpentTransactions = 0;
@@ -472,6 +484,7 @@ else
     TimeSpan? timeUntilNextStage;
 
     private ProjectInfo project;
+    private FounderProject founderProject;
 
     private FeeData feeData = new();
 
@@ -506,7 +519,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
+        founderProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+        project = founderProject?.ProjectInfo;
 
         firstTimeRefreshSpinner = true;
 
@@ -526,17 +540,20 @@ else
         totalSpentAmount = 0;
         totalSpentTransactions = 0;
         currentWithdrawableAmount = 0;
+        totalInvestedAmount = 0;
 
         foreach (var stage in stageDatas)
         {
             var stageIsActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
             var totalStageTransactions = stage.Items.Count();
+            var investedAmount = stage.Items.Sum(c => c.Amount);
             var availableInvestedAmount = stage.Items.Where(c => !c.IsSpent).Sum(c => c.Amount);
             var spentStageAmount = stage.Items.Where(c => c.IsSpent).Sum(c => c.Amount);
             var spentStageTransactions = stage.Items.Count(c => c.IsSpent);
             var daysUntilRelease = (stage.Stage.ReleaseDate - DateTime.UtcNow).Days;
             var stageReleasePercentage = stage.Stage.AmountToRelease;
 
+            totalInvestedAmount += investedAmount;
             totalAvailableInvestedAmount += availableInvestedAmount;
             totalInvestedTransactions += totalStageTransactions;
             totalSpentAmount += spentStageAmount;
@@ -690,6 +707,12 @@ else
 
     protected async Task ClaimCoinsCheckPassword(int stageId)
     {
+        if (totalInvestedAmount <= founderProject.ProjectInfo.TargetAmount)
+        {
+            notificationComponent.ShowErrorMessage("Target investment amount has not been reached, you can only release the funds back to the investors");
+            return;
+        }
+
         if (passwordComponent.HasPassword())
         {
             await ClaimCoins(stageId);
@@ -958,4 +981,8 @@ else
         showRawTransactionModal = isVisible;
     }
 
+    private void ReleaseFundsToInvestors(MouseEventArgs e)
+    {
+        NavigationManager.NavigateTo($"/unfunded/{ProjectId}");
+    }
 }

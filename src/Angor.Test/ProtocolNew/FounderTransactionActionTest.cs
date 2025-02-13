@@ -72,7 +72,7 @@ public class FounderTransactionActionTest : AngorTestData
         projectInvestmentInfo.ProjectSeeders.SecretHashes.Add(seederContext.InvestorSecretHash);
 
         return operations.CreateInvestmentTransaction(network, seederContext,
-            Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            projectInvestmentInfo.TargetAmount);
     }
 
     private Transaction GivenAnInvestorTransaction(ProjectInfo projectInvestmentInfo)
@@ -88,8 +88,7 @@ public class FounderTransactionActionTest : AngorTestData
         context.InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes());
         context.ChangeAddress = seederChangeKey.PubKey.GetSegwitAddress(network).ToString();
 
-        return operations.CreateInvestmentTransaction(network, context,
-            Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+        return operations.CreateInvestmentTransaction(network, context, projectInvestmentInfo.TargetAmount);
     }
 
     /// <summary>

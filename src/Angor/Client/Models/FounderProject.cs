@@ -9,7 +9,12 @@ public class FounderProject : Project
 
     public string ProjectInfoEventId { get; set; }
     public bool NostrProfileCreated { get; set; }
-    
+
+    public bool ProjectHasStarted()
+    {
+        return DateTime.UtcNow > ProjectInfo.StartDate;
+    }
+
     public bool NostrMetadataCreated()
     {
         return !string.IsNullOrEmpty(Metadata?.Name);

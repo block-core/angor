@@ -143,10 +143,9 @@
                         Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
                         var nostrPubKey = project.ProjectInfo.NostrPubKey;
                         investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
+                        releaseRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentReleaseRequests);
 
                         <div class="col">
-
-          
 
                             <div class="card card-body">
                                 <div class="d-flex align-items-center">
@@ -162,7 +161,7 @@
 
                                 <div class="mb-3 mt-4 d-flex justify-content-between">
                                     <span>Funding Target:</span>
-                                    <strong>@project.ProjectInfo.TargetAmount @network.CoinTicker</strong>
+                                    <strong>@Money.Satoshis(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
                                 </div>
 
                                 <div class="mb-3 d-flex justify-content-between">
@@ -172,7 +171,7 @@
 
                                 <div class="mb-3 d-flex justify-content-between">
                                     <span>Raised (% Target):</span>
-                                    <strong>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</strong>
+                                    <strong>@((stats?.AmountInvested ?? 0) * 100 / project.ProjectInfo.TargetAmount) %</strong>
                                 </div>
 
                                 <div class="mb-3 d-flex justify-content-between">
@@ -230,6 +229,24 @@
                                         <strong class="text-danger">Pending</strong>
                                     }
                                 </div>
+
+                                <div class="mb-3 d-flex justify-content-between">
+                                    <span>Founder Released Funds</span>
+                                    @if (hasInvestmentReleaseRequests)
+                                    {
+                                        @if (project.UnfundedReleaseTransactionId == null)
+                                        {
+                                            <a href=@($"/release/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-sm btn-border ms-2" title="Pending">
+                                                <strong class="text-danger">Release funds</strong>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <strong class="text-primary">Funds released</strong>
+                                        }
+                                    }
+                                </div>
+                                
                                 <div class="card-footer">
                                     <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border w-100">
                                         View Project
@@ -263,6 +280,7 @@
     long TotalInRecovery = 0;
 
     private Dictionary<string, bool> investmentRequestsMap = new Dictionary<string, bool>();
+    private Dictionary<string, bool> releaseRequestsMap = new Dictionary<string, bool>();
 
     public Dictionary<string, ProjectStats> Stats = new();
 
@@ -289,6 +307,7 @@
 
             var refreshTask = RefreshBalance();
             CheckSignatureFromFounder();
+            CheckReleaseFromFounder();
             await refreshTask;
         }
     }
@@ -345,6 +364,15 @@
         return Task.CompletedTask;
     }
 
+    private void HandleReleaseSignatureReceivedAsync(string nostrPubKey, string signatureContent)
+    {
+        if (releaseRequestsMap.ContainsKey(nostrPubKey))
+        {
+            releaseRequestsMap[nostrPubKey] = true;
+            StateHasChanged();
+        }
+    }
+
     private void CheckSignatureFromFounder()
     {
         foreach (var project in projects)
@@ -361,6 +389,21 @@
         }
     }
 
+    private void CheckReleaseFromFounder()
+    {
+        foreach (var project in projects)
+        {
+            releaseRequestsMap[project.ProjectInfo.NostrPubKey] = false;
+
+            _SignService.LookupReleaseSigs(
+                project.InvestorNPub,
+                project.ProjectInfo.NostrPubKey,
+                null,
+                project.SignaturesInfo.SignatureRequestEventId,
+                signatureContent => HandleReleaseSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
+                , () => {});
+        }
+    }
 
     private async Task RefreshBalance()
     {

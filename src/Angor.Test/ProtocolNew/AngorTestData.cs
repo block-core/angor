@@ -1,6 +1,7 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
+using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP39;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -35,7 +36,7 @@ public class AngorTestData
         startDate ??= DateTime.UtcNow;
         
         var projectInvestmentInfo = new ProjectInfo();
-        projectInvestmentInfo.TargetAmount = 3;
+        projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
         projectInvestmentInfo.StartDate = startDate.Value;
         projectInvestmentInfo.ExpiryDate = startDate.Value.AddDays(5);
         projectInvestmentInfo.PenaltyDays = 10;

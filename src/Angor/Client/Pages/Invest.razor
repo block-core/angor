@@ -14,6 +14,7 @@
 @using Angor.Client.Models
 @using Blockcore.Networks
 @using System.Text.Json
+@using Angor.Shared.Utilities
 
 
 @inherits BaseComponent
@@ -80,7 +81,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="text-muted">Target Amount</h6>
-                            <h4 class="mb-0">@project.ProjectInfo.TargetAmount @network.CoinTicker</h4>
+                            <h4 class="mb-0">@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</h4>
                         </div>
                         <div class="stat-icon">
                             <Icon IconName="balance" Height="32" Width="32" />
@@ -192,33 +193,23 @@
 
                 <div class="form-group mb-4">
                     <label for="investmentAmount" class="form-label">Investment Amount</label>
-
-
-
                     <div class="input-group">
-
-
-                        <InputNumber class="form-control" id="investmentAmount" @bind-Value="@Investment.InvestmentAmountBtc"
-                        @oninput="UpdateStagesBreakdown" />
-
-
+                        <InputNumber class="form-control" id="investmentAmount" @bind-Value="@Investment.InvestmentAmountBtc" @oninput="UpdateStagesBreakdown" />
                         <span role="button" class="btn btn-border d-flex align-items-center justify-content-center">
                             @network.CoinTicker
                         </span>
                     </div>
-
-
                 </div>
 
                 <div class="form-group mb-4">
                     <label for="investmentSlider" class="form-label mb-4">Select Investment Amount</label>
                     <input type="range" class="form-range custom-range" id="investmentSlider"
-                    min="0.001" max="@project.ProjectInfo.TargetAmount" step="0.001"
-                    @bind="Investment.InvestmentAmountBtc"
-                    @oninput="UpdateStagesBreakdown" />
+                           min="0.001" max="@project.ProjectInfo.TargetAmount.ToUnitBtc()" step="0.001"
+                            @bind="Investment.InvestmentAmountBtc"
+                            @oninput="UpdateStagesBreakdown" />
                     <div class="d-flex justify-content-between">
                         <small>0.001 @network.CoinTicker</small>
-                        <small>@project.ProjectInfo.TargetAmount @network.CoinTicker</small>
+                        <small>@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</small>
                     </div>
                 </div>
 
@@ -249,7 +240,7 @@
                             <div class="stage-card animate-fade-up">
                                 <div class="stage-header">
                                     <h6 class="mb-0">Stage @stage.StageNumber</h6>
-                                    <span class="badge bg-primary">@stage.Amount @network.CoinTicker</span>
+                                    <span class="badge bg-primary">@stage.AmountBtc @network.CoinTicker</span>
                                 </div>
                                 <div class="stage-body">
                                     <p class="mb-2">
@@ -307,7 +298,7 @@
                                     <div class="info-card flex-grow-1 me-2">
                                         <div class="info-label">Amount to Invest</div>
                                         <div class="info-value text-success">
-                                            @(Money.Satoshis(Investment.InvestmentAmount).ToUnit(MoneyUnit.BTC)) @network.CoinTicker
+                                            @Investment.InvestmentAmountBtc @network.CoinTicker
                                         </div>
                                     </div>
                                     <div class="info-card flex-grow-1 ms-2">
@@ -362,7 +353,7 @@
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <div>
                                                         <div class="info-label">Stage @(++index)</div>
-                                                        <div class="info-value">@StagesBreakdown[index - 1].Amount @network.CoinTicker</div>
+                                                        <div class="info-value">@StagesBreakdown[index - 1].AmountBtc @network.CoinTicker</div>
                                                     </div>
                                                     <div class="text-end">
                                                         <div class="info-label">Release Date</div>
@@ -407,7 +398,6 @@
             </div>
         </div>
     }
-
 }
 else
 {
@@ -502,8 +492,6 @@ else
 
     }
 }
-
-
 
 @code {
 
@@ -659,10 +647,6 @@ else
         return Task.CompletedTask;
     }
 
-
-
-
-
     private void UpdateStagesBreakdown(ChangeEventArgs e)
     {
         if (decimal.TryParse(e.Value.ToString(), out decimal amountBtc))
@@ -677,7 +661,7 @@ else
                 var insert = new StageBreakdown
                     {
                         StageNumber = index++,
-                        Amount = Investment.InvestmentAmountBtc * (stage.AmountToRelease / 100),
+                        AmountBtc = Investment.InvestmentAmountBtc * (stage.AmountToRelease / 100),
                         StageDateTime = stage.ReleaseDate,
                         DaysFromStartDate = (stage.ReleaseDate - project.ProjectInfo.StartDate).Days
                     };
@@ -706,13 +690,15 @@ else
             bool isTestnet = network.NetworkType == NetworkType.Testnet;
             long maxInvestmentAmount = isTestnet ? long.MaxValue : Money.Satoshis(0.1m) ; // 0.1 BTC for mainnet, unlimited for testnet
             long minInvestmentAmount = Money.Satoshis(0.001m) ; // Minimum investment for all networks
-            if (Investment.InvestmentAmount < minInvestmentAmount)
+            long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+
+            if (investmentAmount < minInvestmentAmount)
             {
                 notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minInvestmentAmount} BTC was not reached");
                 return;
             }
 
-            if (Investment.InvestmentAmount > maxInvestmentAmount)
+            if (investmentAmount > maxInvestmentAmount)
             {
                 notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentAmount} BTC on the mainnet");
                 return;
@@ -720,7 +706,9 @@ else
         }
         else
         {
-            if (Investment.InvestmentAmount < Money.Satoshis(0.001m))
+            long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+
+            if (investmentAmount < Money.Satoshis(0.001m))
             {
                 notificationComponent.ShowErrorMessage($"Investor minimum investment amount is {0.001} BTC");
                 return;
@@ -761,7 +749,7 @@ else
                 var seederHash = _derivationOperations.DeriveSeederSecretHash(words, project.ProjectInfo.FounderKey);
             }
 
-            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Satoshis(Investment.InvestmentAmount));
+            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
 
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
@@ -834,7 +822,7 @@ else
                     Metadata = project.Metadata,
                     SignedTransactionHex = signedTransaction!.Transaction!.ToHex(),
                     CreationTransactionId = project.CreationTransactionId,
-                    AmountInvested = Investment.InvestmentAmount,
+                    AmountInvested = Investment.InvestmentAmountBtc.ToUnitSatoshi(),
                     InvestorPublicKey = InvestorPubKey ?? throw new ArgumentNullException("The investor pub key is not populated")
                 };
 
@@ -853,25 +841,30 @@ else
 
             var words = await passwordComponent.GetWalletAsync();
 
-            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
+            var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
+            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
 
-            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+            var releaseAddress = accountInfo.GetNextReceiveAddress();
+
+            SignRecoveryRequest signRecoveryRequest = new()
+            {
+                ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
+                InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                UnfundedReleaseAddress = releaseAddress
+            };
+
+            var sigJson = serializer.Serialize(signRecoveryRequest);
 
             var encryptedContent = await encryption.EncryptNostrContentAsync(
                 nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey,
-                strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory));
+                sigJson);
 
-            var investmentSigsRequest = _SignService.RequestInvestmentSigs(new SignRecoveryRequest
-                {
-                    ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
-                    EncryptedContent = encryptedContent,
-                    NostrPubKey = investorProject.ProjectInfo.NostrPubKey,
-                    InvestorNostrPrivateKey = nostrPrivateKeyHex
-                });
+            var investmentSigsRequest = _SignService.RequestInvestmentSigs(encryptedContent, nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey);
 
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
             investorProject.InvestorNPub = NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex;
+            investorProject.UnfundedReleaseAddress = releaseAddress;
 
             storage.AddInvestmentProject(investorProject);
 
@@ -1030,7 +1023,14 @@ else
             {
                 ProjectIdentifiers = storage.GetInvestmentProjects()
                             .Where(x => x.InvestedInProject())
-                            .Select(x => new InvestmentState { ProjectIdentifier = x.ProjectInfo.ProjectIdentifier, investorPubKey = x.InvestorPublicKey, InvestmentTransactionHash = x.TransactionId })
+                            .Select(x => new InvestmentState
+                            {
+                                ProjectIdentifier = x.ProjectInfo.ProjectIdentifier, 
+                                investorPubKey = x.InvestorPublicKey, 
+                                InvestmentTransactionHash = x.TransactionId, 
+                                ReleaseAddress = x.UnfundedReleaseAddress,
+
+                            })
                             .ToList()
             };
 
@@ -1049,11 +1049,6 @@ else
     public class InvestmentModel
     {
         /// <summary>
-        /// Amount in satoshis converted on demand.
-        /// </summary>
-        public long InvestmentAmount => Money.Coins(InvestmentAmountBtc).Satoshi;
-
-        /// <summary>
         /// Amount in BTC, this is a parameter that is bind to the users input,
         /// so it makes sense to keep it in btc format (instead of satoshis) 
         /// </summary>
@@ -1065,7 +1060,7 @@ else
     public class StageBreakdown
     {
         public int StageNumber { get; set; }
-        public decimal Amount { get; set; }
+        public decimal AmountBtc { get; set; }
         public DateTime StageDateTime { get; set; }
         public int DaysFromStartDate { get; set; }
     }
@@ -1090,7 +1085,7 @@ else
             Stages = StagesBreakdown.Select(stage => new
             {
                 StageNumber = stage.StageNumber,
-                Amount = stage.Amount,
+                Amount = stage.AmountBtc,
                 ReleaseDate = stage.StageDateTime.ToString("dd/MM/yyyy"),
                 DaysFromStart = stage.DaysFromStartDate,
                 AmountToRelease = project.ProjectInfo.Stages[stage.StageNumber - 1].AmountToRelease
