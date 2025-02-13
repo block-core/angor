@@ -4,9 +4,9 @@ using Serilog.Events;
 
 namespace AngorApp.Core;
 
-public class LoggerConfig
+public static class LoggerConfig
 {
-    public static ILoggerFactory CreateFactory()
+    public static ILoggingBuilder RegisterSerilog(this ILoggingBuilder builder)
     {
         var logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
@@ -16,15 +16,8 @@ public class LoggerConfig
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
 
-        var factory = new LoggerFactory();
-        
-        factory.AddSerilog(logger);
+        builder.AddSerilog(logger);
 
-        return factory;
-    }
-
-    public static ILogger<T> CreateLogger<T>()
-    {
-        return CreateFactory().CreateLogger<T>();
+        return builder;
     }
 }
