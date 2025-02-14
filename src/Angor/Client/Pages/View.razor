@@ -770,8 +770,11 @@
                         projectStats.TimeLeft = 0; // Ensure no negative time left
                     }
 
-                    // Calculate funding progress as a percentage of the target amount
-                    projectStats.FundingProgressPercent = (int)(projectStats.TotalRaised * 100 / project.ProjectInfo.TargetAmount);
+                    if (project.ProjectInfo.TargetAmount > 0)
+                    {
+                        // Calculate funding progress as a percentage of the target amount
+                        projectStats.FundingProgressPercent = (int)(projectStats.TotalRaised * 100 / project.ProjectInfo.TargetAmount);
+                    }
                 }
             }
         }
