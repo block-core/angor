@@ -4508,6 +4508,7 @@ fieldset:disabled .btn {
 .nav-link {
     display: block;
     padding: var(--angor-nav-link-padding-y) var(--angor-nav-link-padding-x);
+    padding-left:11px !important;
     font-size: var(--angor-nav-link-font-size);
     font-weight: var(--angor-nav-link-font-weight);
     color: var(--angor-nav-link-color);
@@ -23429,7 +23430,7 @@ hr.horizontal {
     top: 0;
     bottom: 0;
     width: 100%;
-    max-width: 15.625rem !important;
+    max-width: 13.625rem !important;
     overflow-y: auto;
     padding: 0;
     box-shadow: none;
@@ -23523,7 +23524,7 @@ hr.horizontal {
         top: 0;
         bottom: 0;
         width: 100%;
-        max-width: 15.625rem !important;
+        max-width: 13.625rem !important;
         overflow-y: auto;
         padding: 0;
         box-shadow: none;
@@ -23620,7 +23621,7 @@ hr.horizontal {
         top: 0;
         bottom: 0;
         width: 100%;
-        max-width: 15.625rem !important;
+        max-width: 13.625rem !important;
         overflow-y: auto;
         padding: 0;
         box-shadow: none;
@@ -23717,7 +23718,7 @@ hr.horizontal {
         top: 0;
         bottom: 0;
         width: 100%;
-        max-width: 15.625rem !important;
+        max-width: 13.625rem !important;
         overflow-y: auto;
         padding: 0;
         box-shadow: none;
@@ -23814,7 +23815,7 @@ hr.horizontal {
         top: 0;
         bottom: 0;
         width: 100%;
-        max-width: 15.625rem !important;
+        max-width: 13.625rem !important;
         overflow-y: auto;
         padding: 0;
         box-shadow: none;
@@ -23911,7 +23912,7 @@ hr.horizontal {
         top: 0;
         bottom: 0;
         width: 100%;
-        max-width: 15.625rem !important;
+        max-width: 13.625rem !important;
         overflow-y: auto;
         padding: 0;
         box-shadow: none;
@@ -24167,7 +24168,7 @@ hr.horizontal {
 
 @media (min-width: 1200px) {
     .sidenav:hover {
-        max-width: 15.625rem;
+        max-width: 13.625rem;
     }
 
     .sidenav .sidenav-toggler {
@@ -24175,11 +24176,11 @@ hr.horizontal {
     }
 
     .sidenav.fixed-start + .main-content {
-        margin-left: 17.125rem;
+        margin-left: 15.125rem;
     }
 
     .sidenav.fixed-end + .main-content {
-        margin-right: 17.125rem;
+        margin-right: 15.125rem;
     }
 }
 
@@ -24465,7 +24466,7 @@ body:not(.dark) .sidenav.bg-transparent .collapse .nav-item .nav-link.active.tex
     }
 
     .sidenav-hidden.rtl .navbar-vertical:hover {
-        max-width: 15.625rem !important;
+        max-width: 13.625rem !important;
     }
 
     .sidenav-hidden.rtl .navbar-vertical .nav-item .nav-link .material-icons-round {
@@ -24540,11 +24541,11 @@ body:not(.dark) .sidenav.bg-transparent .collapse .nav-item .nav-link.active.tex
         }
 
         .sidenav-hidden .navbar-vertical:hover {
-            max-width: 15.625rem !important;
+            max-width: 13.625rem !important;
         }
 
             .sidenav-hidden .navbar-vertical:hover.fixed-start + .main-content {
-                margin-left: 17.125rem;
+                margin-left: 15.125rem;
             }
 
             .sidenav-hidden .navbar-vertical:hover .navbar-brand span {

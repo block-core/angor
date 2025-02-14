@@ -37,14 +37,14 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-<div class="row mb-4 slide-up">
+<div class="row slide-in">
     <div class="card card-body hover-effect">
         <div class="d-flex align-items-center justify-content-between flex-wrap">
             <div class="d-flex col-auto my-auto align-items-center">
                 <span class="user-select-none animate-rotate">
                     <Icon IconName="spend" Height="42" Width="42"/>
                 </span>
-                <div class="h-100 ms-3">
+                <div class="ms-3">
                     <h5 class="mb-0 font-weight-bolder animate-fade-in">
                         Founder Stage Claim
                     </h5>
@@ -64,18 +64,18 @@
     </div>
 </div>
 
-<div class="animate-fade-in">
+<div class="slide-in mt-4">
 
-    @if (firstTimeRefreshSpinner && refreshSpinner)
-    {
-        <div class="row card card-body">
-            <div class="d-flex justify-content-center">
-                <div class="loader"></div>
-            </div>
+@if (firstTimeRefreshSpinner && refreshSpinner)
+{
+    <div class="row card card-body">
+        <div class="d-flex justify-content-center">
+            <div class="loader"></div>
         </div>
-    }
-    else
-    {
+    </div>
+}
+else
+    {       
         @if (totalInvestedAmount <= founderProject.ProjectInfo.TargetAmount && founderProject.ProjectHasStarted())
         {
             <div class="alert alert-warning" role="alert">
@@ -84,13 +84,12 @@
                 <button class="btn btn-primary" @onclick="ReleaseFundsToInvestors">Release Funds to Investors</button>
             </div>
         }
-
-        <div class="card card-body slide-up">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="card-title d-flex align-items-center">
-                    <span class="user-select-none animate-rotate">
-                        <Icon IconName="statistics" Height="42" Width="42" />
-                    </span>
+    <div class="card card-body slide-up">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="card-title d-flex align-items-center">
+                <span class="user-select-none animate-rotate">
+                    <Icon IconName="statistics" Height="42" Width="42"/>
+                </span>
 
                 <div class="h-100 ms-3">
                     Project Statistics

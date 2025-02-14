@@ -194,7 +194,11 @@
                 <div class="form-group mb-4">
                     <label for="investmentAmount" class="form-label">Investment Amount</label>
                     <div class="input-group">
+
+
                         <InputNumber class="form-control" id="investmentAmount" @bind-Value="@Investment.InvestmentAmountBtc" @oninput="UpdateStagesBreakdown" />
+
+
                         <span role="button" class="btn btn-border d-flex align-items-center justify-content-center">
                             @network.CoinTicker
                         </span>
@@ -205,8 +209,8 @@
                     <label for="investmentSlider" class="form-label mb-4">Select Investment Amount</label>
                     <input type="range" class="form-range custom-range" id="investmentSlider"
                            min="0.001" max="@project.ProjectInfo.TargetAmount.ToUnitBtc()" step="0.001"
-                            @bind="Investment.InvestmentAmountBtc"
-                            @oninput="UpdateStagesBreakdown" />
+                    @bind="Investment.InvestmentAmountBtc"
+                    @oninput="UpdateStagesBreakdown" />
                     <div class="d-flex justify-content-between">
                         <small>0.001 @network.CoinTicker</small>
                         <small>@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</small>
@@ -278,7 +282,7 @@
                         </div>
 
                         <div class="modal-body modal-body-scroll py-4">
-                            <div class="transaction-info-section mb-4">
+                            <div class="mb-4">
                                 <div class="project-id-card mb-3">
                                     <div class="d-flex align-items-center">
                                         <Icon IconName="project" Height="24" Width="24" class="me-2" />
@@ -324,12 +328,12 @@
                                 </h6>
                                 <div class="fee-slider-container">
                                     <input type="range"
-                                    class="form-range custom-range"
-                                    id="feeRange"
-                                    @bind="feeData.FeePosition"
-                                    @oninput="FeeRangeChanged"
-                                    min="@feeData.FeeMin"
-                                    max="@feeData.FeeMax">
+                                           class="form-range custom-range"
+                                           id="feeRange"
+                                           @bind="feeData.FeePosition"
+                                           @oninput="FeeRangeChanged"
+                                           min="@feeData.FeeMin"
+                                           max="@feeData.FeeMax">
                                     <div class="fee-info">
                                         <small class="text-muted">
                                             Estimated confirmation in @feeData.SelectedFeeEstimation.Confirmations blocks
@@ -349,21 +353,22 @@
                                         int index = 0;
                                         @foreach (var stage in project.ProjectInfo.Stages)
                                         {
-                                            <div class="info-card mb-2 animate-fade-in">
+                                            <div class="info-card mb-3 p-3 shadow-sm rounded animate-fade-in">
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <div>
                                                         <div class="info-label">Stage @(++index)</div>
                                                         <div class="info-value">@StagesBreakdown[index - 1].AmountBtc @network.CoinTicker</div>
                                                     </div>
                                                     <div class="text-end">
-                                                        <div class="info-label">Release Date</div>
-                                                        <div class="info-value">@stage.ReleaseDate.ToString("dd/MM/yyyy")</div>
+                                                        <div class="text-muted fw-semibold">Release Date</div>
+                                                        <div class="fs-5 fw-bold text-dark">@stage.ReleaseDate.ToString("dd/MM/yyyy")</div>
                                                     </div>
                                                 </div>
                                                 <div class="text-muted small mt-2">
                                                     @stage.AmountToRelease% of investment - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after start
                                                 </div>
                                             </div>
+
                                         }
                                     }
                                 </div>
@@ -688,29 +693,28 @@ else
         if (Investment.IsSeeder)
         {
             bool isTestnet = network.NetworkType == NetworkType.Testnet;
-            long maxInvestmentAmount = isTestnet ? long.MaxValue : Money.Satoshis(0.1m) ; // 0.1 BTC for mainnet, unlimited for testnet
-            long minInvestmentAmount = Money.Satoshis(0.001m) ; // Minimum investment for all networks
-            long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+            decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.1m; // 0.1 BTC for mainnet, unlimited for testnet
+            decimal minInvestmentBtc = 0.001m; // Minimum investment for all networks
 
-            if (investmentAmount < minInvestmentAmount)
+            if (Investment.InvestmentAmountBtc < minInvestmentBtc)
             {
-                notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minInvestmentAmount} BTC was not reached");
+                notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minInvestmentBtc} BTC was not reached");
                 return;
             }
 
-            if (investmentAmount > maxInvestmentAmount)
+            if (Investment.InvestmentAmountBtc > maxInvestmentBtc)
             {
-                notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentAmount} BTC on the mainnet");
+                notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentBtc} BTC on the mainnet");
                 return;
             }
         }
         else
         {
-            long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+            decimal minInvestmentBtc = 0.001m;
 
-            if (investmentAmount < Money.Satoshis(0.001m))
+            if (Investment.InvestmentAmountBtc < minInvestmentBtc)
             {
-                notificationComponent.ShowErrorMessage($"Investor minimum investment amount is {0.001} BTC");
+                notificationComponent.ShowErrorMessage($"Investor minimum investment amount is {minInvestmentBtc} BTC");
                 return;
             }
         }
@@ -1022,16 +1026,15 @@ else
         Investments investments = new()
             {
                 ProjectIdentifiers = storage.GetInvestmentProjects()
-                            .Where(x => x.InvestedInProject())
-                            .Select(x => new InvestmentState
-                            {
-                                ProjectIdentifier = x.ProjectInfo.ProjectIdentifier, 
-                                investorPubKey = x.InvestorPublicKey, 
-                                InvestmentTransactionHash = x.TransactionId, 
-                                ReleaseAddress = x.UnfundedReleaseAddress,
-
-                            })
-                            .ToList()
+                                .Where(x => x.InvestedInProject())
+                                .Select(x => new InvestmentState
+                                {
+                                    ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
+                                    InvestorPubKey = x.InvestorPublicKey,
+                                    InvestmentTransactionHash = x.TransactionId,
+                                    UnfundedReleaseAddress = x.UnfundedReleaseAddress,
+                                })
+                                .ToList()
             };
 
         var encryptedProjectIdList = await encryption.EncryptNostrContentAsync(
@@ -1050,10 +1053,10 @@ else
     {
         /// <summary>
         /// Amount in BTC, this is a parameter that is bind to the users input,
-        /// so it makes sense to keep it in btc format (instead of satoshis) 
+        /// so it makes sense to keep it in btc format (instead of satoshis)
         /// </summary>
-        public decimal InvestmentAmountBtc { get; set; } 
-        
+        public decimal InvestmentAmountBtc { get; set; }
+
         public bool IsSeeder { get; set; }
     }
 

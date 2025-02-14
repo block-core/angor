@@ -157,7 +157,6 @@
 
                                         case 2:
                                             <div class="info-card slide-in">
-
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 @foreach (var (index, word) in selectedWordsToVerify)
                                                 {
@@ -276,29 +275,51 @@
                         </div>
 
                         <div class="modal-footer border-0 pt-0">
-                            @if (currentStep > 1)
-                            {
-                                <button class="btn btn-border me-2" @onclick="PreviousStep">Back</button>
-                            }
-
-                            @if (currentStep < totalSteps)
-                            {
-                                <button class="btn btn-border-success" @onclick="NextStep"
-                                        disabled="@(!CanProceedToNextStep())">
-                                    Next
-                                </button>
-                            }
-                            else
-                            {
-                                <button class="btn btn-border-success" @onclick="CreateWalletAsync"
-                                        disabled="@(!CanCreateWallet())">
-                                    @if (createWalletSpinner)
+                            <div class="d-flex flex-column flex-md-row justify-content-md-end w-100 gap-2">
+                                @if (network.NetworkType == NetworkType.Testnet && currentStep == 2 && isNewWallet)
+                                {
+                                    <div class="d-flex flex-column flex-md-row justify-content-between w-100">
+                                        <button class="btn btn-border-warning order-1 order-md-0 w-100 w-md-auto mb-2 mb-md-0" @onclick="SkipVerification">
+                                            Skip Verification
+                                        </button>
+                                        <div class="d-flex flex-column flex-md-row gap-2">
+                                            @if (currentStep > 1)
+                                            {
+                                                <button class="btn btn-border" @onclick="PreviousStep">Back</button>
+                                            }
+                                            <button class="btn btn-border-success" @onclick="NextStep" disabled="@(!CanProceedToNextStep())">
+                                                Next
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    @if (currentStep > 1)
                                     {
-                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                        <button class="btn btn-border" @onclick="PreviousStep">Back</button>
                                     }
-                                    @(isNewWallet ? "Create Wallet" : "Recover Wallet")
-                                </button>
-                            }
+
+                                    @if (currentStep < totalSteps)
+                                    {
+                                        <button class="btn btn-border-success" @onclick="NextStep"
+                                                disabled="@(!CanProceedToNextStep())">
+                                            Next
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-border-success" @onclick="CreateWalletAsync"
+                                                disabled="@(!CanCreateWallet())">
+                                            @if (createWalletSpinner)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                            }
+                                            @(isNewWallet ? "Create Wallet" : "Recover Wallet")
+                                        </button>
+                                    }
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1785,5 +1806,11 @@ else
         showVerificationError = false;
     }
     
+    private void SkipVerification()
+    {
+        verificationPassed = true;
+        showVerificationError = false;
+        NextStep();
+    }
     
 }

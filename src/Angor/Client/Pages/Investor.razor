@@ -526,7 +526,7 @@
 
         var words = await passwordComponent.GetWalletAsync();
 
-        var investment = await _IndexerService.GetInvestmentAsync(investmentState.ProjectIdentifier, investmentState.investorPubKey);
+        var investment = await _IndexerService.GetInvestmentAsync(investmentState.ProjectIdentifier, investmentState.InvestorPubKey);
 
         if (investment == null)
             return;

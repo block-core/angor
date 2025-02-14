@@ -2,12 +2,16 @@
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
+@using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
 @using Angor.Client.Models
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
+@using System.Text.Json
 @using Angor.Shared.Services
 @using System.Security.Cryptography
+
+@inject IJSRuntime JS
 
 @inject ILogger<Signatures> Logger
 @inject IDerivationOperations DerivationOperations
@@ -50,115 +54,115 @@
     </div>
 </div>
 
-    @if (!signaturesRequests.Any())
-    {
-            <div class="row mt-4">
-            <div class="card card-body angor-alert-info pt-2 pb-2">
-                <div class="d-flex align-items-center">
-                    <span class="me-3 user-select-none">
-                        <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
-                    </span>
-                    <span class="text-white" data-cy="projectsGrid">No pending signatures yet...</span>
+@if (!signaturesRequests.Any())
+{
+    <div class="row mt-4">
+        <div class="card card-body angor-alert-info pt-2 pb-2">
+            <div class="d-flex align-items-center">
+                <span class="me-3 user-select-none">
+                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
+                </span>
+                <span class="text-white" data-cy="projectsGrid">No pending signatures yet...</span>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Signatures Details Section -->
+    <div class="row mt-4">
+        <div class="col">
+            @if (messagesReceived || isLoading)
+            {
+                <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+                    <div class="text-center mb-3">
+                        @if (isLoading)
+                        {
+                            <h6 class="mb-0">Approving Signatures... @numOfSignaturesSigned / @numOfSignatureToSign</h6>
+                        }
+                        <div class="loader"></div>
+                    </div>
                 </div>
-            </div>
-        </div>
-     }
-    else
-    {
-        <!-- Signatures Details Section -->
-        <div class="row mt-4">
-            <div class="col">
-                @if (messagesReceived || isLoading)
-                {
-                    <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
-                        <div class="text-center mb-3">
-                            @if (isLoading)
-                            {
-                                <h6 class="mb-0">Approving Signatures... @numOfSignaturesSigned / @numOfSignatureToSign</h6>
-                            }
-                            <div class="loader"></div>
-                        </div>
-                    </div>
-                }
-                
-                else
-                {
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header pb-0 p-3">
-                                <div class="row">
-                                    <div class="col-6 d-flex align-items-center">
-                                        <h6 class="mb-0">Signatures</h6>
-                                    </div>
-                                    <div class="col-6 d-flex justify-content-end">
-                                        <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">Approve All</button>
-                                        <button class="btn btn-sm btn-border ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
-                                            @if (refreshButtonSpinner)
-                                            {
-                                                <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                <span>Refreshing...</span>
-                                            }
-                                            else
-                                            {
-                                                <span>Refresh</span>
-                                            }
-                                        </button>
-                                    </div>
+            }
+
+            else
+            {
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header pb-0 p-3">
+                            <div class="row">
+                                <div class="col-6 d-flex align-items-center">
+                                    <h6 class="mb-0">Signatures</h6>
+                                </div>
+                                <div class="col-6 d-flex justify-content-end">
+                                    <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">Approve All</button>
+                                    <button class="btn btn-sm btn-border ml-2" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
+                                        @if (refreshButtonSpinner)
+                                        {
+                                            <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            <span>Refreshing...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Refresh</span>
+                                        }
+                                    </button>
                                 </div>
                             </div>
-                            <div class="card-body">
-                                
-                                
-                                <div class="table-responsive form-control">
-                                    <table class="table align-items-center mb-0">
-                                        <thead>
+                        </div>
+                        <div class="card-body">
+
+
+                            <div class="table-responsive form-control">
+                                <table class="table align-items-center mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investment amount</th>
+                                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received at</th>
+                                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var signature in signaturesRequests.Where(_ => _ is { SignRecoveryRequest.InvestmentTransactionHex: not null, AmountToInvest: not null }))
+                                        {
                                             <tr>
-                                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investment amount</th>
-                                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received at</th>
-                                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
+                                                <td>@Money.Satoshis(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                                <td>@signature.TimeArrived.ToString("g")</td>
+                                                @if (signature.TimeApproved is null)
+                                                {
+                                                    <td>
+                                                        <button class="btn btn-border-success" @onclick="() => ApproveSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.Any()">
+                                                            @if (signaturesRequestsApproving.ContainsKey(signature))
+                                                            {
+                                                                <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                                <span>Approving...</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span>Approve</span>
+                                                            }
+                                                        </button>
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td>Approved on - @signature.TimeApproved.ToString()</td>
+                                                }
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var signature in signaturesRequests.Where(_ => _ is { SignRecoveryRequest.InvestmentTransactionHex: not null, AmountToInvest: not null }))
-                                            {
-                                                <tr>
-                                                    <td>@Money.Satoshis(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                                    <td>@signature.TimeArrived.ToString("g")</td>
-                                                    @if (signature.TimeApproved is null)
-                                                    {
-                                                        <td>
-                                                            <button class="btn btn-border-success" @onclick="() => ApproveSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.Any()">
-                                                                @if (signaturesRequestsApproving.ContainsKey(signature))
-                                                                {
-                                                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                                    <span>Approving...</span>
-                                                                }
-                                                                else
-                                                                {
-                                                                    <span>Approve</span>
-                                                                }
-                                                            </button>
-                                                        </td>
-                                                    }
-                                                    else
-                                                    {
-                                                        <td>Approved on - @signature.TimeApproved.ToString()</td>
-                                                    }
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        }
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                }
-            </div>
+            }
         </div>
+    </div>
 
-    }
- 
+}
+
 
 @code {
     [Parameter]
@@ -167,8 +171,8 @@
     public FounderProject FounderProject { get; set; }
     private List<SignatureItem> signaturesRequests = new();
 
-    
-    private Dictionary<SignatureItem,string> signaturesRequestsApproving = new();
+
+    private Dictionary<SignatureItem, string> signaturesRequestsApproving = new();
 
     bool messagesReceived;
     bool scanedForApprovals;
@@ -210,11 +214,11 @@
         {
             if (passwordComponent.HasPassword())
             {
-                await FetchOrDecryptSignaturesRequest();
+                await FetchSignatures();
             }
             else
             {
-                passwordComponent.ShowPassword(FetchOrDecryptSignaturesRequest);
+                passwordComponent.ShowPassword(FetchSignatures);
             }
         }
     }
@@ -238,11 +242,11 @@
     {
         refreshButtonSpinner = true;
         StateHasChanged();
-        
+
         try
         {
             await FetchPendingSignatures(FounderProject);
-            await FetchOrDecryptSignaturesRequest();
+            await FetchSignatures();
             await Task.Delay(1000);
         }
         catch (Exception e)
@@ -251,13 +255,13 @@
         }
         finally
         {
-            
+
             refreshButtonSpinner = false;
             StateHasChanged();
         }
     }
 
-    protected async Task FetchOrDecryptSignaturesRequest()
+    protected async Task FetchSignatures()
     {
         Logger.LogDebug($"handled = {signaturesRequests.Count(x => x.AmountToInvest.HasValue)}, total = {signaturesRequests.Count}");
 
@@ -298,8 +302,7 @@
                     var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.SignRecoveryRequest.InvestmentTransactionHex);
 
                     //Todo get the actual outputs with taproot type
-                    pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3)
-                        .Sum(_ => _.TxOut.Value.Satoshi);
+                    pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3).Sum(_ => _.TxOut.Value.Satoshi);
                 }
                 catch (FormatException fe)
                 {
@@ -317,6 +320,7 @@
                     pendingSignature.SignRecoveryRequest = null;
                 }
             }
+
             Logger.LogDebug($"Calling StateHasChanged in OnAfterRenderAsync");
             messagesReceived = false;
             StateHasChanged();
@@ -353,12 +357,12 @@
                 messagesReceived = true;
 
                 var signatureRequest = new SignatureItem
-                {
-                    investorNostrPubKey = investorNostrPubKey,
-                    TimeArrived = timeArrived,
-                    EncryptedMessage = encryptedMessage, //To be encrypted after js interop is loaded
-                    EventId = eventId
-                };
+                    {
+                        investorNostrPubKey = investorNostrPubKey,
+                        TimeArrived = timeArrived,
+                        EncryptedMessage = encryptedMessage, //To be encrypted after js interop is loaded
+                        EventId = eventId
+                    };
 
                 signaturesRequests.Add(signatureRequest);
                 Logger.LogDebug($"Added to pendingSignatures");
@@ -461,7 +465,7 @@
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
@@ -493,12 +497,15 @@
 
         try
         {
-            var pendingSignatures = signaturesRequests.Where(s => s.SignRecoveryRequest?.InvestmentTransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null).ToList();
+            var pendingSignatures = signaturesRequests
+                .Where(s => s.SignRecoveryRequest?.InvestmentTransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null)
+                .ToList();
+
             numOfSignatureToSign = pendingSignatures.Count;
             numOfSignaturesSigned = 0;
-        
+
             var words = await passwordComponent.GetWalletAsync();
-        
+
             foreach (var signature in pendingSignatures)
             {
                 await PerformSignatureApproval(signature, words);
@@ -508,14 +515,14 @@
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
             isLoading = false;
             passwordComponent.ClearPassword();
         }
-        
+
         StateHasChanged();
     }
 
@@ -564,7 +571,7 @@
 
         return sig;
     }
-  
+
     public class SignatureItem
     {
         public string investorNostrPubKey { get; set; }
@@ -575,7 +582,6 @@
         public DateTime? TimeApproved { get; set; }
 
         public SignRecoveryRequest? SignRecoveryRequest { get; set; }
-
         public string? EncryptedMessage { get; set; }
 
         public string EventId { get; set; }
