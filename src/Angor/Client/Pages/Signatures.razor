@@ -123,7 +123,7 @@ else
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach (var signature in signaturesRequests.Where(_ => _ is { TransactionHex: not null, AmountToInvest: not null }))
+                                        @foreach (var signature in signaturesRequests.Where(_ => _ is { SignRecoveryRequest.InvestmentTransactionHex: not null, AmountToInvest: not null }))
                                         {
                                             <tr>
                                                 <td>@Money.Satoshis(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
@@ -177,7 +177,7 @@ else
     bool messagesReceived;
     bool scanedForApprovals;
 
-    private bool CanApproveAllSignatures => signaturesRequests != null && signaturesRequests.Any(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null);
+    private bool CanApproveAllSignatures => signaturesRequests != null && signaturesRequests.Any(s => s.SignRecoveryRequest?.InvestmentTransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null);
 
     private string ApproveButtonClass => CanApproveAllSignatures ? "btn-border-success" : "btn-border";
 
@@ -289,31 +289,38 @@ else
             {
                 try
                 {
-                    pendingSignature.TransactionHex = await encryption.DecryptNostrContentAsync(
+                    var sigResJson = await encryption.DecryptNostrContentAsync(
                         nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.EncryptedMessage);
 
-                    var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.TransactionHex);
+                    pendingSignature.SignRecoveryRequest = serializer.Deserialize<SignRecoveryRequest>(sigResJson);
+
+                    if (pendingSignature.SignRecoveryRequest is null)
+                    {
+                        throw new Exception("Error deserializing signature request");
+                    }
+
+                    var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.SignRecoveryRequest.InvestmentTransactionHex);
 
                     //Todo get the actual outputs with taproot type
-                    pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3)
-                        .Sum(_ => _.TxOut.Value.Satoshi);
+                    pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3).Sum(_ => _.TxOut.Value.Satoshi);
                 }
                 catch (FormatException fe)
                 {
-                    Logger.LogError("Format error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", pendingSignature?.TransactionHex, fe.Message);
-                    pendingSignature.TransactionHex = null;
+                    Logger.LogError("Format error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", pendingSignature?.SignRecoveryRequest?.InvestmentTransactionHex, fe.Message);
+                    pendingSignature.SignRecoveryRequest = null;
                 }
                 catch (CryptographicException ce)
                 {
-                    Logger.LogError("Cryptographic error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", pendingSignature?.TransactionHex, ce.Message);
-                    pendingSignature.TransactionHex = null;
+                    Logger.LogError("Cryptographic error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", pendingSignature?.SignRecoveryRequest?.InvestmentTransactionHex, ce.Message);
+                    pendingSignature.SignRecoveryRequest = null;
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError("Error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", pendingSignature?.TransactionHex, e.Message);
-                    pendingSignature.TransactionHex = null;
+                    Logger.LogError("Error decrypting transaction hex: {TransactionHex}, Exception: {ExceptionMessage}", pendingSignature?.SignRecoveryRequest?.InvestmentTransactionHex, e.Message);
+                    pendingSignature.SignRecoveryRequest = null;
                 }
             }
+
             Logger.LogDebug($"Calling StateHasChanged in OnAfterRenderAsync");
             messagesReceived = false;
             StateHasChanged();
@@ -349,7 +356,7 @@ else
 
                 messagesReceived = true;
 
-                var SignatureItem = new SignatureItem
+                var signatureRequest = new SignatureItem
                     {
                         investorNostrPubKey = investorNostrPubKey,
                         TimeArrived = timeArrived,
@@ -357,7 +364,7 @@ else
                         EventId = eventId
                     };
 
-                signaturesRequests.Add(SignatureItem);
+                signaturesRequests.Add(signatureRequest);
                 Logger.LogDebug($"Added to pendingSignatures");
             },
             () =>
@@ -490,7 +497,10 @@ else
 
         try
         {
-            var pendingSignatures = signaturesRequests.Where(s => s.TransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null).ToList();
+            var pendingSignatures = signaturesRequests
+                .Where(s => s.SignRecoveryRequest?.InvestmentTransactionHex != null && s.AmountToInvest != null && s.TimeApproved == null)
+                .ToList();
+
             numOfSignatureToSign = pendingSignatures.Count;
             numOfSignaturesSigned = 0;
 
@@ -521,7 +531,7 @@ else
         try
         {
             var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex);
-            var signatureInfo = signProject(signature.TransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
+            var signatureInfo = CreateRecoverySignatures(signature.SignRecoveryRequest.InvestmentTransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
 
             var sigJson = serializer.Serialize(signatureInfo);
 
@@ -546,7 +556,7 @@ else
         }
     }
 
-    private SignatureInfo signProject(string transactionHex, ProjectInfo info, string founderSigningPrivateKey)
+    private SignatureInfo CreateRecoverySignatures(string transactionHex, ProjectInfo info, string founderSigningPrivateKey)
     {
         var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
 
@@ -556,6 +566,8 @@ else
 
         if (!InvestorTransactionActions.CheckInvestorRecoverySignatures(info, investorTrx, sig))
             throw new InvalidOperationException();
+
+        sig.SignatureType = SignatureInfoType.Recovery;
 
         return sig;
     }
@@ -569,7 +581,7 @@ else
         public DateTime TimeArrived { get; set; }
         public DateTime? TimeApproved { get; set; }
 
-        public string? TransactionHex { get; set; }
+        public SignRecoveryRequest? SignRecoveryRequest { get; set; }
         public string? EncryptedMessage { get; set; }
 
         public string EventId { get; set; }
