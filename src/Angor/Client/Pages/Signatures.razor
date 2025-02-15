@@ -292,17 +292,54 @@ else
                     var sigResJson = await encryption.DecryptNostrContentAsync(
                         nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.EncryptedMessage);
 
-                    pendingSignature.SignRecoveryRequest = serializer.Deserialize<SignRecoveryRequest>(sigResJson);
-
-                    if (pendingSignature.SignRecoveryRequest is null)
+                    if (!string.IsNullOrEmpty(sigResJson))
                     {
-                        throw new Exception("Error deserializing signature request");
+                        try
+                        {
+                            // Check if the content is a raw hex string (starts with 01 and contains only hex chars)
+                            if (sigResJson.StartsWith("01") && System.Text.RegularExpressions.Regex.IsMatch(sigResJson, "^[0-9a-fA-F]+$"))
+                            {
+                                // Create a proper SignRecoveryRequest object
+                                pendingSignature.SignRecoveryRequest = new SignRecoveryRequest 
+                                { 
+                                    InvestmentTransactionHex = sigResJson 
+                                };
+                            }
+                            else
+                            {
+                                // Try normal JSON deserialization
+                                pendingSignature.SignRecoveryRequest = serializer.Deserialize<SignRecoveryRequest>(sigResJson);
+                            }
+
+                            if (pendingSignature.SignRecoveryRequest is null)
+                            {
+                                Logger.LogError("Deserialized SignRecoveryRequest is null");
+                                continue;
+                            }
+
+                            // Validate transaction hex before creating transaction
+                            if (string.IsNullOrEmpty(pendingSignature.SignRecoveryRequest.InvestmentTransactionHex))
+                            {
+                                Logger.LogError("InvestmentTransactionHex is null or empty");
+                                continue;
+                            }
+
+                            var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.SignRecoveryRequest.InvestmentTransactionHex);
+                          
+                          
+                            //Todo get the actual outputs with taproot type
+                            pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3).Sum(_ => _.TxOut.Value.Satoshi);
+                        }
+                        catch (JsonException je)
+                        {
+                            Logger.LogError("JSON deserialization error: {Message}, Content: {Content}", je.Message, sigResJson);
+                            pendingSignature.SignRecoveryRequest = null;
+                        }
                     }
-
-                    var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.SignRecoveryRequest.InvestmentTransactionHex);
-
-                    //Todo get the actual outputs with taproot type
-                    pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3).Sum(_ => _.TxOut.Value.Satoshi);
+                    else
+                    {
+                        Logger.LogError("Decrypted content is null or empty");
+                    }
                 }
                 catch (FormatException fe)
                 {
