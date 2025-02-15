@@ -5,6 +5,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace Angor.Shared.Services
 {
@@ -138,8 +139,15 @@ namespace Angor.Shared.Services
                         if (response.IsSuccessStatusCode)
                         {
                             relayUrl.Status = UrlStatus.Online;
-                            var relayInfo = await response.Content.ReadFromJsonAsync<NostrRelayInfo>();
-                            relayUrl.Name = relayInfo?.Name ?? string.Empty;
+                            try
+                            {
+                                var relayInfo = await response.Content.ReadFromJsonAsync<NostrRelayInfo>();
+                                relayUrl.Name = relayInfo?.Name ?? string.Empty;
+                            }
+                            catch (JsonException jsonEx)
+                            {
+                                _logger.LogError(jsonEx, "Failed to deserialize JSON response from relay.");
+                            }
                         }
                         else
                         {
