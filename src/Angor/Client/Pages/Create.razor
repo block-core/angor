@@ -562,31 +562,40 @@
             </div>
             }
 
-            @if (showConfirmationModal)
-            {
-                <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
+
+
+        </div>  
+    }
+    @if (showConfirmationModal)
+        {
+        <div class="modal-wrapper">
+            <div class="modal fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content modern-modal">
+                        <div class="modal-header border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <Icon IconName="alert-circle" Height="32" Width="32" class="me-2" />
                                 <h5 class="modal-title">Confirmation</h5>
-                                <button type="button" class="btn-close" @onclick="CloseConfirmationModal" aria-label="Close"></button>
                             </div>
-                            <div class="modal-body">
-                                <p>@confirmationMessage</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" @onclick="CloseConfirmationModal">Cancel</button>
-                                <button type="button" class="btn btn-primary" @onclick="PerformFinalizeAction">Confirm</button>
-                            </div>
+                            <button class="btn-close-custom" @onclick="CloseConfirmationModal">
+                                <Icon IconName="close-circle" Height="24" Width="24" />
+                            </button>
+                        </div>
+
+                        <div class="modal-body modal-body-scroll">
+                            <p class="mb-1">@confirmationMessage</p>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-border-warning" @onclick="CloseConfirmationModal">Cancel</button>
+                            <button type="button" class="btn btn-border-success" @onclick="PerformFinalizeAction">Confirm</button>
                         </div>
                     </div>
                 </div>
-            }
-
-
-
+            </div>
         </div>
-    }
+
+        }
 </div>
 @code {
 
