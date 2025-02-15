@@ -5,7 +5,6 @@ using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace Angor.Shared.Services
 {
@@ -52,7 +51,7 @@ namespace Angor.Shared.Services
                 if (setNetwork != null)
                 {
                     network = AngorNetworksSelector.NetworkByName(setNetwork);
-                } 
+                }
                 else if (url.Contains("test"))
                 {
                     network = new Angornet();
@@ -92,7 +91,7 @@ namespace Angor.Shared.Services
         {
             var settings = _networkStorage.GetSettings();
 
-            foreach (var indexerUrl  in settings.Indexers)
+            foreach (var indexerUrl in settings.Indexers)
             {
                 if (force || (DateTime.UtcNow - indexerUrl.LastCheck).Minutes > 10)
                 {
@@ -133,21 +132,14 @@ namespace Angor.Shared.Services
                     {
                         var uri = new Uri(relayUrl.Url);
                         var httpUri = uri.Scheme == "wss" ? new Uri($"https://{uri.Host}/") : new Uri($"http://{uri.Host}/");
-                        
+
                         var response = await _httpClient.GetAsync(httpUri);
 
                         if (response.IsSuccessStatusCode)
                         {
                             relayUrl.Status = UrlStatus.Online;
-                            try
-                            {
-                                var relayInfo = await response.Content.ReadFromJsonAsync<NostrRelayInfo>();
-                                relayUrl.Name = relayInfo?.Name ?? string.Empty;
-                            }
-                            catch (JsonException jsonEx)
-                            {
-                                _logger.LogError(jsonEx, "Failed to deserialize JSON response from relay.");
-                            }
+                            var relayInfo = await response.Content.ReadFromJsonAsync<NostrRelayInfo>();
+                            relayUrl.Name = relayInfo?.Name ?? string.Empty;
                         }
                         else
                         {
