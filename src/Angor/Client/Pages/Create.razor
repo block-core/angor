@@ -477,29 +477,7 @@
             </div>
         </div>
 
-        @code {
-        private IEnumerable<(string IconName, string Label, string Value)> GetProjectInfoData()
-        {
-            return new List<(string, string, string)>
-    {
-    ("name", "Project Name", project.Metadata.Name),
-    ("about", "Project About", ((MarkupString)project.Metadata.About).ToString()),
-    ("identifier", "Project Identifier", project.ProjectInfo.ProjectIdentifier),
-    ("key", "Founder Key", project.ProjectInfo.FounderKey)
-    };
-        }
 
-        private IEnumerable<(string IconName, string Label, string Value, string color)> GetAdditionalProjectInfo()
-        {
-            return new List<(string, string, string, string)>
-    {
-    ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}","text-success"),
-    ("calendar", "Start date", $"{project.ProjectInfo.StartDate:dd/MM/yyyy} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days","text-warning"),
-    ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate:dd/MM/yyyy} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days","text-warning"),
-    ("sad-circle", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days","text-warning")
-    };
-        }
-    }
     }
 
 
@@ -520,94 +498,94 @@
                         </div>
 
 
-                <div class="modal-body modal-body-scroll">
-                    <p class="mb-1">
-                        <strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier
-                    </p>
-                    <p class="mb-1"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
+                        <div class="modal-body modal-body-scroll">
+                            <p class="mb-1">
+                                <strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier
+                            </p>
+                            <p class="mb-1"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
 
-                    <p class="mb-1">
-                        <strong>Target amount:</strong> @project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker
-                    </p>
+                            <p class="mb-1">
+                                <strong>Target amount:</strong> @project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker
+                            </p>
 
-                    <p class="mb-1"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
-                    <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
-                    <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
+                            <p class="mb-1"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
+                            <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
+                            <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
 
-                    <p class="mb-1">
-                        <strong>Miner fee:</strong> @Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                    </p>
-                    <p class="mb-1">
-                        <strong>Angor fee:</strong> @signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                    </p>
+                            <p class="mb-1">
+                                <strong>Miner fee:</strong> @Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                            </p>
+                            <p class="mb-1">
+                                <strong>Angor fee:</strong> @signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                            </p>
 
-                    <hr>
+                            <hr>
 
-                    <div class="mb-3">
-                        <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                        <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
-                    </div>
+                            <div class="mb-3">
+                                <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
+                                <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                            </div>
 
-                    <hr>
+                            <hr>
 
-                    <h6 class="mt-3 mb-2">Stages</h6>
-                    @foreach (var stage in project.ProjectInfo.Stages)
-                    {
-                        <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
-                            <p class="mb-1"><strong>Stage percent:</strong> @stage.AmountToRelease % </p>
-                            <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts </p>
+                            <h6 class="mt-3 mb-2">Stages</h6>
+                            @foreach (var stage in project.ProjectInfo.Stages)
+                            {
+                                <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
+                                    <p class="mb-1"><strong>Stage percent:</strong> @stage.AmountToRelease % </p>
+                                    <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts </p>
+                                </div>
+                            }
+
+                            <hr>
+
+                            <p class="mt-3">Are you sure you want to continue?</p>
+
                         </div>
-                    }
-
-                    <hr>
-
-                    <p class="mt-3">Are you sure you want to continue?</p>
-
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-border" @onclick="Send" disabled="@publishProjectSpinner">
-                        @if (publishProjectSpinner)
-                        {
-                            <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            <span>Confirming...</span>
-                        }
-                        else
-                        {
-                            <span>Confirm</span>
-                        }
-                    </button>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-border" @onclick="Send" disabled="@publishProjectSpinner">
+                                @if (publishProjectSpinner)
+                                {
+                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Confirming...</span>
+                                }
+                                else
+                                {
+                                    <span>Confirm</span>
+                                }
+                            </button>
 
 
+                        </div>
+                    </div>
                 </div>
             </div>
+            }
+
+            @if (showConfirmationModal)
+            {
+                <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirmation</h5>
+                                <button type="button" class="btn-close" @onclick="CloseConfirmationModal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>@confirmationMessage</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" @onclick="CloseConfirmationModal">Cancel</button>
+                                <button type="button" class="btn btn-primary" @onclick="PerformFinalizeAction">Confirm</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+
+
         </div>
-    </div>
-}
-
-@if (showConfirmationModal)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmation</h5>
-                    <button type="button" class="btn-close" @onclick="CloseConfirmationModal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>@confirmationMessage</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CloseConfirmationModal">Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="PerformFinalizeAction">Confirm</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-
-
-</div>
     }
 </div>
 @code {
@@ -1277,21 +1255,21 @@
     private FounderProject CreateDefaultProject(FounderKeys projectsKeys)
     {
         return new FounderProject
-        {
-            ProjectIndex = projectsKeys.Index,
-            Metadata = new ProjectMetadata(),
-            ProjectInfo = new ProjectInfo
             {
-                FounderKey = projectsKeys.FounderKey,
-                FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
-                ProjectIdentifier = projectsKeys.ProjectIdentifier,
-                NostrPubKey = projectsKeys.NostrPubKey,
-                StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
-                PenaltyDays = 90,
-                ExpiryDate = DateTime.UtcNow.AddDays(120),
-                TargetAmount = Money.Coins(50).Satoshi
+                ProjectIndex = projectsKeys.Index,
+                Metadata = new ProjectMetadata(),
+                ProjectInfo = new ProjectInfo
+                {
+                    FounderKey = projectsKeys.FounderKey,
+                    FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
+                    ProjectIdentifier = projectsKeys.ProjectIdentifier,
+                    NostrPubKey = projectsKeys.NostrPubKey,
+                    StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
+                    PenaltyDays = 90,
+                    ExpiryDate = DateTime.UtcNow.AddDays(120),
+                    TargetAmount = Money.Coins(50).Satoshi
                 }
-        };
+            };
     }
     private void PopulateTestnetData(FounderProject project)
     {
@@ -1326,4 +1304,27 @@
             ("key", "Founder Key", project.ProjectInfo.FounderKey)
         };
     }
+
+    private IEnumerable<(string IconName, string Label, string Value)> GetProjectInfoData()
+    {
+        return new List<(string, string, string)>
+        {
+            ("name", "Project Name", project.Metadata.Name),
+            ("about", "Project About", ((MarkupString)project.Metadata.About).ToString()),
+            ("identifier", "Project Identifier", project.ProjectInfo.ProjectIdentifier),
+            ("key", "Founder Key", project.ProjectInfo.FounderKey)
+        };
+    }
+
+    private IEnumerable<(string IconName, string Label, string Value, string color)> GetAdditionalProjectInfo()
+    {
+        return new List<(string, string, string, string)>
+        {
+            ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}","text-success"),
+            ("calendar", "Start date", $"{project.ProjectInfo.StartDate:dd/MM/yyyy} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days","text-warning"),
+            ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate:dd/MM/yyyy} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days","text-warning"),
+            ("sad-circle", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days","text-warning")
+        };
+    }
+
 }
