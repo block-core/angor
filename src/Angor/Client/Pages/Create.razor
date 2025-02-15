@@ -1159,19 +1159,31 @@
             return false;
         }
 
-        var prev = DateTime.UtcNow;
-        foreach (var stage in project.ProjectInfo.Stages)
+        // Fix stage chronological validation
+        if (project.ProjectInfo.Stages.Any())
         {
-            if ((stage.ReleaseDate - prev).Days < 0)
+            // First check if first stage is after project start
+            if (project.ProjectInfo.Stages.First().ReleaseDate < project.ProjectInfo.StartDate)
             {
-                notificationComponent.ShowErrorMessage("Stages must be chronological");
+                notificationComponent.ShowErrorMessage("First stage must be after project start date");
                 return false;
             }
 
-            prev = stage.ReleaseDate;
+            // Then check stages are in order
+            var sortedStages = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).ToList();
+            for (int i = 0; i < sortedStages.Count - 1; i++)
+            {
+                if (sortedStages[i].ReleaseDate >= sortedStages[i + 1].ReleaseDate)
+                {
+                    notificationComponent.ShowErrorMessage($"Stage {i + 2} must be after stage {i + 1}");
+                    return false;
+                }
+            }
+
+            // Keep stages sorted
+            project.ProjectInfo.Stages = sortedStages;
         }
 
-        // If all checks pass, return true
         return true;
     }
 
