@@ -51,7 +51,7 @@ namespace Angor.Shared.Services
                 if (setNetwork != null)
                 {
                     network = AngorNetworksSelector.NetworkByName(setNetwork);
-                } 
+                }
                 else if (url.Contains("test"))
                 {
                     network = new Angornet();
@@ -91,7 +91,7 @@ namespace Angor.Shared.Services
         {
             var settings = _networkStorage.GetSettings();
 
-            foreach (var indexerUrl  in settings.Indexers)
+            foreach (var indexerUrl in settings.Indexers)
             {
                 if (force || (DateTime.UtcNow - indexerUrl.LastCheck).Minutes > 10)
                 {
@@ -132,7 +132,7 @@ namespace Angor.Shared.Services
                     {
                         var uri = new Uri(relayUrl.Url);
                         var httpUri = uri.Scheme == "wss" ? new Uri($"https://{uri.Host}/") : new Uri($"http://{uri.Host}/");
-                        
+
                         var response = await _httpClient.GetAsync(httpUri);
 
                         if (response.IsSuccessStatusCode)
