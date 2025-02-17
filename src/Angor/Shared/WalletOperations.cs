@@ -105,13 +105,15 @@ public class WalletOperations : IWalletOperations
         {
             if (clonedTransaction.Inputs.Any(x => x.PrevOut == coin.Outpoint))
                 continue;
-            clonedTransaction.AddInput(new TxIn(coin.Outpoint, null));
+            var txin = new TxIn(coin.Outpoint, null);
+            txin.WitScript = new WitScript(Op.GetPushOp(new byte[72]), Op.GetPushOp(new byte[33])); // for total size calculation
+            clonedTransaction.AddInput(txin);
         }
 
         var totalSize = clonedTransaction.GetVirtualSize(4);
 
         // Step 4: Calculate fee again, based on the UPDATED size with inputs
-        var totalFee = new FeeRate(Money.Satoshis(feeRate.FeeRate)).GetFee(totalSize);
+        var totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize);
 
         // Step 5: Adjust the change output (remaining coins after paying the fee)
         var totalSats = coins.coins.Sum(s => s.Amount.Satoshi);
