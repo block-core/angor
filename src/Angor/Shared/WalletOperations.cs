@@ -119,8 +119,8 @@ public class WalletOperations : IWalletOperations
         var totalSats = coins.coins.Sum(s => s.Amount.Satoshi);
         totalSats -= totalFee;
 
-        // Handle cases where change is below "dust threshold"
-        if (totalSats <= 546)
+        // Handle cases where change is below "dust threshold" for SegWit
+        if (totalSats <= 294)
         {
             // Absorb small change into the transaction fee
             changeOutput.Value = Money.Zero;

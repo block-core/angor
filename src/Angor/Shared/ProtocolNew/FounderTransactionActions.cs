@@ -104,12 +104,15 @@ public class FounderTransactionActions : IFounderTransactionActions
             .Select(trx => AddInputToSpendingTransaction(projectInfo, stageNumber, trx, spendingTransaction))
             .ToList();
 
+        var txSize = spendingTransaction.GetVirtualSize();
+        var minimumFee = new FeeRate(Money.Satoshis(1000)).GetFee(txSize); //1000 sats per kilobyte
+        
         var totalFee = nbitcoinNetwork
             .CreateTransactionBuilder()
             .AddCoins(stageOutputs.Select(_ => _.ToCoin()))
             .EstimateFees(spendingTransaction, new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(fee.FeeRate)));
 
-        spendingTransaction.Outputs[0].Value -= totalFee;
+        spendingTransaction.Outputs[0].Value -= totalFee < minimumFee ? minimumFee : totalFee;
 
         // Step 4 - sign the taproot inputs
         var trxData = spendingTransaction.PrecomputeTransactionData(stageOutputs.Select(_ => _.TxOut).ToArray());
