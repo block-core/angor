@@ -7,7 +7,7 @@ public record BroadcastedTransaction(
     IEnumerable<TransactionOutputInfo> WalletOutputs, 
     IEnumerable<TransactionAddressInfo> AllInputs, 
     IEnumerable<TransactionAddressInfo> AllOutputs, 
-    ulong Fee,
+    long Fee,
     bool IsConfirmed,
     int? BlockHeight,
     DateTimeOffset? BlockTime,
