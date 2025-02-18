@@ -1,12 +1,12 @@
 using Angor.UI.Model;
-using CSharpFunctionalExtensions;
+using AngorApp.Core;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 
 namespace AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsGeneration;
 
 public interface ISeedWordsViewModel : IStep
 {
-    Maybe<SeedWords> Words { get; }
-    ReactiveCommand<Unit, Maybe<SeedWords>> GenerateWords { get; }
+    SafeMaybe<SeedWords> Words { get; }
+    ReactiveCommand<Unit, SafeMaybe<SeedWords>> GenerateWords { get; }
     bool AreWordsWrittenDown { get; set; }
 }

@@ -181,7 +181,7 @@ else
                 FounderKey = Encoders.Hex.EncodeData(privateFounderKey.Neuter().PubKey.ToBytes()),
                 PenaltyDays = 100,
                 StartDate = DateTime.Now,
-                TargetAmount = 10,
+                TargetAmount = Money.Coins(10).Satoshi,
                 ProjectIdentifier = derivationOperations.DeriveAngorKey(Encoders.Hex.EncodeData(privateFounderKey.Neuter().PubKey.ToBytes()),angorRootKey),
                 ProjectSeeders = new ProjectSeeders()
             }
@@ -217,7 +217,7 @@ else
 
         founderTransaction = founderTransactionRes.Transaction;
 
-        transactionInfo = _walletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transactionInfo.Transaction, walletWords, localAccountInfo, fee.First());
+        transactionInfo = _walletOperations.AddInputsAndSignTransaction(context.ChangeAddress, transactionInfo.Transaction, walletWords, localAccountInfo, fee.First().FeeRate);
         
         ShowTransaction = true;
     }

@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Zafiro.Avalonia.Services;
 
-namespace AngorApp.Services;
+namespace AngorApp.UI.Services;
 
 public class NoopLauncherService : ILauncherService
 {

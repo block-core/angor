@@ -50,7 +50,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
     public void HandleOkMessages(NostrOkResponse okResponse)
     {
-        _logger.LogInformation($"OkStream {okResponse.Accepted} message - {okResponse.Message}");
+        _logger.LogDebug($"OkStream {okResponse.Accepted} message - {okResponse.Message}");
 
         if (!OkVerificationActions.TryGetValue(okResponse?.EventId ?? string.Empty, out var action)) 
             return;
@@ -69,21 +69,21 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         var add = _communicationFactory.MonitoringEoseReceivedOnSubscription(subscriptionName);
 
         if (!add)
-            _logger.LogWarning($"Subscription {subscriptionName} is already being monitored");
+            _logger.LogDebug($"Subscription {subscriptionName} is already being monitored");
 
         return userEoseActions.TryAdd(subscriptionName,action); 
     }
 
     public void HandleEoseMessages(NostrEoseResponse _)
     {
-        _logger.LogInformation($"EoseStream {_.Subscription} message - {_.AdditionalData}");
+        _logger.LogDebug($"EoseStream {_.Subscription} message - {_.AdditionalData}");
 
         if (!_communicationFactory.EoseEventReceivedOnAllRelays(_.Subscription))
             return;
         
         if (userEoseActions.TryGetValue(_.Subscription, out var action))
         {
-            _logger.LogInformation($"Invoking action on EOSE - {_.Subscription}");
+            _logger.LogDebug($"Invoking action on EOSE - {_.Subscription}");
             try
             {
                 action.Invoke();
@@ -94,7 +94,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
             }
 
             userEoseActions.Remove(_.Subscription);
-            _logger.LogInformation($"Removed action on EOSE for subscription - {_.Subscription}");
+            _logger.LogDebug($"Removed action on EOSE for subscription - {_.Subscription}");
         }
 
         _communicationFactory.ClearEoseReceivedOnSubscriptionMonitoring(_.Subscription);
@@ -102,7 +102,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         if (!relaySubscriptions.ContainsKey(_.Subscription)) 
             return;
         
-        _logger.LogInformation($"Disposing of subscription - {_.Subscription}");
+        _logger.LogDebug($"Disposing of subscription - {_.Subscription}");
         
         _communicationFactory
             .GetOrCreateClient(_networkService)
@@ -110,7 +110,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         
         relaySubscriptions[_.Subscription].Dispose();
         relaySubscriptions.Remove(_.Subscription);
-        _logger.LogInformation($"subscription disposed - {_.Subscription}");
+        _logger.LogDebug($"subscription disposed - {_.Subscription}");
     }
 
     public bool RelaySubscriptionAdded(string subscriptionKey)

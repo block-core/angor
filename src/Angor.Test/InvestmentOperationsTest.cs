@@ -75,7 +75,7 @@ namespace Angor.Test
             var funderReceiveCoinsKey = new Key();
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount = 3;
+            projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -157,7 +157,7 @@ namespace Angor.Test
             // create seeder1 investment transaction
 
             var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context,
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
 
             seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
                     seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
@@ -168,7 +168,7 @@ namespace Angor.Test
             // create seeder2 investment transaction
 
             var seeder2InvTrx = operations.CreateInvestmentTransaction(network, seeder2Context,
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
 
             seeder2Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder2Context.ChangeAddress,
                     seeder2InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
@@ -179,7 +179,7 @@ namespace Angor.Test
             // create seeder3 investment transaction
 
             var seeder3InvTrx = operations.CreateInvestmentTransaction(network, seeder3Context,
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
 
             seeder3Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder3Context.ChangeAddress,
                     seeder3InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
@@ -190,7 +190,7 @@ namespace Angor.Test
             // create investor 1 investment transaction
 
             var investor1InvTrx = operations.CreateInvestmentTransaction(network, investor1Context,
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
 
             investor1Context.TransactionHex = operations.SignInvestmentTransaction(network,
                     investor1Context.ChangeAddress, investor1InvTrx, null, new List<UtxoDataWithPath>(),
@@ -202,7 +202,7 @@ namespace Angor.Test
             // create investor 2 investment transaction
 
             var investor2InvTrx = operations.CreateInvestmentTransaction(network, investor2Context,
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
 
             investor2Context.TransactionHex = operations.SignInvestmentTransaction(network,
                     investor2Context.ChangeAddress, investor2InvTrx, null, new List<UtxoDataWithPath>(),
@@ -231,7 +231,7 @@ namespace Angor.Test
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount = 3;
+            projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -260,7 +260,7 @@ namespace Angor.Test
             // create the investment transaction
 
             var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context,
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
 
             seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
                     seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
@@ -284,7 +284,7 @@ namespace Angor.Test
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount = 3;
+            projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -312,7 +312,7 @@ namespace Angor.Test
             // create the investment transaction
 
             var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context,
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
 
             seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
                     seeder1InvTrx, null, new List<UtxoDataWithPath>(),
@@ -337,7 +337,7 @@ namespace Angor.Test
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount = 3;
+            projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -371,7 +371,7 @@ namespace Angor.Test
             // create the investment transaction
 
             var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context,
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
 
             seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
                     seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
@@ -408,7 +408,7 @@ namespace Angor.Test
             {
                 ProjectInfo = new ProjectInfo
                 {
-                    TargetAmount = 3,
+                    TargetAmount = Money.Coins(3).Satoshi,
                     StartDate = DateTime.UtcNow,
                     ExpiryDate = DateTime.UtcNow.AddDays(5),
                     Stages = new List<Stage>
@@ -430,7 +430,7 @@ namespace Angor.Test
             // create the investment transaction
 
             var investmentTransaction = operations.CreateInvestmentTransaction(network, investorContext,
-                Money.Coins(investorContext.ProjectInfo.TargetAmount).Satoshi);
+                investorContext.ProjectInfo.TargetAmount);
 
             investorContext.TransactionHex = investmentTransaction.ToHex();
 
@@ -508,7 +508,7 @@ namespace Angor.Test
                 {
                     ProjectInfo = new ProjectInfo
                     {
-                        TargetAmount = 3,
+                        TargetAmount = Money.Coins(3).Satoshi,
                         StartDate = DateTime.UtcNow,
                         ExpiryDate = DateTime.UtcNow.AddDays(5),
                         Stages = new List<Stage>
@@ -539,7 +539,7 @@ namespace Angor.Test
                 // create the investment transaction
 
                 var investmentTransaction = operations.CreateInvestmentTransaction(network, investorContext,
-                    Money.Coins(investorContext.ProjectInfo.TargetAmount).Satoshi);
+                    investorContext.ProjectInfo.TargetAmount);
 
                 investorContext.TransactionHex = investmentTransaction.ToHex();
 
@@ -621,7 +621,7 @@ namespace Angor.Test
                 {
                     ProjectInfo = new ProjectInfo
                     {
-                        TargetAmount = 3,
+                        TargetAmount = Money.Coins(3).Satoshi,
                         StartDate = DateTime.UtcNow,
                         ExpiryDate = DateTime.UtcNow.AddDays(5),
                         Stages = new List<Stage>
@@ -644,7 +644,7 @@ namespace Angor.Test
                 // create the investment transaction
 
                 var investmentTransaction = operations.CreateInvestmentTransaction(network, seederContext,
-                    Money.Coins(seederContext.ProjectInfo.TargetAmount).Satoshi);
+                    seederContext.ProjectInfo.TargetAmount);
 
                 seederContext.TransactionHex = investmentTransaction.ToHex();
 
@@ -711,7 +711,7 @@ namespace Angor.Test
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount = 3;
+            projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -750,7 +750,7 @@ namespace Angor.Test
             // create the investment transaction
 
             var seeder1InvTrx = operations.CreateInvestmentTransaction(network, seeder1Context,
-                Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+                projectInvestmentInfo.TargetAmount);
 
             seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
                     seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)

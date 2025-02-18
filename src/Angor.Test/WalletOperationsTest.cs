@@ -122,7 +122,7 @@ public class WalletOperationsTest : AngorTestData
         recoveryTransaction.Outputs.RemoveAt(0);
         recoveryTransaction.Inputs.RemoveAt(0);
 
-        var recoveryTransactions = _sut.AddFeeAndSignTransaction(changeAddress, recoveryTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
+        var recoveryTransactions = _sut.AddFeeAndSignTransaction(changeAddress, recoveryTransaction, words, accountInfo, 3000);
 
         // add the inputs of the investment trx
         List<Blockcore.NBitcoin.Coin> coins = new();
@@ -153,7 +153,7 @@ public class WalletOperationsTest : AngorTestData
         var network = _networkConfiguration.Object.GetNetwork();
 
         var projectInfo = new ProjectInfo();
-        projectInfo.TargetAmount = 3;
+        projectInfo.TargetAmount = Money.Coins(3).Satoshi;
         projectInfo.StartDate = DateTime.UtcNow;
         projectInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
         projectInfo.PenaltyDays = 10;
@@ -174,7 +174,7 @@ public class WalletOperationsTest : AngorTestData
         var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, projectInfo.FounderKey);
 
         var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investorKey, Money.Coins(investmentAmount).Satoshi);
-        var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
+        var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, 3000);
         var strippedInvestmentTransaction = network.CreateTransaction(signedInvestmentTransaction.Transaction.ToHex());
         strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
         Assert.Equal(signedInvestmentTransaction.Transaction.GetHash(), strippedInvestmentTransaction.GetHash());
@@ -182,7 +182,8 @@ public class WalletOperationsTest : AngorTestData
         var unsignedRecoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInfo, strippedInvestmentTransaction);
         var recoverySigs = _founderTransactionActions.SignInvestorRecoveryTransactions(projectInfo, strippedInvestmentTransaction.ToHex(), unsignedRecoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
-        _investorTransactionActions.CheckInvestorRecoverySignatures(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs);
+        var sigCheckResult  = _investorTransactionActions.CheckInvestorRecoverySignatures(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs);
+        Assert.True(sigCheckResult, "failed to validate the founders signatures");
 
         var recoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
@@ -190,7 +191,7 @@ public class WalletOperationsTest : AngorTestData
         recoveryTransaction.Outputs.RemoveAt(0);
         recoveryTransaction.Inputs.RemoveAt(0);
 
-        var signedRecoveryTransaction = _sut.AddFeeAndSignTransaction(accountInfo.GetNextReceiveAddress(), recoveryTransaction, words, accountInfo, new FeeEstimation { FeeRate = 3000 });
+        var signedRecoveryTransaction = _sut.AddFeeAndSignTransaction(accountInfo.GetNextReceiveAddress(), recoveryTransaction, words, accountInfo, 3000);
 
         // add the inputs of the investment trx
         List<Blockcore.NBitcoin.Coin> coins = new();
@@ -244,7 +245,7 @@ public class WalletOperationsTest : AngorTestData
         string scriptHex = GenerateScriptHex(address, network);
         var sendInfo = new SendInfo
         {
-            SendAmount = 0.01m,
+            SendAmount = Money.Coins(0.01m).Satoshi,
             SendUtxos = new Dictionary<string, UtxoDataWithPath>
         {
             {
@@ -262,7 +263,8 @@ public class WalletOperationsTest : AngorTestData
                     HdPath = "your_hd_path_here"
                 }
             }
-        }
+        },
+            FeeRate = Money.Coins(3000).Satoshi,
         };
 
         // Act & Assert
@@ -297,25 +299,26 @@ public class WalletOperationsTest : AngorTestData
         {
             SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
             ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
-            SendAmount = 0.01m,
+            SendAmount = Money.Coins(0.01m).Satoshi,
+            FeeRate = Money.Satoshis(3000).Satoshi,
             SendUtxos = new Dictionary<string, UtxoDataWithPath>
-        {
             {
-                "key", new UtxoDataWithPath
                 {
-                    UtxoData = new UtxoData
+                    "key", new UtxoDataWithPath
                     {
-                        value = 1500000, // Sufficient to cover the send amount and estimated fees
-                        address = address,
-                        scriptHex = scriptHex,
-                        outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
-                        blockIndex = 1,
-                        PendingSpent = false
-                    },
-                    HdPath = "m/0/0"
+                        UtxoData = new UtxoData
+                        {
+                            value = 1500000, // Sufficient to cover the send amount and estimated fees
+                            address = address,
+                            scriptHex = scriptHex,
+                            outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
+                            blockIndex = 1,
+                            PendingSpent = false
+                        },
+                        HdPath = "m/0/0"
+                    }
                 }
-            }
-        }
+            },
         };
 
         // Act
@@ -383,32 +386,32 @@ public class WalletOperationsTest : AngorTestData
         var address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
         var scriptHex = "0014b7d165bb8b25f567f05c57d3b484159582ac2827";  
         var accountInfo = new AccountInfo(); 
-        long feeRate = 10; 
+        long feeRate = Money.Satoshis(10).Satoshi; 
 
         // Scenario 1: Sufficient funds
         var sendInfoSufficientFunds = new SendInfo
         {
             SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
             ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
-            SendAmount = 0.0001m,  // Lower amount for successful fee calculation
+            SendAmount = Money.Coins(0.0001m).Satoshi, // Lower amount for successful fee calculation
             SendUtxos = new Dictionary<string, UtxoDataWithPath>
-        {
             {
-                "key", new UtxoDataWithPath
                 {
-                    UtxoData = new UtxoData
+                    "key", new UtxoDataWithPath
                     {
-                        value = 150000000, // Sufficient to cover the send amount and estimated fees
-                        address = address,
-                        scriptHex = scriptHex,
-                        outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
-                        blockIndex = 1,
-                        PendingSpent = false
-                    },
-                    HdPath = "m/0/0"
+                        UtxoData = new UtxoData
+                        {
+                            value = 150000000, // Sufficient to cover the send amount and estimated fees
+                            address = address,
+                            scriptHex = scriptHex,
+                            outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
+                            blockIndex = 1,
+                            PendingSpent = false
+                        },
+                        HdPath = "m/0/0"
+                    }
                 }
             }
-        }
         };
 
         // Act & Assert for sufficient funds
@@ -421,7 +424,7 @@ public class WalletOperationsTest : AngorTestData
         {
             SendToAddress = sendInfoSufficientFunds.SendToAddress,
             ChangeAddress = sendInfoSufficientFunds.ChangeAddress,
-            SendAmount = 10000m,  // High amount to trigger insufficient funds
+            SendAmount = Money.Coins(10000m).Satoshi,  // High amount to trigger insufficient funds
             SendUtxos = new Dictionary<string, UtxoDataWithPath>
         {
             {

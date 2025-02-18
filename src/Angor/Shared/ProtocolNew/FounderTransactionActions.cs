@@ -55,8 +55,6 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         SignatureInfo info = new SignatureInfo { ProjectIdentifier = projectInfo.ProjectIdentifier };
 
-        AssemblyLogger.LogAssemblyVersion(key.GetType(), _logger);
-
         // todo: david change to Enumerable.Range 
         for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
         {

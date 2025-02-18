@@ -172,7 +172,7 @@
                             <i class="me-2">
                                 <Icon IconName="balance" />
                             </i>
-                            <p class="card-text ms-2">Target Amount: <b>@project.ProjectInfo.TargetAmount @network.CoinTicker</b></p>
+                            <p class="card-text ms-2">Target Amount: <b>@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</b></p>
                         </div>
                         <div class="form-control mt-1 d-flex align-items-center">
                             <i class="me-2">
@@ -361,13 +361,13 @@
                     <p class="action-text">Manage your project funds and approve transactions</p>
                     <div class="action-buttons d-flex justify-content-center item-center mt-4">
                                              
-                        <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border text-white animate-scale">
+                        <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success text-white animate-scale">
                             <i class="me-2">
                                 <Icon IconName="wallet" />
                             </i>
                             Manage Funds
                         </a>
-                        <a href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border animate-scale">
+                        <a href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-warning animate-scale">
                             <i class="me-2">
                                 <Icon IconName="signature" />
                             </i>
@@ -469,7 +469,7 @@
 
                     <div class="input-group">
                         <InputText id="NostrNpubPublicKey" @bind-Value="@Npub" class="form-control" placeholder="@Npub" readonly />
-                        <button @onclick="OpenInBrowseAsync" class="btn btn-border">
+                        <button @onclick="OpenInHUBAsync" class="btn btn-border">
                             <i>
                                 <Icon IconName="link" />
                             </i>
@@ -479,16 +479,30 @@
                     <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                     <div class="input-group">
                         <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                        @*   <button @onclick="OpenInBrowseAsync" class="btn btn-border">
-                <Icon IconName="link"></Icon>
-                </button> *@
+                     @*<button @onclick="OpenInHUBAsync" class="btn btn-border">
+                           <Icon IconName="link"></Icon>
+                       </button> *@
                     </div>
 
 
                     @if (founder)
                     {
-                        <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border mt-4 mr-1">Edit project profile</button>
-                        <button @onclick="ShowNsecAsync" class="btn btn-border mt-4">Show private key</button>
+                        <div class="action-buttons d-flex justify-content-center item-center mt-4">
+                            <button @onclick="OpenInHUBAsync" class="btn btn-border-success mt-4 mr-1">
+                                <Icon IconName="link" Class="me-2" />
+                                Open in Angor HUB
+                            </button>
+                            <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning mt-4 mr-1">
+                                <Icon IconName="edit" Class="me-2" />
+                                Edit project profile
+                            </button>
+                            <button @onclick="ShowNsecAsync" class="btn btn-border-danger mt-4">
+                                <Icon IconName="shield" Class="me-2" />
+                                Show private key
+                            </button>
+                        </div>
+
+
 
                         @if (isGeneratingNsec)
                         {
@@ -528,6 +542,15 @@
                                 </button>
                             </div>
                         }
+                    }
+                    else
+                    {
+                        <div class="action-buttons d-flex justify-content-center item-center mt-4">
+                            <button @onclick="OpenInHUBAsync" class="btn btn-border-success mt-4 mr-1">
+                                <Icon IconName="link" Class="me-2" />
+                                Open in Angor HUB
+                            </button>
+                        </div>
                     }
                 </div>
             }
@@ -747,9 +770,11 @@
                         projectStats.TimeLeft = 0; // Ensure no negative time left
                     }
 
-                    // Calculate funding progress as a percentage of the target amount
-                    var targetSat = Money.Coins(project.ProjectInfo.TargetAmount).Satoshi;
-                    projectStats.FundingProgressPercent = (int)(projectStats.TotalRaised * 100 / targetSat);
+                    if (project.ProjectInfo.TargetAmount > 0)
+                    {
+                        // Calculate funding progress as a percentage of the target amount
+                        projectStats.FundingProgressPercent = (int)(projectStats.TotalRaised * 100 / project.ProjectInfo.TargetAmount);
+                    }
                 }
             }
         }
@@ -880,7 +905,7 @@
         }
     }
 
-    private async void OpenInBrowseAsync()
+    private async void OpenInHUBAsync()
     {
         var url = $"https://hub.angor.io/project/{project.ProjectInfo.ProjectIdentifier}";
 

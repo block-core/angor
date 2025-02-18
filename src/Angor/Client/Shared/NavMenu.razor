@@ -66,8 +66,7 @@
             </li>
 
         }
-        <hr class="horizontal mt-0">
-
+ 
         <li class="nav-item">
             <NavLink class="nav-link menu-text" href="settings">
                 <i class="me-1">
@@ -81,6 +80,7 @@
 
     </ul>
 </div>
+<hr class="horizontal mt-0 mb-2" />
 
 <div class="sidenav-footer position-absolute w-100 bottom-0">
     <ul class="navbar-nav">
@@ -89,7 +89,7 @@
             @if (!islockMenu)
             {
                 <span class="nav-link menu-text" @onclick="ToggleSidenavText">
-                    <i class="me-1">
+                    <i class="ms--4">
                         @if (isSidenavHide)
                         {
                             <Icon IconName="menu_open" Height="24" Width="24" />
@@ -104,7 +104,7 @@
             @if (!isSidenavHide)
             {
                 <span class="nav-link menu-text" @onclick="ToggleLockMenu">
-                    <i class="me-1">
+                    <i class="ms--4">
                         @if (islockMenu)
                         {
                             <Icon IconName="lock" Height="24" Width="24"/>
@@ -120,11 +120,6 @@
             }
 
         </li>
-
-
-
-
-        <hr class="horizontal light mt-0">
 
         <li class="nav-item">
             <a class="nav-link menu-text" href="https://hub.angor.io">

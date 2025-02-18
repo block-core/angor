@@ -1,3 +1,4 @@
+using AngorApp.Composition;
 using AngorApp.Core;
 using AngorApp.Sections.Shell;
 using Avalonia;
@@ -17,7 +18,7 @@ public partial class App : Application
             .WriteTo.Console()
             .MinimumLevel.Debug()
             .CreateLogger();
-        
+
         AvaloniaXamlLoader.Load(this);
     }
 
@@ -25,7 +26,7 @@ public partial class App : Application
     {
         IconProvider.Current
             .Register<FontAwesomeIconProvider>();
-        
+
         this.Connect(() => new MainView(), CompositionRoot.CreateMainViewModel, () => new MainWindow());
 
         base.OnFrameworkInitializationCompleted();

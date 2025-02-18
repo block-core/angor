@@ -20,11 +20,15 @@
 @inject IWalletOperations _WalletOperations
 @inject IInvestorTransactionActions _InvestorTransactionActions
 @inject ILogger<Recover> Logger;
+@inject IWalletUIService _walletUIService;
+@inject ISignService SignService
+@inject ICurrencyService _currencyService
+
 
 @inherits BaseComponent
 
-<NotificationComponent @ref="notificationComponent" />
-<PasswordComponent @ref="passwordComponent" />
+<NotificationComponent @ref="notificationComponent"/>
+<PasswordComponent @ref="passwordComponent"/>
 
 
 @if (!hasWallet)
@@ -37,7 +41,7 @@
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex col-auto my-auto align-items-center">
                 <span class="user-select-none">
-                    <Icon IconName="recovery" Height="42" Width="42" />
+                    <Icon IconName="recovery" Height="42" Width="42"/>
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
@@ -55,11 +59,11 @@
 
     <div class="card card-body position-relative">
         <p style="margin-bottom: 20px;">
-            Transaction ID: <span id="transactionID">@StageInfo.Trxid</span> |
+            Transaction ID: <span id="transactionID">@StageInfo.TransactionInfo?.TransactionId</span> |
             <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
         </p>
-
-        <p>Total funds to recover = @StageInfo.TotalSpendable @network.CoinTicker</p>
+        
+        <p>Total funds to recover = @Money.Satoshis(StageInfo.TotalSpendable).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
 
         @if (trxNotFound)
         {
@@ -76,56 +80,63 @@
         {
             <div class="d-flex justify-content-between">
                 <div>
-                    @if (!refreshSpinner)
+                    @if (releaseSigsfound)
                     {
-                        @if (StageInfo.CanRelease)
+                        <button class="btn btn-border me-2 btn-primary" @onclick="NavigatetoReleaseSigs">Target not met go to Release Funds</button>
+                    }
+                    else
+                    {
+                        @if (!refreshSpinner)
                         {
-                            <p>Total funds in penalty = @StageInfo.TotalInPenalty @network.CoinTicker</p>
-                        }
+                            @if (StageInfo.CanRelease)
+                            {
+                                <p>Total funds in penalty = @(Money.Satoshis(StageInfo.TotalInPenalty).ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
+                            }
 
-                        @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
-                        {
-                            <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
-                                @if (PrepareToRecoverCoinsModalSpinner)
-                                {
-                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Recover Funds...</span>
-                                }
-                                else
-                                {
-                                    <span>Recover Funds</span>
-                                }
-                            </button>
-                        }
+                            @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
+                            {
+                                <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
+                                    @if (PrepareToRecoverCoinsModalSpinner)
+                                    {
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Recover Funds...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Recover Funds</span>
+                                    }
+                                </button>
+                            }
 
-                        @if (StageInfo.CanRelease)
-                        {
-                            <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
-                                @if (PrepareToReleaseCoinsModalSpinner)
-                                {
-                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Release Funds...</span>
-                                }
-                                else
-                                {
-                                    <span>Release Funds</span>
-                                }
-                            </button>
-                        }
+                            @if (StageInfo.CanRelease)
+                            {
+                                <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
+                                    @if (PrepareToReleaseCoinsModalSpinner)
+                                    {
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Release Funds...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Release Funds</span>
+                                    }
+                                </button>
+                            }
 
-                        @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
-                        {
-                            <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
-                                @if (PrepareEndOfProjectCoinsModalSpinner)
-                                {
-                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>End of project...</span>
-                                }
-                                else
-                                {
-                                    <span>End of project</span>
-                                }
-                            </button>
+                            @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
+                            {
+                                <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
+                                    @if (PrepareEndOfProjectCoinsModalSpinner)
+                                    {
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>End of project...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>End of project</span>
+                                    }
+                                </button>
+                            }
                         }
                     }
                 </div>
@@ -151,35 +162,33 @@
             <div class="table-responsive form-control mt-4">
                 <table class="table align-items-center mb-0">
                     <thead>
-                        <tr>
-                            <th>Stage </th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                        </tr>
+                    <tr>
+                        <th>Stage </th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in StageInfo.Items)
-                        {
-                            <tr>
-                                <td>@(item.StageIndex + 1)</td>
-                                <td>@item.Amount @network.CoinTicker</td>
-                                <td>
-                                    @if (item.IsSpent)
-                                    {
-                                        <span class="text-primary">@item.SpentTo</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-success">Not Spent</span>
-                                    }
-                                </td>
-                            </tr>
-                        }
+                    @foreach (var item in StageInfo.Items)
+                    {
+                        <tr>
+                            <td>@(item.StageIndex + 1)</td>
+                            <td>@(_currencyService.ToBtc(item.Amount)) @network.CoinTicker</td>
+                            <td>
+                                @if (item.IsSpent)
+                                {
+                                    <span class="text-primary">@item.SpentTo</span>
+                                }
+                                else
+                                {
+                                    <span class="text-success">Not Spent</span>
+                                }
+                            </td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>
-
-
         }
 
         @if (showRecoveryModal)
@@ -191,11 +200,11 @@
 
                             <div class="modal-header border-0 pb-0">
                                 <div class="d-flex align-items-center">
-                                    <Icon IconName="wallet" Height="32" Width="32" class="me-2" />
+                                    <Icon IconName="wallet" Height="32" Width="32" class="me-2"/>
                                     <h5 class="modal-title">Recovery Confirmation</h5>
                                 </div>
                                 <button class="btn-close-custom" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner">
-                                    <Icon IconName="close-circle" Height="24" Width="24" />
+                                    <Icon IconName="close-circle" Height="24" Width="24"/>
                                 </button>
                             </div>
 
@@ -203,11 +212,22 @@
 
                                 <p class="mb-1">The number of stages to be recovered is @StageInfo.Items.Count(s => !s.IsSpent) </p>
 
-                                <p class="mb-1">The amount to be recovered in to a penalty = @StageInfo.Items.Where(s => !s.IsSpent).Sum(s => s.Amount) @network.CoinTicker</p>
+                                @{
+                                    var totalAmount = StageInfo.Items
+                                        .Where(s => !s.IsSpent)
+                                        .Sum(s => Money.Satoshis(s.Amount).ToUnit(MoneyUnit.BTC));
+
+                                    var coinTicker = network.CoinTicker;
+                                }
+                                <p class="mb-1">
+                                    The amount to be recovered into a penalty = @totalAmount @coinTicker
+                                </p>
 
                                 <p class="mb-1">The penalty duration is @project.ProjectInfo.PenaltyDays days </p>
 
-                                <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(recoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                <p class="mb-1">
+                                    <strong>Miner fee:</strong> @Money.Satoshis(recoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                </p>
 
                                 <hr>
 
@@ -220,8 +240,8 @@
 
                                 <p class="mt-3">Are you sure you want to recover these funds?</p>
                             </div>
-                         
-                            
+
+
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-border" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner">Cancel</button>
                                 <button type="button" class="btn btn-border" @onclick="RecoverCoins" disabled="@PrepareToRecoverCoinsConfirmSpinner">
@@ -236,7 +256,7 @@
                                     }
                                 </button>
                             </div>
-                       
+
                         </div>
                     </div>
                 </div>
@@ -259,7 +279,9 @@
 
                                 <p class="mb-1">Send to @releaseRecoveryTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
 
-                                <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(releaseRecoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                <p class="mb-1">
+                                    <strong>Miner fee:</strong> @Money.Satoshis(releaseRecoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                </p>
 
                                 <hr>
 
@@ -308,7 +330,9 @@
 
                                 <p class="mb-1">Send to @endOfProjectTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
 
-                                <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(endOfProjectTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                <p class="mb-1">
+                                    <strong>Miner fee:</strong> @Money.Satoshis(endOfProjectTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                </p>
 
                                 <hr>
 
@@ -343,11 +367,10 @@
         }
     </div>
 </div>
- 
+
 
 @code {
-    [Parameter]
-    public string ProjectId { get; set; }
+    [Parameter] public string ProjectId { get; set; }
     private InvestorProject project;
 
     private bool showRecoveryModal = false;
@@ -371,19 +394,20 @@
     private TransactionInfo? releaseRecoveryTransaction;
     private TransactionInfo? endOfProjectTransaction;
 
+    private bool releaseSigsfound = false;
+
     StageData StageInfo = new();
     string explorerLink;
 
     private FeeData feeData = new();
 
     private bool trxNotFound = false;
+
     public class StageData
     {
-        public string Trxid;
-
         public QueryTransaction? TransactionInfo;
-        public decimal TotalSpendable;
-        public decimal TotalInPenalty;
+        public long TotalSpendable;
+        public long TotalInPenalty;
         public bool CanRecover;
         public bool CanRelease;
         public bool EndOfProject;
@@ -397,7 +421,7 @@
 
         public int Outputindex;
         public string OutputAddress;
-        public decimal Amount;
+        public long Amount; // Store amount in satoshis
         public bool IsSpent;
         public string SpentTo;
 
@@ -430,6 +454,8 @@
 
         try
         {
+            CheckReleaseSignatures();
+
             await FindInvestments();
 
             await CheckSpentFund();
@@ -446,6 +472,20 @@
 
         StateHasChanged();
         await Task.Delay(10);
+    }
+
+    protected void CheckReleaseSignatures()
+    {
+        SignService.LookupReleaseSigs(
+            project.InvestorNPub,
+            project.ProjectInfo.NostrPubKey,
+            null,
+            project.SignaturesInfo?.SignatureRequestEventId!,
+            _ =>
+            {
+                releaseSigsfound = true;
+                StateHasChanged();
+            }, () => {});
     }
 
     private async Task FindInvestments()
@@ -477,7 +517,6 @@
 
         var trxInfo = await _IndexerService.GetTransactionInfoByIdAsync(trx.TransactionId);
 
-        StageInfo.Trxid = trx.TransactionId;
         StageInfo.TransactionInfo = trxInfo;
         lastCheck = DateTime.UtcNow;
 
@@ -491,14 +530,13 @@
             var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
 
             var insert = new StageDataTrx
-                {
-                    OutputAddress = output.Address,
-                    Outputindex = stageIndex + 2,
-                    Amount = Money.Satoshis(output.Balance).ToUnit(MoneyUnit.BTC),
-                    StageIndex = stageIndex,
-                    IsSpent = false,
-
-                };
+            {
+                OutputAddress = output.Address,
+                Outputindex = stageIndex + 2,
+                Amount = output.Balance, // Store balance in satoshis
+                StageIndex = stageIndex,
+                IsSpent = false,
+            };
 
             StageInfo.Items.Add(insert);
 
@@ -507,6 +545,7 @@
     }
 
     DateTime lastCheck = DateTime.UtcNow;
+
     private async Task CheckSpentFund()
     {
         if (StageInfo.TransactionInfo == null)
@@ -545,7 +584,7 @@
 
         foreach (var item in StageInfo.Items)
         {
-            if (LinqExtension.Contains(unconfirmedOutbound, new Outpoint(StageInfo.Trxid, item.Outputindex)))
+            if (LinqExtension.Contains(unconfirmedOutbound, new Outpoint(StageInfo.TransactionInfo.TransactionId, item.Outputindex)))
             {
                 item.IsSpent = true;
                 item.SpentTo = "pending confirmations";
@@ -560,50 +599,58 @@
             {
                 item.IsSpent = true;
 
-                if (output.SpentInTransaction == project.RecoveryTransactionId)
+                if (output.SpentInTransaction == project.UnfundedReleaseTransactionId)
                 {
-                    if (!string.IsNullOrEmpty(project.RecoveryReleaseTransactionId))
-                    {
-                        item.SpentTo = "Recovered after penalty";
-                        item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Unknown };
-                    }
-                    else
-                    {
-                        item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty };
-                        var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
-                        item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
-                    }
+                    item.SpentTo = "Project Unfunded, Spent back to investor";
+                    item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorNoPenalty };
                 }
                 else
                 {
-                    // try to resolve the destination
-                    var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
-
-                    var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == StageInfo.Trxid && input.InputIndex == item.Outputindex);
-
-                    if (input != null && investmentTransaction != null)
+                    if (output.SpentInTransaction == project.RecoveryTransactionId)
                     {
-                        item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project.ProjectInfo, investmentTransaction, item.StageIndex, input.WitScript);
-
-                        switch (item.ProjectScriptType.ScriptType)
+                        if (!string.IsNullOrEmpty(project.RecoveryReleaseTransactionId))
                         {
-                            case ProjectScriptTypeEnum.Founder:
+                            item.SpentTo = "Recovered after penalty";
+                            item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Unknown };
+                        }
+                        else
+                        {
+                            item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty };
+                            var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                            item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
+                        }
+                    }
+                    else
+                    {
+                        // try to resolve the destination
+                        var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+
+                        var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == StageInfo.TransactionInfo.TransactionId && input.InputIndex == item.Outputindex);
+
+                        if (input != null && investmentTransaction != null)
+                        {
+                            item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project.ProjectInfo, investmentTransaction, item.StageIndex, input.WitScript);
+
+                            switch (item.ProjectScriptType.ScriptType)
+                            {
+                                case ProjectScriptTypeEnum.Founder:
                                 {
                                     item.SpentTo = "Spent by founder";
                                     break;
                                 }
-                            case ProjectScriptTypeEnum.InvestorWithPenalty:
+                                case ProjectScriptTypeEnum.InvestorWithPenalty:
                                 {
                                     var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
                                     item.SpentTo = days > 0 ? $"Penalty, released in {days.ToString("0.0")} days" : "Penalty can be released";
                                     break;
                                 }
-                            case ProjectScriptTypeEnum.EndOfProject:
-                            case ProjectScriptTypeEnum.InvestorNoPenalty:
+                                case ProjectScriptTypeEnum.EndOfProject:
+                                case ProjectScriptTypeEnum.InvestorNoPenalty:
                                 {
                                     item.SpentTo = $"Spent by investor";
                                     break;
                                 }
+                            }
                         }
                     }
                 }
@@ -615,20 +662,6 @@
         StageInfo.CanRelease = (StageInfo.Items.Any(a => a.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && DateTime.UtcNow > penaltyExpieryDate);
         StageInfo.TotalInPenalty = StageInfo.Items.Where(t => t.ProjectScriptType?.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty).Sum(t => t.Amount);
         StageInfo.EndOfProject = project.ProjectInfo.ExpiryDate < DateTime.Now;
-    }
-
-    private void AddTransactionToPending(Transaction transaction)
-    {
-        var accountInfo = storage.GetAccountInfo(network.Name);
-        var unconfirmedInbound = _cacheStorage.GetUnconfirmedInboundFunds();
-        var unconfirmedOutbound = _cacheStorage.GetUnconfirmedOutboundFunds();
-
-        unconfirmedInbound.AddRange(_WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, transaction));
-        unconfirmedOutbound.AddRange(transaction.Inputs.Select(_ => new Outpoint(_.PrevOut.Hash.ToString(), (int)_.PrevOut.N)));
-
-        storage.SetAccountInfo(network.Name, accountInfo);
-        _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInbound);
-        _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
     }
 
     private async Task PrepareToRecoverCoinsCheckPassword()
@@ -679,7 +712,7 @@
             foreach (var txIn in removeTxin) unsignedRecoveryTransaction.Inputs.Remove(txIn);
 
             // add fee to the recovery trx
-            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
             Logger.LogInformation($"recoveryTransaction={recoveryTransaction.Transaction.GetHash().ToString()}");
 
@@ -720,7 +753,7 @@
 
                     var accountInfo = storage.GetAccountInfo(network.Name);
 
-                    recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+                    recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
                     StateHasChanged();
                 }
@@ -756,10 +789,9 @@
 
             storage.UpdateInvestmentProject(project);
 
-            AddTransactionToPending(recoveryTransaction.Transaction);
+            _walletUIService.AddTransactionToPending(recoveryTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
-
         }
         catch (Exception e)
         {
@@ -885,10 +917,9 @@
             project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.Transaction.GetHash().ToString();
             storage.UpdateInvestmentProject(project);
 
-            AddTransactionToPending(releaseRecoveryTransaction.Transaction);
+            _walletUIService.AddTransactionToPending(releaseRecoveryTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
-
         }
         catch (Exception e)
         {
@@ -1010,7 +1041,7 @@
             project.EndOfProjectTransactionId = endOfProjectTransaction.Transaction.GetHash().ToString();
             storage.UpdateInvestmentProject(project);
 
-            AddTransactionToPending(endOfProjectTransaction.Transaction);
+            _walletUIService.AddTransactionToPending(endOfProjectTransaction.Transaction);
 
             notificationComponent.ShowNotificationMessage("Done", 1);
         }
@@ -1024,4 +1055,10 @@
             passwordComponent.ClearPassword();
         }
     }
+
+    private void NavigatetoReleaseSigs()
+    {
+        NavigationManager.NavigateTo($"/release/{ProjectId}");
+    }
+
 }

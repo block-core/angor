@@ -40,7 +40,7 @@ public class WalletOperations : IWalletOperations
     }
     
     public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
+        WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -55,7 +55,7 @@ public class WalletOperations : IWalletOperations
             .AddKeys(coins.keys.ToArray())
             .SetChange(BitcoinAddress.Create(changeAddress, network))
             .ContinueToBuild(transaction)
-            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate.FeeRate)))
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
             .CoverTheRest();
 
         var signTransaction = builder.BuildTransaction(true);
@@ -77,7 +77,7 @@ public class WalletOperations : IWalletOperations
     }
 
     public TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
+        WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -86,7 +86,7 @@ public class WalletOperations : IWalletOperations
         var changeOutput = clonedTransaction.AddOutput(Money.Zero, BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
 
         var virtualSize = clonedTransaction.GetVirtualSize(4);
-        var fee = new FeeRate(Money.Satoshis(feeRate.FeeRate)).GetFee(virtualSize);
+        var fee = new FeeRate(Money.Satoshis(feeRate)).GetFee(virtualSize);
         
         var utxoDataWithPaths = FindOutputsForTransaction((long)fee, accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
@@ -124,7 +124,7 @@ public class WalletOperations : IWalletOperations
     {
         Network network = _networkConfiguration.GetNetwork();
 
-        if (sendInfo.SendAmountSat > sendInfo.SendUtxos.Values.Sum(s => s.UtxoData.value))
+        if (sendInfo.SendAmount > sendInfo.SendUtxos.Values.Sum(s => s.UtxoData.value))
         {
             throw new ApplicationException("not enough funds");
         }
@@ -138,11 +138,11 @@ public class WalletOperations : IWalletOperations
         }
 
         var builder = new TransactionBuilder(network)
-            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), Money.Coins(sendInfo.SendAmount))
+            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), Money.Satoshis(sendInfo.SendAmount))
             .AddCoins(coins)
             .AddKeys(keys.ToArray())
             .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network))
-            .SendEstimatedFees(new FeeRate(Money.Coins(sendInfo.FeeRate)));
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(sendInfo.FeeRate)));
 
         var signedTransaction = builder.BuildTransaction(true);
 
@@ -558,7 +558,7 @@ public class WalletOperations : IWalletOperations
 
         if (sendInfo.SendUtxos.Count == 0)
         {
-            var utxosToSpend = FindOutputsForTransaction(sendInfo.SendAmountSat, accountInfo);
+            var utxosToSpend = FindOutputsForTransaction(sendInfo.SendAmount, accountInfo);
 
             foreach (var data in utxosToSpend) //TODO move this out of the fee calculation
             {
@@ -572,7 +572,7 @@ public class WalletOperations : IWalletOperations
                 Money.Satoshis(_.value), Script.FromHex(_.scriptHex)));
 
         var builder = new TransactionBuilder(network)
-            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), sendInfo.SendAmountSat)
+            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), sendInfo.SendAmount)
             .AddCoins(coins)
             .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network));
 

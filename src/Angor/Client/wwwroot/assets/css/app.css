@@ -2147,7 +2147,7 @@ button:hover:not(:disabled) {
 }
 
 .info-value {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--angor-value-color, #333);
 }
@@ -2877,4 +2877,38 @@ button:hover:not(:disabled) {
     .navbar .text-sm h6 {
         max-width: none;
     }
+}
+.ms--4{
+    margin-right:-4px;
+}
+
+.table-container {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .table td, .table th {
+        min-width: 120px;
+    }
+    
+    .text-break {
+        word-break: break-word;
+    }
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
 }

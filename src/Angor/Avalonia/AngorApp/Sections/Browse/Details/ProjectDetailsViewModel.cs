@@ -2,16 +2,17 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Angor.UI.Model;
 using AngorApp.Sections.Browse.Details.Invest.Amount;
-using AngorApp.Services;
 using AngorApp.UI.Controls.Common.Success;
 using AngorApp.UI.Controls.Common.TransactionPreview;
+using AngorApp.UI.Services;
 using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.Sections.Browse.Details;
 
-public class ProjectDetailsViewModel(IWalletProvider walletProvider, IProject project, UIServices uiServices) : ReactiveObject, IProjectDetailsViewModel
+public class ProjectDetailsViewModel(IWalletProvider walletProvider, IProject project, UIServices uiServices)
+    : ReactiveObject, IProjectDetailsViewModel
 {
     public object Icon => project.Icon;
     public object Picture => project.Picture;
@@ -19,7 +20,8 @@ public class ProjectDetailsViewModel(IWalletProvider walletProvider, IProject pr
     public ICommand Invest { get; } = ReactiveCommand.CreateFromTask(() =>
     {
         var maybeWallet = walletProvider.GetWallet();
-        return maybeWallet.Match(wallet => DoInvest(wallet, project, uiServices), () => uiServices.NotificationService.Show("You need to create a Wallet before investing", "No wallet"));
+        return maybeWallet.Match(wallet => DoInvest(wallet, project, uiServices),
+            () => uiServices.NotificationService.Show("You need to create a Wallet before investing", "No wallet"));
     });
 
     public IEnumerable<INostrRelay> Relays { get; } =

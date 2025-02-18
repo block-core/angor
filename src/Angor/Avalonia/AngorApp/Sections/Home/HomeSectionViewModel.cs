@@ -2,25 +2,23 @@ using System.Windows.Input;
 using Angor.UI.Model;
 using AngorApp.Core;
 using AngorApp.Sections.Shell;
-using AngorApp.Services;
+using AngorApp.UI.Services;
 
 namespace AngorApp.Sections.Home;
 
-public class HomeSectionViewModel : ReactiveObject, IHomeSectionViewModel
+public class HomeSectionViewModel(
+    IActiveWallet activeWallet,
+    UIServices uiServices,
+    Func<IMainViewModel> getMainViewModel)
+    : ReactiveObject, IHomeSectionViewModel
 {
-    private readonly IWalletProvider provider;
+    //GoToFounderSection = ReactiveCommand.Create(() => getMainViewModel().GoToSection("Founder"));
 
-    public HomeSectionViewModel(IWalletProvider provider, UIServices uiServices, Func<IMainViewModel> getMainViewModel)
-    {
-        this.provider = provider;
-        provider.GetWallet();
-        GoToWalletSection = ReactiveCommand.Create(() => getMainViewModel().GoToSection("Wallet"));
-        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(Constants.AngorHubUri));
-        //GoToFounderSection = ReactiveCommand.Create(() => getMainViewModel().GoToSection("Founder"));
-    }
+    public bool IsWalletSetup => activeWallet.Current.HasValue;
 
-    public bool IsWalletSetup => provider.GetWallet().HasValue;
-    public ICommand GoToWalletSection { get; }
+    public ICommand GoToWalletSection { get; } = ReactiveCommand.Create(() => getMainViewModel().GoToSection("Wallet"), activeWallet.HasWallet);
+
     public ICommand GoToFounderSection { get; }
-    public ICommand OpenHub { get; }
+
+    public ICommand OpenHub { get; } = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(Constants.AngorHubUri));
 }
