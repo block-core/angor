@@ -20,16 +20,4 @@ public sealed record XPub
 
         return new XPub(value, scriptType, path);
     }
-
-    public string ToDescriptor(DerivationType derivationType)
-    {
-        var descriptor = ScriptType switch
-        {
-            DomainScriptType.SegWit => $"wpkh({Value}/{(int)derivationType}/*)",
-            DomainScriptType.Taproot => $"tr({Value}/{(int)derivationType}/*)",
-            _ => throw new NotSupportedException($"Script type {ScriptType} not supported")
-        };
-
-        return descriptor;
-    }
 }
