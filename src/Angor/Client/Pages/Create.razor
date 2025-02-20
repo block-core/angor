@@ -1187,6 +1187,15 @@
             return false;
         }
 
+        foreach (var stage in project.ProjectInfo.Stages)
+        {
+            if (stage.AmountToRelease <= 0 || stage.AmountToRelease > 100)
+            {
+                notificationComponent.ShowErrorMessage("Stage percentage must be between 1 and 100.");
+                return false;
+            }
+        }
+
         var projects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
 
         if (projects.Any(a => project.ProjectInfo.ProjectIdentifier == a.ProjectInfo.ProjectIdentifier))
