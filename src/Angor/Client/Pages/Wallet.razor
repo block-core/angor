@@ -25,29 +25,27 @@
 <PageTitle>Wallet and balances</PageTitle>
 <NotificationComponent @ref="notificationComponent"/>
 <PasswordComponent @ref="passwordComponent"/>
-<div class="row">
-    <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex col-auto my-auto">
-                <span class="me-1">
+<div class="row slide-in">
+    <div class="card card-body hover-effect">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <div class="d-flex col-auto my-auto align-items-center">
+                <span class="user-select-none animate-rotate">
                     <Icon IconName="wallet" Width="42" Height="42"/>
                 </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-1 font-weight-bolder">
+                <div class="ms-3">
+                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
                         Wallet
                     </h5>
-                    <p class="mb-0 font-weight-normal text-sm">
-                        Wallet and balances
-                    </p>
                 </div>
             </div>
-            @if (hasWallet)
-            {
-                <div>
-                    <button type="button" class="btn btn-border-danger mb-0" @onclick="() => walletWordsModal = true" data-cy="wallet-words">Wallet Words</button>
-                </div>
-            }
-
+            <div class="d-flex align-items-center">
+                @if (hasWallet)
+                {
+                    <button class="btn btn-border mx-2" @onclick="() => walletWordsModal = true" data-cy="wallet-words">
+                        <span class="nav-link-text">Wallet Words</span>
+                    </button>
+                }
+            </div>
         </div>
     </div>
 </div>
@@ -264,7 +262,16 @@
                                                     <input type="@passwordInputType" class="form-control"
                                                            @bind="newWalletPassword" placeholder="Enter password">
                                                     <button class="btn btn-border" @onclick="TogglePasswordVisibility">
-                                                        @passwordToggleText
+
+                                                        @if (passwordToggleText == "Show")
+                                                        {
+                                                            <Icon IconName="visibility-off" Height="24" Width="24"></Icon>
+                                                        }
+                                                        else
+                                                        {
+                                                            <Icon IconName="visibility" Height="24" Width="24"></Icon>
+                                                        }
+                                                        
                                                     </button>
                                                 </div>
                                             </div>
@@ -275,49 +282,51 @@
                         </div>
 
                         <div class="modal-footer border-0 pt-0">
-                            <div class="d-flex flex-column flex-md-row justify-content-md-end w-100 gap-2">
+                            <div class="d-flex flex-column flex-md-row justify-content-between w-100">
                                 @if (network.NetworkType == NetworkType.Testnet && currentStep == 2 && isNewWallet)
                                 {
-                                    <div class="d-flex flex-column flex-md-row justify-content-between w-100">
-                                        <button class="btn btn-border-warning order-1 order-md-0 w-100 w-md-auto mb-2 mb-md-0" @onclick="SkipVerification">
+                                    <div class="order-1 order-md-0">
+                                        <button class="btn btn-border-warning w-100 w-md-auto" @onclick="SkipVerification">
                                             Skip Verification
                                         </button>
-                                        <div class="d-flex flex-column flex-md-row gap-2">
-                                            @if (currentStep > 1)
-                                            {
-                                                <button class="btn btn-border" @onclick="PreviousStep">Back</button>
-                                            }
-                                            <button class="btn btn-border-success" @onclick="NextStep" disabled="@(!CanProceedToNextStep())">
-                                                Next
-                                            </button>
-                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column flex-md-row gap-2 order-0 order-md-1">
+                                        @if (currentStep > 1)
+                                        {
+                                            <button class="btn btn-border order-1 order-md-0" @onclick="PreviousStep">Back</button>
+                                        }
+                                        <button class="btn btn-border-success order-0 order-md-1" @onclick="NextStep" disabled="@(!CanProceedToNextStep())">
+                                            Next
+                                        </button>
                                     </div>
                                 }
                                 else
                                 {
-                                    @if (currentStep > 1)
-                                    {
-                                        <button class="btn btn-border" @onclick="PreviousStep">Back</button>
-                                    }
+                                    <div class="d-flex flex-column flex-md-row justify-content-md-end w-100 gap-2">
+                                        @if (currentStep > 1)
+                                        {
+                                            <button class="btn btn-border order-1 order-md-0" @onclick="PreviousStep">Back</button>
+                                        }
 
-                                    @if (currentStep < totalSteps)
-                                    {
-                                        <button class="btn btn-border-success" @onclick="NextStep"
-                                                disabled="@(!CanProceedToNextStep())">
-                                            Next
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-border-success" @onclick="CreateWalletAsync"
-                                                disabled="@(!CanCreateWallet())">
-                                            @if (createWalletSpinner)
-                                            {
-                                                <span class="spinner-border spinner-border-sm me-2"></span>
-                                            }
-                                            @(isNewWallet ? "Create Wallet" : "Recover Wallet")
-                                        </button>
-                                    }
+                                        @if (currentStep < totalSteps)
+                                        {
+                                            <button class="btn btn-border-success order-0 order-md-1" @onclick="NextStep"
+                                                    disabled="@(!CanProceedToNextStep())">
+                                                Next
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-border-success order-0 order-md-1" @onclick="CreateWalletAsync"
+                                                    disabled="@(!CanCreateWallet())">
+                                                @if (createWalletSpinner)
+                                                {
+                                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                                }
+                                                @(isNewWallet ? "Create Wallet" : "Recover Wallet")
+                                            </button>
+                                        }
+                                    </div>
                                 }
                             </div>
                         </div>
@@ -396,67 +405,86 @@ else
     <!-- Section 1 -->
     <div class="row mt-4">
 
-        <div class="card card-body position-relative z-index-1">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex flex-wrap align-items-center">
-                    <div class="d-flex flex-wrap align-items-center">
-
-                        <div class="d-flex align-items-center">
-                            <span class="user-select-none me-3">
-                                <Icon IconName="balance" Width="42" Height="42"></Icon>
-                            </span>
-                            <div>
-                                <BalanceDisplay BtcBalance="@Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC)"
-                                                BtcBalanceInFiat="@btcBalanceInUsd"
-                                                PreferredCurrency="@storage.GetCurrencyDisplaySetting()"
-                                                ShowFiatInline="true"/>
-                            </div>
-
-                        </div>
-
+        <div class="card card-body position-relative z-index-1 wallet-balance-card">
+            <div class="wallet-header">
+                <div class="wallet-balance-section">
+                    <div class="wallet-icon">
+                        <span class="user-select-none animate-rotate">
+                            <Icon IconName="balance" Width="42" Height="42"/>
+                        </span>
                     </div>
-                    @if (CanGetTestCoins())
-                    {
-                        <div class="d-flex flex-wrap align-items-center">
-                            <button class="btn btn-border ms-2" data-cy="get-test-coins" @onclick="GetTestCoins" disabled="@testCoinsSpinner">
-                                @if (testCoinsSpinner)
-                                {
-                                    <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status" aria-hidden="true"></span>
-                                }
-                                else
-                                {
-                                    <span>Get Test Coins</span>
-                                }
-                            </button>
-                        </div>
-                    }
-
+                    
+                    <div class="wallet-balance">
+                        <BalanceDisplay 
+                            BtcBalance="@Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC)"
+                            BtcBalanceInFiat="@btcBalanceInUsd"
+                            PreferredCurrency="@storage.GetCurrencyDisplaySetting()"
+                            ShowFiatInline="true"/>
+                    </div>
                 </div>
 
+                <div class="wallet-actions">
+                    @if (CanGetTestCoins())
+                    {
+                        <button class="btn btn-border-warning test-coins-btn h-100" 
+                                data-cy="get-test-coins" 
+                                @onclick="GetTestCoins" 
+                                disabled="@testCoinsSpinner">
+                            @if (testCoinsSpinner)
+                            {
+                                <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" 
+                                      role="status" 
+                                      aria-hidden="true">
+                                </span>
+                            }
+                            else
+                            {
+                                <Icon IconName="balance" Height="24" Width="24" Class="me-2" />
+                                <span>Get Test Coins</span>
+                            }
+                        </button>
+                    }
 
-                <button class="btn btn-border ml-2" @onclick="RefreshBalance">
-
-                    <span data-cy="history-refresh" class="@(balanceSpinner ? "rotate-icon" : "")" aria-hidden="true">
-                        <Icon IconName="refresh" Height="24" Width="24"></Icon>
-                    </span>
-
-                </button>
-
-
+                    <button class="btn btn-border-success refresh-btn h-100" 
+                            @onclick="RefreshBalance"
+                            disabled="@balanceSpinner">
+                        @if (balanceSpinner)
+                        {
+                            <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" 
+                                  role="status" 
+                                  aria-hidden="true">
+                            </span>
+                        }
+                        else
+                        {
+                            <Icon IconName="refresh" Height="24" Width="24" Class="me-2"/>
+                            <span>Refresh</span>
+                        }
+                    </button>
+                </div>
             </div>
-            <div class="d-flex">
+
+            <div class="wallet-details">
                 @if (accountBalanceInfo.TotalUnconfirmedBalance > 0)
                 {
-                    <div class="mt-4 me-4">
-                        <p class="text-sm opacity-8 mb-0" data-cy="confirmed-balance">Unconfirmed balance</p>
-                        <h6 class="mb-0">@Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
+                    <div class="balance-info">
+                        <p class="balance-label" data-cy="confirmed-balance">
+                            Unconfirmed balance
+                        </p>
+                        <h6 class="balance-value">
+                            @Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) 
+                            @network.CoinTicker
+                        </h6>
                     </div>
                 }
                 @if (accountBalanceInfo.TotalBalanceReserved > 0)
                 {
-                    <div class="mt-4 me-4">
-                        <p class="text-sm opacity-8 mb-0">Reserved balance</p>
-                        <h6 class="mb-0">@Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h6>
+                    <div class="balance-info">
+                        <p class="balance-label">Reserved balance</p>
+                        <h6 class="balance-value">
+                            @Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC) 
+                            @network.CoinTicker
+                        </h6>
                     </div>
                 }
             </div>
@@ -589,7 +617,7 @@ else
             <div class="card card-body p-3 mt-4">
 
                 <div class="d-flex align-items-center">
-                    <span class="user-select-none">
+                    <span class="user-select-none animate-rotate">
                         <Icon IconName="send"></Icon>
                     </span>
                     <div class="h-100 ms-3">
@@ -785,7 +813,7 @@ else
 
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <div class="d-flex align-items-center">
-                        <span class="user-select-none">
+                        <span class="user-select-none animate-rotate">
                             <Icon IconName="receive"></Icon>
                         </span>
                         <div class="h-100 ms-3">
@@ -819,7 +847,7 @@ else
         <div class="col-md-12 mb-lg-0 mb-4">
             <div class="card card-body p-3 mt-4">
                 <div class="d-flex align-items-center">
-                    <span class="user-select-none">
+                    <span class="user-select-none animate-rotate">
                         <Icon IconName="calculator"></Icon>
                     </span>
                     <div class="h-100 ms-3">

@@ -244,18 +244,22 @@
 ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
+    transition: all 0.3s ease;
+    background-color: transparent;
 }
 
-::-webkit-scrollbar-track {
+ ::-webkit-scrollbar-track {
     background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--angor-scrollbar-thumb-hover-bg);
+    background: rgba(8, 108, 129, 0.3);
+    backdrop-filter: blur(5px);
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--angor-scrollbar-thumb-hover-bg);
+    background: rgba(8, 108, 129, 0.5);
 }
 
 .modal-body-scroll {
@@ -812,7 +816,6 @@ tr[style*="cursor: pointer;"]:hover {
     align-items: center;
     z-index: 1000000;
     backdrop-filter: blur(3px);
-    background: rgba(0, 0, 0, 0.5);
 }
 
 .card-img-top {
@@ -1474,11 +1477,42 @@ a p {
 }
 
 .hover-effect {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: all 0.3s ease;
+    background: var(--form-bg);
 }
 
 .hover-effect:hover {
     transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.animate-rotate span {
+    display: inline-block;
+    transition: transform 0.5s ease;
+}
+
+.animate-rotate:hover span {
+    transform: rotate(360deg);
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+.animate-fade-in-delayed {
+    animation: fadeIn 0.8s ease-in;
+}
+
+.animate-scale {
+    transition: transform 0.2s ease;
+}
+
+.animate-scale:hover {
+    transform: scale(1.05);
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
 }
 
 .card-zoom {
@@ -1702,7 +1736,7 @@ button:hover:not(:disabled) {
 }
 
 .animate-scale:hover {
-    transform: scale(1);
+    transform: scale(1.05);
 }
 
 .action-buttons a {
@@ -2514,10 +2548,6 @@ button:hover:not(:disabled) {
 }
 
 @media (max-width: 576px) {
-    .modal-dialog {
-        margin: 0.5rem;
-    }
-
     .project-id-card {
         padding: 0.75rem;
     }
@@ -2911,4 +2941,402 @@ input[type=number]::-webkit-outer-spin-button {
 
 input[type=number] {
     -moz-appearance: textfield;
+}
+
+.modal-footer .d-flex {
+    gap: 0.5rem !important;
+}
+
+@media (min-width: 768px) {
+    .modal-footer .d-flex {
+        flex-direction: row !important;
+    }
+
+    .modal-footer .btn {
+        width: auto !important;
+        margin-bottom: 0 !important;
+    }
+
+    .modal-footer .gap-3 {
+        gap: 1rem !important;
+    }
+    
+    .modal-footer .order-md-0 {
+        order: 0;
+    }
+    
+    .modal-footer .order-md-1 {
+        order: 1;
+    }
+}
+
+@media (max-width: 767px) {
+    .modal-footer .d-flex {
+        flex-direction: column !important;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .modal-footer .gap-3 {
+        gap: 1rem !important;
+    }
+    
+    .modal-footer .order-0 {
+        order: 0;
+    }
+    
+    .modal-footer .order-1 {
+        order: 1;
+    }
+}
+
+.tab-container {
+    padding: 1rem;
+    background: var(--angor-section-bg, rgba(0, 0, 0, 0.05));
+    border-radius: 12px;
+}
+
+.tab-card {
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid var(--btn-border);
+    background: var(--form-bg);
+    padding: 0.5rem;
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tab-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tab-card.active {
+    border-color: var(--angor-secondary);
+    background: linear-gradient(135deg, rgba(8, 108, 129, 0.1), rgba(8, 108, 129, 0.05));
+}
+
+.tab-card .card-body {
+    padding: 0.75rem !important;
+}
+
+.tab-icon {
+    transition: transform 0.3s ease;
+    opacity: 0.7;
+}
+
+.tab-card:hover .tab-icon {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.tab-card h5 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--angor-primary);
+    margin: 0;
+}
+
+.tab-card.active h5 {
+    color: var(--angor-primary);
+    font-weight: 600;
+}
+
+.tab-card.active .tab-icon {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .tab-container {
+        padding: 0.75rem;
+    }
+    
+    .tab-card {
+        padding: 0.25rem;
+    }
+    
+    .tab-card .card-body {
+        padding: 0.5rem !important;
+    }
+    
+    .tab-icon svg {
+        width: 32px !important;
+        height: 32px !important;
+    }
+    
+    .tab-card h5 {
+        font-size: 0.9rem;
+    }
+}
+
+.wallet-balance-card {
+    background: var(--form-bg);
+    border-radius: 15px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.wallet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.wallet-balance-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.wallet-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--angor-secondary-rgb), 0.1);
+    padding: 0.5rem;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.wallet-icon:hover {
+    transform: scale(1.05);
+}
+
+.wallet-balance {
+    display: flex;
+    flex-direction: column;
+}
+
+.wallet-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.test-coins-btn,
+.refresh-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.test-coins-btn:hover:not(:disabled),
+.refresh-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.spinner-border {
+    width: 24px;
+    height: 24px;
+}
+
+.btn-border-warning,
+.btn-border-success {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-border-warning:disabled,
+.btn-border-success:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.wallet-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.balance-info {
+    flex: 1;
+    min-width: 200px;
+    padding: 1rem;
+    background: rgba(var(--angor-secondary-rgb), 0.05);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.balance-info:hover {
+    background: rgba(var(--angor-secondary-rgb), 0.1);
+}
+
+.balance-label {
+    font-size: 0.875rem;
+    color: var(--form-label);
+    margin-bottom: 0.5rem;
+    opacity: 0.8;
+}
+
+.balance-value {
+    font-size: 1rem;
+    color: var(--form-text);
+    font-weight: 600;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .wallet-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .wallet-actions {
+        justify-content: space-between;
+    }
+    
+    .wallet-balance-section {
+        justify-content: center;
+    }
+    
+    .balance-info {
+        min-width: 100%;
+    }
+    
+    .test-coins-btn,
+    .refresh-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .wallet-balance-card {
+        padding: 1rem;
+    }
+    
+    .wallet-icon {
+        padding: 0.35rem;
+    }
+    
+    .balance-label {
+        font-size: 0.8rem;
+    }
+    
+    .balance-value {
+        font-size: 0.9rem;
+    }
+}
+
+.founder-card {
+    background: var(--form-bg);
+    border-radius: 15px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.founder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.founder-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.founder-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--angor-secondary-rgb), 0.1);
+    padding: 0.75rem;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.founder-icon:hover {
+    transform: scale(1.05);
+}
+
+.founder-title {
+    flex: 1;
+    min-width: 200px;
+}
+
+.founder-title h5 {
+    color: var(--form-text);
+    font-size: 1.25rem;
+}
+
+.founder-title p {
+    color: var(--form-label);
+    line-height: 1.5;
+    margin-top: 0.5rem;
+    opacity: 0.9;
+}
+
+.founder-actions {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+.create-project-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    min-width: 160px;
+    justify-content: center;
+}
+
+.create-project-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.create-project-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .founder-header {
+        flex-direction: column;
+    }
+    
+    .founder-info {
+        width: 100%;
+    }
+    
+    .founder-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .create-project-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .founder-card {
+        padding: 1rem;
+    }
+    
+    .founder-icon {
+        padding: 0.5rem;
+    }
+    
+    .founder-title h5 {
+        font-size: 1.1rem;
+    }
+    
+    .founder-title p {
+        font-size: 0.85rem;
+    }
 }

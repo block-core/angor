@@ -49,11 +49,11 @@
     <div class="card card-body animate-fade-in">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none">
+                <span class="user-select-none animate-rotate">
                     <Icon IconName="portfolio" Height="42" Width="42" />
                 </span>
                 <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
+                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
                         Project Investment
                     </h5>
 
@@ -252,7 +252,7 @@
                                         Release: @stage.StageDateTime.ToString("dd/MM/yyyy")
                                     </p>
                                     <p class="mb-0">
-                                        <Icon IconName="time" Height="16" Width="16" class="me-2" />
+                                        <Icon IconName="clock-square" Height="16" Width="16" class="me-2" />
                                         @stage.DaysFromStartDate days from start
                                     </p>
                                 </div>
@@ -356,12 +356,12 @@
                                             <div class="info-card mb-3 p-3 shadow-sm rounded animate-fade-in">
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <div>
-                                                        <div class="info-label">Stage @(++index)</div>
+                                                        <div class="info-label">Stage @(++index):</div>
                                                         <div class="info-value">@StagesBreakdown[index - 1].AmountBtc @network.CoinTicker</div>
                                                     </div>
-                                                    <div class="text-end">
-                                                        <div class="text-muted fw-semibold">Release Date</div>
-                                                        <div class="fs-5 fw-bold text-dark">@stage.ReleaseDate.ToString("dd/MM/yyyy")</div>
+                                                    <div>
+                                                        <div class="info-label">Release:</div>
+                                                        <div class="info-value">@stage.ReleaseDate.ToString("dd/MM/yyyy")</div>
                                                     </div>
                                                 </div>
                                                 <div class="text-muted small mt-2">

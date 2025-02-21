@@ -11,8 +11,7 @@
 @using Blockcore.NBitcoin.DataEncoders
 @using Microsoft.Extensions.Logging.Abstractions
 
-<h3>CheckTransactionCode</h3>
-
+ 
 @inject IWalletOperations _walletOperations; 
 @inject INetworkConfiguration _networkConfiguration;
 @inject IClientStorage storage;
@@ -21,33 +20,32 @@
 @inject ISeederTransactionActions SeederTransactionActions;
 @inject IFounderTransactionActions FounderTransactionActions;
 
-<div class="row">
-    <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between">
+<div class="row slide-in">
+    <div class="card card-body hover-effect">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
             <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="addresses" Height="42" Width="42" />
+                <span class="user-select-none animate-rotate">
+                    <Icon IconName="addresses" Width="42" Height="42" />
                 </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
+                <div class="ms-3">
+                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
                         Dashboard
                     </h5>
- 
                 </div>
             </div>
-            <button class="btn btn-border w-100 w-lg-auto me-3 mb-lg-0" @onclick="CreateInvestmentTransaction">
-                <i>
-                    <Icon IconName="refresh" Width="24" Height="24"></Icon>
-                </i>
-                <span class="nav-link-text ms-1">Load transaction</span>
+            <div class="d-flex align-items-center">
+                <button class="btn btn-border w-100 w-lg-auto me-3 mb-lg-0" @onclick="CreateInvestmentTransaction">
+                    <i>
+                        <Icon IconName="refresh" Width="24" Height="24"></Icon>
+                    </i>
+                    <span class="nav-link-text ms-1">Load transaction</span>
 
-            </button>
+                </button>
+            </div>
         </div>
     </div>
 </div>
-
- 
-        
+   
 @if (transactionInfo == null)
 {
     <p><em>Loading...</em></p>

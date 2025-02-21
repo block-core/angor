@@ -31,15 +31,15 @@
 }
 
 
-<div class="row">
-    <div class="card card-body">
+<div class="row slide-in">
+    <div class="card card-body hover-effect">
         <div class="d-flex align-items-center justify-content-between flex-wrap">
             <div class="d-flex col-auto my-auto align-items-center">
                 <span class="user-select-none">
                     <Icon IconName="portfolio" Height="42" Width="42" />
                 </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
+                <div class="ms-3">
+                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
                         Invested Portfolio
                     </h5>
                 </div>
@@ -49,6 +49,8 @@
                     <i class="@(RefreshBalanceTriggered ? "rotate-icon" : "")">
                         <Icon IconName="refresh" Width="24" Height="24"></Icon>
                     </i>
+                    <span class="nav-link-text ms-1">Refresh</span>
+
                 </button>
 
                 <button class="btn btn-border-warning w-100 w-lg-auto" @onclick="NavigateToPenalties" data-toggle="tooltip" title="Penalties return control to investors but put Bitcoin on hold for a penalty duration.">
