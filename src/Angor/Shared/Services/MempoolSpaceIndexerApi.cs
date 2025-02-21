@@ -400,10 +400,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
             Timestamp = trx.Status.BlockTime,
             Inputs = trx.Vin.Select((x, i) => new QueryTransactionInput
             {
-                InputIndex = i,
+                InputIndex = x.Vout,
                 InputTransactionId = x.Txid,
-                WitScript = new WitScript(x.Witness.Select(s => Encoders.Hex.DecodeData(s)).ToArray()).ToString()
-            }),
+                WitScript = new WitScript(x.Witness.Select(s => Encoders.Hex.DecodeData(s)).ToArray()).ToScript().ToHex(),
+            }).ToList(),
             Outputs = trx.Vout
                 .Select((x, i) => new QueryTransactionOutput
                 {
@@ -414,7 +414,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
                     OutputType = x.ScriptpubkeyType,
                     ScriptPubKeyAsm = x.ScriptpubkeyAsm,
                     SpentInTransaction = spends.ElementAtOrDefault(i)?.Txid
-                })
+                }).ToList()
         };
     }
 
