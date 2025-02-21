@@ -3229,3 +3229,117 @@ input[type=number] {
         font-size: 0.9rem;
     }
 }
+
+.founder-card {
+    background: var(--form-bg);
+    border: 1px solid var(--form-border);
+    border-radius: 15px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.founder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.founder-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.founder-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--angor-secondary-rgb), 0.1);
+    padding: 0.75rem;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.founder-icon:hover {
+    transform: scale(1.05);
+}
+
+.founder-title {
+    flex: 1;
+    min-width: 200px;
+}
+
+.founder-title h5 {
+    color: var(--form-text);
+    font-size: 1.25rem;
+}
+
+.founder-title p {
+    color: var(--form-label);
+    line-height: 1.5;
+    margin-top: 0.5rem;
+    opacity: 0.9;
+}
+
+.founder-actions {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+.create-project-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    min-width: 160px;
+    justify-content: center;
+}
+
+.create-project-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.create-project-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .founder-header {
+        flex-direction: column;
+    }
+    
+    .founder-info {
+        width: 100%;
+    }
+    
+    .founder-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .create-project-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .founder-card {
+        padding: 1rem;
+    }
+    
+    .founder-icon {
+        padding: 0.5rem;
+    }
+    
+    .founder-title h5 {
+        font-size: 1.1rem;
+    }
+    
+    .founder-title p {
+        font-size: 0.85rem;
+    }
+}
