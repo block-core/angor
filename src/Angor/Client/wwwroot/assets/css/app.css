@@ -1478,7 +1478,6 @@ a p {
 
 .hover-effect {
     transition: all 0.3s ease;
-    border: 1px solid var(--btn-border);
     background: var(--form-bg);
 }
 
@@ -3076,7 +3075,6 @@ input[type=number] {
 
 .wallet-balance-card {
     background: var(--form-bg);
-    border: 1px solid var(--form-border);
     border-radius: 15px;
     padding: 1.5rem;
     transition: all 0.3s ease;
@@ -3232,7 +3230,6 @@ input[type=number] {
 
 .founder-card {
     background: var(--form-bg);
-    border: 1px solid var(--form-border);
     border-radius: 15px;
     padding: 1.5rem;
     transition: all 0.3s ease;
