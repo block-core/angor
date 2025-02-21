@@ -242,18 +242,13 @@
 }
 
 ::-webkit-scrollbar {
-    width: 1px;
-    height: 1px;
+    width: 5px;
+    height: 5px;
     transition: all 0.3s ease;
     background-color: transparent;
 }
 
-::-webkit-scrollbar:hover {
-    width: 5px;
-    height: 5px;
-}
-
-::-webkit-scrollbar-track {
+ ::-webkit-scrollbar-track {
     background: transparent;
 }
 
@@ -1482,11 +1477,43 @@ a p {
 }
 
 .hover-effect {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: all 0.3s ease;
+    border: 1px solid var(--btn-border);
+    background: var(--form-bg);
 }
 
 .hover-effect:hover {
     transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.animate-rotate span {
+    display: inline-block;
+    transition: transform 0.5s ease;
+}
+
+.animate-rotate:hover span {
+    transform: rotate(360deg);
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+.animate-fade-in-delayed {
+    animation: fadeIn 0.8s ease-in;
+}
+
+.animate-scale {
+    transition: transform 0.2s ease;
+}
+
+.animate-scale:hover {
+    transform: scale(1.05);
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
 }
 
 .card-zoom {
@@ -1710,7 +1737,7 @@ button:hover:not(:disabled) {
 }
 
 .animate-scale:hover {
-    transform: scale(1);
+    transform: scale(1.05);
 }
 
 .action-buttons a {
@@ -3043,6 +3070,162 @@ input[type=number] {
     }
     
     .tab-card h5 {
+        font-size: 0.9rem;
+    }
+}
+
+.wallet-balance-card {
+    background: var(--form-bg);
+    border: 1px solid var(--form-border);
+    border-radius: 15px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.wallet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.wallet-balance-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.wallet-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--angor-secondary-rgb), 0.1);
+    padding: 0.5rem;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.wallet-icon:hover {
+    transform: scale(1.05);
+}
+
+.wallet-balance {
+    display: flex;
+    flex-direction: column;
+}
+
+.wallet-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.test-coins-btn,
+.refresh-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.test-coins-btn:hover:not(:disabled),
+.refresh-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.spinner-border {
+    width: 24px;
+    height: 24px;
+}
+
+.btn-border-warning,
+.btn-border-success {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-border-warning:disabled,
+.btn-border-success:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.wallet-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.balance-info {
+    flex: 1;
+    min-width: 200px;
+    padding: 1rem;
+    background: rgba(var(--angor-secondary-rgb), 0.05);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.balance-info:hover {
+    background: rgba(var(--angor-secondary-rgb), 0.1);
+}
+
+.balance-label {
+    font-size: 0.875rem;
+    color: var(--form-label);
+    margin-bottom: 0.5rem;
+    opacity: 0.8;
+}
+
+.balance-value {
+    font-size: 1rem;
+    color: var(--form-text);
+    font-weight: 600;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .wallet-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .wallet-actions {
+        justify-content: space-between;
+    }
+    
+    .wallet-balance-section {
+        justify-content: center;
+    }
+    
+    .balance-info {
+        min-width: 100%;
+    }
+    
+    .test-coins-btn,
+    .refresh-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .wallet-balance-card {
+        padding: 1rem;
+    }
+    
+    .wallet-icon {
+        padding: 0.35rem;
+    }
+    
+    .balance-label {
+        font-size: 0.8rem;
+    }
+    
+    .balance-value {
         font-size: 0.9rem;
     }
 }
