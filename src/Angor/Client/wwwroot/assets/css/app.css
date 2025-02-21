@@ -2911,3 +2911,53 @@ input[type=number]::-webkit-outer-spin-button {
 input[type=number] {
     -moz-appearance: textfield;
 }
+
+.modal-footer .d-flex {
+    gap: 0.5rem !important;
+}
+
+@media (min-width: 768px) {
+    .modal-footer .d-flex {
+        flex-direction: row !important;
+    }
+
+    .modal-footer .btn {
+        width: auto !important;
+        margin-bottom: 0 !important;
+    }
+
+    .modal-footer .gap-3 {
+        gap: 1rem !important;
+    }
+    
+    .modal-footer .order-md-0 {
+        order: 0;
+    }
+    
+    .modal-footer .order-md-1 {
+        order: 1;
+    }
+}
+
+@media (max-width: 767px) {
+    .modal-footer .d-flex {
+        flex-direction: column !important;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .modal-footer .gap-3 {
+        gap: 1rem !important;
+    }
+    
+    .modal-footer .order-0 {
+        order: 0;
+    }
+    
+    .modal-footer .order-1 {
+        order: 1;
+    }
+}
