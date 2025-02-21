@@ -107,12 +107,15 @@ public class MempoolSpaceIndexerApi : IIndexerService
     private class Outspent
     {
         public bool Spent { get; set; }
+        public string Txid { get; set; }
+        public int Vin { get; set; }
+        public UtxoStatus Status { get; set; }
     }
     
     public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
     {
         var indexer = _networkService.GetPrimaryIndexer();
-        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects?offset={offset ?? 0}&limit={limit}");
+        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects?offset={offset}&limit={limit}");
         _networkService.CheckAndHandleError(response);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>() ?? new List<ProjectIndexerData>();
@@ -198,8 +201,6 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
         return response.ReasonPhrase + content;
     }
-
-    
     
     public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false)
     {
@@ -376,10 +377,22 @@ public class MempoolSpaceIndexerApi : IIndexerService
         if (!response.IsSuccessStatusCode)
             throw new InvalidOperationException(response.ReasonPhrase);
 
-        var trx = await response.Content.ReadFromJsonAsync<MempoolTransaction>(new JsonSerializerOptions()
+        var options = new JsonSerializerOptions()
         {
             PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
-        });
+        };
+
+        var trx = await response.Content.ReadFromJsonAsync<MempoolTransaction>(options);
+
+        var urlSpent = $"{MempoolApiRoute}/tx/{transactionId}/outspends";
+
+        var responseSpent = await _httpClient.GetAsync(indexer.Url + urlSpent);
+        _networkService.CheckAndHandleError(responseSpent);
+
+        if (!responseSpent.IsSuccessStatusCode)
+            throw new InvalidOperationException(responseSpent.ReasonPhrase);
+
+        var spends = await responseSpent.Content.ReadFromJsonAsync<List<Outspent>>(options);
 
         return new QueryTransaction
         {
@@ -389,18 +402,19 @@ public class MempoolSpaceIndexerApi : IIndexerService
             {
                 InputIndex = i,
                 InputTransactionId = x.Txid,
-                WitScript = new WitScript(x.Witness.Select(s => Encoders.Hex.DecodeData(s)).ToArray()).ToString() 
+                WitScript = new WitScript(x.Witness.Select(s => Encoders.Hex.DecodeData(s)).ToArray()).ToString()
             }),
             Outputs = trx.Vout
                 .Select((x, i) => new QueryTransactionOutput
-            {
-                Address = x.ScriptpubkeyAddress, //TODO check that this is correct
-                Balance = x.Value,
-                Index = i,
-                ScriptPubKey = x.Scriptpubkey,
-                OutputType = x.ScriptpubkeyType,
-                ScriptPubKeyAsm = x.ScriptpubkeyAsm
-            })
+                {
+                    Address = x.ScriptpubkeyAddress, //TODO check that this is correct
+                    Balance = x.Value,
+                    Index = i,
+                    ScriptPubKey = x.Scriptpubkey,
+                    OutputType = x.ScriptpubkeyType,
+                    ScriptPubKeyAsm = x.ScriptpubkeyAsm,
+                    SpentInTransaction = spends.ElementAtOrDefault(i)?.Txid
+                })
         };
     }
 
