@@ -812,7 +812,6 @@ tr[style*="cursor: pointer;"]:hover {
     align-items: center;
     z-index: 1000000;
     backdrop-filter: blur(3px);
-    background: rgba(0, 0, 0, 0.5);
 }
 
 .card-img-top {
