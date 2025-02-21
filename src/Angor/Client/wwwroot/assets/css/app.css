@@ -2966,3 +2966,83 @@ input[type=number] {
         order: 1;
     }
 }
+
+.tab-container {
+    padding: 1rem;
+    background: var(--angor-section-bg, rgba(0, 0, 0, 0.05));
+    border-radius: 12px;
+}
+
+.tab-card {
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid var(--btn-border);
+    background: var(--form-bg);
+    padding: 0.5rem;
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tab-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tab-card.active {
+    border-color: var(--angor-secondary);
+    background: linear-gradient(135deg, rgba(8, 108, 129, 0.1), rgba(8, 108, 129, 0.05));
+}
+
+.tab-card .card-body {
+    padding: 0.75rem !important;
+}
+
+.tab-icon {
+    transition: transform 0.3s ease;
+    opacity: 0.7;
+}
+
+.tab-card:hover .tab-icon {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.tab-card h5 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--angor-primary);
+    margin: 0;
+}
+
+.tab-card.active h5 {
+    color: var(--angor-primary);
+    font-weight: 600;
+}
+
+.tab-card.active .tab-icon {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .tab-container {
+        padding: 0.75rem;
+    }
+    
+    .tab-card {
+        padding: 0.25rem;
+    }
+    
+    .tab-card .card-body {
+        padding: 0.5rem !important;
+    }
+    
+    .tab-icon svg {
+        width: 32px !important;
+        height: 32px !important;
+    }
+    
+    .tab-card h5 {
+        font-size: 0.9rem;
+    }
+}
