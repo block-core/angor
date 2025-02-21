@@ -242,6 +242,13 @@
 }
 
 ::-webkit-scrollbar {
+    width: 1px;
+    height: 1px;
+    transition: all 0.3s ease;
+    background-color: transparent;
+}
+
+::-webkit-scrollbar:hover {
     width: 5px;
     height: 5px;
 }
@@ -251,11 +258,13 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--angor-scrollbar-thumb-hover-bg);
+    background: rgba(8, 108, 129, 0.3);
+    backdrop-filter: blur(5px);
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--angor-scrollbar-thumb-hover-bg);
+    background: rgba(8, 108, 129, 0.5);
 }
 
 .modal-body-scroll {
@@ -2513,10 +2522,6 @@ button:hover:not(:disabled) {
 }
 
 @media (max-width: 576px) {
-    .modal-dialog {
-        margin: 0.5rem;
-    }
-
     .project-id-card {
         padding: 0.75rem;
     }
