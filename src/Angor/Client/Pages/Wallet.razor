@@ -25,25 +25,23 @@
 <PageTitle>Wallet and balances</PageTitle>
 <NotificationComponent @ref="notificationComponent"/>
 <PasswordComponent @ref="passwordComponent"/>
-<div class="row slide-in">
-    <div class="card card-body hover-effect">
-        <div class="d-flex align-items-center justify-content-between flex-wrap">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none animate-rotate">
-                    <Icon IconName="wallet" Width="42" Height="42"/>
+
+<div class="header-container slide-in">
+    <div class="card card-body">
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="wallet" Class="header-icon" Width="32" Height="32" />
                 </span>
-                <div class="ms-3">
-                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
-                        Wallet
-                    </h5>
-                </div>
+                <h5 class="header-text">Wallet</h5>
             </div>
-            <div class="d-flex align-items-center">
+            <div class="header-actions">
                 @if (hasWallet)
                 {
-                    <button class="btn btn-border-danger mx-2" @onclick="() => walletWordsModal = true" data-cy="wallet-words">
-                        <span class="nav-link-text">Wallet Words</span>
-                    </button>       
+                    <button class="btn btn-border-danger" @onclick="() => walletWordsModal = true" data-cy="wallet-words" title="Wallet Words">
+                        <Icon IconName="wallet" Height="24" Width="24" />
+                        <span class="button-text ms-2">Wallet Words</span>
+                    </button>
                 }
             </div>
         </div>
@@ -161,9 +159,9 @@
                                                     <div class="mb-3">
                                                         <label class="form-label">Word #@index</label>
                                                         <input type="text" class="form-control"
-                                                               @bind="userVerificationInputs[index]"
-                                                               @bind:after="ValidateWordInput"
-                                                               placeholder="Enter word #@index"/>
+                                                        @bind="userVerificationInputs[index]"
+                                                        @bind:after="ValidateWordInput"
+                                                        placeholder="Enter word #@index"/>
                                                     </div>
                                                 }
                                                 @if (showVerificationError)
@@ -183,7 +181,7 @@
                                                     <div class="d-flex align-items-center justify-content-center">
                                                         <span class="me-1">
                                                             <Icon IconName="@(isPassphraseEnabled ? "shield-minus" : "shield-plus")"
-                                                                  Height="24" Width="24" Color="var(--angor-primary)">
+                                                            Height="24" Width="24" Color="var(--angor-primary)">
                                                             </Icon>
                                                         </span>
                                                         <span>Optional Passphrase</span>
@@ -194,7 +192,7 @@
                                                 {
                                                     <div class="mb-3">
                                                         <input type="text" class="form-control" placeholder="Enter passphrase"
-                                                               @bind="passphraseInput">
+                                                        @bind="passphraseInput">
                                                         <small class="text-muted">
                                                             A passphrase adds extra security. Make sure to remember it!
                                                         </small>
@@ -209,7 +207,7 @@
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <div class="input-group">
                                                     <input type="@passwordInputType" class="form-control"
-                                                           @bind="newWalletPassword" placeholder="Enter password">
+                                                    @bind="newWalletPassword" placeholder="Enter password">
                                                     <button class="btn btn-border" @onclick="TogglePasswordVisibility">
                                                         @if (passwordToggleText == "Show")
                                                         {
@@ -234,7 +232,7 @@
 
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <textarea class="form-control" rows="3" placeholder="Enter your wallet words"
-                                                          @bind="newWalletWords"></textarea>
+                                                @bind="newWalletWords"></textarea>
                                             </div>
                                             break;
 
@@ -246,7 +244,7 @@
                                                     <div class="d-flex align-items-center justify-content-center">
                                                         <span class="me-1">
                                                             <Icon IconName="@(isPassphraseEnabled ? "shield-minus" : "shield-plus")"
-                                                                  Height="24" Width="24" Color="var(--angor-primary)">
+                                                            Height="24" Width="24" Color="var(--angor-primary)">
                                                             </Icon>
                                                         </span>
                                                         <span>Optional Passphrase</span>
@@ -256,7 +254,7 @@
                                                 @if (isPassphraseEnabled)
                                                 {
                                                     <input type="text" class="form-control" placeholder="Enter your passphrase"
-                                                           @bind="passphraseInput">
+                                                    @bind="passphraseInput">
                                                 }
                                             </div>
                                             break;
@@ -267,7 +265,7 @@
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <div class="input-group">
                                                     <input type="@passwordInputType" class="form-control"
-                                                           @bind="newWalletPassword" placeholder="Enter password">
+                                                    @bind="newWalletPassword" placeholder="Enter password">
                                                     <button class="btn btn-border" @onclick="TogglePasswordVisibility">
 
                                                         @if (passwordToggleText == "Show")
@@ -278,7 +276,7 @@
                                                         {
                                                             <Icon IconName="visibility" Height="24" Width="24"></Icon>
                                                         }
-                                                        
+
                                                     </button>
                                                 </div>
                                             </div>
@@ -318,14 +316,14 @@
                                         @if (currentStep < totalSteps)
                                         {
                                             <button class="btn btn-border-success order-0 order-md-1" @onclick="NextStep"
-                                                    disabled="@(!CanProceedToNextStep())">
+                                            disabled="@(!CanProceedToNextStep())">
                                                 Next
                                             </button>
                                         }
                                         else
                                         {
                                             <button class="btn btn-border-success order-0 order-md-1" @onclick="CreateWalletAsync"
-                                                    disabled="@(!CanCreateWallet())">
+                                            disabled="@(!CanCreateWallet())">
                                                 @if (createWalletSpinner)
                                                 {
                                                     <span class="spinner-border spinner-border-sm me-2"></span>
@@ -412,91 +410,84 @@ else
     <!-- Section 1 -->
     <div class="row mt-4">
 
-        <div class="card card-body position-relative z-index-1 wallet-balance-card">
-            <div class="wallet-header">
-                <div class="wallet-balance-section">
-                    <div class="wallet-icon">
-                        <span class="user-select-none animate-rotate">
-                            <Icon IconName="balance" Width="42" Height="42"/>
+        <div class="header-container slide-in">
+            <div class="card card-body">
+                <div class="header-content">
+                    <div class="header-title animate-fade-in">
+                        <span class="header-icon-wrapper">
+                            <Icon IconName="balance" Width="32" Height="32" />
                         </span>
-                    </div>
-                    
-                    <div class="wallet-balance">
-                        <BalanceDisplay 
+                        <div class="wallet-balance">
+                            <BalanceDisplay 
                             BtcBalance="@Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC)"
                             BtcBalanceInFiat="@btcBalanceInUsd"
                             PreferredCurrency="@storage.GetCurrencyDisplaySetting()"
                             ShowFiatInline="true"/>
+                        </div>
                     </div>
-                </div>
-
-                <div class="wallet-actions">
-                    @if (CanGetTestCoins())
-                    {
-                        <button class="btn btn-border-warning test-coins-btn h-100" 
-                                data-cy="get-test-coins" 
-                                @onclick="GetTestCoins" 
-                                disabled="@testCoinsSpinner">
-                            @if (testCoinsSpinner)
+                    <div class="header-actions">
+                        @if (CanGetTestCoins())
+                        {
+                            <button class="btn btn-border-warning"
+                            data-cy="get-test-coins" 
+                            @onclick="GetTestCoins" 
+                            disabled="@testCoinsSpinner">
+                                @if (testCoinsSpinner)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                }
+                                else
+                                {
+                                    <Icon IconName="balance" Height="24" Width="24"/>
+                                    <span class="button-text ms-2">Get Test Coins</span>
+                                }
+                            </button>
+                        }
+                        <button class="btn btn-border-success"
+                        @onclick="RefreshBalance"
+                        disabled="@balanceSpinner">
+                            @if (balanceSpinner)
                             {
-                                <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" 
-                                      role="status" 
-                                      aria-hidden="true">
-                                </span>
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                             }
                             else
                             {
-                                <Icon IconName="balance" Height="24" Width="24" Class="me-2" />
-                                <span>Get Test Coins</span>
+                                <Icon IconName="refresh" Height="24" Width="24"/>
+                                <span class="button-text ms-2">Refresh</span>
                             }
                         </button>
-                    }
-
-                    <button class="btn btn-border-success refresh-btn h-100" 
-                            @onclick="RefreshBalance"
-                            disabled="@balanceSpinner">
-                        @if (balanceSpinner)
-                        {
-                            <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" 
-                                  role="status" 
-                                  aria-hidden="true">
-                            </span>
-                        }
-                        else
-                        {
-                            <Icon IconName="refresh" Height="24" Width="24" Class="me-2"/>
-                            <span>Refresh</span>
-                        }
-                    </button>
+                    </div>
                 </div>
-            </div>
-
-            <div class="wallet-details">
-                @if (accountBalanceInfo.TotalUnconfirmedBalance > 0)
+                @if (accountBalanceInfo.TotalUnconfirmedBalance > 0 || accountBalanceInfo.TotalBalanceReserved > 0)
                 {
-                    <div class="balance-info">
-                        <p class="balance-label" data-cy="confirmed-balance">
-                            Unconfirmed balance
-                        </p>
-                        <h6 class="balance-value">
-                            @Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) 
-                            @network.CoinTicker
-                        </h6>
+                    <div class="wallet-details">
+                        @if (accountBalanceInfo.TotalUnconfirmedBalance > 0)
+                        {
+                            <div class="balance-info">
+                                <p class="balance-label" data-cy="unconfirmed-balance">Unconfirmed balance</p>
+                                <h6 class="balance-value">
+                                    @Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC)
+                                    @network.CoinTicker
+                                </h6>
+                            </div>
+                        }
+
+                        @if (accountBalanceInfo.TotalBalanceReserved > 0)
+                        {
+                            <div class="balance-info">
+                                <p class="balance-label" data-cy="reserved-balance">Reserved balance</p>
+                                <h6 class="balance-value">
+                                    @Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC)
+                                    @network.CoinTicker
+                                </h6>
+                            </div>
+                        }
                     </div>
                 }
-                @if (accountBalanceInfo.TotalBalanceReserved > 0)
-                {
-                    <div class="balance-info">
-                        <p class="balance-label">Reserved balance</p>
-                        <h6 class="balance-value">
-                            @Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC) 
-                            @network.CoinTicker
-                        </h6>
-                    </div>
-                }
-            </div>
-        </div>
 
+
+    </div>
+</div>
 
         @if (walletWordsModal)
         {
@@ -1634,7 +1625,8 @@ else
             return false;
         }
 
-        if (Money.Satoshis(accountBalanceInfo.TotalBalance + accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC) > 100)
+        // اگر موجودی بیشتر از 0 باشد دکمه را نمایش نمی‌دهیم
+        if (accountBalanceInfo.TotalBalance > 0)
         {
             return false;
         }

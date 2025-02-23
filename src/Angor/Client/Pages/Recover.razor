@@ -36,32 +36,44 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-
-<div class="row slide-in">
-    <div class="card card-body hover-effect">
-        <div class="d-flex align-items-center justify-content-between flex-wrap">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none animate-rotate">
-                    <Icon IconName="recovery" Height="42" Width="42" />
+<div class="header-container slide-in">
+    <div class="card card-body">
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="recovery" Class="header-icon" Width="32" Height="32" />
                 </span>
-                <div class="ms-3">
-                    <h5 class="mb-0 font-weight-bolder animate-fade-in animate-fade-in">
-                        Recover Funds
-                    </h5>
-                </div>
+                <h5 class="header-text">Recover Funds</h5>
             </div>
-            <button class="btn btn-border mb-2 animate-scale" @onclick="RefreshInvestments" disabled="@refreshSpinner">
-                <i class="@(refreshSpinner ? "rotate-icon" : "")">
-                    <Icon IconName="refresh" Width="24" Height="24"></Icon>
-                </i>
-                <span class="nav-link-text ms-1">Refresh</span>
-            </button>
+            <div class="header-actions">
+                <button class="btn btn-border-success"
+                        @onclick="RefreshInvestments"
+                        disabled="@refreshSpinner"
+                        title="Refresh">
+                    @if (refreshSpinner)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <Icon IconName="refresh" Height="24" Width="24" />
+                        <span class="button-text ms-2">Refresh</span>
+                    }
+                </button>
+            </div>
         </div>
-        <p class="mb-0 font-weight-normal text-sm text-truncate mt-4 animate-fade-in-delayed">
+    </div>
+</div>
+
+
+<div class="row slide-in mt-4">
+    <div class="card card-body">
+        <p class="mb-0 font-weight-normal text-sm animate-fade-in-delayed">
             Project ID: @ProjectId
         </p>
     </div>
 </div>
+
 
 <div class="slide-in mt-4">
     @if (firstTimeRefreshSpinner && refreshSpinner)
@@ -108,11 +120,11 @@
                 }
             </div>
 
-            <div class="d-flex justify-content-between mt-4">
+            <div class="d-flex justify-content-between">
                 <div>
                     @if (releaseSigsfound)
                     {
-                        <button class="btn btn-border me-2 btn-primary" @onclick="NavigatetoReleaseSigs">Target not met go to Release Funds</button>
+                        <button class="btn btn-border me-2 btn-border-warning mt-4" @onclick="NavigatetoReleaseSigs">Target not met go to Release Funds</button>
                     }
                     else
                     {
@@ -120,12 +132,12 @@
                         {
                             @if (StageInfo.CanRelease)
                             {
-                                <p>Total funds in penalty = @(Money.Satoshis(StageInfo.TotalInPenalty).ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
+                                <p class="mt-4">Total funds in penalty = @(Money.Satoshis(StageInfo.TotalInPenalty).ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
                             }
 
                             @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
                             {
-                                <button class="btn btn-border-warning me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
+                                <button class="btn btn-border-warning me-2 mt-4" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
                                     @if (PrepareToRecoverCoinsModalSpinner)
                                     {
                                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -140,7 +152,7 @@
 
                             @if (StageInfo.CanRelease)
                             {
-                                <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
+                                <button class="btn btn-border-success me-2 mt-4" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
                                     @if (PrepareToReleaseCoinsModalSpinner)
                                     {
                                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -155,7 +167,7 @@
 
                             @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
                             {
-                                <button class="btn btn-border-warning" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
+                                <button class="btn btn-border-warning mt-4" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
                                     @if (PrepareEndOfProjectCoinsModalSpinner)
                                     {
                                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
