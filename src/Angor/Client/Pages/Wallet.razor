@@ -211,7 +211,14 @@
                                                     <input type="@passwordInputType" class="form-control"
                                                            @bind="newWalletPassword" placeholder="Enter password">
                                                     <button class="btn btn-border" @onclick="TogglePasswordVisibility">
-                                                        @passwordToggleText
+                                                        @if (passwordToggleText == "Show")
+                                                        {
+                                                            <Icon IconName="visibility-off" Height="24" Width="24"></Icon>
+                                                        }
+                                                        else
+                                                        {
+                                                            <Icon IconName="visibility" Height="24" Width="24"></Icon>
+                                                        }
                                                     </button>
                                                 </div>
                                             </div>

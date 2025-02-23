@@ -44,16 +44,24 @@
                     </h5>
                 </div>
             </div>
-            <div class="d-flex align-items-center justify-content-end w-100 w-lg-auto mt-3 mt-lg-0">
-                <button class="btn btn-border w-100 w-lg-auto me-3 mb-lg-0" @onclick="GetProjectsAndUpdateAsync">
-                    <i class="@(RefreshBalanceTriggered ? "rotate-icon" : "")">
-                        <Icon IconName="refresh" Width="24" Height="24"></Icon>
-                    </i>
-                    <span class="nav-link-text ms-1">Refresh</span>
-
+            <div class="d-flex align-items-center justify-content-end w-100 w-lg-auto mt-3 mt-lg-0 wallet-actions">
+                <button class="btn btn-border-success refresh-btn h-100"
+                        @onclick="GetProjectsAndUpdateAsync"
+                        disabled="@RefreshBalanceTriggered">
+                    @if (RefreshBalanceTriggered)
+                    {
+                        <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content"
+                              role="status"
+                              aria-hidden="true">
+                        </span>
+                    }
+                    else
+                    {
+                        <Icon IconName="refresh" Height="24" Width="24" Class="me-2" />
+                        <span>Refresh</span>
+                    }
                 </button>
-
-                <button class="btn btn-border-warning w-100 w-lg-auto" @onclick="NavigateToPenalties" data-toggle="tooltip" title="Penalties return control to investors but put Bitcoin on hold for a penalty duration.">
+                <button class="btn btn-border-warning test-coins-btn h-100" @onclick="NavigateToPenalties" data-toggle="tooltip" title="Penalties return control to investors but put Bitcoin on hold for a penalty duration.">
                     <i>
                         <Icon IconName="sad-circle" Width="24" Height="24"></Icon>
                     </i>

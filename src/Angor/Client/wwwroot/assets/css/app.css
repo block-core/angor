@@ -1437,17 +1437,12 @@ a p {
     border-radius: 15px;
     transition: all 0.3s ease;
     cursor: pointer;
-    border: 2px solid transparent;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .tab-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-}
-
-.tab-card.active {
-    border-color: var(--angor-primary);
 }
 
 .tab-icon {
@@ -3003,7 +2998,6 @@ input[type=number] {
     border-radius: 10px;
     transition: all 0.3s ease;
     cursor: pointer;
-    border: 1px solid var(--btn-border);
     background: var(--form-bg);
     padding: 0.5rem;
     transform: translateY(0);
@@ -3016,8 +3010,7 @@ input[type=number] {
 }
 
 .tab-card.active {
-    border-color: var(--angor-secondary);
-    background: linear-gradient(135deg, rgba(8, 108, 129, 0.1), rgba(8, 108, 129, 0.05));
+     background: linear-gradient(135deg, rgba(8, 108, 129, 0.2), rgba(8, 108, 129, 0.2));
 }
 
 .tab-card .card-body {
@@ -3102,10 +3095,6 @@ input[type=number] {
     padding: 0.5rem;
     border-radius: 12px;
     transition: transform 0.3s ease;
-}
-
-.wallet-icon:hover {
-    transform: scale(1.05);
 }
 
 .wallet-balance {
@@ -3287,7 +3276,6 @@ input[type=number] {
 }
 
 .create-project-btn {
-    padding: 0.75rem 1.5rem;
     border-radius: 10px;
     transition: all 0.3s ease;
     min-width: 160px;
