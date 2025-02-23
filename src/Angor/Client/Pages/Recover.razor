@@ -155,7 +155,7 @@
 
                             @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
                             {
-                                <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
+                                <button class="btn btn-border-warning" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
                                     @if (PrepareEndOfProjectCoinsModalSpinner)
                                     {
                                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -277,8 +277,8 @@
                             </div>
 
                             <div class="modal-footer border-0 pt-0">
-                                <button class="btn btn-border" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner">Cancel</button>
-                                <button class="btn btn-border" @onclick="RecoverCoins" disabled="@PrepareToRecoverCoinsConfirmSpinner">
+                                <button class="btn btn-border-warning" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner">Cancel</button>
+                                <button class="btn btn-border-success" @onclick="RecoverCoins" disabled="@PrepareToRecoverCoinsConfirmSpinner">
                                     @if (PrepareToRecoverCoinsConfirmSpinner)
                                     {
                                         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -352,8 +352,8 @@
                             </div>
 
                             <div class="modal-footer border-0 pt-0">
-                                <button class="btn btn-border" @onclick="() => showRecoveryReleaseModal = false" disabled="@PrepareToReleaseCoinsConfirmSpinner">Cancel</button>
-                                <button class="btn btn-border" @onclick="ReleaseCoins" disabled="@PrepareToReleaseCoinsConfirmSpinner">
+                                <button class="btn btn-border-warning" @onclick="() => showRecoveryReleaseModal = false" disabled="@PrepareToReleaseCoinsConfirmSpinner">Cancel</button>
+                                <button class="btn btn-border-success" @onclick="ReleaseCoins" disabled="@PrepareToReleaseCoinsConfirmSpinner">
                                     @if (PrepareToReleaseCoinsConfirmSpinner)
                                     {
                                         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -427,8 +427,8 @@
                             </div>
 
                             <div class="modal-footer border-0 pt-0">
-                                <button class="btn btn-border" @onclick="() => showEndOfProjectModal = false" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">Cancel</button>
-                                <button class="btn btn-border" @onclick="EndOfProjectCoins" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">
+                                <button class="btn btn-border-warning" @onclick="() => showEndOfProjectModal = false" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">Cancel</button>
+                                <button class="btn btn-border-success" @onclick="EndOfProjectCoins" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">
                                     @if (PrepareEndOfProjectCoinsConfirmSpinner)
                                     {
                                         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>

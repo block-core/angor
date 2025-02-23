@@ -148,8 +148,8 @@
                         <p class="mt-3">Are you sure you want to claim back these funds?</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-border" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">Cancel</button>
-                        <button type="button" class="btn btn-border" @onclick="ReleaseInvestorCoins" disabled="@prepareToReleaseCoinsConfirmSpinner">
+                        <button type="button" class="btn btn-border-warning" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">Cancel</button>
+                        <button type="button" class="btn btn-border-success" @onclick="ReleaseInvestorCoins" disabled="@prepareToReleaseCoinsConfirmSpinner">
                             @if (prepareToReleaseCoinsConfirmSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
