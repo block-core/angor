@@ -521,7 +521,12 @@ else
                                     <div class="mb-1">
                                         <label class="mb-3">Please enter your wallet password:</label>
                                         <div class="input-group">
-                                            <input type="@passwordInputType" class="form-control" @bind="showWalletPassword"/>
+                                            <input type="@passwordInputType" 
+                                                   class="form-control" 
+                                                   @bind="showWalletPassword"
+                                                   @bind:event="oninput"
+                                                   @onkeypress="@(async e => { if(e.Key is "Enter" or "NumpadEnter") await ShowWords(); })"
+                                                   />
                                             <button class="btn btn-border" type="button" @onclick="TogglePasswordVisibility">
                                                 @if (passwordToggleText == "Show")
                                                 {
