@@ -30,9 +30,9 @@
             <div class="header-actions">
                 @if (projects.Count > 0)
                 {
-                    <span role="button" class="user-select-none" @onclick="ToggleView">
-                        <Icon IconName="@viewModeIcon" />
-                    </span>
+                    <button class="btn btn-border-success" @onclick="ToggleView">
+                        <Icon IconName="@viewModeIcon" Width="24" Height="24" />
+                    </button>
                 }
             </div>
         </div>
@@ -157,79 +157,79 @@ else
         <div class="project-wrapper">
             @foreach (var indexerData in projects.OrderByDescending(project => project.CreatedOnBlock))
             {
-               
-                    <div class="card project-card slide-in hover-effect mx-2 mb-4">
-                        <div class="row">
-                            <div class="col-md-4 position-relative card-zoom">
-                                <div class="banner-container-list">
-                                    @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
-                                    {
-                                        var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                        <img class="banner-image fade-in" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                        <div class="profile-container slide-up">
-                                            <img class="profile-image" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Image" />
-                                        </div>
-                                    }
-                                </div>
+
+                <div class="card project-card slide-in hover-effect mx-2 mb-4">
+                    <div class="row">
+                        <div class="col-md-4 position-relative card-zoom">
+                            <div class="banner-container-list">
+                                @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                                {
+                                    var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                    <img class="banner-image fade-in" src="@(project?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(project?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    <div class="profile-container slide-up">
+                                        <img class="profile-image" src="@(project?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Image" />
+                                    </div>
+                                }
                             </div>
-                            <div class="col-md-8 d-flex align-items-center">
-                                <div class="card-body">
-                                    @if (nostrSearchInProgress)
-                                    {
-                                        <div class="p-3">
-                                            <div class="loader-small m-auto"></div>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="project-list">
-                                            <div>
-                                                @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                        </div>
+                        <div class="col-md-8 d-flex align-items-center">
+                            <div class="card-body">
+                                @if (nostrSearchInProgress)
+                                {
+                                    <div class="p-3">
+                                        <div class="loader-small m-auto"></div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="project-list">
+                                        <div>
+                                            @if (SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
+                                            {
+                                                var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
+                                                if (project?.Metadata != null)
                                                 {
-                                                    var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
-                                                    if (project?.Metadata != null)
-                                                    {
 
-                                                        <div class="d-flex align-items-center mb-4">
-                                                            <span class="user-select-none">
-                                                                <Icon IconName="view" Height="24" Width="24"></Icon>
-                                                            </span>
-                                                            <div class="h-100 ms-3">
-                                                                <h5 class="mb-0 font-weight-bolder" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                                                    <a href="/view/@project.ProjectInfo.ProjectIdentifier"> @project.Metadata.Name</a>
-                                                                </h5>
-                                                            </div>
+                                                    <div class="d-flex align-items-center mb-4">
+                                                        <span class="user-select-none">
+                                                            <Icon IconName="view" Height="24" Width="24"></Icon>
+                                                        </span>
+                                                        <div class="h-100 ms-3">
+                                                            <h5 class="mb-0 font-weight-bolder" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                                                <a href="/view/@project.ProjectInfo.ProjectIdentifier"> @project.Metadata.Name</a>
+                                                            </h5>
                                                         </div>
+                                                    </div>
 
-                                                        <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@ConvertToMarkupString(project.Metadata.About)</p>
-                                                    }
+                                                    <p class="card-text line-clamp-3" role="button" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">@ConvertToMarkupString(project.Metadata.About)</p>
                                                 }
-                                                else
-                                                {
-                                                    <p class="text-warning-emphasis">Project not found in any relay!</p>
-                                                }
-                                            </div>
-                                            <hr class="horizontal light m-only">
-
-                                            <div role="button" class="d-flex align-items-center btn btn-border vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                                <span class="user-select-none">
-                                                    <Icon IconName="view-project" Height="24" Width="24"></Icon>
-                                                </span>
-                                                <div class="h-100 mt-3">
-                                                    <span class="mb-0 font-weight-bolder">
-                                                        View Project
-                                                    </span>
-                                                </div>
-                                            </div>
-
-
+                                            }
+                                            else
+                                            {
+                                                <p class="text-warning-emphasis">Project not found in any relay!</p>
+                                            }
                                         </div>
-                                    }
-                                </div>
+                                        <hr class="horizontal light m-only">
+
+                                        <div role="button" class="d-flex align-items-center btn btn-border vertical-button w-100-m" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                            <span class="user-select-none">
+                                                <Icon IconName="view-project" Height="24" Width="24"></Icon>
+                                            </span>
+                                            <div class="h-100 mt-3">
+                                                <span class="mb-0 font-weight-bolder">
+                                                    View Project
+                                                </span>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+                                }
                             </div>
                         </div>
                     </div>
-                
+                </div>
+
             }
         </div>
 

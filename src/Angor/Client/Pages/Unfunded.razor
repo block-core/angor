@@ -32,30 +32,30 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-
-<div class="row slide-in">
-    <div class="card card-body hover-effect">
-        <div class="d-flex align-items-center justify-content-between flex-wrap">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none animate-rotate">
-                    <Icon IconName="refund" Height="42" Width="42" />
+<div class="header-container slide-in">
+    <div class="card card-body">
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="refund" Class="header-icon" Width="32" Height="32" />
                 </span>
-                <div class="ms-3">
-                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
-                        Release Funds for Unfunded Projects
-                    </h5>
-                </div>
+                <h5 class="header-text">Release Funds for Unfunded Projects</h5>
             </div>
-            <span class="badge bg-warning d-flex align-items-center py-2 animate-fade-in">
-                <Icon IconName="info" Height="16" Width="16" class="me-2"/>
-                Project Not Funded
-            </span>
+            <div class="header-actions">
+            </div>
         </div>
-        <p class="mb-0 font-weight-normal text-sm text-truncate mt-4 animate-fade-in-delayed">
-            Project ID: <span class="text-primary">@ProjectIdentifier</span>
+    </div>
+</div>
+
+
+<div class="row slide-in mt-4">
+    <div class="card card-body">
+        <p class="mb-0 font-weight-normal text-sm animate-fade-in-delayed">
+            Project ID: @ProjectIdentifier
         </p>
     </div>
 </div>
+
 
 <div class="slide-in mt-4">
     @if (!FounderProject.ProjectHasStarted())
