@@ -19,6 +19,7 @@
     NavigationManager.NavigateTo("/wallet");
     return;
 }
+
 <div class="header-container slide-in">
     <div class="card card-body">
         <div class="header-content">
@@ -35,20 +36,13 @@
                             disabled="@(scanningForProjects || (founderProjects.Count >= 14) ? true : null)">
                         @if (scanningForProjects)
                         {
-                            <div class="d-flex align-items-center">
-                                <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content"
-                                      role="status"
-                                      aria-hidden="true">
-                                </span>
-                                <span class="button-text ms-2">Scanning...</span>
-                            </div>
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span class="button-text ms-2">Scanning...</span>
                         }
                         else
                         {
-                            <div class="d-flex align-items-center">
-                                <Icon IconName="add" Width="24" Height="24" />
-                                <span class="button-text ms-2">Create Project</span>
-                            </div>
+                            <Icon IconName="add" Width="24" Height="24" />
+                            <span class="button-text ms-2">Create Project</span>
                         }
                     </button>
                 </div>
