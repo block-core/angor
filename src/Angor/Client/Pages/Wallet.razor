@@ -570,43 +570,31 @@ else
     <!-- Section 2 -->
     <div class="row mt-4">
     <div class="tab-container">
-        <div class="row g-4 justify-content-center text-center">
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="card tab-card h-100 @(activeTab == 1 ? "active" : "")"
-                     @onclick="() => SetActiveTab(1)"
-                     data-cy="send-tab">
-                    <div class="card-body py-4 d-flex align-items-center justify-content-center">
-                        <div class="tab-icon me-3 @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
-                            <Icon IconName="send" Height="42" Width="42"/>
-                        </div>
-                        <h5 class="mb-0">Send</h5>
+        <div class="tabs-wrapper">
+            <div class="tab-item @(activeTab == 1 ? "active" : "")" @onclick="() => SetActiveTab(1)" data-cy="send-tab">
+                <div class="tab-content">
+                    <div class="tab-icon @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
+                        <Icon IconName="send" Height="32" Width="32" />
                     </div>
+                    <span class="tab-label">Send</span>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="card tab-card h-100 @(activeTab == 2 ? "active" : "")"
-                     @onclick="() => SetActiveTab(2)"
-                     data-cy="receive-tab">
-                    <div class="card-body py-4 d-flex align-items-center justify-content-center">
-                        <div class="tab-icon me-3 @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
-                            <Icon IconName="receive" Height="42" Width="42"/>
-                        </div>
-                        <h5 class="mb-0">Receive</h5>
+            <div class="tab-item @(activeTab == 2 ? "active" : "")" @onclick="() => SetActiveTab(2)" data-cy="receive-tab">
+                <div class="tab-content">
+                    <div class="tab-icon @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
+                        <Icon IconName="receive" Height="32" Width="32" />
                     </div>
+                    <span class="tab-label">Receive</span>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="card tab-card h-100 @(activeTab == 3 ? "active" : "")"
-                     @onclick="() => SetActiveTab(3)"
-                     data-cy="history-tab">
-                    <div class="card-body py-4 d-flex align-items-center justify-content-center">
-                        <div class="tab-icon me-3 @(activeTab == 3 ? "heartbeat" : "")" aria-hidden="true">
-                            <Icon IconName="calculator" Height="42" Width="42"/>
-                        </div>
-                        <h5 class="mb-0">Addresses</h5>
+            <div class="tab-item @(activeTab == 3 ? "active" : "")" @onclick="() => SetActiveTab(3)" data-cy="history-tab">
+                <div class="tab-content">
+                    <div class="tab-icon @(activeTab == 3 ? "heartbeat" : "")" aria-hidden="true">
+                        <Icon IconName="calculator" Height="32" Width="32" />
                     </div>
+                    <span class="tab-label">Addresses</span>
                 </div>
             </div>
         </div>
