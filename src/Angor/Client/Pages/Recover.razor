@@ -69,7 +69,7 @@
 <div class="row slide-in mt-4">
     <div class="card card-body">
         <p class="mb-0 font-weight-normal text-sm animate-fade-in-delayed">
-            Project ID: @ProjectId
+            Project ID: @ProjectIdentifier
         </p>
     </div>
 </div>
@@ -462,7 +462,7 @@
 
 
 @code {
-    [Parameter] public string ProjectId { get; set; }
+    [Parameter] public string ProjectIdentifier { get; set; }
     private InvestorProject project;
 
     private bool showRecoveryModal = false;
@@ -522,7 +522,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        project = storage.GetInvestmentProjects().First(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+        project = storage.GetInvestmentProjects().First(p => p.ProjectInfo.ProjectIdentifier == ProjectIdentifier);
 
         firstTimeRefreshSpinner = true;
     }
@@ -1150,7 +1150,7 @@
 
     private void NavigatetoReleaseSigs()
     {
-        NavigationManager.NavigateTo($"/release/{ProjectId}");
+        NavigationManager.NavigateTo($"/release/{ProjectIdentifier}");
     }
 
 }

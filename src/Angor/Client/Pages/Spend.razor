@@ -37,32 +37,43 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-<div class="row slide-in">
-    <div class="card card-body hover-effect">
-        <div class="d-flex align-items-center justify-content-between flex-wrap">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none animate-rotate">
-                    <Icon IconName="spend" Height="42" Width="42" />
+<div class="header-container slide-in">
+    <div class="card card-body">
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="spend" Class="header-icon" Width="32" Height="32" />
                 </span>
-                <div class="ms-3">
-                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
-                        Founder Stage Claim
-                    </h5>
-                </div>
+                <h5 class="header-text"> Founder Stage Claim</h5>
             </div>
-            <button class="btn btn-border mb-2 animate-scale" @onclick="RefreshBalance" disabled="@refreshSpinner">
-
-                <i class="@(refreshSpinner ? "rotate-icon" : "")">
-                    <Icon IconName="refresh" Width="24" Height="24"></Icon>
-                </i>
-                <span class="nav-link-text ms-1">Refresh</span>
-            </button>
+            <div class="header-actions">
+                <button class="btn btn-border-success"
+                        @onclick="RefreshBalance"
+                        disabled="@refreshSpinner"
+                        title="Refresh">
+                    @if (refreshSpinner)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <Icon IconName="refresh" Height="24" Width="24" />
+                        <span class="button-text ms-2">Refresh</span>
+                    }
+                </button>
+            </div>
         </div>
-        <p class="mb-0 font-weight-normal text-sm text-truncate mt-4 animate-fade-in-delayed">
-            Project Identifier: @project.ProjectIdentifier
+    </div>
+</div>
+
+<div class="row slide-in mt-4">
+    <div class="card card-body">
+        <p class="mb-0 font-weight-normal text-sm animate-fade-in-delayed">
+            Project ID: @project.ProjectIdentifier
         </p>
     </div>
 </div>
+
 
 <div class="slide-in mt-4">
 
