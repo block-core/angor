@@ -1,10 +1,6 @@
-using Angor.UI.Model;
-using AngorApp.Sections.Browse;
-using CSharpFunctionalExtensions;
+namespace AngorApp.Sections.Wallet.CreateAndRecover.Steps.Summary;
 
-namespace AngorApp.Sections.Wallet.CreateAndRecover.Steps.SummaryAndCreation;
-
-public class SummaryAndCreationViewModelDesign : ISummaryAndCreationViewModel
+public class SummaryViewModelDesign : ISummaryViewModel
 {
     public Maybe<string> Passphrase { get; } = Maybe<string>.None;
     public ReactiveCommand<Unit, Result<IWallet>> CreateWallet { get; }

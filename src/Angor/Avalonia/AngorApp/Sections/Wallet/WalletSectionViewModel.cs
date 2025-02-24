@@ -1,9 +1,7 @@
-using System.Reactive.Linq;
 using System.Windows.Input;
-using Angor.UI.Model;
+using AngorApp.Sections.Wallet.CreateAndRecover;
 using AngorApp.Sections.Wallet.Operate;
 using AngorApp.UI.Services;
-using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
 
@@ -13,11 +11,10 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
 {
     [ObservableAsProperty] private IWalletViewModel? wallet;
 
-    public WalletSectionViewModel(IWalletFactory walletFactory, IWalletProvider walletProvider, UIServices services)
+    public WalletSectionViewModel(UIServices services, IWalletWizard walletWizard)
     {
-        CreateWallet = ReactiveCommand.CreateFromTask(walletFactory.Create);
-        CreateWallet.Values().Successes().Do(walletProvider.SetWallet).Subscribe();
-        RecoverWallet = ReactiveCommand.CreateFromTask(walletFactory.Recover);
+        CreateWallet = ReactiveCommand.CreateFromTask(() => walletWizard.CreateNew());
+        RecoverWallet = ReactiveCommand.CreateFromTask(() => walletWizard.Recover());
 
         walletHelper = services.ActiveWallet.CurrentChanged
             .Merge(Observable.Return(services.ActiveWallet.Current).Values())
@@ -25,6 +22,6 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
             .ToProperty(this, x => x.Wallet);
     }
 
-    public ReactiveCommand<Unit, Maybe<Result<IWallet>>> CreateWallet { get; }
-    public ReactiveCommand<Unit, Maybe<Result<IWallet>>> RecoverWallet { get; }
+    public ReactiveCommand<Unit, Maybe<Unit>> CreateWallet { get; }
+    public ReactiveCommand<Unit, Maybe<Unit>> RecoverWallet { get; }
 }

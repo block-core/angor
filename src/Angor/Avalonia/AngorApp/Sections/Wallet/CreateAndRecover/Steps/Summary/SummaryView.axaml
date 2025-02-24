@@ -4,13 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:pr="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              xmlns:cv="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
-             xmlns:summaryAndCreation="clr-namespace:AngorApp.Sections.Wallet.CreateAndRecover.Steps.SummaryAndCreation"
+             xmlns:summaryAndCreation="clr-namespace:AngorApp.Sections.Wallet.CreateAndRecover.Steps.Summary"
              mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
-             x:Class="AngorApp.Sections.Wallet.CreateAndRecover.Steps.SummaryAndCreation.SummaryAndCreationView"
-             x:DataType="summaryAndCreation:ISummaryAndCreationViewModel">
+             x:Class="AngorApp.Sections.Wallet.CreateAndRecover.Steps.Summary.SummaryView"
+             x:DataType="summaryAndCreation:ISummaryViewModel">
 
     <Design.DataContext>
-        <summaryAndCreation:SummaryAndCreationViewModelDesign IsRecovery="True" />
+        <summaryAndCreation:SummaryViewModelDesign IsRecovery="True" />
     </Design.DataContext>
 
     <Panel>

@@ -10,4 +10,8 @@
       <PackageReference Include="Zafiro" Version="14.0.7" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Angor.Wallet\Angor.Wallet.csproj" />
+    </ItemGroup>
+
 </Project>
