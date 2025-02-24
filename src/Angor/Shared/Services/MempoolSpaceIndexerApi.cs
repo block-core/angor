@@ -241,7 +241,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         
         return response.ToArray();
     }
-
+    
     public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset)
     {
         var indexer = _networkService.GetPrimaryIndexer();

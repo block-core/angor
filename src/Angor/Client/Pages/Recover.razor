@@ -1,4 +1,4 @@
-﻿@page "/recover/{ProjectId}"
+﻿@page "/recover/{ProjectIdentifier}"
 
 @using Angor.Shared
 @using Angor.Client.Storage
@@ -36,53 +36,95 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-<div class="row">
+<div class="header-container slide-in">
     <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="recovery" Height="42" Width="42"/>
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="recovery" Class="header-icon" Width="32" Height="32" />
                 </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Recover funds
-                    </h5>
-                    <p class="mb-0 font-weight-normal text-sm">
-                        Project ID: <span id="transactionID">@ProjectId</span>
-                    </p>
-                </div>
+                <h5 class="header-text">Recover Funds</h5>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-border-success"
+                        @onclick="RefreshInvestments"
+                        disabled="@refreshSpinner"
+                        title="Refresh">
+                    @if (refreshSpinner)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <Icon IconName="refresh" Height="24" Width="24" />
+                        <span class="button-text ms-2">Refresh</span>
+                    }
+                </button>
             </div>
         </div>
     </div>
 </div>
-<div class="row mt-4">
 
-    <div class="card card-body position-relative">
-        <p style="margin-bottom: 20px;">
-            Transaction ID: <span id="transactionID">@StageInfo.TransactionInfo?.TransactionId</span> |
-            <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
+
+<div class="row slide-in mt-4">
+    <div class="card card-body">
+        <p class="mb-0 font-weight-normal text-sm animate-fade-in-delayed">
+            Project ID: @ProjectIdentifier
         </p>
-        
-        <p>Total funds to recover = @Money.Satoshis(StageInfo.TotalSpendable).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+    </div>
+</div>
 
-        @if (trxNotFound)
-        {
-            <p class="alert alert-danger">Transaction was not found it may still be confirming</p>
-        }
 
-        @if (firstTimeRefreshSpinner && refreshSpinner)
-        {
+<div class="slide-in mt-4">
+    @if (firstTimeRefreshSpinner && refreshSpinner)
+    {
+        <div class="row card card-body">
             <div class="d-flex justify-content-center">
                 <div class="loader"></div>
             </div>
-        }
-        else
-        {
+        </div>
+    }
+    else
+    {
+        <div class="card card-body slide-up">
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="stat-card p-3 rounded-3 border hover-effect">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="text-muted">Total Funds</h6>
+                                <h4 class="mb-0">@Money.Satoshis(StageInfo.TotalSpendable).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h4>
+                            </div>
+                            <div class="stat-icon">
+                                <Icon IconName="wallet" Height="32" Width="32"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (StageInfo.CanRelease)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="stat-card p-3 rounded-3 border hover-effect">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="text-muted">In Penalty</h6>
+                                    <h4 class="mb-0">@Money.Satoshis(StageInfo.TotalInPenalty).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h4>
+                                </div>
+                                <div class="stat-icon">
+                                    <Icon IconName="penalty" Height="32" Width="32"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
             <div class="d-flex justify-content-between">
                 <div>
                     @if (releaseSigsfound)
                     {
-                        <button class="btn btn-border me-2 btn-primary" @onclick="NavigatetoReleaseSigs">Target not met go to Release Funds</button>
+                        <button class="btn btn-border me-2 btn-border-warning mt-4" @onclick="NavigatetoReleaseSigs">Target not met go to Release Funds</button>
                     }
                     else
                     {
@@ -90,12 +132,12 @@
                         {
                             @if (StageInfo.CanRelease)
                             {
-                                <p>Total funds in penalty = @(Money.Satoshis(StageInfo.TotalInPenalty).ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
+                                <p class="mt-4">Total funds in penalty = @(Money.Satoshis(StageInfo.TotalInPenalty).ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
                             }
 
                             @if (StageInfo.CanRecover && !StageInfo.EndOfProject)
                             {
-                                <button class="btn btn-border me-2" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
+                                <button class="btn btn-border-warning me-2 mt-4" @onclick="PrepareToRecoverCoinsCheckPassword" disabled="@PrepareToRecoverCoinsModalSpinner">
                                     @if (PrepareToRecoverCoinsModalSpinner)
                                     {
                                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -110,7 +152,7 @@
 
                             @if (StageInfo.CanRelease)
                             {
-                                <button class="btn btn-border me-2" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
+                                <button class="btn btn-border-success me-2 mt-4" @onclick="PrepareToReleaseCoinsCheckPassword" disabled="@PrepareToReleaseCoinsModalSpinner">
                                     @if (PrepareToReleaseCoinsModalSpinner)
                                     {
                                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -125,7 +167,7 @@
 
                             @if (StageInfo.EndOfProject && StageInfo.TotalSpendable > 0)
                             {
-                                <button class="btn btn-border" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
+                                <button class="btn btn-border-warning mt-4" @onclick="PrepareEndOfProjectCoinsCheckPassword" disabled="@PrepareEndOfProjectCoinsModalSpinner">
                                     @if (PrepareEndOfProjectCoinsModalSpinner)
                                     {
                                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -140,115 +182,119 @@
                         }
                     }
                 </div>
-
-                <div>
-                    <button class="btn btn-border" @onclick="RefreshInvestments" disabled="@refreshSpinner">
-                        @if (refreshSpinner)
-                        {
-                            <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            <span>Refresh...</span>
-                        }
-                        else
-                        {
-                            <span>Refresh</span>
-                        }
-                    </button>
-                </div>
             </div>
-        }
 
-        @if (StageInfo.Items.Count() > 0)
-        {
-            <div class="table-responsive form-control mt-4">
-                <table class="table align-items-center mb-0">
-                    <thead>
-                    <tr>
-                        <th>Stage </th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var item in StageInfo.Items)
-                    {
+            @if (StageInfo.Items.Count() > 0)
+            {
+                <div class="table-responsive form-control mt-4">
+                    <table class="table align-items-center mb-0">
+                        <thead>
                         <tr>
-                            <td>@(item.StageIndex + 1)</td>
-                            <td>@(_currencyService.ToBtc(item.Amount)) @network.CoinTicker</td>
-                            <td>
-                                @if (item.IsSpent)
-                                {
-                                    <span class="text-primary">@item.SpentTo</span>
-                                }
-                                else
-                                {
-                                    <span class="text-success">Not Spent</span>
-                                }
-                            </td>
+                            <th>Stage </th>
+                            <th>Amount</th>
+                            <th>Status</th>
                         </tr>
-                    }
-                    </tbody>
-                </table>
-            </div>
-        }
+                        </thead>
+                        <tbody>
+                        @foreach (var item in StageInfo.Items)
+                        {
+                            <tr>
+                                <td>@(item.StageIndex + 1)</td>
+                                <td>@(_currencyService.ToBtc(item.Amount)) @network.CoinTicker</td>
+                                <td>
+                                    @if (item.IsSpent)
+                                    {
+                                        <span class="text-primary">@item.SpentTo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-success">Not Spent</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
 
+
+        </div>            
         @if (showRecoveryModal)
         {
             <div class="modal-wrapper">
                 <div class="modal fade show d-block" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content modern-modal">
-
                             <div class="modal-header border-0 pb-0">
                                 <div class="d-flex align-items-center">
-                                    <Icon IconName="wallet" Height="32" Width="32" class="me-2"/>
+                                    <Icon IconName="recovery" Height="32" Width="32" class="me-2" />
                                     <h5 class="modal-title">Recovery Confirmation</h5>
                                 </div>
                                 <button class="btn-close-custom" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner">
-                                    <Icon IconName="close-circle" Height="24" Width="24"/>
+                                    <Icon IconName="close-circle" Height="24" Width="24" />
                                 </button>
                             </div>
 
-                            <div class="modal-body modal-body-scroll">
-
-                                <p class="mb-1">The number of stages to be recovered is @StageInfo.Items.Count(s => !s.IsSpent) </p>
-
-                                @{
-                                    var totalAmount = StageInfo.Items
-                                        .Where(s => !s.IsSpent)
-                                        .Sum(s => Money.Satoshis(s.Amount).ToUnit(MoneyUnit.BTC));
-
-                                    var coinTicker = network.CoinTicker;
-                                }
-                                <p class="mb-1">
-                                    The amount to be recovered into a penalty = @totalAmount @coinTicker
-                                </p>
-
-                                <p class="mb-1">The penalty duration is @project.ProjectInfo.PenaltyDays days </p>
-
-                                <p class="mb-1">
-                                    <strong>Miner fee:</strong> @Money.Satoshis(recoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                </p>
+                            <div class="modal-body modal-body-scroll py-4">
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <div class="info-card h-100">
+                                            <div class="info-label">Stages to Recover</div>
+                                            <div class="info-value">@StageInfo.Items.Count(s => !s.IsSpent)</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-card h-100">
+                                            <div class="info-label">Amount to Recover</div>
+                                            <div class="info-value text-success">
+                                                @{
+                                                    var totalAmount = StageInfo.Items
+                                                        .Where(s => !s.IsSpent)
+                                                        .Sum(s => Money.Satoshis(s.Amount).ToUnit(MoneyUnit.BTC));
+                                                }
+                                                @totalAmount @network.CoinTicker
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-card h-100">
+                                            <div class="info-label">Penalty Duration</div>
+                                            <div class="info-value text-warning">@project.ProjectInfo.PenaltyDays days</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-card h-100">
+                                            <div class="info-label">Miner Fee</div>
+                                            <div class="info-value text-warning">@Money.Satoshis(recoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <hr>
 
-                                <div class="mb-3">
+                                <div class="info-card mb-3">
                                     <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
                                     <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="RecoveryFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
                                 </div>
 
                                 <hr>
 
-                                <p class="mt-3">Are you sure you want to recover these funds?</p>
+                                <div class="confirmation-section mt-4 text-center">
+                                    <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
+                                    <p class="confirmation-text">
+                                        Are you sure you want to recover these funds?
+                                    </p>
+                                </div>
                             </div>
 
-
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-border" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner">Cancel</button>
-                                <button type="button" class="btn btn-border" @onclick="RecoverCoins" disabled="@PrepareToRecoverCoinsConfirmSpinner">
+                            <div class="modal-footer border-0 pt-0">
+                                <button class="btn btn-border-warning" @onclick="() => showRecoveryModal = false" disabled="@PrepareToRecoverCoinsConfirmSpinner">Cancel</button>
+                                <button class="btn btn-border-success" @onclick="RecoverCoins" disabled="@PrepareToRecoverCoinsConfirmSpinner">
                                     @if (PrepareToRecoverCoinsConfirmSpinner)
                                     {
-                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                        <span>Confirm...</span>
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Confirming...</span>
                                     }
                                     else
                                     {
@@ -256,7 +302,6 @@
                                     }
                                 </button>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -266,41 +311,65 @@
         @if (showRecoveryReleaseModal)
         {
             <div class="modal-wrapper">
-                <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Release Recovery Confirmation</h5>
-                                <button type="button" class="btn-close" @onclick="() => showRecoveryReleaseModal = false" disabled="@PrepareToReleaseCoinsConfirmSpinner"></button>
+                <div class="modal fade show d-block" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content modern-modal">
+                            <div class="modal-header border-0 pb-0">
+                                <div class="d-flex align-items-center">
+                                    <Icon IconName="release" Height="32" Width="32" class="me-2" />
+                                    <h5 class="modal-title">Release Recovery Confirmation</h5>
+                                </div>
+                                <button class="btn-close-custom" @onclick="() => showRecoveryReleaseModal = false" disabled="@PrepareToReleaseCoinsConfirmSpinner">
+                                    <Icon IconName="close-circle" Height="24" Width="24" />
+                                </button>
                             </div>
-                            <div class="modal-body modal-body-scroll">
 
-                                <p class="mb-1">The amount to be released from the penalty = @Money.Satoshis(releaseRecoveryTransaction.Transaction.Outputs.Sum(s => s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-
-                                <p class="mb-1">Send to @releaseRecoveryTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
-
-                                <p class="mb-1">
-                                    <strong>Miner fee:</strong> @Money.Satoshis(releaseRecoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                </p>
+                            <div class="modal-body modal-body-scroll py-4">
+                                <div class="row g-4">
+                                    <div class="col-md-12">
+                                        <div class="info-card h-100">
+                                            <div class="info-label">Amount to Release</div>
+                                            <div class="info-value text-success">@Money.Satoshis(releaseRecoveryTransaction.Transaction.Outputs.Sum(s => s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="info-card h-100">
+                                            <div class="info-label">Destination Address</div>
+                                            <div class="info-value">@releaseRecoveryTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork())</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="info-card h-100">
+                                            <div class="info-label">Miner Fee</div>
+                                            <div class="info-value text-warning">@Money.Satoshis(releaseRecoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <hr>
 
-                                <div class="mb-3">
+                                <div class="info-card mb-3">
                                     <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
                                     <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="ReleaseFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
                                 </div>
 
                                 <hr>
 
-                                <p class="mt-3">Are you sure you want to release these funds from the penalty?</p>
+                                <div class="confirmation-section mt-4 text-center">
+                                    <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
+                                    <p class="confirmation-text">
+                                        Are you sure you want to release these funds from the penalty?
+                                    </p>
+                                </div>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-border" @onclick="() => showRecoveryReleaseModal = false" disabled="@PrepareToReleaseCoinsConfirmSpinner">Cancel</button>
-                                <button type="button" class="btn btn-border" @onclick="ReleaseCoins" disabled="@PrepareToReleaseCoinsConfirmSpinner">
+
+                            <div class="modal-footer border-0 pt-0">
+                                <button class="btn btn-border-warning" @onclick="() => showRecoveryReleaseModal = false" disabled="@PrepareToReleaseCoinsConfirmSpinner">Cancel</button>
+                                <button class="btn btn-border-success" @onclick="ReleaseCoins" disabled="@PrepareToReleaseCoinsConfirmSpinner">
                                     @if (PrepareToReleaseCoinsConfirmSpinner)
                                     {
-                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                        <span>Confirm...</span>
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Confirming...</span>
                                     }
                                     else
                                     {
@@ -314,63 +383,86 @@
             </div>
         }
 
-        @if (showEndOfProjectModal)
-        {
+         @if (showEndOfProjectModal)  
+         {  
             <div class="modal-wrapper">
-                <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">End Of project Confirmation</h5>
-                                <button type="button" class="btn-close" @onclick="() => showEndOfProjectModal = false" disabled="@PrepareEndOfProjectCoinsConfirmSpinner"></button>
+                <div class="modal fade show d-block" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content modern-modal">
+                            <div class="modal-header border-0 pb-0">
+                                <div class="d-flex align-items-center">
+                                    <Icon IconName="end" Height="32" Width="32" class="me-2" />
+                                    <h5 class="modal-title">End Of Project Confirmation</h5>
+                                </div>
+                                <button class="btn-close-custom" @onclick="() => showEndOfProjectModal = false" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">
+                                    <Icon IconName="close-circle" Height="24" Width="24" />
+                                </button>
                             </div>
-                            <div class="modal-body modal-body-scroll">
 
-                                <p class="mb-1">The amount to claim back after project ended = @Money.Satoshis(endOfProjectTransaction.Transaction.Outputs.Sum(s => s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-
-                                <p class="mb-1">Send to @endOfProjectTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork()) </p>
-
-                                <p class="mb-1">
-                                    <strong>Miner fee:</strong> @Money.Satoshis(endOfProjectTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                </p>
+                            <div class="modal-body modal-body-scroll py-4">
+                                <div class="row g-4">
+                                    <div class="col-md-12">
+                                        <div class="info-card h-100">
+                                            <div class="info-label">Amount to Claim</div>
+                                            <div class="info-value text-success">@Money.Satoshis(endOfProjectTransaction.Transaction.Outputs.Sum(s => s.Value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="info-card h-100">
+                                            <div class="info-label">Destination Address</div>
+                                            <div class="info-value">@endOfProjectTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork())</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="info-card h-100">
+                                            <div class="info-label">Miner Fee</div>
+                                            <div class="info-value text-warning">@Money.Satoshis(endOfProjectTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <hr>
 
-                                <div class="mb-3">
+                                <div class="info-card mb-3">
                                     <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
                                     <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="EndOfProjectFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
                                 </div>
 
                                 <hr>
 
-                                <p class="mt-3">Are you sure you want to claim these funds?</p>
+                                <div class="confirmation-section mt-4 text-center">
+                                    <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
+                                    <p class="confirmation-text">
+                                        Are you sure you want to claim these funds?
+                                    </p>
+                                </div>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-border" @onclick="() => showEndOfProjectModal = false" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">Cancel</button>
-                                <button type="button" class="btn btn-border" @onclick="EndOfProjectCoins" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">
+
+                            <div class="modal-footer border-0 pt-0">
+                                <button class="btn btn-border-warning" @onclick="() => showEndOfProjectModal = false" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">Cancel</button>
+                                <button class="btn btn-border-success" @onclick="EndOfProjectCoins" disabled="@PrepareEndOfProjectCoinsConfirmSpinner">
                                     @if (PrepareEndOfProjectCoinsConfirmSpinner)
                                     {
-                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                        <span>Confirm...</span>
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Confirming...</span>
                                     }
                                     else
                                     {
                                         <span>Confirm</span>
                                     }
-
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        }
-    </div>
+         }  
+    }
 </div>
 
 
 @code {
-    [Parameter] public string ProjectId { get; set; }
+    [Parameter] public string ProjectIdentifier { get; set; }
     private InvestorProject project;
 
     private bool showRecoveryModal = false;
@@ -430,7 +522,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        project = storage.GetInvestmentProjects().First(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+        project = storage.GetInvestmentProjects().First(p => p.ProjectInfo.ProjectIdentifier == ProjectIdentifier);
 
         firstTimeRefreshSpinner = true;
     }
@@ -1058,7 +1150,7 @@
 
     private void NavigatetoReleaseSigs()
     {
-        NavigationManager.NavigateTo($"/release/{ProjectId}");
+        NavigationManager.NavigateTo($"/release/{ProjectIdentifier}");
     }
 
 }

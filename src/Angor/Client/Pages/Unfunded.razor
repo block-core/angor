@@ -32,140 +32,185 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-
-<div class="row">
+<div class="header-container slide-in">
     <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="signature" Height="42" Width="42" />
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="refund" Class="header-icon" Width="32" Height="32" />
                 </span>
-                <div class="h-100 ms-3 flex-grow-1">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Release Funds for unfunded projects
-                    </h5>
-
-                </div>
+                <h5 class="header-text">Release Funds for Unfunded Projects</h5>
+            </div>
+            <div class="header-actions">
             </div>
         </div>
-        <p class="mb-0 font-weight-normal text-sm d-flex mt-4">
-            Project ID:
-            <span id="transactionID" class="text-dynamic ms-1">@ProjectIdentifier</span>
+    </div>
+</div>
+
+
+<div class="row slide-in mt-4">
+    <div class="card card-body">
+        <p class="mb-0 font-weight-normal text-sm animate-fade-in-delayed">
+            Project ID: @ProjectIdentifier
         </p>
     </div>
 </div>
 
 
-<div class="row mt-4">
-    <div class="col">
-
-        @if (!FounderProject.ProjectHasStarted())
+<div class="slide-in mt-4">
+    @if (!FounderProject.ProjectHasStarted())
+    {
+        <div class="card card-body text-center p-5">
+            <div class="empty-state">
+                <Icon IconName="pending" Height="64" Width="64" class="text-muted mb-4"/>
+                <h5 class="mb-3">Project Hasn't Started Yet</h5>
+                <p class="text-muted">The project needs to start before any actions can be taken.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        @if (TargetInvestmentReached())
         {
-            <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
-                <div class="text-center mb-3">
-
-                    <h6 class="mb-0">Project didn't start yet</h6>
+            <div class="card card-body text-center p-5">
+                <div class="empty-state">
+                    <Icon IconName="target-missed" Height="64" Width="64" class="text-success mb-4" />
+                    <h5 class="mb-3">Target Reached Successfully</h5>
+                    <p class="text-muted">The investment target for this project has been met.</p>
                 </div>
             </div>
         }
         else
         {
-            @if (TargetInvestmentReached())
-            {
-                <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
-                    <div class="text-center mb-3">
-
-                        <h6 class="mb-0">Target reached</h6>
-                    </div>
-                </div>
-            }
-            else
-            {
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header pb-0 p-3">
-                            <div class="row">
-                                <div class="col-6 d-flex align-items-center">
-                                    <h6 class="mb-0">Signatures</h6>
-                                </div>
-                                <div class="col-6 d-flex justify-content-end">
-                                    <button class="btn btn-sm @(ApproveButtonClass)" @onclick="ReleaseAllSignatures" disabled="@ApproveButtonDisabled">
-                                        @if (releasingAll)
-                                        {
-                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                            <span>Releasing...</span>
-                                        }
-                                        else
-                                        {
-                                            <span>Release All</span>
-                                        }
-                                    </button>
-                                    <button class="btn btn-sm btn-border ml-2" @onclick="RefreshSignaturesInternal" disabled="@isRefreshing">
-                                        @if (isRefreshing)
-                                        {
-                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                            <span>Refreshing...</span>
-                                        }
-                                        else
-                                        {
-                                            <span>Refresh</span>
-                                        }
-                                    </button>
-                                </div>
-                            </div>
+            <div class="card card-body hover-effect">
+                <div class="header-container">
+                    <div class="header-content">
+                        <div class="header-title animate-fade-in">
+                            <span class="header-icon-wrapper">
+                                <Icon IconName="signature" Class="header-icon" Width="32" Height="32" />
+                            </span>
+                            <h5 class="header-text">Release Signatures</h5>
                         </div>
-                        <div class="card-body">
-
-
-                            <div class="table-responsive form-control">
-                                <table class="table align-items-center mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Arrived</th>
-                                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Approved</th>
-                                            <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Released</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var signature in signaturesReleaseItems.Where(_ => _.SignRecoveryRequest?.InvestmentTransactionHex != null))
-                                        {
-                                            <tr>
-                                                <td>@signature.TimeArrived.ToString("g")</td>
-                                                <td>@signature.TimeApproved?.ToString("g")</td>
-                                                @if (signature.TimeReleased is null)
-                                                {
-                                                    <td>
-                                                        <button class="btn btn-border-success" @onclick="() => ApproveReleaseSignatureCheckPassword(signature)" disabled="@(signaturesReleaseApproving.Any() || scanningForReleaseApprovals)">
-                                                            @if (signaturesReleaseApproving.ContainsKey(signature))
-                                                            {
-                                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                                <span>Releasing...</span>
-                                                            }
-                                                            else
-                                                            {
-                                                                <span>Release</span>
-                                                            }
-                                                        </button>
-                                                    </td>
-                                                }
-                                                else
-                                                {
-                                                    <td>@signature.TimeReleased?.ToString("g")</td>
-                                                }
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="header-actions">
+                            <button class="btn btn-border-warning @(ApproveButtonClass)"
+                                    @onclick="ReleaseAllSignatures"
+                                    disabled="@ApproveButtonDisabled">
+                                @if (releasingAll)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    <span class="button-text ms-2">Releasing All...</span>
+                                }
+                                else
+                                {
+                                    <Icon IconName="release-all" Width="24" Height="24" />
+                                    <span class="button-text ms-2">Release All</span>
+                                }
+                            </button>
+                            <button class="btn btn-border-success ms-2" @onclick="RefreshSignaturesInternal" disabled="@isRefreshing">
+                                @if (isRefreshing)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                }
+                                else
+                                {
+                                    <Icon IconName="refresh" Width="24" Height="24" />
+                                }
+                            </button>
                         </div>
                     </div>
                 </div>
-            }
+
+                @if (signaturesReleaseItems.Any())
+                {
+                    <div class="table-responsive form-control mt-4 slide-in">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Arrived</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Approved</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Time Released</th>
+                                    <th class="text-uppercase text-xxs font-weight-bolder opacity-7 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var signature in signaturesReleaseItems.Where(_ => _.SignRecoveryRequest?.InvestmentTransactionHex != null))
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <Icon IconName="calendar" Width="24" Height="24" class="me-2" />
+                                                <span>@signature.TimeArrived.ToString("g")</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if (signature.TimeApproved.HasValue)
+                                            {
+                                                <div class="d-flex align-items-center">
+                                                    <Icon IconName="check" Width="24" Height="24" class="me-2 text-success" />
+                                                    <span>@signature.TimeApproved?.ToString("g")</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Pending</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (signature.TimeReleased.HasValue)
+                                            {
+                                                <div class="d-flex align-items-center">
+                                                    <Icon IconName="released" Width="24" Height="24" class="me-2 text-success" />
+                                                    <span>@signature.TimeReleased?.ToString("g")</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-warning">Not Released</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (signature.TimeReleased is null)
+                                            {
+                                                <button class="btn btn-border-warning animate-scale"
+                                                        @onclick="() => ApproveReleaseSignatureCheckPassword(signature)"
+                                                        disabled="@(signaturesReleaseApproving.Any() || scanningForReleaseApprovals)">
+                                                    @if (signaturesReleaseApproving.ContainsKey(signature))
+                                                    {
+                                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                        <span>Processing...</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <Icon IconName="release" Width="20" Height="20" />
+                                                        <span class="ms-2">Release</span>
+                                                    }
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">
+                                                    <Icon IconName="check" Width="16" Height="16" class="me-1" />
+                                                    Released
+                                                </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center mt-4">
+                        <h5 class="mb-3">No Signatures to Release</h5>
+                        <p class="text-muted">There are currently no pending signatures that need to be released.</p>
+                    </div>
+                }
+            </div>
         }
-    </div>
+    }
 </div>
-
-
 
 @code {
     [Parameter]
@@ -275,7 +320,7 @@
     {
         refreshButtonSpinner = true;
         StateHasChanged();
-        
+
         if (!passwordComponent.HasPassword())
         {
             notificationComponent.ShowErrorMessage("no wallet password");
@@ -298,7 +343,7 @@
         }
         finally
         {
-            
+
             refreshButtonSpinner = false;
             StateHasChanged();
         }
@@ -335,12 +380,12 @@
                 Logger.LogDebug($"Sig request event received is new");
 
                 var signatureReleaseItem = new SignatureReleaseItem
-                {
-                    investorNostrPubKey = investorNostrPubKey,
-                    TimeArrived = timeArrived,
-                    EncryptedSignRecoveryMessage = encryptedMessage, //To be encrypted after js interop is loaded
-                    EventId = eventId
-                };
+                    {
+                        investorNostrPubKey = investorNostrPubKey,
+                        TimeArrived = timeArrived,
+                        EncryptedSignRecoveryMessage = encryptedMessage, //To be encrypted after js interop is loaded
+                        EventId = eventId
+                    };
 
                 signaturesReleaseItems.Add(signatureReleaseItem);
                 Logger.LogDebug($"Added to pendingSignatures");
@@ -349,7 +394,7 @@
             {
                 Logger.LogDebug($"End of messages");
 
-                // we cannot directly call a method that needs to be awaited 
+                // we cannot directly call a method that needs to be awaited
                 // so we do it inside the InvokeAsync delegate.
 
                 // decrypt the message
@@ -391,7 +436,7 @@
                 signatureReleaseItem.SignRecoveryRequest = null; // should we remove the item instead?
             }
         }
-        
+
         StateHasChanged();
     }
 
@@ -509,7 +554,7 @@
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
@@ -518,7 +563,7 @@
 
         StateHasChanged();
     }
- 
+
     private async Task ReleaseAllSignatures()
     {
         if (passwordComponent.HasPassword())
@@ -541,10 +586,10 @@
 
         try
         {
-            var releaseSignatures = signaturesReleaseItems.Where(s =>  s.TimeReleased == null).ToList();
-        
+            var releaseSignatures = signaturesReleaseItems.Where(s => s.TimeReleased == null).ToList();
+
             var words = await passwordComponent.GetWalletAsync();
-        
+
             foreach (var signature in releaseSignatures)
             {
                 await PerformReleaseSignature(signature, words);
@@ -553,14 +598,14 @@
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
             releasingAll = false;
             passwordComponent.ClearPassword();
         }
-        
+
         StateHasChanged();
     }
 
@@ -580,7 +625,7 @@
                 nostrPrivateKeyHex, signature.investorNostrPubKey, sigJson);
 
             signature.TimeReleased = SignService.SendReleaseSigsToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
-            
+
             return new OperationResult { Success = true };
         }
         catch (Exception ex)
@@ -598,7 +643,7 @@
         var sig = FounderTransactionActions.SignInvestorRecoveryTransactions(info, transactionHex, recoveryTrx, founderSigningPrivateKey);
 
         if (!InvestorTransactionActions.CheckInvestorUnfundedReleaseSignatures(info, investorTrx, sig, investorReleaseAddress))
-           throw new InvalidOperationException();
+            throw new InvalidOperationException();
 
         sig.SignatureType = SignatureInfoType.Release;
 
