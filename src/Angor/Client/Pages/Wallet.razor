@@ -1508,11 +1508,15 @@ else
                 accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
                 storage.SetAccountInfo(network.Name, accountInfo);
                 _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
+                
+                notificationComponent.ShowNotificationMessage("Sent complete!");
+            }
+            else
+            {
+                notificationComponent.ShowNotificationMessage($"Sending failed! {res.Message}");
             }
 
             _sendInfo = new SendInfo();
-
-            notificationComponent.ShowNotificationMessage("Sent complete!");
         }
         catch (Exception e)
         {

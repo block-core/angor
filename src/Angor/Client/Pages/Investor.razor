@@ -515,6 +515,11 @@
             },
             () =>
             {
+                if (investorProject.ProjectInfo == null)
+                {
+                    _Logger.LogError("Failed to get project info for project {0}", investmentState.ProjectIdentifier);
+                    return;
+                }
                 _RelayService.LookupNostrProfileForNPub(
                     (_, metadata) => { investorProject.Metadata ??= metadata; },
                     () =>

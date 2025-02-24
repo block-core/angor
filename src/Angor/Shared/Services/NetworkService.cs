@@ -51,7 +51,7 @@ namespace Angor.Shared.Services
                 if (setNetwork != null)
                 {
                     network = AngorNetworksSelector.NetworkByName(setNetwork);
-                }
+                } 
                 else if (url.Contains("test"))
                 {
                     network = new Angornet();
@@ -91,7 +91,7 @@ namespace Angor.Shared.Services
         {
             var settings = _networkStorage.GetSettings();
 
-            foreach (var indexerUrl in settings.Indexers)
+            foreach (var indexerUrl  in settings.Indexers)
             {
                 if (force || (DateTime.UtcNow - indexerUrl.LastCheck).Minutes > 10)
                 {
@@ -100,7 +100,10 @@ namespace Angor.Shared.Services
                     try
                     {
                         var uri = new Uri(indexerUrl.Url);
-                        var response = await _httpClient.GetAsync($"{uri}api/stats/heartbeat");
+                        
+                        var blockUrl = Path.Combine(uri.AbsoluteUri, "api", "v1", "block-height", "0");
+
+                        var response = await _httpClient.GetAsync(blockUrl);
 
                         if (response.IsSuccessStatusCode)
                         {
@@ -131,7 +134,9 @@ namespace Angor.Shared.Services
                     try
                     {
                         var uri = new Uri(relayUrl.Url);
-                        var httpUri = uri.Scheme == "wss" ? new Uri($"https://{uri.Host}/") : new Uri($"http://{uri.Host}/");
+                        var httpUri = uri.Scheme == "wss"
+                            ? new Uri($"https://{uri.Host}/")
+                            : new Uri($"http://{uri.Host}/");
 
                         var response = await _httpClient.GetAsync(httpUri);
 
@@ -143,7 +148,8 @@ namespace Angor.Shared.Services
                         }
                         else
                         {
-                            _logger.LogError($"Failed to check relay status url = {relayUrl.Url}, StatusCode = {response.StatusCode}");
+                            _logger.LogError(
+                                $"Failed to check relay status url = {relayUrl.Url}, StatusCode = {response.StatusCode}");
                         }
                     }
                     catch (Exception ex)
@@ -184,7 +190,6 @@ namespace Angor.Shared.Services
             }
 
             return ret;
-
         }
 
         public List<SettingsUrl> GetRelays()
@@ -202,7 +207,8 @@ namespace Angor.Shared.Services
                 {
                     var settings = _networkStorage.GetSettings();
 
-                    var host = settings.Indexers.FirstOrDefault(a => new Uri(a.Url).Host == httpResponseMessage.RequestMessage?.RequestUri?.Host);
+                    var host = settings.Indexers.FirstOrDefault(a =>
+                        new Uri(a.Url).Host == httpResponseMessage.RequestMessage?.RequestUri?.Host);
 
                     if (host != null)
                     {
