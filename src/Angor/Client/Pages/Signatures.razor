@@ -87,14 +87,20 @@
         @if (messagesReceived || isLoading)
         {
             <div class="card card-body">
-                <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
-                    <div class="text-center">
-                        @if (isLoading)
-                        {
-                            <h6 class="mb-3">Approving Signatures... @numOfSignaturesSigned / @numOfSignatureToSign</h6>
-                        }
-                        <div class="loader"></div>
-                    </div>
+                <div class="d-flex flex-column justify-content-center align-items-center py-5">
+                    @if (isLoading)
+                    {
+                        <div class="text-center mb-4">
+                            <h5 class="d-flex align-items-center justify-content-center">
+                                <Icon IconName="signature" Width="24" Height="24" class="me-2" />
+                                Approving Signatures
+                            </h5>
+                            <div class="badge bg-primary px-4 py-2 my-3">
+                                @numOfSignaturesSigned / @numOfSignatureToSign
+                            </div>
+                        </div>
+                    }
+                    <div class="loader"></div>
                 </div>
             </div>
         }
