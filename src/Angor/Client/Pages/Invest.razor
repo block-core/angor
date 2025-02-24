@@ -45,33 +45,35 @@
     return;
 }
 
-<div class="row mb-4 slide-in">
-    <div class="card card-body animate-fade-in">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none animate-rotate">
-                    <Icon IconName="portfolio" Height="42" Width="42" />
+<div class="header-container slide-in">
+    <div class="card card-body">
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="portfolio" Class="header-icon" Width="32" Height="32" />
                 </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
-                        Project Investment
-                    </h5>
-
-                </div>
+                <h5 class="header-text">Project Investment</h5>
             </div>
-
-
+            <div class="header-actions">
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row mb-4 slide-in">
-    <div class="card card-body hover-effect animate-fade-in">
-        <h6 class="section-title mb-4">
-            <Icon IconName="info" Height="32" Width="32" class="me-2" />
-            Investment Information
-        </h6>
-        <p class="mb-3">
+<div class="row mt-4 slide-in">
+    <div class="card card-body">
+        <div class="header-container">
+            <div class="header-content">
+                <div class="header-title animate-fade-in">
+                    <span class="header-icon-wrapper">
+                        <Icon IconName="info" Class="header-icon" Width="32" Height="32" />
+                    </span>
+                    <h5 class="header-text">Investment Information</h5>
+                </div>
+            </div>
+        </div>
+
+        <p class="mb-4 mt-4">
             To invest in this project, the founder must sign a recovery agreement.
             This ensures that you can recover your funds if the project does not succeed.
         </p>
@@ -180,11 +182,15 @@
 {
     <div class="animate-fade-in mt-4">
         <div class="card card-body slide-in">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="card-title d-flex align-items-center">
-                    <Icon IconName="investment" Height="32" Width="32" class="me-2" />
-                    Investment Details
-                </h5>
+            <div class="header-container">
+                <div class="header-content">
+                    <div class="header-title animate-fade-in">
+                        <span class="header-icon-wrapper">
+                            <Icon IconName="investment" Class="header-icon" Width="32" Height="32" />
+                        </span>
+                        <h5 class="header-text">Investment Details</h5>
+                    </div>
+                </div>
             </div>
 
             <EditForm Model="Investment" OnValidSubmit="InvestFundsAndCheckPassword" class="investment-form">
@@ -383,7 +389,7 @@
                         </div>
 
                         <div class="modal-footer border-0 pt-0">
-                            <button class="btn btn-border" @onclick="ShowTransactionJsonModal">
+                            <button class="btn btn-border-warning" @onclick="ShowTransactionJsonModal">
                                 View Details
                             </button>
                             <button type="button" class="btn btn-border-success" @onclick="Send" disabled="@investSpinner">
@@ -408,29 +414,37 @@ else
 {
     if (investorProject.WaitingForFounderResponse())
     {
-        <div class="card mt-4 text-center animate-fade-in">
-            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-                <h4 class="mb-0">Waiting for the founder to approve</h4>
-                <div class="d-flex mt-2 mt-md-0">
-                    <button type="button" class="btn btn-border-danger me-2 animate-scale" @onclick="CancelInvestment">
-                        <Icon IconName="cancel" Width="20" Height="20" class="me-1" />
-                        <span>Cancel</span>
-                    </button>
-                    <button class="btn btn-border animate-scale" @onclick="RefreshSignatures" disabled="@refreshSpinner">
-                        @if (refreshSpinner)
-                        {
-                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                            <span>Refreshing...</span>
-                        }
-                        else
-                        {
-                            <Icon IconName="refresh" Width="20" Height="20" class="me-1" />
-                            <span>Refresh</span>
-                        }
-                    </button>
+        <div class="card card-body hover-effect animate-fade-in mt-4">
+            <div class="header-container">
+                <div class="header-content">
+                    <div class="header-title animate-fade-in">
+                        <span class="header-icon-wrapper">
+                            <Icon IconName="pending" Class="header-icon" Width="32" Height="32" />
+                        </span>
+                        <h5 class="header-text">Waiting for the founder to approve</h5>
+                    </div>
+                    <div class="header-actions">
+                        <button type="button" class="btn btn-border-danger" @onclick="CancelInvestment">
+                            <Icon IconName="close-circle" Width="20" Height="20" />
+                            <span class="button-text ms-2">Cancel</span>
+                        </button>
+                        <button class="btn btn-border ms-2" @onclick="RefreshSignatures" disabled="@refreshSpinner">
+                            @if (refreshSpinner)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                <span class="button-text ms-2">Refreshing...</span>
+                            }
+                            else
+                            {
+                                <Icon IconName="refresh" Width="20" Height="20" />
+                                <span class="button-text ms-2">Refresh</span>
+                            }
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="card-body d-flex justify-content-center align-items-center">
+
+            <div class="d-flex justify-content-center align-items-center mt-4">
                 <div class="loader-slow"></div>
             </div>
         </div>
@@ -473,7 +487,7 @@ else
                                 <Icon IconName="details" Height="20" Width="20" class="me-2" />
                                 Transaction Details
                             </h5>
-                            <div class="info-card p-3 rounded-3 border hover-effect animate-fade-in">
+                            <div class="info-card p-3 rounded-3 border animate-fade-in">
                                 <div class="d-flex justify-content-between">
                                     <div>
                                         <strong>Amount to invest:</strong>

@@ -37,32 +37,43 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-<div class="row slide-in">
-    <div class="card card-body hover-effect">
-        <div class="d-flex align-items-center justify-content-between flex-wrap">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none animate-rotate">
-                    <Icon IconName="spend" Height="42" Width="42" />
+<div class="header-container slide-in">
+    <div class="card card-body">
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="spend" Class="header-icon" Width="32" Height="32" />
                 </span>
-                <div class="ms-3">
-                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
-                        Founder Stage Claim
-                    </h5>
-                </div>
+                <h5 class="header-text"> Founder Stage Claim</h5>
             </div>
-            <button class="btn btn-border mb-2 animate-scale" @onclick="RefreshBalance" disabled="@refreshSpinner">
-
-                <i class="@(refreshSpinner ? "rotate-icon" : "")">
-                    <Icon IconName="refresh" Width="24" Height="24"></Icon>
-                </i>
-                <span class="nav-link-text ms-1">Refresh</span>
-            </button>
+            <div class="header-actions">
+                <button class="btn btn-border-success"
+                        @onclick="RefreshBalance"
+                        disabled="@refreshSpinner"
+                        title="Refresh">
+                    @if (refreshSpinner)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <Icon IconName="refresh" Height="24" Width="24" />
+                        <span class="button-text ms-2">Refresh</span>
+                    }
+                </button>
+            </div>
         </div>
-        <p class="mb-0 font-weight-normal text-sm text-truncate mt-4 animate-fade-in-delayed">
-            Project Identifier: @project.ProjectIdentifier
+    </div>
+</div>
+
+<div class="row slide-in mt-4">
+    <div class="card card-body">
+        <p class="mb-0 font-weight-normal text-sm animate-fade-in-delayed">
+            Project ID: @project.ProjectIdentifier
         </p>
     </div>
 </div>
+
 
 <div class="slide-in mt-4">
 
@@ -78,76 +89,77 @@
     {
         @if (totalInvestedAmount <= founderProject.ProjectInfo.TargetAmount && founderProject.ProjectHasStarted())
         {
-            <div class="card card-body slide-in mt-4">
-                <div class="row g-4">
-                    <div class="col">
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
-                           
-                            <div class="d-flex align-items-center">
-                               
-                                <h4 class="alert-heading text-warning mb-0 fw-bold">Target Not Reached</h4>
-                            
-                            </div>
+            <div class="target-status-section slide-in mt-4">
 
-                            <div class="funding-progress d-flex align-items-center gap-3">
-                                <span class="badge bg-warning text-dark d-flex align-items-center py-2">
-                                    <Icon IconName="progress" Height="16" Width="16" class="me-2" />
-                                    <span>@((totalInvestedAmount * 100 / founderProject.ProjectInfo.TargetAmount).ToString("0.0"))% Funded</span>
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="row g-4 mb-4">
-                            <div class="col-12 col-md-6">
-                                <div class="stat-card p-3 rounded-3 border hover-effect h-100">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <Icon IconName="wallet" Height="24" Width="24" class="text-warning me-2" />
-                                        <span class="text-muted">Current Amount</span>
+                <div class="info-alert glass-effect">
+                    <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+                    <p>The target investment amount has not been reached. As founder, you can only release the funds back to the investors.</p>
+                </div>
+                <div class="status-overview mt-4">
+                    <div class="progress-circle-wrapper">
+                        <div class="progress-circle"
+                             role="progressbar"
+                             data-percentage="@((totalInvestedAmount * 100 / founderProject.ProjectInfo.TargetAmount).ToString("0"))"
+                             style="--percentage: @((totalInvestedAmount * 100 / founderProject.ProjectInfo.TargetAmount).ToString("0"))">
+                            <div class="progress-circle-inner">
+                                <div class="progress-circle-content">
+                                    <Icon IconName="alert-circle" Height="32" Width="32" Class="warning-icon" />
+                                    <h4 class="progress-title">Target Not Reached</h4>
+                                    <div class="progress-value">
+                                        @((totalInvestedAmount * 100 / founderProject.ProjectInfo.TargetAmount).ToString("0.0"))%
                                     </div>
-                                    <h5 class="mb-0 fw-bold">
-                                        @Money.Satoshis(totalInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                    </h5>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <div class="stat-card p-3 rounded-3 border hover-effect h-100">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <Icon IconName="wallet" Height="24" Width="24" class="text-warning me-2" />
-                                        <span class="text-muted">Target Amount</span>
-                                    </div>
-                                    <h5 class="mb-0 fw-bold">
-                                        @Money.Satoshis(founderProject.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                    </h5>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-
-                        <div class="row mt-4">
-                            <div class="card card-body angor-alert-info pt-2 pb-2">
-                                <div class="d-flex align-items-center align-items-center">
-                                    <span class="me-3 user-select-none">
-                                        <Icon IconName="info" Width="32" Height="32" Color="var(--angor-primary)" />
+                    <div class="amount-stats">
+                        <div class="amount-card glass-effect">
+                            <div class="amount-card-content">
+                                <Icon IconName="wallet" Height="32" Width="32" Class="card-icon" />
+                                <div class="amount-info">
+                                    <span class="amount-label">Current Amount</span>
+                                    <span class="amount-value">
+                                        @Money.Satoshis(totalInvestedAmount).ToUnit(MoneyUnit.BTC)
+                                        <small class="currency">@network.CoinTicker</small>
                                     </span>
-                                    <span class="text-white">The target investment amount has not been reached. As founder, you can only release the funds back to the investors.</span>
                                 </div>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar" style="width: @((totalInvestedAmount * 100 / founderProject.ProjectInfo.TargetAmount).ToString("0"))%"></div>
                             </div>
                         </div>
 
-
-                        <div class="d-flex justify-content-end mt-4">
-                            <button class="btn btn-border-warning text-dark btn-lg d-inline-flex align-items-center gap-2 animate-scale"
-                                    @onclick="ReleaseFundsToInvestors">
-                                <Icon IconName="refund" Height="24" Width="24" />
-                                <span class="d-none d-sm-inline">Release Funds to Investors</span>
-                                <span class="d-inline d-sm-none">Release</span>
-                                <Icon IconName="arrow-right" Height="24" Width="24" />
-                            </button>
+                        <div class="amount-card glass-effect">
+                            <div class="amount-card-content">
+                                <Icon IconName="wallet" Height="32" Width="32" Class="card-icon" />
+                                <div class="amount-info">
+                                    <span class="amount-label">Target Amount</span>
+                                    <span class="amount-value">
+                                        @Money.Satoshis(founderProject.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC)
+                                        <small class="currency">@network.CoinTicker</small>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+
+
+
+                    <div class="action-section">
+                        <button class="btn btn-border-warning w-100-m" @onclick="ReleaseFundsToInvestors">
+                            <div class="button-content">
+                                <Icon IconName="refund" Height="24" Width="24" />
+                                <span> Release Funds to Investors</span>
+                                <Icon IconName="arrow-right" Height="20" Width="20" />
+                            </div>
+                            <div class="button-background"></div>
+                        </button>
                     </div>
                 </div>
             </div>
         }
+
         <div class="card card-body slide-up mt-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="card-title d-flex align-items-center">
@@ -161,7 +173,7 @@
                 </h5>
             </div>
 
-            <div class="row g-4">
+            <div class="row g-4 mb-4">
                 <div class="col-md-6 col-lg-3">
                     <div class="stat-card p-3 rounded-3 border hover-effect">
                         <div class="d-flex justify-content-between">
@@ -219,7 +231,7 @@
                 </div>
             </div>
 
-            <div class="row g-4 mt-2">
+            <div class="row g-4">
                 <div class="col-md-6">
                     <div class="stat-card p-3 rounded-3 border hover-effect h-100">
                         <div class="d-flex flex-column h-100">
@@ -499,7 +511,7 @@
                     </div>
 
                     <div class="modal-footer border-0 pt-0">
-                        <button class="btn btn-border" @onclick="ShowTransactionJsonModal">
+                        <button class="btn btn-border-warning" @onclick="ShowTransactionJsonModal">
                             View Details
                         </button>
                         <button class="btn btn-border-success"

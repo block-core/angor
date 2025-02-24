@@ -35,10 +35,9 @@
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
-    <div class="row z-index-notif">
-        <div class="col">
+
             <div class="modal-wrapper">
-                <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                <div class="modal show d-block" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content bg-danger">
                             <div class="modal-header text-white">
@@ -57,8 +56,7 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+
 }
 
 @code {

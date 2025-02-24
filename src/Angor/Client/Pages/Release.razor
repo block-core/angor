@@ -32,25 +32,27 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-
-<div class="row slide-in">
-    <div class="card card-body hover-effect">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="signature" Height="42" Width="42" />
+<div class="header-container slide-in">
+    <div class="card card-body">
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="signature" Class="header-icon" Width="32" Height="32" />
                 </span>
-                <div class="h-100 ms-3 flex-grow-1">
-                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
-                        Claim released funds without a penalty
-                    </h5>
-
-                </div>
+                <h5 class="header-text">Claim released funds without a penalty</h5>
+            </div>
+            <div class="header-actions">
+                
             </div>
         </div>
-        <p class="mb-0 font-weight-normal text-sm d-flex mt-4">
-            Project ID:
-            <span id="transactionID" class="text-dynamic ms-1">@ProjectIdentifier</span>
+    </div>
+</div>
+
+
+<div class="row slide-in mt-4">
+    <div class="card card-body">
+        <p class="mb-0 font-weight-normal text-sm animate-fade-in-delayed">
+            Project ID: @ProjectIdentifier
         </p>
     </div>
 </div>
@@ -148,8 +150,8 @@
                         <p class="mt-3">Are you sure you want to claim back these funds?</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-border" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">Cancel</button>
-                        <button type="button" class="btn btn-border" @onclick="ReleaseInvestorCoins" disabled="@prepareToReleaseCoinsConfirmSpinner">
+                        <button type="button" class="btn btn-border-warning" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">Cancel</button>
+                        <button type="button" class="btn btn-border-success" @onclick="ReleaseInvestorCoins" disabled="@prepareToReleaseCoinsConfirmSpinner">
                             @if (prepareToReleaseCoinsConfirmSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>

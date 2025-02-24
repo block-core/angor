@@ -39,67 +39,49 @@
         <p>@errorMessage</p>
     </div>
 }
-
-<div class="row slide-in">
-    <div class="card card-body hover-effect">
-        <div class="d-flex align-items-center justify-content-between flex-wrap">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none animate-rotate">
-                    <Icon IconName="add" Height="42" Width="42" />
+<div class="header-container slide-in">
+    <div class="card card-body">
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="add" Class="header-icon" Width="32" Height="32" />
                 </span>
-                <div class="ms-3">
-                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
-                        Create New Project
-                    </h5>
-
-                </div>
+                <h5 class="header-text">Create New Project</h5>
+            </div>
+            <div class="header-actions">
+ 
             </div>
         </div>
     </div>
 </div>
-
+ 
 <div class="slide-in mt-4">
     <div class="tab-container">
-        <div class="row g-4 justify-content-center text-center">
-            <!-- Tab 1: Project Metadata -->
-            <div class="col-lg-3 col-md-4 col-sm-6 animate-card">
-                <div class="card tab-card h-100 @(activeTab == 1 ? "active hover-effect" : "hover-effect")"
-                     @onclick="() => SetActiveTab(1)"
-                     data-cy="metadata-tab">
-                    <div class="card-body py-4 d-flex align-items-center justify-content-center">
-                        <div class="tab-icon me-3 @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
-                            <Icon IconName="relay" Height="42" Width="42" />
-                        </div>
-                        <h5 class="mb-0">Project Metadata</h5>
+        <div class="tabs-wrapper">
+            <div class="tab-item @(activeTab == 1 ? "active" : "")" @onclick="() => SetActiveTab(1)" data-cy="metadata-tab">
+                <div class="tab-content">
+                    <div class="tab-icon @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
+                        <Icon IconName="relay" Height="32" Width="32" />
                     </div>
+                    <span class="tab-label">Metadata</span>
                 </div>
             </div>
 
-            <!-- Tab 2: Project Info -->
-            <div class="col-lg-3 col-md-4 col-sm-6 animate-card">
-                <div class="card tab-card h-100 @(activeTab == 2 ? "active hover-effect" : "hover-effect")"
-                     @onclick="() => SetActiveTab(2)"
-                     data-cy="info-tab">
-                    <div class="card-body py-4 d-flex align-items-center justify-content-center">
-                        <div class="tab-icon me-3 @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
-                            <Icon IconName="view-project" Height="42" Width="42" />
-                        </div>
-                        <h5 class="mb-0">Project Info</h5>
+            <div class="tab-item @(activeTab == 2 ? "active" : "")" @onclick="() => SetActiveTab(2)" data-cy="info-tab">
+                <div class="tab-content">
+                    <div class="tab-icon @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
+                        <Icon IconName="view-project" Height="32" Width="32" />
                     </div>
+                    <span class="tab-label">Project Info</span>
                 </div>
             </div>
 
-            <!-- Tab 3: On Chain -->
-            <div class="col-lg-3 col-md-4 col-sm-6 animate-card">
-                <div class="card tab-card h-100 @(activeTab == 3 ? "active hover-effect" : "hover-effect")"
-                     @onclick="() => SetActiveTab(3)"
-                     data-cy="onchain-tab">
-                    <div class="card-body py-4 d-flex align-items-center justify-content-center">
-                        <div class="tab-icon me-3 @(activeTab == 3 ? "heartbeat" : "")" aria-hidden="true">
-                            <Icon IconName="addresses" Height="42" Width="42" />
-                        </div>
-                        <h5 class="mb-0">On Chain</h5>
+            <div class="tab-item @(activeTab == 3 ? "active" : "")" @onclick="() => SetActiveTab(3)" data-cy="onchain-tab">
+                <div class="tab-content">
+                    <div class="tab-icon @(activeTab == 3 ? "heartbeat" : "")" aria-hidden="true">
+                        <Icon IconName="addresses" Height="32" Width="32" />
                     </div>
+                    <span class="tab-label">On Chain</span>
                 </div>
             </div>
         </div>
@@ -576,7 +558,7 @@
                         </div>
 
                         <div class="modal-footer border-0 pt-0">
-                            <button class="btn btn-border" @onclick="Send" disabled="@publishProjectSpinner">
+                            <button class="btn btn-border-success" @onclick="Send" disabled="@publishProjectSpinner">
                                 @if (publishProjectSpinner)
                                 {
                                     <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>

@@ -32,33 +32,44 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-
-<div class="row slide-in">
-    <div class="card card-body hover-effect">
-        <div class="d-flex align-items-center justify-content-between flex-wrap">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none animate-rotate">
-                    <Icon IconName="signature" Height="42" Width="42" />
+<div class="header-container slide-in">
+    <div class="card card-body">
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="signature" Class="header-icon" Width="32" Height="32" />
                 </span>
-                <div class="ms-3">
-                    <h5 class="mb-0 font-weight-bolder animate-fade-in">
-                        Pending Signatures
-                    </h5>
-                </div>
+                <h5 class="header-text">Pending Signatures</h5>
             </div>
-            <button class="btn btn-border mb-2 animate-scale" @onclick="RefreshSignaturesInternal" disabled="@refreshButtonSpinner">
-                <i class="@(refreshButtonSpinner ? "rotate-icon" : "")">
-                    <Icon IconName="refresh" Width="24" Height="24"></Icon>
-                </i>
-                <span class="nav-link-text ms-1">Refresh</span>
-            </button>
+            <div class="header-actions">
+                <button class="btn btn-border-success"
+                        @onclick="RefreshSignaturesInternal"
+                        disabled="@refreshButtonSpinner"
+                        title="Refresh">
+                    @if (refreshButtonSpinner)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <Icon IconName="refresh" Height="24" Width="24" />
+                        <span class="button-text ms-2">Refresh</span>
+                    }
+                </button>
+            </div>
         </div>
-        <p class="mb-0 font-weight-normal text-sm text-truncate mt-4 animate-fade-in-delayed">
+    </div>
+</div>
+
+<div class="row slide-in mt-4">
+    <div class="card card-body">
+        <p class="mb-0 font-weight-normal text-sm animate-fade-in-delayed">
             Project ID: @ProjectIdentifier
         </p>
     </div>
 </div>
 
+ 
 <div class="slide-in mt-4">
     @if (!signaturesRequests.Any())
     {
@@ -76,31 +87,41 @@
         @if (messagesReceived || isLoading)
         {
             <div class="card card-body">
-                <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
-                    <div class="text-center">
-                        @if (isLoading)
-                        {
-                            <h6 class="mb-3">Approving Signatures... @numOfSignaturesSigned / @numOfSignatureToSign</h6>
-                        }
-                        <div class="loader"></div>
-                    </div>
+                <div class="d-flex flex-column justify-content-center align-items-center py-5">
+                    @if (isLoading)
+                    {
+                        <div class="text-center mb-4">
+                            <h5 class="d-flex align-items-center justify-content-center">
+                                <Icon IconName="signature" Width="24" Height="24" class="me-2" />
+                                Approving Signatures
+                            </h5>
+                            <div class="badge bg-primary px-4 py-2 my-3">
+                                @numOfSignaturesSigned / @numOfSignatureToSign
+                            </div>
+                        </div>
+                    }
+                    <div class="loader"></div>
                 </div>
             </div>
         }
         else
         {
             <div class="card card-body hover-effect">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title d-flex align-items-center">
-                        <span class="user-select-none animate-rotate">
-                            <Icon IconName="statistics" Height="42" Width="42"/>
-                        </span>
-                        <div class="ms-3">Signatures Overview</div>
-                    </h5>
-                    <button class="btn @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">
-                        <Icon IconName="approved" Width="20" Height="20" />
-                        <span class="ms-2">Approve All</span>
-                    </button>
+                <div class="header-container">
+                    <div class="header-content">
+                        <div class="header-title animate-fade-in">
+                            <span class="header-icon-wrapper">
+                                <Icon IconName="statistics" Class="header-icon" Width="32" Height="32" />
+                            </span>
+                            <h5 class="header-text">Signatures Overview</h5>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn @(ApproveButtonClass)" @onclick="ApproveAllSignatures" disabled="@ApproveButtonDisabled">
+                                <Icon IconName="approved" Width="20" Height="20" />
+                                <span class="button-text ms-2">Approve All</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="table-responsive form-control mt-4 slide-in">

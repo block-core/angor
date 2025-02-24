@@ -2,25 +2,23 @@
 @using Blockcore.Networks
 @inject INetworkConfiguration NetworkConfiguration
 
-
-<div class="d-flex flex-column align-items-start" title="@GetTooltip()">
-    <span class="fs-4">
-        <strong>@BtcBalance</strong> @_network.CoinTicker
-    </span>
+<div class="balance-display @(IsCompact ? "compact" : "")" title="@GetTooltip()">
+    <div class="balance-amount">
+        <strong class="btc-value">@BtcBalance</strong>
+        <span class="currency-ticker">@_network.CoinTicker</span>
+    </div>
     @if (ShowFiatInline && PreferredCurrency != "BTC" && !string.IsNullOrEmpty(BtcBalanceInFiat))
     {
-        <h6 class="text-muted">@BtcBalanceInFiat</h6>
+        <div class="fiat-value">@BtcBalanceInFiat</div>
     }
 </div>
 
 @code {
     [Parameter] public decimal BtcBalance { get; set; }
-
     [Parameter] public string BtcBalanceInFiat { get; set; }
-
     [Parameter] public string PreferredCurrency { get; set; }
-
     [Parameter] public bool ShowFiatInline { get; set; } = false;
+    [Parameter] public bool IsCompact { get; set; } = false;
 
     private Network _network;
 
@@ -36,5 +34,4 @@
             ? $"Equivalent: {BtcBalanceInFiat}"
             : string.Empty;
     }
-
 }
