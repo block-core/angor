@@ -1473,13 +1473,11 @@ a p {
 
 .hover-effect {
     transition: all 0.3s ease;
-    background: var(--form-bg);
-}
+ }
 
 .hover-effect:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
+ }
 
 .animate-rotate span {
     display: inline-block;
@@ -2023,7 +2021,7 @@ button:hover:not(:disabled) {
 }
 
 .stat-value {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 600;
 }
 
@@ -3729,7 +3727,6 @@ input[type=number] {
     align-items: center;
     justify-content: center;
     background: rgba(var(--angor-secondary-rgb), 0.1);
-    padding: 0.75rem;
     border-radius: 12px;
 }
 
@@ -3746,17 +3743,7 @@ input[type=number] {
     gap: 1.5rem;
 }
 
-.project-card {
-    background: var(--form-bg);
-    border-radius: 12px;
-    padding: 1.5rem;
-    transition: all 0.3s ease;
-}
 
-.project-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
 
 .project-header {
     display: flex;

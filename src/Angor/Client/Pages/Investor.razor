@@ -53,7 +53,7 @@
                         }
                         else
                         {
-                            <Icon IconName="refresh" Height="24" Width="24"/>
+                            <Icon IconName="refresh" Height="24" Width="24" />
                             <span class="button-text ms-2">Refresh</span>
                         }
                     </button>
@@ -68,7 +68,7 @@
         </div>
     </div>
 </div>
- 
+
 
 
 
@@ -90,7 +90,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="stats-card">
             <div class="stats-content">
                 <div class="stats-icon">
@@ -132,12 +132,6 @@
     @if (projects.Count > 0)
     {
         <div class="projects-container mt-4">
-            <div class="projects-header">
-                <div class="header-icon">
-                    <Icon IconName="project_explorer" Height="32" Width="32" />
-                </div>
-                <h5 class="header-title">Your Projects</h5>
-            </div>
 
             <div class="projects-grid">
                 @foreach (var project in projects)
@@ -147,7 +141,7 @@
                     investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
                     releaseRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentReleaseRequests);
 
-                    <div class="project-card">
+                    <div class="card card-body p-4">
                         <div class="project-header">
                             <div class="project-icon">
                                 <Icon IconName="project_explorer" Height="24" Width="24" />
@@ -164,8 +158,8 @@
                             <div class="stat-row">
                                 <span class="stat-label">Raised</span>
                                 <div class="stat-value-group">
-                                    <span class="stat-value">@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
                                     <span class="stat-percentage">(@((stats?.AmountInvested ?? 0) * 100 / project.ProjectInfo.TargetAmount)%)</span>
+                                    <span class="stat-value">@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
                                 </div>
                             </div>
 
@@ -186,11 +180,14 @@
                                 <div class="stat-value-group">
                                     @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
                                     {
-                                        <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="pending-badge" title="Pending">
-                                            <Icon IconName="clock-square" Width="16" Height="16" />
+                                        <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") title="Pending">
+                                            <span class="stat-value text-warning">@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
                                         </a>
                                     }
-                                    <span class="stat-value">@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+                                    else
+                                    {
+                                        <span class="stat-value">@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+                                    }
                                 </div>
                             </div>
 
@@ -365,7 +362,7 @@
                 null,
                 project.SignaturesInfo.SignatureRequestEventId,
                 signatureContent => HandleReleaseSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
-                , () => {});
+                , () => { });
         }
     }
 
@@ -380,7 +377,7 @@
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage(ex.Message,ex);
+            notificationComponent.ShowErrorMessage(ex.Message, ex);
         }
     }
 
@@ -447,7 +444,7 @@
             }, rootNostrPubKeyHex);
     }
 
-    
+
     //TODO David check if we should replace the logic to get all projects first and then get signatures for them?
     private void FetchProjectsData(params string[] eventIds)
     {
@@ -468,7 +465,7 @@
                     {
                         var project = projects.FirstOrDefault(x => x.ProjectInfo.NostrPubKey == projectNpub);
                         if (project is { Metadata: null }) { project.Metadata = metadata; }
-                    }, 
+                    },
                     () =>
                     {
                         if (eventIds.Length != projects.Count)
@@ -478,9 +475,9 @@
                         StateHasChanged();
                     },
                     projects.Select(x => x.ProjectInfo.NostrPubKey).ToArray());
-            },eventIds);
+            }, eventIds);
     }
-    
+
     private async Task GetInvestmentProjectDataAsync(InvestmentState investmentState)
     {
         var projectIndexerData = await _IndexerService.GetProjectByIdAsync(investmentState.ProjectIdentifier);
@@ -498,11 +495,11 @@
         var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, projectIndexerData.ProjectIdentifier);
 
         var investorProject = new InvestorProject
-        {
-            TransactionId = investment.TransactionId,
-            AmountInvested = investment.TotalAmount,
-            InvestorNPub = investorNostrPrivateKey.PubKey.ToHex()[2..]
-        };
+            {
+                TransactionId = investment.TransactionId,
+                AmountInvested = investment.TotalAmount,
+                InvestorNPub = investorNostrPrivateKey.PubKey.ToHex()[2..]
+            };
 
         DateTime? createdAt = null;
         string? eventId = null;
