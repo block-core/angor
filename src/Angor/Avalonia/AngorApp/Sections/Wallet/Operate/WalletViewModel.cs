@@ -1,5 +1,4 @@
 using System.Windows.Input;
-using Angor.UI.Model;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Wallet.Operate.Send;
 using AngorApp.UI.Controls.Common.Success;
@@ -14,14 +13,14 @@ public class WalletViewModel(IWallet wallet, UIServices uiServices) : ReactiveOb
 {
     public IWallet Wallet => wallet;
 
-    public ICommand Send => ReactiveCommand.CreateFromTask<bool>(() =>
+    public ICommand Send => ReactiveCommand.CreateFromTask(() =>
     {
         var wizard = WizardBuilder.StartWith(() => new AddressAndAmountViewModel(wallet))
             .Then(model => new TransactionPreviewViewModel(wallet,
                 new Destination("Test", model.Amount!.Value, SampleData.TestNetBitcoinAddress), uiServices))
             .Then(_ => new SuccessViewModel("Transaction sent!", "Success"))
-            .Build();
+            .FinishWith(_ => Unit.Default);
 
-        return uiServices.Dialog.Show(wizard, "Send", closeable => wizard.OptionsForCloseable(closeable));
+        return uiServices.Dialog.ShowWizard(wizard, "Send");
     });
 }

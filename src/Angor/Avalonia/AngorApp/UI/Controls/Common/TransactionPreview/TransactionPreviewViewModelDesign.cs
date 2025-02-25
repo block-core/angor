@@ -1,7 +1,4 @@
-using System.Reactive.Linq;
-using Angor.UI.Model;
 using AngorApp.Sections.Wallet.Operate;
-using CSharpFunctionalExtensions;
 
 namespace AngorApp.UI.Controls.Common.TransactionPreview;
 

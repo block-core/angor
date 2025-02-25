@@ -14,6 +14,7 @@ public static class CompositionRoot
         ModelServices.Register(services);
         ViewModels.Register(services);
         UIServices.Register(services, topLevelView);
+        WalletServices.Register(services);
 
         var serviceProvider = services.BuildServiceProvider();
         return serviceProvider.GetRequiredService<IMainViewModel>();

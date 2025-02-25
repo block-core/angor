@@ -1,11 +1,9 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Angor.UI.Model;
 using AngorApp.Sections.Browse.Details.Invest.Amount;
 using AngorApp.UI.Controls.Common.Success;
 using AngorApp.UI.Controls.Common.TransactionPreview;
 using AngorApp.UI.Services;
-using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
 
@@ -42,7 +40,7 @@ public class ProjectDetailsViewModel(IWalletProvider walletProvider, IProject pr
     public double CurrentInvestment { get; } = 0.79d;
     public IProject Project => project;
 
-    private static async Task DoInvest(IWallet wallet, IProject project, UIServices uiServices)
+    private static async Task<Maybe<Unit>> DoInvest(IWallet wallet, IProject project, UIServices uiServices)
     {
         var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project))
             .Then(viewModel =>
@@ -51,8 +49,8 @@ public class ProjectDetailsViewModel(IWalletProvider walletProvider, IProject pr
                 return new TransactionPreviewViewModel(wallet, destination, uiServices);
             })
             .Then(_ => new SuccessViewModel("Transaction confirmed!", "Success"))
-            .Build();
+            .FinishWith(model => Unit.Default);
 
-        await uiServices.Dialog.Show(wizard, @$"Invest in ""{project}""", closeable => wizard.OptionsForCloseable(closeable));
+        return await uiServices.Dialog.ShowWizard(wizard, @$"Invest in ""{project}""");
     }
 }

@@ -1,7 +1,4 @@
-using System.Reactive.Linq;
-using Angor.UI.Model;
 using AngorApp.UI.Services;
-using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.CSharpFunctionalExtensions;
