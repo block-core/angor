@@ -115,7 +115,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
     {
         var indexer = _networkService.GetPrimaryIndexer();
-        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects?offset={offset}&limit={limit}");
+        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects?offset={offset ?? 0}&limit={limit}");
         _networkService.CheckAndHandleError(response);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>() ?? new List<ProjectIndexerData>();
@@ -241,35 +241,6 @@ public class MempoolSpaceIndexerApi : IIndexerService
         
         return response.ToArray();
     }
-
-    
-
-    //To use if the UTXO endpoint works on the mempool indexer
-    // public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset)
-    // {
-    //     var indexer = _networkService.GetPrimaryIndexer();
-    //
-    //     var url = $"/api/v1/address/{address}/utxo";
-    //
-    //     var response = await _httpClient.GetAsync(indexer.Url + url);
-    //     _networkService.CheckAndHandleError(response);
-    //
-    //     if (!response.IsSuccessStatusCode)
-    //         throw new InvalidOperationException(response.ReasonPhrase);
-    //
-    //     var utxo = await response.Content.ReadFromJsonAsync<List<AddressUtxo>>(new JsonSerializerOptions()
-    //         { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
-    //
-    //     return utxo.Select(x => new UtxoData
-    //     {
-    //         address = address,
-    //         scriptHex = null, //TODO!!
-    //         blockIndex = x.Status.BlockHeight,
-    //         outpoint = new Outpoint(x.Txid,x.Vout),
-    //         value = x.Value,
-    //         PendingSpent = !x.Status.Confirmed
-    //     }).ToList();
-    // }
     
     public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset)
     {

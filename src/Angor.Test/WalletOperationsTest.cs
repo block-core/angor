@@ -105,7 +105,7 @@ public class WalletOperationsTest : AngorTestData
 
         AccountInfo accountInfo = _sut.BuildAccountInfoForWalletWords(words);
 
-        AddCoins(accountInfo, 2, 500);
+        AddCoins(accountInfo, 2, 1000);
 
         var network = _networkConfiguration.Object.GetNetwork();
 
