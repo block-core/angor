@@ -1,4 +1,151 @@
-## <small>0.0.70 (2024-11-29)</small>
+## <small>0.0.78 (2025-02-25)</small>
+
+* Ability to create Wallet (#237) ([d70a276](https://github.com/block-core/angor/commit/d70a276)), closes [#237](https://github.com/block-core/angor/issues/237)
+* Add "Get Projects" and "Find By Id" from Production Service (#251) ([e8cf306](https://github.com/block-core/angor/commit/e8cf306)), closes [#251](https://github.com/block-core/angor/issues/251)
+* Add New Wallet Wizard (#239) ([9962b12](https://github.com/block-core/angor/commit/9962b12)), closes [#239](https://github.com/block-core/angor/issues/239)
+* Add some more logs to the decryption method (#234) ([7b76bd8](https://github.com/block-core/angor/commit/7b76bd8)), closes [#234](https://github.com/block-core/angor/issues/234)
+* Add Wallet domain model and abstractions (#262) ([198fba7](https://github.com/block-core/angor/commit/198fba7)), closes [#262](https://github.com/block-core/angor/issues/262)
+* Add Wallet flow. Refine project Invest (stages). (#233) ([9d033c8](https://github.com/block-core/angor/commit/9d033c8)), closes [#233](https://github.com/block-core/angor/issues/233)
+* Add wallet recovery wizard (#242) ([cd05822](https://github.com/block-core/angor/commit/cd05822)), closes [#242](https://github.com/block-core/angor/issues/242)
+* adding limitations (#267) ([ba658bf](https://github.com/block-core/angor/commit/ba658bf)), closes [#267](https://github.com/block-core/angor/issues/267)
+* Convert amount from dec to long (#248) ([10e6998](https://github.com/block-core/angor/commit/10e6998)), closes [#248](https://github.com/block-core/angor/issues/248)
+* Fix invisible step in wizard (#259) ([bdb602d](https://github.com/block-core/angor/commit/bdb602d)), closes [#259](https://github.com/block-core/angor/issues/259)
+* Fix the dependencies for Tauri ([e4a917a](https://github.com/block-core/angor/commit/e4a917a))
+* Fix UI bugs (#270) ([80076f3](https://github.com/block-core/angor/commit/80076f3)), closes [#270](https://github.com/block-core/angor/issues/270)
+* Fix UI bugs (#272) ([3de0c36](https://github.com/block-core/angor/commit/3de0c36)), closes [#272](https://github.com/block-core/angor/issues/272)
+* Fixes exceptions when using Maybe.Value in ViewModels (#257) ([1536b0e](https://github.com/block-core/angor/commit/1536b0e)), closes [#257](https://github.com/block-core/angor/issues/257)
+* Improve Home section (#243) ([55e33cf](https://github.com/block-core/angor/commit/55e33cf)), closes [#243](https://github.com/block-core/angor/issues/243)
+* Memool-end-to-end (#255) ([a1a24fe](https://github.com/block-core/angor/commit/a1a24fe)), closes [#255](https://github.com/block-core/angor/issues/255)
+* Memool-end-to-end-fee-fixes (#265) ([1e9c2f5](https://github.com/block-core/angor/commit/1e9c2f5)), closes [#265](https://github.com/block-core/angor/issues/265)
+* New UI (#241) ([c8a0c28](https://github.com/block-core/angor/commit/c8a0c28)), closes [#241](https://github.com/block-core/angor/issues/241)
+* New UI (#244) ([482c64c](https://github.com/block-core/angor/commit/482c64c)), closes [#244](https://github.com/block-core/angor/issues/244)
+* New UI (#252) ([e71b51f](https://github.com/block-core/angor/commit/e71b51f)), closes [#252](https://github.com/block-core/angor/issues/252)
+* New UI (#254) ([885740a](https://github.com/block-core/angor/commit/885740a)), closes [#254](https://github.com/block-core/angor/issues/254)
+* New UI (#263) ([6fbce01](https://github.com/block-core/angor/commit/6fbce01)), closes [#263](https://github.com/block-core/angor/issues/263)
+* Put a limit to founder if target amount was not reached (#227) ([a9cc53a](https://github.com/block-core/angor/commit/a9cc53a)), closes [#227](https://github.com/block-core/angor/issues/227)
+* Simplify container registrations (#260) ([9021cb0](https://github.com/block-core/angor/commit/9021cb0)), closes [#260](https://github.com/block-core/angor/issues/260)
+* TargetAmount  should not be zero but if it is at least we wont get an exception (#261) ([c8bb5d4](https://github.com/block-core/angor/commit/c8bb5d4)), closes [#261](https://github.com/block-core/angor/issues/261)
+* UI improvements (#268) ([8925ba8](https://github.com/block-core/angor/commit/8925ba8)), closes [#268](https://github.com/block-core/angor/issues/268) [#022229](https://github.com/block-core/angor/issues/022229)
+* UI UX improvement (#264) ([f99fcaf](https://github.com/block-core/angor/commit/f99fcaf)), closes [#264](https://github.com/block-core/angor/issues/264)
+* UI/UX improvement (#235) ([bfd7815](https://github.com/block-core/angor/commit/bfd7815)), closes [#235](https://github.com/block-core/angor/issues/235)
+* Update dashboard.css (#271) ([71817f4](https://github.com/block-core/angor/commit/71817f4)), closes [#271](https://github.com/block-core/angor/issues/271)
+* Update version ([a232c37](https://github.com/block-core/angor/commit/a232c37))
+* Use factories to create ViewModels (#256) ([631bea9](https://github.com/block-core/angor/commit/631bea9)), closes [#256](https://github.com/block-core/angor/issues/256)
+* Use IoC Container (#258) ([bff0434](https://github.com/block-core/angor/commit/bff0434)), closes [#258](https://github.com/block-core/angor/issues/258)
+
+
+
+## <small>0.0.76 (2024-12-22)</small>
+
+* Add a link to profile editor for founders (#232) ([c464e31](https://github.com/block-core/angor/commit/c464e31)), closes [#232](https://github.com/block-core/angor/issues/232)
+* Add Random Space Images for Nostr Profile Defaults on Testnet (#219) ([16709be](https://github.com/block-core/angor/commit/16709be)), closes [#219](https://github.com/block-core/angor/issues/219)
+* Add support for ARM-64 (#213) ([4481250](https://github.com/block-core/angor/commit/4481250)), closes [#213](https://github.com/block-core/angor/issues/213)
+* Add support for Mac ARM ([3a959c3](https://github.com/block-core/angor/commit/3a959c3))
+* Allow to fetch up to 100 test coins (#231) ([e0ceac3](https://github.com/block-core/angor/commit/e0ceac3)), closes [#231](https://github.com/block-core/angor/issues/231)
+* Call the balance refresh on the view on first time we see a project (#230) ([5cfd53c](https://github.com/block-core/angor/commit/5cfd53c)), closes [#230](https://github.com/block-core/angor/issues/230)
+* Complete Browse section (#225) ([7690592](https://github.com/block-core/angor/commit/7690592)), closes [#225](https://github.com/block-core/angor/issues/225)
+* Disable for now the old Mac and new Win builds ([51595ac](https://github.com/block-core/angor/commit/51595ac))
+* Dont try to decrypt a failed trx sig request the second time (#196) ([595134e](https://github.com/block-core/angor/commit/595134e)), closes [#196](https://github.com/block-core/angor/issues/196)
+* Fix a nostr subscription registration bug (#201) ([dc64ff0](https://github.com/block-core/angor/commit/dc64ff0)), closes [#201](https://github.com/block-core/angor/issues/201)
+* Fix bug with link ([3aee1c3](https://github.com/block-core/angor/commit/3aee1c3))
+* fix for issue 166, where you cannot create more than 15 projects. (#203) ([773b821](https://github.com/block-core/angor/commit/773b821)), closes [#203](https://github.com/block-core/angor/issues/203)
+* fix for the create button bug (#224) ([4f969e9](https://github.com/block-core/angor/commit/4f969e9)), closes [#224](https://github.com/block-core/angor/issues/224)
+* Fix how we handle fetching a project on the view page (#229) ([4d5a0d3](https://github.com/block-core/angor/commit/4d5a0d3)), closes [#229](https://github.com/block-core/angor/issues/229)
+* Fix the build ([82f4800](https://github.com/block-core/angor/commit/82f4800))
+* Fix Windows copy path ([07a7407](https://github.com/block-core/angor/commit/07a7407))
+* Improve build performance with caching ([2946900](https://github.com/block-core/angor/commit/2946900))
+* Issue 204 - Blocking pages from server side (#217) ([677868b](https://github.com/block-core/angor/commit/677868b)), closes [#217](https://github.com/block-core/angor/issues/217)
+* Make the dotnet version for workflow .NET 8 ([0ecd7e6](https://github.com/block-core/angor/commit/0ecd7e6))
+* Restore - wrong repo ([51b219d](https://github.com/block-core/angor/commit/51b219d))
+* Update all packages ([473cfb8](https://github.com/block-core/angor/commit/473cfb8))
+* Update build.yml ([a8690f0](https://github.com/block-core/angor/commit/a8690f0))
+* Update build.yml ([51a044d](https://github.com/block-core/angor/commit/51a044d))
+* Update build.yml ([f4ab894](https://github.com/block-core/angor/commit/f4ab894))
+* Update styles (#222) ([4b967c4](https://github.com/block-core/angor/commit/4b967c4)), closes [#222](https://github.com/block-core/angor/issues/222)
+* Update version ([5543860](https://github.com/block-core/angor/commit/5543860))
+* Update workflow for ARM64 ([01fed2e](https://github.com/block-core/angor/commit/01fed2e))
+
+
+
+## <small>0.0.75 (2024-12-12)</small>
+
+* Changed the scanning to fix bug in project index and added validation of noster event id (#215) ([846b970](https://github.com/block-core/angor/commit/846b970)), closes [#215](https://github.com/block-core/angor/issues/215)
+* PublishSingleFile not allowed for Blazor ([9617590](https://github.com/block-core/angor/commit/9617590))
+* Remove NuGet package attributes ([1d22425](https://github.com/block-core/angor/commit/1d22425))
+* Restore nbitcoin (#214) ([823878a](https://github.com/block-core/angor/commit/823878a)), closes [#214](https://github.com/block-core/angor/issues/214)
+* Revert to .NET 8 ([2ad9125](https://github.com/block-core/angor/commit/2ad9125))
+* Update version ([b795a04](https://github.com/block-core/angor/commit/b795a04))
+* Update version and change dotnet publish arguments ([f729de7](https://github.com/block-core/angor/commit/f729de7))
+
+
+
+## <small>0.0.73 (2024-12-12)</small>
+
+* add a debug page and track the assembly version that is used to sign and verify sig ([3b2cbf7](https://github.com/block-core/angor/commit/3b2cbf7))
+* Add Grids (#210) ([fe1678e](https://github.com/block-core/angor/commit/fe1678e)), closes [#210](https://github.com/block-core/angor/issues/210)
+* Adding logs to try to debug the sig bug (#206) ([e3f9922](https://github.com/block-core/angor/commit/e3f9922)), closes [#206](https://github.com/block-core/angor/issues/206)
+* Change the configuration to Debug ([96ae388](https://github.com/block-core/angor/commit/96ae388))
+* do verification on point of creation ([6c6fdae](https://github.com/block-core/angor/commit/6c6fdae))
+* Expand section coverage (#207) ([0c3d844](https://github.com/block-core/angor/commit/0c3d844)), closes [#207](https://github.com/block-core/angor/issues/207)
+* fix faucet (#202) ([226edee](https://github.com/block-core/angor/commit/226edee)), closes [#202](https://github.com/block-core/angor/issues/202)
+* make sure we create projects that can be invested right away ([74377ad](https://github.com/block-core/angor/commit/74377ad))
+* Remove pwa and server (#212) ([2ba7646](https://github.com/block-core/angor/commit/2ba7646)), closes [#212](https://github.com/block-core/angor/issues/212)
+* try to fix the formatting of datetime serialization to be consistent ([434ebdf](https://github.com/block-core/angor/commit/434ebdf))
+* Update build.yml ([fee71a5](https://github.com/block-core/angor/commit/fee71a5))
+* Update nbitcoin (#208) ([10546d3](https://github.com/block-core/angor/commit/10546d3)), closes [#208](https://github.com/block-core/angor/issues/208)
+* Update version ([def93ed](https://github.com/block-core/angor/commit/def93ed))
+
+
+
+## <small>0.0.72 (2024-12-06)</small>
+
+* Disable the minify steps in workflow (#193) ([756158e](https://github.com/block-core/angor/commit/756158e)), closes [#193](https://github.com/block-core/angor/issues/193)
+* Project creation refactor  (#175) ([1f98f71](https://github.com/block-core/angor/commit/1f98f71)), closes [#175](https://github.com/block-core/angor/issues/175)
+* Revert the change to nbitcoin (#195) ([21eab5a](https://github.com/block-core/angor/commit/21eab5a)), closes [#195](https://github.com/block-core/angor/issues/195)
+* Update a tag that is deprecated (#194) ([6b955ef](https://github.com/block-core/angor/commit/6b955ef)), closes [#194](https://github.com/block-core/angor/issues/194)
+* Update Index.razor (#200) ([57a6c68](https://github.com/block-core/angor/commit/57a6c68)), closes [#200](https://github.com/block-core/angor/issues/200)
+* Update version number ([7a80363](https://github.com/block-core/angor/commit/7a80363))
+
+
+
+## <small>0.0.71 (2024-12-05)</small>
+
+* Add Avalonia files (#186) ([c9e4805](https://github.com/block-core/angor/commit/c9e4805)), closes [#186](https://github.com/block-core/angor/issues/186)
+* add cap (#184) ([b109459](https://github.com/block-core/angor/commit/b109459)), closes [#184](https://github.com/block-core/angor/issues/184)
+* Add missing dependency for Linux ([ee28364](https://github.com/block-core/angor/commit/ee28364))
+* Add Tauri build and artifact upload ([ec70f49](https://github.com/block-core/angor/commit/ec70f49))
+* Adding missing dependency on Linux ([81b3b27](https://github.com/block-core/angor/commit/81b3b27))
+* Attempt to add artifact to release ([ca2191e](https://github.com/block-core/angor/commit/ca2191e))
+* Attempt to use action for release ([03dd622](https://github.com/block-core/angor/commit/03dd622))
+* Check block when adding indxer (#179) ([3c04be3](https://github.com/block-core/angor/commit/3c04be3)), closes [#179](https://github.com/block-core/angor/issues/179)
+* Delete Dockerfile.Release ([5b11125](https://github.com/block-core/angor/commit/5b11125))
+* Desktop app (#187) ([b361a22](https://github.com/block-core/angor/commit/b361a22)), closes [#187](https://github.com/block-core/angor/issues/187)
+* Disable for now ([1a3125c](https://github.com/block-core/angor/commit/1a3125c))
+* Ensure less caching of Angor web app (#192) ([0845e86](https://github.com/block-core/angor/commit/0845e86)), closes [#192](https://github.com/block-core/angor/issues/192)
+* Fix the tauri script name ([1eefb3b](https://github.com/block-core/angor/commit/1eefb3b))
+* Get source in release step ([ea462e5](https://github.com/block-core/angor/commit/ea462e5))
+* Move tauri source back ([d940dd6](https://github.com/block-core/angor/commit/d940dd6))
+* Move the tauri code to sub-folder under src ([fee5033](https://github.com/block-core/angor/commit/fee5033))
+* Refactored Settings.razor (#182) ([d3fa7c5](https://github.com/block-core/angor/commit/d3fa7c5)), closes [#182](https://github.com/block-core/angor/issues/182)
+* Set correct release version for Tauri ([c0ab2a5](https://github.com/block-core/angor/commit/c0ab2a5))
+* Show error message refactor (#183) ([f6baba1](https://github.com/block-core/angor/commit/f6baba1)), closes [#183](https://github.com/block-core/angor/issues/183)
+* Update Blockcore.Core dependency ([32d455c](https://github.com/block-core/angor/commit/32d455c))
+* Update the workflow with new flow (#191) ([7eec3a5](https://github.com/block-core/angor/commit/7eec3a5)), closes [#191](https://github.com/block-core/angor/issues/191)
+* Update to .NET 9 and update NuGet packages ([fd923bc](https://github.com/block-core/angor/commit/fd923bc))
+* Use .NET version from props file ([e0e6cb4](https://github.com/block-core/angor/commit/e0e6cb4))
+* Use latest Node.js LTS ([3fe7c83](https://github.com/block-core/angor/commit/3fe7c83))
+* Use updated upload-artifact action ([d4c9391](https://github.com/block-core/angor/commit/d4c9391))
+
+
+
+## <small>0.0.71 (2024-12-02)</small>
+
+* Fix the faucet test coins api endpoint ([905c2cc](https://github.com/block-core/angor/commit/905c2cc))
+* Upgrade to 0.71 ([87532bf](https://github.com/block-core/angor/commit/87532bf))
+
+
+
+## <small>0.0.70-release (2024-11-29)</small>
 
 * Add button to display raw transaction JSON for addresses and amounts (#131) ([9fc82a3](https://github.com/block-core/angor/commit/9fc82a3)), closes [#131](https://github.com/block-core/angor/issues/131)
 * Add cleanup on rescan (#169) ([ce85437](https://github.com/block-core/angor/commit/ce85437)), closes [#169](https://github.com/block-core/angor/issues/169)
@@ -14,6 +161,7 @@
 * Update FAQ url (#180) ([9c4075c](https://github.com/block-core/angor/commit/9c4075c)), closes [#180](https://github.com/block-core/angor/issues/180)
 * Update LICENSE (#171) ([5211c37](https://github.com/block-core/angor/commit/5211c37)), closes [#171](https://github.com/block-core/angor/issues/171)
 * Update README.md (#174) ([a64c59d](https://github.com/block-core/angor/commit/a64c59d)), closes [#174](https://github.com/block-core/angor/issues/174)
+* Upgrade to v 0.70 ([4b88157](https://github.com/block-core/angor/commit/4b88157))
 
 
 
