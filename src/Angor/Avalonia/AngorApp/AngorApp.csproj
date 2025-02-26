@@ -37,6 +37,7 @@
         <PackageReference Include="Serilog.Sinks.Console" />
         <PackageReference Include="Zafiro.Avalonia" />
         <PackageReference Include="Zafiro.Avalonia.Dialogs" />
+        <PackageReference Include="FluentAvaloniaUI" />
     </ItemGroup>
 
     <ItemGroup>

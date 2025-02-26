@@ -5,8 +5,9 @@
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d" d:DesignWidth="800"
-             x:Class="AngorApp.Sections.Wallet.Operate.WalletView"  x:DataType="operate:IWalletViewModel">
+             x:Class="AngorApp.Sections.Wallet.Operate.WalletView" x:DataType="operate:IWalletViewModel">
 
     <Design.DataContext>
         <operate:WalletViewModelDesign />
@@ -24,40 +25,55 @@
         </Style>
     </UserControl.Styles>
 
-    <DockPanel>
+    <Panel>
+        <DockPanel IsVisible="{Binding SyncCommand.StartReactive.IsExecuting^}">
+            <Panel>
+                <DockPanel IsVisible="{Binding HasSomething}">
+                    <controls:Pane IsTitleVisible="True" Title="Wallet"
+                                   Subtitle="Wallet and balances" DockPanel.Dock="Top">
+                        <controls:Pane.TitleRightContent>
+                            <UniformGrid Rows="1">
+                                <UniformGrid.Styles>
+                                    <Style Selector="Button">
+                                        <Setter Property="Margin" Value="5" />
+                                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                                    </Style>
+                                </UniformGrid.Styles>
+                                <Button Command="{Binding Send}" Content="Send" />
+                                <Button Content="Receive">
+                                    <Button.Flyout>
+                                        <Flyout>
+                                            <operate:Receive />
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
+                            </UniformGrid>
+                        </controls:Pane.TitleRightContent>
+                        <controls:Pane.TitleIcon>
+                            <i:Icon Value="fa-wallet" />
+                        </controls:Pane.TitleIcon>
+                    </controls:Pane>
 
-        <StackPanel Spacing="20">
+                    <operate:Balance DockPanel.Dock="Top" />
 
-            <controls:Pane IsTitleVisible="True" Title="Wallet"
-                           Subtitle="Wallet and balances">
-                <controls:Pane.TitleRightContent>
-                    <UniformGrid Rows="1">
-                        <UniformGrid.Styles>
-                            <Style Selector="Button">
-                                <Setter Property="Margin" Value="5" />
-                                <Setter Property="HorizontalAlignment" Value="Stretch" />
-                            </Style>
-                        </UniformGrid.Styles>
-                        <Button Command="{Binding Send}" Content="Send" />
-                        <Button Content="Receive">
-                            <Button.Flyout>
-                                <Flyout>
-                                    <operate:Receive />
-                                </Flyout>
-                            </Button.Flyout>
-                        </Button>
-                    </UniformGrid>
-                </controls:Pane.TitleRightContent>
-                <controls:Pane.TitleIcon>
-                    <i:Icon Value="fa-wallet" />
-                </controls:Pane.TitleIcon>
-            </controls:Pane>
+                    <operate:HistoryView />
 
-            <operate:Balance />
-
-            <operate:HistoryView />
-            
-        </StackPanel>
-    </DockPanel>
+                </DockPanel>
+                <controls:Pane IsVisible="{Binding IsLoading^}">
+                    <StackPanel Margin="0 20" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="Loading Wallet..." TextAlignment="Center" />
+                        <fa:ProgressRing Width="100" Height="100" IsIndeterminate="True" />
+                    </StackPanel>
+                </controls:Pane>
+            </Panel>
+        </DockPanel>
+        <controls:Pane IsVisible="{Binding !SyncCommand.StartReactive.IsExecuting^}">
+            <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <i:Icon Value="fa-lock" FontSize="40" />
+                <TextBlock Text="WALLET LOCKED" TextAlignment="Center" />
+                <Button HorizontalAlignment="Center" Content="UNLOCK" Command="{Binding SyncCommand.Start}" />
+            </StackPanel>
+        </controls:Pane>
+    </Panel>
 
 </UserControl>
