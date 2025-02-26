@@ -8,10 +8,9 @@ namespace Angor.Wallet.Infrastructure.Impl;
 public class WalletFactory(IWalletStore walletStore, IWalletSecurityContext securityContext)
     : IWalletFactory
 {
-
     public async Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
     {
-        var walletId = WalletId.New();
+        var walletId = WalletAppService.SingleWalletId;
         var descriptor = WalletDescriptorFactory.Create(seedwords, passphrase, network.ToNBitcoin());
         var wallet = new Domain.Wallet(walletId, descriptor);
 

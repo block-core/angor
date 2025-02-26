@@ -18,25 +18,25 @@ public class WalletAppService : IWalletAppService
     private readonly IIndexerService _indexerService;
     private readonly IWalletFactory walletFactory;
     private readonly IWalletOperations _walletOperations;
-    
+    private readonly IWalletStore walletStore;
+
     public WalletAppService(
         ISensitiveWalletDataProvider sensitiveWalletDataProvider,
         IIndexerService indexerService,
         IWalletFactory walletFactory,
-        IWalletOperations walletOperations)
+        IWalletOperations walletOperations, IWalletStore walletStore)
     {
         this.sensitiveWalletDataProvider = sensitiveWalletDataProvider;
         _indexerService = indexerService;
         this.walletFactory = walletFactory;
         _walletOperations = walletOperations;
+        this.walletStore = walletStore;
     }
 
-    public async Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
+    public Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
     {
-        return new List<WalletMetadata>
-        {
-            new(SingleWalletName, SingleWalletId)
-        };
+        List<WalletMetadata> singleWalletList = [new(SingleWalletName, SingleWalletId)];
+        return walletStore.GetAll().Map(wallets => wallets.Any() ? singleWalletList : []).Map(metadatas => metadatas.AsEnumerable());
     }
 
     public async Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletId walletId)
@@ -182,7 +182,7 @@ public class WalletAppService : IWalletAppService
         if (walletId != SingleWalletId)
             return Result.Failure<TxId>("Invalid wallet ID");
         
-        var satsPerVirtualKB = feeRate.SatsPerVByte * 1000; 
+        var finalFeeRate = feeRate.SatsPerVByte * 10000; 
 
         try
         {
@@ -202,13 +202,13 @@ public class WalletAppService : IWalletAppService
             {
                 SendAmount = amount.Value,
                 SendToAddress = address.Value,
-                FeeRate = satsPerVirtualKB,
+                FeeRate = finalFeeRate,
                 ChangeAddress = accountInfo.GetNextChangeReceiveAddress(),
                 SendUtxos = _walletOperations.FindOutputsForTransaction(amount.Value, accountInfo)
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
             
-            var fee = _walletOperations.CalculateTransactionFee(sendInfo, accountInfo, satsPerVirtualKB);
+            var fee = _walletOperations.CalculateTransactionFee(sendInfo, accountInfo, finalFeeRate);
             
             sendInfo.SendFee = fee;
             

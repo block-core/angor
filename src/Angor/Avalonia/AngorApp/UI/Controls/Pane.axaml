@@ -15,9 +15,9 @@
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="TitlePadding" Value="0 0 0 10" />
             <Setter Property="Margin" Value="5, 5, 15, 15" />
-            <Setter Property="Effect">
-                <DropShadowEffect BlurRadius="20" Opacity="0.4" />
-            </Setter>
+            <!-- <Setter Property="Effect"> -->
+            <!--     <DropShadowEffect BlurRadius="20" Opacity="0.4" /> -->
+            <!-- </Setter> -->
             <Setter Property="Template">
                 <ControlTemplate>
                     <Border x:Name="PART_RootBorder"

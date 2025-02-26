@@ -19,23 +19,26 @@
             <i:Icon Value="fa-solid fa-cube" />
         </controls:Pane.TitleIcon>
 
-        <z:SlimDataGrid Margin="10" ItemsSource="{Binding Wallet.History}">
+        <z:SlimDataGrid Margin="10" ItemsSource="{Binding History}">
+            <z:SlimDataGrid.Styles>
+                <Style Selector="TextBlock">
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                    <Setter Property="ToolTip.Tip" Value="{Binding $self.Text}" />
+                </Style>
+            </z:SlimDataGrid.Styles>
             <z:SlimDataGrid.Columns>
                 <z:Column Header="ADDRESS" Binding="{Binding Address}" />
-            </z:SlimDataGrid.Columns>
-            <z:SlimDataGrid.Columns>
-                <z:Column Header="AMOUNT" Binding="{Binding Amount}" />
-            </z:SlimDataGrid.Columns>
-            <z:SlimDataGrid.Columns>
-                <z:Column Header="PATH" Binding="{Binding Path}" />
-            </z:SlimDataGrid.Columns>
-            <z:SlimDataGrid.Columns>
+                <z:Column Header="AMOUNT" Binding="{Binding Amount, Converter={x:Static controls:MiscConverters.SatsToBtc}, StringFormat={x:Static controls:MiscConverters.AmountBtcFormat}}" />
                 <z:Column Header="UTXO COUNT" Binding="{Binding UtxoCount}" />
+                <z:Column Header="TXN JSON" Binding="{Binding ShowJson}">
+                    <z:Column.CellTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding}" i:Attached.Icon="fa-solid fa-ellipsis" />
+                        </DataTemplate>
+                    </z:Column.CellTemplate>
+                </z:Column>
             </z:SlimDataGrid.Columns>
-            <z:SlimDataGrid.Columns>
-                <z:Column Header="VIEW RAW JSON" Binding="{Binding ViewRawJson}" />
-            </z:SlimDataGrid.Columns>
-
         </z:SlimDataGrid>
     </controls:Pane>
 

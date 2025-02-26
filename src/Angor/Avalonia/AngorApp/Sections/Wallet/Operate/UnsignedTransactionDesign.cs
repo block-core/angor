@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Angor.UI.Model;
+using Angor.Wallet.Domain;
 using CSharpFunctionalExtensions;
 
 namespace AngorApp.Sections.Wallet.Operate;
@@ -16,9 +17,9 @@ public class UnsignedTransactionDesign : IUnsignedTransaction
     public int UtxoCount { get; set; }
     public string ViewRawJson { get; set; }
     
-    public async Task<Result<IBroadcastedTransaction>> Broadcast()
+    public async Task<Result<TxId>> Accept()
     {
         await Task.Delay(3000);
-        return new BroadcastedTransactionDesign();
+        return new TxId("test");
     }
 }
