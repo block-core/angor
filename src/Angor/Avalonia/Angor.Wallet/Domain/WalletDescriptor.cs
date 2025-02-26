@@ -1,3 +1,3 @@
 namespace Angor.Wallet.Domain;
 
-public sealed record WalletDescriptor(BitcoinNetwork Network, XPubCollection Xpubs);
+public sealed record WalletDescriptor(BitcoinNetwork Network, XPubCollection XPubs);
