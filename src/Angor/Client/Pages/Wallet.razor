@@ -31,7 +31,7 @@
         <div class="header-content">
             <div class="header-title animate-fade-in">
                 <span class="header-icon-wrapper">
-                    <Icon IconName="wallet" Class="header-icon" Width="32" Height="32" />
+                    <Icon IconName="wallet" Width="32" Height="32" />
                 </span>
                 <h5 class="header-text">Wallet</h5>
             </div>
@@ -768,7 +768,7 @@ else
 
                                     @foreach (var infoSendUtxo in _sendInfo.SendUtxos)
                                     {
-                                        <p style="font-size: 0.7em;">@Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker - @infoSendUtxo.Key</p>
+                                        <p>@Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker - @infoSendUtxo.Key</p>
                                     }
 
                                 </div>

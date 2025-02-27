@@ -44,7 +44,7 @@
         <div class="header-content">
             <div class="header-title animate-fade-in">
                 <span class="header-icon-wrapper">
-                    <Icon IconName="add" Class="header-icon" Width="32" Height="32" />
+                    <Icon IconName="add" Width="32" Height="32" />
                 </span>
                 <h5 class="header-text">Create New Project</h5>
             </div>
@@ -388,14 +388,22 @@
             <h5 class="mb-4">Stages</h5>
             @foreach (var stage in project.ProjectInfo.Stages)
             {
-                <div class="info-card mt-4 p-3">
-                    <div class="d-flex align-items-center">
-                        <Icon IconName="percent"></Icon>
-                        <p class="card-text ms-2 mb-1"><strong>Stage Percent:</strong> @stage.AmountToRelease %</p>
+                <div class="stage-card mt-4 p-3">
+                    <div class="stage-content">
+                        <div class="stage-icon">
+                            <Icon IconName="percent" Height="32" Width="32" />
+                        </div>
+                        <div class="stage-info">
+                            <p class="stage-text"><strong>Stage Percent:</strong> @stage.AmountToRelease %</p>
+                        </div>
                     </div>
-                    <div class="d-flex align-items-center">
-                        <Icon IconName="calendar"></Icon>
-                        <p class="card-text ms-2 mb-1"><strong>Stage Date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
+                    <div class="stage-content">
+                        <div class="stage-icon">
+                            <Icon IconName="calendar" Height="32" Width="32" />
+                        </div>
+                        <div class="stage-info">
+                            <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
+                        </div>
                     </div>
                 </div>
             }
@@ -408,7 +416,7 @@
             </div>
 
             <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                <button class="btn btn-border-success mt-4" @onclick="ConfirmFinalizeNostrProfileCreation" disabled="@nostrMetadataCreated">
+                <button class="btn btn-border-success mt-4 w-100-m" @onclick="ConfirmFinalizeNostrProfileCreation" disabled="@nostrMetadataCreated">
                     @if (createProfileSpinner)
                     {
                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -420,7 +428,7 @@
                     }
                 </button>
 
-                <button class="btn btn-border-success mt-4" @onclick="ConfirmFinalizeProjectInfoCreation" disabled="@(!nostrMetadataCreated || nostrApplicationSpecificDataCreated)">
+                <button class="btn btn-border-success mt-4 w-100-m" @onclick="ConfirmFinalizeProjectInfoCreation" disabled="@(!nostrMetadataCreated || nostrApplicationSpecificDataCreated)">
                     @if (createApplicationDataSpinner)
                     {
                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -432,7 +440,7 @@
                     }
                 </button>
 
-                <button type="button" class="btn btn-border-success mt-4" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
+                <button type="button" class="btn btn-border-success mt-4 w-100-m" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
                     @if (creatProjectSpinner)
                     {
                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -535,14 +543,22 @@
                             <h6 class="mt-3 mb-2">Stages</h6>
                             @foreach (var stage in project.ProjectInfo.Stages)
                             {
-                                <div class="info-card mt-4 p-3">
-                                    <div class="d-flex align-items-center">
-                                        <Icon IconName="percent"></Icon>
-                                        <p class="card-text ms-2 mb-1"><strong>Stage Percent:</strong> @stage.AmountToRelease %</p>
+                                <div class="stage-card mt-4 p-3">
+                                    <div class="stage-content">
+                                        <div class="stage-icon">
+                                            <Icon IconName="percent" Height="32" Width="32" />
+                                        </div>
+                                        <div class="stage-info">
+                                            <p class="stage-text"><strong>Stage Percent:</strong> @stage.AmountToRelease %</p>
+                                        </div>
                                     </div>
-                                    <div class="d-flex align-items-center">
-                                        <Icon IconName="calendar"></Icon>
-                                        <p class="card-text ms-2 mb-1"><strong>Stage Date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
+                                    <div class="stage-content">
+                                        <div class="stage-icon">
+                                            <Icon IconName="calendar" Height="32" Width="32" />
+                                        </div>
+                                        <div class="stage-info">
+                                            <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
+                                        </div>
                                     </div>
                                 </div>
                             }
