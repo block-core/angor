@@ -4253,3 +4253,31 @@ input[type=number] {
         display: none;
     }
 }
+.stage-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stage-content {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.stage-icon {
+    flex-shrink: 0;
+    margin-right: 12px;
+}
+
+.stage-info {
+    flex-grow: 1;
+}
+
+.stage-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
