@@ -3325,9 +3325,6 @@ input[type=number] {
     .mobile-title {
         font-size: 1.1rem;
     }
-    .header-icon {
-        transition: all 0.3s ease;
-    }
 }
 
 .header-container {
@@ -3445,11 +3442,6 @@ input[type=number] {
 }
 
 @media (max-width: 576px) {
-    .header-icon {
-        width: 32px;
-        height: 32px;
-    }
-
     .header-text {
         font-size: 1.1rem;
     }
@@ -3716,14 +3708,6 @@ input[type=number] {
     margin-bottom: 1.5rem;
 }
 
-.header-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(var(--angor-secondary-rgb), 0.1);
-    border-radius: 12px;
-}
-
 .header-title {
     font-size: 1.25rem;
     font-weight: 600;
@@ -3880,11 +3864,7 @@ input[type=number] {
     .projects-header {
         padding: 1rem;
     }
-    
-    .header-icon {
-        padding: 0.5rem;
-    }
-    
+  
     .header-title {
         font-size: 1.1rem;
     }
