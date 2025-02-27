@@ -408,7 +408,7 @@
             </div>
 
             <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                <button class="btn btn-border-success mt-4" @onclick="ConfirmFinalizeNostrProfileCreation" disabled="@nostrMetadataCreated">
+                <button class="btn btn-border-success mt-4 w-100-m" @onclick="ConfirmFinalizeNostrProfileCreation" disabled="@nostrMetadataCreated">
                     @if (createProfileSpinner)
                     {
                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -420,7 +420,7 @@
                     }
                 </button>
 
-                <button class="btn btn-border-success mt-4" @onclick="ConfirmFinalizeProjectInfoCreation" disabled="@(!nostrMetadataCreated || nostrApplicationSpecificDataCreated)">
+                <button class="btn btn-border-success mt-4 w-100-m" @onclick="ConfirmFinalizeProjectInfoCreation" disabled="@(!nostrMetadataCreated || nostrApplicationSpecificDataCreated)">
                     @if (createApplicationDataSpinner)
                     {
                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -432,7 +432,7 @@
                     }
                 </button>
 
-                <button type="button" class="btn btn-border-success mt-4" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
+                <button type="button" class="btn btn-border-success mt-4 w-100-m" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
                     @if (creatProjectSpinner)
                     {
                         <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>

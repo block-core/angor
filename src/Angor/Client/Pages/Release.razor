@@ -78,14 +78,16 @@
     
     @if (InvestorProject.UnfundedReleaseTransactionId != null)
     {
-        <p style="margin-bottom: 20px;">
+        <p class="my-3">
             Transaction ID: <span id="transactionID">@InvestorProject.UnfundedReleaseTransactionId</span> |
-            <a href="@explorerLink" target="_blank" style="margin-left: 10px;">View on explorer</a>
+            <a href="@explorerLink" target="_blank" class="ms-2">View on explorer</a>
         </p>
 
         <p class="modal-title">
-            Coin have already been release .
+            Coins have already been released.
         </p>
+        <hr class="my-4" />
+        <p class="text-muted">You can now proceed to claim your funds.</p>
     }
     else
     {
@@ -125,7 +127,7 @@
 @if (showReleaseModal)
 {
     <div class="modal-wrapper">
-        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+        <div class="modal fade show d-block" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
