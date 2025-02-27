@@ -230,7 +230,7 @@ public class WalletAppService : IWalletAppService
             .Map(_ => SingleWalletId);
     }
 
-    public string GetSeedWords()
+    public string GenerateRandomSeedwords()
     {
         var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
         return mnemonic.ToString();
