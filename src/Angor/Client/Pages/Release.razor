@@ -262,7 +262,7 @@
         StateHasChanged();
 
         var words = await passwordComponent.GetWalletAsync();
-        var nostrPrivateKey = DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, InvestorProject.ProjectInfo.ProjectIdentifier);
+        var nostrPrivateKey = DerivationOperations.DeriveProjectNostrPrivateKey(words, InvestorProject.ProjectInfo.FounderKey);
         var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
         SignService.LookupReleaseSigs(

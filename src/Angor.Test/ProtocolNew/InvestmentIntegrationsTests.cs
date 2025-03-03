@@ -122,7 +122,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
-            projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
             projectInvestmentInfo.ProjectIdentifier =
                 _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
 
@@ -256,7 +256,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
-            projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
             projectInvestmentInfo.ProjectIdentifier =
                 _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
 
@@ -311,7 +311,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
-            projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
             projectInvestmentInfo.ProjectIdentifier =
                 derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
             projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
@@ -364,7 +364,7 @@ namespace Angor.Test
                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
-            projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
             projectInvestmentInfo.ProjectIdentifier =
                 derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
             projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
@@ -413,10 +413,10 @@ namespace Angor.Test
             var seederSecret = new Key();
 
             var funderKey = _derivationOperations.DeriveFounderKey(words, 1);
-            var founderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
+            var founderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, funderKey);
             var angorKey = _derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
             var funderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
-            var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
+            var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, funderKey);
 
             var investorContext = new InvestorContext
             {
@@ -483,9 +483,9 @@ namespace Angor.Test
 
             var funderKey = _derivationOperations.DeriveFounderKey(words, 1);
             var angorKey = _derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
-            var founderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
+            var founderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, funderKey);
             var funderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
-            var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
+            var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, funderKey);
 
             var investorContext = new InvestorContext
             {
@@ -588,7 +588,7 @@ namespace Angor.Test
                     new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
                 },
                 FounderKey = _derivationOperations.DeriveFounderKey(words, 1),
-                FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1),
+                FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, _derivationOperations.DeriveFounderKey(words, 1)),
                 ProjectSeeders = new()
                 {
                     Threshold = 2,
@@ -648,9 +648,9 @@ namespace Angor.Test
 
             var funderKey = _derivationOperations.DeriveFounderKey(words, 1);
             var angorKey = _derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
-            var founderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
+            var founderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, funderKey);
             var funderPrivateKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
-            var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
+            var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, funderKey);
 
             var investorContext = new InvestorContext
             {

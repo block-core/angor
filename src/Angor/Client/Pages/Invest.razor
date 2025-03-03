@@ -630,7 +630,7 @@ else
             {
                 var words = await passwordComponent.GetWalletAsync();
 
-                var nostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
+                var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
 
                 var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -764,7 +764,7 @@ else
 
             if (Investment.IsSeeder)
             {
-                var seederHash = _derivationOperations.DeriveSeederSecretHash(words, project.ProjectInfo.FounderKey);
+                var seederHash = _derivationOperations.DeriveLeadInvestorSecretHash(words, project.ProjectInfo.FounderKey);
             }
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
@@ -859,7 +859,7 @@ else
 
             var words = await passwordComponent.GetWalletAsync();
 
-            var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
+            var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
 
             var releaseAddress = accountInfo.GetNextReceiveAddress();

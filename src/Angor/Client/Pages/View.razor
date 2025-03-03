@@ -826,7 +826,7 @@
             if (project is FounderProject founderProject)
             {
                 var words = await passwordComponent.GetWalletAsync();
-                var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, founderProject.ProjectIndex);
+                var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, founderProject.ProjectInfo.FounderKey);
                 NostrHexSecKey = Encoders.Hex.EncodeData(nostrKey.ToBytes());
                 NostrNsecSecKey = NostrHelper.ConvertHexToNsec(NostrHexSecKey)!;
 

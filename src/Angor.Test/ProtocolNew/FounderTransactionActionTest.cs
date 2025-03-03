@@ -97,11 +97,10 @@ public class FounderTransactionActionTest : AngorTestData
     [Fact]
     public void SignInvestorRecoveryTransactions_CreatesValidSignatures()
     {
-        var words = new WalletWords
-            { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+        var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
         var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
 
-        var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
+        var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, projectInvestmentInfo.FounderKey);
 
         var investmentTrxHex =
             "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000236a21038a7eedf38d874799c0d7579d5f08d605ca039da7f6dc7c57e6abd82f0f380334e0930400000000002251207aade2c416ca565c1b66041eac56d707a26aa8bab7d217190ecf3aa57899c9a360e316000000000022512048dc0a52f43379c6515962a40eec91d183582c8e2c861d612e4e564617d08a67804f120000000000225120f57ad9ed9e0fb880cda0847cfea668a4c3ccb1b9a08bdbcc3f029e8ad0380c9d00000000";
