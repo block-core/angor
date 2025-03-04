@@ -250,6 +250,38 @@ public class DerivationOperations : IDerivationOperations
         return upi;
     }
 
+    public string DeriveNostrStoragePubKeyHex(WalletWords walletWords)
+    {
+        var key = DeriveNostrStorageKey(walletWords);
+
+        return key.PubKey.ToHex()[2..]; //Need the pub key without prefix
+    }
+
+    public Key DeriveNostrStorageKey(WalletWords walletWords)
+    {
+        ExtKey extendedKey = GetExtendedKey(walletWords);
+
+        var path = $"m/44'/1237'/1'/0/0";
+
+        ExtKey extKey = extendedKey.Derive(new KeyPath(path));
+
+        return extKey.PrivateKey;
+    }
+
+    public string DeriveNostrStoragePassword(WalletWords walletWords)
+    {
+        var key = DeriveNostrStorageKey(walletWords);
+
+         var privateKeyBytes = key.ToBytes();
+
+        var hashedKey = Hashes.Hash256(new Span<byte>(privateKeyBytes));
+
+        // the hex of the hash of the private key is the password
+        var hex = Encoders.Hex.EncodeData(hashedKey.ToArray()).Replace("-", "").ToLower();
+
+        return hex;
+    }
+
     public string DeriveAngorKey(string founderKey, string angorRootKey)
     {
         Network network = _networkConfiguration.GetNetwork();

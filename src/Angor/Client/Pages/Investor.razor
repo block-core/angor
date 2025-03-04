@@ -399,62 +399,46 @@
         }
 
         RefreshBalanceTriggered = true;
+
         var words = await passwordComponent.GetWalletAsync();
+        var storageAccountKey = _DerivationOperations.DeriveNostrStoragePubKeyHex(words);
+        var password = _DerivationOperations.DeriveNostrStoragePassword(words);
 
         CheckSignatureFromFounder();
 
-        foreach (var investorProject in projects)
-        {
-            var nostrPubKey = _DerivationOperations.DeriveNostrPubKey(words, investorProject.ProjectInfo.FounderKey);
-
-            if(investorProject.ProjectInfo.NostrPubKey != nostrPubKey)
-                throw new Exception("The investor project NostrPubKey is the same as the founder NostrPubKey");
-
-            await _RelayService.LookupDirectMessagesForPubKeyAsync(nostrPubKey, null, 1,
-                async x =>
+        await _RelayService.LookupDirectMessagesForPubKeyAsync(storageAccountKey, null, 1,
+            async x =>
+            {
+                try
                 {
-                    try
+                    var decrypted = await _encryptionService.DecryptData(x.Content, password);
+
+                    var projectIdList = serializer.Deserialize<Investments>(decrypted);
+
+                    bool foundNewProjects = false;
+                    foreach (var investment in projectIdList.ProjectIdentifiers)
                     {
-                        var project = projects.FirstOrDefault(p => p.InvestorNPub == x.Pubkey);
+                        if (projects.Any(x => x.ProjectInfo.ProjectIdentifier == investment.ProjectIdentifier) ||
+                            scannedInvestments.ProjectIdentifiers.Any(x => x.ProjectIdentifier == investment.ProjectIdentifier))
+                            continue;
 
-                        if(project == null)
-                            return;
-
-                        var nostrPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, project.ProjectInfo.FounderKey);
-                        var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
-
-                        var decryptedString = await _encryptionService.DecryptNostrContentAsync(
-                            nostrPrivateKeyHex, project.InvestorNPub, x.Content);
-
-                        var projectIdList = serializer.Deserialize<Investments>(decryptedString);
-
-                        bool foundNewProjects = false;
-                        foreach (var investment in projectIdList.ProjectIdentifiers)
-                        {
-                            if (projects.Any(x => x.ProjectInfo.ProjectIdentifier == investment.ProjectIdentifier) ||
-                                scannedInvestments.ProjectIdentifiers.Any(x => x.ProjectIdentifier == investment.ProjectIdentifier))
-                                continue;
-
-                            scannedInvestments.ProjectIdentifiers.Add(investment);
-                            foundNewProjects = true;
-                        }
-
-                        if (foundNewProjects)
-                        {
-                            addedProjectsFromEvent = true;
-                            RefreshBalanceTriggered = true;
-                            StateHasChanged();
-                        }
+                        scannedInvestments.ProjectIdentifiers.Add(investment);
+                        foundNewProjects = true;
                     }
-                    catch (Exception e)
+
+                    if (foundNewProjects)
                     {
-                        _Logger.LogError(e, "failed to get handle investment list event from relay");
+                        addedProjectsFromEvent = true;
+                        RefreshBalanceTriggered = true;
+                        StateHasChanged();
                     }
-                }, nostrPubKey);
-
-        }
+                }
+                catch (Exception e)
+                {
+                    _Logger.LogError(e, "failed to get handle investment list event from relay");
+                }
+            }, storageAccountKey);
     }
-
 
     //TODO David check if we should replace the logic to get all projects first and then get signatures for them?
     private void FetchProjectsData(params string[] eventIds)
