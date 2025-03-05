@@ -3934,17 +3934,8 @@ input[type=number] {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1.5rem;
-    background: var(--form-bg);
-    border: 1px solid var(--form-border);
-    border-radius: 16px;
-    transition: all 0.3s ease;
 }
 
-.amount-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
 
 .amount-icon {
     display: flex;
@@ -4042,7 +4033,6 @@ input[type=number] {
         var(--angor-secondary) calc(var(--percentage) * 1%),
         rgba(var(--angor-secondary-rgb), 0.1) 0
     );
-    /* تغییر از -90 به 0 درجه برای شروع از بالا */
     transform: rotate(0deg);
 }
 
@@ -4051,7 +4041,6 @@ input[type=number] {
     inset: 16px;
     border-radius: 50%;
     background: var(--form-bg);
-    /* حذف rotate برای حفظ خوانایی محتوا */
     transform: rotate(0deg);
     display: flex;
     align-items: center;
@@ -4280,4 +4269,128 @@ input[type=number] {
     margin: 0;
     font-size: 14px;
     line-height: 1.5;
+}
+
+.progress-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin: auto;
+ }
+
+.progress-card .percent {
+    position: relative;
+}
+
+.progress-card svg {
+    position: relative;
+    width: 210px;
+    height: 210px;
+    transform: rotate(-90deg);
+}
+
+.progress-card svg circle {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--form-border);
+    stroke-width: 10;
+    stroke-linecap: round;
+}
+
+.progress-card svg circle:last-of-type {
+    stroke-dasharray: 625px;
+    stroke-dashoffset: calc(625px - (625px * var(--percent)) / 100);
+    stroke: var(--angor-secondary);
+    transition: stroke-dashoffset 1s ease-in-out;
+}
+
+.progress-card .number {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.progress-card .number h3 {
+    font-weight: 200;
+    font-size: 2rem;
+    color: var(--form-text);
+    margin: 0;
+}
+
+.progress-card .number h3 span {
+    font-size: 1rem;
+}
+
+.progress-card .number p {
+    font-size: 1rem;
+    color: var(--form-label);
+    margin: 5px 0 0;
+}
+
+.progress-card .title h2 {
+    margin: 25px 0 0;
+    color: var(--form-text);
+}
+
+.dark .progress-card {
+    background-color: var(--angor-card-bg-dark);
+}
+
+.progress-warning svg circle:last-of-type {
+    stroke: #ff9900;
+}
+
+.progress-success svg circle:last-of-type {
+    stroke: #28a745;
+}
+
+.progress-danger svg circle:last-of-type {
+    stroke: #dc3545;
+}
+
+.claim-info-card {
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.claim-amount {
+    min-width: 200px;
+}
+
+@media (max-width: 575.98px) {
+    .claim-info-card .btn {
+        width: 100%;
+    }
+}
+
+.transaction-status-container {
+    margin: 1.5rem 0;
+}
+
+.transaction-info {
+    background-color: var(--bs-light);
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.transaction-id {
+    font-family: monospace;
+    max-width: 200px;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .transaction-details {
+        width: 100%;
+    }
+    
+    .transaction-status {
+        width: 100%;
+        text-align: left;
+        margin-top: 1rem;
+    }
 }

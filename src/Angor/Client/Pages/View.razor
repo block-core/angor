@@ -115,7 +115,7 @@
                                 <div class="modal-body modal-body-scroll">
                                     <img class="animate-scale-in w-100 rounded-3" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                 </div>
-                             </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -192,6 +192,7 @@
                     </div>
                     <div class="col-12 col-md-12 col-lg-4 order-1 order-md-1 d-flex justify-content-center align-items-center mt-4">
                         <div class="w-100">
+
                             @{
                                 var startsInDays = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
 
@@ -203,28 +204,63 @@
                                 {
                                     var totalDays = (project.ProjectInfo.ExpiryDate - project.ProjectInfo.StartDate).Days;
                                     var currentDays = (DateTime.Now - project.ProjectInfo.StartDate).Days;
-                                    currentDays = currentDays < 0 ? 0 : currentDays;
-                                    currentDays = currentDays > totalDays ? totalDays : currentDays;
+                                    currentDays = Math.Clamp(currentDays, 0, totalDays);
+
+                                    var daysProgressPercent = totalDays > 0 ? (currentDays * 100 / totalDays) : 0;
+                                    var remainingDays = totalDays - currentDays;
 
                                     if (totalDays > 0)
                                     {
-                                        <div class="progress-container">
-                                            <div role="progressbar" data-type="days" aria-valuenow="@currentDays" aria-valuemin="0" aria-valuemax="@totalDays" style="--day: @currentDays; --total: @totalDays;" data-day="@currentDays" data-total="@totalDays"></div>
+                                        <div class="w-100">
+                                            <div class="progress-card @(projectStats.FundingProgressPercent >= 100 ? "progress-success" : "progress-warning")">
+                                                <div class="percent">
+                                                    <svg>
+                                                        <circle cx="105" cy="105" r="100"></circle>
+                                                        <circle cx="105" cy="105" r="100" style="--percent: @daysProgressPercent"></circle>
+                                                    </svg>
+                                                    <div class="number">
+                                                        <p>@currentDays days (@daysProgressPercent%)</p>
+                                                    </div>
+                                                </div>
+                                                <div class="footer text-center mt-4">
+                                                    <p>@remainingDays days remaining</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     }
                                 }
                             }
+
                         </div>
                     </div>
                 </div>
 
                 <div class="row align-items-center">
                     <div class="col-12 col-lg-4 d-flex justify-content-center align-items-center mt-4 order-1 order-lg-1">
+
+                        @{
+                            var progressPercent = project.ProjectInfo.TargetAmount.ToUnitBtc() > 0
+                            ? (Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) / project.ProjectInfo.TargetAmount.ToUnitBtc()) * 100
+                            : 0;
+                        
                         <div class="w-100">
-                            <div class="progress-container">
-                                <div role="progressbar" data-type="percent" aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100" style="--value: @projectStats.FundingProgressPercent;"></div>
+                                <div class="progress-card @(progressPercent >= 100 ? "progress-success" : "progress-warning")">
+                                <div class="percent">
+                                    <svg>
+                                        <circle cx="105" cy="105" r="100"></circle>
+                                        <circle cx="105" cy="105" r="100" style="--percent: @progressPercent"></circle>
+                                    </svg>
+                                    <div class="number">
+                                            <p>@progressPercent %</p>
+                                    </div>
+                                </div>
+                                <div class="footer text-center  mt-4">
+                                    <p>@(Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
+                                </div>
                             </div>
                         </div>
+                        }
+
                     </div>
                     <div class="col-12 col-lg-8 mt-4 order-2 order-lg-2">
                         @if (projectStats.Loading)
@@ -360,7 +396,7 @@
                     <h3 class="mt-4 text-success">Project Owner Dashboard</h3>
                     <p class="action-text">Manage your project funds and approve transactions</p>
                     <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                                             
+
                         <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success text-white animate-scale">
                             <i class="me-2">
                                 <Icon IconName="wallet" />
@@ -384,7 +420,7 @@
 
 
                 </div>
-          
+
             }
             else if (invested)
             {
@@ -399,11 +435,11 @@
                     </p>
                     <div class="d-flex justify-content-center item-center mt-4">
 
-                    <button class="btn btn-border animate-scale" @onclick="RecoverFunds">
-                        <Icon IconName="recover" Class="me-2" />
-                         Manage Investment
-                    </button>
-                     </div>
+                        <button class="btn btn-border animate-scale" @onclick="RecoverFunds">
+                            <Icon IconName="recover" Class="me-2" />
+                            Manage Investment
+                        </button>
+                    </div>
                 </div>
             }
             else
@@ -421,23 +457,23 @@
                         var canInvest = applicationLogicService.IsInvestmentWindowOpen(project?.ProjectInfo);
                     }
                     <div class="d-flex justify-content-center item-center mt-4">
-                       <button class="btn btn-border-success animate-scale"
-                            data-cy="INVEST_BUTTON"
-                            @onclick="InvestInProject"
-                            disabled="@(!canInvest)">
+                        <button class="btn btn-border-success animate-scale"
+                                data-cy="INVEST_BUTTON"
+                                @onclick="InvestInProject"
+                                disabled="@(!canInvest)">
 
-                        <Icon IconName="shield-star" Class="me-2" />
+                            <Icon IconName="shield-star" Class="me-2" />
 
-                        @if (!canInvest)
-                        {
-                            <span>Investment Period Closed</span>
-                        }
-                        else
-                        {
-                            <span>Invest Now</span>
-                        }
-                       </button>
-                     </div>
+                            @if (!canInvest)
+                            {
+                                <span>Investment Period Closed</span>
+                            }
+                            else
+                            {
+                                <span>Invest Now</span>
+                            }
+                        </button>
+                    </div>
                 </div>
             }
         </div>
@@ -479,7 +515,7 @@
                     <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                     <div class="input-group">
                         <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                     @*<button @onclick="OpenInHUBAsync" class="btn btn-border">
+                        @*<button @onclick="OpenInHUBAsync" class="btn btn-border">
                            <Icon IconName="link"></Icon>
                        </button> *@
                     </div>
