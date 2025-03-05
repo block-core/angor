@@ -87,34 +87,41 @@
     }
     else
     {
-        @if (totalInvestedAmount <= founderProject.ProjectInfo.TargetAmount && founderProject.ProjectHasStarted())
+        @if (Money.Satoshis(totalInvestedAmount).ToUnit(MoneyUnit.BTC) <= Money.Satoshis(founderProject.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC) && founderProject.ProjectHasStarted())
         {
-            <div class="target-status-section slide-in mt-4">
+            <div class="card card-body slide-in mt-4">
 
-                <div class="info-alert glass-effect">
+                <div class="info-alert">
                     <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
                     <p>The target investment amount has not been reached. As founder, you can only release the funds back to the investors.</p>
                 </div>
+
                 <div class="status-overview mt-4">
-                    <div class="progress-circle-wrapper">
-                        <div class="progress-circle"
-                             role="progressbar"
-                             data-percentage="@((totalInvestedAmount * 100 / founderProject.ProjectInfo.TargetAmount).ToString("0"))"
-                             style="--percentage: @((totalInvestedAmount * 100 / founderProject.ProjectInfo.TargetAmount).ToString("0"))">
-                            <div class="progress-circle-inner">
-                                <div class="progress-circle-content">
-                                    <Icon IconName="alert-circle" Height="32" Width="32" Class="warning-icon" />
-                                    <h4 class="progress-title">Target Not Reached</h4>
-                                    <div class="progress-value">
-                                        @((totalInvestedAmount * 100 / founderProject.ProjectInfo.TargetAmount).ToString("0.0"))%
+                     @{
+                        var progressPercent = founderProject.ProjectInfo.TargetAmount > 0
+                        ? (Money.Satoshis(totalInvestedAmount).ToUnit(MoneyUnit.BTC) / Money.Satoshis(founderProject.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC)) * 100
+                        : 0;
+
+                        <div class="w-100">
+                            <div class="progress-card @(progressPercent >= 100 ? "progress-success" : "progress-warning")">
+                                <div class="percent">
+                                    <svg>
+                                        <circle cx="105" cy="105" r="100"></circle>
+                                        <circle cx="105" cy="105" r="100" style="--percent: @progressPercent"></circle>
+                                    </svg>
+                                    <div class="number">
+                                        <p>@progressPercent %</p>
                                     </div>
+                                </div>
+                                <div class="footer text-center  mt-4">
+                                    <p>@Money.Satoshis(totalInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker </p>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    }
 
                     <div class="amount-stats">
-                        <div class="amount-card glass-effect">
+                        <div class="amount-card info-card rounded-3 border hover-effect">
                             <div class="amount-card-content">
                                 <Icon IconName="wallet" Height="32" Width="32" Class="card-icon" />
                                 <div class="amount-info">
@@ -130,7 +137,7 @@
                             </div>
                         </div>
 
-                        <div class="amount-card glass-effect">
+                        <div class="amount-card info-card rounded-3 border hover-effect">
                             <div class="amount-card-content">
                                 <Icon IconName="wallet" Height="32" Width="32" Class="card-icon" />
                                 <div class="amount-info">
