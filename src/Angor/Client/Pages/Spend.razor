@@ -87,7 +87,7 @@
     }
     else
     {
-        @if (Money.Satoshis(totalInvestedAmount).ToUnit(MoneyUnit.BTC) <= Money.Satoshis(founderProject.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC) && founderProject.ProjectHasStarted())
+        @if (totalInvestedAmount <= founderProject.ProjectInfo.TargetAmount && founderProject.ProjectHasStarted())
         {
             <div class="card card-body slide-in mt-4">
 
