@@ -197,7 +197,7 @@ public class FounderTransactionActionTest : AngorTestData
             transactionList.Select(_ => _.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1).ToCoin()));
     }
 
-    //[Fact]
+    // a method to generate test data
     public void GenerateVectorsFor_SignInvestorRecoveryTransactions_CreatesValidSignatures()
     {
         // this code generates text vectors for SignInvestorRecoveryTransactions_CreatesValidSignatures
