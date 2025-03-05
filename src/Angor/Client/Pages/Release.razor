@@ -39,15 +39,13 @@
                 <span class="header-icon-wrapper">
                     <Icon IconName="signature" Width="32" Height="32" />
                 </span>
-                <h5 class="header-text">Claim released funds without a penalty</h5>
+                <h5 class="header-text">Claim funds free</h5>
             </div>
             <div class="header-actions">
-                
             </div>
         </div>
     </div>
 </div>
-
 
 <div class="row slide-in mt-4">
     <div class="card card-body">
@@ -57,99 +55,184 @@
     </div>
 </div>
 
-<div class="card mt-4 text-center animate-fade-in">
-    <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-        <h4 class="mb-0">Waiting for the founder to approve</h4>
-        <div class="d-flex mt-2 mt-md-0">
-            <button class="btn btn-border animate-scale" @onclick="FetchInvestorCheckPassword" disabled="@refreshSpinner">
-                @if (refreshSpinner)
-                {
-                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                    <span>Refreshing...</span>
-                }
-                else
-                {
-                    <Icon IconName="refresh" Width="20" Height="20" class="me-1" />
-                    <span>Refresh</span>
-                }
-            </button>
+<div class="card card-body mt-4 animate-fade-in">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center">
+            <span class="user-select-none animate-rotate">
+                <Icon IconName="indexer" Height="32" Width="32"></Icon>
+            </span>
+            <div class="h-100 ms-3">
+                <h5 class="mb-0 font-weight-bolder">
+                    Awaiting release
+                </h5>
+
+            </div>
         </div>
+        <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="FetchInvestorCheckPassword" disabled="@refreshSpinner">
+            @if (refreshSpinner)
+            {
+                <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content"
+                      role="status"
+                      aria-hidden="true">
+                </span>
+            }
+            else
+            {
+                <Icon IconName="refresh" Height="24" Width="24" />
+            }
+        </button>
     </div>
-    
+
     @if (InvestorProject.UnfundedReleaseTransactionId != null)
     {
-        <p class="my-3">
-            Transaction ID: <span id="transactionID">@InvestorProject.UnfundedReleaseTransactionId</span> |
-            <a href="@explorerLink" target="_blank" class="ms-2">View on explorer</a>
-        </p>
-
-        <p class="modal-title">
-            Coins have already been released.
-        </p>
-        <hr class="my-4" />
-        <p class="text-muted">You can now proceed to claim your funds.</p>
+        <div class="transaction-status-container">
+            <div class="transaction-info p-4 rounded shadow-sm">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div class="transaction-details">
+                        <h6 class="text-muted mb-2">Transaction ID</h6>
+                        <div class="d-flex align-items-center">
+                            <span class="transaction-id text-truncate">@InvestorProject.UnfundedReleaseTransactionId</span>
+                            <a href="@explorerLink" target="_blank" class="ms-2 btn btn-sm btn-outline-primary">
+                                <Icon IconName="link" Width="16" Height="16" Class="me-1" />
+                                View on Explorer
+                            </a>
+                        </div>
+                    </div>
+                    <div class="transaction-status">
+                        <span class="badge bg-success">
+                            <Icon IconName="check-circle" Width="16" Height="16" Class="me-1" />
+                            Released
+                        </span>
+                    </div>
+                </div>
+                <hr class="my-4" />
+                <div class="text-center">
+                    <p class="lead mb-0">Your coins have been successfully released.</p>
+                    <p class="text-muted mt-2">You can now proceed to claim your funds.</p>
+                </div>
+            </div>
+        </div>
     }
     else
     {
         @if (InvestorReleaseSigInfo == null)
         {
-            <div class="card-body d-flex justify-content-center align-items-center">
+            <div class="d-flex justify-content-center align-items-center">
                 <div class="loader-slow"></div>
             </div>
         }
         else
         {
-            <p class="modal-title">
-                The founder has signed a transaction that allows the investor to take back the coins without a penalty, you may claim back your coins.
-            </p>
+            <div class="info-card d-flex align-items-center mb-4">
+                <Icon IconName="info" Class="alert-icon me-3" Width="24" Height="24" />
+                <p class="mb-0">
+                    Funds are ready to be claimed without penalty
+                </p>
+            </div>
+
             @if (totalInvested != null)
             {
-                <p class="modal-title">
-                    Total coins to claim is @Money.Satoshis(totalInvested.Value).ToUnit(MoneyUnit.BTC) @network.CoinTicker 
-                </p>
+                <div class="info-card">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
+                        <div class="claim-amount text-center text-md-start">
+                            <h6 class="mb-1 text-muted">Total Available to Claim</h6>
+                            <h4 class="mb-0">@Money.Satoshis(totalInvested.Value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h4>
+                        </div>
+                        <button class="btn btn-border-success btn-lg mt-2 mt-sm-0" @onclick="ClaimInvestorCoinsPasswordAsync" disabled="@claimCoinSpinner">
+                            @if (claimCoinSpinner)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Processing Claim...</span>
+                            }
+                            else
+                            {
+                                <Icon IconName="coins" Class="me-2" Width="20" Height="20" />
+                                <span>Claim Funds</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+
             }
-            <br/>
-            <button class="btn btn-sm btn-border ml-2" @onclick="ClaimInvestorCoinsPasswordAsync" disabled="@claimCoinSpinner">
-                @if (claimCoinSpinner)
-                {
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    <span>Claiming coins...</span>
-                }
-                else
-                {
-                    <span>Claim coins</span>
-                }
-            </button>
         }
     }
 </div>
-    
+
 @if (showReleaseModal)
 {
     <div class="modal-wrapper">
         <div class="modal fade show d-block" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Recovery Confirmation</h5>
-                        <button type="button" class="btn-close" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner"></button>
-                    </div>
-                    <div class="modal-body modal-body-scroll">
-
-                        <p class="mb-1">Claim back your investment without a penalty </p>
-
-                        <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(releaseTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-
-                        <hr>
-
-                        <div class="mb-3">
-                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="ReleaseInvestorFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modern-modal">
+                    <div class="modal-header border-0 pb-0">
+                        <div class="d-flex align-items-center">
+                            <Icon IconName="wallet" Height="32" Width="32" class="me-2" />
+                            <h5 class="modal-title">Recovery Confirmation</h5>
                         </div>
+                        <button class="btn-close-custom" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">
+                            <Icon IconName="close-circle" Height="24" Width="24" />
+                        </button>
+                    </div>
 
-                        <hr>
+                    <div class="modal-body modal-body-scroll">
+                        <div class="release-confirmation-container">
+                            <div class="transaction-summary mb-4">
+                                <div class="summary-header d-flex align-items-center mb-3">
+                                    <Icon IconName="info-circle" Class="me-2" Width="24" Height="24" />
+                                    <h6 class="mb-0">Transaction Summary</h6>
+                                </div>
 
-                        <p class="mt-3">Are you sure you want to claim back these funds?</p>
+                                <div class="info-card fee-details p-3 rounded">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="text-muted">Network Fee:</span>
+                                        <span class="fee-amount fw-bold">
+                                            @Money.Satoshis(releaseTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                        </span>
+                                    </div>
+
+                                    <div class="fee-adjustment">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label for="feeRange" class="form-label mb-0">Transaction Speed</label>
+                                            <span class="badge bg-primary">
+                                                @feeData.SelectedFeeEstimation.FeeRate sats 
+                                            </span>
+                                        </div>
+
+                                        <div class="range-container position-relative">
+                                            <input type="range"
+                                                   class="form-range"
+                                                   id="feeRange"
+                                                   @bind="feeData.FeePosition"
+                                                   @oninput="ReleaseInvestorFeeRangeChanged"
+                                                   min="@feeData.FeeMin"
+                                                   max="@feeData.FeeMax">
+
+                                            <div class="range-labels d-flex justify-content-between mt-2">
+                                                <small class="text-muted">Slower</small>
+                                                <small class="text-muted">
+                                                    ~@feeData.SelectedFeeEstimation.Confirmations blocks
+                                                </small>
+                                                <small class="text-muted">Faster</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="confirmation-message alert alert-warning">
+                                <div class="d-flex align-items-center">
+                                    <Icon IconName="exclamation-triangle" Class="me-2" Width="20" Height="20" />
+                                    <div>
+                                        <h6 class="alert-heading mb-1">Confirmation Required</h6>
+                                        <p class="mb-0 small">
+                                            You are about to claim back your investment without any penalty.
+                                            This action cannot be undone.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-border-warning" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">Cancel</button>
@@ -170,6 +253,7 @@
         </div>
     </div>
 }
+
 
 @code {
     [Parameter]
@@ -297,7 +381,7 @@
                             Logger.LogError("Incorrect signature types received");
                             InvestorReleaseSigInfo = null;
                         }
-                      
+
                         StateHasChanged();
 
                     });

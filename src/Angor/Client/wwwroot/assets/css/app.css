@@ -4351,3 +4351,46 @@ input[type=number] {
 .progress-danger svg circle:last-of-type {
     stroke: #dc3545;
 }
+
+.claim-info-card {
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.claim-amount {
+    min-width: 200px;
+}
+
+@media (max-width: 575.98px) {
+    .claim-info-card .btn {
+        width: 100%;
+    }
+}
+
+.transaction-status-container {
+    margin: 1.5rem 0;
+}
+
+.transaction-info {
+    background-color: var(--bs-light);
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.transaction-id {
+    font-family: monospace;
+    max-width: 200px;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .transaction-details {
+        width: 100%;
+    }
+    
+    .transaction-status {
+        width: 100%;
+        text-align: left;
+        margin-top: 1rem;
+    }
+}
