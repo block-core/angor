@@ -630,7 +630,7 @@ else
             {
                 var words = await passwordComponent.GetWalletAsync();
 
-                var nostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
+                var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
 
                 var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -764,7 +764,7 @@ else
 
             if (Investment.IsSeeder)
             {
-                var seederHash = _derivationOperations.DeriveSeederSecretHash(words, project.ProjectInfo.FounderKey);
+                var seederHash = _derivationOperations.DeriveLeadInvestorSecretHash(words, project.ProjectInfo.FounderKey);
             }
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
@@ -859,7 +859,7 @@ else
 
             var words = await passwordComponent.GetWalletAsync();
 
-            var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
+            var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
 
             var releaseAddress = accountInfo.GetNextReceiveAddress();
@@ -1032,10 +1032,11 @@ else
     private async Task SaveInvestmentsListToNostrAsync()
     {
         var words = await passwordComponent.GetWalletAsync();
-        var rootNostrPrivateKey = await _derivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 0);
-        var rootNostrPrivateKeyHex = Encoders.Hex.EncodeData(rootNostrPrivateKey.ToBytes());
+        var storageAccountKey = _derivationOperations.DeriveNostrStoragePubKeyHex(words);
+        var storageKey = _derivationOperations.DeriveNostrStorageKey(words);
+        var storageKeyHex = Encoders.Hex.EncodeData(storageKey.ToBytes());
 
-        var nostrDMKey = _derivationOperations.DeriveNostrPubKey(words, 1);
+        var password = _derivationOperations.DeriveNostrStoragePassword(words);
 
         Investments investments = new()
             {
@@ -1051,10 +1052,10 @@ else
                                 .ToList()
             };
 
-        var encryptedProjectIdList = await encryption.EncryptNostrContentAsync(
-            rootNostrPrivateKeyHex, nostrDMKey, serializer.Serialize(investments));
 
-        _RelayService.SendDirectMessagesForPubKeyAsync(rootNostrPrivateKeyHex, nostrDMKey, encryptedProjectIdList, x =>
+        var encrypted = await encryption.EncryptData(serializer.Serialize(investments), password);
+
+        _RelayService.SendDirectMessagesForPubKeyAsync(storageKeyHex, storageAccountKey, encrypted, x =>
         {
             if (!x.Accepted)
             {

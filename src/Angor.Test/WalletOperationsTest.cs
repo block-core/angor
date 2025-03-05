@@ -164,10 +164,10 @@ public class WalletOperationsTest : AngorTestData
             new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
         };
         projectInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
-        projectInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
+        projectInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, projectInfo.FounderKey);
         projectInfo.ProjectIdentifier = _derivationOperations.DeriveAngorKey(projectInfo.FounderKey, angorRootKey);
 
-        var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
+        var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, projectInfo.FounderKey);
 
         var investmentAmount = 10;
         var investorKey = _derivationOperations.DeriveInvestorKey(words, projectInfo.FounderKey);

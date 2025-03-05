@@ -352,7 +352,7 @@
     private async Task FetchSignatureRequests()
     {
         var words = await passwordComponent.GetWalletAsync();
-        var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
+        var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
         var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
         scanningForSigRequests = true;
@@ -613,12 +613,12 @@
     {
         try
         {
-            var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex);
+            var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectInfo.FounderKey);
             var signatureInfo = CreateReleaseSignatures(signature.SignRecoveryRequest?.InvestmentTransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()), signature.SignRecoveryRequest?.UnfundedReleaseAddress ?? signature.SignRecoveryRequest.UnfundedReleaseKey);
 
             var sigJson = serializer.Serialize(signatureInfo);
 
-            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
+            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
             var encryptedContent = await encryption.EncryptNostrContentAsync(

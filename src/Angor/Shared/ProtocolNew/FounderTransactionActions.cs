@@ -65,7 +65,9 @@ public class FounderTransactionActions : IFounderTransactionActions
 
             var sig = key.SignTaprootKeySpend(hash, sigHash).ToString();
 
-            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}; signature-hex={sig}");
+            var hashHex = Encoders.Hex.EncodeData(hash.ToBytes());
+
+            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}; encodedHash={hashHex} signature-hex={sig}");
 
             var result = key.PubKey.GetTaprootFullPubKey().VerifySignature(hash, TaprootSignature.Parse(sig).SchnorrSignature);
 

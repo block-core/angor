@@ -295,7 +295,7 @@
 
             var words = await passwordComponent.GetWalletAsync();
 
-            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
+            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
 
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
@@ -543,12 +543,12 @@
     {
         try
         {
-            var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectIndex);
+            var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectInfo.FounderKey);
             var signatureInfo = CreateRecoverySignatures(signature.SignRecoveryRequest.InvestmentTransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
 
             var sigJson = serializer.Serialize(signatureInfo);
 
-            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectIndex);
+            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
             var encryptedContent = await encryption.EncryptNostrContentAsync(
