@@ -9,7 +9,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Wallet.Operate.HistoryView"
              x:DataType="operate:IWalletViewModel">
-    
+
     <Design.DataContext>
         <operate:WalletViewModelDesign />
     </Design.DataContext>
@@ -26,15 +26,18 @@
                     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
                     <Setter Property="ToolTip.Tip" Value="{Binding $self.Text}" />
                 </Style>
+                
             </z:SlimDataGrid.Styles>
             <z:SlimDataGrid.Columns>
-                <z:Column Header="ADDRESS" Binding="{Binding Address}" />
-                <z:Column Header="AMOUNT" Binding="{Binding Amount, Converter={x:Static controls:MiscConverters.SatsToBtc}, StringFormat={x:Static controls:MiscConverters.AmountBtcFormat}}" />
-                <z:Column Header="UTXO COUNT" Binding="{Binding UtxoCount}" />
-                <z:Column Header="TXN JSON" Binding="{Binding ShowJson}">
+                <z:Column Header="ADDRESS" Width="3*" Binding="{Binding Address}" />
+                <z:Column Header="AMOUNT" Width="3*"
+                          Binding="{Binding Amount, Converter={x:Static controls:MiscConverters.SatsToBtc}, StringFormat={x:Static controls:MiscConverters.AmountBtcFormat}}" />
+                <z:Column Header="UTXO COUNT" Width="2*" Binding="{Binding UtxoCount}" />
+                <z:Column Header="TXN" Width="Auto" Binding="{Binding ShowJson}">
                     <z:Column.CellTemplate>
                         <DataTemplate>
-                            <Button Command="{Binding}" i:Attached.Icon="fa-solid fa-ellipsis" />
+                            <Button Command="{Binding}"
+                                    i:Attached.Icon="fa-solid fa-ellipsis" />
                         </DataTemplate>
                     </z:Column.CellTemplate>
                 </z:Column>
