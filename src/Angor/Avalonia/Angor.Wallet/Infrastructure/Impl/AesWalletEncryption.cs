@@ -61,11 +61,9 @@ public class AesWalletEncryption : IWalletEncryption
             aes.IV = iv;
 
             using var msEncrypt = new MemoryStream();
-            using (var csEncrypt = new CryptoStream(msEncrypt, aes.CreateEncryptor(), CryptoStreamMode.Write))
-            using (var writer = new StreamWriter(csEncrypt, Encoding.UTF8))
+            await using (var csEncrypt = new CryptoStream(msEncrypt, aes.CreateEncryptor(), CryptoStreamMode.Write))
             {
-                var jsonData = JsonSerializer.Serialize(walletData);
-                await writer.WriteAsync(jsonData);
+                await JsonSerializer.SerializeAsync(csEncrypt, walletData);
             }
 
             encryptedData = msEncrypt.ToArray();
