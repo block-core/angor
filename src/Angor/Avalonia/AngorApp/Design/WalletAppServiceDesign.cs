@@ -46,7 +46,7 @@ public class WalletAppServiceDesign : IWalletAppService
         return new Address("test address");
     }
 
-    public string GetSeedWords()
+    public string GenerateRandomSeedwords()
     {
         return SampleData.Seedwords.ToString();
     }

@@ -21,7 +21,7 @@ public class WalletWizard(UI.Services.UIServices uiServices, IWalletBuilder wall
         string encryptionKey = null!;
 
         var wizard = WizardBuilder.StartWith(() => new Steps.CreateWelcome.WelcomeViewModel())
-            .Then(prev => new Steps.SeedWordsGeneration.SeedWordsViewModel(uiServices))
+            .Then(prev => new Steps.SeedWordsGeneration.SeedWordsViewModel(walletAppService, uiServices))
             .Then(prev => new SeedWordsConfirmationViewModel(seedWords), x => seedWords = x.Words.Value!)
             .Then(prev => new Steps.Passphrase.Create.PassphraseCreateViewModel())
             .Then(prev => new Steps.EncryptionPassword.EncryptionPasswordViewModel(), x => passphrase = x.Passphrase)
