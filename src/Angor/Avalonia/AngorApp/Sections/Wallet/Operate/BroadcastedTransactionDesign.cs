@@ -4,6 +4,7 @@ namespace AngorApp.Sections.Wallet.Operate;
 
 public class BroadcastedTransactionDesign : IBroadcastedTransaction
 {
+    public string Id { get; }
     public string Address { get; init; }
     public long FeeRate { get; set; }
     public long TotalFee { get; set; }

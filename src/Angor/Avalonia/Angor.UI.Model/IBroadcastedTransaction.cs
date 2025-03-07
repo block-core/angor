@@ -2,6 +2,7 @@ namespace Angor.UI.Model;
 
 public interface IBroadcastedTransaction
 {
+    string Id { get; }
     public string Address { get; }
     public long FeeRate { get; }
     public long TotalFee { get; }

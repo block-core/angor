@@ -3,29 +3,10 @@ using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.Sections.Wallet.Operate;
 
-public interface ITransactionViewModel
+public class TransactionViewModel(IBroadcastedTransaction transaction,UIServices uiServices)
 {
-    ReactiveCommand<Unit, Unit> ShowJson { get; }
-    string Address { get; }
-    long FeeRate { get; }
-    long TotalFee { get; }
-    long Amount { get; }
-    string Path { get; }
-    int UtxoCount { get; }
-}
-
-public class TransactionViewModel(IBroadcastedTransaction tx, UIServices uiServices) : ITransactionViewModel
-{
-    public ReactiveCommand<Unit, Unit> ShowJson { get; } = ReactiveCommand.CreateFromTask(() => uiServices.Dialog.ShowMessage("Transaction JSON", tx.ViewRawJson));
-    public string Address => tx.Address;
-
-    public long FeeRate => tx.FeeRate;
-
-    public long TotalFee => tx.TotalFee;
-
-    public long Amount => tx.Amount;
-
-    public string Path => tx.Path;
-
-    public int UtxoCount => tx.UtxoCount;
+    public string Address => transaction.Address;
+    public long Amount => transaction.Amount;
+    public int UtxoCount => transaction.UtxoCount;
+    public ReactiveCommand<Unit, Unit> ShowJson => ReactiveCommand.CreateFromTask(() => uiServices.Dialog.Show(new TransactionJsonViewModel(transaction.ViewRawJson), "Transaction Json", Observable.Return(true)));
 }
