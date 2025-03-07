@@ -11,7 +11,6 @@ public static class AngorServices
     public static IServiceCollection Register(this IServiceCollection services)
     {
         return services
-            .AddLogging(builder => builder.RegisterSerilog())
             .AddSingleton<IIndexerService>(sp => DependencyFactory.GetIndexerService(sp.GetRequiredService<ILoggerFactory>()))
             .AddSingleton<IRelayService>(sp => DependencyFactory.GetRelayService(sp.GetRequiredService<ILoggerFactory>()));
     }

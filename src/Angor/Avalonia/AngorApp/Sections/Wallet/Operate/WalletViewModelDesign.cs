@@ -1,10 +1,24 @@
 using System.Windows.Input;
-using Angor.UI.Model;
+using Angor.Wallet.Domain;
+using ReactiveUI.SourceGenerators;
+using SuppaWallet.Gui.Wallet.Main;
+using Zafiro.UI;
 
 namespace AngorApp.Sections.Wallet.Operate;
 
-public class WalletViewModelDesign : IWalletViewModel
+public partial class WalletViewModelDesign : ReactiveObject, IWalletViewModel
 {
-    public IWallet Wallet { get; set; } = new WalletDesign();
+    private ReactiveCommand<Unit, ResultViewModel<string>> getReceiveAddress;
+
+    public IWallet Wallet { get; } = new WalletDesign();
+
     public ICommand Send { get; }
+    public string Name { get; init; } = "Test Wallet";
+
+    ReactiveCommand<Unit, ResultViewModel<string>> IWalletViewModel.GetReceiveAddress => getReceiveAddress;
+
+    public ResultViewModel<string> ReceiveAddressResult { get; }
+    public StoppableCommand<Unit, Result<BroadcastedTransaction>> SyncCommand { get; set; }
+    public IEnumerable<IdentityContainer<TransactionViewModel>> History { get; }
+    [Reactive] private WalletDisplayStatus walletDisplayStatus;
 }

@@ -1,6 +1,7 @@
 using Angor.UI.Model.Implementation.Projects;
 using AngorApp.Design;
 using AngorApp.Sections.Wallet.CreateAndRecover;
+using AngorApp.UI.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AngorApp.Composition.Registrations;
@@ -11,7 +12,7 @@ public static class ModelServices
     {
         return services
             .AddSingleton<IWalletProvider, WalletProviderDesign>()
-            .AddSingleton<IWalletBuilder, WalletBuilderDesign>()
+            .AddSingleton<IWalletBuilder, WalletBuilder>()
             .AddSingleton<IWalletWizard, WalletWizard>()
             .AddSingleton<IProjectService, ProjectService>();
     }

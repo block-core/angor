@@ -8,6 +8,13 @@
     
     <ItemGroup>
         <PackageReference Include="CSharpFunctionalExtensions" />
+        <PackageReference Include="Microsoft.Extensions.Http" />
+        <PackageReference Include="Serilog" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\Client\Angor.Client.csproj" />
+      <ProjectReference Include="..\..\Shared\Angor.Shared.csproj" />
     </ItemGroup>
 
 </Project>

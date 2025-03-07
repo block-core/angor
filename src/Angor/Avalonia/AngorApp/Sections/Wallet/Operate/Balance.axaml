@@ -14,14 +14,8 @@
     
     <controls:Pane IsTitleVisible="True">
         <controls:Pane.Title>
-            <Binding Path="Wallet.Balance" 
-                     Converter="{x:Static controls:MiscConverters.SatsToBtcString}" />
+            <Binding Path="Wallet.Balance^" Converter="{x:Static controls:MiscConverters.SatsToBtcString}" />
         </controls:Pane.Title>
-        <controls:Pane.TitleRightContent>
-            <StackPanel Orientation="Horizontal" Spacing="20">
-                <Button DockPanel.Dock="Right" i:Attached.Icon="fa-rotate" />
-            </StackPanel>
-        </controls:Pane.TitleRightContent>
         <controls:Pane.TitleIcon>
             <i:Icon Value="fa-database" />
         </controls:Pane.TitleIcon>

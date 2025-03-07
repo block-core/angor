@@ -12,5 +12,5 @@ public interface IWalletAppService
     Task<Result<Fee>> EstimateFee(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate);
     Task<Result<Address>> GetNextReceiveAddress(WalletId id);
     Task<Result<WalletId>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network);
-    public string GetSeedWords();
+    public string GenerateRandomSeedwords();
 }
