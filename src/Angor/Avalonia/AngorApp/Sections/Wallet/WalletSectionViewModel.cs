@@ -5,7 +5,9 @@ using AngorApp.Sections.Wallet.CreateAndRecover;
 using AngorApp.Sections.Wallet.Operate;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
+using SuppaWallet.Gui.Wallet.Main;
 using Zafiro.CSharpFunctionalExtensions;
+using WalletViewModel = AngorApp.Sections.Wallet.Operate.WalletViewModel;
 
 namespace AngorApp.Sections.Wallet;
 

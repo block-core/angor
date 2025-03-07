@@ -29,11 +29,11 @@
                 
             </z:SlimDataGrid.Styles>
             <z:SlimDataGrid.Columns>
-                <z:Column Header="ADDRESS" Width="3*" Binding="{Binding Address}" />
+                <z:Column Header="ADDRESS" Width="3*" Binding="{Binding Content.Address}" />
                 <z:Column Header="AMOUNT" Width="3*"
-                          Binding="{Binding Amount, Converter={x:Static controls:MiscConverters.SatsToBtc}, StringFormat={x:Static controls:MiscConverters.AmountBtcFormat}}" />
-                <z:Column Header="UTXO COUNT" Width="2*" Binding="{Binding UtxoCount}" />
-                <z:Column Header="TXN" Width="Auto" Binding="{Binding ShowJson}">
+                          Binding="{Binding Content.Amount, Converter={x:Static controls:MiscConverters.SatsToBtc}, StringFormat={x:Static controls:MiscConverters.AmountBtcFormat}}" />
+                <z:Column Header="UTXO COUNT" Width="2*" Binding="{Binding Content.UtxoCount}" />
+                <z:Column Header="TXN" Width="Auto" Binding="{Binding Content.ShowJson}">
                     <z:Column.CellTemplate>
                         <DataTemplate>
                             <Button Command="{Binding}"
