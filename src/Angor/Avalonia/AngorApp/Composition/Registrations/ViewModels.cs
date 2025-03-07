@@ -19,14 +19,11 @@ public static class ViewModels
     public static IServiceCollection Register(this IServiceCollection services)
     {
         return services
-            .AddTransient<BrowseSectionViewModelFactory>(sp =>
-                navigator => ActivatorUtilities.CreateInstance<BrowseSectionViewModel>(sp, navigator))
-            .AddTransient<NavigationViewModel>(sp =>
-                new NavigationViewModel(navigator =>
-                    sp.GetRequiredService<BrowseSectionViewModelFactory>()(navigator)
-                ))
-            .AddSingleton<ISectionsFactory, SectionsFactory>()
-            .AddSingleton<Lazy<IMainViewModel>>(sp => new Lazy<IMainViewModel>(sp.GetRequiredService<IMainViewModel>))
+            // .AddTransient<BrowseSectionViewModelFactory>(sp =>
+            //     navigator => ActivatorUtilities.CreateInstance<BrowseSectionViewModel>(sp, navigator))
+            .AddScoped<INavigator, Navigator>()
+            .AddTransient<ISectionsFactory, SectionsFactory>()
+            .AddTransient<Lazy<IMainViewModel>>(sp => new Lazy<IMainViewModel>(sp.GetRequiredService<IMainViewModel>))
             .AddTransient<IHomeSectionViewModel>(sp =>
                 new HomeSectionViewModel(
                     sp.GetRequiredService<IActiveWallet>(),
@@ -39,7 +36,7 @@ public static class ViewModels
             .AddTransient<IBrowseSectionViewModel, BrowseSectionViewModel>()
             .AddTransient<IPortfolioSectionViewModel, PortfolioSectionViewModel>()
             .AddTransient<IFounderSectionViewModel, FounderSectionViewModel>()
-            .AddSingleton<IMainViewModel>(sp =>
+            .AddTransient<IMainViewModel>(sp =>
                 new MainViewModel(
                     sp.GetRequiredService<ISectionsFactory>().CreateSections(),
                     sp.GetRequiredService<UI.Services.UIServices>()
