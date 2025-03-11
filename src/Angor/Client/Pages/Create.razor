@@ -21,6 +21,7 @@
 @inject ILogger<Create> _Logger;
 @inject IHtmlStripperService HtmlStripperService;
 @inject IJSRuntime JS;
+@inject NavMenuState NavMenuState
 
 @inject IFounderTransactionActions _founderTransactionActions
 <NotificationComponent @ref="notificationComponent" />
@@ -672,6 +673,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        NavMenuState.SetActivePage("founder");
+
         if (!hasWallet)
         {
             return;

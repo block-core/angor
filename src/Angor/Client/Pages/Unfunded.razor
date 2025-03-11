@@ -21,6 +21,7 @@
 @inject IIndexerService _IndexerService
 @inject IWalletOperations _WalletOperations
 @inject IWalletUIService _walletUIService;
+@inject NavMenuState NavMenuState
 
 @inherits BaseComponent
 
@@ -264,6 +265,8 @@
     {
         if (hasWallet)
         {
+            NavMenuState.SetActivePage("founder");
+
             FounderProject = Storage.GetFounderProjects().FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier);
 
             if (FounderProject is null)

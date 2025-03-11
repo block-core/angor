@@ -25,6 +25,7 @@
 @inject IHtmlStripperService HtmlStripperService;
 @inject IApplicationLogicService applicationLogicService;
 @inject NostrConversionHelper NostrHelper
+@inject NavMenuState NavMenuState
 
 
 @inherits BaseComponent
@@ -695,6 +696,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        NavMenuState.SetActivePage("browse");
+
         projectStats.Loading = true;
         findInProgress = false;
         error = string.Empty;

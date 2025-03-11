@@ -135,13 +135,4 @@ public class LocalSessionStorage : ICacheStorage
         return _sessionStorageService.GetItem<List<string>>("Eose" + subscriptionName);
     }
 
-    public void SetActiveMenuPage(string page)
-    {
-        _sessionStorageService.SetItem(ActiveMenuPageKey, page);
-    }
-
-    public string? GetActiveMenuPage()
-    {
-        return _sessionStorageService.GetItem<string>(ActiveMenuPageKey);
-    }
 }

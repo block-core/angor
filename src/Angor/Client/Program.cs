@@ -71,6 +71,5 @@ var app = builder.Build();
 
 // Initialize NavMenuState from storage
 var navMenuState = app.Services.GetRequiredService<NavMenuState>();
-await navMenuState.InitializeFromStorage();
 
 await app.RunAsync();

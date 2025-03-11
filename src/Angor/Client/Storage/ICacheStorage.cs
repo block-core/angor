@@ -21,6 +21,4 @@ public interface ICacheStorage
     void SetCurrencyRate(string currencyCode, RateCacheEntry rateCacheEntry);
     RateCacheEntry? GetCurrencyRate(string currencyCode);
     void WipeSession();
-    void SetActiveMenuPage(string page);
-    string? GetActiveMenuPage();
 }

@@ -10,6 +10,7 @@
 @inject NavigationManager NavigationManager
 @inject IIndexerService _IndexerService
 @inject ILogger<Penalties> Logger;
+@inject NavMenuState NavMenuState
 
 @inherits BaseComponent
 <NotificationComponent @ref="notificationComponent" />
@@ -51,15 +52,15 @@
 
 @if (!penaltyProjects.Any())
 {
-    <div class="row mt-4">
-        <div class="card card-body angor-alert-info pt-2 pb-2">
-            <div class="d-flex align-items-center align-items-center">
-                <span class="me-3 user-select-none">
-                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
-                </span>
-                <span class="text-white">No penalties found</span>
-            </div>
+    <div class="row">
+
+        <div class="info-alert my-4 ">
+            <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+            <p class="text-warning">
+                No penalties found
+            </p>
         </div>
+        
     </div>
 }
 else
@@ -143,6 +144,8 @@ else
     {
         if (hasWallet)
         {
+            NavMenuState.SetActivePage("investor");
+
             var projects = storage.GetInvestmentProjects();
 
             foreach (var project in projects)
