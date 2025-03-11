@@ -5,7 +5,10 @@
 @using Angor.Client.Models
 @using Angor.Client.Storage
 @using System.Text.RegularExpressions
+@using Angor.Client.Shared
+
 @inject ICacheStorage SessionStorage
+@inject NavMenuState NavMenuState
 @inject NavigationManager NavigationManager
 @inject IRelayService _RelayService
 @inject IIndexerService _IndexerService
@@ -267,6 +270,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // Set active menu
+        NavMenuState.SetActivePage("browse");
+        
         await GetAllProjects();
         projects = SessionStorage.GetProjectIndexerData() ?? new List<ProjectIndexerData>();
 

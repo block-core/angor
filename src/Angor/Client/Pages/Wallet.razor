@@ -8,6 +8,7 @@
 @using Angor.Shared.Utilities
 @using Blockcore.NBitcoin
 @using Blockcore.Networks
+@using Angor.Client.Shared
 @inherits BaseComponent
 @inject HttpClient _httpClient;
 @inject IClientStorage storage;
@@ -52,7 +53,7 @@
 @if (!hasWallet)
 {
     <!-- No Wallet found -->
-    <div class="row mt-4">
+    <div class="row">
 
         <div class="info-alert my-4 ">
             <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
@@ -1913,4 +1914,9 @@ else
         NextStep();
     }
     
+    protected override void OnInitialized()
+    {
+        NavMenuState.SetActivePage("wallet");
+        base.OnInitialized();
+    }
 }

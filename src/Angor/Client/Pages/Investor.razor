@@ -7,8 +7,10 @@
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin.DataEncoders
 @using Nostr.Client.Messages
+@using Angor.Client.Shared
 
 @inject ILogger<Investor> _Logger
+@inject NavMenuState NavMenuState
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
@@ -237,6 +239,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Set active menu
+        NavMenuState.SetActivePage("investor");
+        
         hasWallet = _walletStorage.HasWallet();
 
         if (hasWallet)

@@ -15,12 +15,13 @@
 @using Blockcore.Networks
 @using System.Text.Json
 @using Angor.Shared.Utilities
+@using Angor.Client.Shared
 
 
 @inherits BaseComponent
 
 @inject IJSRuntime JS
-
+@inject NavMenuState NavMenuState
 @inject ILogger<Invest> _Logger;
 @inject IDerivationOperations _derivationOperations;
 @inject IClientStorage storage;
@@ -540,6 +541,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // Set active menu
+        NavMenuState.SetActivePage("invest");
+
         if (!hasWallet)
         {
             NavigationManager.NavigateTo($"/wallet");

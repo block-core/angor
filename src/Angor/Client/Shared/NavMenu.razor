@@ -25,7 +25,7 @@
 <div class="collapse navbar-collapse w-auto overflow-x-hidden" id="sidenav-collapse-main">
     <ul class="navbar-nav" @onclick="ToggleSidenav">
         <li class="nav-item">
-            <NavLink class="nav-link menu-text" href="wallet">
+            <NavLink class="@GetNavLinkClass("wallet")" href="wallet">
                 <i class="me-1">
                     <Icon IconName="wallet" />
                 </i>
@@ -33,7 +33,7 @@
             </NavLink>
         </li>
         <li class="nav-item">
-            <NavLink class="nav-link menu-text" href="browse">
+            <NavLink class="@GetNavLinkClass("browse")" href="browse">
                 <i class="me-1">
                     <Icon IconName="browse" />
                 </i>
@@ -41,12 +41,10 @@
             </NavLink>
         </li>
 
-
-
         @if (hasWallet)
         {
             <li class="nav-item">
-                <NavLink class="nav-link menu-text" href="investor">
+                <NavLink class="@GetNavLinkClassForInvestor()" href="investor">
                     <i class="me-1">
                         <Icon IconName="portfolio" />
                     </i>
@@ -55,7 +53,7 @@
             </li>
 
             <li class="nav-item">
-                <NavLink class="nav-link menu-text" href="founder">
+                <NavLink class="@GetNavLinkClass("founder")" href="founder">
                     <i class="me-1">
                         <Icon IconName="founder" />
                     </i>
@@ -64,20 +62,16 @@
                     </span>
                 </NavLink>
             </li>
-
         }
- 
+
         <li class="nav-item">
-            <NavLink class="nav-link menu-text" href="settings">
+            <NavLink class="@GetNavLinkClass("settings")" href="settings">
                 <i class="me-1">
                     <Icon IconName="settings" />
                 </i>
                 <span class="nav-link-text ms-1">Settings</span>
             </NavLink>
         </li>
-
-
-
     </ul>
 </div>
 <hr class="horizontal mt-0 mb-2" />
@@ -190,6 +184,21 @@
     private void UpdateLockMenuIcon(bool islockMenu)
     {
         betweenOrEnd = islockMenu ? "end" : "between";
+    }
+
+    private bool IsInvestorPage(string page)
+    {
+        return page == "investor" || page == "invest" || page == "release" || page == "penalties";
+    }
+
+    private string GetNavLinkClass(string page)
+    {
+        return $"nav-link menu-text {(NavMenuState.ActivePage == page ? "active" : "")}";
+    }
+
+    private string GetNavLinkClassForInvestor()
+    {
+        return $"nav-link menu-text {(IsInvestorPage(NavMenuState.ActivePage) ? "active" : "")}";
     }
 
     /// <inheritdoc />
