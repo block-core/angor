@@ -7,12 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Zafiro" />
-        <PackageReference Include="Zafiro.UI" />
+        <PackageReference Include="Zafiro"/>
+        <PackageReference Include="Zafiro.UI"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Angor.Wallet\Angor.Wallet.csproj" />
+        <ProjectReference Include="..\Angor.Wallet\Angor.Wallet.csproj"/>
     </ItemGroup>
 
 </Project>
