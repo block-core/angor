@@ -182,7 +182,7 @@ public class WalletAppService : IWalletAppService
         if (walletId != SingleWalletId)
             return Result.Failure<TxId>("Invalid wallet ID");
         
-        var finalFeeRate = feeRate.SatsPerVByte * 10000; 
+        var satsPerVirtualKB = feeRate.SatsPerVByte * 1000; 
 
         try
         {
@@ -202,13 +202,13 @@ public class WalletAppService : IWalletAppService
             {
                 SendAmount = amount.Value,
                 SendToAddress = address.Value,
-                FeeRate = finalFeeRate,
+                FeeRate = satsPerVirtualKB,
                 ChangeAddress = accountInfo.GetNextChangeReceiveAddress(),
                 SendUtxos = _walletOperations.FindOutputsForTransaction(amount.Value, accountInfo)
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
             
-            var fee = _walletOperations.CalculateTransactionFee(sendInfo, accountInfo, finalFeeRate);
+            var fee = _walletOperations.CalculateTransactionFee(sendInfo, accountInfo, satsPerVirtualKB);
             
             sendInfo.SendFee = fee;
             
