@@ -1,15 +1,15 @@
-﻿using Microsoft.JSInterop;
+﻿using Angor.Client.Services;
+using Angor.Client.Storage;
 
 namespace Angor.Client.Shared
 {
     public class NavMenuState
     {
-        private readonly IJSRuntime _jsRuntime;
-        private const string StorageKey = "activeMenuPage";
+        private readonly ICacheStorage _cacheStorage;
 
-        public NavMenuState(IJSRuntime jsRuntime)
+        public NavMenuState(ICacheStorage cacheStorage)
         {
-            _jsRuntime = jsRuntime;
+            _cacheStorage = cacheStorage;
         }
 
         public event Action OnChange;
@@ -23,23 +23,24 @@ namespace Angor.Client.Shared
                 if (_activePage != value)
                 {
                     _activePage = value;
-                    _ = PersistState();
+                    PersistState();
                 }
             }
         }
 
-        public async Task SetActivePage(string page)
+        public Task SetActivePage(string page)
         {
             ActivePage = page;
             NotifyStateChanged();
-            await PersistState();
+            PersistState();
+            return Task.CompletedTask;
         }
 
-        public async Task InitializeFromStorage()
+        public Task InitializeFromStorage()
         {
             try
             {
-                var storedPage = await _jsRuntime.InvokeAsync<string>("sessionStorage.getItem", StorageKey);
+                var storedPage = _cacheStorage.GetActiveMenuPage();
                 if (!string.IsNullOrEmpty(storedPage))
                 {
                     _activePage = storedPage;
@@ -50,13 +51,15 @@ namespace Angor.Client.Shared
             {
                 // Ignore any errors during initialization
             }
+
+            return Task.CompletedTask;
         }
 
-        private async Task PersistState()
+        private void PersistState()
         {
             try
             {
-                await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", StorageKey, ActivePage);
+                _cacheStorage.SetActiveMenuPage(ActivePage);
             }
             catch 
             {

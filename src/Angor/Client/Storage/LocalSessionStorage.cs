@@ -10,6 +10,7 @@ public class LocalSessionStorage : ICacheStorage
 {
     private const string BrowseIndexerData = "subscriptions";
     private const string NostrPubKeyMapping = "NostrPubKeyMapping";
+    private const string ActiveMenuPageKey = "activeMenuPage";
     private readonly ISyncSessionStorageService _sessionStorageService;
 
     public LocalSessionStorage(ISyncSessionStorageService sessionStorageService)
@@ -132,5 +133,15 @@ public class LocalSessionStorage : ICacheStorage
     public List<string> GetNamesOfCommunicatorsThatReceivedEose(string subscriptionName)
     {
         return _sessionStorageService.GetItem<List<string>>("Eose" + subscriptionName);
+    }
+
+    public void SetActiveMenuPage(string page)
+    {
+        _sessionStorageService.SetItem(ActiveMenuPageKey, page);
+    }
+
+    public string? GetActiveMenuPage()
+    {
+        return _sessionStorageService.GetItem<string>(ActiveMenuPageKey);
     }
 }
