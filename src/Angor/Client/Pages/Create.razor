@@ -253,7 +253,7 @@
                     <!-- Presets for Stages -->
                     <!-- Toggle Button -->
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <button class="btn btn-border-success" @onclick="ToggleStageMode">
+                        <button class="btn btn-border-success" @onclick="ToggleStageMode" disabled="@nostrApplicationSpecificDataCreated">
                             @if (isPresetMode)
                             {
                                 <span>Switch to Manual Helper</span>
@@ -271,7 +271,7 @@
                         <!-- Preset Selection -->
                         <div class="mb-3">
                             <label for="stagePreset" class="form-label">Select Stage Preset</label>
-                            <select id="stagePreset" class="form-control" @onchange="OnStagePresetChange">
+                            <select id="stagePreset" class="form-control" @onchange="OnStagePresetChange" disabled="@nostrApplicationSpecificDataCreated">
                                 <option value="">Select a preset...</option>
                                 <option value="preset1">Preset 1: 3 Stages (10%, 30%, 60%)</option>
                                 <option value="preset2">Preset 2: 4 Stages (25%, 25%, 25%, 25%)</option>
@@ -284,13 +284,13 @@
                         <!-- Automatic Generation Inputs -->
                         <div class="mb-3">
                             <label for="totalDuration" class="form-label">Total Project Duration (in days)</label>
-                            <InputNumber id="totalDuration" @bind-Value="totalDuration" class="form-control" placeholder="Enter total duration in days" />
+                            <InputNumber id="totalDuration" @bind-Value="totalDuration" class="form-control" placeholder="Enter total duration in days" disabled="@nostrApplicationSpecificDataCreated" />
                         </div>
                         <div class="mb-3">
                             <label for="numberOfStages" class="form-label">Number of Stages</label>
-                            <InputNumber id="numberOfStages" @bind-Value="numberOfStages" class="form-control" placeholder="Enter number of stages" />
+                            <InputNumber id="numberOfStages" @bind-Value="numberOfStages" class="form-control" placeholder="Enter number of stages" disabled="@nostrApplicationSpecificDataCreated" />
                         </div>
-                        <button type="button" class="btn btn-border-success mb-3" @onclick="GenerateSmartStages">
+                        <button type="button" class="btn btn-border-success mb-3" @onclick="GenerateSmartStages" disabled="@nostrApplicationSpecificDataCreated">
                             <Icon IconName="server-path" Height="20" Width="20" Color="var(--angor-primary)" Class="me-2"></Icon>
                             Generate Stages
                         </button>
