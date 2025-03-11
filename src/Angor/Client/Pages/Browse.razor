@@ -16,8 +16,6 @@
 
 <NotificationComponent @ref="notificationComponent" />
 
-
-
 <div class="header-container slide-in">
     <div class="card card-body">
         <div class="header-content">
@@ -221,15 +219,12 @@ else
                                                 </span>
                                             </div>
                                         </div>
-
-
                                     </div>
                                 }
                             </div>
                         </div>
                     </div>
                 </div>
-
             }
         </div>
 
@@ -238,6 +233,14 @@ else
 
 @if (!searchInProgress)
 {
+    <div class="info-alert my-4 ">
+        <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+        <p class="text-warning">
+            Only the latest 21 projects are displayed here.To explore the full list of projects, please visit
+            <strong>Angor Hub</strong>.
+        </p>
+    </div>
+
     <div class="d-flex justify-content-center mt-4">
         <a class="btn btn-border my-3" href="https://hub.angor.io" target="_blank">
             <i>

@@ -37,7 +37,7 @@
                 <span class="header-icon-wrapper">
                     <Icon IconName="portfolio" Width="32" Height="32" />
                 </span>
-                <h5 class="header-text">Invested Portfolio</h5>
+                <h5 class="header-text">Portfolio</h5>
             </div>
             <div class="header-actions">
                 <div class="d-flex align-items-center justify-content-end wallet-actions">
@@ -82,7 +82,7 @@
         <div class="stats-card">
             <div class="stats-content">
                 <div class="stats-icon">
-                    <Icon IconName="founder" Height="32" Width="32" />
+                    <Icon IconName="portfolio" Height="32" Width="32" />
                 </div>
                 <div class="stats-info">
                     <h6 class="stats-title">Funded Projects</h6>
@@ -99,18 +99,6 @@
                 <div class="stats-info">
                     <h6 class="stats-title">Total invested</h6>
                     <p class="stats-value">@Money.Satoshis(TotalInvested).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="stats-card">
-            <div class="stats-content">
-                <div class="stats-icon">
-                    <Icon IconName="wallet" Height="32" Width="32" />
-                </div>
-                <div class="stats-info">
-                    <h6 class="stats-title">Wallet</h6>
-                    <p class="stats-value">@Money.Satoshis(TotalWallet).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                 </div>
             </div>
         </div>

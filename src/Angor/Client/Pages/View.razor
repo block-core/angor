@@ -46,15 +46,11 @@
             @if (!string.IsNullOrEmpty(error))
             {
                 <div class="row mt-4">
-                    <div class="card card-body angor-alert-info pt-2 pb-2">
-                        <div class="d-flex align-items-center">
-                            <span class="me-3 user-select-none">
-                                <i>
-                                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
-                                </i>
-                            </span>
-                            <span class="text-white">@error</span>
-                        </div>
+                    <div class="info-alert my-4 ">
+                        <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+                        <p class="text-warning">
+                            @error
+                        </p>
                     </div>
                 </div>
             }
