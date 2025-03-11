@@ -97,28 +97,7 @@
                 </div>
 
                 <div class="status-overview mt-4">
-                     @{
-                        var progressPercent = founderProject.ProjectInfo.TargetAmount > 0
-                        ? (Money.Satoshis(totalInvestedAmount).ToUnit(MoneyUnit.BTC) / Money.Satoshis(founderProject.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC)) * 100
-                        : 0;
 
-                        <div class="w-100">
-                            <div class="progress-card @(progressPercent >= 100 ? "progress-success" : "progress-warning")">
-                                <div class="percent">
-                                    <svg>
-                                        <circle cx="105" cy="105" r="100"></circle>
-                                        <circle cx="105" cy="105" r="100" style="--percent: @progressPercent"></circle>
-                                    </svg>
-                                    <div class="number">
-                                        <p>@progressPercent %</p>
-                                    </div>
-                                </div>
-                                <div class="footer text-center  mt-4">
-                                    <p>@Money.Satoshis(totalInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker </p>
-                                </div>
-                            </div>
-                        </div>
-                    }
 
                     <div class="amount-stats">
                         <div class="amount-card info-card rounded-3 border hover-effect">
@@ -131,9 +110,6 @@
                                         <small class="currency">@network.CoinTicker</small>
                                     </span>
                                 </div>
-                            </div>
-                            <div class="progress-bar-wrapper">
-                                <div class="progress-bar" style="width: @((totalInvestedAmount * 100 / founderProject.ProjectInfo.TargetAmount).ToString("0"))%"></div>
                             </div>
                         </div>
 
