@@ -9,7 +9,7 @@ public record BroadcastedTransaction(
     IEnumerable<TransactionAddressInfo> AllOutputs, 
     long Fee,
     bool IsConfirmed,
-    int? BlockHeight,
+    long? BlockHeight,
     DateTimeOffset? BlockTime,
     string RawJson
 );

@@ -1,6 +1,7 @@
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Angor.UI.Model;
+using Angor.Wallet.Application;
 using AngorApp.Core;
 using AngorApp.UI.Services;
 using CSharpFunctionalExtensions;
@@ -13,8 +14,11 @@ namespace AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsGeneration;
 
 public partial class SeedWordsViewModel : ReactiveValidationObject, ISeedWordsViewModel
 {
-    public SeedWordsViewModel(UIServices uiServices)
+    private readonly IWalletAppService walletAppService;
+
+    public SeedWordsViewModel(IWalletAppService walletAppService, UIServices uiServices)
     {
+        this.walletAppService = walletAppService;
         // Start without seed words
         words = new SafeMaybe<SeedWords>(Maybe<SeedWords>.None);
 
@@ -43,9 +47,9 @@ public partial class SeedWordsViewModel : ReactiveValidationObject, ISeedWordsVi
         wordsHelper = GenerateWords.ToProperty(this, x => x.Words);
     }
 
-    private static SeedWords CreateNewWords()
+    private SeedWords CreateNewWords()
     {
-        return SampleData.Seedwords;
+        return new SeedWords(walletAppService.GenerateRandomSeedwords());
     }
 
     private static Task<Maybe<bool>> ShowConfirmation(UIServices uiServices)
