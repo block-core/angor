@@ -897,15 +897,19 @@ else
 
                 <div class="row mt-4">
                     <div class="col-md-12 mb-md-0 mb-4">
-                        <div class="card card-body form-control card-plain border-radius-lg d-flex align-items-center flex-row" data-cy="wallet-address">
-                            <img class="address-image me-3 mb-0" src="/assets/img/bitcoin.svg" alt="Bitcoin">
-                            <h6 class="address-text mb-0 overflow-x-auto">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</h6>
-                            <i @onclick="CopyNextReceiveAddress" class="ms-auto cursor-pointer user-select-none" data-cy="SHOW_QR_CODE_WALLET">
-                                <Icon IconName="copy"></Icon>
-                            </i>
+                        <div class="info-card p-3">
+                            <div class="d-flex align-items-center">
+                                <img class="me-3 flex-shrink-0" src="/assets/img/bitcoin.svg" alt="Bitcoin" style="width: 24px; height: 24px;">
+                                <div class="overflow-auto flex-grow-1 me-2" style="white-space: nowrap; min-width: 0;">
+                                    <span class="text-break fw-bold" style="font-size: 14px;">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</span>
+                                </div>
+                                <button class="btn btn-sm btn-border ms-2 flex-shrink-0" @onclick="CopyNextReceiveAddress" data-cy="SHOW_QR_CODE_WALLET">
+                                    <Icon IconName="copy" Width="18" Height="18" />
+                                    <span class="d-none d-md-inline ms-1">Copy</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
