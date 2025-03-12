@@ -20,12 +20,12 @@ public class WalletDesign : IWallet
 
     public IObservable<long> Balance { get; } = Observable.Return<long>(5_0000_0000);
     
-    public async Task<Result<IUnsignedTransaction>> CreateTransaction(long amount, string address, long feerate)
+    public async Task<Result<ITransactionPreview>> CreateTransaction(long amount, string address, long feerate)
     {
         await Task.Delay(1000);
 
         //return Result.Failure<ITransaction>("Transaction creation failed");
-        return new UnsignedTransactionDesign
+        return new TransactionPreviewDesign
         {
             Address = address,
             Amount = amount,

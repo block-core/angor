@@ -4,7 +4,7 @@ using CSharpFunctionalExtensions;
 
 namespace Angor.UI.Model.Implementation.Wallet;
 
-public class TransactionPreview(WalletId walletId, long amount, string address, long feeRate, Fee fee, IWalletAppService walletAppService) : IUnsignedTransaction
+public class TransactionPreview(WalletId walletId, long amount, string address, long feeRate, Fee fee, IWalletAppService walletAppService) : ITransactionPreview
 {
     public WalletId WalletId { get; } = walletId;
     public long Amount { get; } = amount;

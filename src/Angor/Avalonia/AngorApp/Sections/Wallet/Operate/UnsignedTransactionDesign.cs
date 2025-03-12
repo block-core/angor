@@ -1,11 +1,9 @@
 ﻿using System.Threading.Tasks;
-using Angor.UI.Model;
 using Angor.Wallet.Domain;
-using CSharpFunctionalExtensions;
 
 namespace AngorApp.Sections.Wallet.Operate;
 
-public class UnsignedTransactionDesign : IUnsignedTransaction
+public class TransactionPreviewDesign : ITransactionPreview
 {
     public string Address { get; set; }
     

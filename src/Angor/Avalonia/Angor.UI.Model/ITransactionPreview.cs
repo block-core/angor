@@ -3,7 +3,7 @@ using CSharpFunctionalExtensions;
 
 namespace Angor.UI.Model;
 
-public interface IUnsignedTransaction
+public interface ITransactionPreview
 {
     public long TotalFee { get; set; }
     Task<Result<TxId>> Accept();

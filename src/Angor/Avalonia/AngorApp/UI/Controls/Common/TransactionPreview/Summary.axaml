@@ -24,12 +24,12 @@
         <HeaderedContentControl Theme="{StaticResource Inline}" Header="Total Fee">
             <HeaderedContentControl.Content>
                 <Panel HorizontalAlignment="Left">
-                    <TextBlock VerticalAlignment="Center" IsVisible="{Binding !CreateTransaction.IsExecuting^}">
+                    <TextBlock VerticalAlignment="Center" IsVisible="{Binding !CreatePreview.IsExecuting^}">
                         <TextBlock.Text>
-                            <Binding Path="Transaction.TotalFee" StringFormat="{}{0:N0} sats" />
+                            <Binding Path="TransactionPreview.TotalFee" StringFormat="{}{0:N0} sats" />
                         </TextBlock.Text>
                     </TextBlock>
-                    <avaloniaProgressRing:ProgressRing Height="20" Width="20" IsVisible="{Binding CreateTransaction.IsExecuting^}" />
+                    <avaloniaProgressRing:ProgressRing Height="20" Width="20" IsVisible="{Binding CreatePreview.IsExecuting^}" />
                 </Panel>
             </HeaderedContentControl.Content>
         </HeaderedContentControl>
