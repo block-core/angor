@@ -23,6 +23,7 @@
 @inject IWalletUIService _walletUIService;
 @inject ISignService SignService
 @inject ICurrencyService _currencyService
+@inject NavMenuState NavMenuState
 
 
 @inherits BaseComponent
@@ -522,6 +523,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        NavMenuState.SetActivePage("investor");
+
         project = storage.GetInvestmentProjects().First(p => p.ProjectInfo.ProjectIdentifier == ProjectIdentifier);
 
         firstTimeRefreshSpinner = true;

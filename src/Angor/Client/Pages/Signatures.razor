@@ -21,6 +21,7 @@
 @inject IFounderTransactionActions FounderTransactionActions
 @inject ISerializer serializer
 @inject IEncryptionService encryption
+@inject NavMenuState NavMenuState
 
 @inherits BaseComponent
 
@@ -204,6 +205,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        NavMenuState.SetActivePage("founder");
+
         Logger.LogDebug("OnInitializedAsync");
         if (hasWallet)
         {

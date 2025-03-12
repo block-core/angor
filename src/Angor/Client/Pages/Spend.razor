@@ -12,9 +12,11 @@
 @using ITransactionSignature = NBitcoin.ITransactionSignature
 @using System.Text.Json
 @using Angor.Client.Models
+@using Angor.Client.Shared
 
 
 @inject IClientStorage storage;
+@inject NavMenuState NavMenuState
 @inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
 @inject INetworkConfiguration _NetworkConfiguration
@@ -588,6 +590,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Set active menu for founder page
+        NavMenuState.SetActivePage("founder");
+        
         founderProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
         project = founderProject?.ProjectInfo;
 

@@ -1,4 +1,7 @@
 ﻿@page "/"
+@inject NavMenuState NavMenuState
+@implements IDisposable
+
 <PageTitle>Angor</PageTitle>
 
 <div class="card b-shadow">
@@ -76,3 +79,15 @@
         </div>
     </div>
 </div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        NavMenuState.SetActivePage("");
+    }
+
+    public void Dispose()
+    {
+        // Clean up if needed
+    }
+}

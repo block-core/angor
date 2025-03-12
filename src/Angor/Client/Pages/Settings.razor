@@ -4,6 +4,7 @@
 @using Angor.Shared.Models;
 @using Angor.Client.Services
 @using Angor.Shared.Services
+@using Angor.Client.Shared
 
 @inject INetworkConfiguration _networkConfiguration
 @inject INetworkService _networkService
@@ -459,6 +460,9 @@
 
     protected override Task OnInitializedAsync()
     {
+        // Set active menu
+        NavMenuState.SetActivePage("settings");
+        
         _networkService.AddSettingsIfNotExist();
 
         settingsInfo = _clientStorage.GetSettingsInfo();

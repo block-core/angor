@@ -9,6 +9,7 @@
 @using Angor.Shared.Services
 @using System.Security.Cryptography
 @using Blockcore.Consensus.TransactionInfo
+@using Angor.Client.Shared
 
 @inject ILogger<Release> Logger
 @inject IDerivationOperations DerivationOperations
@@ -21,6 +22,7 @@
 @inject IIndexerService _IndexerService
 @inject IWalletOperations _WalletOperations
 @inject IWalletUIService _walletUIService;
+@inject NavMenuState NavMenuState
 
 @inherits BaseComponent
 
@@ -281,6 +283,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Set active menu
+        NavMenuState.SetActivePage("founder");
+
         if (hasWallet)
         {
             InvestorProject = Storage.GetInvestmentProjects().FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier);
