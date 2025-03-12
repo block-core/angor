@@ -1070,7 +1070,7 @@
         return new MarkupString(sanitizedInput);
     }
 
-    private void SetActiveTab(int tabNumber)
+    private async void SetActiveTab(int tabNumber)
     {
         if (!nostrMetadataCreated)
         {
@@ -1080,6 +1080,11 @@
 
         activeTab = tabNumber;
         StateHasChanged();
+        
+        // Add a slight delay before scrolling to the top
+        // This ensures the tab content has been rendered
+        await Task.Delay(10);
+        await JS.InvokeVoidAsync("window.scrollTo", 0, 0);
     }
 
     private string GetProgressMessage()
