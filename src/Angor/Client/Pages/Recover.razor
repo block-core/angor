@@ -886,7 +886,16 @@
 
             _walletUIService.AddTransactionToPending(recoveryTransaction.Transaction);
 
-            notificationComponent.ShowNotificationMessage("Done", 1);
+            notificationComponent.ShowNotificationMessage("Transaction submitted successfully", 5);
+            
+            // Auto refresh after a short delay to allow transaction to propagate
+            _ = Task.Run(async () => {
+                await Task.Delay(3000); // Wait 3 seconds before refreshing
+                await InvokeAsync(async () => {
+                    await RefreshInvestments();
+                    StateHasChanged();
+                });
+            });
         }
         catch (Exception e)
         {
@@ -1014,7 +1023,16 @@
 
             _walletUIService.AddTransactionToPending(releaseRecoveryTransaction.Transaction);
 
-            notificationComponent.ShowNotificationMessage("Done", 1);
+            notificationComponent.ShowNotificationMessage("Transaction submitted successfully", 5);
+            
+            // Auto refresh after a short delay to allow transaction to propagate
+            _ = Task.Run(async () => {
+                await Task.Delay(3000); // Wait 3 seconds before refreshing
+                await InvokeAsync(async () => {
+                    await RefreshInvestments();
+                    StateHasChanged();
+                });
+            });
         }
         catch (Exception e)
         {
@@ -1138,7 +1156,16 @@
 
             _walletUIService.AddTransactionToPending(endOfProjectTransaction.Transaction);
 
-            notificationComponent.ShowNotificationMessage("Done", 1);
+            notificationComponent.ShowNotificationMessage("Transaction submitted successfully", 5);
+            
+            // Auto refresh after a short delay to allow transaction to propagate
+            _ = Task.Run(async () => {
+                await Task.Delay(3000); // Wait 3 seconds before refreshing
+                await InvokeAsync(async () => {
+                    await RefreshInvestments();
+                    StateHasChanged();
+                });
+            });
         }
         catch (Exception e)
         {
@@ -1147,13 +1174,3 @@
         finally
         {
             PrepareEndOfProjectCoinsConfirmSpinner = false;
-            passwordComponent.ClearPassword();
-        }
-    }
-
-    private void NavigatetoReleaseSigs()
-    {
-        NavigationManager.NavigateTo($"/release/{ProjectIdentifier}");
-    }
-
-}
