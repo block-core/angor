@@ -3718,10 +3718,6 @@ input[type=number] {
         grid-template-columns: 1fr;
     }
     
-    .project-card {
-        padding: 1rem;
-    }
-    
     .project-header {
         margin-bottom: 1rem;
     }
