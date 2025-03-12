@@ -1174,3 +1174,13 @@
         finally
         {
             PrepareEndOfProjectCoinsConfirmSpinner = false;
+            passwordComponent.ClearPassword();
+        }
+    }
+
+    private void NavigatetoReleaseSigs()
+    {
+        NavigationManager.NavigateTo($"/release/{ProjectIdentifier}");
+    }
+
+}
