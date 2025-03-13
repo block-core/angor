@@ -29,12 +29,27 @@ public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecuri
 
     private async Task<Result<(string seed, string passphrase)>> RequestSensitiveDataCore(WalletId id)
     {
-        return await GetEncryptedWallet(id)
-            .Bind(encryptedWallet =>
-                walletSecurityContext.EncryptionKeyProvider.Get(id).ToResult("Encryption key not provided")
-                    .Bind(encryptionKey => walletSecurityContext.PassphraseProvider.Get(id).ToResult("Passphrase not provided")
-                        .Bind(passphrase => walletSecurityContext.WalletEncryption.Decrypt(encryptedWallet, encryptionKey)
-                            .Ensure(data => data.SeedWords != null, "Seed words not found")
-                            .Map(data => (data.SeedWords!, passphrase)))));
+        // Get the encrypted wallet
+        var encryptedWalletResult = await GetEncryptedWallet(id);
+        if (encryptedWalletResult.IsFailure)
+            return Result.Failure<(string, string)>(encryptedWalletResult.Error);
+
+        // Get the encryption key
+        var encryptionKey = await walletSecurityContext.EncryptionKeyProvider.Get(id);
+        if (encryptionKey.HasNoValue)
+            return Result.Failure<(string, string)>("Encryption key not provided");
+
+        // Get the passphrase
+        var passphrase = await walletSecurityContext.PassphraseProvider.Get(id);
+        if (passphrase.HasNoValue)
+            return Result.Failure<(string, string)>("Passphrase not provided");
+
+        // Decrypt the wallet
+        var decryptedResult = await walletSecurityContext.WalletEncryption.Decrypt(encryptedWalletResult.Value, encryptionKey.Value);
+        if (decryptedResult.IsFailure || decryptedResult.Value.SeedWords == null)
+            return Result.Failure<(string, string)>("Seed words not found");
+
+        return Result.Success((decryptedResult.Value.SeedWords, passphrase.Value));
     }
+
 }
