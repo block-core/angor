@@ -231,7 +231,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
             var addressResponse = await apiResponse.Content.ReadFromJsonAsync<AddressResponse>(new JsonSerializerOptions()
                 { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
-            if (addressResponse is { ChainStats.TxCount: > 0 })
+            if (addressResponse != null && (addressResponse.ChainStats.TxCount > 0 || addressResponse.MempoolStats.TxCount > 0))
             {
                 response.Add(new AddressBalance
                 {
@@ -277,17 +277,15 @@ public class MempoolSpaceIndexerApi : IIndexerService
             var spentOutputsStatus = await resultsOutputs.Content.ReadFromJsonAsync<List<Outspent>>(new JsonSerializerOptions()
                 { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
-            int index = 0;
-            foreach (var vout in mempoolTransaction.Vout)
+            for (int index = 0; index < mempoolTransaction.Vout.Count; index++)
             {
+                var vout = mempoolTransaction.Vout[index];
+
                 if (vout.ScriptpubkeyAddress == address)
                 {
-                    if (spentOutputsStatus![index].Spent)
+                    if (mempoolTransaction.Status.Confirmed && spentOutputsStatus![index].Spent)
                     {
-                        if (mempoolTransaction.Status.Confirmed)
-                        {
-                            continue;
-                        }
+                        continue;
                     }
 
                     var data = new UtxoData
@@ -310,8 +308,6 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
                     utxoDataList.Add(data);
                 }
-
-                index++;
             }
         }
 
@@ -342,10 +338,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
         {
             Fees = new List<FeeEstimation>
             {
-                new() { FeeRate = feeEstimations.FastestFee * 1000, Confirmations = 1 }, //TODO this is an estimation
-                new() { FeeRate = feeEstimations.HalfHourFee * 1000, Confirmations = 3 },
-                new() { FeeRate = feeEstimations.HourFee * 1000, Confirmations = 6 },
-                new() { FeeRate = feeEstimations.EconomyFee * 1000, Confirmations = 18 }, //TODO this is an estimation
+                new() { FeeRate = feeEstimations.FastestFee * 1100, Confirmations = 1 }, //TODO this is an estimation
+                new() { FeeRate = feeEstimations.HalfHourFee * 1100, Confirmations = 3 },
+                new() { FeeRate = feeEstimations.HourFee * 1100, Confirmations = 6 },
+                new() { FeeRate = feeEstimations.EconomyFee * 1100, Confirmations = 18 }, //TODO this is an estimation
             }
         };
     }

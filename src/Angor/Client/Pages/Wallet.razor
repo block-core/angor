@@ -1513,7 +1513,7 @@ else
             }
             else
             {
-                notificationComponent.ShowNotificationMessage($"Sending failed! {res.Message}");
+                notificationComponent.ShowErrorMessage($"Sending failed! {res.Message}");
             }
 
             _sendInfo = new SendInfo();
