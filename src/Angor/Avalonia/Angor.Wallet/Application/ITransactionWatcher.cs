@@ -1,8 +1,9 @@
 using Angor.Wallet.Domain;
+using CSharpFunctionalExtensions;
 
 namespace Angor.Wallet.Application;
 
 public interface ITransactionWatcher
 {
-    IObservable<BroadcastedTransaction> Watch(WalletId id);
+    IObservable<Result<BroadcastedTransaction>> Watch(WalletId id);
 }

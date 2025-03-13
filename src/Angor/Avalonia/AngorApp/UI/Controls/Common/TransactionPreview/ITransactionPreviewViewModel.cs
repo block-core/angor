@@ -1,14 +1,13 @@
-using Angor.UI.Model;
-using CSharpFunctionalExtensions;
+using Angor.Wallet.Domain;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 
 namespace AngorApp.UI.Controls.Common.TransactionPreview;
 
-public interface ITransactionPreviewViewModel : IStep
+public interface ITransactionDraftViewModel : IStep
 {
-    public IUnsignedTransaction Transaction { get; }
-    ReactiveCommand<Unit, Result<IBroadcastedTransaction>> Confirm { get; }
-    ReactiveCommand<Unit, Result<IUnsignedTransaction>> CreateTransaction { get; }
+    public ITransactionDraft TransactionDraft { get; }
+    ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
+    ReactiveCommand<Unit, Result<ITransactionDraft>> CreateDraft { get; }
     public IObservable<bool> TransactionConfirmed { get; }
     public Destination Destination { get; }
     public long Feerate { get; set; }

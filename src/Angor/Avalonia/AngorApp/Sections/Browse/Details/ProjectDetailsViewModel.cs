@@ -46,7 +46,7 @@ public class ProjectDetailsViewModel(IWalletProvider walletProvider, IProject pr
             .Then(viewModel =>
             {
                 var destination = new Destination(project.Name, viewModel.Amount!.Value, project.BitcoinAddress);
-                return new TransactionPreviewViewModel(wallet, destination, uiServices);
+                return new TransactionDraftViewModel(wallet, destination, uiServices);
             })
             .Then(_ => new SuccessViewModel("Transaction confirmed!", "Success"))
             .FinishWith(model => Unit.Default);

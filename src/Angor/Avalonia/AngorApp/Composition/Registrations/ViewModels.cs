@@ -19,8 +19,6 @@ public static class ViewModels
     public static IServiceCollection Register(this IServiceCollection services)
     {
         return services
-            // .AddTransient<BrowseSectionViewModelFactory>(sp =>
-            //     navigator => ActivatorUtilities.CreateInstance<BrowseSectionViewModel>(sp, navigator))
             .AddScoped<INavigator, Navigator>()
             .AddTransient<ISectionsFactory, SectionsFactory>()
             .AddTransient<Lazy<IMainViewModel>>(sp => new Lazy<IMainViewModel>(sp.GetRequiredService<IMainViewModel>))

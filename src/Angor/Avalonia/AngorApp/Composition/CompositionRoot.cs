@@ -1,5 +1,8 @@
+using System.Linq;
 using Angor.Wallet.Domain;
 using Angor.Wallet.Infrastructure;
+using Angor.Wallet.Infrastructure.Impl;
+using Angor.Wallet.Infrastructure.Interfaces;
 using AngorApp.Composition.Registrations;
 using AngorApp.Sections.Shell;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,11 +26,18 @@ public static class CompositionRoot
         ViewModels.Register(services);
         UIServices.Register(services, topLevelView);
         SecurityContext.Register(services);
-        WalletServices.Register(services, logger);
+        RegisterWalletServices(services, logger);
 
         var serviceProvider = services.BuildServiceProvider();
 
         return serviceProvider.GetRequiredService<IMainViewModel>();
+    }
+
+    private static void RegisterWalletServices(ServiceCollection services, Logger logger)
+    {
+        // TODO: Set network from configuration
+        WalletServices.Register(services, logger, BitcoinNetwork.Testnet)
+            .AddSingleton<IStore>(new FileStore("Angor"));
     }
 
     private static void RegisterLogger(ServiceCollection services, Logger logger)

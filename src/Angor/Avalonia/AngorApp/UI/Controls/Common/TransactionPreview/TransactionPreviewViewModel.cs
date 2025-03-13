@@ -1,4 +1,4 @@
-using AngorApp.UI.Services;
+using Angor.Wallet.Domain;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.CSharpFunctionalExtensions;
@@ -7,32 +7,30 @@ using Zafiro.UI;
 
 namespace AngorApp.UI.Controls.Common.TransactionPreview;
 
-public partial class TransactionPreviewViewModel : ReactiveValidationObject, ITransactionPreviewViewModel
+public partial class TransactionDraftViewModel : ReactiveValidationObject, ITransactionDraftViewModel
 {
     [Reactive] private long feerate = 1;
-    [ObservableAsProperty] private IUnsignedTransaction? transaction;
+    [ObservableAsProperty] private ITransactionDraft? transactionDraft;
 
-    public TransactionPreviewViewModel(IWallet wallet, Destination destination, UIServices services)
+    public TransactionDraftViewModel(IWallet wallet, Destination destination, Services.UIServices services)
     {
         Destination = destination;
-        CreateTransaction = ReactiveCommand.CreateFromTask<Result<IUnsignedTransaction>>(() =>
-            wallet.CreateTransaction(destination.Amount, destination.BitcoinAddress, Feerate));
-        transactionHelper = CreateTransaction.Successes().ToProperty(this, x => x.Transaction);
-        Confirm = ReactiveCommand.CreateFromTask<Result<IBroadcastedTransaction>>(() => Transaction!.Broadcast(),
-            this.WhenAnyValue<TransactionPreviewViewModel, IUnsignedTransaction>(x => x.Transaction).Null()
-                .CombineLatest(CreateTransaction.IsExecuting, (a, b) => !a && !b));
+        CreateDraft = ReactiveCommand.CreateFromTask(() => wallet.CreateDraft(destination.Amount, destination.BitcoinAddress, Feerate));
+        transactionDraftHelper = CreateDraft.Successes().ToProperty(this, x => x.TransactionDraft);
+        Confirm = ReactiveCommand.CreateFromTask(() => TransactionDraft!.Submit(),
+            this.WhenAnyValue<TransactionDraftViewModel, ITransactionDraft>(x => x.TransactionDraft!).Null().CombineLatest(CreateDraft.IsExecuting, (a, b) => !a && !b));
         TransactionConfirmed = Confirm.Successes().Select(_ => true).StartWith(false);
-        IsBusy = CreateTransaction.IsExecuting.CombineLatest(Confirm.IsExecuting, (a, b) => a | b);
+        IsBusy = CreateDraft.IsExecuting.CombineLatest(Confirm.IsExecuting, (a, b) => a | b);
 
         Confirm.HandleErrorsWith(services.NotificationService, "Could not confirm transaction");
+        CreateDraft.HandleErrorsWith(services.NotificationService, "Could not create transaction preview");
 
-        this.WhenAnyValue(x => x.Feerate).ToSignal().InvokeCommand(CreateTransaction);
+        this.WhenAnyValue(x => x.Feerate).ToSignal().InvokeCommand(CreateDraft);
     }
 
-
-    public ReactiveCommand<Unit, Result<IBroadcastedTransaction>> Confirm { get; }
+    public ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
     public IObservable<bool> IsBusy { get; }
-    public ReactiveCommand<Unit, Result<IUnsignedTransaction>> CreateTransaction { get; }
+    public ReactiveCommand<Unit, Result<ITransactionDraft>> CreateDraft { get; }
     public IObservable<bool> TransactionConfirmed { get; }
     public Destination Destination { get; }
     public IObservable<bool> IsValid => TransactionConfirmed;

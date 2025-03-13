@@ -18,25 +18,25 @@ public class WalletAppService : IWalletAppService
     private readonly IIndexerService _indexerService;
     private readonly IWalletFactory walletFactory;
     private readonly IWalletOperations _walletOperations;
-    
+    private readonly IWalletStore walletStore;
+
     public WalletAppService(
         ISensitiveWalletDataProvider sensitiveWalletDataProvider,
         IIndexerService indexerService,
         IWalletFactory walletFactory,
-        IWalletOperations walletOperations)
+        IWalletOperations walletOperations, IWalletStore walletStore)
     {
         this.sensitiveWalletDataProvider = sensitiveWalletDataProvider;
         _indexerService = indexerService;
         this.walletFactory = walletFactory;
         _walletOperations = walletOperations;
+        this.walletStore = walletStore;
     }
 
-    public async Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
+    public Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
     {
-        return new List<WalletMetadata>
-        {
-            new(SingleWalletName, SingleWalletId)
-        };
+        List<WalletMetadata> singleWalletList = [new(SingleWalletName, SingleWalletId)];
+        return walletStore.GetAll().Map(wallets => wallets.Any() ? singleWalletList : []).Map(metadatas => metadatas.AsEnumerable());
     }
 
     public async Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletId walletId)
