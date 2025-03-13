@@ -264,34 +264,53 @@ public class MempoolSpaceIndexerApi : IIndexerService
         
         foreach (var mempoolTransaction in trx)
         {
+            if (mempoolTransaction.Vout.All(v => v.ScriptpubkeyAddress != address))
+            {
+                // this trx has no outputs with the requested address.
+                continue;
+            }
+
             var urloutspends = $"{MempoolApiRoute}/tx/" + mempoolTransaction.Txid + "/outspends";
 
             var resultsOutputs = await _httpClient.GetAsync(indexer.Url + urloutspends);
         
-            var spentOutputsStatus = await resultsOutputs.Content.ReadFromJsonAsync<List<Outspent>>();
+            var spentOutputsStatus = await resultsOutputs.Content.ReadFromJsonAsync<List<Outspent>>(new JsonSerializerOptions()
+                { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
             int index = 0;
             foreach (var vout in mempoolTransaction.Vout)
             {
-                var data = new UtxoData
+                if (vout.ScriptpubkeyAddress == address)
                 {
-                    address = vout.ScriptpubkeyAddress,
-                    scriptHex = vout.Scriptpubkey,
-                    outpoint = new Outpoint(mempoolTransaction.Txid, index),
-                    value = vout.Value,
-                };
+                    if (spentOutputsStatus![index].Spent)
+                    {
+                        if (mempoolTransaction.Status.Confirmed)
+                        {
+                            continue;
+                        }
+                    }
 
-                if (mempoolTransaction.Status.Confirmed)
-                {
-                    data.blockIndex = mempoolTransaction.Status.BlockHeight;
+                    var data = new UtxoData
+                    {
+                        address = vout.ScriptpubkeyAddress,
+                        scriptHex = vout.Scriptpubkey,
+                        outpoint = new Outpoint(mempoolTransaction.Txid, index),
+                        value = vout.Value,
+                    };
+
+                    if (mempoolTransaction.Status.Confirmed)
+                    {
+                        data.blockIndex = mempoolTransaction.Status.BlockHeight;
+                    }
+
+                    if (spentOutputsStatus![index].Spent)
+                    {
+                        data.PendingSpent = true;
+                    }
+
+                    utxoDataList.Add(data);
                 }
 
-                if (spentOutputsStatus![index].Spent)
-                {
-                    data.PendingSpent = true;
-                }
-
-                utxoDataList.Add(data);
                 index++;
             }
         }
