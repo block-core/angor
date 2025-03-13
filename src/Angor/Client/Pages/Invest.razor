@@ -212,7 +212,7 @@
                 <div class="form-group mb-4">
                     <label for="investmentSlider" class="form-label mb-4">Select Investment Amount</label>
                     <input type="range" class="form-range custom-range" id="investmentSlider"
-                           min="0.001" max="@project.ProjectInfo.TargetAmount.ToUnitBtc()" step="00000001"
+                           min="0.001" max="@project.ProjectInfo.TargetAmount.ToUnitBtc()" step="0.001"
                     @bind="Investment.InvestmentAmountBtc"
                     @oninput="UpdateStagesBreakdown" />
                     <div class="d-flex justify-content-between">
