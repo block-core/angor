@@ -3718,10 +3718,6 @@ input[type=number] {
         grid-template-columns: 1fr;
     }
     
-    .project-card {
-        padding: 1rem;
-    }
-    
     .project-header {
         margin-bottom: 1rem;
     }
@@ -4112,4 +4108,71 @@ input[type=number] {
         text-align: left;
         margin-top: 1rem;
     }
+}
+
+
+/* Wizard Styles */
+.wizard-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.wizard-progress .step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+}
+
+.wizard-progress .step-item {
+    text-align: center;
+    flex: 1;
+    position: relative;
+}
+
+.wizard-progress .step-label {
+    font-size: 0.875rem;
+    color: var(--bs-secondary);
+}
+
+.wizard-progress .step-item.active .step-label {
+    color: var(--bs-success);
+    font-weight: 500;
+}
+
+.wizard-content {
+    background: var(--bs-body-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.step-content {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Add responsive adjustments */
+@media (max-width: 768px) {
+    .wizard-navigation {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .wizard-navigation .btn {
+        width: 100%;
+    }
+}
+
+.fw-bold {
+   color: var(--angor-primary) !important;
 }
