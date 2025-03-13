@@ -7,10 +7,10 @@
              xmlns:transactionPreview="clr-namespace:AngorApp.UI.Controls.Common.TransactionPreview"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.UI.Controls.Common.TransactionPreview.Summary" x:DataType="transactionPreview:ITransactionPreviewViewModel">
+             x:Class="AngorApp.UI.Controls.Common.TransactionPreview.Summary" x:DataType="transactionPreview:ITransactionDraftViewModel">
 
     <Design.DataContext>
-        <transactionPreview:TransactionPreviewViewModelDesign />
+        <transactionPreview:TransactionDraftViewModelDesign />
     </Design.DataContext>
 
     <StackPanel Grid.IsSharedSizeScope="True" Spacing="10">
@@ -24,12 +24,12 @@
         <HeaderedContentControl Theme="{StaticResource Inline}" Header="Total Fee">
             <HeaderedContentControl.Content>
                 <Panel HorizontalAlignment="Left">
-                    <TextBlock VerticalAlignment="Center" IsVisible="{Binding !CreatePreview.IsExecuting^}">
+                    <TextBlock VerticalAlignment="Center" IsVisible="{Binding !CreateDraft.IsExecuting^}">
                         <TextBlock.Text>
-                            <Binding Path="TransactionPreview.TotalFee" StringFormat="{}{0:N0} sats" />
+                            <Binding Path="TransactionDraft.TotalFee" StringFormat="{}{0:N0} sats" />
                         </TextBlock.Text>
                     </TextBlock>
-                    <avaloniaProgressRing:ProgressRing Height="20" Width="20" IsVisible="{Binding CreatePreview.IsExecuting^}" />
+                    <avaloniaProgressRing:ProgressRing Height="20" Width="20" IsVisible="{Binding CreateDraft.IsExecuting^}" />
                 </Panel>
             </HeaderedContentControl.Content>
         </HeaderedContentControl>

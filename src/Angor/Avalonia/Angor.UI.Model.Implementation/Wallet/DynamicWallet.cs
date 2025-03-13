@@ -65,10 +65,10 @@ public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
 
     public BitcoinNetwork Network { get; } = BitcoinNetwork.Testnet;
 
-    public Task<Result<ITransactionPreview>> CreateTransaction(long amount, string address, long feerate)
+    public Task<Result<ITransactionDraft>> CreateDraft(long amount, string address, long feerate)
     {
         return walletAppService.EstimateFee(Id, new Amount(amount), new Address(address), new DomainFeeRate(feerate))
-            .Map(ITransactionPreview (fee) => new TransactionPreview(Id, amount, address, feerate, fee, walletAppService));
+            .Map(ITransactionDraft (fee) => new TransactionDraft(Id, amount, address, feerate, fee, walletAppService));
     }
 
     public Result IsAddressValid(string address)

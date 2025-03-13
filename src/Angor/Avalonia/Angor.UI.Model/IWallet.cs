@@ -10,7 +10,7 @@ public interface IWallet
 {
     public ReadOnlyObservableCollection<IBroadcastedTransaction> History { get; }
     IObservable<long> Balance { get; }
-    Task<Result<ITransactionPreview>> CreateTransaction(long amount, string address, long feerate);
+    Task<Result<ITransactionDraft>> CreateDraft(long amount, string address, long feerate);
     Result IsAddressValid(string address);
     WalletId Id { get; }
     StoppableCommand<Unit, Result<BroadcastedTransaction>> SyncCommand { get; }

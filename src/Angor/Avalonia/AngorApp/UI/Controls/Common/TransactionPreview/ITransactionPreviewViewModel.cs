@@ -3,11 +3,11 @@ using Zafiro.Avalonia.Controls.Wizards.Builder;
 
 namespace AngorApp.UI.Controls.Common.TransactionPreview;
 
-public interface ITransactionPreviewViewModel : IStep
+public interface ITransactionDraftViewModel : IStep
 {
-    public ITransactionPreview TransactionPreview { get; }
+    public ITransactionDraft TransactionDraft { get; }
     ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
-    ReactiveCommand<Unit, Result<ITransactionPreview>> CreatePreview { get; }
+    ReactiveCommand<Unit, Result<ITransactionDraft>> CreateDraft { get; }
     public IObservable<bool> TransactionConfirmed { get; }
     public Destination Destination { get; }
     public long Feerate { get; set; }

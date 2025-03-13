@@ -9,10 +9,10 @@
              d:DesignWidth="600"
              d:DesignHeight="400"
              x:Class="AngorApp.UI.Controls.Common.TransactionPreview.TransactionPreviewView"
-             x:DataType="transactionPreview:ITransactionPreviewViewModel">
+             x:DataType="transactionPreview:ITransactionDraftViewModel">
 
     <Design.DataContext>
-        <transactionPreview:TransactionPreviewViewModelDesign />
+        <transactionPreview:TransactionDraftViewModelDesign />
     </Design.DataContext>
 
     <UserControl.Styles>
