@@ -8,6 +8,7 @@
 @using Angor.Shared.Utilities
 @using Blockcore.NBitcoin
 @using Blockcore.Networks
+@using Angor.Client.Shared
 @inherits BaseComponent
 @inject HttpClient _httpClient;
 @inject IClientStorage storage;
@@ -33,14 +34,14 @@
                 <span class="header-icon-wrapper">
                     <Icon IconName="wallet" Width="32" Height="32" />
                 </span>
-                <h5 class="header-text">Wallet</h5>
+                <h5 class="header-text">My Wallet</h5>
             </div>
             <div class="header-actions">
                 @if (hasWallet)
                 {
-                    <button class="btn btn-border-danger" @onclick="() => walletWordsModal = true" data-cy="wallet-words" title="Wallet Words">
+                    <button class="btn btn-border-warning" @onclick="() => walletWordsModal = true" data-cy="wallet-words" title="Wallet Seed">
                         <Icon IconName="wallet" Height="24" Width="24" />
-                        <span class="button-text ms-2">Wallet Words</span>
+                        <span class="button-text ms-2">View Seed</span>
                     </button>
                 }
             </div>
@@ -52,15 +53,15 @@
 @if (!hasWallet)
 {
     <!-- No Wallet found -->
-    <div class="row mt-4">
-        <div class="card card-body angor-alert-info pt-2 pb-2">
-            <div class="d-flex align-items-center align-items-center">
-                <span class="me-3 user-select-none">
-                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)"/>
-                </span>
-                <span class="text-white">No Wallet Found</span>
-            </div>
+    <div class="row">
+
+        <div class="info-alert my-4 ">
+            <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+            <p class="text-warning">
+                No Wallet Available
+            </p>
         </div>
+
     </div>
     <div class="row g-4 mt-4 d-flex justify-content-center text-center align-items-center slide-in">
 
@@ -71,7 +72,7 @@
                     <span class="mb-3" aria-hidden="true" data-cy="create-wallet">
                         <Icon IconName="add" Width="40" Height="40"/>
                     </span>
-                    <h5 class="text-nowrap"> Create Wallet </h5>
+                    <h5 class="text-nowrap">New Wallet</h5>
                 </div>
             </div>
         </div>
@@ -81,7 +82,7 @@
                     <span class="mb-3" aria-hidden="true">
                         <Icon IconName="recovery" Width="40" Height="40"/>
                     </span>
-                    <h5 class="text-nowrap"> Recover Wallet </h5>
+                    <h5 class="text-nowrap">Import Wallet</h5>
                 </div>
             </div>
         </div>
@@ -116,7 +117,7 @@
                                                 <button class="btn btn-border-success w-100 mb-3" @onclick="GenerateNewWalletWords">
                                                     <div class="d-flex align-items-center justify-content-center">
                                                         <Icon IconName="plus" Height="24" Width="24" Color="var(--angor-primary)"/>
-                                                        <span>Generate Wallet Words</span>
+                                                        <span>Generate Recovery Phrase</span>
                                                     </div>
                                                 </button>
 
@@ -138,12 +139,12 @@
                                                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-3">
                                                         <button class="btn btn-border w-100 w-md-auto" @onclick="CopyWalletWords">
                                                             <Icon IconName="copy" Height="20" Width="20" class="me-2"/>
-                                                            Copy Words
+                                                            Copy
                                                         </button>
                                                         <div class="form-check">
                                                             <input class="form-check-input" type="checkbox" @bind="backupConfirmation" id="backupCheck">
                                                             <label class="form-check-label" for="backupCheck">
-                                                                I have written down my wallet words
+                                                                I have safely backed up my recovery phrase
                                                             </label>
                                                         </div>
                                                     </div>
@@ -350,7 +351,7 @@
                         <div class="modal-header border-0 pb-0">
                             <div class="d-flex align-items-center">
                                 <Icon IconName="wallet" Height="32" Width="32" class="me-2"/>
-                                <h5 class="modal-title">Wallet Words</h5>
+                                <h5 class="modal-title">Backup Recovery Phrase</h5>
                             </div>
                             <button class="btn-close-custom" @onclick="() => walletWordsModal = false">
                                 <Icon IconName="close-circle" Height="24" Width="24"/>
@@ -370,7 +371,7 @@
                                 @if (!string.IsNullOrEmpty(showWalletWords))
                                 {
                                     <div class="col-12 col-md-6 mb-3">
-                                        <div class="info-label">Wallet Words</div>
+                                        <div class="info-label">Recovery Phrase</div>
                                         <textarea class="form-control" @bind="showWalletWords" rows="3" readonly></textarea>
                                     </div>
                                     <div class="col-12 col-md-6 mb-3">
@@ -395,7 +396,7 @@
                                 }
                                 else
                                 {
-                                    <span>Show Wallet Words</span>
+                                    <span>View Seed</span>
                                 }
                             </button>
                         </div>
@@ -464,7 +465,7 @@ else
                         @if (accountBalanceInfo.TotalUnconfirmedBalance > 0)
                         {
                             <div class="balance-info">
-                                <p class="balance-label" data-cy="unconfirmed-balance">Unconfirmed balance</p>
+                                <p class="balance-label" data-cy="unconfirmed-balance">Pending Balance</p>
                                 <h6 class="balance-value">
                                     @Money.Satoshis(accountBalanceInfo.TotalUnconfirmedBalance).ToUnit(MoneyUnit.BTC)
                                     @network.CoinTicker
@@ -475,7 +476,7 @@ else
                         @if (accountBalanceInfo.TotalBalanceReserved > 0)
                         {
                             <div class="balance-info">
-                                <p class="balance-label" data-cy="reserved-balance">Reserved balance</p>
+                                <p class="balance-label" data-cy="reserved-balance">Reserved Balance</p>
                                 <h6 class="balance-value">
                                     @Money.Satoshis(accountBalanceInfo.TotalBalanceReserved).ToUnit(MoneyUnit.BTC)
                                     @network.CoinTicker
@@ -499,7 +500,7 @@ else
                             <div class="modal-header border-0 pb-0">
                                 <div class="d-flex align-items-center">
                                     <Icon IconName="key" Height="32" Width="32" class="me-2"/>
-                                    <h5 class="modal-title">Wallet Words</h5>
+                                    <h5 class="modal-title">Wallet Seed</h5>
                                 </div>
                                 <button class="btn-close-custom" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }">
                                     <Icon IconName="close-circle" Height="24" Width="24"/>
@@ -555,7 +556,7 @@ else
                             </div>
 
                             <div class="modal-footer border-0 pt-0">
-                                <button class="btn btn-border-danger" @onclick="ShowWords" data-cy="wallet-words-in-popup">Show Words</button>
+                                <button class="btn btn-border-danger" @onclick="ShowWords" data-cy="wallet-words-in-popup">View Seed</button>
                             </div>
                         </div>
                     </div>
@@ -639,7 +640,7 @@ else
 
                         <div class="mb-3">
                             <label for="sendAmount" class="form-label">Amount</label>
-                            <input type="number" class="form-control" id="sendAmount"
+                                <input type="number" step="0.00000001" min="0" class="form-control" id="sendAmount"
                                    @bind-value="sendAmount" @bind-value:event="oninput"
                                    placeholder="Enter amount">
                         </div>
@@ -738,56 +739,132 @@ else
             @if (sendConfirmModal)
             {
                 <!-- Send Confirmation Modal -->
-
                 <div class="modal-wrapper">
-                    <div class="modal fade show d-block">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Confirmation</h5>
-                                    <span type="button" aria-label="Close" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner">
-                                        <Icon IconName="close-circle"/>
-                                    </span>
+                    <div class="modal fade show d-block" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content modern-modal">
+                                <div class="modal-header border-0 pb-0">
+                                    <div class="d-flex align-items-center">
+                                        <Icon IconName="utxo" Height="32" Width="32" class="me-2"/>
+                                        <h5 class="modal-title">Transaction Details</h5>
+                                    </div>
+                                    <button class="btn-close-custom" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner">
+                                        <Icon IconName="close-circle" Height="24" Width="24"/>
+                                    </button>
                                 </div>
-                                <div class="modal-body modal-body-scroll">
-                                    <p>Are you sure you want to send @_sendInfo.SendAmount.ToUnitBtc() @network.CoinTicker to @_sendInfo.SendToAddress?</p>
-                                    <p>Fees: @_sendInfo.SendFee</p>
 
-                                    <div class="mb-3">
-                                        <label for="feeRange" class="form-label">Feerate for @_sendInfo.FeeBlockCount blocks is @_sendInfo.FeeRate sats</label>
-                                        <input type="range" class="form-range" id="feeRange" @bind="FeePosition" @oninput="FeeRangeChanged" min="@FeeMin" max="@_feeMax">
+                                <div class="modal-body modal-body-scroll">
+                                    <div class="transaction-details mb-4">
+                                        <div class="info-card p-3 rounded">
+                                            <div class="d-flex flex-column gap-3">
+                                                <div class="info-row d-flex flex-column">
+                                                    <span class="text-muted small mb-1">Amount</span>
+                                                    <span class="amount fw-bold text-break">
+                                                        @_sendInfo.SendAmount.ToUnitBtc() @network.CoinTicker
+                                                    </span>
+                                                </div>
+
+                                                <div class="info-row d-flex flex-column">
+                                                    <span class="text-muted small mb-1">Destination Address</span>
+                                                    <span class="address text-break" style="word-break: break-all;">
+                                                        @_sendInfo.SendToAddress
+                                                    </span>
+                                                </div>
+
+                                                <div class="info-row d-flex flex-column">
+                                                    <span class="text-muted small mb-1">Change Address</span>
+                                                    <span class="address text-break" style="word-break: break-all;">
+                                                        @_sendInfo.ChangeAddress
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <hr>
+                                    <div class="info-card fee-details p-3 rounded">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <span class="text-muted">Transaction Fee:</span>
+                                            <span class="fee-amount fw-bold">
+                                                @_sendInfo.SendFee @network.CoinTicker
+                                            </span>
+                                        </div>
 
-                                    The change address is <strong>@_sendInfo.ChangeAddress</strong>
+                                        <div class="fee-adjustment">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <label for="feeRange" class="form-label mb-0">Processing Speed</label>
+                                                <span class="badge bg-primary">
+                                                    @_sendInfo.FeeRate sats
+                                                </span>
+                                            </div>
 
-                                    <br/>
+                                            <div class="range-container position-relative">
+                                                <input type="range"
+                                                       class="form-range"
+                                                       id="feeRange"
+                                                       @bind="FeePosition"
+                                                       @oninput="FeeRangeChanged"
+                                                       min="@FeeMin"
+                                                       max="@_feeMax">
 
-                                    The selected inputs:
+                                                <div class="range-labels d-flex justify-content-between mt-2">
+                                                    <small class="text-muted">Slower</small>
+                                                    <small class="text-muted">
+                                                        ~@_sendInfo.FeeBlockCount blocks
+                                                    </small>
+                                                    <small class="text-muted">Faster</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                    @foreach (var infoSendUtxo in _sendInfo.SendUtxos)
+                                    @if (_sendInfo.SendUtxos.Any())
                                     {
-                                        <p>@Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker - @infoSendUtxo.Key</p>
+                                        <div class="info-card utxo-details p-3 rounded mt-4">
+                                            <h6 class="mb-3">Selected UTXOs</h6>
+                                            <div class="utxo-list">
+                                                @foreach (var infoSendUtxo in _sendInfo.SendUtxos)
+                                                {
+                                                    var outpointStr = infoSendUtxo.Key;
+                                                    var shortenedOutpoint = outpointStr.Length > 20 
+                                                        ? $"{outpointStr[..10]}...{outpointStr[^10..]}" 
+                                                        : outpointStr;
+                                                    
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span class="text-muted text-truncate me-2" title="@outpointStr">@shortenedOutpoint</span>
+                                                        <span class="fw-bold text-nowrap">
+                                                            @Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                                        </span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
                                     }
-
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-border-warning" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner">Cancel</button>
-                                    <button type="button" class="btn btn-border-success" @onclick="SendCoins" disabled="@sendConfirmSpinner">
-                                        @if (sendConfirmSpinner)
-                                        {
-                                            <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                            <span>Sending...</span>
-                                        }
-                                        else
-                                        {
-                                            <span>Confirm</span>
-                                        }
-                                    </button>
-                                    <button class="btn btn-outline-primary" @onclick="ShowTransactionJson">
-                                        View Transaction Details
-                                    </button>
+
+                                <div class="modal-footer border-0 pt-0">
+                                    <div class="d-flex flex-column flex-md-row justify-content-end gap-2 w-100">
+                                        <button class="btn btn-border order-3 order-md-1" @onclick="ShowTransactionJson">
+                                            View Details
+                                        </button>
+                                        <button type="button" class="btn btn-border-warning order-2" 
+                                                @onclick="() => sendConfirmModal = false" 
+                                                disabled="@sendConfirmSpinner">
+                                            Cancel
+                                        </button>
+                                        <button type="button" class="btn btn-border-success order-1 order-md-3" 
+                                                @onclick="SendCoins" 
+                                                disabled="@sendConfirmSpinner">
+                                            @if (sendConfirmSpinner)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                <span>Sending...</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Confirm</span>
+                                            }
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -820,15 +897,19 @@ else
 
                 <div class="row mt-4">
                     <div class="col-md-12 mb-md-0 mb-4">
-                        <div class="card card-body form-control card-plain border-radius-lg d-flex align-items-center flex-row" data-cy="wallet-address">
-                            <img class="address-image me-3 mb-0" src="/assets/img/bitcoin.svg" alt="Bitcoin">
-                            <h6 class="address-text mb-0 overflow-x-auto">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</h6>
-                            <i @onclick="CopyNextReceiveAddress" class="ms-auto cursor-pointer user-select-none" data-cy="SHOW_QR_CODE_WALLET">
-                                <Icon IconName="copy"></Icon>
-                            </i>
+                        <div class="info-card p-3">
+                            <div class="d-flex align-items-center">
+                                <img class="me-3 flex-shrink-0" src="/assets/img/bitcoin.svg" alt="Bitcoin" style="width: 24px; height: 24px;">
+                                <div class="overflow-auto flex-grow-1 me-2" style="white-space: nowrap; min-width: 0;">
+                                    <span class="text-break fw-bold" style="font-size: 14px;">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</span>
+                                </div>
+                                <button class="btn btn-sm btn-border ms-2 flex-shrink-0" @onclick="CopyNextReceiveAddress" data-cy="SHOW_QR_CODE_WALLET">
+                                    <Icon IconName="copy" Width="18" Height="18" />
+                                    <span class="d-none d-md-inline ms-1">Copy</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -1837,4 +1918,9 @@ else
         NextStep();
     }
     
+    protected override void OnInitialized()
+    {
+        NavMenuState.SetActivePage("wallet");
+        base.OnInitialized();
+    }
 }

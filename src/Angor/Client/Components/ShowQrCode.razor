@@ -38,19 +38,25 @@
                                  width="200" height="200"
                                  alt="QR Code" />
                         </div>
-                        <div class="card border p-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="flex-grow-1">
-                                    <small class="text-muted d-block mb-1">Address</small>
-                                    <div class="small text-truncate" title="@Data" data-cy="WALLET_ADRESS_IN_QR_POPUP">
-                                        @Data
-                                    </div>
+
+
+                <div class="row mt-4">
+                    <div class="col-md-12 mb-md-0 mb-4">
+                        <div class="info-card p-3">
+                            <div class="d-flex align-items-center">
+                                <img class="me-3 flex-shrink-0" src="/assets/img/bitcoin.svg" alt="Bitcoin" style="width: 24px; height: 24px;">
+                                <div class="overflow-auto flex-grow-1 me-2" style="white-space: nowrap; min-width: 0;">
+                                    <span class="text-break fw-bold" style="font-size: 14px;">@Data</span>
                                 </div>
-                                <i class="px-2 py-1" @onclick="CopyToClipboard">
-                                    <Icon IconName="copy" Height="32" Width="32" />
-                                </i>
+                                <button class="btn btn-sm btn-border ms-2 flex-shrink-0" @onclick="CopyToClipboard" data-cy="SHOW_QR_CODE_WALLET">
+                                    <Icon IconName="copy" Width="18" Height="18" />
+                                    <span class="d-none d-md-inline ms-1">Copy</span>
+                                </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+ 
                     </div>
                 </div>
             </div>

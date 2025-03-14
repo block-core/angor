@@ -67,4 +67,9 @@ builder.Services.AddScoped<IconService>();
 
 builder.Services.AddScoped<IWalletUIService, WalletUIService>();
 
-await builder.Build().RunAsync();
+var app = builder.Build();
+
+// Initialize NavMenuState from storage
+var navMenuState = app.Services.GetRequiredService<NavMenuState>();
+
+await app.RunAsync();

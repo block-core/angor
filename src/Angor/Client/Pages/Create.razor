@@ -21,6 +21,7 @@
 @inject ILogger<Create> _Logger;
 @inject IHtmlStripperService HtmlStripperService;
 @inject IJSRuntime JS;
+@inject NavMenuState NavMenuState
 
 @inject IFounderTransactionActions _founderTransactionActions
 <NotificationComponent @ref="notificationComponent" />
@@ -49,12 +50,11 @@
                 <h5 class="header-text">Create New Project</h5>
             </div>
             <div class="header-actions">
- 
             </div>
         </div>
     </div>
 </div>
- 
+
 <div class="slide-in mt-4">
     <div class="tab-container">
         <div class="tabs-wrapper">
@@ -63,7 +63,7 @@
                     <div class="tab-icon @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
                         <Icon IconName="relay" Height="32" Width="32" />
                     </div>
-                    <span class="tab-label">Metadata</span>
+                    <span class="tab-label">Profile</span>
                 </div>
             </div>
 
@@ -72,7 +72,7 @@
                     <div class="tab-icon @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
                         <Icon IconName="view-project" Height="32" Width="32" />
                     </div>
-                    <span class="tab-label">Project Info</span>
+                    <span class="tab-label">Details</span>
                 </div>
             </div>
 
@@ -81,7 +81,7 @@
                     <div class="tab-icon @(activeTab == 3 ? "heartbeat" : "")" aria-hidden="true">
                         <Icon IconName="addresses" Height="32" Width="32" />
                     </div>
-                    <span class="tab-label">On Chain</span>
+                    <span class="tab-label">Deploy</span>
                 </div>
             </div>
         </div>
@@ -126,8 +126,10 @@
 
                     <div class="info-card mt-4">
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-border-success" @onclick="() => SetActiveTab(2)">
-                                <span>Next</span>
+                            <button class="btn btn-border-success d-flex align-items-center" @onclick="() => SetActiveTab(2)">
+                                Next
+                                <Icon IconName="arrow-right" Width="18" Height="18" Class="ms-2" />
+
                             </button>
                         </div>
                     </div>
@@ -253,7 +255,7 @@
                     <!-- Presets for Stages -->
                     <!-- Toggle Button -->
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <button class="btn btn-border-success" @onclick="ToggleStageMode">
+                        <button class="btn btn-border-success" @onclick="ToggleStageMode" disabled="@nostrApplicationSpecificDataCreated">
                             @if (isPresetMode)
                             {
                                 <span>Switch to Manual Helper</span>
@@ -271,7 +273,7 @@
                         <!-- Preset Selection -->
                         <div class="mb-3">
                             <label for="stagePreset" class="form-label">Select Stage Preset</label>
-                            <select id="stagePreset" class="form-control" @onchange="OnStagePresetChange">
+                            <select id="stagePreset" class="form-control" @onchange="OnStagePresetChange" disabled="@nostrApplicationSpecificDataCreated">
                                 <option value="">Select a preset...</option>
                                 <option value="preset1">Preset 1: 3 Stages (10%, 30%, 60%)</option>
                                 <option value="preset2">Preset 2: 4 Stages (25%, 25%, 25%, 25%)</option>
@@ -284,13 +286,13 @@
                         <!-- Automatic Generation Inputs -->
                         <div class="mb-3">
                             <label for="totalDuration" class="form-label">Total Project Duration (in days)</label>
-                            <InputNumber id="totalDuration" @bind-Value="totalDuration" class="form-control" placeholder="Enter total duration in days" />
+                            <InputNumber id="totalDuration" @bind-Value="totalDuration" class="form-control" placeholder="Enter total duration in days" disabled="@nostrApplicationSpecificDataCreated" />
                         </div>
                         <div class="mb-3">
                             <label for="numberOfStages" class="form-label">Number of Stages</label>
-                            <InputNumber id="numberOfStages" @bind-Value="numberOfStages" class="form-control" placeholder="Enter number of stages" />
+                            <InputNumber id="numberOfStages" @bind-Value="numberOfStages" class="form-control" placeholder="Enter number of stages" disabled="@nostrApplicationSpecificDataCreated" />
                         </div>
-                        <button type="button" class="btn btn-border-success mb-3" @onclick="GenerateSmartStages">
+                        <button type="button" class="btn btn-border-success mb-3" @onclick="GenerateSmartStages" disabled="@nostrApplicationSpecificDataCreated">
                             <Icon IconName="server-path" Height="20" Width="20" Color="var(--angor-primary)" Class="me-2"></Icon>
                             Generate Stages
                         </button>
@@ -328,13 +330,18 @@
 
                 <div class="info-card mt-4 slide-in">
                     <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-border-success" @onclick="() => SetActiveTab(1)">
-                            <span>Previous</span>
+
+                        <button class="btn btn-border-warning d-flex align-items-center" @onclick="() => SetActiveTab(1)">
+                            <Icon IconName="arrow-left" Width="18" Height="18" Class="me-2" />
+                            Previous
                         </button>
 
-                        <button type="submit" class="btn btn-border-success" @onclick="() => SetActiveTab(3)">
-                            <span>Next</span>
+                        <button class="btn btn-border-success d-flex align-items-center" @onclick="() => SetActiveTab(3)">
+                            Next
+                            <Icon IconName="arrow-right" Width="18" Height="18" Class="ms-2" />
+
                         </button>
+
                     </div>
                 </div>
             </EditForm>
@@ -410,54 +417,214 @@
         </div>
 
         <div class="info-card">
-            <h5>Current Step</h5>
-            <div class="text-center">
-                @GetProgressMessage()
+
+
+            <div class="wizard-container">
+                <!-- Modern Progress Indicators -->
+                <div class="d-flex justify-content-between mb-4 position-relative">
+
+                    <!-- Step Indicators with Icons -->
+                    <div class="d-flex flex-column align-items-center position-relative z-1">
+                        <div class="step-circle d-flex align-items-center justify-content-center rounded-circle @(currentStep >= 1 ? "bg-success text-white" : " border")"
+                             style="width: 40px; height: 40px; transition: all 0.3s ease;">
+                            @if (currentStep > 1)
+                            {
+                                <Icon IconName="check-circle" Width="20" Height="20" />
+                            }
+                            else
+                            {
+                                <span class="fw-bold">1</span>
+                            }
+                        </div>
+                        <span class="step-label mt-2 small fw-semibold @(currentStep >= 1 ? "text-success" : "text-muted")">Profile</span>
+                    </div>
+
+                    <div class="d-flex flex-column align-items-center position-relative z-1">
+                        <div class="step-circle d-flex align-items-center justify-content-center rounded-circle @(currentStep >= 2 ? "bg-success text-white" : " border")"
+                             style="width: 40px; height: 40px; transition: all 0.3s ease;">
+                            @if (currentStep > 2)
+                            {
+                                <Icon IconName="check-circle" Width="20" Height="20" />
+                            }
+                            else
+                            {
+                                <span class="fw-bold">2</span>
+                            }
+                        </div>
+                        <span class="step-label mt-2 small fw-semibold @(currentStep >= 2 ? "text-success" : "text-muted")">Details</span>
+                    </div>
+
+                    <div class="d-flex flex-column align-items-center position-relative z-1">
+                        <div class="step-circle d-flex align-items-center justify-content-center rounded-circle @(currentStep >= 3 ? "bg-success text-white" : " border")"
+                             style="width: 40px; height: 40px; transition: all 0.3s ease;">
+                            <span class="fw-bold">3</span>
+                        </div>
+                        <span class="step-label mt-2 small fw-semibold @(currentStep >= 3 ? "text-success" : "text-muted")">Deploy</span>
+                    </div>
+                </div>
+
+                <!-- Step Content Card with Clean Design -->
+                <div class="card border-0 shadow-sm animate-fade-in mb-4">
+                    <div class="card-body p-4">
+                        @switch (currentStep)
+                        {
+                            case 1:
+                                <div class="animate-fade-in">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3">
+                                            <Icon IconName="nostr" Width="24" Height="24" Color="var(--angor-primary)" />
+                                        </div>
+                                        <h5 class="mb-0 fw-bold">Create Nostr Profile</h5>
+                                    </div>
+
+                                    <p class="text-muted mb-4 ps-2">Your project needs a public profile on the Nostr network. This information establishes your project's identity.</p>
+                                 
+                                    <div class="info-alert my-4 ">
+                                        <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+                                        <p class="text-warning">
+                                            Once created, profile information cannot be modified
+                                        </p>
+                                    </div>
+
+                                    <button class="btn btn-lg btn-border-success w-100 d-flex align-items-center justify-content-center"
+                                            @onclick="ConfirmFinalizeNostrProfileCreation"
+                                            disabled="@nostrMetadataCreated">
+                                        @if (createProfileSpinner)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                            <span>Creating Profile...</span>
+                                        }
+                                        else
+                                        {
+                                            <Icon IconName="nostr" Width="20" Height="20" Class="me-2" />
+                                            <span>Create Nostr Profile</span>
+                                        }
+                                    </button>
+
+                                    @if (nostrMetadataCreated)
+                                    {
+                                        <div class="text-center mt-3">
+                                            <span class="badge bg-success d-inline-flex align-items-center gap-1 px-3 py-2">
+                                                <Icon IconName="check" Width="16" Height="16" />
+                                                Profile Created
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+                                break;
+
+                            case 2:
+                                <div class="animate-fade-in">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3">
+                                            <Icon IconName="project" Width="24" Height="24" Color="var(--angor-primary)" />
+                                        </div>
+                                        <h5 class="mb-0 fw-bold">Project Information</h5>
+                                    </div>
+
+                                    <p class="text-muted mb-4 ps-2">Define technical details and funding structure for your project. These settings will be published to the Nostr network.</p>
+
+                                    <button class="btn btn-lg btn-border-success w-100 d-flex align-items-center justify-content-center"
+                                            @onclick="ConfirmFinalizeProjectInfoCreation"
+                                            disabled="@(!nostrMetadataCreated || nostrApplicationSpecificDataCreated)">
+                                        @if (createApplicationDataSpinner)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                            <span>Publishing Project Info...</span>
+                                        }
+                                        else
+                                        {
+                                            <Icon IconName="project" Width="20" Height="20" Class="me-2" />
+                                            <span>Publish Project Info</span>
+                                        }
+                                    </button>
+
+                                    @if (nostrApplicationSpecificDataCreated)
+                                    {
+                                        <div class="text-center mt-3">
+                                            <span class="badge bg-success d-inline-flex align-items-center gap-1 px-3 py-2">
+                                                <Icon IconName="check" Width="16" Height="16" />
+                                                Project Info Published
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+                                break;
+
+                            case 3:
+                                <div class="animate-fade-in">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3">
+                                            <Icon IconName="deploy" Width="24" Height="24" Color="var(--angor-primary)" />
+                                        </div>
+                                        <h5 class="mb-0 fw-bold">Deploy Project</h5>
+                                    </div>
+
+                                    <p class="text-muted mb-4 ps-2">Deploy your project to the blockchain. This final step creates the on-chain contract for your project.</p>
+
+                                    <div class="info-alert my-4 ">
+                                        <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+                                        <p class="text-warning">
+                                            This action cannot be undone. Your project will be live after this step.
+                                        </p>
+                                    </div>
+
+                                    <button class="btn btn-lg btn-border-success w-100 d-flex align-items-center justify-content-center"
+                                            @onclick="CreatProjectTransactionAnCheckPassword"
+                                            disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
+                                        @if (creatProjectSpinner)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                            <span>Deploying Project...</span>
+                                        }
+                                        else
+                                        {
+                                            <Icon IconName="deploy" Width="20" Height="20" Class="me-2" />
+                                            <span>Deploy to Blockchain</span>
+                                        }
+                                    </button>
+                                </div>
+                                break;
+                        }
+                    </div>
+                </div>
+
+                <!-- Navigation Bar with Improved Design -->
+                <div class="d-flex justify-content-between align-items-center">
+                    @if (currentStep > 1)
+                    {
+                        <button class="btn btn-border-warning d-flex align-items-center" @onclick="() => currentStep--">
+                            <Icon IconName="arrow-left" Width="18" Height="18" Class="me-2" />
+                            Previous
+                        </button>
+                    }
+                    else
+                    {
+                        <div></div> <!-- Spacer -->
+                    }
+
+                    @if (currentStep < 3 && CanProceedToNextStep())
+                    {
+                        <button class="btn btn-border-success d-flex align-items-center" @onclick="() => currentStep++">
+                            Continue
+                            <Icon IconName="arrow-right" Width="18" Height="18" Class="ms-2" />
+                        </button>
+                    }
+                    else
+                    {
+                        <div></div> <!-- Spacer -->
+                    }
+                </div>
             </div>
 
-            <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                <button class="btn btn-border-success mt-4 w-100-m" @onclick="ConfirmFinalizeNostrProfileCreation" disabled="@nostrMetadataCreated">
-                    @if (createProfileSpinner)
-                    {
-                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        <span>Creating Nostr Profile...</span>
-                    }
-                    else
-                    {
-                        <span>Create Nostr Profile</span>
-                    }
-                </button>
 
-                <button class="btn btn-border-success mt-4 w-100-m" @onclick="ConfirmFinalizeProjectInfoCreation" disabled="@(!nostrMetadataCreated || nostrApplicationSpecificDataCreated)">
-                    @if (createApplicationDataSpinner)
-                    {
-                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        <span>Creating Project Info...</span>
-                    }
-                    else
-                    {
-                        <span>Create Project Info</span>
-                    }
-                </button>
-
-                <button type="button" class="btn btn-border-success mt-4 w-100-m" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
-                    @if (creatProjectSpinner)
-                    {
-                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        <span>Create Project...</span>
-                    }
-                    else
-                    {
-                        <span>Create Project</span>
-                    }
-                </button>
-            </div>
         </div>
 
         <div class="info-card mt-4">
             <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-border-success" @onclick="() => SetActiveTab(2)">
-                    <span>Previous</span>
+                <button class="btn btn-border-warning d-flex align-items-center" @onclick="() => SetActiveTab(2)">
+                    <Icon IconName="arrow-left" Width="18" Height="18" Class="me-2" />
+                    Previous
                 </button>
             </div>
         </div>
@@ -623,6 +790,7 @@
     }
 </div>
 
+
 @code {
 
     private bool sendConfirmModal;
@@ -670,8 +838,40 @@
     bool nostrMetadataCreated;
     bool nostrApplicationSpecificDataCreated;
 
+    private int currentStep = 1;
+
+    private int GetProgressPercentage() => (currentStep - 1) * 50;
+
+    private void NextStep()
+    {
+        if (currentStep < 3)
+        {
+            currentStep++;
+        }
+    }
+
+    private void PreviousStep()
+    {
+        if (currentStep > 1)
+        {
+            currentStep--;
+        }
+    }
+
+    private bool CanProceedToNextStep()
+    {
+        return currentStep switch
+        {
+            1 => nostrMetadataCreated,
+            2 => nostrApplicationSpecificDataCreated,
+            _ => false
+        };
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        NavMenuState.SetActivePage("founder");
+
         if (!hasWallet)
         {
             return;
@@ -1067,7 +1267,7 @@
         return new MarkupString(sanitizedInput);
     }
 
-    private void SetActiveTab(int tabNumber)
+    private async void SetActiveTab(int tabNumber)
     {
         if (!nostrMetadataCreated)
         {
@@ -1077,6 +1277,11 @@
 
         activeTab = tabNumber;
         StateHasChanged();
+
+        // Add a slight delay before scrolling to the top
+        // This ensures the tab content has been rendered
+        await Task.Delay(10);
+        await JS.InvokeVoidAsync("window.scrollTo", 0, 0);
     }
 
     private string GetProgressMessage()

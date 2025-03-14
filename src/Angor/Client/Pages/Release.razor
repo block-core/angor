@@ -9,6 +9,7 @@
 @using Angor.Shared.Services
 @using System.Security.Cryptography
 @using Blockcore.Consensus.TransactionInfo
+@using Angor.Client.Shared
 
 @inject ILogger<Release> Logger
 @inject IDerivationOperations DerivationOperations
@@ -21,6 +22,7 @@
 @inject IIndexerService _IndexerService
 @inject IWalletOperations _WalletOperations
 @inject IWalletUIService _walletUIService;
+@inject NavMenuState NavMenuState
 
 @inherits BaseComponent
 
@@ -176,6 +178,12 @@
                     </div>
 
                     <div class="modal-body modal-body-scroll">
+
+                        <div class="info-card mb-3">
+                            <p class="text-muted mb-0">
+                                Since the project has not met its target, you can now claim your investment back immediately without any penalty period.
+                            </p>
+                        </div>
                         <div class="release-confirmation-container">
                             <div class="transaction-summary mb-4">
                                 <div class="summary-header d-flex align-items-center mb-3">
@@ -281,6 +289,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Set active menu
+        NavMenuState.SetActivePage("founder");
+
         if (hasWallet)
         {
             InvestorProject = Storage.GetInvestmentProjects().FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier);

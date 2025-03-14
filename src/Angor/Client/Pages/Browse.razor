@@ -5,7 +5,10 @@
 @using Angor.Client.Models
 @using Angor.Client.Storage
 @using System.Text.RegularExpressions
+@using Angor.Client.Shared
+
 @inject ICacheStorage SessionStorage
+@inject NavMenuState NavMenuState
 @inject NavigationManager NavigationManager
 @inject IRelayService _RelayService
 @inject IIndexerService _IndexerService
@@ -15,8 +18,6 @@
 @inject IHtmlStripperService HtmlStripperService;
 
 <NotificationComponent @ref="notificationComponent" />
-
-
 
 <div class="header-container slide-in">
     <div class="card card-body">
@@ -221,15 +222,12 @@ else
                                                 </span>
                                             </div>
                                         </div>
-
-
                                     </div>
                                 }
                             </div>
                         </div>
                     </div>
                 </div>
-
             }
         </div>
 
@@ -238,6 +236,14 @@ else
 
 @if (!searchInProgress)
 {
+    <div class="info-alert my-4 ">
+        <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+        <p class="text-warning">
+            Only the latest 21 projects are displayed here.To explore the full list of projects, please visit
+            <strong>Angor Hub</strong>.
+        </p>
+    </div>
+
     <div class="d-flex justify-content-center mt-4">
         <a class="btn btn-border my-3" href="https://hub.angor.io" target="_blank">
             <i>
@@ -264,6 +270,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // Set active menu
+        NavMenuState.SetActivePage("browse");
+        
         await GetAllProjects();
         projects = SessionStorage.GetProjectIndexerData() ?? new List<ProjectIndexerData>();
 
