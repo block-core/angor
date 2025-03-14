@@ -126,7 +126,8 @@ public class NetworkConfiguration : INetworkConfiguration
             {
                 return new List<SettingsUrl>
                 {
-                    new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io", IsPrimary = true },
+                    new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io", IsPrimary = false },
+                    new SettingsUrl { Name = "", Url = "https://mempool.thedude.pro", IsPrimary = true },
                 };
             }
 

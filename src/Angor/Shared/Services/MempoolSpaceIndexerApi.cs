@@ -231,7 +231,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
             var addressResponse = await apiResponse.Content.ReadFromJsonAsync<AddressResponse>(new JsonSerializerOptions()
                 { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
-            if (addressResponse is { ChainStats.TxCount: > 0 })
+            if (addressResponse != null && (addressResponse.ChainStats.TxCount > 0 || addressResponse.MempoolStats.TxCount > 0))
             {
                 response.Add(new AddressBalance
                 {
@@ -249,9 +249,9 @@ public class MempoolSpaceIndexerApi : IIndexerService
     {
         var indexer = _networkService.GetPrimaryIndexer();
 
-        var url = $"{MempoolApiRoute}/address/{address}/txs";
+        var txsUrl = $"{MempoolApiRoute}/address/{address}/txs";
 
-        var response = await _httpClient.GetAsync(indexer.Url + url);
+        var response = await _httpClient.GetAsync(indexer.Url + txsUrl);
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
@@ -264,31 +264,53 @@ public class MempoolSpaceIndexerApi : IIndexerService
         
         foreach (var mempoolTransaction in trx)
         {
-            var resultsOutputs =
-                await _httpClient.GetAsync(indexer.Url + $"{MempoolApiRoute}/tx/" + mempoolTransaction.Txid + "/outspends");
+            if (mempoolTransaction.Vout.All(v => v.ScriptpubkeyAddress != address))
+            {
+                // this trx has no outputs with the requested address.
+                continue;
+            }
+
+            var outspendsUrl = $"{MempoolApiRoute}/tx/" + mempoolTransaction.Txid + "/outspends";
+
+            var resultsOutputs = await _httpClient.GetAsync(indexer.Url + outspendsUrl);
         
-            var spentOutputsStatus = await resultsOutputs.Content.ReadFromJsonAsync<List<Outspent>>();
-        
-            utxoDataList.AddRange(
-                mempoolTransaction.Vout.Select(
-                        (vout, i) =>
-                        {
-                            if (spentOutputsStatus[i].Spent || vout.ScriptpubkeyAddress != address)
-                                return null;
-                            
-                            return new UtxoData
-                            {
-                                address = address,
-                                scriptHex = vout.Scriptpubkey,
-                                blockIndex = mempoolTransaction.Status.BlockHeight,
-                                outpoint = new Outpoint(mempoolTransaction.Txid, i),
-                                value = vout.Value,
-                                PendingSpent = !mempoolTransaction.Status.Confirmed
-                            };
-                        }).Where(x => x != null)
-                    .ToArray()
-            );
+            var spentOutputsStatus = await resultsOutputs.Content.ReadFromJsonAsync<List<Outspent>>(new JsonSerializerOptions()
+                { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+
+            for (int index = 0; index < mempoolTransaction.Vout.Count; index++)
+            {
+                var vout = mempoolTransaction.Vout[index];
+
+                if (vout.ScriptpubkeyAddress == address)
+                {
+                    if (mempoolTransaction.Status.Confirmed && spentOutputsStatus![index].Spent)
+                    {
+                        continue;
+                    }
+
+                    var data = new UtxoData
+                    {
+                        address = vout.ScriptpubkeyAddress,
+                        scriptHex = vout.Scriptpubkey,
+                        outpoint = new Outpoint(mempoolTransaction.Txid, index),
+                        value = vout.Value,
+                    };
+
+                    if (mempoolTransaction.Status.Confirmed)
+                    {
+                        data.blockIndex = mempoolTransaction.Status.BlockHeight;
+                    }
+
+                    if (spentOutputsStatus![index].Spent)
+                    {
+                        data.PendingSpent = true;
+                    }
+
+                    utxoDataList.Add(data);
+                }
+            }
         }
+
         return utxoDataList;
     }
 
@@ -316,10 +338,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
         {
             Fees = new List<FeeEstimation>
             {
-                new() { FeeRate = feeEstimations.FastestFee * 1000, Confirmations = 1 }, //TODO this is an estimation
-                new() { FeeRate = feeEstimations.HalfHourFee * 1000, Confirmations = 3 },
-                new() { FeeRate = feeEstimations.HourFee * 1000, Confirmations = 6 },
-                new() { FeeRate = feeEstimations.EconomyFee * 1000, Confirmations = 18 }, //TODO this is an estimation
+                new() { FeeRate = feeEstimations.FastestFee * 1100, Confirmations = 1 }, //TODO this is an estimation
+                new() { FeeRate = feeEstimations.HalfHourFee * 1100, Confirmations = 3 },
+                new() { FeeRate = feeEstimations.HourFee * 1100, Confirmations = 6 },
+                new() { FeeRate = feeEstimations.EconomyFee * 1100, Confirmations = 18 }, //TODO this is an estimation
             }
         };
     }
