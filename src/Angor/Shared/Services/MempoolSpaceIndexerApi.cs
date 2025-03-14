@@ -249,9 +249,9 @@ public class MempoolSpaceIndexerApi : IIndexerService
     {
         var indexer = _networkService.GetPrimaryIndexer();
 
-        var urltxs = $"{MempoolApiRoute}/address/{address}/txs";
+        var txsUrl = $"{MempoolApiRoute}/address/{address}/txs";
 
-        var response = await _httpClient.GetAsync(indexer.Url + urltxs);
+        var response = await _httpClient.GetAsync(indexer.Url + txsUrl);
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
@@ -270,9 +270,9 @@ public class MempoolSpaceIndexerApi : IIndexerService
                 continue;
             }
 
-            var urloutspends = $"{MempoolApiRoute}/tx/" + mempoolTransaction.Txid + "/outspends";
+            var outspendsUrl = $"{MempoolApiRoute}/tx/" + mempoolTransaction.Txid + "/outspends";
 
-            var resultsOutputs = await _httpClient.GetAsync(indexer.Url + urloutspends);
+            var resultsOutputs = await _httpClient.GetAsync(indexer.Url + outspendsUrl);
         
             var spentOutputsStatus = await resultsOutputs.Content.ReadFromJsonAsync<List<Outspent>>(new JsonSerializerOptions()
                 { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
