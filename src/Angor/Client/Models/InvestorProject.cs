@@ -50,4 +50,8 @@ public class InvestorProject : Project
         SignedTransactionHex = null;
         AmountInvested = investmentTransaction.Outputs.Skip(2).Take(ProjectInfo.Stages.Count).Sum(s => s.Value);
     }
+
+    public long? RecoveredAmount { get; set; }
+    public int? InvestorsInRecovery { get; set; }
+    public bool? IsRecoveryCompleted { get; set; }
 }

@@ -116,6 +116,30 @@
                 </div>
             </div>
         </div>
+        
+        <div class="stats-card">
+            <div class="stats-content">
+                <div class="stats-icon">
+                    <Icon IconName="check-circle" Height="32" Width="32" />
+                </div>
+                <div class="stats-info">
+                    <h6 class="stats-title">Successfully Recovered</h6>
+                    <p class="stats-value">@Money.Satoshis(TotalSuccessfullyRecovered).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="stats-content">
+                <div class="stats-icon">
+                    <Icon IconName="recovery" Height="32" Width="32" />
+                </div>
+                <div class="stats-info">
+                    <h6 class="stats-title">Projects in Recovery</h6>
+                    <p class="stats-value">@ProjectsInRecovery</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- List of Projects -->
@@ -199,6 +223,29 @@
                                 <span class="stat-label">In Recovery</span>
                                 <span class="stat-value">@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
                             </div>
+                            
+                            <div class="stat-row">
+                                <span class="stat-label">Recovery Status</span>
+                                <div class="stat-value-group">
+                                    @if (project.AmountInRecovery > 0)
+                                    {
+                                        @if (project.IsRecoveryCompleted == true)
+                                        {
+                                            <span class="status-badge status-success">Recovered</span>
+                                            <span class="stat-value ms-2">@Money.Satoshis(project.RecoveredAmount ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge status-warning">In Progress</span>
+                                            <span class="stat-value ms-2">@(project.InvestorsInRecovery ?? 0) Investors</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-inactive">None</span>
+                                    }
+                                </div>
+                            </div>
                         </div>
 
                         <div class="project-actions">
@@ -229,6 +276,8 @@
     long TotalWallet = 0;
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
+    long TotalSuccessfullyRecovered = 0;
+    int ProjectsInRecovery = 0;
 
     private Dictionary<string, bool> investmentRequestsMap = new Dictionary<string, bool>();
     private Dictionary<string, bool> releaseRequestsMap = new Dictionary<string, bool>();
@@ -258,6 +307,8 @@
             TotalInvested = projects.Sum(s => s.AmountInvested ?? 0);
             TotalWallet = abi.TotalBalance;
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
+            TotalSuccessfullyRecovered = projects.Sum(s => s.RecoveredAmount ?? 0);
+            ProjectsInRecovery = projects.Count(s => s.AmountInRecovery > 0);
 
             var refreshTask = RefreshBalance();
             CheckSignatureFromFounder();
@@ -301,6 +352,8 @@
             TotalInvested = projects.Sum(s => s.AmountInvested ?? 0);
             TotalWallet = abi.TotalBalance;
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
+            TotalSuccessfullyRecovered = projects.Sum(s => s.RecoveredAmount ?? 0);
+            ProjectsInRecovery = projects.Count(s => s.AmountInRecovery > 0);
 
             await RefreshBalance();
         }
@@ -486,7 +539,11 @@
             {
                 TransactionId = investment.TransactionId,
                 AmountInvested = investment.TotalAmount,
-                InvestorNPub = investorNostrPrivateKey.PubKey.ToHex()[2..]
+                InvestorNPub = investorNostrPrivateKey.PubKey.ToHex()[2..],
+                // Initialize recovery properties with default values
+                RecoveredAmount = 0,
+                InvestorsInRecovery = 0,
+                IsRecoveryCompleted = false
             };
 
         DateTime? createdAt = null;
