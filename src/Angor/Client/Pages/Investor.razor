@@ -232,12 +232,10 @@
                                         @if (project.IsRecoveryCompleted == true)
                                         {
                                             <span class="status-badge status-success">Recovered</span>
-                                            <span class="stat-value ms-2">@Money.Satoshis(project.RecoveredAmount ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
                                         }
                                         else
                                         {
                                             <span class="status-badge status-warning">In Progress</span>
-                                            <span class="stat-value ms-2">@(project.InvestorsInRecovery ?? 0) Investors</span>
                                         }
                                     }
                                     else
@@ -353,7 +351,7 @@
             TotalInvested = projects.Sum(s => s.AmountInvested ?? 0);
             TotalWallet = abi.TotalBalance;
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
-            TotalSuccessfullyRecovered = projects.Sum(s => s.RecoveredAmount ?? 0);
+            TotalSuccessfullyRecovered = projects.Sum(s => s.AmountInRecovery ?? 0);
             ProjectsInRecovery = projects.Count(s => s.AmountInRecovery > 0);
 
             await RefreshBalance();
@@ -541,8 +539,6 @@
                 TransactionId = investment.TransactionId,
                 AmountInvested = investment.TotalAmount,
                 InvestorNPub = investorNostrPrivateKey.PubKey.ToHex()[2..],
-            // Initialize recovery properties with default values
-                RecoveredAmount = 0,
                 InvestorsInRecovery = 0,
                 IsRecoveryCompleted = false
             };

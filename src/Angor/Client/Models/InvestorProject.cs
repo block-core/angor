@@ -29,7 +29,6 @@ public class InvestorProject : Project
     /// </summary>
     public string UnfundedReleaseTransactionId { get; set; } 
 
-    public long? RecoveredAmount { get; set; }
     public int? InvestorsInRecovery { get; set; }
     public bool? IsRecoveryCompleted { get; set; }
     

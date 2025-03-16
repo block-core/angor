@@ -956,10 +956,7 @@
 
             project.RecoveryTransactionId = recoveryTransaction.Transaction.GetHash().ToString();
             project.AmountInRecovery = totalsats;
-            
-            // Update the recovery-related parameters
-            project.RecoveredAmount = totalsats;
-            
+                      
             // Increment investors in recovery count or set to 1 if null
             project.InvestorsInRecovery = (project.InvestorsInRecovery ?? 0) + 1;
             
