@@ -120,18 +120,6 @@
         <div class="stats-card">
             <div class="stats-content">
                 <div class="stats-icon">
-                    <Icon IconName="check-circle" Height="32" Width="32" />
-                </div>
-                <div class="stats-info">
-                    <h6 class="stats-title">Successfully Recovered</h6>
-                    <p class="stats-value">@Money.Satoshis(TotalSuccessfullyRecovered).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="stats-card">
-            <div class="stats-content">
-                <div class="stats-icon">
                     <Icon IconName="recovery" Height="32" Width="32" />
                 </div>
                 <div class="stats-info">
@@ -276,7 +264,6 @@
     long TotalWallet = 0;
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
-    long TotalSuccessfullyRecovered = 0;
     int ProjectsInRecovery = 0;
 
     private Dictionary<string, bool> investmentRequestsMap = new Dictionary<string, bool>();
@@ -351,7 +338,6 @@
             TotalInvested = projects.Sum(s => s.AmountInvested ?? 0);
             TotalWallet = abi.TotalBalance;
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
-            TotalSuccessfullyRecovered = projects.Sum(s => s.AmountInRecovery ?? 0);
             ProjectsInRecovery = projects.Count(s => s.AmountInRecovery > 0);
 
             await RefreshBalance();
