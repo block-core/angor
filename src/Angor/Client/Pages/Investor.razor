@@ -116,7 +116,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="stats-card">
             <div class="stats-content">
                 <div class="stats-icon">
@@ -223,7 +223,7 @@
                                 <span class="stat-label">In Recovery</span>
                                 <span class="stat-value">@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
                             </div>
-                            
+
                             <div class="stat-row">
                                 <span class="stat-label">Recovery Status</span>
                                 <div class="stat-value-group">
@@ -247,16 +247,18 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="project-actions">
+                        <div class="project-actions d-flex flex-column flex-lg-row gap-2">
                             @if (hasInvestmentReleaseRequests && project.UnfundedReleaseTransactionId == null)
                             {
-                                <a href=@($"/release/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-warning">
+                                <a href=@($"/release/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-warning flex-fill">
                                     Release Funds
                                 </a>
                             }
-                            <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border">
+                            <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border flex-fill">
                                 View Project
+                            </a>
+                            <a href=@($"/recover/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success flex-fill">
+                                Manage Investment
                             </a>
                         </div>
                     </div>
@@ -290,7 +292,7 @@
     {
         // Set active menu
         NavMenuState.SetActivePage("investor");
-        
+
         hasWallet = _walletStorage.HasWallet();
 
         if (hasWallet)
@@ -307,7 +309,6 @@
             TotalInvested = projects.Sum(s => s.AmountInvested ?? 0);
             TotalWallet = abi.TotalBalance;
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
-            TotalSuccessfullyRecovered = projects.Sum(s => s.RecoveredAmount ?? 0);
             ProjectsInRecovery = projects.Count(s => s.AmountInRecovery > 0);
 
             var refreshTask = RefreshBalance();
@@ -540,7 +541,7 @@
                 TransactionId = investment.TransactionId,
                 AmountInvested = investment.TotalAmount,
                 InvestorNPub = investorNostrPrivateKey.PubKey.ToHex()[2..],
-                // Initialize recovery properties with default values
+            // Initialize recovery properties with default values
                 RecoveredAmount = 0,
                 InvestorsInRecovery = 0,
                 IsRecoveryCompleted = false
@@ -616,4 +617,6 @@
     {
         NavigationManager.NavigateTo("/penalties");
     }
+
+
 }

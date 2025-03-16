@@ -29,6 +29,10 @@ public class InvestorProject : Project
     /// </summary>
     public string UnfundedReleaseTransactionId { get; set; } 
 
+    public long? RecoveredAmount { get; set; }
+    public int? InvestorsInRecovery { get; set; }
+    public bool? IsRecoveryCompleted { get; set; }
+    
     public bool WaitingForFounderResponse()
     {
         return ReceivedFounderSignatures() == false && SignaturesInfo?.TimeOfSignatureRequest != null;
@@ -51,7 +55,4 @@ public class InvestorProject : Project
         AmountInvested = investmentTransaction.Outputs.Skip(2).Take(ProjectInfo.Stages.Count).Sum(s => s.Value);
     }
 
-    public long? RecoveredAmount { get; set; }
-    public int? InvestorsInRecovery { get; set; }
-    public bool? IsRecoveryCompleted { get; set; }
 }

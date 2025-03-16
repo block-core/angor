@@ -956,6 +956,15 @@
 
             project.RecoveryTransactionId = recoveryTransaction.Transaction.GetHash().ToString();
             project.AmountInRecovery = totalsats;
+            
+            // Update the recovery-related parameters
+            project.RecoveredAmount = totalsats;
+            
+            // Increment investors in recovery count or set to 1 if null
+            project.InvestorsInRecovery = (project.InvestorsInRecovery ?? 0) + 1;
+            
+            // Mark recovery as not completed yet (will be completed after release)
+            project.IsRecoveryCompleted = false;
 
             storage.UpdateInvestmentProject(project);
 
@@ -1086,6 +1095,10 @@
             }
 
             project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.Transaction.GetHash().ToString();
+            
+            // Mark recovery process as completed when funds are released
+            project.IsRecoveryCompleted = true;
+            
             storage.UpdateInvestmentProject(project);
 
             _walletUIService.AddTransactionToPending(releaseRecoveryTransaction.Transaction);
