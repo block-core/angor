@@ -535,7 +535,7 @@ progress {
 
 .initialism {
     font-size: 0.875em;
-    text-transform: uppercase;
+    
 }
 
 .blockquote {
@@ -20339,12 +20339,12 @@ fieldset:disabled .btn {
 }
 
 .badge {
-    text-transform: uppercase;
+    
 }
 
 .btn {
     letter-spacing: 0;
-    text-transform: uppercase;
+    
     background-size: 150%;
     background-position-x: 25%;
     position: relative;
@@ -23418,7 +23418,7 @@ hr.horizontal {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
     font-size: 0.75rem;
-    text-transform: uppercase;
+    
     letter-spacing: 0.04em;
 }
 
