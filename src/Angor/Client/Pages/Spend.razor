@@ -13,6 +13,7 @@
 @using System.Text.Json
 @using Angor.Client.Models
 @using Angor.Client.Shared
+@using Angor.Client.Components
 
 
 @inject IClientStorage storage;
@@ -341,8 +342,7 @@
                                     <div class="d-flex justify-content-start mb-3">
                                         <button class="btn btn-border btn-sm"
                                                 @onclick="() => SelectAllUnspentUtxos(stage.StageIndex)">
-                                            <Icon IconName="select-all" Width="16" Height="16" />
-                                            <span class="ms-1">Select All Available</span>
+                                            <span class="ms-1">@(AreAllUnspentUtxosSelected(stage.StageIndex) ? "Deselect All" : "Select All Available")</span>
                                         </button>
                                     </div>
                                 }
@@ -1080,13 +1080,27 @@
     private void SelectAllUnspentUtxos(int stageIndex)
     {
         var stage = stageDatas.First(s => s.StageIndex == stageIndex);
+        bool areAllSelected = AreAllUnspentUtxosSelected(stageIndex);
+
         foreach (var transaction in stage.Items.Where(x => !x.IsSpent))
         {
             var key = new UtxoKey(transaction.Trxid, transaction.Outputindex);
-            if (!selectedUtxos.ContainsKey(key))
+            if (areAllSelected)
+            {
+                selectedUtxos.Remove(key);
+            }
+            else if (!selectedUtxos.ContainsKey(key))
             {
                 selectedUtxos[key] = true;
             }
         }
+    }
+
+    private bool AreAllUnspentUtxosSelected(int stageIndex)
+    {
+        var stage = stageDatas.First(s => s.StageIndex == stageIndex);
+        var unspentUtxos = stage.Items.Where(x => !x.IsSpent);
+        return unspentUtxos.All(transaction => 
+            selectedUtxos.ContainsKey(new UtxoKey(transaction.Trxid, transaction.Outputindex)));
     }
 }
