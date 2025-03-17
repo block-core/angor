@@ -109,7 +109,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="text-muted">Expiry Date</h6>
-                                <h4 class="mb-0">@project.ProjectInfo.ExpiryDate.ToString("MMM dd, yyyy")</h4>
+                                <h4 class="mb-0">@project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")</h4>
                             </div>
                             <div class="stat-icon">
                                 <Icon IconName="calendar" Height="32" Width="32" />
@@ -957,11 +957,6 @@
             project.RecoveryTransactionId = recoveryTransaction.Transaction.GetHash().ToString();
             project.AmountInRecovery = totalsats;
                       
-            // Increment investors in recovery count or set to 1 if null
-            project.InvestorsInRecovery = (project.InvestorsInRecovery ?? 0) + 1;
-            
-            // Mark recovery as not completed yet (will be completed after release)
-            project.IsRecoveryCompleted = false;
 
             storage.UpdateInvestmentProject(project);
 
@@ -1092,10 +1087,7 @@
             }
 
             project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.Transaction.GetHash().ToString();
-            
-            // Mark recovery process as completed when funds are released
-            project.IsRecoveryCompleted = true;
-            
+                       
             storage.UpdateInvestmentProject(project);
 
             _walletUIService.AddTransactionToPending(releaseRecoveryTransaction.Transaction);

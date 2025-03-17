@@ -28,10 +28,7 @@ public class InvestorProject : Project
     /// The trxid of an unfunded project that the investor has released the funds without a penalty 
     /// </summary>
     public string UnfundedReleaseTransactionId { get; set; } 
-
-    public int? InvestorsInRecovery { get; set; }
-    public bool? IsRecoveryCompleted { get; set; }
-    
+   
     public bool WaitingForFounderResponse()
     {
         return ReceivedFounderSignatures() == false && SignaturesInfo?.TimeOfSignatureRequest != null;

@@ -217,7 +217,7 @@
                                 <div class="stat-value-group">
                                     @if (project.AmountInRecovery > 0)
                                     {
-                                        @if (project.IsRecoveryCompleted == true)
+                                        @if (string.IsNullOrEmpty(project.RecoveryReleaseTransactionId))
                                         {
                                             <span class="status-badge status-success">Recovered</span>
                                         }
@@ -525,8 +525,6 @@
                 TransactionId = investment.TransactionId,
                 AmountInvested = investment.TotalAmount,
                 InvestorNPub = investorNostrPrivateKey.PubKey.ToHex()[2..],
-                InvestorsInRecovery = 0,
-                IsRecoveryCompleted = false
             };
 
         DateTime? createdAt = null;
