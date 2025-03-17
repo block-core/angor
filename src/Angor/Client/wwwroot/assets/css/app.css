@@ -193,7 +193,7 @@
 .btn.bg-gradient-primary:not(:disabled):not(.disabled).active,
 .btn.bg-gradient-primary:not(:disabled):not(.disabled):active,
 .show>.btn.bg-gradient-primary.dropdown-toggle {
-    color: color-yiq(var(--angor-primary));
+    color: var(--angor-primary);
     background-color: var(--angor-primary);
     border-color: var(--angor-primary);
 }
@@ -228,7 +228,7 @@
 .btn.bg-gradient-secondary:not(:disabled):not(.disabled).active,
 .btn.bg-gradient-secondary:not(:disabled):not(.disabled):active,
 .show>.btn.bg-gradient-secondary.dropdown-toggle {
-    color: color-yiq(var(--angor-secondary));
+    color: var(--angor-secondary);
     background-color: var(--angor-secondary);
     border-color: var(--angor-secondary);
 }
@@ -254,6 +254,7 @@
 
 ::-webkit-scrollbar-thumb {
     background: rgba(8, 108, 129, 0.3);
+    -webkit-backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
     border-radius: 3px;
 }
@@ -782,7 +783,14 @@ tr[style*="cursor: pointer;"]:hover {
     justify-content: center;
     align-items: center;
     z-index: 1000000;
+    -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
+    overflow: hidden; 
+}
+
+ body.modal-open {
+    overflow: hidden;  
+    padding-right: var(--scrollbar-width, 0px); 
 }
 
 .card-img-top {
@@ -1109,10 +1117,8 @@ h1:focus-visible {
 img,
 a {
     -webkit-user-drag: none;
-    -khtml-user-drag: none;
     -moz-user-drag: none;
     -o-user-drag: none;
-    user-drag: none;
 }
 
 .disabled {
@@ -1276,6 +1282,16 @@ a p {
 .feature-box {
     transition: all 0.3s ease;
     border-radius: 15px;
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     padding: 2rem;
     height: 100%;
@@ -1871,6 +1887,7 @@ button:hover:not(:disabled) {
 
 .form-check-label {
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
     margin: 0;
 }
@@ -2804,6 +2821,7 @@ input[type=number]::-webkit-outer-spin-button {
 
 input[type=number] {
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .modal-footer .d-flex {
