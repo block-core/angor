@@ -21,6 +21,7 @@ body {
     background-color: var(--angor-accent);
     overflow-y: scroll;
     -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
@@ -279,6 +280,7 @@ caption {
 th {
     text-align: inherit;
     text-align: -webkit-match-parent;
+    text-align: match-parent;
 }
 
 thead,
@@ -535,7 +537,7 @@ progress {
 
 .initialism {
     font-size: 0.875em;
-    text-transform: uppercase;
+    
 }
 
 .blockquote {
@@ -2886,20 +2888,7 @@ textarea.form-control-lg {
         margin-left: 0;
     }
 
-.form-check-input {
-    width: 1.23em;
-    height: 1.23em;
-    margin-top: 0.135em;
-    vertical-align: top;
-    background-color: #fff;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    border: none;
-    appearance: none;
-    print-color-adjust: exact;
-    transition: background-color 0.25s ease, border-color 0.25s ease, background-position 0.15s ease-in-out, opacity 0.15s ease-out, box-shadow 0.15s ease-in-out;
-}
+
 
 @media (prefers-reduced-motion: reduce) {
     .form-check-input {
@@ -3533,7 +3522,6 @@ textarea.form-control.is-invalid {
     text-align: center;
     vertical-align: middle;
     cursor: pointer;
-    user-select: none;
     border: var(--angor-btn-border-width) solid var(--angor-btn-border-color);
     border-radius: var(--angor-btn-border-radius);
     background-color: var(--angor-btn-bg);
@@ -20339,12 +20327,12 @@ fieldset:disabled .btn {
 }
 
 .badge {
-    text-transform: uppercase;
+    
 }
 
 .btn {
     letter-spacing: 0;
-    text-transform: uppercase;
+    
     background-size: 150%;
     background-position-x: 25%;
     position: relative;
@@ -23418,7 +23406,7 @@ hr.horizontal {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
     font-size: 0.75rem;
-    text-transform: uppercase;
+    
     letter-spacing: 0.04em;
 }
 
