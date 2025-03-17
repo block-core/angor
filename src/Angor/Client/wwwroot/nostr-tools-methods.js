@@ -1,4 +1,5 @@
 import {Base64} from "./lib/js-base64/base64.mjs";
+
 function hexToBytes(hex) {
     let bytes = [];
     for (let c = 0; c < hex.length; c += 2) {
@@ -60,7 +61,7 @@ async function encryptNostr(sharedSecretHex, message) {
 
 async function decryptNostr(sharedSecretHex, encryptedMessage) {
     try {
-        return NostrTools.nip44.v2.decrypt(encryptedMessage,sharedSecretHex);
+        return NostrTools.nip44.decrypt(encryptedMessage,sharedSecretHex);
     }
     catch (e)
     {

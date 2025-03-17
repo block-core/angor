@@ -26,14 +26,13 @@ namespace Angor.Client.Services
 
         public async Task<string> EncryptNostrContentAsync(string nsec, string npub, string content)
         {
-            //var secertHex = GetSharedSecretHexWithoutPrefix(nsec, npub);
             var secertHex = GetAesConversationKey(nsec, npub);
+            
             return await _jsRuntime.InvokeAsync<string>("encryptNostr", secertHex, content);
         }
 
         public async Task<string> DecryptNostrContentAsync(string nsec, string npub, string encryptedContent)
         {
-            //var secertHex = GetSharedSecretHexWithoutPrefix(nsec, npub);
             var secertHex = GetAesConversationKey(nsec, npub);
             return await _jsRuntime.InvokeAsync<string>("decryptNostr", secertHex, encryptedContent);
         }
@@ -54,7 +53,7 @@ namespace Angor.Client.Services
             
             var secert = publicKey.GetSharedPubkey(privateKey);
 
-            return HKDF.DeriveKey(HashAlgorithmName.SHA256, secert.ToBytes(), 32, "nip44-v2"u8.ToArray());
+            return HKDF.Extract(HashAlgorithmName.SHA256, secert.ToBytes()[1..], Encoders.ASCII.DecodeData("nip44-v2"));
         }
     }
 }
