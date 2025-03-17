@@ -13,6 +13,7 @@
 @using System.Text.Json
 @using Angor.Client.Models
 @using Angor.Client.Shared
+@using Angor.Client.Components
 
 
 @inject IClientStorage storage;
@@ -240,7 +241,7 @@
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-value text-success mb-2">@(totalInvestedTransactions - totalSpentTransactions)</div>
-                                    <div class="stat-label">Unspent</div>
+                                    <div class="stat-label">Available</div>
                                 </div>
                                 <div class="stat-item">
                                     <div class="stat-value text-warning mb-2">@totalSpentTransactions</div>
@@ -311,7 +312,7 @@
                                       title="Amount left to spend: @Money.Satoshis(unspentInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker">
                                     @Money.Satoshis(unspentInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker
                                 </span>
-                                <span class="badge bg-secondary ms-2">@investedCount trx</span>
+                                <span class="badge bg-secondary ms-2">@investedCount transactions</span>
                             </h5>
 
                             <button @onclick="() => Expand(stage.StageIndex)"
@@ -336,13 +337,26 @@
                         @if (stage.StageIndex == expandedStageId)
                         {
                             <div class="mt-3 animate-fade-in">
+                                @if (stage.Items.Any(x => !x.IsSpent))
+                                {
+                                    <div class="d-flex justify-content-start mb-3">
+                                        <button class="btn btn-border btn-sm"
+                                                @onclick="() => SelectAllUnspentUtxos(stage.StageIndex)">
+                                            <span class="ms-1">@(AreAllUnspentUtxosSelected(stage.StageIndex) ? "Deselect All" : "Select All Available")</span>
+                                        </button>
+                                    </div>
+                                }
+
                                 @foreach (var transaction in stage.Items)
                                 {
                                     bool isTicked = IsUtxoSelected(transaction.Trxid, transaction.Outputindex);
                                     string statusClass = transaction.IsSpent ? "bg-warning text-dark" : "bg-success text-light";
-                                    string statusText = transaction.IsSpent ? "Spent" : "Unspent";
+                                    string statusText = transaction.IsSpent ? 
+                                        (transaction.SpentType == "founder" ? "Spent by founder" : "Redeemed by investor") : 
+                                        "Available";
 
-                                    <div class="d-flex align-items-center mb-2 p-2 border rounded hover-effect">
+                                    <div class="d-flex align-items-center mb-2 p-2 border rounded hover-effect"
+                                         title="@(transaction.InvestorNpub != null ? $"Investor: {transaction.InvestorNpub}" : "")">
                                         <div class="me-3">
                                             <div class="form-check">
                                                 <input class="form-check-input"
@@ -358,7 +372,8 @@
                                         </div>
                                         <div class="flex-grow-1 d-flex justify-content-between align-items-center">
                                             <span class="text-primary cursor-pointer small"
-                                                  @onclick="() => CopyTRXToClipboard(transaction.Trxid)">
+                                                  @onclick="() => CopyTRXToClipboard(transaction.Trxid)"
+                                                  title="Click to copy transaction ID">
                                                 @transaction.Trxid.Substring(0, 8)...
                                             </span>
                                             <span class="badge @statusClass">@statusText</span>
@@ -578,6 +593,8 @@
         public string OutputAddress;
         public long Amount;
         public bool IsSpent;
+        public string SpentType;  // "founder" or "investor"
+        public string InvestorNpub;  // Optional, can be null
     }
 
     List<StageData> stageDatas = new();
@@ -1058,5 +1075,32 @@
     private void ReleaseFundsToInvestors(MouseEventArgs e)
     {
         NavigationManager.NavigateTo($"/unfunded/{ProjectId}");
+    }
+
+    private void SelectAllUnspentUtxos(int stageIndex)
+    {
+        var stage = stageDatas.First(s => s.StageIndex == stageIndex);
+        bool areAllSelected = AreAllUnspentUtxosSelected(stageIndex);
+
+        foreach (var transaction in stage.Items.Where(x => !x.IsSpent))
+        {
+            var key = new UtxoKey(transaction.Trxid, transaction.Outputindex);
+            if (areAllSelected)
+            {
+                selectedUtxos.Remove(key);
+            }
+            else if (!selectedUtxos.ContainsKey(key))
+            {
+                selectedUtxos[key] = true;
+            }
+        }
+    }
+
+    private bool AreAllUnspentUtxosSelected(int stageIndex)
+    {
+        var stage = stageDatas.First(s => s.StageIndex == stageIndex);
+        var unspentUtxos = stage.Items.Where(x => !x.IsSpent);
+        return unspentUtxos.All(transaction => 
+            selectedUtxos.ContainsKey(new UtxoKey(transaction.Trxid, transaction.Outputindex)));
     }
 }
