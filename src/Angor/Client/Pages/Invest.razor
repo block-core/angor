@@ -198,12 +198,18 @@
                 <ValidationSummary />
 
                 <div class="form-group mb-4">
-                    <label for="investmentAmount" class="form-label">Investment Amount</label>
-                    <div class="input-group">
 
-                        <InputNumber type="number" step="0.00000001" min="0" class="form-control" id="investmentAmount" @bind-Value="@Investment.InvestmentAmountBtc" @oninput="UpdateStagesBreakdown" />
+                    <label for="investmentAmount" class="form-label d-flex align-items-center gap-2 mb-3 mt-3">
+                        <Icon IconName="investment" Width="20" Height="20" />
+                        <span>Investment Amount</span>
+                    </label>
 
-                        <span role="button" class="btn btn-border d-flex align-items-center justify-content-center">
+
+                    <div class="input-group form-control">
+                        <InputNumber type="number" step="0.00000001" min="0" class="form-control bg-transparent border-0 shadow-none"
+                                     id="investmentAmount" @bind-Value="@Investment.InvestmentAmountBtc"
+                                     @oninput="UpdateStagesBreakdown" />
+                        <span class="border-0 d-flex align-items-center justify-content-center">
                             @network.CoinTicker
                         </span>
                     </div>
@@ -213,8 +219,8 @@
                     <label for="investmentSlider" class="form-label mb-4">Select Investment Amount</label>
                     <input type="range" class="form-range custom-range" id="investmentSlider"
                            min="0.001" max="@project.ProjectInfo.TargetAmount.ToUnitBtc()" step="0.001"
-                    @bind="Investment.InvestmentAmountBtc"
-                    @oninput="UpdateStagesBreakdown" />
+                           @bind="Investment.InvestmentAmountBtc"
+                           @oninput="UpdateStagesBreakdown" />
                     <div class="d-flex justify-content-between">
                         <small>0.001 @network.CoinTicker</small>
                         <small>@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</small>
@@ -866,11 +872,11 @@ else
             var releaseAddress = accountInfo.GetNextReceiveAddress();
 
             SignRecoveryRequest signRecoveryRequest = new()
-            {
-                ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
-                InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
-                UnfundedReleaseAddress = releaseAddress
-            };
+                {
+                    ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
+                    InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                    UnfundedReleaseAddress = releaseAddress
+                };
 
             var sigJson = serializer.Serialize(signRecoveryRequest);
 
@@ -1042,15 +1048,15 @@ else
         Investments investments = new()
             {
                 ProjectIdentifiers = storage.GetInvestmentProjects()
-                                .Where(x => x.InvestedInProject())
-                                .Select(x => new InvestmentState
-                                {
-                                    ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
-                                    InvestorPubKey = x.InvestorPublicKey,
-                                    InvestmentTransactionHash = x.TransactionId,
-                                    UnfundedReleaseAddress = x.UnfundedReleaseAddress,
-                                })
-                                .ToList()
+                                    .Where(x => x.InvestedInProject())
+                                    .Select(x => new InvestmentState
+                                    {
+                                        ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
+                                        InvestorPubKey = x.InvestorPublicKey,
+                                        InvestmentTransactionHash = x.TransactionId,
+                                        UnfundedReleaseAddress = x.UnfundedReleaseAddress,
+                                    })
+                                    .ToList()
             };
 
 
