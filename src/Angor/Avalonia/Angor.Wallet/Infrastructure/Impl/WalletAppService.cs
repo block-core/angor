@@ -110,6 +110,8 @@ public class WalletAppService : IWalletAppService
         if (walletId != SingleWalletId)
             return Result.Failure<Fee>("Invalid wallet ID");
 
+        var satsPerVirtualKB = feeRate.SatsPerVByte * 1000;
+        
         try
         {
             var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
@@ -132,6 +134,7 @@ public class WalletAppService : IWalletAppService
 
             var sendInfo = new SendInfo
             {
+                FeeRate = satsPerVirtualKB,
                 SendAmount = amount.Value,
                 SendToAddress = address.Value,
                 ChangeAddress = changeAddress,
