@@ -1,6 +1,4 @@
-# Deploying Deploy a Proxy Server
-
-## Step 1: Deploy a Proxy
+# Deploying a Proxy Server
 
 ### How the Proxy Works
 
@@ -29,7 +27,7 @@ ASPNETCORE_URLS: http://+:9910
 ```
 
 ### Deploy the Proxy
-1. Ensure the `.nginx.conf` file is present.  
+1. Ensure the `nginx.conf` file is present.  
 2. Start the proxy service in the proxy folder:
    ```bash
    docker-compose up -d proxy
