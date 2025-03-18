@@ -2,7 +2,7 @@ using System.Windows.Input;
 using Angor.Wallet.Domain;
 using AngorApp.Sections.Wallet.Operate.Send;
 using AngorApp.UI.Controls.Common.Success;
-using AngorApp.UI.Controls.Common.TransactionPreview;
+using AngorApp.UI.Controls.Common.TransactionDraft;
 using AngorApp.UI.Services;
 using DynamicData;
 using DynamicData.Binding;

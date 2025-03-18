@@ -1,7 +1,7 @@
 using Angor.Wallet.Domain;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 
-namespace AngorApp.UI.Controls.Common.TransactionPreview;
+namespace AngorApp.UI.Controls.Common.TransactionDraft;
 
 public interface ITransactionDraftViewModel : IStep
 {

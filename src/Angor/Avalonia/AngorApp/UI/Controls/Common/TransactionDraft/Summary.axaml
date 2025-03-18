@@ -4,10 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:avaloniaProgressRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
-             xmlns:transactionPreview="clr-namespace:AngorApp.UI.Controls.Common.TransactionPreview"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:transactionPreview="clr-namespace:AngorApp.UI.Controls.Common.TransactionDraft"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.UI.Controls.Common.TransactionPreview.Summary" x:DataType="transactionPreview:ITransactionDraftViewModel">
+             x:Class="AngorApp.UI.Controls.Common.TransactionDraft.Summary" x:DataType="transactionPreview:ITransactionDraftViewModel">
 
     <Design.DataContext>
         <transactionPreview:TransactionDraftViewModelDesign />

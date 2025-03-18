@@ -51,7 +51,7 @@ public class WalletAppService : IWalletAppService
 
             var (seed, passphrase) = sensitiveDataResult.Value;
             
-            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase };
+            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
             var transactions = new List<BroadcastedTransaction>();
                 
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(walletWords);
@@ -120,7 +120,7 @@ public class WalletAppService : IWalletAppService
 
             var (seed, passphrase) = sensitiveDataResult.Value;
             
-            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase };
+            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(walletWords);
         
             // Update AccountInfo to ensure it has change addresses
@@ -161,7 +161,7 @@ public class WalletAppService : IWalletAppService
             }
 
             var (seed, passphrase) = sensitiveDataResult.Value;
-            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase };
+            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(walletWords);
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
@@ -194,7 +194,7 @@ public class WalletAppService : IWalletAppService
 
             var (seed, passphrase) = sensitiveDataResult.Value;
             
-            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase };
+            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
             var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(walletWords);
             await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
             

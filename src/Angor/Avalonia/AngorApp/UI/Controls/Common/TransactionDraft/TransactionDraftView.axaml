@@ -3,12 +3,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:dp="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
-             xmlns:transactionPreview="clr-namespace:AngorApp.UI.Controls.Common.TransactionPreview"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:transactionPreview="clr-namespace:AngorApp.UI.Controls.Common.TransactionDraft"
              mc:Ignorable="d"
              d:DesignWidth="600"
              d:DesignHeight="400"
-             x:Class="AngorApp.UI.Controls.Common.TransactionPreview.TransactionPreviewView"
+             x:Class="AngorApp.UI.Controls.Common.TransactionDraft.TransactionDraftView"
              x:DataType="transactionPreview:ITransactionDraftViewModel">
 
     <Design.DataContext>

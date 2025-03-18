@@ -1,4 +1,4 @@
-namespace AngorApp.UI.Controls.Common.TransactionPreview;
+namespace AngorApp.UI.Controls.Common.TransactionDraft;
 
 public partial class Summary : UserControl
 {

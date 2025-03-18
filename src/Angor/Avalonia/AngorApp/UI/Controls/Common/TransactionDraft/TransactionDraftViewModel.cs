@@ -5,7 +5,7 @@ using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
 using Zafiro.UI;
 
-namespace AngorApp.UI.Controls.Common.TransactionPreview;
+namespace AngorApp.UI.Controls.Common.TransactionDraft;
 
 public partial class TransactionDraftViewModel : ReactiveValidationObject, ITransactionDraftViewModel
 {

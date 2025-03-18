@@ -1,7 +1,7 @@
 using Angor.Wallet.Domain;
 using AngorApp.Sections.Wallet.Operate;
 
-namespace AngorApp.UI.Controls.Common.TransactionPreview;
+namespace AngorApp.UI.Controls.Common.TransactionDraft;
 
 public class TransactionDraftViewModelDesign : ITransactionDraftViewModel
 {

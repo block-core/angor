@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using AngorApp.Sections.Browse.Details.Invest.Amount;
 using AngorApp.UI.Controls.Common.Success;
-using AngorApp.UI.Controls.Common.TransactionPreview;
+using AngorApp.UI.Controls.Common.TransactionDraft;
 using AngorApp.UI.Services;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
