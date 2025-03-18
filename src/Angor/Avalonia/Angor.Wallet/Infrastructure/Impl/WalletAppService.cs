@@ -143,7 +143,7 @@ public class WalletAppService : IWalletAppService
             };
 
             var estimatedFee = _walletOperations.CalculateTransactionFee(sendInfo, accountInfo, feeRate.SatsPerVByte);
-            return Result.Success(new Fee((long)(estimatedFee * 100_000_000))); // Convertir BTC a sats
+            return Result.Success(new Fee((long)(estimatedFee * 100_000_000))); // Conversion to sats
         }
         catch (Exception ex)
         {
