@@ -1,3 +1,24 @@
+## <small>0.0.79 (2025-03-17)</small>
+
+* act on copilot review ([af55ac3](https://github.com/block-core/angor/commit/af55ac3))
+* Adapt GUI to Angor.Wallet (#273) ([274372c](https://github.com/block-core/angor/commit/274372c)), closes [#273](https://github.com/block-core/angor/issues/273)
+* Add mempool indexer to the list of indexers ([b07b180](https://github.com/block-core/angor/commit/b07b180))
+* Correctly add the pending response form mempool and increase the base fee by a bit ([74adc43](https://github.com/block-core/angor/commit/74adc43))
+* disable some additional boxes once profile is created (#279) ([8653c1a](https://github.com/block-core/angor/commit/8653c1a)), closes [#279](https://github.com/block-core/angor/issues/279)
+* Filter out utxo not part of the address ([7607b81](https://github.com/block-core/angor/commit/7607b81))
+* Fix the derivation path on all keys (#276) ([191c3e2](https://github.com/block-core/angor/commit/191c3e2)), closes [#276](https://github.com/block-core/angor/issues/276)
+* Fix UI  (#278) ([eb3b482](https://github.com/block-core/angor/commit/eb3b482)), closes [#278](https://github.com/block-core/angor/issues/278)
+* Fix UI (#275) ([d79569b](https://github.com/block-core/angor/commit/d79569b)), closes [#275](https://github.com/block-core/angor/issues/275)
+* Improve sidebar menu (#281) ([9a297e7](https://github.com/block-core/angor/commit/9a297e7)), closes [#281](https://github.com/block-core/angor/issues/281)
+* Improve UI (#283) ([e50586f](https://github.com/block-core/angor/commit/e50586f)), closes [#283](https://github.com/block-core/angor/issues/283)
+* Improve UI of View, Index, and Spend pages (#280) ([95be0b5](https://github.com/block-core/angor/commit/95be0b5)), closes [#280](https://github.com/block-core/angor/issues/280)
+* make mempool primary ([2bdd205](https://github.com/block-core/angor/commit/2bdd205))
+* Merge pull request #274 ([d0fd41e](https://github.com/block-core/angor/commit/d0fd41e)), closes [#274](https://github.com/block-core/angor/issues/274)
+* Support up to 8 decimal places for BTC input (#284) ([86b8522](https://github.com/block-core/angor/commit/86b8522)), closes [#284](https://github.com/block-core/angor/issues/284)
+* use the correct values form outspends ([dbc400b](https://github.com/block-core/angor/commit/dbc400b))
+
+
+
 ## <small>0.0.78 (2025-02-25)</small>
 
 * Ability to create Wallet (#237) ([d70a276](https://github.com/block-core/angor/commit/d70a276)), closes [#237](https://github.com/block-core/angor/issues/237)
@@ -15,6 +36,7 @@
 * Fix UI bugs (#272) ([3de0c36](https://github.com/block-core/angor/commit/3de0c36)), closes [#272](https://github.com/block-core/angor/issues/272)
 * Fixes exceptions when using Maybe.Value in ViewModels (#257) ([1536b0e](https://github.com/block-core/angor/commit/1536b0e)), closes [#257](https://github.com/block-core/angor/issues/257)
 * Improve Home section (#243) ([55e33cf](https://github.com/block-core/angor/commit/55e33cf)), closes [#243](https://github.com/block-core/angor/issues/243)
+* Increment version ([7a5f811](https://github.com/block-core/angor/commit/7a5f811))
 * Memool-end-to-end (#255) ([a1a24fe](https://github.com/block-core/angor/commit/a1a24fe)), closes [#255](https://github.com/block-core/angor/issues/255)
 * Memool-end-to-end-fee-fixes (#265) ([1e9c2f5](https://github.com/block-core/angor/commit/1e9c2f5)), closes [#265](https://github.com/block-core/angor/issues/265)
 * New UI (#241) ([c8a0c28](https://github.com/block-core/angor/commit/c8a0c28)), closes [#241](https://github.com/block-core/angor/issues/241)
@@ -29,7 +51,9 @@
 * UI UX improvement (#264) ([f99fcaf](https://github.com/block-core/angor/commit/f99fcaf)), closes [#264](https://github.com/block-core/angor/issues/264)
 * UI/UX improvement (#235) ([bfd7815](https://github.com/block-core/angor/commit/bfd7815)), closes [#235](https://github.com/block-core/angor/issues/235)
 * Update dashboard.css (#271) ([71817f4](https://github.com/block-core/angor/commit/71817f4)), closes [#271](https://github.com/block-core/angor/issues/271)
+* Update version ([c35966a](https://github.com/block-core/angor/commit/c35966a))
 * Update version ([a232c37](https://github.com/block-core/angor/commit/a232c37))
+* Updated the CHANGELOG.md ([1f0f357](https://github.com/block-core/angor/commit/1f0f357))
 * Use factories to create ViewModels (#256) ([631bea9](https://github.com/block-core/angor/commit/631bea9)), closes [#256](https://github.com/block-core/angor/issues/256)
 * Use IoC Container (#258) ([bff0434](https://github.com/block-core/angor/commit/bff0434)), closes [#258](https://github.com/block-core/angor/issues/258)
 

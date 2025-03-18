@@ -117,7 +117,7 @@ public class NetworkConfiguration : INetworkConfiguration
             return new List<SettingsUrl>
             {
                 new SettingsUrl { Name = "", Url = "https://btc.indexer.angor.io", IsPrimary = false },
-                new SettingsUrl { Name = "", Url = "https://mempool.explorer.angor.io/", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "https://btc2.indexer.angor.io", IsPrimary = true },
             };
         }
 
@@ -205,7 +205,7 @@ public class NetworkConfiguration : INetworkConfiguration
         // Determine the correct genesis block hash based on the network type
         return currentNetwork.Name switch
         {
-            "Mainnet" => "000000000019d6689c085ae165831e93",
+            "Main" => "000000000019d6689c085ae165831e93",
             "Testnet" => "000000000933ea01ad0ee984209779ba",
             "Signet" => "00000000020f01e33f91b6c7c5d3a3f8",
             "Regtest" => "0f9195cbdb894feda6ee07798e0d597d",
@@ -218,7 +218,7 @@ public class NetworkConfiguration : INetworkConfiguration
     {
         return genesisBlockHash switch
         {
-            "000000000019d6689c085ae165831e93" => "Mainnet",
+            "000000000019d6689c085ae165831e93" => "Main",
             "000000000933ea01ad0ee984209779ba" => "Testnet",
             "00000000020f01e33f91b6c7c5d3a3f8" => "Signet",
             "0f9195cbdb894feda6ee07798e0d597d" => "Regtest",
