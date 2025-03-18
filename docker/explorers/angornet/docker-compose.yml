@@ -12,54 +12,40 @@ volumes:
   electrs_data:
     name: electrs-data
 
+
 services:
+
   node:
     container_name: btc-node
-    user: 1000:1000
-    image: lncm/bitcoind:v25.0
-    mem_limit: 8192m
-    cpus: 2.000
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 65536
+    image: blockcore/bitcoin-angornet:latest
+    mem_limit: 2048m
+    cpus: 0.8 # how many cpus to use
     healthcheck:
-      test: ["CMD", "bitcoin-cli", "-rpcuser=rpcuser", "-rpcpassword=rpcpassword", "-rpcport=8332", "getblockchaininfo"]
+      test: ["CMD", "bitcoin-cli", "ping"]
       interval: 10s
       retries: 5
       start_period: 5s
       timeout: 10s
-    command:
-      [
-        "-server=1",
-        "-rest=1",
-        "-txindex=1",
-        "-dbcache=6000",
-        "-rpcworkqueue=100",
-        "-rpcthreads=100",
-        "-addresstype=bech32",
-        "-changetype=bech32",
-        "-rpcallowip=10.202.0.0/8",
-        "-rpcallowip=10.201.0.0/8",
-        "-rpcallowip=192.168.0.0/8",
-        "-rpcallowip=172.0.0.0/8",
-        "-rpcallowip=127.0.0.1/8",
-        "-rpcbind=0.0.0.0",
-        "-rpcuser=rpcuser",
-        "-rpcpassword=rpcpassword",
-        "-assumevalid=000000000000000000039f849372dbe650f8b9a17e7aba7a8e022aaf41280b8d",
-      ]
-    restart: on-failure
-    stop_grace_period: 15m30s
+    restart: unless-stopped
+    stop_grace_period: 15m
     volumes:
-      - blockchain:/data/.bitcoin
+      - blockchain:/root/.bitcoin
+    environment:
+      UACOMMENT: $UACOMMENT
+      BLOCKPRODUCTIONDELAY: ${BLOCKPRODUCTIONDELAY:-30}
+      NBITS: $NBITS
+      SIGNETCHALLENGE: ${SIGNETCHALLENGE:-512102a3f8184701a033e5f8faa295647374b0bbc868082240d6e7ad8e9ecb0d86e6d451ae}
+      EXTERNAL_IP: $EXTERNAL_IP
+      RPCUSER: ${RPCUSER:-rpcuser}
+      RPCPASSWORD: ${RPCPASSWORD:-rpcpassword}
+      ADDNODE: ${ADDNODE:-207.180.254.78, 173.249.17.85}
     ports:
-      - "8333:8333"
-      - "8332:8332"
-      - "38332:38332"
-      - "38333:38333"
+      - 18333:18333 # Make this a public node.
+      - 8333:8333 # Make this a public node.
+      - 38333:38333 # Make this a public node.
+      - 38332:38332
     networks:
-      - mempoolnetwork
+      - btcnetwork
 
   mempool_api:
     container_name: mempool-api
@@ -72,7 +58,7 @@ services:
       ELECTRUM_PORT: "5001"
       ELECTRUM_TLS_ENABLED: "false"
       CORE_RPC_HOST: "node"
-      CORE_RPC_PORT: "8332"
+      CORE_RPC_PORT: "38333"
       CORE_RPC_USERNAME: "rpcuser"
       CORE_RPC_PASSWORD: "rpcpassword"
       DATABASE_ENABLED: "true"
@@ -84,11 +70,11 @@ services:
       MEMPOOL_STDOUT_LOG_MIN_PRIORITY: "debug"
       MEMPOOL_INDEXING_BLOCKS_AMOUNT: -1
       ANGOR_ENABLED: "true"
-      VIRTUAL_HOST: btc2.indexer.angor.io
+      VIRTUAL_HOST: tbtc.indexer.angor.io
       VIRTUAL_PORT: 8999
       VIRTUAL_PROTO: http
       VIRTUAL_NETWORK: proxy
-      LETSENCRYPT_HOST: btc2.indexer.angor.io
+      LETSENCRYPT_HOST: tbtc.indexer.angor.io
       LETSENCRYPT_EMAIL: admin@blockcore.net
       ASPNETCORE_URLS: http://+:8999
     restart: unless-stopped
@@ -99,7 +85,7 @@ services:
     volumes:
       - memmpool_api:/backend/cache
     networks:
-      - mempoolnetwork
+      - btcnetwork
       - proxy
 
   mempool_db:
@@ -115,22 +101,22 @@ services:
     volumes:
       - memmpool_indexer:/var/lib/mysql
     networks:
-      - mempoolnetwork
+      - btcnetwork
 
   mempool_web:
     container_name: "mempool_web"
     environment:
-      MAINNET_ENABLED: "true"
-      ROOT_NETWORK: "main"
+      MAINNET_ENABLED: "false"
+      ROOT_NETWORK: "signet"
       FRONTEND_HTTP_PORT: "8080"
       BACKEND_MAINNET_HTTP_HOST: "mempool_api"
       LIGHTNING: "false"
       ANGOR_ENABLED: "true"
-      VIRTUAL_HOST: mempool.explorer.angor.io
+      VIRTUAL_HOST: test.explorer.angor.io
       VIRTUAL_PORT: 8080
       VIRTUAL_PROTO: http
       VIRTUAL_NETWORK: proxy
-      LETSENCRYPT_HOST: mempool.explorer.angor.io
+      LETSENCRYPT_HOST: test.explorer.angor.io
       LETSENCRYPT_EMAIL: admin@blockcore.net
       ASPNETCORE_URLS: http://+:8080
     image: blockcore/mempool-frontend:latest
@@ -141,40 +127,39 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - mempoolnetwork
+      - btcnetwork
       - proxy
 
   mempool_electrs:
     container_name: mempool-electrs
-    image: getumbrel/electrs:v0.10.9
+    image: mempool/electrs:latest
     user: root
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 65536
     ports:
       - 5001:5001
       - 3003:3003
     depends_on:
       node:
         condition: service_healthy
+    entrypoint:
+      /bin/electrs
     command: |
-      --network bitcoin
-      --daemon-rpc-addr btc-node:8332
-      --daemon-p2p-addr btc-node:8333
+      --network signet
+      --jsonrpc-import
+      --daemon-rpc-addr btc-node:38332
+      --cookie "rpcuser:rpcpassword"
       --db-dir /electrs
+      --http-addr 0.0.0.0:3003
       --electrum-rpc-addr 0.0.0.0:5001
-      --log-filters INFO  
+      -vvvv
     volumes:
       - electrs_data:/electrs
-      - ./electrs.conf:/etc/electrs/config.toml:ro
     networks:
-      - mempoolnetwork
+      - btcnetwork
 
 networks:
-  mempoolnetwork:
+  btcnetwork:
     external: false
-    name: mempoolnetwork
+    name: btcnetwork
   proxy:
     external: true
     name: proxy
