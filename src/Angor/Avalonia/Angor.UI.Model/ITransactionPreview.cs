@@ -1,9 +1,10 @@
+using Angor.Wallet.Domain;
 using CSharpFunctionalExtensions;
 
 namespace Angor.UI.Model;
 
-public interface IUnsignedTransaction
+public interface ITransactionDraft
 {
     public long TotalFee { get; set; }
-    Task<Result<IBroadcastedTransaction>> Broadcast();
+    Task<Result<TxId>> Submit();
 }

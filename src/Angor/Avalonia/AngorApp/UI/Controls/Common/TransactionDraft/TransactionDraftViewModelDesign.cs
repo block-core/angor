@@ -1,10 +1,11 @@
+using Angor.Wallet.Domain;
 using AngorApp.Sections.Wallet.Operate;
 
-namespace AngorApp.UI.Controls.Common.TransactionPreview;
+namespace AngorApp.UI.Controls.Common.TransactionDraft;
 
-public class TransactionPreviewViewModelDesign : ITransactionPreviewViewModel
+public class TransactionDraftViewModelDesign : ITransactionDraftViewModel
 {
-    public IUnsignedTransaction Transaction { get; set; } = new UnsignedTransactionDesign()
+    public ITransactionDraft TransactionDraft { get; set; } = new TransactionDraftDesign
     {
         TotalFee = 10,
         Address = "Test Address",
@@ -14,9 +15,10 @@ public class TransactionPreviewViewModelDesign : ITransactionPreviewViewModel
         UtxoCount = 1,
         ViewRawJson = "JSON"
     };
+
     public IObservable<bool> IsBusy { get; set; } = Observable.Return(false);
-    public ReactiveCommand<Unit, Result<IBroadcastedTransaction>> Confirm { get; }
-    public ReactiveCommand<Unit, Result<IUnsignedTransaction>> CreateTransaction { get; }
+    public ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
+    public ReactiveCommand<Unit, Result<ITransactionDraft>> CreateDraft { get; }
     public IObservable<bool> TransactionConfirmed { get; }
     public Destination Destination { get; } = new("Sample Destination", 1000, "mzHrLAR3WWLE4eCpq82BDCKmLeYRyYXPtm");
     public long Feerate { get; set; } = 1;

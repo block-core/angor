@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using AngorApp.Sections.Browse.Details.Invest.Amount;
 using AngorApp.UI.Controls.Common.Success;
-using AngorApp.UI.Controls.Common.TransactionPreview;
+using AngorApp.UI.Controls.Common.TransactionDraft;
 using AngorApp.UI.Services;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
@@ -46,7 +46,7 @@ public class ProjectDetailsViewModel(IWalletProvider walletProvider, IProject pr
             .Then(viewModel =>
             {
                 var destination = new Destination(project.Name, viewModel.Amount!.Value, project.BitcoinAddress);
-                return new TransactionPreviewViewModel(wallet, destination, uiServices);
+                return new TransactionDraftViewModel(wallet, destination, uiServices);
             })
             .Then(_ => new SuccessViewModel("Transaction confirmed!", "Success"))
             .FinishWith(model => Unit.Default);

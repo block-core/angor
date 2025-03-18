@@ -1,30 +1,31 @@
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Angor.Wallet.Domain;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Wallet.Operate;
+using Zafiro.UI;
 
 namespace AngorApp.Sections.Wallet;
 
 public class WalletDesign : IWallet
 {
-    public IEnumerable<IBroadcastedTransaction> History { get; } =
-    [
+    private readonly Task<Result<string>> receiveAddress = Task.FromResult(Result.Success(SampleData.TestNetBitcoinAddress));
+
+    public ReadOnlyObservableCollection<IBroadcastedTransaction> History { get; } = new([
         new BroadcastedTransactionDesign { Address = "someaddress1", Amount = 1000, UtxoCount = 12, Path = "path", ViewRawJson = "json" },
         new BroadcastedTransactionDesign { Address = "someaddress2", Amount = 3000, UtxoCount = 15, Path = "path", ViewRawJson = "json" },
         new BroadcastedTransactionDesign { Address = "someaddress3", Amount = 43000, UtxoCount = 15, Path = "path", ViewRawJson = "json" },
         new BroadcastedTransactionDesign { Address = "someaddress4", Amount = 30000, UtxoCount = 15, Path = "path", ViewRawJson = "json" }
-    ];
+    ]);
 
-    public long? Balance { get; set; } = 5_0000_0000;
-
-    public string ReceiveAddress { get; } = SampleData.TestNetBitcoinAddress;
-
-    public async Task<Result<IUnsignedTransaction>> CreateTransaction(long amount, string address, long feerate)
+    public IObservable<long> Balance { get; } = Observable.Return<long>(5_0000_0000);
+    
+    public async Task<Result<ITransactionDraft>> CreateDraft(long amount, string address, long feerate)
     {
         await Task.Delay(1000);
 
         //return Result.Failure<ITransaction>("Transaction creation failed");
-        return new UnsignedTransactionDesign
+        return new TransactionDraftDesign
         {
             Address = address,
             Amount = amount,
@@ -35,9 +36,15 @@ public class WalletDesign : IWallet
 
     public Result IsAddressValid(string address)
     {
-        var value = BitcoinAddressValidator.ValidateBitcoinAddress(address, Network);
-        return value.IsValid ? Result.Success() : Result.Failure(value.Message);
+        return Result.Success();
     }
 
-    public BitcoinNetwork Network => BitcoinNetwork.Testnet;
+    public WalletId Id { get; }
+    public StoppableCommand<Unit, Result<BroadcastedTransaction>> SyncCommand { get; }
+    public IObservable<bool> HasTransactions { get; } = Observable.Return(false);
+    public IObservable<bool> HasBalance { get; }= Observable.Return(false);
+    public async Task<Result<string>> GenerateReceiveAddress()
+    {
+        return Result.Success("test");
+    }
 }

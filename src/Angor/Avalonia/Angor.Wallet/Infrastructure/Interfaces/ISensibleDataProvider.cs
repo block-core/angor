@@ -5,5 +5,5 @@ namespace Angor.Wallet.Infrastructure.Interfaces;
 
 public interface ISensitiveWalletDataProvider
 {
-    Task<Result<(string seed, string passphrase)>> RequestSensitiveData(WalletId id);
+    Task<Result<(string seed, Maybe<string> passphrase)>> RequestSensitiveData(WalletId id);
 }
