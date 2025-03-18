@@ -1,6 +1,6 @@
 [package]
 name = "angor"
-version = "0.0.79"
+version = "0.0.80"
 description = "Angor"
 authors = ["Blockcore"]
 edition = "2021"
