@@ -33,14 +33,12 @@ services:
     environment:
       UACOMMENT: $UACOMMENT
       BLOCKPRODUCTIONDELAY: ${BLOCKPRODUCTIONDELAY:-30}
-      MINERENABLED: ${MINERENABLED:-0} # change this to 1 if this node needs to mine (however for simplicity there should only be one mining node per challenge)
       NBITS: $NBITS
-      MINETO: ${MINETO:-tb1qk4pq0rh75qtph47wlufhyss43flhvhvwe4zt8a} # miner private key path is m/84'/1'/0'/0/0 of test wallet wallet "radio diamond leg loud street announce guitar video shiver speed eyebrow"
-      PRIVKEY: ${PRIVKEY:-cNDhpWanXGyCed6U7eBNqRN3EyB7mEUbqm19tA7z5ho6BiNaPfmy} 
       SIGNETCHALLENGE: ${SIGNETCHALLENGE:-512102a3f8184701a033e5f8faa295647374b0bbc868082240d6e7ad8e9ecb0d86e6d451ae}
       EXTERNAL_IP: $EXTERNAL_IP
       RPCUSER: ${RPCUSER:-rpcuser}
       RPCPASSWORD: ${RPCPASSWORD:-rpcpassword}
+      ADDNODE: ${ADDNODE:-207.180.254.78, 173.249.17.85}
     ports:
       - 18333:18333 # Make this a public node.
       - 8333:8333 # Make this a public node.
@@ -60,7 +58,7 @@ services:
       ELECTRUM_PORT: "5001"
       ELECTRUM_TLS_ENABLED: "false"
       CORE_RPC_HOST: "node"
-      CORE_RPC_PORT: "8333"
+      CORE_RPC_PORT: "38333"
       CORE_RPC_USERNAME: "rpcuser"
       CORE_RPC_PASSWORD: "rpcpassword"
       DATABASE_ENABLED: "true"
@@ -134,7 +132,7 @@ services:
 
   mempool_electrs:
     container_name: mempool-electrs
-    image: getumbrel/electrs:v0.10.9
+    image: mempool/electrs:latest
     user: root
     ports:
       - 5001:5001
@@ -142,16 +140,19 @@ services:
     depends_on:
       node:
         condition: service_healthy
+    entrypoint:
+      /bin/electrs
     command: |
       --network signet
-      --daemon-rpc-addr btc-node:8332
-      --daemon-p2p-addr btc-node:8333
+      --jsonrpc-import
+      --daemon-rpc-addr btc-node:38332
+      --cookie "rpcuser:rpcpassword"
       --db-dir /electrs
+      --http-addr 0.0.0.0:3003
       --electrum-rpc-addr 0.0.0.0:5001
-      --log-filters INFO  
+      -vvvv
     volumes:
       - electrs_data:/electrs
-      - ./electrs.conf:/etc/electrs/config.toml:ro
     networks:
       - mempoolnetwork
 
