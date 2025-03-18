@@ -643,7 +643,7 @@ else
                             <label for="sendAmount" class="form-label">Amount</label>
                                 <input type="number" step="0.00000001" min="0" class="form-control" id="sendAmount"
                                    @bind-value="sendAmount" @bind-value:event="oninput"
-                                       placeholder="Enter amount" @onchange="HandleAmountChange">
+                                       placeholder="Enter amount">
                         </div>
 
                         <div class="d-flex align-items-center">
@@ -1923,27 +1923,5 @@ else
     {
         NavMenuState.SetActivePage("wallet");
         base.OnInitialized();
-    }
-
-    private void HandleAmountChange(ChangeEventArgs e)
-    {
-        if (e.Value is string valueStr && !string.IsNullOrEmpty(valueStr))
-        {
-            // Always use period as decimal separator for parsing,
-            // but also accept comma input by converting it
-            string normalizedValue = valueStr.Replace(',', '.');
-
-            if (decimal.TryParse(normalizedValue,
-                NumberStyles.Any,
-                CultureInfo.InvariantCulture,
-                out var result))
-            {
-                sendAmount = result;
-            }
-        }
-        else
-        {
-            sendAmount = 0;
-        }
     }
 }

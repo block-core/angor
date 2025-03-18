@@ -663,7 +663,7 @@ else
 
     private void UpdateStagesBreakdown(ChangeEventArgs e)
     {
-         if (decimal.TryParse(e.Value.ToString().Replace(",", "."), out decimal amountBtc))
+         if (decimal.TryParse(e.Value.ToString(), out decimal amountBtc))
         {
             Investment.InvestmentAmountBtc = amountBtc;
 
