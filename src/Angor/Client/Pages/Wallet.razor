@@ -1192,7 +1192,7 @@ else
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
             accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
-            btcBalanceInUsd = await GetBtcValueInPreferredCurrency((long)Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC));
+            btcBalanceInUsd = await GetBtcValueInPreferredCurrency(accountBalanceInfo.TotalBalance);
             await PrecomputeFiatValues();
         }
 

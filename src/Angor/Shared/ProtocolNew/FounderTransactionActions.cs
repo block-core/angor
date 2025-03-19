@@ -116,6 +116,8 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         spendingTransaction.Outputs[0].Value -= totalFee < minimumFee ? minimumFee : totalFee;
 
+        _logger.LogInformation($"Unsigned spendingTransaction hex {spendingTransaction.ToHex()}");
+
         // Step 4 - sign the taproot inputs
         var trxData = spendingTransaction.PrecomputeTransactionData(stageOutputs.Select(_ => _.TxOut).ToArray());
         const TaprootSigHash sigHash = TaprootSigHash.All;
@@ -129,8 +131,12 @@ public class FounderTransactionActions : IFounderTransactionActions
 
             var execData = new TaprootExecutionData(inputIndex, scriptToExecute.TaprootV1LeafHash) { SigHash = sigHash };
             var hash = spendingTransaction.GetSignatureHashTaproot(trxData, execData);
-            
+
+            _logger.LogInformation($"sig hash of inputIndex {inputIndex} spendingTransaction hex {hash.ToString()}");
+
             var sig = key.SignTaprootKeySpend(hash, sigHash);
+
+            _logger.LogInformation($"sig of inputIndex {inputIndex} spendingTransaction hex {sig.ToString()}");
 
             // todo: throw a proper exception
             Debug.Assert(key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature));
@@ -140,9 +146,13 @@ public class FounderTransactionActions : IFounderTransactionActions
                 Op.GetPushOp(scriptToExecute.ToBytes()),
                 Op.GetPushOp(controlBlock));
 
+            _logger.LogInformation($"WitScript of inputIndex {inputIndex} spendingTransaction hex {input.WitScript.ToString()}");
+
             inputIndex++;
         }
 
+        _logger.LogInformation($"signed spendingTransaction hex {spendingTransaction.ToHex()}");
+        
         var finalTrx = network.CreateTransaction(spendingTransaction.ToHex());
 
         return new TransactionInfo {Transaction = finalTrx, TransactionFee = totalFee};
