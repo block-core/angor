@@ -21,6 +21,7 @@
 @inject NavMenuState NavMenuState
 @inject IEncryptionService _encryptionService
 @inject IClipboardService ClipboardService
+@inject IWalletUIService _walletUIService
 
 <PageTitle>Wallet and balances</PageTitle>
 <NotificationComponent @ref="notificationComponent"/>
@@ -1208,28 +1209,7 @@ else
 
             try
             {
-                var accountInfo = storage.GetAccountInfo(network.Name);
-                var unconfirmedInboundFunds = _cacheStorage.GetUnconfirmedInboundFunds();
-
-                await _walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
-
-                await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
-
-                storage.SetAccountInfo(network.Name, accountInfo);
-
-                // lets log the entire account class to see what has changed
-                Logger.LogInformation(JsonSerializer.Serialize(accountInfo, new JsonSerializerOptions { WriteIndented = true }));
-
-                var utxos = accountInfo.AllUtxos()
-                    .Select(x => x.outpoint.ToString()).ToList();
-
-                var spentToUpdate = unconfirmedInboundFunds
-                    .RemoveAll(x => utxos.Contains(x.outpoint.ToString()));
-
-                if (spentToUpdate > 0)
-                    _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInboundFunds);
-
-                accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInboundFunds);
+                await _walletUIService.RefreshBalance(accountBalanceInfo);
 
                 showQrCode?.SetQRCode(accountBalanceInfo.AccountInfo.GetNextReceiveAddress());
             }
