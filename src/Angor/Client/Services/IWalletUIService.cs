@@ -13,6 +13,6 @@ namespace Angor.Client.Services
         /// <summary>
         /// Refreshes the wallet balance.
         /// </summary>
-        Task RefreshBalance(AccountBalanceInfo accountBalanceInfo);
+        Task<AccountBalanceInfo> RefreshBalance(AccountBalanceInfo? accountBalanceInfo = null);
     }
 }

@@ -5,7 +5,6 @@
 @using Blockcore.NBitcoin
 @using Angor.Shared.ProtocolNew
 @using Blockcore.NBitcoin.DataEncoders
-@using JSException = Microsoft.JSInterop.JSException
 @using Money = Blockcore.NBitcoin.Money
 @using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
 @using Angor.Shared.Services
@@ -29,6 +28,7 @@
 @inject IApplicationLogicService applicationLogicService;
 @inject ISignService _SignService;
 @inject IRelayService _RelayService;
+@inject IWalletUIService _walletUIService
 
 @inject IInvestorTransactionActions _InvestorTransactionActions;
 
@@ -747,7 +747,7 @@ else
 
         try
         {
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountInfo = await _walletUIService.RefreshBalance();
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
@@ -765,7 +765,7 @@ else
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.AccountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
             showCreateModal = true;
         }
