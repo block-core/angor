@@ -22,7 +22,7 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
 
         walletHelper = uiServices.ActiveWallet.CurrentChanged
             .Merge(Observable.Return(uiServices.ActiveWallet.Current).Values())
-            .Select(w => new WalletViewModel(w, uiServices))
+            .Select(w => new WalletViewModel(w, walletAppService, uiServices))
             .ToProperty(this, x => x.Wallet);
         
         SetDefaultWallet = ReactiveCommand.CreateFromTask(() => DoSetDefaultWallet(walletAppService, walletBuilder, uiServices));

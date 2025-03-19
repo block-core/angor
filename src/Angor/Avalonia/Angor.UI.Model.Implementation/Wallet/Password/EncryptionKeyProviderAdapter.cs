@@ -9,6 +9,6 @@ public class EncryptionKeyProviderAdapter(IDialog dialog): IEncryptionKeyProvide
 {
     public Task<Maybe<string>> Get(WalletId walletId)
     {
-        return new DialogEncryptionKeyProvider(dialog, "Please, enter the encryption key").Get(walletId);
+        return new DialogEncryptionKeyProvider(dialog, "Please, enter your wallet's encryption key to unlock it").Get(walletId);
     }
 }
