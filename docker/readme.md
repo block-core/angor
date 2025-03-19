@@ -18,6 +18,7 @@ Angor services can be deployed using Docker Compose, enabling users to run the s
 
 ### What Can You Self-Host?
 - **The Angor App**: Build and run the Angor app locally or on a VPS instead of pulling the package from GitHub.
+- **The Angor Hub**: Host the Angor Hub to manage and coordinate multiple Angor projects, allowing a user to filter what projects they think are a good investment.
 - **Explorers and Blockchain Indexers**: Host specialized indexers required by Angor (future updates may remove this dependency for the web app).
 - **Nostr Relays**: Ideal for project founders who want to host relays themselves to serve their community and investors.
 
@@ -50,7 +51,6 @@ cd angor/docker
 ### Example `.env` File
 ```env
 DATABASE_URL=postgres://user:password@localhost:5432/angor
-API_KEY=your_api_key
 ```
 
 ### 3. Build Docker Images
