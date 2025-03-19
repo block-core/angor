@@ -12,6 +12,7 @@ using Blazored.LocalStorage;
 using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using System.Globalization;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -67,9 +68,9 @@ builder.Services.AddScoped<IconService>();
 
 builder.Services.AddScoped<IWalletUIService, WalletUIService>();
 
-var app = builder.Build();
+CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
 
-// Initialize NavMenuState from storage
-var navMenuState = app.Services.GetRequiredService<NavMenuState>();
+var app = builder.Build();
 
 await app.RunAsync();
