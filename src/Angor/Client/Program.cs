@@ -73,7 +73,7 @@ CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
 
 var app = builder.Build();
 
-// Initialize NavMenuState from storage
-var navMenuState = app.Services.GetRequiredService<NavMenuState>();
+//// Initialize NavMenuState from storage
+//var navMenuState = app.Services.GetRequiredService<NavMenuState>();
 
 await app.RunAsync();
