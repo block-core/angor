@@ -68,8 +68,11 @@ builder.Services.AddScoped<IconService>();
 
 builder.Services.AddScoped<IWalletUIService, WalletUIService>();
 
-CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
-CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
+// to change culture dynamically during startup,
+// set <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+// in the application's project file.)
+// CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+// CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
 
 var app = builder.Build();
 
