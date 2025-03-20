@@ -1,36 +1,71 @@
-using System.Reactive.Disposables;
+﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using Angor.Projects.Application.Dtos;
+using Angor.Projects.Domain;
+using Angor.Projects.Infrastructure.Interfaces;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Zafiro.Reactive;
 
-namespace Angor.UI.Model.Implementation.Projects;
+namespace Angor.Projects.Infrastructure.Impl;
 
-public class ProjectService : IProjectService
+public class ProjectAppService(
+    IProjectRepository projectRepository,
+    IInvestmentRepository investmentRepository,
+    IInvestmentService bitcoinService, 
+    IRelayService relayService,
+    IIndexerService indexerService)
+    : IProjectAppService
 {
-    private readonly IIndexerService indexerService;
-    private readonly IRelayService relayService;
-
-    public ProjectService(IIndexerService indexerService, IRelayService relayService)
+    public Task<IList<ProjectDto>> Latest()
     {
-        this.indexerService = indexerService;
-        this.relayService = relayService;
+        return ProjectsFrom(indexerService.GetLatest()).ToList().ToTask();
     }
-
-    public async Task<Maybe<IProject>> FindById(string projectId)
+    
+    public async Task<Maybe<ProjectDto>> FindById(string projectId)
     {
         var project = (await indexerService.GetProjectByIdAsync(projectId)).AsMaybe();
         return await project.Map(async data => await ProjectsFrom(new[] { data }.ToObservable()).FirstAsync());
     }
-
-    public Task<IList<IProject>> Latest()
+    
+    public async Task<Result> Invest(ProjectId projectId, Amount amount, ModelFeeRate feeRate)
     {
-        return ProjectsFrom(indexerService.GetLatest()).ToList().ToTask();
+        var projectResult = await projectRepository.Get(projectId);
+        if (projectResult.IsFailure)
+        {
+            return Result.Failure(projectResult.Error);
+        }
+        
+        var project = projectResult.Value;
+        
+        // 2. Get investor data
+        string investorId = "..."; 
+        string investorPubKey = "...";
+        string projectAddress = "...";
+        
+        // 3. Create invest transaction
+        var transactionResult = await bitcoinService.CreateInvestmentTransaction(
+            projectAddress, 
+            investorPubKey,
+            amount.Sats,
+            feeRate
+        );
+        
+        if (transactionResult.IsFailure)
+        {
+            return Result.Failure(transactionResult.Error);
+        }
+        
+        // 4. Create and save investment
+        var investment = Investment.Create(project.Id, investorId, amount.Sats);
+        await investmentRepository.Save(investment);
+        
+        return Result.Success();
     }
-
-    public IObservable<IProject> ProjectsFrom(IObservable<ProjectIndexerData> projectIndexerDatas)
+    
+    public IObservable<ProjectDto> ProjectsFrom(IObservable<ProjectIndexerData> projectIndexerDatas)
     {
         var tuples = projectIndexerDatas.ToList().SelectMany(lists => ProjectInfos(lists)
             .ToList()

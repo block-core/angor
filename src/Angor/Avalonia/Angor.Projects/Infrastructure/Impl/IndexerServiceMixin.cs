@@ -1,9 +1,8 @@
 using System.Reactive.Linq;
-using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Zafiro.Reactive;
 
-namespace Angor.UI.Model.Implementation.Projects;
+namespace Angor.Projects.Infrastructure.Impl;
 
 public static class IndexerServiceMixin
 {

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using Angor.Projects.Infrastructure.Interfaces;
 using Angor.UI.Model;
 using Angor.Wallet.Application;
 using AngorApp.Core;
@@ -24,7 +25,7 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
     [Reactive] private IProjectViewModel? selectedProject;
 
     public ProjectLookupViewModel(
-        IProjectService projectService,
+        IProjectAppService projectService,
         IWalletAppService walletAppService,
         INavigator navigator,
         UIServices uiServices)
@@ -34,7 +35,7 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
         Lookup = ReactiveCommand.CreateFromTask<string, SafeMaybe<IList<IProjectViewModel>>>(
             async pid =>
             {
-                var maybeProject = await projectService.FindById(pid);
+                var maybeProject = await projectService.FindById(pid).Map(dto => dto.ToProject());
                 Log.Debug("Got project {ProjectId}", pid);
 
                 return maybeProject.Map<IProject, IList<IProjectViewModel>>(project =>
