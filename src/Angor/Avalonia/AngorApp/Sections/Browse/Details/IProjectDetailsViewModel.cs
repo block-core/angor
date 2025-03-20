@@ -7,7 +7,7 @@ public interface IProjectDetailsViewModel
 {
     object Icon { get; }
     object Picture { get; }
-    public ICommand Invest { get; }
+    public ReactiveCommand<Unit, Result> Invest { get; }
     public IEnumerable<INostrRelay> Relays { get; }
     public double TotalDays { get; }
     public double TotalInvestment { get; }

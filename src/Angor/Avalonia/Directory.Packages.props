@@ -32,12 +32,12 @@
     <PackageVersion Include="Serilog.Extensions.Logging" Version="9.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.1" />
-    <PackageVersion Include="Zafiro" Version="14.0.10" />
+    <PackageVersion Include="Zafiro" Version="15.0.1" />
     <PackageVersion Include="Zafiro" Version="14.0.7" />
-    <PackageVersion Include="Zafiro.Avalonia" Version="22.0.6" />
-    <PackageVersion Include="Zafiro.UI" Version="14.0.10" />
+    <PackageVersion Include="Zafiro.Avalonia" Version="22.0.7" />
+    <PackageVersion Include="Zafiro.UI" Version="15.0.1" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.5.1" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="22.0.6" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="22.0.7" />
     <PackageVersion Include="DynamicData" Version="9.1.2" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />

@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using Angor.Wallet.Application;
 using Angor.Wallet.Domain;
 using AngorApp.Sections.Wallet.Operate.Send;
 using AngorApp.UI.Controls.Common.Success;
@@ -16,10 +17,12 @@ namespace AngorApp.Sections.Wallet.Operate;
 
 public partial class WalletViewModel : ReactiveObject, IWalletViewModel
 {
+    private readonly IWalletAppService walletAppService;
     private readonly UIServices uiServices;
 
-    public WalletViewModel(IWallet wallet, UIServices uiServices)
+    public WalletViewModel(IWallet wallet, IWalletAppService walletAppService, UIServices uiServices)
     {
+        this.walletAppService = walletAppService;
         this.uiServices = uiServices;
         Wallet = wallet;
 
@@ -65,7 +68,7 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
     public ICommand Send => ReactiveCommand.CreateFromTask(async () =>
     {
         var wizard = WizardBuilder.StartWith(() => new AddressAndAmountViewModel(Wallet))
-            .Then(model => new TransactionDraftViewModel(Wallet, new Destination("Test", model.Amount!.Value, model.Address!), uiServices))
+            .Then(model => new TransactionDraftViewModel(Wallet.Id, walletAppService, new Destination("Test", model.Amount!.Value, model.Address!), uiServices))
             .Then(_ => new SuccessViewModel("Transaction sent!", "Success"))
             .FinishWith(_ => Unit.Default);
 

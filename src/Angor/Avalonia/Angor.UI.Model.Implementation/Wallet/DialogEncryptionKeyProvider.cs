@@ -14,7 +14,7 @@ public class DialogEncryptionKeyProvider(IDialog dialog, string text) : IEncrypt
     {
         return Dispatcher.UIThread.InvokeAsync(() =>
         {
-            return dialog.ShowAndGetResult<PasswordViewModel, string>(new PasswordViewModel(text), "Encryption key", x => x.IsValid<PasswordViewModel>(), x => x.Password!);
+            return dialog.ShowAndGetResult<PasswordViewModel, string>(new PasswordViewModel(text), "Wallet Unlock", x => x.IsValid<PasswordViewModel>(), x => x.Password!);
         });
     }
 }
