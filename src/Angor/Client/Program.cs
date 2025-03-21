@@ -22,6 +22,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddBlazoredSessionStorage();
 
+builder.Services.AddTransient<INostrEncryptionService, NostrTools>();
 builder.Services.AddSingleton<ISerializer, Serializer>();
 builder.Services.AddSingleton<INetworkConfiguration, NetworkConfiguration>();
 builder.Services.AddTransient<IHdOperations, HdOperations>();

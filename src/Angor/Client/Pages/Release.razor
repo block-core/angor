@@ -373,12 +373,9 @@
                     {
                         Logger.LogInformation($"decrypting");
 
-                        var signatureJson = await encryption.DecryptNostrContentAsync(
-                            nostrPrivateKeyHex, InvestorProject.ProjectInfo.NostrPubKey, signatureContent);
+                        Logger.LogInformation("signature : " + signatureContent);
 
-                        Logger.LogInformation("signature : " + signatureJson);
-
-                        InvestorReleaseSigInfo = serializer.Deserialize<SignatureInfo>(signatureJson);
+                        InvestorReleaseSigInfo = serializer.Deserialize<SignatureInfo>(signatureContent);
 
                         if (InvestorReleaseSigInfo?.SignatureType != SignatureInfoType.Release)
                         {

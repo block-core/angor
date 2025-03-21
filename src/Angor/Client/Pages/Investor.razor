@@ -259,9 +259,11 @@
             TotalWallet = abi.TotalBalance;
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
 
+            var words = await passwordComponent.GetWalletAsync();
+            
             var refreshTask = RefreshBalance();
-            CheckSignatureFromFounder();
-            CheckReleaseFromFounder();
+            CheckSignatureFromFounder(words);
+            CheckReleaseFromFounder(words);
             await refreshTask;
         }
     }
@@ -327,14 +329,16 @@
         }
     }
 
-    private void CheckSignatureFromFounder()
+    private void CheckSignatureFromFounder(WalletWords words)
     {
         foreach (var project in projects)
         {
             investmentRequestsMap[project.ProjectInfo.NostrPubKey] = false;
 
+            var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
+            
             _SignService.LookupSignatureForInvestmentRequest(
-                project.InvestorNPub,
+                Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes()),
                 project.ProjectInfo.NostrPubKey,
                 project.SignaturesInfo.TimeOfSignatureRequest.Value,
                 project.SignaturesInfo.SignatureRequestEventId,
@@ -343,14 +347,16 @@
         }
     }
 
-    private void CheckReleaseFromFounder()
+    private void CheckReleaseFromFounder(WalletWords words)
     {
         foreach (var project in projects)
         {
             releaseRequestsMap[project.ProjectInfo.NostrPubKey] = false;
-
+            
+            var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
+            
             _SignService.LookupReleaseSigs(
-                project.InvestorNPub,
+                Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes()),
                 project.ProjectInfo.NostrPubKey,
                 null,
                 project.SignaturesInfo.SignatureRequestEventId,
@@ -397,7 +403,7 @@
         var storageAccountKey = _DerivationOperations.DeriveNostrStoragePubKeyHex(words);
         var password = _DerivationOperations.DeriveNostrStoragePassword(words);
 
-        CheckSignatureFromFounder();
+        CheckSignatureFromFounder(words);
 
         await _RelayService.LookupDirectMessagesForPubKeyAsync(storageAccountKey, null, 1,
             async x =>
@@ -512,6 +518,7 @@
                     (_, metadata) => { investorProject.Metadata ??= metadata; },
                     () =>
                     {
+                        //TODO fix this flow because it doesn't fit nip 17
                         _SignService.LookupInvestmentRequestsAsync(investorProject.ProjectInfo.NostrPubKey, investorProject.InvestorNPub, null,
                             (id, publisherPubKey, content, eventTime) =>
                             {
@@ -522,17 +529,14 @@
                                 }
                             }, () =>
                             {
-                                _SignService.LookupSignatureForInvestmentRequest(investorProject.InvestorNPub, investorProject.ProjectInfo.NostrPubKey,
+                                _SignService.LookupSignatureForInvestmentRequest(Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes()), investorProject.ProjectInfo.NostrPubKey,
                                     createdAt!.Value, eventId!,
                                     async encryptedSignatures =>
                                     {
                                         if (investorProject.ReceivedFounderSignatures()) //multiple relays for the same message
                                             return;
 
-                                        var signatureJson = await _encryptionService.DecryptNostrContentAsync(
-                                            Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes()), investorProject.ProjectInfo.NostrPubKey, encryptedSignatures);
-
-                                        var res = serializer.Deserialize<SignatureInfo>(signatureJson);
+                                        var res = serializer.Deserialize<SignatureInfo>(encryptedSignatures);
 
                                         if (res.ProjectIdentifier == investorProject.ProjectInfo.ProjectIdentifier)
                                         {

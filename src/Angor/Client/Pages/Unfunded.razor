@@ -7,7 +7,6 @@
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 @using Angor.Shared.Services
-@using System.Security.Cryptography
 @using Blockcore.Consensus.TransactionInfo
 
 @inject ILogger<Release> Logger
@@ -17,10 +16,7 @@
 @inject IInvestorTransactionActions InvestorTransactionActions
 @inject IFounderTransactionActions FounderTransactionActions
 @inject ISerializer serializer
-@inject IEncryptionService encryption
 @inject IIndexerService _IndexerService
-@inject IWalletOperations _WalletOperations
-@inject IWalletUIService _walletUIService;
 @inject NavMenuState NavMenuState
 
 @inherits BaseComponent
@@ -360,7 +356,7 @@
 
         scanningForSigRequests = true;
 
-        await SignService.LookupInvestmentRequestsAsync(FounderProject.ProjectInfo.NostrPubKey, null, null,
+        await SignService.LookupInvestmentRequestsAsync(nostrPrivateKeyHex, null, null,
             (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
             {
                 Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
@@ -401,8 +397,8 @@
                 // so we do it inside the InvokeAsync delegate.
 
                 // decrypt the message
-                InvokeAsync(async () => { await DecryptMessages(nostrPrivateKeyHex); });
-
+               // InvokeAsync(async () => { await DecryptMessages(nostrPrivateKeyHex); });
+               StateHasChanged();
                 scanningForSigRequests = false;
 
                 // fetch all the approvals
@@ -421,12 +417,10 @@
             try
             {
                 Logger.LogInformation($"Decrypting recovery request for key {signatureReleaseItem.investorNostrPubKey}");
+                
+                signatureReleaseItem.SignRecoveryRequest = serializer.Deserialize<SignRecoveryRequest>(signatureReleaseItem.EncryptedSignRecoveryMessage);
 
-                var sigResJson = await encryption.DecryptNostrContentAsync(nostrPrivateKeyHex, signatureReleaseItem.investorNostrPubKey, signatureReleaseItem.EncryptedSignRecoveryMessage);
-
-                signatureReleaseItem.SignRecoveryRequest = serializer.Deserialize<SignRecoveryRequest>(sigResJson);
-
-                Logger.LogInformation($"Decrypted recovery request for key {signatureReleaseItem.investorNostrPubKey} content = {sigResJson}");
+                Logger.LogInformation($"Decrypted recovery request for key {signatureReleaseItem.investorNostrPubKey} content = {signatureReleaseItem.EncryptedSignRecoveryMessage}");
 
                 if (signatureReleaseItem.SignRecoveryRequest is null)
                 {
@@ -447,7 +441,7 @@
     {
         scanningForApprovals = true;
 
-        SignService.LookupInvestmentRequestApprovals(FounderProject.ProjectInfo.NostrPubKey,
+        SignService.LookupInvestmentRequestApprovals(nostrPrivateKeyHex,
             (investorNostrPubKey, timeEventCreated, reqEventId) =>
             {
                 Logger.LogDebug($"Sig response event received investorNostrPubKey: {investorNostrPubKey} - timeApproved: {timeEventCreated} - reqEventId: {reqEventId}");
@@ -489,7 +483,7 @@
     {
         scanningForReleaseApprovals = true;
 
-        SignService.LookupSignedReleaseSigs(FounderProject.ProjectInfo.NostrPubKey,
+        SignService.LookupSignedReleaseSigs(nostrPrivateKeyHex,
             (item) =>
             {
                 Logger.LogDebug($"Sig release response event received investorNostrPubKey: {item.ProfileIdentifier} - timeReleased: {item.EventCreatedAt} - reqEventId: {item.EventIdentifier}");
@@ -624,10 +618,7 @@
             var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            var encryptedContent = await encryption.EncryptNostrContentAsync(
-                nostrPrivateKeyHex, signature.investorNostrPubKey, sigJson);
-
-            signature.TimeReleased = SignService.SendReleaseSigsToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
+            signature.TimeReleased = await SignService.SendReleaseSigsToInvestorAsync(sigJson, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
 
             return new OperationResult { Success = true };
         }
