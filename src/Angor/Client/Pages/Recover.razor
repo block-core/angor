@@ -859,7 +859,8 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+            var accountInfo = accountBalanceInfo.AccountInfo;
             var words = await passwordComponent.GetWalletAsync();
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
@@ -1001,7 +1002,8 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+            var accountInfo = accountBalanceInfo.AccountInfo;
             var words = await passwordComponent.GetWalletAsync();
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
@@ -1131,7 +1133,8 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+            var accountInfo = accountBalanceInfo.AccountInfo;
             var words = await passwordComponent.GetWalletAsync();
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
@@ -1235,5 +1238,4 @@
     {
         NavigationManager.NavigateTo($"/release/{ProjectIdentifier}");
     }
-
 }

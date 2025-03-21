@@ -38,7 +38,7 @@ namespace Angor.Client.Services
             _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
         }
 
-        public async Task<AccountBalanceInfo> RefreshBalance(AccountBalanceInfo? accountBalanceInfo = null)
+        public async Task<AccountBalanceInfo> RefreshWalletBalance(AccountBalanceInfo? accountBalanceInfo = null)
         {
             try
             {

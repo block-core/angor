@@ -1209,7 +1209,7 @@ else
 
             try
             {
-                await _walletUIService.RefreshBalance(accountBalanceInfo);
+                await _walletUIService.RefreshWalletBalance(accountBalanceInfo);
 
                 showQrCode?.SetQRCode(accountBalanceInfo.AccountInfo.GetNextReceiveAddress());
             }

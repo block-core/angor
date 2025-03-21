@@ -747,7 +747,7 @@ else
 
         try
         {
-            var accountInfo = await _walletUIService.RefreshBalance();
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
@@ -765,7 +765,7 @@ else
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.AccountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
             showCreateModal = true;
         }
