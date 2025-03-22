@@ -14,7 +14,6 @@
 @inject IDerivationOperations _derivationOperations
 @inject IClientStorage storage;
 @inject ICacheStorage SessionStorage;
-@inject NavigationManager NavigationManager
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IClipboardService _clipboardService
 @inject IIndexerService _IndexerService
@@ -433,18 +432,26 @@
                             <i class="me-2">
                                 <Icon IconName="wallet" />
                             </i>
-                            Manage Funds
+                            Manage funds
                         </a>
                         <a href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-warning animate-scale">
                             <i class="me-2">
                                 <Icon IconName="signature" />
                             </i>
-                            Pending Approvals
+                            Approve investments
                         </a>
 
-                        <a href="#" class="btn btn-border animate-scale warning-button disabled">
+                        <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}")
+                           class="btn btn-border animate-scale warning-button @(CanReleaseUnfundedProject() ? "" : "disabled")">
                             <i class="me-2">
-                                <Icon IconName="lock" />
+                                @if (CanReleaseUnfundedProject())
+                                {
+                                    <Icon IconName="unlock" />
+                                }
+                                else
+                                {
+                                    <Icon IconName="lock" />
+                                }
                             </i>
                             Release funds back to investors
                         </a>
@@ -993,5 +1000,12 @@
         await _clipboardService.WriteTextAsync(text);
         notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
     }
-}
+    private bool CanReleaseUnfundedProject()
+    {
+        if (project?.ProjectInfo == null) return false;
 
+        // Project has started and total invested amount is less than target
+        return project.ProjectInfo.StartDate <= DateTime.UtcNow
+               && projectStats?.TotalRaised < project.ProjectInfo.TargetAmount;
+    }
+}
