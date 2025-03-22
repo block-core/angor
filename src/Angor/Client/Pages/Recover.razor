@@ -12,6 +12,7 @@
 @using Blockcore.NBitcoin.DataEncoders
 @using Angor.Client.Models
 
+@inject INetworkService _NetworkService
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
@@ -672,7 +673,7 @@
 
         if (trx == null)
         {
-            explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.TransactionId}";
+            explorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/transaction/{project.TransactionId}";
             trxNotFound = true;
             return;
         }
@@ -690,7 +691,7 @@
         StageInfo.TransactionInfo = trxInfo;
         lastCheck = DateTime.UtcNow;
 
-        explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{trx.TransactionId}";
+        explorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/transaction/{trx.TransactionId}";
 
         StageInfo.Items.Clear();
 

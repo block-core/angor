@@ -11,6 +11,7 @@
 @using NBitcoin.DataEncoders
 @using Nostr.Client.Messages
 
+@inject INetworkService _NetworkService
 @inject IDerivationOperations _derivationOperations
 @inject IClientStorage storage;
 @inject ICacheStorage SessionStorage;
@@ -726,7 +727,8 @@
             if (project is InvestorProject investorProject)
             {
                 invested = investorProject.InvestedInProject();
-                myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investorProject.TransactionId}";
+
+                myProjectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/transaction/{investorProject.TransactionId}";
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
                 return;
@@ -809,7 +811,7 @@
     {
         if (!string.IsNullOrEmpty(project?.CreationTransactionId))
         {
-            projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
+            projectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/transaction/{project.CreationTransactionId}";
         }
         else
         {
