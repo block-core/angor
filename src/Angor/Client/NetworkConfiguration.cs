@@ -161,7 +161,7 @@ public class NetworkConfiguration : INetworkConfiguration
         };
     }
 
-    public List<SettingsUrl> GetDefaultExplorerUrl()
+    public List<SettingsUrl> GetDefaultExplorerUrls()
     {
         if (currentNetwork.NetworkType == NetworkType.Mainnet)
         {

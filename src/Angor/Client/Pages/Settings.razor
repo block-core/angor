@@ -131,33 +131,81 @@
 @* Explorer *@
 <div class="row mt-4 slide-in">
     <div class="card card-body">
-        <div class="d-flex flex-column">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                    <span class="user-select-none animate-rotate">
-                        <Icon IconName="explorer" Height="32" Width="32"></Icon>
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <span class="user-select-none animate-rotate">
+                    <Icon IconName="explorer" Height="32" Width="32"></Icon>
+                </span>
+                <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Explorer
+                    </h5>
+                </div>
+            </div>
+            <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh" disabled="@refreshSpinner">
+                @if (refreshSpinner)
+                {
+                    <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content"
+                          role="status"
+                          aria-hidden="true">
                     </span>
-                    <div class="h-100 ms-3">
-                        <h5 class="mb-0 font-weight-bolder">
-                            Explorer
-                        </h5>
-                    </div>
-                </div>
-                <div>
-                    <a class="btn btn-border-success h-100 w-auto" href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">
-                        <Icon IconName="link" Height="24" Width="24"></Icon>
-                    </a>
-                </div>
+                }
+                else
+                {
+                    <Icon IconName="refresh" Height="24" Width="24" />
+                }
+            </button>
+        </div>
+        <form @onsubmit="AddExplorer">
+            <div class="input-group mb-3">
+                <input type="text" @bind-value="newExplorerLink" class="form-control" placeholder="Enter new explorer link" aria-label="Enter new explorer link" aria-describedby="button-addon3">
+                <button class="btn btn-border" type="submit" id="button-addon3">
+                    <Icon IconName="plus" Height="24" Width="24"></Icon>
+                </button>
             </div>
-            <div class="mt-2">
-                <p class="mb-0 font-weight-normal text-sm text-break">
-                    Explorer url: <a href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url">@_networkConfiguration.GetDefaultExplorerUrl().First().Url</a>
-                </p>
-            </div>
+        </form>
+        <div class="table-responsive form-control">
+            <table class="table align-items-center mb-0">
+                <thead>
+                    <tr>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var explorer in settingsInfo.Explorers)
+                    {
+                        <tr>
+                            <td><a href="@explorer.Url" target="_blank">@explorer.Url</a></td>
+                            <td style="color: @(explorer.Status == UrlStatus.Online ? "green" : explorer.Status == UrlStatus.NotReady ? "yellow" :  "red");">@explorer.Status.ToString()</td>
+                            <td>
+                                @if (explorer.IsPrimary)
+                                {
+                                    <span role="button">
+                                        <Icon IconName="primary" Height="24" Width="24"></Icon>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span @onclick="() => SetPrimaryExplorer(explorer)" role="button">
+                                        <Icon IconName="set" Height="24" Width="24"></Icon>
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-border-danger btn-sm" @onclick="() => RemoveExplorer(explorer.Url)">
+                                    <Icon IconName="delete" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
-
 
 @* Indexer *@
 <div class="row mt-4 slide-in">
@@ -442,6 +490,7 @@
 @code {
     private string newIndexerLink;
     private string newRelayLink;
+    private string newExplorerLink;
 
     private string networkType;
     private bool refreshSpinner = false;
@@ -589,6 +638,46 @@
         await Refresh(false);
     }
 
+    private async Task AddExplorer()
+    {
+        if (!string.IsNullOrWhiteSpace(newExplorerLink))
+        {
+            if (!Uri.TryCreate(newExplorerLink, UriKind.Absolute, out Uri? uri))
+            {
+                notificationComponent.ShowErrorMessage($"Invalid URL: {newExplorerLink}");
+                return;
+            }
+
+            if (uri.Scheme is not ("http" or "https"))
+            {
+                notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
+                return;
+            }
+
+            newExplorerLink = $"{uri.Scheme}://{uri.Authority}".TrimEnd('/');
+
+            if (settingsInfo.Explorers.Any(a => a.Url == newExplorerLink))
+            {
+                notificationComponent.ShowErrorMessage($"URL already exists: {newExplorerLink}");
+                return;
+            }
+
+            // Add explorer to settings
+            settingsInfo.Explorers.Add(new SettingsUrl
+            {
+                Url = newExplorerLink,
+                LastCheck = DateTime.UtcNow,
+                Status = UrlStatus.Online
+            });
+
+            _clientStorage.SetSettingsInfo(settingsInfo);
+            notificationComponent.ShowNotificationMessage("Explorer added successfully.");
+            newExplorerLink = string.Empty;
+
+            await Refresh(false);
+        }
+    }
+
     private void RemoveIndexer(string url)
     {
         var res = settingsInfo.Indexers.FirstOrDefault(f => f.Url == url);
@@ -617,6 +706,23 @@
             if (res.IsPrimary && settingsInfo.Relays.Any())
             {
                 var next = settingsInfo.Relays.OrderBy(a => a.Status).First();
+                next.IsPrimary = true;
+            }
+
+            _clientStorage.SetSettingsInfo(settingsInfo);
+        }
+    }
+
+    private void RemoveExplorer(string url)
+    {
+        var res = settingsInfo.Explorers.FirstOrDefault(f => f.Url == url);
+        if (res != null)
+        {
+            settingsInfo.Explorers.Remove(res);
+
+            if (res.IsPrimary && settingsInfo.Explorers.Any())
+            {
+                var next = settingsInfo.Explorers.OrderBy(a => a.Status).First();
                 next.IsPrimary = true;
             }
 
@@ -659,6 +765,24 @@
 
         _clientStorage.SetSettingsInfo(settingsInfo);
 
+        StateHasChanged();
+    }
+
+    private void SetPrimaryExplorer(SettingsUrl explorer)
+    {
+        foreach (var exp in settingsInfo.Explorers)
+        {
+            if (exp.Url == explorer.Url)
+            {
+                exp.IsPrimary = true;
+            }
+            else
+            {
+                exp.IsPrimary = false;
+            }
+        }
+
+        _clientStorage.SetSettingsInfo(settingsInfo);
         StateHasChanged();
     }
 

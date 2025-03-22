@@ -74,6 +74,12 @@ namespace Angor.Shared.Services
         {
             var settings = _networkStorage.GetSettings();
 
+            if (!settings.Explorers.Any())
+            {
+                settings.Explorers.AddRange(_networkConfiguration.GetDefaultExplorerUrls());
+                _networkStorage.SetSettings(settings);
+            }
+
             if (!settings.Indexers.Any())
             {
                 settings.Indexers.AddRange(_networkConfiguration.GetDefaultIndexerUrls());
@@ -197,6 +203,20 @@ namespace Angor.Shared.Services
             var settings = _networkStorage.GetSettings();
 
             return settings.Relays;
+        }
+
+        public SettingsUrl GetPrimaryExplorer()
+        {
+            var settings = _networkStorage.GetSettings();
+
+            var ret = settings.Explorers.FirstOrDefault(p => p.IsPrimary);
+
+            if (ret == null)
+            {
+                throw new ApplicationException("No explorer found go to settings to add an explorer.");
+            }
+
+            return ret;
         }
 
         public void CheckAndHandleError(HttpResponseMessage httpResponseMessage)
