@@ -139,7 +139,7 @@ namespace Angor.Shared.Services
                     {
                         var uri = new Uri(explorerUrl.Url);
                         
-                         var heartbeatUrl = Path.Combine(uri.Host, "api", "stats", "heartbeat");
+                         var heartbeatUrl = new Uri(uri, "api/stats/heartbeat").ToString();
                          var response = await _httpClient.GetAsync(heartbeatUrl);
 
                         if (response.IsSuccessStatusCode)
