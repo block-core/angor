@@ -31,7 +31,7 @@
                 <h5 class="header-text">settings</h5>
             </div>
             <div class="header-actions">
- 
+
             </div>
         </div>
     </div>
@@ -84,9 +84,11 @@
                                             </div>
 
                                             <div class="" role="alert">
-                                                <p class="mb-0 text-bl">Warning: By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
+                                                <p class="mb-0 text-bl">Warning: By confirming, you agree to wiping all data
+                                                    from this device since you have a backup of your wallet words.</p>
                                                 <div class="form-check mt-4 mb-4">
-                                                    <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                                    <input class="form-check-input border mt-0" type="checkbox"
+                                                        id="confirmWipeCheckbox" @bind="confirmWipe">
                                                     <label class="form-check-label mb-0" for="confirmWipeCheckbox">
                                                         Confirm?
                                                     </label>
@@ -101,7 +103,8 @@
 
                                             <div class="info-card mb-3">
                                                 <label for="networkSelection" class="info-label m-0">Select Network:</label>
-                                                <select class="form-control mt-2" id="networkSelection" @bind="selectedNetwork">
+                                                <select class="form-control mt-2" id="networkSelection"
+                                                    @bind="selectedNetwork">
                                                     <option value="Angornet" selected>Angornet</option>
                                                     <option value="TestNet4" disabled selected>Testnet4</option>
                                                     <option value="Signet" disabled selected>Signet</option>
@@ -142,12 +145,12 @@
                     </h5>
                 </div>
             </div>
-            <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh" disabled="@refreshSpinner">
+            <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh"
+                disabled="@refreshSpinner">
                 @if (refreshSpinner)
                 {
-                    <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content"
-                          role="status"
-                          aria-hidden="true">
+                    <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status"
+                        aria-hidden="true">
                     </span>
                 }
                 else
@@ -158,7 +161,9 @@
         </div>
         <form @onsubmit="AddExplorer">
             <div class="input-group mb-3">
-                <input type="text" @bind-value="newExplorerLink" class="form-control" placeholder="Enter new explorer link" aria-label="Enter new explorer link" aria-describedby="button-addon3">
+                <input type="text" @bind-value="newExplorerLink" class="form-control"
+                    placeholder="Enter new explorer link" aria-label="Enter new explorer link"
+                    aria-describedby="button-addon3">
                 <button class="btn btn-border" type="submit" id="button-addon3">
                     <Icon IconName="plus" Height="24" Width="24"></Icon>
                 </button>
@@ -179,7 +184,9 @@
                     {
                         <tr>
                             <td><a href="@explorer.Url" target="_blank">@explorer.Url</a></td>
-                            <td style="color: @(explorer.Status == UrlStatus.Online ? "green" : explorer.Status == UrlStatus.NotReady ? "yellow" :  "red");">@explorer.Status.ToString()</td>
+                            <td
+                                style="color: @(explorer.Status == UrlStatus.Online ? "green" : explorer.Status == UrlStatus.NotReady ? "yellow" : "red");">
+                                @explorer.Status.ToString()</td>
                             <td>
                                 @if (explorer.IsPrimary)
                                 {
@@ -223,12 +230,12 @@
 
                 </div>
             </div>
-            <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh" disabled="@refreshSpinner">
+            <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh"
+                disabled="@refreshSpinner">
                 @if (refreshSpinner)
                 {
-                    <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content"
-                          role="status"
-                          aria-hidden="true">
+                    <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status"
+                        aria-hidden="true">
                     </span>
                 }
                 else
@@ -239,7 +246,9 @@
         </div>
         <form @onsubmit="AddIndexer">
             <div class="input-group mb-3">
-                <input type="text" @bind-value="newIndexerLink" class="form-control" placeholder="Enter new indexer link" aria-label="Enter new indexer link" aria-describedby="button-addon">
+                <input type="text" @bind-value="newIndexerLink" class="form-control"
+                    placeholder="Enter new indexer link" aria-label="Enter new indexer link"
+                    aria-describedby="button-addon">
                 <button class="btn btn-border" type="submit" id="button-addon">
                     <Icon IconName="plus" Height="24" Width="24"></Icon>
                 </button>
@@ -260,7 +269,9 @@
                     {
                         <tr>
                             <td><a href="@indexer.Url" target="_blank">@indexer.Url</a></td>
-                            <td style="color: @(indexer.Status == UrlStatus.Online ? "green" : indexer.Status == UrlStatus.NotReady ? "yellow" :  "red");">@indexer.Status.ToString()</td>
+                            <td
+                                style="color: @(indexer.Status == UrlStatus.Online ? "green" : indexer.Status == UrlStatus.NotReady ? "yellow" : "red");">
+                                @indexer.Status.ToString()</td>
                             <td>
                                 @if (indexer.IsPrimary)
                                 {
@@ -303,12 +314,12 @@
                     </h5>
                 </div>
             </div>
-            <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh" disabled="@refreshSpinner">
+            <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh"
+                disabled="@refreshSpinner">
                 @if (refreshSpinner)
                 {
-                    <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content"
-                          role="status"
-                          aria-hidden="true">
+                    <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status"
+                        aria-hidden="true">
                     </span>
                 }
                 else
@@ -319,7 +330,8 @@
         </div>
         <form @onsubmit="AddRelay">
             <div class="input-group mb-3">
-                <input type="text" @bind-value="newRelayLink" class="form-control" placeholder="Enter new relay link" aria-label="Enter new relay link" aria-describedby="button-addon2">
+                <input type="text" @bind-value="newRelayLink" class="form-control" placeholder="Enter new relay link"
+                    aria-label="Enter new relay link" aria-describedby="button-addon2">
                 <button class="btn btn-border" type="submit" id="button-addon2">
                     <Icon IconName="plus" Height="24" Width="24"></Icon>
                 </button>
@@ -342,7 +354,8 @@
                         <tr>
                             <td><a href="@relay.Url" target="_blank">@relay.Url</a></td>
                             <td>@relay.Name</td>
-                            <td class="@((relay.Status == UrlStatus.Online) ? "text-success" : (relay.Status == UrlStatus.NotReady) ? "text-warning" : "text-danger")">
+                            <td
+                                class="@((relay.Status == UrlStatus.Online) ? "text-success" : (relay.Status == UrlStatus.NotReady) ? "text-warning" : "text-danger")">
                                 @relay.Status.ToString()
                             </td>
                             <td>
@@ -376,7 +389,8 @@
 @* Currency Display Settings *@
 <div class="row mt-4 slide-in">
     <div class="card card-body">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-4">
+        <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-4">
             <div class="d-flex align-items-center">
                 <span class="user-select-none animate-rotate">
                     <Icon IconName="currency" Height="32" Width="32"></Icon>
@@ -393,10 +407,8 @@
             <div class="currency-select-container w-100 w-md-auto">
                 <div class="d-flex flex-column">
                     <label for="currencySelection" class="mb-2">Select Currency:</label>
-                    <select id="currencySelection" 
-                            class="form-control" 
-                            value="@selectedCurrency" 
-                            @onchange="OnCurrencyChanged">
+                    <select id="currencySelection" class="form-control" value="@selectedCurrency"
+                        @onchange="OnCurrencyChanged">
                         <option value="BTC">Bitcoin (BTC)</option>
                         <option value="USD">US Dollar (USD)</option>
                         <option value="EUR">Euro (EUR)</option>
@@ -455,9 +467,11 @@
                                     <div class="alert alert-danger" role="alert">
                                         <p>This will wipe your wallet!</p>
                                     </div>
-                                    <p class="mb-0 text-bl">Warning: By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
+                                    <p class="mb-0 text-bl">Warning: By confirming, you agree to wiping all data from this
+                                        device since you have a backup of your wallet words.</p>
                                     <div class="form-check mt-4">
-                                        <input class="form-check-input border" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+                                        <input class="form-check-input border" type="checkbox" id="confirmWipeCheckbox"
+                                            @bind="confirmWipe">
                                         <label class="form-check-label" for="confirmWipeCheckbox">
                                             Confirm?
                                         </label>
@@ -511,7 +525,7 @@
     {
         // Set active menu
         NavMenuState.SetActivePage("settings");
-        
+
         _networkService.AddSettingsIfNotExist();
 
         settingsInfo = _clientStorage.GetSettingsInfo();
@@ -592,11 +606,11 @@
 
             // Add indexer to settings
             settingsInfo.Indexers.Add(new SettingsUrl
-                {
-                    Url = newIndexerLink,
-                    LastCheck = DateTime.UtcNow,
-                    Status = UrlStatus.Online
-                });
+            {
+                Url = newIndexerLink,
+                LastCheck = DateTime.UtcNow,
+                Status = UrlStatus.Online
+            });
 
             _clientStorage.SetSettingsInfo(settingsInfo);
             notificationComponent.ShowNotificationMessage("Indexer added successfully.");
@@ -663,12 +677,15 @@
             }
 
             // Add explorer to settings
-            settingsInfo.Explorers.Add(new SettingsUrl
+            var newExplorer = new SettingsUrl
             {
                 Url = newExplorerLink,
                 LastCheck = DateTime.UtcNow,
-                Status = UrlStatus.Online
-            });
+                Status = UrlStatus.Online,
+                IsPrimary = !settingsInfo.Explorers.Any(e => e.IsPrimary) // Set as primary if no primary exists
+            };
+
+            settingsInfo.Explorers.Add(newExplorer);
 
             _clientStorage.SetSettingsInfo(settingsInfo);
             notificationComponent.ShowNotificationMessage("Explorer added successfully.");
