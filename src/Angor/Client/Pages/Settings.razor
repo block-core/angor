@@ -737,9 +737,20 @@
         {
             settingsInfo.Explorers.Remove(res);
 
+            // If removing primary explorer, try to set a new primary
             if (res.IsPrimary && settingsInfo.Explorers.Any())
             {
-                var next = settingsInfo.Explorers.OrderBy(a => a.Status).First();
+                // First try to find an online explorer
+                var next = settingsInfo.Explorers
+                .Where(e => e.Status == UrlStatus.Online)
+                .FirstOrDefault();
+
+                // If no online explorer found, fall back to first available
+                if (next == null)
+                {
+                    next = settingsInfo.Explorers.First();
+                }
+
                 next.IsPrimary = true;
             }
 
