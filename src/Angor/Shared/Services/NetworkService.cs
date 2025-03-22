@@ -129,6 +129,79 @@ namespace Angor.Shared.Services
                 }
             }
 
+            foreach (var explorerUrl in settings.Explorers)
+            {
+                if (force || (DateTime.UtcNow - explorerUrl.LastCheck).Minutes > 10)
+                {
+                    explorerUrl.LastCheck = DateTime.UtcNow;
+
+                    try
+                    {
+                        var uri = new Uri(explorerUrl.Url);
+                        
+                        // Create a request message that we can customize
+                        var request = new HttpRequestMessage(HttpMethod.Head, uri);
+                        
+                        // Set a timeout to avoid long waits
+                        var cts = new CancellationTokenSource();
+                        cts.CancelAfter(TimeSpan.FromSeconds(10));
+                        
+                        try
+                        {
+                            var response = await _httpClient.SendAsync(request, cts.Token);
+                            
+                            if (response.IsSuccessStatusCode)
+                            {
+                                explorerUrl.Status = UrlStatus.Online;
+                                _logger.LogInformation($"Explorer status check succeeded for {explorerUrl.Url}");
+                            }
+                            else
+                            {
+                                // Some explorers may return a non-success status but still be online
+                                // We'll treat anything except server errors (5xx) as potentially online
+                                if ((int)response.StatusCode < 500)
+                                {
+                                    explorerUrl.Status = UrlStatus.Online;
+                                    _logger.LogInformation($"Explorer returned non-success but acceptable status for {explorerUrl.Url}: {response.StatusCode}");
+                                }
+                                else
+                                {
+                                    explorerUrl.Status = UrlStatus.Offline;
+                                    _logger.LogError($"Failed to check explorer status url = {explorerUrl.Url}, StatusCode = {response.StatusCode}");
+                                }
+                            }
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            // If the request timed out, we'll assume the service is accessible but slow
+                            explorerUrl.Status = UrlStatus.Online;
+                            _logger.LogInformation($"Explorer check timed out for {explorerUrl.Url}, assuming online but slow");
+                        }
+                        catch (HttpRequestException ex) when (ex.InnerException?.Message?.Contains("Failed to fetch") == true)
+                        {
+                            // This is typically a CORS error in browser context
+                            // Since CORS errors happen when the server exists but doesn't allow cross-origin requests,
+                            // we'll treat this as the service being online
+                            explorerUrl.Status = UrlStatus.Online;
+                            _logger.LogInformation($"CORS restriction detected for {explorerUrl.Url}, assuming explorer is online");
+                        }
+                        catch (Exception ex)
+                        {
+                            explorerUrl.Status = UrlStatus.Offline;
+                            _logger.LogError(ex, $"Failed to check explorer status url = {explorerUrl.Url}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        explorerUrl.Status = UrlStatus.Offline;
+                        _logger.LogError(ex, $"Failed to create request for explorer url = {explorerUrl.Url}");
+                    }
+                    
+                    // Always notify of status changes
+                    OnStatusChanged?.Invoke();
+                }
+            }
+
             var nostrHeaderMediaType = new MediaTypeWithQualityHeaderValue("application/nostr+json");
             _httpClient.DefaultRequestHeaders.Accept.Add(nostrHeaderMediaType);
             foreach (var relayUrl in settings.Relays)
