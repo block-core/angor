@@ -27,22 +27,8 @@ public class NostrTools : INostrEncryptionService
         var secertHex = GetAesConversationKey(nsec, npub);
         return await _jsRuntime.InvokeAsync<string>("decryptNostr", secertHex, encryptedContent);
     }
-    
-    public string EncryptNostrContent(string nsec, string npub, string content)
-    {
-        var secertHex = GetAesConversationKey(nsec, npub);
-            
-        return _jsRuntime.InvokeAsync<string>("encryptNostr", secertHex, content)
-            .GetAwaiter().GetResult();
-    }
 
-    public string DecryptNostrContent(string nsec, string npub, string encryptedContent)
-    {
-        var secertHex = GetAesConversationKey(nsec, npub);
-        return _jsRuntime.InvokeAsync<string>("decryptNostr", secertHex, encryptedContent)
-            .GetAwaiter().GetResult();
-    }
-
+    //NIP 04
     private static string GetSharedSecretHexWithoutPrefix(string nsec, string npub)
     {
         var privateKey = new Key(Encoders.Hex.DecodeData(nsec));
@@ -52,6 +38,7 @@ public class NostrTools : INostrEncryptionService
         return Encoders.Hex.EncodeData(secert.ToBytes()[1..]);
     }
         
+    //NIP 44
     private static byte[] GetAesConversationKey(string nsec, string npub)
     {
         var privateKey = new Key(Encoders.Hex.DecodeData(nsec));
