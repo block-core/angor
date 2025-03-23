@@ -106,26 +106,25 @@ namespace Angor.Shared.Services
                     .Where(_ => _.Subscription == subscriptionKey)
                     .DistinctUntilChanged(x => x.Event?.Id)
                     .Where(x => x.Event?.Kind == _nup17Kind)
-                    .Subscribe(async x => {
-                        try {
-                            // Process the event synchronously within the subscribe block
-                            var unwrappedEvent = await _nip59Actions.UnwrapEventAsync(x.Event!, projectNsec);
-                            if (unwrappedEvent != null && 
-                                unwrappedEvent.Kind == _privateMessageKind && 
-                                unwrappedEvent.Tags.FindFirstTagValue("subject") == "Investment offer")
-                            {
-                                action.Invoke(
-                                    unwrappedEvent.Id, 
-                                    unwrappedEvent.Pubkey, 
-                                    unwrappedEvent.Content, 
-                                    unwrappedEvent.CreatedAt.Value
-                                );
-                            }
+                    .SelectMany(async x =>
+                    {
+                        try
+                        {
+                            return await _nip59Actions.UnwrapEventAsync(x.Event!, projectNsec);
                         }
-                        catch (Exception ex) {
+                        catch (Exception ex)
+                        {
                             // Log the exception but don't rethrow to avoid breaking the subscription
                             Console.WriteLine($"Error processing event: {ex.Message}");
+                            return null; // Return null to avoid breaking the subscription
                         }
+                    })
+                    .Where(_ => _ != null)
+                    .Where(x => x.Kind == _privateMessageKind)
+                    .Where(x => x.Tags.FindFirstTagValue("subject") == "Investment offer")
+                    .Subscribe(async x =>
+                    {
+                        action.Invoke(x.Id, x.Pubkey, x.Content, x.CreatedAt.Value);
                     });
 
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
@@ -160,10 +159,18 @@ namespace Angor.Shared.Services
                     .DistinctUntilChanged(x => x.Event?.Id)
                     .Where(x => x.Event?.Kind == _nup17Kind)
                     .SelectMany(async x => {
-                        var unwrappedEvent = await _nip59Actions.UnwrapEventAsync(x.Event!, investorNsec);
-                        return new { Response = x, UnwrappedEvent = unwrappedEvent };
+                        try
+                        {
+                            return await _nip59Actions.UnwrapEventAsync(x.Event!, investorNsec);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log the exception but don't rethrow to avoid breaking the subscription
+                            Console.WriteLine($"Error processing event: {ex.Message}");
+                            return null; // Return null to avoid breaking the subscription
+                        }
                     })
-                    .Select(x => x.UnwrappedEvent)
+                    .Where(x => x != null)
                     .Where(_ => _?.Kind == _privateMessageKind)
                     .Where(_ => _.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
                     .Subscribe(nostrEvent =>
