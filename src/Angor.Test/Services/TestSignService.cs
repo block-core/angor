@@ -1,8 +1,8 @@
-using Angor.Client.Services;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Nostr.Client.Client;
@@ -34,7 +34,7 @@ namespace Angor.Test.Services
             var networkService = new NetworkService(mockNetworkStorage.Object, new HttpClient { BaseAddress = new Uri("https://angor.io") }, new NullLogger<NetworkService>(), mockNetworkConfiguration.Object); 
             var subscriptionsHanding = new RelaySubscriptionsHandling(new NullLogger<RelaySubscriptionsHandling>(), communicationFactory, networkService); 
 
-            _signService = new SignService(communicationFactory, networkService, subscriptionsHanding);
+            _signService = new SignService(communicationFactory, networkService, subscriptionsHanding, new Mock<INostrNip59Actions>().Object);
         }
 
         //[Fact] // uncomment to test

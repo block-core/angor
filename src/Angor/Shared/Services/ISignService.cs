@@ -1,6 +1,6 @@
 using Angor.Shared.Models;
 
-namespace Angor.Client.Services;
+namespace Angor.Shared.Services;
 
 public interface ISignService
 {
@@ -8,7 +8,7 @@ public interface ISignService
         string founderNostrPubKey);
     void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action);
 
-    Task LookupInvestmentRequestsAsync(string nostrPubKey, string? senderNpub, DateTime? since, Action<string, string, string, DateTime> action,
+    Task LookupInvestmentRequestsAsync(string founderNsec, string? senderNpub, DateTime? since, Action<string, string, string, DateTime> action,
         Action onAllMessagesReceived);
     
     void LookupInvestmentRequestApprovals(string nostrPubKey, Action<string, DateTime, string> action,

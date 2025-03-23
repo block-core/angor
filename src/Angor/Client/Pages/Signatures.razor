@@ -213,8 +213,6 @@
             FounderProject = Storage.GetFounderProjects()
                 .FirstOrDefault(_ => _.ProjectInfo.ProjectIdentifier == ProjectIdentifier)
                              ?? throw new ArgumentException("The project was not found, try to scan in the founder page");
-
-            await FetchPendingSignatures(FounderProject);
         }
         Logger.LogDebug("End of OnInitializedAsync");
     }
@@ -222,6 +220,21 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         Logger.LogDebug("OnAfterRenderAsync");
+        WalletWords words;
+            
+        if (passwordComponent.HasPassword())
+        {
+            words = await passwordComponent.GetWalletAsync();
+            await FetchPendingSignatures(FounderProject, words);
+        }
+        else
+        {
+            passwordComponent.ShowPassword(async () =>
+            {
+                words = await passwordComponent.GetWalletAsync();
+                await FetchPendingSignatures(FounderProject, words);
+            });
+        }
         await FetchSignaturesCheckPassword();
     }
 
@@ -262,7 +275,8 @@
 
         try
         {
-            await FetchPendingSignatures(FounderProject);
+            var words = await passwordComponent.GetWalletAsync();
+            await FetchPendingSignatures(FounderProject, words);
             await FetchSignatures();
             await Task.Delay(1000);
         }
@@ -295,25 +309,11 @@
                 notificationComponent.ShowErrorMessage("no wallet password");
                 return;
             }
-
-            var words = await passwordComponent.GetWalletAsync();
-
-            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
-
-            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
-
-            foreach (var pendingSignature in signaturesRequests.Where(_ => _.EncryptedMessage != null && _.AmountToInvest == null))
+            
+            foreach (var pendingSignature in signaturesRequests.Where(_ => _.AmountToInvest == null))
             {
                 try
                 {
-                    var sigResJson = await encryption.DecryptNostrContentAsync(
-                        nostrPrivateKeyHex, pendingSignature.investorNostrPubKey, pendingSignature.EncryptedMessage);
-
-                    pendingSignature.SignRecoveryRequest = serializer.Deserialize<SignRecoveryRequest>(sigResJson);
-                    if (pendingSignature.SignRecoveryRequest is null)
-                    {
-                        throw new Exception("Error deserializing signature request");
-                    }
                     var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.SignRecoveryRequest.InvestmentTransactionHex);
 
                     // Todo get the actual outputs with taproot type
@@ -346,10 +346,12 @@
         Logger.LogDebug($"Signatures retrieved: {signaturesRequests.Count}");
     }
 
-    private async Task FetchPendingSignatures(FounderProject project)
+    private async Task FetchPendingSignatures(FounderProject project, WalletWords words)
     {
-        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null, null,// project.LastRequestForSignaturesTime , async
-            (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
+        var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, project.ProjectInfo.FounderKey);
+        
+        await SignService.LookupInvestmentRequestsAsync(Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes()), null, null,// project.LastRequestForSignaturesTime , async
+            (eventId, investorNostrPubKey, message, timeArrived) =>
             {
                 Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
 
@@ -376,7 +378,7 @@
                     {
                         investorNostrPubKey = investorNostrPubKey,
                         TimeArrived = timeArrived,
-                        EncryptedMessage = encryptedMessage, //To be encrypted after js interop is loaded
+                        SignRecoveryRequest = serializer.Deserialize<SignRecoveryRequest>(message),
                         EventId = eventId
                     };
 
@@ -554,10 +556,7 @@
             var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            var encryptedContent = await encryption.EncryptNostrContentAsync(
-                nostrPrivateKeyHex, signature.investorNostrPubKey, sigJson);
-
-            FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
+            FounderProject.LastRequestForSignaturesTime = await SignService.SendSignaturesToInvestorAsync(sigJson, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
 
             Storage.UpdateFounderProject(FounderProject);
 
@@ -598,7 +597,6 @@
         public DateTime? TimeApproved { get; set; }
 
         public SignRecoveryRequest? SignRecoveryRequest { get; set; }
-        public string? EncryptedMessage { get; set; }
 
         public string EventId { get; set; }
     }

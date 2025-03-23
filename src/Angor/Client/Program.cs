@@ -22,7 +22,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddBlazoredSessionStorage();
 
-builder.Services.AddTransient<INostrEncryptionService, NostrTools>();
+
 builder.Services.AddSingleton<ISerializer, Serializer>();
 builder.Services.AddSingleton<INetworkConfiguration, NetworkConfiguration>();
 builder.Services.AddTransient<IHdOperations, HdOperations>();
@@ -38,10 +38,11 @@ builder.Services.AddScoped<NavMenuState>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ICurrencyRateService, CurrencyRateService>();
 
-//builder.Services.AddScoped<IIndexerService, IndexerService>();
 builder.Services.AddScoped<IIndexerService, MempoolSpaceIndexerApi>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
 
+builder.Services.AddTransient<INostrEncryptionService, NostrTools>();
+builder.Services.AddTransient<INostrNip59Actions, Nip59Actions>();
 builder.Services.AddTransient<IRelayService, RelayService>();
 builder.Services.AddTransient<ISignService, SignService>();
 
