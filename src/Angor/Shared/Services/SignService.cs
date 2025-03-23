@@ -71,9 +71,10 @@ namespace Angor.Shared.Services
                         catch (Exception e)
                         {
                             Console.WriteLine(e);
-                            throw;
+                            return null; // Return null to avoid breaking the subscription;
                         }
                     })
+                    .Where(_ => _ != null)
                     .Where(_ => _?.Kind == _privateMessageKind)
                     .Where(_ => _.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
                     .Subscribe(_ => { action.Invoke(_.Content); });
@@ -249,10 +250,18 @@ namespace Angor.Shared.Services
                     .DistinctUntilChanged(x => x.Event?.Id)
                     .Where(x => x.Event?.Kind == _nup17Kind)
                     .SelectMany(async x => {
-                        var unwrappedEvent = await _nip59Actions.UnwrapEventAsync(x.Event!, investorNsec);
-                        return new { Response = x, UnwrappedEvent = unwrappedEvent };
+                        try
+                        {
+                            return await _nip59Actions.UnwrapEventAsync(x.Event!, investorNsec);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log the exception but don't rethrow to avoid breaking the subscription
+                            Console.WriteLine($"Error processing event: {ex.Message}");
+                            return null; // Return null to avoid breaking the subscription
+                        }
                     })
-                    .Select(x => x.UnwrappedEvent)
+                    .Where(x => x != null)
                     .Where(_ => _?.Kind == _privateMessageKind)
                     .Where(_ => _.Tags.FindFirstTagValue("subject") == "Release transaction signatures")
                     .Subscribe(_ => { action.Invoke(_.Content); });
@@ -286,10 +295,17 @@ namespace Angor.Shared.Services
                     .Where(x => x.Subscription == subscriptionKey)
                     .Where(x => x.Event?.Kind == _nup17Kind)
                     .SelectMany(async x => {
-                            var unwrappedEvent = await _nip59Actions.UnwrapEventAsync(x.Event!, nsec);
-                            return new { Response = x, UnwrappedEvent = unwrappedEvent };
-                        })
-                    .Select(x => x.UnwrappedEvent)
+                        try
+                        {
+                            return await _nip59Actions.UnwrapEventAsync(x.Event!, nsec);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log the exception but don't rethrow to avoid breaking the subscription
+                            Console.WriteLine($"Error processing event: {ex.Message}");
+                            return null; // Return null to avoid breaking the subscription
+                        }
+                    })
                     .Where(x => x != null)
                     .Where(x => x.Kind == _privateMessageKind)
                     .Where(x => x.Tags.FindFirstTagValue("subject") == "Release transaction signatures")
