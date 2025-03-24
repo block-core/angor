@@ -728,7 +728,7 @@
             {
                 invested = investorProject.InvestedInProject();
 
-                myProjectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/transaction/{investorProject.TransactionId}";
+                myProjectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{investorProject.TransactionId}";
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
                 return;
@@ -811,7 +811,7 @@
     {
         if (!string.IsNullOrEmpty(project?.CreationTransactionId))
         {
-            projectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/transaction/{project.CreationTransactionId}";
+            projectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{project.CreationTransactionId}";
         }
         else
         {

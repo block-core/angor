@@ -944,6 +944,8 @@
 
             storage.UpdateInvestmentProject(project);
 
+            Logger.LogInformation($"recover trx hex = {recoveryTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory)}");
+
             var response = await _WalletOperations.PublishTransactionAsync(network, recoveryTransaction.Transaction);
 
             if (!response.Success)
@@ -1079,6 +1081,8 @@
 
             storage.UpdateInvestmentProject(project);
 
+            Logger.LogInformation($"release trx hex = {releaseRecoveryTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory)}");
+
             var response = await _WalletOperations.PublishTransactionAsync(network, releaseRecoveryTransaction.Transaction);
 
             if (!response.Success)
@@ -1204,6 +1208,8 @@
             showEndOfProjectModal = false;
 
             storage.UpdateInvestmentProject(project);
+
+            Logger.LogInformation($"end of project trx hex = {endOfProjectTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory)}");
 
             var response = await _WalletOperations.PublishTransactionAsync(network, endOfProjectTransaction.Transaction);
 
