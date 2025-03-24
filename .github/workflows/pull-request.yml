@@ -42,8 +42,8 @@ jobs:
         echo VERSION=$(npm run version --silent) >> $GITHUB_ENV
       shell: bash
       
-    - name: Workload
-      run: dotnet workload restore ${{env.SOLUTION_PATH}}
+    # - name: Workload
+    #   run: dotnet workload restore ${{env.SOLUTION_PATH}}
 
     - name: Restore
       run: dotnet restore ${{env.SOLUTION_PATH}}
