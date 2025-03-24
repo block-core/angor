@@ -111,7 +111,7 @@
                     <Icon IconName="recovery" Height="32" Width="32" />
                 </div>
                 <div class="stats-info">
-                    <h6 class="stats-title">In Recovery</h6>
+                    <h6 class="stats-title">Recovered to penalty</h6>
                     <p class="stats-value">@Money.Satoshis(TotalInRecovery).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                 </div>
             </div>
@@ -243,9 +243,18 @@
                             <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border flex-fill">
                                 View Project
                             </a>
-                            <a href=@($"/recover/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success flex-fill">
-                                Manage Investment
-                            </a>
+                            @if (string.IsNullOrWhiteSpace(project.TransactionId))
+                            {
+                                <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success flex-fill">
+                                    Completed Investment
+                                </a>
+                            }
+                            else
+                            {
+                                <a href=@($"/recover/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success flex-fill">
+                                    Manage Investment
+                                </a>
+                            }
                         </div>
                     </div>
                 }

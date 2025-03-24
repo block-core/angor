@@ -11,10 +11,10 @@
 @using NBitcoin.DataEncoders
 @using Nostr.Client.Messages
 
+@inject INetworkService _NetworkService
 @inject IDerivationOperations _derivationOperations
 @inject IClientStorage storage;
 @inject ICacheStorage SessionStorage;
-@inject NavigationManager NavigationManager
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IClipboardService _clipboardService
 @inject IIndexerService _IndexerService
@@ -433,18 +433,26 @@
                             <i class="me-2">
                                 <Icon IconName="wallet" />
                             </i>
-                            Manage Funds
+                            Manage funds
                         </a>
                         <a href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-warning animate-scale">
                             <i class="me-2">
                                 <Icon IconName="signature" />
                             </i>
-                            Pending Approvals
+                            Approve investments
                         </a>
 
-                        <a href="#" class="btn btn-border animate-scale warning-button disabled">
+                        <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}")
+                           class="btn btn-border animate-scale warning-button @(CanReleaseUnfundedProject() ? "" : "disabled")">
                             <i class="me-2">
-                                <Icon IconName="lock" />
+                                @if (CanReleaseUnfundedProject())
+                                {
+                                    <Icon IconName="unlock" />
+                                }
+                                else
+                                {
+                                    <Icon IconName="lock" />
+                                }
                             </i>
                             Release funds back to investors
                         </a>
@@ -558,7 +566,7 @@
                         <div class="action-buttons d-flex justify-content-center item-center mt-4">
                             <button @onclick="OpenInHUBAsync" class="btn btn-border-success mt-4 mr-1">
                                 <Icon IconName="link" Class="me-2" />
-                                Open in Angor HUB
+                                Open in Angor Hub
                             </button>
                             <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning mt-4 mr-1">
                                 <Icon IconName="edit" Class="me-2" />
@@ -566,7 +574,7 @@
                             </button>
                             <button @onclick="ShowNsecAsync" class="btn btn-border-danger mt-4">
                                 <Icon IconName="shield" Class="me-2" />
-                                View nsec key
+                                View nsec
                             </button>
                         </div>
 
@@ -616,7 +624,7 @@
                         <div class="action-buttons d-flex justify-content-center item-center mt-4">
                             <button @onclick="OpenInHUBAsync" class="btn btn-border-success mt-4 mr-1">
                                 <Icon IconName="link" Class="me-2" />
-                                Open in Angor HUB
+                                Open in Angor Hub
                             </button>
                         </div>
                     }
@@ -719,7 +727,8 @@
             if (project is InvestorProject investorProject)
             {
                 invested = investorProject.InvestedInProject();
-                myProjectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{investorProject.TransactionId}";
+
+                myProjectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{investorProject.TransactionId}";
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
                 return;
@@ -802,7 +811,7 @@
     {
         if (!string.IsNullOrEmpty(project?.CreationTransactionId))
         {
-            projectExplorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.CreationTransactionId}";
+            projectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{project.CreationTransactionId}";
         }
         else
         {
@@ -993,5 +1002,12 @@
         await _clipboardService.WriteTextAsync(text);
         notificationComponent.ShowNotificationMessage("Copied to clipboard!", 3);
     }
-}
+    private bool CanReleaseUnfundedProject()
+    {
+        if (project?.ProjectInfo == null) return false;
 
+        // Project has started and total invested amount is less than target
+        return project.ProjectInfo.StartDate <= DateTime.UtcNow
+               && projectStats?.TotalRaised < project.ProjectInfo.TargetAmount;
+    }
+}

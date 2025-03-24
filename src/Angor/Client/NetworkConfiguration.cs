@@ -161,13 +161,14 @@ public class NetworkConfiguration : INetworkConfiguration
         };
     }
 
-    public List<SettingsUrl> GetDefaultExplorerUrl()
+    public List<SettingsUrl> GetDefaultExplorerUrls()
     {
         if (currentNetwork.NetworkType == NetworkType.Mainnet)
         {
             return new List<SettingsUrl>
             {
-                new SettingsUrl { Name = "", Url = "https://explorer.angor.io/btc/explorer", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "https://explorer.angor.io/btc/explorer", IsPrimary = false },
+                new SettingsUrl { Name = "", Url = "https://mempool.explorer.angor.io", IsPrimary = true },
             };
         }
 
@@ -178,6 +179,7 @@ public class NetworkConfiguration : INetworkConfiguration
                 return new List<SettingsUrl>
                 {
                     new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer", IsPrimary = true },
+                    new SettingsUrl { Name = "", Url = "https://explorer.thedude.pro", IsPrimary = true },
                 };
             }
 

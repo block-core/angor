@@ -74,6 +74,12 @@ namespace Angor.Shared.Services
         {
             var settings = _networkStorage.GetSettings();
 
+            if (!settings.Explorers.Any())
+            {
+                settings.Explorers.AddRange(_networkConfiguration.GetDefaultExplorerUrls());
+                _networkStorage.SetSettings(settings);
+            }
+
             if (!settings.Indexers.Any())
             {
                 settings.Indexers.AddRange(_networkConfiguration.GetDefaultIndexerUrls());
@@ -119,6 +125,37 @@ namespace Angor.Shared.Services
                     {
                         indexerUrl.Status = UrlStatus.Offline;
                         _logger.LogError(ex, $"Failed to check indexer status url = {indexerUrl.Url}");
+                    }
+                }
+            }
+
+            foreach (var explorerUrl in settings.Explorers)
+            {
+                if (force || (DateTime.UtcNow - explorerUrl.LastCheck).Minutes > 10)
+                {
+                    explorerUrl.LastCheck = DateTime.UtcNow;
+
+                    try
+                    {
+                        var uri = new Uri(explorerUrl.Url);
+                        
+                         var heartbeatUrl = new Uri(uri, "api/stats/heartbeat").ToString();
+                         var response = await _httpClient.GetAsync(heartbeatUrl);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            explorerUrl.Status = UrlStatus.Online;
+                        }
+                        else
+                        {
+                            _logger.LogError($"Failed to check explorer status url = {explorerUrl.Url}, StatusCode = {response.StatusCode}");
+                        }
+                        OnStatusChanged?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        explorerUrl.Status = UrlStatus.Offline;
+                        _logger.LogError(ex, $"Failed to check explorer status url = {explorerUrl.Url}");
                     }
                 }
             }
@@ -197,6 +234,20 @@ namespace Angor.Shared.Services
             var settings = _networkStorage.GetSettings();
 
             return settings.Relays;
+        }
+
+        public SettingsUrl GetPrimaryExplorer()
+        {
+            var settings = _networkStorage.GetSettings();
+
+            var ret = settings.Explorers.FirstOrDefault(p => p.IsPrimary);
+
+            if (ret == null)
+            {
+                throw new ApplicationException("No explorer found go to settings to add an explorer.");
+            }
+
+            return ret;
         }
 
         public void CheckAndHandleError(HttpResponseMessage httpResponseMessage)

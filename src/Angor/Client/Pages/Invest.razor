@@ -458,7 +458,7 @@ else
                     <p class="modal-title">
                         The founder has signed a transaction agreement ensuring that you can recover your funds if the project does not succeed, you may now invest.
                     </p>
-                    <div class="d-flex justify-content-center mt-4">
+                    <div class="d-flex justify-content-center align-items-center mt-4">
                         <button type="button" class="btn btn-border-success animate-scale" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
                             @if (publishSpinner)
                             {
@@ -467,8 +467,8 @@ else
                             }
                             else
                             {
-                                <Icon IconName="invest" Width="20" Height="20" class="me-1" />
-                                <span>Invest</span>
+                                <Icon IconName="shield-star" Width="32" Height="32" class="me-1" />
+                                <h4 class="mb-0">Invest</h4>
                             }
                         </button>
                     </div>

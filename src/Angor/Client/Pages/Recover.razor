@@ -12,6 +12,7 @@
 @using Blockcore.NBitcoin.DataEncoders
 @using Angor.Client.Models
 
+@inject INetworkService _NetworkService
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
@@ -44,7 +45,7 @@
                 <span class="header-icon-wrapper">
                     <Icon IconName="recovery" Width="32" Height="32" />
                 </span>
-                <h5 class="header-text">Recover Funds</h5>
+                <h5 class="header-text">Recover Funds (@project.Metadata?.Name)</h5>
             </div>
             <div class="header-actions">
                 <button class="btn btn-border-success"
@@ -672,7 +673,7 @@
 
         if (trx == null)
         {
-            explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{project.TransactionId}";
+            explorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/transaction/{project.TransactionId}";
             trxNotFound = true;
             return;
         }
@@ -690,7 +691,7 @@
         StageInfo.TransactionInfo = trxInfo;
         lastCheck = DateTime.UtcNow;
 
-        explorerLink = _NetworkConfiguration.GetExplorerUrl().Url + $"/transaction/{trx.TransactionId}";
+        explorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/transaction/{trx.TransactionId}";
 
         StageInfo.Items.Clear();
 
@@ -943,6 +944,8 @@
 
             storage.UpdateInvestmentProject(project);
 
+            Logger.LogInformation($"recover trx hex = {recoveryTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory)}");
+
             var response = await _WalletOperations.PublishTransactionAsync(network, recoveryTransaction.Transaction);
 
             if (!response.Success)
@@ -1078,6 +1081,8 @@
 
             storage.UpdateInvestmentProject(project);
 
+            Logger.LogInformation($"release trx hex = {releaseRecoveryTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory)}");
+
             var response = await _WalletOperations.PublishTransactionAsync(network, releaseRecoveryTransaction.Transaction);
 
             if (!response.Success)
@@ -1203,6 +1208,8 @@
             showEndOfProjectModal = false;
 
             storage.UpdateInvestmentProject(project);
+
+            Logger.LogInformation($"end of project trx hex = {endOfProjectTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory)}");
 
             var response = await _WalletOperations.PublishTransactionAsync(network, endOfProjectTransaction.Transaction);
 
