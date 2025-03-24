@@ -33,6 +33,7 @@ services:
     environment:
       UACOMMENT: $UACOMMENT
       BLOCKPRODUCTIONDELAY: ${BLOCKPRODUCTIONDELAY:-30}
+      MINERENABLED: ${MINERENABLED:-0} # change this to 1 if this node needs to mine (however for simplicity there should only be one mining node per challenge)
       NBITS: $NBITS
       SIGNETCHALLENGE: ${SIGNETCHALLENGE:-512102a3f8184701a033e5f8faa295647374b0bbc868082240d6e7ad8e9ecb0d86e6d451ae}
       EXTERNAL_IP: $EXTERNAL_IP
