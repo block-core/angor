@@ -37,5 +37,36 @@ namespace Angor.Client.Services
             _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInbound);
             _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
         }
+
+        public async Task<AccountBalanceInfo> RefreshWalletBalance(AccountBalanceInfo? accountBalanceInfo = null)
+        {
+            try
+            {
+                var accountInfo = _storage.GetAccountInfo(_networkConfiguration.GetNetwork().Name);
+                var unconfirmedInboundFunds = _cacheStorage.GetUnconfirmedInboundFunds();
+
+                await _walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
+                await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+
+                _storage.SetAccountInfo(_networkConfiguration.GetNetwork().Name, accountInfo);
+
+                var utxos = accountInfo.AllUtxos().Select(x => x.outpoint.ToString()).ToList();
+                var spentToUpdate = unconfirmedInboundFunds.RemoveAll(x => utxos.Contains(x.outpoint.ToString()));
+
+                if (spentToUpdate > 0)
+                    _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInboundFunds);
+
+                accountBalanceInfo ??= new AccountBalanceInfo();
+
+                accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInboundFunds);
+
+                return accountBalanceInfo;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error refreshing balance");
+                throw;
+            }
+        }
     }
 }

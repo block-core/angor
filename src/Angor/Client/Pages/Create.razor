@@ -23,6 +23,8 @@
 @inject IJSRuntime JS;
 @inject NavMenuState NavMenuState
 
+@inject IWalletUIService _walletUIService;
+
 @inject IFounderTransactionActions _founderTransactionActions
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
@@ -1140,7 +1142,8 @@
         try
         {
             var words = await passwordComponent.GetWalletAsync();
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+            var accountInfo = accountBalanceInfo.AccountInfo;
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();

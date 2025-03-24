@@ -860,7 +860,8 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+            var accountInfo = accountBalanceInfo.AccountInfo;
             var words = await passwordComponent.GetWalletAsync();
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
@@ -965,6 +966,8 @@
 
             _walletUIService.AddTransactionToPending(recoveryTransaction.Transaction);
 
+            await RefreshInvestments();
+
             notificationComponent.ShowNotificationMessage("Transaction submitted successfully", 5);
 
         }
@@ -1004,7 +1007,8 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+            var accountInfo = accountBalanceInfo.AccountInfo;
             var words = await passwordComponent.GetWalletAsync();
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
@@ -1096,6 +1100,8 @@
             storage.UpdateInvestmentProject(project);
 
             _walletUIService.AddTransactionToPending(releaseRecoveryTransaction.Transaction);
+            
+            await RefreshInvestments();
 
             notificationComponent.ShowNotificationMessage("Transaction submitted successfully", 5);
 
@@ -1136,7 +1142,8 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+            var accountInfo = accountBalanceInfo.AccountInfo;
             var words = await passwordComponent.GetWalletAsync();
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
@@ -1223,6 +1230,8 @@
             storage.UpdateInvestmentProject(project);
 
             _walletUIService.AddTransactionToPending(endOfProjectTransaction.Transaction);
+            
+            await RefreshInvestments();
 
             notificationComponent.ShowNotificationMessage("Transaction submitted successfully", 5);
 
@@ -1242,5 +1251,4 @@
     {
         NavigationManager.NavigateTo($"/release/{ProjectIdentifier}");
     }
-
 }
