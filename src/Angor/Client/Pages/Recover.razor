@@ -963,6 +963,8 @@
 
             _walletUIService.AddTransactionToPending(recoveryTransaction.Transaction);
 
+            await RefreshInvestments();
+
             notificationComponent.ShowNotificationMessage("Transaction submitted successfully", 5);
 
         }
@@ -1093,6 +1095,8 @@
             storage.UpdateInvestmentProject(project);
 
             _walletUIService.AddTransactionToPending(releaseRecoveryTransaction.Transaction);
+            
+            await RefreshInvestments();
 
             notificationComponent.ShowNotificationMessage("Transaction submitted successfully", 5);
 
@@ -1219,6 +1223,8 @@
             storage.UpdateInvestmentProject(project);
 
             _walletUIService.AddTransactionToPending(endOfProjectTransaction.Transaction);
+            
+            await RefreshInvestments();
 
             notificationComponent.ShowNotificationMessage("Transaction submitted successfully", 5);
 
