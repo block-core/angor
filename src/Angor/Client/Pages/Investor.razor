@@ -243,9 +243,18 @@
                             <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border flex-fill">
                                 View Project
                             </a>
-                            <a href=@($"/recover/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success flex-fill">
-                                Manage Investment
-                            </a>
+                            @if (string.IsNullOrWhiteSpace(project.TransactionId))
+                            {
+                                <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success flex-fill">
+                                    Completed Investment
+                                </a>
+                            }
+                            else
+                            {
+                                <a href=@($"/recover/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success flex-fill">
+                                    Manage Investment
+                                </a>
+                            }
                         </div>
                     </div>
                 }
