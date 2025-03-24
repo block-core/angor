@@ -43,15 +43,15 @@ jobs:
       shell: bash
       
     - name: Workload
-      run: dotnet workload restore ${{env.SOLUTION_PATH}} --sdk 8.0
+      run: dotnet workload restore ${{env.SOLUTION_PATH}}
 
     - name: Restore
       run: dotnet restore ${{env.SOLUTION_PATH}}
 
     - name: Unit Test (Debug)
       run: |
-       dotnet test --sdk 8.0 --logger "trx;LogFileName=testresults.trx" -v normal -c Debug src/Angor.sln | grep -E '(Passed|Failed) .*ms'
+       dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Debug src/Angor.sln | grep -E '(Passed|Failed) .*ms'
 
     - name: Unit Test (Release)
       run: |
-        dotnet test --sdk 8.0 --logger "trx;LogFileName=testresults.trx" -v normal -c Release src/Angor.sln | grep -E '(Passed|Failed) .*ms'
+        dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Release src/Angor.sln | grep -E '(Passed|Failed) .*ms'

@@ -56,11 +56,11 @@ jobs:
       shell: bash
 
     - name: Publish
-      run: dotnet publish --sdk 8.0 -c Release -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }}.${{ github.run_number }} -v m -o publish  ${{env.PROJECT_PATH}}
+      run: dotnet publish -c Release -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }}.${{ github.run_number }} -v m -o publish  ${{env.PROJECT_PATH}}
 
     - name: Run Tests
       continue-on-error: true
-      run: dotnet test --sdk 8.0 -c Release -r ${{matrix.runtime}} --verbosity normal  ${{env.SOLUTION_PATH}} 
+      run: dotnet test -c Release -r ${{matrix.runtime}} --verbosity normal  ${{env.SOLUTION_PATH}} 
 
     - name: Zip Release
       run: |
