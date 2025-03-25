@@ -20,7 +20,7 @@ public static class UIServices
         
         return services
             .AddSingleton<ILauncherService>(_ => new LauncherService(topLevel!.Launcher))
-            .AddSingleton<IDialog, DesktopDialog>()
+            .AddSingleton(DialogService.Create())
             .AddSingleton<IActiveWallet, ActiveWallet>()
             .AddSingleton<INotificationService>(_ => notificationService)
             .AddSingleton<UI.Services.UIServices>();

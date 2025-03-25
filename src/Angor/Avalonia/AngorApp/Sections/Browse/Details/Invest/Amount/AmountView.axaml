@@ -6,6 +6,7 @@
              xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d"
              d:DesignWidth="500"
              x:Class="AngorApp.Sections.Browse.Details.Invest.Amount.AmountView" x:DataType="amount:IAmountViewModel">
@@ -20,44 +21,55 @@
         </Style>
     </UserControl.Styles>
 
-    <StackPanel Spacing="20">
-        <TextBlock TextWrapping="Wrap">
-            <TextBlock.Inlines>
-                <Run>
-                    Here is a small explanation of the project.
-                </Run>
-                <Run>You can view more details about the project </Run>
-                <InlineUIContainer>
-                    <HyperlinkButton Content="here" Padding="0" NavigateUri="{Binding Project.InformationUri}" />
-                </InlineUIContainer>
-            </TextBlock.Inlines>
-        </TextBlock>
-        <TextBlock TextWrapping="Wrap">
-            To invest in this project, the founder must sign a recovery agreement.
-            This agreement ensures that in the event the project does not succeed, you will be able to recover your funds.
-            This provides a safety net for your investment, giving you peace of mind that your financial contribution is protected.
-        </TextBlock>
-        <Separator />
-        <StackPanel Spacing="10" Grid.IsSharedSizeScope="True">
-            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Project Id:" Content="{Binding Project.Id}" />
-            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Target Amount:" Content="{Binding Project.TargetAmount, StringFormat={x:Static controls:MiscConverters.BigBtcFormat} }" />
-            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Starting in:" Content="{Binding Project.StartingDate}" />
+    <Panel>
+        <StackPanel Spacing="20" IsVisible="{Binding !IsBusy^}">
+            <TextBlock TextWrapping="Wrap">
+                <TextBlock.Inlines>
+                    <Run>
+                        Here is a small explanation of the project.
+                    </Run>
+                    <Run>You can view more details about the project </Run>
+                    <InlineUIContainer>
+                        <HyperlinkButton Content="here" Padding="0" NavigateUri="{Binding Project.InformationUri}" />
+                    </InlineUIContainer>
+                </TextBlock.Inlines>
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap">
+                To invest in this project, the founder must sign a recovery agreement.
+                This agreement ensures that in the event the project does not succeed, you will be able to recover your funds.
+                This provides a safety net for your investment, giving you peace of mind that your financial contribution is protected.
+            </TextBlock>
             <Separator />
-            <controls:AmountControl Satoshis="{Binding Amount}">
-                <Interaction.Behaviors>
-                    <behaviors:UntouchedClassBehavior />
-                </Interaction.Behaviors>
-            </controls:AmountControl>
-            <controls:IconButton HorizontalAlignment="Right" Content="Stages breakdown" IsVisible="{Binding !!Amount}">
-                <controls:IconButton.Icon>
-                    <avalonia:Icon Value="fa-info" />
-                </controls:IconButton.Icon>
-                <controls:IconButton.Flyout>
-                    <Flyout Placement="BottomEdgeAlignedLeft">
-                        <amount:StagesBreakdown />
-                    </Flyout>
-                </controls:IconButton.Flyout>
-            </controls:IconButton>
+            <StackPanel Spacing="10" Grid.IsSharedSizeScope="True">
+                <HeaderedContentControl Theme="{StaticResource Inline}" Header="Project Id:"
+                                        Content="{Binding Project.Id}" />
+                <HeaderedContentControl Theme="{StaticResource Inline}" Header="Target Amount:"
+                                        Content="{Binding Project.TargetAmount, StringFormat={x:Static controls:MiscConverters.BigBtcFormat} }" />
+                <HeaderedContentControl Theme="{StaticResource Inline}" Header="Starting in:"
+                                        Content="{Binding Project.StartingDate}" />
+                <Separator />
+                <controls:AmountControl Satoshis="{Binding Amount}">
+                    <Interaction.Behaviors>
+                        <behaviors:UntouchedClassBehavior />
+                    </Interaction.Behaviors>
+                </controls:AmountControl>
+                <controls:IconButton HorizontalAlignment="Right" Content="Stages breakdown"
+                                     IsVisible="{Binding !!Amount}">
+                    <controls:IconButton.Icon>
+                        <avalonia:Icon Value="fa-info" />
+                    </controls:IconButton.Icon>
+                    <controls:IconButton.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedLeft">
+                            <amount:StagesBreakdown />
+                        </Flyout>
+                    </controls:IconButton.Flyout>
+                </controls:IconButton>
+            </StackPanel>
         </StackPanel>
-    </StackPanel>
+        <StackPanel Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy^}">
+            <TextBlock Text="Loading wallet properties" TextAlignment="Center" />
+            <TextBlock Text="Please wait..." TextAlignment="Center" />
+            <fa:ProgressRing IsIndeterminate="True" Height="120" Width="120" />
+        </StackPanel>
+    </Panel>
 </UserControl>

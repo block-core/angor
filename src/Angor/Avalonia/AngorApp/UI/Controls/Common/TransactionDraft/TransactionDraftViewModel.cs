@@ -1,4 +1,7 @@
+using System.Threading.Tasks;
+using Angor.Wallet.Application;
 using Angor.Wallet.Domain;
+using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.CSharpFunctionalExtensions;
@@ -9,13 +12,17 @@ namespace AngorApp.UI.Controls.Common.TransactionDraft;
 
 public partial class TransactionDraftViewModel : ReactiveValidationObject, ITransactionDraftViewModel
 {
+    private readonly WalletId walletId;
+    private readonly IWalletAppService walletAppService;
     [Reactive] private long feerate = 1;
     [ObservableAsProperty] private ITransactionDraft? transactionDraft;
 
-    public TransactionDraftViewModel(IWallet wallet, Destination destination, Services.UIServices services)
+    public TransactionDraftViewModel(WalletId walletId, IWalletAppService walletAppService, Destination destination, UIServices services)
     {
+        this.walletId = walletId;
+        this.walletAppService = walletAppService;
         Destination = destination;
-        CreateDraft = ReactiveCommand.CreateFromTask(() => wallet.CreateDraft(destination.Amount, destination.BitcoinAddress, Feerate));
+        CreateDraft = ReactiveCommand.CreateFromTask(() => CreateDraftTo(destination.Amount, destination.BitcoinAddress, Feerate));
         transactionDraftHelper = CreateDraft.Successes().ToProperty(this, x => x.TransactionDraft);
         Confirm = ReactiveCommand.CreateFromTask(() => TransactionDraft!.Submit(),
             this.WhenAnyValue<TransactionDraftViewModel, ITransactionDraft>(x => x.TransactionDraft!).Null().CombineLatest(CreateDraft.IsExecuting, (a, b) => !a && !b));
@@ -26,6 +33,19 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
         CreateDraft.HandleErrorsWith(services.NotificationService, "Could not create transaction preview");
 
         this.WhenAnyValue(x => x.Feerate).ToSignal().InvokeCommand(CreateDraft);
+    }
+
+    private Task<Result<ITransactionDraft>> CreateDraftTo(long destinationAmount, string destinationBitcoinAddress, long feeRate)
+    {
+        var feeResult = walletAppService.EstimateFee(walletId, new Amount(destinationAmount), new Address(destinationBitcoinAddress), new DomainFeeRate(feeRate));
+        
+        return feeResult.Map(fee => (ITransactionDraft)new Angor.UI.Model.Implementation.Wallet.TransactionDraft(
+            walletId: walletId,
+            amount: destinationAmount,
+            address: destinationBitcoinAddress,
+            fee: fee,
+            feeRate: feerate,
+            walletAppService: walletAppService));
     }
 
     public ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
