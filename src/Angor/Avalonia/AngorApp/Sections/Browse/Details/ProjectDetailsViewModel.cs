@@ -1,26 +1,50 @@
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Angor.Wallet.Application;
+using Angor.Wallet.Domain;
 using AngorApp.Sections.Browse.Details.Invest.Amount;
 using AngorApp.UI.Controls.Common.Success;
-using AngorApp.UI.Controls.Common.TransactionPreview;
+using AngorApp.UI.Controls.Common.TransactionDraft;
 using AngorApp.UI.Services;
+using Avalonia.Threading;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
+using Zafiro.UI;
 
 namespace AngorApp.Sections.Browse.Details;
 
-public class ProjectDetailsViewModel(IWalletProvider walletProvider, IProject project, UIServices uiServices)
-    : ReactiveObject, IProjectDetailsViewModel
+public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 {
+    private readonly IProject project;
+
+    public ProjectDetailsViewModel(IWalletAppService walletAppService, IProject project, UIServices uiServices)
+    {
+        this.project = project;
+        Invest = ReactiveCommand.CreateFromTask(() =>
+        {
+            return walletAppService.GetMetadatas()
+                .Map(x => x.TryFirst())
+                .Bind(maybeMetadata =>
+                {
+                    if (maybeMetadata.HasValue)
+                    {
+                        return Result.Success(DoInvest(maybeMetadata.Value.Id, walletAppService, project, uiServices));
+                    }
+                    else
+                    {
+                        return Result.Success(Maybe<Unit>.None);
+                    }
+                });
+        });
+
+        Invest.HandleErrorsWith(uiServices.NotificationService);
+    }
+
     public object Icon => project.Icon;
     public object Picture => project.Picture;
 
-    public ICommand Invest { get; } = ReactiveCommand.CreateFromTask(() =>
-    {
-        var maybeWallet = walletProvider.GetWallet();
-        return maybeWallet.Match(wallet => DoInvest(wallet, project, uiServices),
-            () => uiServices.NotificationService.Show("You need to create a Wallet before investing", "No wallet"));
-    });
+    public ReactiveCommand<Unit, Result> Invest { get; }
 
     public IEnumerable<INostrRelay> Relays { get; } =
     [
@@ -40,17 +64,23 @@ public class ProjectDetailsViewModel(IWalletProvider walletProvider, IProject pr
     public double CurrentInvestment { get; } = 0.79d;
     public IProject Project => project;
 
-    private static async Task<Maybe<Unit>> DoInvest(IWallet wallet, IProject project, UIServices uiServices)
+    private static async Task<Maybe<Unit>> DoInvest(WalletId walletId, IWalletAppService walletAppService, IProject project, UIServices uiServices)
     {
-        var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project))
-            .Then(viewModel =>
+        return await Observable
+            .Defer(() => Observable.FromAsync(() =>
             {
-                var destination = new Destination(project.Name, viewModel.Amount!.Value, project.BitcoinAddress);
-                return new TransactionPreviewViewModel(wallet, destination, uiServices);
-            })
-            .Then(_ => new SuccessViewModel("Transaction confirmed!", "Success"))
-            .FinishWith(model => Unit.Default);
-
-        return await uiServices.Dialog.ShowWizard(wizard, @$"Invest in ""{project}""");
+                var wizard = WizardBuilder.StartWith(() => new AmountViewModel(walletId, walletAppService, project))
+                    .Then(viewModel =>
+                    {
+                        var destination = new Destination(project.Name, viewModel.Amount!.Value, project.BitcoinAddress);
+                        return new TransactionDraftViewModel(walletId, walletAppService, destination, uiServices);
+                    })
+                    .Then(_ => new SuccessViewModel("Transaction confirmed!", "Success"))
+                    .FinishWith(model => Unit.Default);
+                
+                return uiServices.Dialog.ShowWizard(wizard, @$"Invest in ""{project}""");
+            }))
+            .SubscribeOn(RxApp.MainThreadScheduler)
+            .FirstAsync();
     }
 }

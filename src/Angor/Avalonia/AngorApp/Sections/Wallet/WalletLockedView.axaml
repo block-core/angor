@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:main="clr-namespace:AngorApp.Sections.Wallet.Operate"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Wallet.WalletLockedView"
+             x:DataType="main:IWalletViewModel">
+    <controls:Pane>
+        <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <i:Icon Value="fa-lock" FontSize="40" />
+            <TextBlock Text="WALLET LOCKED" TextAlignment="Center" />
+            <Button HorizontalAlignment="Center" Content="UNLOCK" Command="{Binding SyncCommand.Start}" />
+        </StackPanel>
+    </controls:Pane>
+</UserControl>

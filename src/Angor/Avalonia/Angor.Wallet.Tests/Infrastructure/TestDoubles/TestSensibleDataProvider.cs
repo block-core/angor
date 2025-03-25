@@ -16,13 +16,13 @@ public class TestSensitiveWalletDataProvider : ISensitiveWalletDataProvider
         _passphrase = passphrase;
     }
 
-    public async Task<Result<(string seed, string passphrase)>> RequestSensitiveData(WalletId walletId)
+    public async Task<Result<(string seed, Maybe<string> passphrase)>> RequestSensitiveData(WalletId walletId)
     {
         if (walletId == WalletAppService.SingleWalletId)
         {
             return (_seed, _passphrase);
         }
 
-        return Result.Failure<(string, string)>("Invalid id");
+        return Result.Failure<(string seed, Maybe<string> passphrase)>("Invalid id");
     }
 }

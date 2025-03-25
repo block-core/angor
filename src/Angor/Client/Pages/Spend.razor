@@ -351,9 +351,9 @@
                                 {
                                     bool isTicked = IsUtxoSelected(transaction.Trxid, transaction.Outputindex);
                                     string statusClass = transaction.IsSpent ? "bg-warning text-dark" : "bg-success text-light";
-                                    string statusText = transaction.IsSpent ? 
-                                        (transaction.SpentType == "founder" ? "Spent by founder" : "Redeemed by investor") : 
-                                        "Available";
+                                    string statusText = transaction.IsSpent ?
+                                    (transaction.SpentType == "founder" ? "Spent by founder" : "Withdrawn by investor") :
+                                    "Available";
 
                                     <div class="d-flex align-items-center mb-2 p-2 border rounded hover-effect"
                                          title="@(transaction.InvestorNpub != null ? $"Investor: {transaction.InvestorNpub}" : "")">
@@ -609,7 +609,7 @@
     {
         // Set active menu for founder page
         NavMenuState.SetActivePage("founder");
-        
+
         founderProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
         project = founderProject?.ProjectInfo;
 
@@ -1100,7 +1100,7 @@
     {
         var stage = stageDatas.First(s => s.StageIndex == stageIndex);
         var unspentUtxos = stage.Items.Where(x => !x.IsSpent);
-        return unspentUtxos.All(transaction => 
+        return unspentUtxos.All(transaction =>
             selectedUtxos.ContainsKey(new UtxoKey(transaction.Trxid, transaction.Outputindex)));
     }
 }

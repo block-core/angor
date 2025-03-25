@@ -14,7 +14,7 @@ public class SeedWords : Collection<SeedWord>
     {
     }
 
-    public SeedWords(string rawWordList) : this(rawWordList.Split(" ").Select((s, i) => new SeedWord(i, s)).ToList())
+    public SeedWords(string rawWordList) : this(rawWordList.Split(" ").Select((s, i) => new SeedWord(i + 1, s)).ToList())
     {
     }
 

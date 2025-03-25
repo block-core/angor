@@ -5,7 +5,6 @@
 @using Blockcore.NBitcoin
 @using Angor.Shared.ProtocolNew
 @using Blockcore.NBitcoin.DataEncoders
-@using JSException = Microsoft.JSInterop.JSException
 @using Money = Blockcore.NBitcoin.Money
 @using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
 @using Angor.Shared.Services
@@ -29,6 +28,7 @@
 @inject IApplicationLogicService applicationLogicService;
 @inject ISignService _SignService;
 @inject IRelayService _RelayService;
+@inject IWalletUIService _walletUIService
 
 @inject IInvestorTransactionActions _InvestorTransactionActions;
 
@@ -198,27 +198,22 @@
                 <ValidationSummary />
 
                 <div class="form-group mb-4">
-                    <label for="investmentAmount" class="form-label">Investment Amount</label>
-                    <div class="input-group">
 
-                        <InputNumber type="number" step="0.00000001" min="0" class="form-control" id="investmentAmount" @bind-Value="@Investment.InvestmentAmountBtc" @oninput="UpdateStagesBreakdown" />
-
-                        <span role="button" class="btn btn-border d-flex align-items-center justify-content-center">
+                    <label for="investmentAmount" class="form-label d-flex align-items-center gap-2 mb-3 mt-3">
+                        <Icon IconName="investment" Width="20" Height="20" />
+                        <span>Investment Amount</span>
+                    </label>
+                    <div class="input-group border border-warning rounded p-2 text-warning bg-opacity-10
+            shadow-sm transition focus-within-shadow-lg">
+                        <InputNumber type="number" step="0.00000001" min="0"
+                                     class="form-control bg-transparent border-0 shadow-none text-warning fw-bold"
+                                     id="investmentAmount" @bind-Value="@Investment.InvestmentAmountBtc"
+                                     @oninput="UpdateStagesBreakdown" />
+                        <span class="border-0 d-flex align-items-center justify-content-center px-3 text-warning fw-bold">
                             @network.CoinTicker
                         </span>
                     </div>
-                </div>
 
-                <div class="form-group mb-4">
-                    <label for="investmentSlider" class="form-label mb-4">Select Investment Amount</label>
-                    <input type="range" class="form-range custom-range" id="investmentSlider"
-                           min="0.001" max="@project.ProjectInfo.TargetAmount.ToUnitBtc()" step="0.001"
-                    @bind="Investment.InvestmentAmountBtc"
-                    @oninput="UpdateStagesBreakdown" />
-                    <div class="d-flex justify-content-between">
-                        <small>0.001 @network.CoinTicker</small>
-                        <small>@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</small>
-                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-border-success w-100" disabled="@buildSpinner">
@@ -463,7 +458,7 @@ else
                     <p class="modal-title">
                         The founder has signed a transaction agreement ensuring that you can recover your funds if the project does not succeed, you may now invest.
                     </p>
-                    <div class="d-flex justify-content-center mt-4">
+                    <div class="d-flex justify-content-center align-items-center mt-4">
                         <button type="button" class="btn btn-border-success animate-scale" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
                             @if (publishSpinner)
                             {
@@ -472,8 +467,8 @@ else
                             }
                             else
                             {
-                                <Icon IconName="invest" Width="20" Height="20" class="me-1" />
-                                <span>Invest</span>
+                                <Icon IconName="shield-star" Width="32" Height="32" class="me-1" />
+                                <h4 class="mb-0">Invest</h4>
                             }
                         </button>
                     </div>
@@ -669,7 +664,7 @@ else
 
     private void UpdateStagesBreakdown(ChangeEventArgs e)
     {
-        if (decimal.TryParse(e.Value.ToString(), out decimal amountBtc))
+         if (decimal.TryParse(e.Value.ToString(), out decimal amountBtc))
         {
             Investment.InvestmentAmountBtc = amountBtc;
 
@@ -752,7 +747,7 @@ else
 
         try
         {
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
@@ -770,7 +765,7 @@ else
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
             showCreateModal = true;
         }
@@ -866,11 +861,11 @@ else
             var releaseAddress = accountInfo.GetNextReceiveAddress();
 
             SignRecoveryRequest signRecoveryRequest = new()
-            {
-                ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
-                InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
-                UnfundedReleaseAddress = releaseAddress
-            };
+                {
+                    ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
+                    InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                    UnfundedReleaseAddress = releaseAddress
+                };
 
             var sigJson = serializer.Serialize(signRecoveryRequest);
 
@@ -1042,15 +1037,15 @@ else
         Investments investments = new()
             {
                 ProjectIdentifiers = storage.GetInvestmentProjects()
-                                .Where(x => x.InvestedInProject())
-                                .Select(x => new InvestmentState
-                                {
-                                    ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
-                                    InvestorPubKey = x.InvestorPublicKey,
-                                    InvestmentTransactionHash = x.TransactionId,
-                                    UnfundedReleaseAddress = x.UnfundedReleaseAddress,
-                                })
-                                .ToList()
+                                        .Where(x => x.InvestedInProject())
+                                        .Select(x => new InvestmentState
+                                        {
+                                            ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
+                                            InvestorPubKey = x.InvestorPublicKey,
+                                            InvestmentTransactionHash = x.TransactionId,
+                                            UnfundedReleaseAddress = x.UnfundedReleaseAddress,
+                                        })
+                                        .ToList()
             };
 
 

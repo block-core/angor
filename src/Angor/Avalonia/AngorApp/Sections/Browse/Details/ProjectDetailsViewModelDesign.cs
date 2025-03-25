@@ -14,7 +14,7 @@ public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
     public object Icon { get; }
     public object Picture { get; }
 
-    public ICommand Invest { get; }
+    public ReactiveCommand<Unit, Result> Invest { get; }
 
     public IEnumerable<INostrRelay> Relays { get; } =
     [

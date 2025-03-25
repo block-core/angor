@@ -55,6 +55,18 @@
                     </span>
                 </div>
             </a>
+            <hr class="horizontal light mt-3">
+            <a role="button" class="d-flex align-items-center btn btn-border-success w-100-m" href=@($"/spend/{FounderProject.ProjectInfo.ProjectIdentifier}")>
+                <span class="user-select-none">
+                    <Icon IconName="wallet" Height="24" Width="24"></Icon>
+                </span>
+                <div class="h-100 ms-3">
+                    <span class="mb-0 font-weight-bolder text-primary">
+                        Manage Funds
+                    </span>
+                </div>
+            </a>
+
             @if (InvestmentRequests)
             {
                 <hr class="horizontal light mt-3">
@@ -64,7 +76,7 @@
                     </span>
                     <div class="h-100 ms-3">
                         <span class="mb-0 font-weight-bolder">
-                            Approve signatures
+                            Approve investments
                         </span>
                     </div>
                 </a>

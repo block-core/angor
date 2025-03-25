@@ -15,28 +15,28 @@ public class WalletAppService : IWalletAppService
     private const string SingleWalletName = "<default>";
         
     private readonly ISensitiveWalletDataProvider sensitiveWalletDataProvider;
-    private readonly IIndexerService _indexerService;
+    private readonly IIndexerService indexerService;
     private readonly IWalletFactory walletFactory;
-    private readonly IWalletOperations _walletOperations;
-    
+    private readonly IWalletOperations walletOperations;
+    private readonly IWalletStore walletStore;
+
     public WalletAppService(
         ISensitiveWalletDataProvider sensitiveWalletDataProvider,
         IIndexerService indexerService,
         IWalletFactory walletFactory,
-        IWalletOperations walletOperations)
+        IWalletOperations walletOperations, IWalletStore walletStore)
     {
         this.sensitiveWalletDataProvider = sensitiveWalletDataProvider;
-        _indexerService = indexerService;
+        this.indexerService = indexerService;
         this.walletFactory = walletFactory;
-        _walletOperations = walletOperations;
+        this.walletOperations = walletOperations;
+        this.walletStore = walletStore;
     }
 
-    public async Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
+    public Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
     {
-        return new List<WalletMetadata>
-        {
-            new(SingleWalletName, SingleWalletId)
-        };
+        List<WalletMetadata> singleWalletList = [new(SingleWalletName, SingleWalletId)];
+        return walletStore.GetAll().Map(wallets => wallets.Any() ? singleWalletList : []).Map(metadatas => metadatas.AsEnumerable());
     }
 
     public async Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletId walletId)
@@ -51,22 +51,22 @@ public class WalletAppService : IWalletAppService
 
             var (seed, passphrase) = sensitiveDataResult.Value;
             
-            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase };
+            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
             var transactions = new List<BroadcastedTransaction>();
                 
-            var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(walletWords);
+            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
                 
             // Update existing UTXOs information
-            await _walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            await walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
+            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
             foreach (var address in accountInfo.AllAddresses())
             {
-                var (_, utxos) = await _walletOperations.FetchUtxoForAddressAsync(address.Address);
+                var (_, utxos) = await walletOperations.FetchUtxoForAddressAsync(address.Address);
                     
                 foreach (var utxo in utxos)
                 {
-                    var txInfo = await _indexerService.GetTransactionInfoByIdAsync(utxo.outpoint.transactionId);
+                    var txInfo = await indexerService.GetTransactionInfoByIdAsync(utxo.outpoint.transactionId);
                     if (txInfo == null) continue;
 
                     // Calculate the balance for this transaction
@@ -110,6 +110,8 @@ public class WalletAppService : IWalletAppService
         if (walletId != SingleWalletId)
             return Result.Failure<Fee>("Invalid wallet ID");
 
+        var satsPerVirtualKB = feeRate.SatsPerVByte * 1000;
+        
         try
         {
             var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
@@ -120,11 +122,11 @@ public class WalletAppService : IWalletAppService
 
             var (seed, passphrase) = sensitiveDataResult.Value;
             
-            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase };
-            var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(walletWords);
+            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
+            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
         
             // Update AccountInfo to ensure it has change addresses
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
         
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
             if (string.IsNullOrEmpty(changeAddress))
@@ -132,15 +134,16 @@ public class WalletAppService : IWalletAppService
 
             var sendInfo = new SendInfo
             {
+                FeeRate = satsPerVirtualKB,
                 SendAmount = amount.Value,
                 SendToAddress = address.Value,
                 ChangeAddress = changeAddress,
-                SendUtxos = _walletOperations.FindOutputsForTransaction(amount.Value, accountInfo)
+                SendUtxos = walletOperations.FindOutputsForTransaction(amount.Value, accountInfo)
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
 
-            var estimatedFee = _walletOperations.CalculateTransactionFee(sendInfo, accountInfo, feeRate.SatsPerVByte);
-            return Result.Success(new Fee((long)(estimatedFee * 100_000_000))); // Convertir BTC a sats
+            var estimatedFee = walletOperations.CalculateTransactionFee(sendInfo, accountInfo, feeRate.SatsPerVByte);
+            return Result.Success(new Fee((long)(estimatedFee * 100_000_000))); // Conversion to sats
         }
         catch (Exception ex)
         {
@@ -161,9 +164,9 @@ public class WalletAppService : IWalletAppService
             }
 
             var (seed, passphrase) = sensitiveDataResult.Value;
-            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase };
-            var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(walletWords);
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
+            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
+            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
             var address = accountInfo.GetNextReceiveAddress();
             if (string.IsNullOrEmpty(address))
@@ -194,9 +197,9 @@ public class WalletAppService : IWalletAppService
 
             var (seed, passphrase) = sensitiveDataResult.Value;
             
-            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase };
-            var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(walletWords);
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
+            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
+            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
             
             var sendInfo = new SendInfo
             {
@@ -204,15 +207,15 @@ public class WalletAppService : IWalletAppService
                 SendToAddress = address.Value,
                 FeeRate = satsPerVirtualKB,
                 ChangeAddress = accountInfo.GetNextChangeReceiveAddress(),
-                SendUtxos = _walletOperations.FindOutputsForTransaction(amount.Value, accountInfo)
+                SendUtxos = walletOperations.FindOutputsForTransaction(amount.Value, accountInfo)
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
             
-            var fee = _walletOperations.CalculateTransactionFee(sendInfo, accountInfo, satsPerVirtualKB);
+            var fee = walletOperations.CalculateTransactionFee(sendInfo, accountInfo, satsPerVirtualKB);
             
             sendInfo.SendFee = fee;
             
-            var result = await _walletOperations.SendAmountToAddress(walletWords, sendInfo);
+            var result = await walletOperations.SendAmountToAddress(walletWords, sendInfo);
             if (!result.Success)
                 return Result.Failure<TxId>(result.Message);
 

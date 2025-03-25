@@ -25,12 +25,11 @@ jobs:
     steps:
 
     - uses: actions/checkout@v1
-      
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: | 
-          8.0.x
+        global-json-file: global.json
 
     - name: Setup Node.js (${{ matrix.node_version }})
       uses: actions/setup-node@v1
@@ -42,8 +41,8 @@ jobs:
         echo VERSION=$(npm run version --silent) >> $GITHUB_ENV
       shell: bash
       
-    - name: Workload
-      run: dotnet workload restore ${{env.SOLUTION_PATH}}
+    # - name: Workload
+    #   run: dotnet workload restore ${{env.SOLUTION_PATH}}
 
     - name: Restore
       run: dotnet restore ${{env.SOLUTION_PATH}}
@@ -55,4 +54,3 @@ jobs:
     - name: Unit Test (Release)
       run: |
         dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Release src/Angor.sln | grep -E '(Passed|Failed) .*ms'
- 
