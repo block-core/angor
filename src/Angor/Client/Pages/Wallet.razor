@@ -781,41 +781,17 @@ else
                                         </div>
                                     </div>
 
-                                    <div class="info-card fee-details p-3 rounded">
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <span class="text-muted">Transaction Fee:</span>
-                                            <span class="fee-amount fw-bold">
-                                                @_sendInfo.SendFee @network.CoinTicker
-                                            </span>
-                                        </div>
-
-                                        <div class="fee-adjustment">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <label for="feeRange" class="form-label mb-0">Processing Speed</label>
-                                                <span class="badge bg-primary">
-                                                    @_sendInfo.FeeRate sats
-                                                </span>
-                                            </div>
-
-                                            <div class="range-container position-relative">
-                                                <input type="range"
-                                                       class="form-range"
-                                                       id="feeRange"
-                                                       @bind="FeePosition"
-                                                       @oninput="FeeRangeChanged"
-                                                       min="@FeeMin"
-                                                       max="@_feeMax">
-
-                                                <div class="range-labels d-flex justify-content-between mt-2">
-                                                    <small class="text-muted">Slower</small>
-                                                    <small class="text-muted">
-                                                        ~@_sendInfo.FeeBlockCount blocks
-                                                    </small>
-                                                    <small class="text-muted">Faster</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <FeeSelector 
+                                        SendFee="@_sendInfo.SendFee"
+                                        CoinTicker="@network.CoinTicker"
+                                        FeeRate="@_sendInfo.FeeRate"
+                                        FeeBlockCount="@_sendInfo.FeeBlockCount"
+                                        FeePosition="@FeePosition"
+                                        FeeMin="@FeeMin"
+                                        FeeMax="@_feeMax"
+                                        RecommendedMinFee="@GetRecommendedMinFee()"
+                                        OnFeePositionChanged="@(value => FeeRangeChanged(new ChangeEventArgs { Value = value }))"
+                                        OnCustomFeeRateChanged="@(value => CustomFeeRateChanged(value))" />
 
                                     @if (_sendInfo.SendUtxos.Any())
                                     {
@@ -1900,5 +1876,24 @@ else
     {
         NavMenuState.SetActivePage("wallet");
         base.OnInitialized();
+    }
+    
+    private long GetRecommendedMinFee()
+    {
+        // Return a recommended minimum fee rate based on network conditions
+        return FeeEstimations.Fees.Any() 
+            ? Math.Max(1, FeeEstimations.Fees.Min(f => f.FeeRate)) 
+            : 5;
+    }
+    
+    private async Task CustomFeeRateChanged(long customFeeRate)
+    {
+        _sendInfo.FeeRate = customFeeRate;
+        _sendInfo.FeeBlockCount = 0; // Custom fee rate doesn't have a block estimate
+        
+        var accountInfo = storage.GetAccountInfo(network.Name);
+        _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, customFeeRate);
+        
+        StateHasChanged();
     }
 }

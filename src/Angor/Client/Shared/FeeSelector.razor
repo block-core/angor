@@ -1,0 +1,145 @@
+@using Angor.Shared.Models
+
+<div class="info-card fee-details p-3 rounded">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted">Transaction Fee:</span>
+        <span class="fee-amount fw-bold">
+            @SendFee @CoinTicker
+        </span>
+    </div>
+
+    <div class="fee-adjustment">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <label for="feeRange" class="form-label mb-0">Processing Speed</label>
+            <span class="badge bg-primary">
+                @FeeRate sats
+            </span>
+        </div>
+
+        <div class="range-container position-relative mb-3">
+            <input type="range"
+                   class="form-range"
+                   id="feeRange"
+                   @bind="FeePosition"
+                   @oninput="FeePositionChanged"
+                   min="@FeeMin"
+                   max="@FeeMax">
+
+            <div class="range-labels d-flex justify-content-between mt-2">
+                <small class="text-muted">Slower</small>
+                <small class="text-muted">
+                    ~@FeeBlockCount blocks
+                </small>
+                <small class="text-muted">Faster</small>
+            </div>
+        </div>
+
+        <div class="custom-fee-input">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="useCustomFee" 
+                       checked="@UseCustomFee" 
+                       @onchange="HandleCustomFeeToggle" />
+                <label class="form-check-label" for="useCustomFee">
+                    Use custom fee rate
+                </label>
+            </div>
+            
+            @if (UseCustomFee)
+            {
+                <div class="d-flex align-items-center">
+                    <input type="number" 
+                           class="form-control" 
+                           placeholder="Enter fee rate in sats/byte" 
+                           @bind="CustomFeeRate"
+                           @bind:event="oninput" 
+                           @onblur="CustomFeeRateChanged"
+                           min="1" />
+                    <span class="px-1">sats</span>
+                </div>
+                @if (CustomFeeRate < RecommendedMinFee)
+                {
+                    <small class="text-warning mt-1">
+                        <i>Warning: Low fees may cause delayed confirmation</i>
+                    </small>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public decimal SendFee { get; set; }
+
+    [Parameter]
+    public string CoinTicker { get; set; }
+
+    [Parameter]
+    public long FeeRate { get; set; }
+
+    [Parameter]
+    public int FeeBlockCount { get; set; }
+
+    [Parameter]
+    public int FeePosition { get; set; }
+
+    [Parameter]
+    public int FeeMin { get; set; } = 1;
+
+    [Parameter]
+    public int FeeMax { get; set; } = 3;
+
+    [Parameter]
+    public long RecommendedMinFee { get; set; } = 5;
+
+    [Parameter]
+    public EventCallback<int> OnFeePositionChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<long> OnCustomFeeRateChanged { get; set; }
+
+    private bool UseCustomFee { get; set; } = false;
+    private long CustomFeeRate { get; set; } = 10; 
+
+    private async Task FeePositionChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int value))
+        {
+            FeePosition = value;
+            await OnFeePositionChanged.InvokeAsync(value);
+            
+            // Update custom fee rate when slider changes
+            if (UseCustomFee)
+            {
+                CustomFeeRate = FeeRate;
+            }
+        }
+    }
+
+    private async Task CustomFeeRateChanged()
+    {
+        if (UseCustomFee && CustomFeeRate > 0)
+        {
+            await OnCustomFeeRateChanged.InvokeAsync(CustomFeeRate);
+        }
+    }
+    
+    private async Task HandleCustomFeeToggle(ChangeEventArgs e)
+    {
+        if (e.Value is bool isChecked)
+        {
+            UseCustomFee = isChecked;
+            
+            if (isChecked)
+            {
+                // When checkbox is checked, set custom fee to current fee rate
+                CustomFeeRate = FeeRate;
+            }
+            else
+            {
+                // When checkbox is unchecked, use the slider value
+                await OnFeePositionChanged.InvokeAsync(FeePosition);
+            }
+        }
+    }
+}
