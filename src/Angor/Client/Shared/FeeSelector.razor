@@ -10,28 +10,39 @@
 
     <div class="fee-adjustment">
         <div class="d-flex justify-content-between align-items-center mb-2">
-            <label for="feeRange" class="form-label mb-0">Processing Speed</label>
-            <span class="badge bg-primary">
-                @FeeRate sats
-            </span>
+            <label class="form-label mb-0">Processing Speed</label>
+            <div class="d-flex align-items-center gap-2">
+                <small class="text-muted">~@FeeBlockCount blocks</small>
+                <span class="badge bg-primary">
+                    @FeeRate sats
+                </span>
+            </div>
         </div>
 
-        <div class="range-container position-relative mb-3">
-            <input type="range"
-                   class="form-range"
-                   id="feeRange"
-                   @bind="FeePosition"
-                   @oninput="FeePositionChanged"
-                   min="@FeeMin"
-                   max="@FeeMax">
+        <div class="btn-group w-100 mb-3 gap-2" role="group">
+            <input type="radio" class="btn-check" name="feeBtn" id="feeLow" autocomplete="off" checked="@(FeePosition == 1)" @onchange="() => SetFeePosition(1)">
+            <label class="btn btn-border-warning flex-grow-1 py-2 m-0" for="feeLow">
+                <div class="d-flex flex-column align-items-center">
+                    <span class="fw-semibold">Economy</span>
+                    <small class="opacity-75">Slower & Cheaper</small>
+                </div>
+            </label>
 
-            <div class="range-labels d-flex justify-content-between mt-2">
-                <small class="text-muted">Slower</small>
-                <small class="text-muted">
-                    ~@FeeBlockCount blocks
-                </small>
-                <small class="text-muted">Faster</small>
-            </div>
+            <input type="radio" class="btn-check" name="feeBtn" id="feeMed" autocomplete="off" checked="@(FeePosition == 2)" @onchange="() => SetFeePosition(2)">
+            <label class="btn btn-border-success flex-grow-1 py-2 m-0" for="feeMed">
+                <div class="d-flex flex-column align-items-center">
+                    <span class="fw-semibold">Standard</span>
+                    <small class="opacity-75">Recommended</small>
+                </div>
+            </label>
+
+            <input type="radio" class="btn-check" name="feeBtn" id="feeHigh" autocomplete="off" checked="@(FeePosition == 3)" @onchange="() => SetFeePosition(3)">
+            <label class="btn btn-border-danger flex-grow-1 py-2 m-0" for="feeHigh">
+                <div class="d-flex flex-column align-items-center">
+                    <span class="fw-semibold">Priority</span>
+                    <small class="opacity-75">Faster & Premium</small>
+                </div>
+            </label>
         </div>
 
         <div class="custom-fee-input">
@@ -140,6 +151,17 @@
                 // When checkbox is unchecked, use the slider value
                 await OnFeePositionChanged.InvokeAsync(FeePosition);
             }
+        }
+    }
+
+    private async Task SetFeePosition(int position)
+    {
+        FeePosition = position;
+        await OnFeePositionChanged.InvokeAsync(position);
+        
+        if (UseCustomFee)
+        {
+            CustomFeeRate = FeeRate;
         }
     }
 }
