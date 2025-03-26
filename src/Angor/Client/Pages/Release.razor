@@ -178,70 +178,22 @@
                         </button>
                     </div>
 
-                    <div class="modal-body modal-body-scroll">
+                    <div class="modal-body modal-body-scroll pb-4">
 
-                        <div class="info-card mb-3">
+                        <div class="info-card mb-4">
                             <p class="text-muted mb-0">
                                 Since the project has not met its target, you can now claim your investment back immediately without any penalty period.
                             </p>
                         </div>
-                        <div class="release-confirmation-container">
-                            <div class="transaction-summary mb-4">
-                                <div class="summary-header d-flex align-items-center mb-3">
-                                    <Icon IconName="info-circle" Class="me-2" Width="24" Height="24" />
-                                    <h6 class="mb-0">Transaction Summary</h6>
-                                </div>
-
-                                <div class="info-card fee-details p-3 rounded">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="text-muted">Network Fee:</span>
-                                        <span class="fee-amount fw-bold">
-                                            @Money.Satoshis(releaseTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                        </span>
-                                    </div>
-
-                                    <div class="fee-adjustment">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <label for="feeRange" class="form-label mb-0">Transaction Speed</label>
-                                            <span class="badge bg-primary">
-                                                @feeData.SelectedFeeEstimation.FeeRate sats 
-                                            </span>
-                                        </div>
-
-                                        <div class="range-container position-relative">
-                                            <input type="range"
-                                                   class="form-range"
-                                                   id="feeRange"
-                                                   @bind="feeData.FeePosition"
-                                                   @oninput="ReleaseInvestorFeeRangeChanged"
-                                                   min="@feeData.FeeMin"
-                                                   max="@feeData.FeeMax">
-
-                                            <div class="range-labels d-flex justify-content-between mt-2">
-                                                <small class="text-muted">Slower</small>
-                                                <small class="text-muted">
-                                                    ~@feeData.SelectedFeeEstimation.Confirmations blocks
-                                                </small>
-                                                <small class="text-muted">Faster</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="confirmation-message alert alert-warning">
-                                <div class="d-flex align-items-center">
-                                    <Icon IconName="exclamation-triangle" Class="me-2" Width="20" Height="20" />
-                                    <div>
-                                        <h6 class="alert-heading mb-1">Confirmation Required</h6>
-                                        <p class="mb-0 small">
-                                            You are about to claim back your investment without any penalty.
-                                            This action cannot be undone.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <FeeSelector SendFee="@Money.Satoshis(releaseTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                     CoinTicker="@network.CoinTicker"
+                                     FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                     FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                     FeePosition="@feeData.FeePosition"
+                                     FeeMin="@feeData.FeeMin"
+                                     FeeMax="@feeData.FeeMax"
+                                     OnFeePositionChanged="@(value => ReleaseInvestorFeeRangeChanged(new ChangeEventArgs { Value = value }))"
+                                     OnCustomFeeRateChanged="@(value => RecalculateReleaseFee(value))" />
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-border-warning" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">Cancel</button>
@@ -508,6 +460,45 @@
                     StateHasChanged();
                 }
             }
+        }
+    }
+
+    private async Task RecalculateReleaseFee(decimal customFeeRate)
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            showReleaseModal = false;
+            notificationComponent.ShowErrorMessage("Wallet password expired");
+            return;
+        }
+
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+
+            // Create a custom fee estimation with the provided rate
+            var customFeeEstimation = new FeeEstimation
+                {
+                    FeeRate = (int)customFeeRate,
+                    Confirmations = 1 // Custom fees typically assume fast confirmation
+                };
+
+            feeData.SelectedFeeEstimation = customFeeEstimation;
+
+            var accountInfo = Storage.GetAccountInfo(network.Name);
+
+            releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(
+                accountInfo.GetNextChangeReceiveAddress(),
+                unsignedReleaseTransaction,
+                words,
+                accountInfo,
+                feeData.SelectedFeeEstimation.FeeRate);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
     }
 
