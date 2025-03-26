@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Client", "Angor\Clien
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Projects", "Angor\Avalonia\Angor.Projects\Angor.Projects.csproj", "{BDDA38DA-A2CF-1AEA-062F-4DC5285FCF26}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Integration.WalletProject", "Angor.Integration.WalletProject\Angor.Integration.WalletProject.csproj", "{F20ADD2A-B7AD-495F-8089-CB5C59C60048}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +78,10 @@ Global
 		{BDDA38DA-A2CF-1AEA-062F-4DC5285FCF26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDDA38DA-A2CF-1AEA-062F-4DC5285FCF26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDDA38DA-A2CF-1AEA-062F-4DC5285FCF26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F20ADD2A-B7AD-495F-8089-CB5C59C60048}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F20ADD2A-B7AD-495F-8089-CB5C59C60048}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F20ADD2A-B7AD-495F-8089-CB5C59C60048}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F20ADD2A-B7AD-495F-8089-CB5C59C60048}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -89,6 +95,7 @@ Global
 		{F281FE2A-3416-400A-8C9A-D88760908EA9} = {5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}
 		{4F515C47-D1BA-481D-B159-DA203CB6296A} = {5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}
 		{BDDA38DA-A2CF-1AEA-062F-4DC5285FCF26} = {5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}
+		{F20ADD2A-B7AD-495F-8089-CB5C59C60048} = {5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {83CB65B8-011F-4ED7-BCD3-A6CFA935EF7E}

@@ -14,6 +14,7 @@ public class Project
     public string NpubKeyHex { get; set; }
     public TimeSpan PenaltyDuration { get; set; }
     public Uri InformationUri { get; set; }
+    public string FounderKey { get; set; }
 
     public override string ToString()
     {

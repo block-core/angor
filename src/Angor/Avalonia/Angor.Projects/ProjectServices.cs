@@ -18,46 +18,20 @@ public class ProjectServices
     {
         var networkConfiguration = new NetworkConfiguration();
         networkConfiguration.SetNetwork(new Angornet());
-        
+
         services.AddSingleton<IProjectAppService, ProjectAppService>();
         services.AddSingleton<IInvestmentService, InvestmentService>();
         services.AddSingleton<IInvestmentRepository, InvestmentRepository>();
         services.AddSingleton<IProjectRepository, ProjectRepository>();
-        
+
         services.TryAddSingleton<ISerializer, Serializer>();
         services.TryAddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
         services.TryAddSingleton<IRelayService, RelayService>();
         services.TryAddSingleton<INetworkConfiguration>(networkConfiguration);
         services.TryAddSingleton<INetworkService, NetworkService>();
         services.TryAddSingleton<INostrCommunicationFactory, NostrCommunicationFactory>();
-        
+
         return services;
-    }
-}
-
-public class ProjectRepository : IProjectRepository
-{
-    public Task<Result<Project>> Get(ProjectId id)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<Result> SaveAsync(Project project)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class InvestmentRepository : IInvestmentRepository
-{
-    public Task<Result> Save(Investment investment)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<Result<IEnumerable<Investment>>> Get(ProjectId projectId)
-    {
-        throw new NotImplementedException();
     }
 }
 
