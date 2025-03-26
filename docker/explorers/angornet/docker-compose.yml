@@ -133,7 +133,7 @@ services:
 
   mempool_electrs:
     container_name: mempool-electrs
-    image: mempool/electrs:latest
+    image: getumbrel/electrs:v0.10.9
     user: root
     ports:
       - 5001:5001
@@ -141,19 +141,16 @@ services:
     depends_on:
       node:
         condition: service_healthy
-    entrypoint:
-      /bin/electrs
     command: |
       --network signet
-      --jsonrpc-import
       --daemon-rpc-addr btc-node:38332
-      --cookie "rpcuser:rpcpassword"
+      --daemon-p2p-addr btc-node:38333
       --db-dir /electrs
-      --http-addr 0.0.0.0:3003
       --electrum-rpc-addr 0.0.0.0:5001
-      -vvvv
+      --log-filters INFO  
     volumes:
       - electrs_data:/electrs
+      - ./electrs.conf:/etc/electrs/config.toml:ro
     networks:
       - btcnetwork
 
