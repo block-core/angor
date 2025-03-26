@@ -12,8 +12,7 @@ To configure the proxy, you need to set the following environment variables in t
 - `LETSENCRYPT_EMAIL`: The email address used for SSL certificate registration (e.g., for Let's Encrypt).
 - `VIRTUAL_PORT`: The port on which the proxy will listen for incoming traffic (default: `443` for HTTPS).
 - `VIRTUAL_NETWORK`: The name of the internal network.
-- `LETSENCRYPT_HOST`: The domain name for your Angor services.
-- `LETSENCRYPT_EMAIL`: The email address used for SSL certificate registration.
+- `LETSENCRYPT_HOST`: The domain name for your Angor services. 
 
 ### Example docker environment section
 ```env
