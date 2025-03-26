@@ -43,7 +43,7 @@ public class ProjectAppService(
         // 2. Get investor data
         string investorId = "..."; 
         string investorPubKey = "...";
-        string projectAddress = "...";
+        string projectAddress =  "...";
         
         // 3. Create invest transaction
         var transactionResult = await bitcoinService.CreateInvestmentTransaction(

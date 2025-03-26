@@ -24,6 +24,8 @@ public class ProjectServices
         services.AddSingleton<IInvestmentRepository, InvestmentRepository>();
         services.AddSingleton<IProjectRepository, ProjectRepository>();
         
+        services.TryAddSingleton<ISerializer, Serializer>();
+        services.TryAddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
         services.TryAddSingleton<IRelayService, RelayService>();
         services.TryAddSingleton<INetworkConfiguration>(networkConfiguration);
         services.TryAddSingleton<INetworkService, NetworkService>();

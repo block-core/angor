@@ -23,7 +23,6 @@ public static class CompositionRoot
         RegisterLogger(services, logger);
         services.AddSingleton<Func<BitcoinNetwork>>(() => BitcoinNetwork.Testnet);
 
-        AngorServices.Register(services);
         ModelServices.Register(services);
         ViewModels.Register(services);
         UIServices.Register(services, topLevelView);
