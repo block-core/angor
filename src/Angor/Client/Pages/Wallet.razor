@@ -24,8 +24,8 @@
 @inject IWalletUIService _walletUIService
 
 <PageTitle>Wallet and balances</PageTitle>
-<NotificationComponent @ref="notificationComponent"/>
-<PasswordComponent @ref="passwordComponent"/>
+<NotificationComponent @ref="notificationComponent" />
+<PasswordComponent @ref="passwordComponent" />
 
 <div class="header-container slide-in">
     <div class="card card-body">
@@ -70,7 +70,7 @@
                 <div class="card-body d-flex flex-column justify-content-center text-center" @onclick="@(() => ShowCreateWalletModal("new"))" role="button">
 
                     <span class="mb-3" aria-hidden="true" data-cy="create-wallet">
-                        <Icon IconName="add" Width="40" Height="40"/>
+                        <Icon IconName="add" Width="40" Height="40" />
                     </span>
                     <h5 class="text-nowrap">New Wallet</h5>
                 </div>
@@ -80,7 +80,7 @@
             <div class="card h-100 feature-box py-0">
                 <div class="card-body d-flex flex-column justify-content-center text-center align-items-center" data-cy="recover-wallet" @onclick="@(() => ShowCreateWalletModal("recover"))" role="button">
                     <span class="mb-3" aria-hidden="true">
-                        <Icon IconName="recovery" Width="40" Height="40"/>
+                        <Icon IconName="recovery" Width="40" Height="40" />
                     </span>
                     <h5 class="text-nowrap">Import Wallet</h5>
                 </div>
@@ -96,11 +96,11 @@
                     <div class="modal-content modern-modal">
                         <div class="modal-header border-0 pb-0">
                             <div class="d-flex align-items-center">
-                                <Icon IconName="wallet" Height="32" Width="32" class="me-2"/>
+                                <Icon IconName="wallet" Height="32" Width="32" class="me-2" />
                                 <h5 class="modal-title">@createWalletTitle - Step @currentStep of @totalSteps</h5>
                             </div>
                             <button class="btn-close-custom" @onclick="() => walletWordsCreateModal = false">
-                                <Icon IconName="close-circle" Height="24" Width="24"/>
+                                <Icon IconName="close-circle" Height="24" Width="24" />
                             </button>
                         </div>
 
@@ -116,7 +116,7 @@
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <button class="btn btn-border-success w-100 mb-3" @onclick="GenerateNewWalletWords">
                                                     <div class="d-flex align-items-center justify-content-center">
-                                                        <Icon IconName="plus" Height="24" Width="24" Color="var(--angor-primary)"/>
+                                                        <Icon IconName="plus" Height="24" Width="24" Color="var(--angor-primary)" />
                                                         <span>Generate Recovery Phrase</span>
                                                     </div>
                                                 </button>
@@ -138,7 +138,7 @@
                                                     </div>
                                                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-3">
                                                         <button class="btn btn-border w-100 w-md-auto" @onclick="CopyWalletWords">
-                                                            <Icon IconName="copy" Height="20" Width="20" class="me-2"/>
+                                                            <Icon IconName="copy" Height="20" Width="20" class="me-2" />
                                                             Copy
                                                         </button>
                                                         <div class="form-check">
@@ -160,9 +160,9 @@
                                                     <div class="mb-3">
                                                         <label class="form-label">Word #@index</label>
                                                         <input type="text" class="form-control"
-                                                        @bind="userVerificationInputs[index]"
-                                                        @bind:after="ValidateWordInput"
-                                                        placeholder="Enter word #@index"/>
+                                                               @bind="userVerificationInputs[index]"
+                                                               @bind:after="ValidateWordInput"
+                                                               placeholder="Enter word #@index" />
                                                     </div>
                                                 }
                                                 @if (showVerificationError)
@@ -182,7 +182,7 @@
                                                     <div class="d-flex align-items-center justify-content-center">
                                                         <span class="me-1">
                                                             <Icon IconName="@(isPassphraseEnabled ? "shield-minus" : "shield-plus")"
-                                                            Height="24" Width="24" Color="var(--angor-primary)">
+                                                                  Height="24" Width="24" Color="var(--angor-primary)">
                                                             </Icon>
                                                         </span>
                                                         <span>Optional Passphrase</span>
@@ -193,7 +193,7 @@
                                                 {
                                                     <div class="mb-3">
                                                         <input type="text" class="form-control" placeholder="Enter passphrase"
-                                                        @bind="passphraseInput">
+                                                               @bind="passphraseInput">
                                                         <small class="text-muted">
                                                             A passphrase adds extra security. Make sure to remember it!
                                                         </small>
@@ -208,7 +208,7 @@
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <div class="input-group">
                                                     <input type="@passwordInputType" class="form-control"
-                                                    @bind="newWalletPassword" placeholder="Enter password">
+                                                           @bind="newWalletPassword" placeholder="Enter password">
                                                     <button class="btn btn-border" @onclick="TogglePasswordVisibility">
                                                         @if (passwordToggleText == "Show")
                                                         {
@@ -233,7 +233,7 @@
 
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <textarea class="form-control" rows="3" placeholder="Enter your wallet words"
-                                                @bind="newWalletWords"></textarea>
+                                                          @bind="newWalletWords"></textarea>
                                             </div>
                                             break;
 
@@ -245,7 +245,7 @@
                                                     <div class="d-flex align-items-center justify-content-center">
                                                         <span class="me-1">
                                                             <Icon IconName="@(isPassphraseEnabled ? "shield-minus" : "shield-plus")"
-                                                            Height="24" Width="24" Color="var(--angor-primary)">
+                                                                  Height="24" Width="24" Color="var(--angor-primary)">
                                                             </Icon>
                                                         </span>
                                                         <span>Optional Passphrase</span>
@@ -255,7 +255,7 @@
                                                 @if (isPassphraseEnabled)
                                                 {
                                                     <input type="text" class="form-control" placeholder="Enter your passphrase"
-                                                    @bind="passphraseInput">
+                                                           @bind="passphraseInput">
                                                 }
                                             </div>
                                             break;
@@ -266,7 +266,7 @@
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <div class="input-group">
                                                     <input type="@passwordInputType" class="form-control"
-                                                    @bind="newWalletPassword" placeholder="Enter password">
+                                                           @bind="newWalletPassword" placeholder="Enter password">
                                                     <button class="btn btn-border" @onclick="TogglePasswordVisibility">
 
                                                         @if (passwordToggleText == "Show")
@@ -317,14 +317,14 @@
                                         @if (currentStep < totalSteps)
                                         {
                                             <button class="btn btn-border-success order-0 order-md-1" @onclick="NextStep"
-                                            disabled="@(!CanProceedToNextStep())">
+                                                    disabled="@(!CanProceedToNextStep())">
                                                 Next
                                             </button>
                                         }
                                         else
                                         {
                                             <button class="btn btn-border-success order-0 order-md-1" @onclick="CreateWalletAsync"
-                                            disabled="@(!CanCreateWallet())">
+                                                    disabled="@(!CanCreateWallet())">
                                                 @if (createWalletSpinner)
                                                 {
                                                     <span class="spinner-border spinner-border-sm me-2"></span>
@@ -350,11 +350,11 @@
                     <div class="modal-content modern-modal">
                         <div class="modal-header border-0 pb-0">
                             <div class="d-flex align-items-center">
-                                <Icon IconName="wallet" Height="32" Width="32" class="me-2"/>
+                                <Icon IconName="wallet" Height="32" Width="32" class="me-2" />
                                 <h5 class="modal-title">Backup Recovery Phrase</h5>
                             </div>
                             <button class="btn-close-custom" @onclick="() => walletWordsModal = false">
-                                <Icon IconName="close-circle" Height="24" Width="24"/>
+                                <Icon IconName="close-circle" Height="24" Width="24" />
                             </button>
                         </div>
 
@@ -419,41 +419,40 @@ else
                             <Icon IconName="balance" Width="32" Height="32" />
                         </span>
                         <div class="wallet-balance">
-                            <BalanceDisplay 
-                            BtcBalance="@Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC)"
-                            BtcBalanceInFiat="@btcBalanceInUsd"
-                            PreferredCurrency="@storage.GetCurrencyDisplaySetting()"
-                            ShowFiatInline="true"/>
+                            <BalanceDisplay BtcBalance="@Money.Satoshis(accountBalanceInfo.TotalBalance).ToUnit(MoneyUnit.BTC)"
+                                            BtcBalanceInFiat="@btcBalanceInUsd"
+                                            PreferredCurrency="@storage.GetCurrencyDisplaySetting()"
+                                            ShowFiatInline="true" />
                         </div>
                     </div>
                     <div class="header-actions">
                         @if (CanGetTestCoins())
                         {
                             <button class="btn btn-border-warning"
-                            data-cy="get-test-coins" 
-                            @onclick="GetTestCoins" 
-                            disabled="@testCoinsSpinner">
+                                    data-cy="get-test-coins"
+                                    @onclick="GetTestCoins"
+                                    disabled="@testCoinsSpinner">
                                 @if (testCoinsSpinner)
                                 {
                                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 }
                                 else
                                 {
-                                    <Icon IconName="balance" Height="24" Width="24"/>
+                                    <Icon IconName="balance" Height="24" Width="24" />
                                     <span class="button-text ms-2">Get Test Coins</span>
                                 }
                             </button>
                         }
                         <button class="btn btn-border-success"
-                        @onclick="RefreshBalance"
-                        disabled="@balanceSpinner">
+                                @onclick="RefreshBalance"
+                                disabled="@balanceSpinner">
                             @if (balanceSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                             }
                             else
                             {
-                                <Icon IconName="refresh" Height="24" Width="24"/>
+                                <Icon IconName="refresh" Height="24" Width="24" />
                                 <span class="button-text ms-2">Refresh</span>
                             }
                         </button>
@@ -487,8 +486,8 @@ else
                 }
 
 
-    </div>
-</div>
+            </div>
+        </div>
 
         @if (walletWordsModal)
         {
@@ -499,11 +498,11 @@ else
                         <div class="modal-content modern-modal">
                             <div class="modal-header border-0 pb-0">
                                 <div class="d-flex align-items-center">
-                                    <Icon IconName="key" Height="32" Width="32" class="me-2"/>
+                                    <Icon IconName="key" Height="32" Width="32" class="me-2" />
                                     <h5 class="modal-title">Wallet Seed</h5>
                                 </div>
                                 <button class="btn-close-custom" @onclick="() => { WalletWordsClose(); walletWordsModal = false; }">
-                                    <Icon IconName="close-circle" Height="24" Width="24"/>
+                                    <Icon IconName="close-circle" Height="24" Width="24" />
                                 </button>
                             </div>
 
@@ -513,12 +512,11 @@ else
                                     <div class="mb-1">
                                         <label class="mb-3">Please enter your wallet password:</label>
                                         <div class="input-group">
-                                            <input type="@passwordInputType" 
-                                                   class="form-control" 
+                                            <input type="@passwordInputType"
+                                                   class="form-control"
                                                    @bind="showWalletPassword"
                                                    @bind:event="oninput"
-                                                   @onkeypress="@(async e => { if(e.Key is "Enter" or "NumpadEnter") await ShowWords(); })"
-                                                   />
+                                                   @onkeypress="@(async e => { if(e.Key is "Enter" or "NumpadEnter") await ShowWords(); })" />
                                             <button class="btn btn-border" type="button" @onclick="TogglePasswordVisibility">
                                                 @if (passwordToggleText == "Show")
                                                 {
@@ -543,7 +541,7 @@ else
                                         <p>@showWalletWords</p>
                                         <div class="mt-3 d-flex justify-content-end">
                                             <i @onclick="CopyWordsToClibboard" class="ms-auto cursor-pointer user-select-none">
-                                                <Icon IconName="copy"/>
+                                                <Icon IconName="copy" />
                                             </i>
                                         </div>
                                     </div>
@@ -570,420 +568,419 @@ else
 
     <!-- Section 2 -->
     <div class="row mt-4">
-    <div class="tab-container">
-        <div class="tabs-wrapper">
-            <div class="tab-item @(activeTab == 1 ? "active" : "")" @onclick="() => SetActiveTab(1)" data-cy="send-tab">
-                <div class="tab-content">
-                    <div class="tab-icon @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
-                        <Icon IconName="send" Height="32" Width="32" />
+        <div class="tab-container">
+            <div class="tabs-wrapper">
+                <div class="tab-item @(activeTab == 1 ? "active" : "")" @onclick="() => SetActiveTab(1)" data-cy="send-tab">
+                    <div class="tab-content">
+                        <div class="tab-icon @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
+                            <Icon IconName="send" Height="32" Width="32" />
+                        </div>
+                        <span class="tab-label">Send</span>
                     </div>
-                    <span class="tab-label">Send</span>
                 </div>
-            </div>
 
-            <div class="tab-item @(activeTab == 2 ? "active" : "")" @onclick="() => SetActiveTab(2)" data-cy="receive-tab">
-                <div class="tab-content">
-                    <div class="tab-icon @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
-                        <Icon IconName="receive" Height="32" Width="32" />
+                <div class="tab-item @(activeTab == 2 ? "active" : "")" @onclick="() => SetActiveTab(2)" data-cy="receive-tab">
+                    <div class="tab-content">
+                        <div class="tab-icon @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
+                            <Icon IconName="receive" Height="32" Width="32" />
+                        </div>
+                        <span class="tab-label">Receive</span>
                     </div>
-                    <span class="tab-label">Receive</span>
                 </div>
-            </div>
 
-            <div class="tab-item @(activeTab == 3 ? "active" : "")" @onclick="() => SetActiveTab(3)" data-cy="history-tab">
-                <div class="tab-content">
-                    <div class="tab-icon @(activeTab == 3 ? "heartbeat" : "")" aria-hidden="true">
-                        <Icon IconName="calculator" Height="32" Width="32" />
+                <div class="tab-item @(activeTab == 3 ? "active" : "")" @onclick="() => SetActiveTab(3)" data-cy="history-tab">
+                    <div class="tab-content">
+                        <div class="tab-icon @(activeTab == 3 ? "heartbeat" : "")" aria-hidden="true">
+                            <Icon IconName="calculator" Height="32" Width="32" />
+                        </div>
+                        <span class="tab-label">Addresses</span>
                     </div>
-                    <span class="tab-label">Addresses</span>
                 </div>
             </div>
         </div>
-    </div>
-    <br/>
-    @if (activeTab == 1)
-    {
-        <!-- Section 3 -->
-        <div class="col-md-12">
+        <br />
+        @if (activeTab == 1)
+        {
+            <!-- Section 3 -->
+            <div class="col-md-12">
 
-            <div class="card card-body mt-4">
+                <div class="card card-body mt-4">
 
-                <div class="d-flex align-items-center">
-                    <span class="user-select-none animate-rotate">
-                        <Icon IconName="send"></Icon>
-                    </span>
-                    <div class="h-100 ms-3">
-                        <h5 class="mb-0 font-weight-bolder">
-                            Send
-                        </h5>
-                    </div>
-                </div>
-
-                <div class="row mt-4">
-
-                    <form>
-                        <div class="mb-3">
-                            <label for="sendToAddress" class="form-label">Send to Address</label>
-                            <div class="input-group">
-                                <span role="button" class="btn btn-border-success" @onclick="PasteFromClipboard">
-                                    <Icon IconName="paste"/>
-                                </span>
-
-                                <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
-
-
-                                <span role="button" class="btn btn-border-danger" @onclick="ClearAddress">
-                                    <Icon IconName="remove"/>
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="sendAmount" class="form-label">Amount</label>
-                                <input type="number" step="0.00000001" min="0" class="form-control" id="sendAmount"
-                                   @bind-value="sendAmount" @bind-value:event="oninput"
-                                       placeholder="Enter amount">
-                        </div>
-
-                        <div class="d-flex align-items-center">
-                            <!-- Select UTXOs Button -->
-                            <button type="button" class="btn btn-border-success me-3"
-                                    @onclick="() => coinControlModal = true">
-                                Select UTXOs
-
-                                @if (_sendInfo.SendUtxos.Any())
-                                {
-                                    <span class="badge text-bg-warning ms-3">
-                                        @_sendInfo.SendUtxos.Count
-                                    </span>
-                                }
-                            </button>
-
-                            <!-- Send Button with Confirmation Dialog -->
-                            <button type="button" class="btn btn-border-success"
-                                    data-cy="send-button" @onclick="AskPassword"
-                                    disabled="@sendLoadSpinner">
-                                @if (sendLoadSpinner)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"
-                                          role="status" aria-hidden="true">
-                                    </span>
-                                    <span>Sending...</span>
-                                }
-                                else
-                                {
-                                    <span>Send</span>
-                                }
-                            </button>
-                        </div>
-
-                    </form>
-                </div>
-            </div>
-
-            @if (coinControlModal)
-            {
-                <div class="modal-wrapper">
-                    <div class="modal fade show d-block" tabindex="-1">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content modern-modal">
-                                <div class="modal-header border-0 pb-0">
-                                    <div class="d-flex align-items-center">
-                                        <Icon IconName="utxo" Height="32" Width="32" class="me-2"/>
-                                        <h5 class="modal-title">Select UTXOs</h5>
-                                    </div>
-                                    <button class="btn-close-custom" @onclick="() => coinControlModal = false">
-                                        <Icon IconName="close-circle" Height="24" Width="24"/>
-                                    </button>
-                                </div>
-
-                                <div class="modal-body modal-body-scroll py-4">
-                                    <div class="transaction-info-section mb-4">
-                                        <p class="pb-4">Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-                                        @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AddressesInfo.Union(accountBalanceInfo.AccountInfo.ChangeAddressesInfo))
-                                        {
-                                            foreach (var addressUtxoItem in addressInfo.UtxoData)
-                                            {
-                                                var outpointStr = addressUtxoItem.outpoint.ToString();
-                                                var outpointLength = outpointStr.Length;
-                                                var shortenedOutpoint = outpointLength > 20
-                                                    ? $"{outpointStr.Substring(0, 10)} ... {outpointStr.Substring(outpointLength - 10)}"
-                                                    : outpointStr;
-
-                                                var valueInBTC = Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC);
-                                                var coinTicker = network.CoinTicker;
-                                                var isTicked = _sendInfo.SendUtxos.ContainsKey(outpointStr);
-
-                                                <div class="info-card mb-3">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" id="@outpointStr" @bind="@isTicked" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
-                                                        <label class="form-check-label" for="@outpointStr">
-                                                            @($"{shortenedOutpoint} - {valueInBTC} {coinTicker}")
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            }
-                                        }
-                                    </div>
-                                </div>
-
-                                <div class="modal-footer border-0">
-                                    <button class="btn btn-border-success" @onclick="() => coinControlModal = false">Submit</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-
-            @if (sendConfirmModal)
-            {
-                <!-- Send Confirmation Modal -->
-                <div class="modal-wrapper">
-                    <div class="modal fade show d-block" tabindex="-1">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content modern-modal">
-                                <div class="modal-header border-0 pb-0">
-                                    <div class="d-flex align-items-center">
-                                        <Icon IconName="utxo" Height="32" Width="32" class="me-2"/>
-                                        <h5 class="modal-title">Transaction Details</h5>
-                                    </div>
-                                    <button class="btn-close-custom" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner">
-                                        <Icon IconName="close-circle" Height="24" Width="24"/>
-                                    </button>
-                                </div>
-
-                                <div class="modal-body modal-body-scroll">
-                                    <div class="transaction-details mb-4">
-                                        <div class="info-card p-3 rounded">
-                                            <div class="d-flex flex-column gap-3">
-                                                <div class="info-row d-flex flex-column">
-                                                    <span class="text-muted small mb-1">Amount</span>
-                                                    <span class="amount fw-bold text-break">
-                                                        @_sendInfo.SendAmount.ToUnitBtc() @network.CoinTicker
-                                                    </span>
-                                                </div>
-
-                                                <div class="info-row d-flex flex-column">
-                                                    <span class="text-muted small mb-1">Destination Address</span>
-                                                    <span class="address text-break" style="word-break: break-all;">
-                                                        @_sendInfo.SendToAddress
-                                                    </span>
-                                                </div>
-
-                                                <div class="info-row d-flex flex-column">
-                                                    <span class="text-muted small mb-1">Change Address</span>
-                                                    <span class="address text-break" style="word-break: break-all;">
-                                                        @_sendInfo.ChangeAddress
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <FeeSelector 
-                                        SendFee="@_sendInfo.SendFee"
-                                        CoinTicker="@network.CoinTicker"
-                                        FeeRate="@_sendInfo.FeeRate"
-                                        FeeBlockCount="@_sendInfo.FeeBlockCount"
-                                        FeePosition="@FeePosition"
-                                        FeeMin="@FeeMin"
-                                        FeeMax="@_feeMax"
-                                        RecommendedMinFee="@GetRecommendedMinFee()"
-                                        OnFeePositionChanged="@(value => FeeRangeChanged(new ChangeEventArgs { Value = value }))"
-                                        OnCustomFeeRateChanged="@(value => CustomFeeRateChanged(value))" />
-
-                                    @if (_sendInfo.SendUtxos.Any())
-                                    {
-                                        <div class="info-card utxo-details p-3 rounded mt-4">
-                                            <h6 class="mb-3">Selected UTXOs</h6>
-                                            <div class="utxo-list">
-                                                @foreach (var infoSendUtxo in _sendInfo.SendUtxos)
-                                                {
-                                                    var outpointStr = infoSendUtxo.Key;
-                                                    var shortenedOutpoint = outpointStr.Length > 20 
-                                                        ? $"{outpointStr[..10]}...{outpointStr[^10..]}" 
-                                                        : outpointStr;
-                                                    
-                                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                                        <span class="text-muted text-truncate me-2" title="@outpointStr">@shortenedOutpoint</span>
-                                                        <span class="fw-bold text-nowrap">
-                                                            @Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                                        </span>
-                                                    </div>
-                                                }
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
-
-                                <div class="modal-footer border-0 pt-0">
-                                    <div class="d-flex flex-column flex-md-row justify-content-end gap-2 w-100">
-                                        <button class="btn btn-border order-3 order-md-1" @onclick="ShowTransactionJson">
-                                            View Details
-                                        </button>
-                                        <button type="button" class="btn btn-border-warning order-2" 
-                                                @onclick="() => sendConfirmModal = false" 
-                                                disabled="@sendConfirmSpinner">
-                                            Cancel
-                                        </button>
-                                        <button type="button" class="btn btn-border-success order-1 order-md-3" 
-                                                @onclick="SendCoins" 
-                                                disabled="@sendConfirmSpinner">
-                                            @if (sendConfirmSpinner)
-                                            {
-                                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                <span>Sending...</span>
-                                            }
-                                            else
-                                            {
-                                                <span>Confirm</span>
-                                            }
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-    }
-    @if (activeTab == 2)
-    {
-        <div class="col-md-12">
-
-            <div class="card card-body mt-4">
-
-                <div class="d-flex align-items-center justify-content-between mb-4">
                     <div class="d-flex align-items-center">
                         <span class="user-select-none animate-rotate">
-                            <Icon IconName="receive"></Icon>
+                            <Icon IconName="send"></Icon>
                         </span>
                         <div class="h-100 ms-3">
                             <h5 class="mb-0 font-weight-bolder">
-                                Receive
+                                Send
                             </h5>
                         </div>
-
                     </div>
-                    <ShowQrCode @ref="showQrCode" Data="@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()"/>
 
+                    <div class="row mt-4">
+
+                        <form>
+                            <div class="mb-3">
+                                <label for="sendToAddress" class="form-label">Send to Address</label>
+                                <div class="input-group">
+                                    <span role="button" class="btn btn-border-success" @onclick="PasteFromClipboard">
+                                        <Icon IconName="paste" />
+                                    </span>
+
+                                    <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
+
+
+                                    <span role="button" class="btn btn-border-danger" @onclick="ClearAddress">
+                                        <Icon IconName="remove" />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="sendAmount" class="form-label">Amount</label>
+                                <input type="number" step="0.00000001" min="0" class="form-control" id="sendAmount"
+                                       @bind-value="sendAmount" @bind-value:event="oninput"
+                                       placeholder="Enter amount">
+                            </div>
+
+                            <div class="d-flex align-items-center">
+                                <!-- Select UTXOs Button -->
+                                <button type="button" class="btn btn-border-success me-3"
+                                        @onclick="() => coinControlModal = true">
+                                    Select UTXOs
+
+                                    @if (_sendInfo.SendUtxos.Any())
+                                    {
+                                        <span class="badge text-bg-warning ms-3">
+                                            @_sendInfo.SendUtxos.Count
+                                        </span>
+                                    }
+                                </button>
+
+                                <!-- Send Button with Confirmation Dialog -->
+                                <button type="button" class="btn btn-border-success"
+                                        data-cy="send-button" @onclick="AskPassword"
+                                        disabled="@sendLoadSpinner">
+                                    @if (sendLoadSpinner)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"
+                                              role="status" aria-hidden="true">
+                                        </span>
+                                        <span>Sending...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Send</span>
+                                    }
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
                 </div>
 
-                <div class="row mt-4">
-                    <div class="col-md-12 mb-md-0 mb-4">
-                        <div class="info-card p-3">
-                            <div class="d-flex align-items-center">
-                                <img class="me-3 flex-shrink-0" src="/assets/img/bitcoin.svg" alt="Bitcoin" style="width: 24px; height: 24px;">
-                                <div class="overflow-auto flex-grow-1 me-2" style="white-space: nowrap; min-width: 0;">
-                                    <span class="text-break fw-bold" style="font-size: 14px;">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</span>
+                @if (coinControlModal)
+                {
+                    <div class="modal-wrapper">
+                        <div class="modal fade show d-block" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content modern-modal">
+                                    <div class="modal-header border-0 pb-0">
+                                        <div class="d-flex align-items-center">
+                                            <Icon IconName="utxo" Height="32" Width="32" class="me-2" />
+                                            <h5 class="modal-title">Select UTXOs</h5>
+                                        </div>
+                                        <button class="btn-close-custom" @onclick="() => coinControlModal = false">
+                                            <Icon IconName="close-circle" Height="24" Width="24" />
+                                        </button>
+                                    </div>
+
+                                    <div class="modal-body modal-body-scroll py-4">
+                                        <div class="transaction-info-section mb-4">
+                                            <p class="pb-4">Total amount selected = @Money.Satoshis(_sendInfo.SendUtxos.Sum(s => s.Value.UtxoData.value)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                            @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AddressesInfo.Union(accountBalanceInfo.AccountInfo.ChangeAddressesInfo))
+                                            {
+                                                foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                                {
+                                                    var outpointStr = addressUtxoItem.outpoint.ToString();
+                                                    var outpointLength = outpointStr.Length;
+                                                    var shortenedOutpoint = outpointLength > 20
+                                                    ? $"{outpointStr.Substring(0, 10)} ... {outpointStr.Substring(outpointLength - 10)}"
+                                                    : outpointStr;
+
+                                                    var valueInBTC = Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC);
+                                                    var coinTicker = network.CoinTicker;
+                                                    var isTicked = _sendInfo.SendUtxos.ContainsKey(outpointStr);
+
+                                                    <div class="info-card mb-3">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" id="@outpointStr" @bind="@isTicked" @onclick="() => HandleCheckboxChange(addressUtxoItem, addressInfo.HdPath)">
+                                                            <label class="form-check-label" for="@outpointStr">
+                                                                @($"{shortenedOutpoint} - {valueInBTC} {coinTicker}")
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer border-0">
+                                        <button class="btn btn-border-success" @onclick="() => coinControlModal = false">Submit</button>
+                                    </div>
                                 </div>
-                                <button class="btn btn-sm btn-border ms-2 flex-shrink-0" @onclick="CopyNextReceiveAddress" data-cy="SHOW_QR_CODE_WALLET">
-                                    <Icon IconName="copy" Width="18" Height="18" />
-                                    <span class="d-none d-md-inline ms-1">Copy</span>
-                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (sendConfirmModal)
+                {
+                    <!-- Send Confirmation Modal -->
+                    <div class="modal-wrapper">
+                        <div class="modal fade show d-block" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content modern-modal">
+                                    <div class="modal-header border-0 pb-0">
+                                        <div class="d-flex align-items-center">
+                                            <Icon IconName="utxo" Height="32" Width="32" class="me-2" />
+                                            <h5 class="modal-title">Transaction Details</h5>
+                                        </div>
+                                        <button class="btn-close-custom" @onclick="() => sendConfirmModal = false" disabled="@sendConfirmSpinner">
+                                            <Icon IconName="close-circle" Height="24" Width="24" />
+                                        </button>
+                                    </div>
+
+                                    <div class="modal-body modal-body-scroll">
+                                        <div class="transaction-details mb-4">
+                                            <div class="info-card p-3 rounded">
+                                                <div class="d-flex flex-column gap-3">
+                                                    <div class="info-row d-flex flex-column">
+                                                        <span class="text-muted small mb-1">Amount</span>
+                                                        <span class="amount fw-bold text-break">
+                                                            @_sendInfo.SendAmount.ToUnitBtc() @network.CoinTicker
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="info-row d-flex flex-column">
+                                                        <span class="text-muted small mb-1">Destination Address</span>
+                                                        <span class="address text-break" style="word-break: break-all;">
+                                                            @_sendInfo.SendToAddress
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="info-row d-flex flex-column">
+                                                        <span class="text-muted small mb-1">Change Address</span>
+                                                        <span class="address text-break" style="word-break: break-all;">
+                                                            @_sendInfo.ChangeAddress
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <FeeSelector SendFee="@_sendInfo.SendFee"
+                                                     CoinTicker="@network.CoinTicker"
+                                                     FeeRate="@_sendInfo.FeeRate"
+                                                     FeeBlockCount="@_sendInfo.FeeBlockCount"
+                                                     FeePosition="@FeePosition"
+                                                     FeeMin="@FeeMin"
+                                                     FeeMax="@_feeMax"
+                                                     RecommendedMinFee="@GetRecommendedMinFee()"
+                                                     OnFeePositionChanged="@(value => FeeRangeChanged(new ChangeEventArgs { Value = value }))"
+                                                     OnCustomFeeRateChanged="@(value => RecalculateFee(value))" />
+
+                                        @if (_sendInfo.SendUtxos.Any())
+                                        {
+                                            <div class="info-card utxo-details p-3 rounded mt-4">
+                                                <h6 class="mb-3">Selected UTXOs</h6>
+                                                <div class="utxo-list">
+                                                    @foreach (var infoSendUtxo in _sendInfo.SendUtxos)
+                                                    {
+                                                        var outpointStr = infoSendUtxo.Key;
+                                                        var shortenedOutpoint = outpointStr.Length > 20
+                                                        ? $"{outpointStr[..10]}...{outpointStr[^10..]}"
+                                                        : outpointStr;
+
+                                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                                            <span class="text-muted text-truncate me-2" title="@outpointStr">@shortenedOutpoint</span>
+                                                            <span class="fw-bold text-nowrap">
+                                                                @Money.Satoshis(infoSendUtxo.Value.UtxoData.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                                            </span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="modal-footer border-0 pt-0">
+                                        <div class="d-flex flex-column flex-md-row justify-content-end gap-2 w-100">
+                                            <button class="btn btn-border order-3 order-md-1" @onclick="ShowTransactionJson">
+                                                View Details
+                                            </button>
+                                            <button type="button" class="btn btn-border-warning order-2"
+                                                    @onclick="() => sendConfirmModal = false"
+                                                    disabled="@sendConfirmSpinner">
+                                                Cancel
+                                            </button>
+                                            <button type="button" class="btn btn-border-success order-1 order-md-3"
+                                                    @onclick="SendCoins"
+                                                    disabled="@sendConfirmSpinner">
+                                                @if (sendConfirmSpinner)
+                                                {
+                                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                    <span>Sending...</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>Confirm</span>
+                                                }
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        @if (activeTab == 2)
+        {
+            <div class="col-md-12">
+
+                <div class="card card-body mt-4">
+
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center">
+                            <span class="user-select-none animate-rotate">
+                                <Icon IconName="receive"></Icon>
+                            </span>
+                            <div class="h-100 ms-3">
+                                <h5 class="mb-0 font-weight-bolder">
+                                    Receive
+                                </h5>
+                            </div>
+
+                        </div>
+                        <ShowQrCode @ref="showQrCode" Data="@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()" />
+
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-12 mb-md-0 mb-4">
+                            <div class="info-card p-3">
+                                <div class="d-flex align-items-center">
+                                    <img class="me-3 flex-shrink-0" src="/assets/img/bitcoin.svg" alt="Bitcoin" style="width: 24px; height: 24px;">
+                                    <div class="overflow-auto flex-grow-1 me-2" style="white-space: nowrap; min-width: 0;">
+                                        <span class="text-break fw-bold" style="font-size: 14px;">@accountBalanceInfo.AccountInfo.GetNextReceiveAddress()</span>
+                                    </div>
+                                    <button class="btn btn-sm btn-border ms-2 flex-shrink-0" @onclick="CopyNextReceiveAddress" data-cy="SHOW_QR_CODE_WALLET">
+                                        <Icon IconName="copy" Width="18" Height="18" />
+                                        <span class="d-none d-md-inline ms-1">Copy</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    }
-    @if (activeTab == 3)
-    {
-        <div class="col-md-12">
-            <div class="card card-body mt-4">
-                <div class="d-flex align-items-center">
-                    <span class="user-select-none animate-rotate">
-                        <Icon IconName="calculator"></Icon>
-                    </span>
-                    <div class="h-100 ms-3">
-                        <h5 class="mb-0 font-weight-bolder">
-                            Addresses and Amounts
-                        </h5>
+        }
+        @if (activeTab == 3)
+        {
+            <div class="col-md-12">
+                <div class="card card-body mt-4">
+                    <div class="d-flex align-items-center">
+                        <span class="user-select-none animate-rotate">
+                            <Icon IconName="calculator"></Icon>
+                        </span>
+                        <div class="h-100 ms-3">
+                            <h5 class="mb-0 font-weight-bolder">
+                                Addresses and Amounts
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="table-responsive form-control mt-4 slide-in">
+                        @if (accountBalanceInfo.AccountInfo.AllAddresses().Any(address => address.Balance > 0))
+                        {
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Address</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Amount</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Path</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">UTXO count</th>
+                                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">View Raw Json</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AllAddresses())
+                                    {
+                                        var total = addressInfo.Balance;
+                                        var count = addressInfo.UtxoData.Count();
+
+                                        if (total > 0)
+                                        {
+                                            <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
+                                                <td>@addressInfo.Address</td>
+                                                <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                                <td>@addressInfo.HdPath</td>
+                                                <td>@count</td>
+                                                <td>
+                                                    <button class="btn btn-border-success" @onclick="() => ShowRawTransactionJson(addressInfo)">Show</button>
+                                                </td>
+                                            </tr>
+                                            @if (IsExpanded(addressInfo.Address))
+                                            {
+                                                <tr>
+                                                    <td colspan="5">
+                                                        <div class="collapse show" data-cy="expend-amount" id="@($"collapse-{addressInfo.Address}")">
+                                                            <div class="card card-body">
+                                                                <!-- Inner table goes here -->
+                                                                <div class="table-responsive form-control">
+                                                                    <table class="table table-sm">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th scope="col">Coin</th>
+                                                                                <th scope="col">Amount</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            @foreach (var addressUtxoItem in addressInfo.UtxoData)
+                                                                            {
+                                                                                <tr>
+                                                                                    <td>@($"{addressUtxoItem.outpoint}")</td>
+                                                                                    <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
+                                                                                </tr>
+                                                                            }
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <div class="text-center">
+                                <p class="text-muted">No addresses or amounts to display.</p>
+                            </div>
+                        }
                     </div>
                 </div>
-                <div class="table-responsive form-control mt-4 slide-in">
-                    @if (accountBalanceInfo.AccountInfo.AllAddresses().Any(address => address.Balance > 0))
-                    {
-                        <table class="table align-items-center mb-0">
-                            <thead>
-                            <tr>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Address</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Amount</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">Path</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">UTXO count</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7" scope="col">View Raw Json</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @foreach (var addressInfo in accountBalanceInfo.AccountInfo.AllAddresses())
-                            {
-                                var total = addressInfo.Balance;
-                                var count = addressInfo.UtxoData.Count();
-
-                                if (total > 0)
-                                {
-                                    <tr @onclick="() => ToggleCollapse(addressInfo.Address)" class="clickable-row" data-cy="adress-row" aria-expanded="@IsExpanded(addressInfo.Address).ToString().ToLower()" aria-controls="@($"collapse-{addressInfo.Address}")">
-                                        <td>@addressInfo.Address</td>
-                                        <td>@Money.Satoshis(total).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                        <td>@addressInfo.HdPath</td>
-                                        <td>@count</td>
-                                        <td>
-                                            <button class="btn btn-border-success" @onclick="() => ShowRawTransactionJson(addressInfo)">Show</button>
-                                        </td>
-                                    </tr>
-                                    @if (IsExpanded(addressInfo.Address))
-                                    {
-                                        <tr>
-                                            <td colspan="5">
-                                                <div class="collapse show" data-cy="expend-amount" id="@($"collapse-{addressInfo.Address}")">
-                                                    <div class="card card-body">
-                                                        <!-- Inner table goes here -->
-                                                        <div class="table-responsive form-control">
-                                                            <table class="table table-sm">
-                                                                <thead>
-                                                                <tr>
-                                                                    <th scope="col">Coin</th>
-                                                                    <th scope="col">Amount</th>
-                                                                </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                @foreach (var addressUtxoItem in addressInfo.UtxoData)
-                                                                {
-                                                                    <tr>
-                                                                        <td>@($"{addressUtxoItem.outpoint}")</td>
-                                                                        <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @network.CoinTicker</td>
-                                                                    </tr>
-                                                                }
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                            }
-                            </tbody>
-                        </table>
-                    }
-                    else
-                    {
-                        <div class="text-center">
-                            <p class="text-muted">No addresses or amounts to display.</p>
-                        </div>
-                    }
-                </div>
             </div>
-        </div>
-    }
+        }
     </div>
 
-    <RawTransactionModal RawTransactionJson="@rawTransactionJson" IsVisible="@showRawTransactionModal" IsVisibleChanged="HandleModalVisibility"/>
-    <RawTransactionModal RawTransactionJson="@transactionJson" IsVisible="@showTransactionJsonModal" IsVisibleChanged="HandleTransactionJsonModalVisibility"/>
+    <RawTransactionModal RawTransactionJson="@rawTransactionJson" IsVisible="@showRawTransactionModal" IsVisibleChanged="HandleModalVisibility" />
+    <RawTransactionModal RawTransactionJson="@transactionJson" IsVisible="@showTransactionJsonModal" IsVisibleChanged="HandleTransactionJsonModalVisibility" />
 }
 
 
@@ -1059,7 +1056,7 @@ else
     private Dictionary<int, string> userVerificationInputs = new();
     private bool verificationPassed;
     private bool showVerificationError;
-    
+
     private decimal sendAmount
     {
         get => Money.Satoshis(_sendInfo.SendAmount).ToUnit(MoneyUnit.BTC);
@@ -1544,7 +1541,7 @@ else
                 accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
                 storage.SetAccountInfo(network.Name, accountInfo);
                 _cacheStorage.SetUnconfirmedInboundFunds(unconfirmedInfo);
-                
+
                 notificationComponent.ShowNotificationMessage("Sent complete!");
             }
             else
@@ -1583,29 +1580,29 @@ else
 
     private async Task FeeRangeChanged(ChangeEventArgs e)
     {
-        // Here you can handle the fee range change
-        // The new value is in e.Value
-
         var selected = e.Value?.ToString();
 
-        if (selected != null)
+        if (selected != null && int.TryParse(selected, out var position))
         {
-            if (int.TryParse(selected, out var res))
+            FeePosition = position;
+
+            if (position <= FeeEstimations.Fees.Count)
             {
-                if (res <= FeeEstimations.Fees.Count)
-                {
-                    var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-                    _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
-                    _sendInfo.FeeRate = estimationsFee.FeeRate;
-                    var accountInfo = storage.GetAccountInfo(network.Name);
-
-                    _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);
-
-                    StateHasChanged();
-                }
+                var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[position - 1];
+                await RecalculateFee(estimationsFee.FeeRate, estimationsFee.Confirmations);
             }
         }
+    }
+
+    private async Task RecalculateFee(long feeRate, int blockCount = 0)
+    {
+        _sendInfo.FeeRate = feeRate;
+        _sendInfo.FeeBlockCount = blockCount;
+
+        var accountInfo = storage.GetAccountInfo(network.Name);
+        _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, feeRate);
+
+        StateHasChanged();
     }
 
     private void showCoinControlModal()
@@ -1761,12 +1758,16 @@ else
 
     private async Task PrepareTransactionJson()
     {
+        string feeRateDescription = _sendInfo.FeeBlockCount > 0
+            ? $"{_sendInfo.FeeRate} sats per byte for {_sendInfo.FeeBlockCount} block confirmations"
+            : $"{_sendInfo.FeeRate} sats per byte";
+
         var transactionDetails = new
         {
             Amount = _sendInfo.SendAmount,
             ToAddress = _sendInfo.SendToAddress,
             Fee = _sendInfo.SendFee,
-            FeeRate = $"{_sendInfo.FeeRate} sats per byte for {_sendInfo.FeeBlockCount} block confirmations",
+            FeeRate = feeRateDescription,
             ChangeAddress = _sendInfo.ChangeAddress,
             Inputs = _sendInfo.SendUtxos.Select(u => new
             {
@@ -1779,6 +1780,7 @@ else
 
         transactionJson = JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions { WriteIndented = true });
     }
+
 
 
     private async Task ShowTransactionJson()
@@ -1864,36 +1866,25 @@ else
         verificationPassed = false;
         showVerificationError = false;
     }
-    
+
     private void SkipVerification()
     {
         verificationPassed = true;
         showVerificationError = false;
         NextStep();
     }
-    
+
     protected override void OnInitialized()
     {
         NavMenuState.SetActivePage("wallet");
         base.OnInitialized();
     }
-    
+
     private long GetRecommendedMinFee()
     {
         // Return a recommended minimum fee rate based on network conditions
-        return FeeEstimations.Fees.Any() 
-            ? Math.Max(1, FeeEstimations.Fees.Min(f => f.FeeRate)) 
+        return FeeEstimations.Fees.Any()
+            ? Math.Max(1, FeeEstimations.Fees.Min(f => f.FeeRate))
             : 5;
-    }
-    
-    private async Task CustomFeeRateChanged(long customFeeRate)
-    {
-        _sendInfo.FeeRate = customFeeRate;
-        _sendInfo.FeeBlockCount = 0; // Custom fee rate doesn't have a block estimate
-        
-        var accountInfo = storage.GetAccountInfo(network.Name);
-        _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, customFeeRate);
-        
-        StateHasChanged();
     }
 }
