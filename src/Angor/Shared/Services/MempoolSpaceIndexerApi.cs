@@ -390,7 +390,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
         var spends = await responseSpent.Content.ReadFromJsonAsync<List<Outspent>>(options);
 
-        await PopulateMissingSpentDataIfAny(spends, trx);
+        await PopulateSpentMissingData(spends, trx);
 
         return new QueryTransaction
         {
@@ -416,47 +416,49 @@ public class MempoolSpaceIndexerApi : IIndexerService
         };
     }
 
-    private async Task PopulateMissingSpentDataIfAny(List<Outspent> outspents, MempoolTransaction mempoolTransaction)
+    private async Task PopulateSpentMissingData(List<Outspent> outspents, MempoolTransaction mempoolTransaction)
     {
         var indexer = _networkService.GetPrimaryIndexer();
 
         for (int index = 0; index < outspents.Count; index++)
         {
-            if (outspents[index].Spent)
+            var outspent = outspents[index];
+
+            if (outspent.Spent && outspent.Txid == null)
             {
-                if (outspents[index].Txid == null)
+                var output = mempoolTransaction.Vout[index];
+                if (output != null && !string.IsNullOrEmpty(output.ScriptpubkeyAddress))
                 {
-                    var output = mempoolTransaction.Vout[index];
-                    if (output != null && !string.IsNullOrEmpty(output.ScriptpubkeyAddress))
+                    var txsUrl = $"{MempoolApiRoute}/address/{output.ScriptpubkeyAddress}/txs";
+
+                    var response = await _httpClient.GetAsync(indexer.Url + txsUrl);
+                    _networkService.CheckAndHandleError(response);
+
+                    if (!response.IsSuccessStatusCode)
+                        throw new InvalidOperationException(response.ReasonPhrase);
+
+                    var trx = await response.Content.ReadFromJsonAsync<List<MempoolTransaction>>(new JsonSerializerOptions()
+                        { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+
+                    bool found = false;
+                    foreach (var transaction in trx)
                     {
-                        var txsUrl = $"{MempoolApiRoute}/address/{output.ScriptpubkeyAddress}/txs";
-
-                        var response = await _httpClient.GetAsync(indexer.Url + txsUrl);
-                        _networkService.CheckAndHandleError(response);
-
-                        if (!response.IsSuccessStatusCode)
-                            throw new InvalidOperationException(response.ReasonPhrase);
-
-                        var trx = await response.Content.ReadFromJsonAsync<List<MempoolTransaction>>(new JsonSerializerOptions()
-                            { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
-
-                        bool found = false;
-                        foreach (var transaction in trx)
+                        var vinIndex = 0;
+                        foreach (var vin in transaction.Vin)
                         {
-                            foreach (var vin in transaction.Vin)
+                            if (vin.Txid == mempoolTransaction.Txid && vin.Vout == index)
                             {
-                                if (vin.Txid == mempoolTransaction.Txid && vin.Vout == index)
-                                {
-                                    outspents[index].Txid = transaction.Txid;
-                                    outspents[index].Vin = vin.Vout;
+                                outspent.Txid = transaction.Txid;
+                                outspent.Vin = vinIndex;
 
-                                    found = true;
-                                    break;
-                                }
+                                found = true;
+                                break;
                             }
 
-                            if(found) break;
+                            vinIndex++;
                         }
+
+                        if (found) break;
                     }
                 }
             }
