@@ -480,7 +480,7 @@
                                     </div>
 
                                     <p class="text-muted mb-4 ps-2">Your project needs a public profile on the Nostr network. This information establishes your project's identity.</p>
-                                 
+
                                     <div class="info-alert my-4 ">
                                         <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
                                         <p class="text-warning">
@@ -650,7 +650,7 @@
 
                         <div class="modal-body modal-body-scroll py-4">
 
-                            <div class="row g-4">
+                            <div class="row g-4 mb-4">
                                 <div class="col-md-12">
                                     <div class="info-card h-100">
                                         <div class="info-label">Project Identifier</div>
@@ -1174,34 +1174,17 @@
     {
         var selected = e.Value?.ToString();
 
-        if (selected != null)
+        if (selected != null && int.TryParse(selected, out int res) && res <= feeData.FeeEstimations.Fees.Count)
         {
-            if (int.TryParse(selected, out int res))
-            {
-                if (res <= feeData.FeeEstimations.Fees.Count)
-                {
-                    if (!passwordComponent.HasPassword())
-                    {
-                        showCreateModal = false;
-                        notificationComponent.ShowErrorMessage("Wallet password expired");
-                        return;
-                    }
+            feeData.FeePosition = res;
 
-                    var words = await passwordComponent.GetWalletAsync();
-                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+            var selectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
-                    var accountInfo = storage.GetAccountInfo(network.Name);
-                    var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
-
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
-
-                    StateHasChanged();
-                }
-            }
+            await RecalculateFee(selectedFeeEstimation.FeeRate, selectedFeeEstimation.Confirmations);
         }
     }
 
-    private async Task RecalculateFee(decimal customFeeRate)
+    private async Task RecalculateFee(decimal customFeeRate, int confirmations = 0)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -1214,11 +1197,11 @@
         {
             var words = await passwordComponent.GetWalletAsync();
 
-            // Create a custom fee estimation with the provided rate
+            // Create a fee estimation with the provided rate and confirmations
             var customFeeEstimation = new FeeEstimation
                 {
                     FeeRate = (int)customFeeRate,
-                    Confirmations = 1 // Custom fees typically assume fast confirmation
+                    Confirmations = confirmations
                 };
 
             feeData.SelectedFeeEstimation = customFeeEstimation;

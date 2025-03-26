@@ -773,34 +773,17 @@ else
     {
         var selected = e.Value?.ToString();
 
-        if (selected != null)
+        if (selected != null && int.TryParse(selected, out int res) && res <= feeData.FeeEstimations.Fees.Count)
         {
-            if (int.TryParse(selected, out int res))
-            {
-                if (res <= feeData.FeeEstimations.Fees.Count)
-                {
-                    if (!passwordComponent.HasPassword())
-                    {
-                        showCreateModal = false;
-                        notificationComponent.ShowErrorMessage("Wallet password expired");
-                        return;
-                    }
+            feeData.FeePosition = res;
 
-                    var words = await passwordComponent.GetWalletAsync();
+            var selectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
-                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-                    var accountInfo = storage.GetAccountInfo(network.Name);
-
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
-
-                    StateHasChanged();
-                }
-            }
+            await RecalculateFee(selectedFeeEstimation.FeeRate, selectedFeeEstimation.Confirmations);
         }
     }
 
-    private async Task RecalculateFee(decimal customFeeRate)
+    private async Task RecalculateFee(decimal customFeeRate, int confirmations = 0)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -813,11 +796,10 @@ else
         {
             var words = await passwordComponent.GetWalletAsync();
 
-            // Create a custom fee estimation with the provided rate
             var customFeeEstimation = new FeeEstimation
                 {
                     FeeRate = (int)customFeeRate,
-                    Confirmations = 1 // Custom fees typically assume fast confirmation
+                    Confirmations = confirmations
                 };
 
             feeData.SelectedFeeEstimation = customFeeEstimation;
@@ -1063,15 +1045,15 @@ else
         Investments investments = new()
             {
                 ProjectIdentifiers = storage.GetInvestmentProjects()
-                                            .Where(x => x.InvestedInProject())
-                                            .Select(x => new InvestmentState
-                                            {
-                                                ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
-                                                InvestorPubKey = x.InvestorPublicKey,
-                                                InvestmentTransactionHash = x.TransactionId,
-                                                UnfundedReleaseAddress = x.UnfundedReleaseAddress,
-                                            })
-                                            .ToList()
+                                                .Where(x => x.InvestedInProject())
+                                                .Select(x => new InvestmentState
+                                                {
+                                                    ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
+                                                    InvestorPubKey = x.InvestorPublicKey,
+                                                    InvestmentTransactionHash = x.TransactionId,
+                                                    UnfundedReleaseAddress = x.UnfundedReleaseAddress,
+                                                })
+                                                .ToList()
             };
 
 

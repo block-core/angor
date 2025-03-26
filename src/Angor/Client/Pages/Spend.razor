@@ -870,38 +870,17 @@
     {
         var selectedItem = e.Value?.ToString();
 
-        if (selectedItem != null)
+        if (selectedItem != null && int.TryParse(selectedItem, out int res) && res <= feeData.FeeEstimations.Fees.Count)
         {
-            if (int.TryParse(selectedItem, out int res))
-            {
-                if (res <= feeData.FeeEstimations.Fees.Count)
-                {
-                    if (!passwordComponent.HasPassword())
-                    {
-                        showCreateModal = false;
-                        notificationComponent.ShowErrorMessage("Wallet password expired");
-                        return;
-                    }
+            feeData.FeePosition = res;
 
-                    var words = await passwordComponent.GetWalletAsync();
-                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
+            var selectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
-                    var accountInfo = storage.GetAccountInfo(network.Name);
-                    var address = accountInfo.GetNextReceiveAddress();
-                    var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
-
-                    var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
-                    var key = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
-
-                    signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
-
-                    StateHasChanged();
-                }
-            }
+            await RecalculateFee(selectedFeeEstimation.FeeRate, selectedFeeEstimation.Confirmations);
         }
     }
 
-    private async Task RecalculateFee(decimal customFeeRate)
+    private async Task RecalculateFee(decimal customFeeRate, int confirmations = 0)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -914,11 +893,10 @@
         {
             var words = await passwordComponent.GetWalletAsync();
 
-            // Create a custom fee estimation with the provided rate
             var customFeeEstimation = new FeeEstimation
                 {
                     FeeRate = (int)customFeeRate,
-                    Confirmations = 1 // Custom fees typically assume fast confirmation
+                    Confirmations = confirmations
                 };
 
             feeData.SelectedFeeEstimation = customFeeEstimation;
