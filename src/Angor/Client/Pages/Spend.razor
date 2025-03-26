@@ -90,7 +90,7 @@
     }
     else
     {
-        @if (totalInvestedAmount <= founderProject.ProjectInfo.TargetAmount && founderProject.ProjectHasStarted())
+        @if (totalInvestedAmount < founderProject.ProjectInfo.TargetAmount && founderProject.ProjectHasStarted())
         {
             <div class="card card-body slide-in mt-4">
 
@@ -798,7 +798,7 @@
 
     protected async Task ClaimCoinsCheckPassword(int stageId)
     {
-        if (totalInvestedAmount <= founderProject.ProjectInfo.TargetAmount)
+        if (totalInvestedAmount < founderProject.ProjectInfo.TargetAmount)
         {
             notificationComponent.ShowErrorMessage("Target investment amount has not been reached, you can only release the funds back to the investors");
             return;
