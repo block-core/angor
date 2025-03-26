@@ -470,26 +470,16 @@
                             </div>
                         </div>
 
-                        <div class="fee-section mb-4">
-                            <h6 class="section-title">
-                                <Icon IconName="fee" Height="20" Width="20" class="me-2" />
-                                Network Fee Rate
-                            </h6>
-                            <div class="fee-slider-container">
-                                <input type="range"
-                                       class="form-range custom-range"
-                                       id="feeRange"
-                                       @bind="feeData.FeePosition"
-                                       @oninput="FeeRangeChanged"
-                                       min="@feeData.FeeMin"
-                                       max="@feeData.FeeMax">
-                                <div class="fee-info">
-                                    <small class="text-muted">
-                                        Estimated confirmation in @feeData.SelectedFeeEstimation.Confirmations blocks
-                                        (@feeData.SelectedFeeEstimation.FeeRate sats/byte)
-                                    </small>
-                                </div>
-                            </div>
+                        <div class="mb-4">
+                            <FeeSelector SendFee="@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                         CoinTicker="@network.CoinTicker"
+                                         FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                         FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                         FeePosition="@feeData.FeePosition"
+                                         FeeMin="@feeData.FeeMin"
+                                         FeeMax="@feeData.FeeMax"
+                                         OnFeePositionChanged="@(value => FeeRangeChanged(new ChangeEventArgs { Value = value }))"
+                                         OnCustomFeeRateChanged="@(value => RecalculateFee(value))" />
                         </div>
                         @if (selectedUtxos.Where(u => u.Value).Count() > 0)
                         {
@@ -908,6 +898,51 @@
                     StateHasChanged();
                 }
             }
+        }
+    }
+
+    private async Task RecalculateFee(decimal customFeeRate)
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            showCreateModal = false;
+            notificationComponent.ShowErrorMessage("Wallet password expired");
+            return;
+        }
+
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+
+            // Create a custom fee estimation with the provided rate
+            var customFeeEstimation = new FeeEstimation
+                {
+                    FeeRate = (int)customFeeRate,
+                    Confirmations = 1 // Custom fees typically assume fast confirmation
+                };
+
+            feeData.SelectedFeeEstimation = customFeeEstimation;
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var address = accountInfo.GetNextReceiveAddress();
+            var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
+
+            var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
+            var key = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
+
+            signedTransaction = _founderTransactionActions.SpendFounderStage(
+                founderContext.ProjectInfo,
+                founderContext.InvestmentTrasnactionsHex,
+                selectedStageId,
+                addressScript,
+                Encoders.Hex.EncodeData(key.ToBytes()),
+                feeData.SelectedFeeEstimation);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
     }
 
