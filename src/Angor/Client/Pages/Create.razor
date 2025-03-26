@@ -700,14 +700,16 @@
                                     </div>
                                 </div>
                             </div>
-                            <hr>
 
-                            <div class="info-card mb-3">
-                                <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                                <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
-                            </div>
-
-                            <hr>
+                            <FeeSelector SendFee="@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                         CoinTicker="@network.CoinTicker"
+                                         FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                         FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                         FeePosition="@feeData.FeePosition"
+                                         FeeMin="@feeData.FeeMin"
+                                         FeeMax="@feeData.FeeMax"
+                                         OnFeePositionChanged="@(value => FeeRangeChanged(new ChangeEventArgs { Value = value }))"
+                                         OnCustomFeeRateChanged="@(value => RecalculateFee(value))" />
 
                             <h6 class="mt-3 mb-2">Stages</h6>
                             @foreach (var stage in project.ProjectInfo.Stages)
@@ -1196,6 +1198,44 @@
                     StateHasChanged();
                 }
             }
+        }
+    }
+
+    private async Task RecalculateFee(decimal customFeeRate)
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            showCreateModal = false;
+            notificationComponent.ShowErrorMessage("Wallet password expired");
+            return;
+        }
+
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+
+            // Create a custom fee estimation with the provided rate
+            var customFeeEstimation = new FeeEstimation
+                {
+                    FeeRate = (int)customFeeRate,
+                    Confirmations = 1 // Custom fees typically assume fast confirmation
+                };
+
+            feeData.SelectedFeeEstimation = customFeeEstimation;
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                accountInfo.GetNextChangeReceiveAddress(),
+                unsignedTransaction,
+                words,
+                accountInfo,
+                feeData.SelectedFeeEstimation.FeeRate);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
     }
 
