@@ -312,7 +312,7 @@
                                     </div>
                                 </div>
 
-                                <div class="info-card mb-3">
+                                <div class="info-card mb-4">
                                     <div class="info-label">Angor Fee</div>
                                     <div class="info-value">
                                         @signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker
@@ -320,29 +320,17 @@
                                 </div>
                             </div>
 
-                            <div class="fee-section mb-4">
-                                <h6 class="section-title">
-                                    <Icon IconName="fee" Height="20" Width="20" class="me-2" />
-                                    Network Fee Rate
-                                </h6>
-                                <div class="fee-slider-container">
-                                    <input type="range"
-                                           class="form-range custom-range"
-                                           id="feeRange"
-                                           @bind="feeData.FeePosition"
-                                           @oninput="FeeRangeChanged"
-                                           min="@feeData.FeeMin"
-                                           max="@feeData.FeeMax">
-                                    <div class="fee-info">
-                                        <small class="text-muted">
-                                            Estimated confirmation in @feeData.SelectedFeeEstimation.Confirmations blocks
-                                            (@feeData.SelectedFeeEstimation.FeeRate sats/byte)
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
+                            <FeeSelector SendFee="@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                         CoinTicker="@network.CoinTicker"
+                                         FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                         FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                         FeePosition="@feeData.FeePosition"
+                                         FeeMin="@feeData.FeeMin"
+                                         FeeMax="@feeData.FeeMax"
+                                         OnFeePositionChanged="@(value => FeeRangeChanged(new ChangeEventArgs { Value = value }))"
+                                         OnCustomFeeRateChanged="@(value => RecalculateFee(value))" />
 
-                            <div class="stages-section mb-4">
+                            <div class="stages-section mb-4 mt-4">
                                 <h6 class="section-title">
                                     <Icon IconName="stage" Height="20" Width="20" class="me-2" />
                                     Investment Stages
@@ -664,7 +652,7 @@ else
 
     private void UpdateStagesBreakdown(ChangeEventArgs e)
     {
-         if (decimal.TryParse(e.Value.ToString(), out decimal amountBtc))
+        if (decimal.TryParse(e.Value.ToString(), out decimal amountBtc))
         {
             Investment.InvestmentAmountBtc = amountBtc;
 
@@ -809,6 +797,44 @@ else
                     StateHasChanged();
                 }
             }
+        }
+    }
+
+    private async Task RecalculateFee(decimal customFeeRate)
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            showCreateModal = false;
+            notificationComponent.ShowErrorMessage("Wallet password expired");
+            return;
+        }
+
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+
+            // Create a custom fee estimation with the provided rate
+            var customFeeEstimation = new FeeEstimation
+                {
+                    FeeRate = (int)customFeeRate,
+                    Confirmations = 1 // Custom fees typically assume fast confirmation
+                };
+
+            feeData.SelectedFeeEstimation = customFeeEstimation;
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                accountInfo.GetNextChangeReceiveAddress(),
+                unSignedTransaction,
+                words,
+                accountInfo,
+                feeData.SelectedFeeEstimation.FeeRate);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
     }
 
@@ -1037,15 +1063,15 @@ else
         Investments investments = new()
             {
                 ProjectIdentifiers = storage.GetInvestmentProjects()
-                                        .Where(x => x.InvestedInProject())
-                                        .Select(x => new InvestmentState
-                                        {
-                                            ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
-                                            InvestorPubKey = x.InvestorPublicKey,
-                                            InvestmentTransactionHash = x.TransactionId,
-                                            UnfundedReleaseAddress = x.UnfundedReleaseAddress,
-                                        })
-                                        .ToList()
+                                            .Where(x => x.InvestedInProject())
+                                            .Select(x => new InvestmentState
+                                            {
+                                                ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
+                                                InvestorPubKey = x.InvestorPublicKey,
+                                                InvestmentTransactionHash = x.TransactionId,
+                                                UnfundedReleaseAddress = x.UnfundedReleaseAddress,
+                                            })
+                                            .ToList()
             };
 
 
