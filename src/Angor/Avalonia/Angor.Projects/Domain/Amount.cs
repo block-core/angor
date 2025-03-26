@@ -6,13 +6,11 @@ public class Investment
 {
     public Guid Id { get; private set; }
     public ProjectId ProjectId { get; private set; }
-    public string InvestorId { get; private set; }
+    public string InvestorPubKey { get; private set; }
     public long AmountInSatoshis { get; private set; }
     public DateTime InvestmentDate { get; private set; }
     public string TransactionId { get; private set; }
     public InvestmentStatus Status { get; private set; }
-    
-    private Investment() { } // Para ORM
     
     public static Investment Create(ProjectId projectId, string investorId, long amountInSatoshis)
     {
@@ -20,7 +18,7 @@ public class Investment
         {
             Id = Guid.NewGuid(),
             ProjectId = projectId,
-            InvestorId = investorId,
+            InvestorPubKey = investorId,
             AmountInSatoshis = amountInSatoshis,
             InvestmentDate = DateTime.UtcNow,
             Status = InvestmentStatus.Pending
