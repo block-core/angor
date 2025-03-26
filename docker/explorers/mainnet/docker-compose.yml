@@ -1,0 +1,180 @@
+version: "2.4"
+
+volumes:
+  blockchain:
+    name: btc-data
+  memmpool_api:
+    name: btc-api
+  memmpool_indexer:
+    name: btc-db
+  mempool_blockchain:
+    name: mempool-blockchain
+  electrs_data:
+    name: electrs-data
+
+services:
+  node:
+    container_name: btc-node
+    user: 1000:1000
+    image: lncm/bitcoind:v25.0
+    mem_limit: 8192m
+    cpus: 2.000
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD", "bitcoin-cli", "-rpcuser=rpcuser", "-rpcpassword=rpcpassword", "-rpcport=8332", "getblockchaininfo"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+      timeout: 10s
+    command:
+      [
+        "-server=1",
+        "-rest=1",
+        "-txindex=1",
+        "-dbcache=6000",
+        "-rpcworkqueue=100",
+        "-rpcthreads=100",
+        "-addresstype=bech32",
+        "-changetype=bech32",
+        "-rpcallowip=10.202.0.0/8",
+        "-rpcallowip=10.201.0.0/8",
+        "-rpcallowip=192.168.0.0/8",
+        "-rpcallowip=172.0.0.0/8",
+        "-rpcallowip=127.0.0.1/8",
+        "-rpcbind=0.0.0.0",
+        "-rpcuser=rpcuser",
+        "-rpcpassword=rpcpassword",
+        "-assumevalid=000000000000000000039f849372dbe650f8b9a17e7aba7a8e022aaf41280b8d",
+      ]
+    restart: on-failure
+    stop_grace_period: 15m30s
+    volumes:
+      - blockchain:/data/.bitcoin
+    ports:
+      - "8333:8333"
+      - "8332:8332"
+      - "38332:38332"
+      - "38333:38333"
+    networks:
+      - btcnetwork
+
+  mempool_api:
+    container_name: mempool-api
+    image: blockcore/mempool-backend:latest
+    environment:
+      MEMPOOL_BACKEND: "electrum"
+      ESPLORA_REST_API_URL: "http://mempool-electrs:3003"
+      ESPLORA_REQUEST_TIMEOUT: "50000"
+      ELECTRUM_HOST: "mempool-electrs"
+      ELECTRUM_PORT: "5001"
+      ELECTRUM_TLS_ENABLED: "false"
+      CORE_RPC_HOST: "node"
+      CORE_RPC_PORT: "8332"
+      CORE_RPC_USERNAME: "rpcuser"
+      CORE_RPC_PASSWORD: "rpcpassword"
+      DATABASE_ENABLED: "true"
+      DATABASE_HOST: "mempool-db"
+      DATABASE_DATABASE: "mempool"
+      DATABASE_USERNAME: "mempool"
+      DATABASE_PASSWORD: "mempool"
+      STATISTICS_ENABLED: "true"
+      MEMPOOL_STDOUT_LOG_MIN_PRIORITY: "debug"
+      MEMPOOL_INDEXING_BLOCKS_AMOUNT: -1
+      ANGOR_ENABLED: "true"
+      VIRTUAL_HOST: btc2.indexer.angor.io
+      VIRTUAL_PORT: 8999
+      VIRTUAL_PROTO: http
+      VIRTUAL_NETWORK: proxy
+      LETSENCRYPT_HOST: btc2.indexer.angor.io
+      LETSENCRYPT_EMAIL: admin@blockcore.net
+      ASPNETCORE_URLS: http://+:8999
+    restart: unless-stopped
+    stop_grace_period: 1m
+    command: "./wait-for-it.sh mempool_db:3306 --timeout=720 --strict -- ./start.sh"
+    ports:
+      - 8999:8999
+    volumes:
+      - memmpool_api:/backend/cache
+    networks:
+      - btcnetwork
+      - proxy
+
+  mempool_db:
+    container_name: mempool-db
+    environment:
+      MYSQL_DATABASE: "mempool"
+      MYSQL_USER: "mempool"
+      MYSQL_PASSWORD: "mempool"
+      MYSQL_ROOT_PASSWORD: "admin"
+    image: mariadb:10.5.21
+    restart: unless-stopped
+    stop_grace_period: 1m
+    volumes:
+      - memmpool_indexer:/var/lib/mysql
+    networks:
+      - btcnetwork
+
+  mempool_web:
+    container_name: "mempool_web"
+    environment:
+      MAINNET_ENABLED: "true"
+      ROOT_NETWORK: "main"
+      FRONTEND_HTTP_PORT: "8080"
+      BACKEND_MAINNET_HTTP_HOST: "mempool_api"
+      LIGHTNING: "false"
+      ANGOR_ENABLED: "true"
+      VIRTUAL_HOST: mempool.explorer.angor.io
+      VIRTUAL_PORT: 8080
+      VIRTUAL_PROTO: http
+      VIRTUAL_NETWORK: proxy
+      LETSENCRYPT_HOST: mempool.explorer.angor.io
+      LETSENCRYPT_EMAIL: admin@blockcore.net
+      ASPNETCORE_URLS: http://+:8080
+    image: blockcore/mempool-frontend:latest
+    user: "0:1000"
+    restart: always
+    stop_grace_period: 1m
+    command: "./wait-for mempool_db:3306 --timeout=720 -- nginx -g 'daemon off;'"
+    ports:
+      - "8080:8080"
+    networks:
+      - btcnetwork
+      - proxy
+
+  mempool_electrs:
+    container_name: mempool-electrs
+    image: getumbrel/electrs:v0.10.9
+    user: root
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - 5001:5001
+      - 3003:3003
+    depends_on:
+      node:
+        condition: service_healthy
+    command: |
+      --network bitcoin
+      --daemon-rpc-addr btc-node:8332
+      --daemon-p2p-addr btc-node:8333
+      --db-dir /electrs
+      --electrum-rpc-addr 0.0.0.0:5001
+      --log-filters INFO  
+    volumes:
+      - electrs_data:/electrs
+      - ./electrs.conf:/etc/electrs/config.toml:ro
+    networks:
+      - btcnetwork
+
+networks:
+  btcnetwork:
+    external: false
+    name: btcnetwork
+  proxy:
+    external: true
+    name: proxy
