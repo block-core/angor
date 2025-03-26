@@ -16,8 +16,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
     private readonly HttpClient _httpClient;
     private readonly INetworkService _networkService;
 
-    private const string AngorApiRoute = "/api/V1/query/Angor";
-    private const string MempoolApiRoute = "/api/V1";
+    private const string AngorApiRoute = "/api/v1/query/Angor";
+    private const string MempoolApiRoute = "/api/v1";
 
     public MempoolSpaceIndexerApi(ILogger<MempoolSpaceIndexerApi> logger, INetworkConfiguration networkConfiguration, HttpClient httpClient, INetworkService networkService)
     {
@@ -390,6 +390,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
         var spends = await responseSpent.Content.ReadFromJsonAsync<List<Outspent>>(options);
 
+        await PopulateSpentMissingData(spends, trx);
+
         return new QueryTransaction
         {
             TransactionId = trx.Txid,
@@ -412,6 +414,55 @@ public class MempoolSpaceIndexerApi : IIndexerService
                     SpentInTransaction = spends.ElementAtOrDefault(i)?.Txid
                 }).ToList()
         };
+    }
+
+    private async Task PopulateSpentMissingData(List<Outspent> outspents, MempoolTransaction mempoolTransaction)
+    {
+        var indexer = _networkService.GetPrimaryIndexer();
+
+        for (int index = 0; index < outspents.Count; index++)
+        {
+            var outspent = outspents[index];
+
+            if (outspent.Spent && outspent.Txid == null)
+            {
+                var output = mempoolTransaction.Vout[index];
+                if (output != null && !string.IsNullOrEmpty(output.ScriptpubkeyAddress))
+                {
+                    var txsUrl = $"{MempoolApiRoute}/address/{output.ScriptpubkeyAddress}/txs";
+
+                    var response = await _httpClient.GetAsync(indexer.Url + txsUrl);
+                    _networkService.CheckAndHandleError(response);
+
+                    if (!response.IsSuccessStatusCode)
+                        throw new InvalidOperationException(response.ReasonPhrase);
+
+                    var trx = await response.Content.ReadFromJsonAsync<List<MempoolTransaction>>(new JsonSerializerOptions()
+                        { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+
+                    bool found = false;
+                    foreach (var transaction in trx)
+                    {
+                        var vinIndex = 0;
+                        foreach (var vin in transaction.Vin)
+                        {
+                            if (vin.Txid == mempoolTransaction.Txid && vin.Vout == index)
+                            {
+                                outspent.Txid = transaction.Txid;
+                                outspent.Vin = vinIndex;
+
+                                found = true;
+                                break;
+                            }
+
+                            vinIndex++;
+                        }
+
+                        if (found) break;
+                    }
+                }
+            }
+        }
     }
 
     public async Task<(bool IsOnline, string? GenesisHash)> CheckIndexerNetwork(string indexerUrl)
