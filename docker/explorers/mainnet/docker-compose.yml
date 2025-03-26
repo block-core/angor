@@ -84,11 +84,11 @@ services:
       MEMPOOL_STDOUT_LOG_MIN_PRIORITY: "debug"
       MEMPOOL_INDEXING_BLOCKS_AMOUNT: -1
       ANGOR_ENABLED: "true"
-      VIRTUAL_HOST: btc2.indexer.angor.io
+      VIRTUAL_HOST: indexer.angor.io
       VIRTUAL_PORT: 8999
       VIRTUAL_PROTO: http
       VIRTUAL_NETWORK: proxy
-      LETSENCRYPT_HOST: btc2.indexer.angor.io
+      LETSENCRYPT_HOST: indexer.angor.io
       LETSENCRYPT_EMAIL: admin@blockcore.net
       ASPNETCORE_URLS: http://+:8999
     restart: unless-stopped
@@ -126,11 +126,11 @@ services:
       BACKEND_MAINNET_HTTP_HOST: "mempool_api"
       LIGHTNING: "false"
       ANGOR_ENABLED: "true"
-      VIRTUAL_HOST: mempool.explorer.angor.io
+      VIRTUAL_HOST: explorer.angor.io
       VIRTUAL_PORT: 8080
       VIRTUAL_PROTO: http
       VIRTUAL_NETWORK: proxy
-      LETSENCRYPT_HOST: mempool.explorer.angor.io
+      LETSENCRYPT_HOST: explorer.angor.io
       LETSENCRYPT_EMAIL: admin@blockcore.net
       ASPNETCORE_URLS: http://+:8080
     image: blockcore/mempool-frontend:latest
