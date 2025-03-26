@@ -304,7 +304,7 @@
                                     </p>
                                 </div>
 
-                                <div class="row g-4">
+                                <div class="row g-4 mb-4">
                                     <div class="col-md-6">
                                         <div class="info-card h-100">
                                             <div class="info-label">Stages to Recover</div>
@@ -338,14 +338,15 @@
                                     </div>
                                 </div>
 
-                                <hr>
-
-                                <div class="info-card mb-3">
-                                    <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                                    <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="RecoveryFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
-                                </div>
-
-                                <hr>
+                                <FeeSelector SendFee="@Money.Satoshis(recoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                             CoinTicker="@network.CoinTicker"
+                                             FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                             FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                             FeePosition="@feeData.FeePosition"
+                                             FeeMin="@feeData.FeeMin"
+                                             FeeMax="@feeData.FeeMax"
+                                             OnFeePositionChanged="@(value => RecoveryFeeRangeChanged(new ChangeEventArgs { Value = value }))"
+                                             OnCustomFeeRateChanged="@(value => RecalculateRecoveryFee(value))" />
 
                                 <div class="confirmation-section mt-4 text-center">
                                     <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
@@ -397,7 +398,7 @@
                             </div>
 
                             <div class="modal-body modal-body-scroll py-4">
-                                <div class="row g-4">
+                                <div class="row g-4 mb-4">
                                     <div class="col-md-12">
                                         <div class="info-card h-100">
                                             <div class="info-label">Amount to Release</div>
@@ -417,15 +418,15 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <hr>
-
-                                <div class="info-card mb-3">
-                                    <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                                    <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="ReleaseFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
-                                </div>
-
-                                <hr>
+                                <FeeSelector SendFee="@Money.Satoshis(releaseRecoveryTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                             CoinTicker="@network.CoinTicker"
+                                             FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                             FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                             FeePosition="@feeData.FeePosition"
+                                             FeeMin="@feeData.FeeMin"
+                                             FeeMax="@feeData.FeeMax"
+                                             OnFeePositionChanged="@(value => ReleaseFeeRangeChanged(new ChangeEventArgs { Value = value }))"
+                                             OnCustomFeeRateChanged="@(value => RecalculateReleaseFee(value))" />
 
                                 <div class="confirmation-section mt-4 text-center">
                                     <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
@@ -498,14 +499,15 @@
                                     </div>
                                 </div>
 
-                                <hr>
-
-                                <div class="info-card mb-3">
-                                    <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                                    <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="EndOfProjectFeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
-                                </div>
-
-                                <hr>
+                                <FeeSelector SendFee="@Money.Satoshis(endOfProjectTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                             CoinTicker="@network.CoinTicker"
+                                             FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                             FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                             FeePosition="@feeData.FeePosition"
+                                             FeeMin="@feeData.FeeMin"
+                                             FeeMax="@feeData.FeeMax"
+                                             OnFeePositionChanged="@(value => EndOfProjectFeeRangeChanged(new ChangeEventArgs { Value = value }))"
+                                             OnCustomFeeRateChanged="@(value => RecalculateEndOfProjectFee(value))" />
 
                                 <div class="confirmation-section mt-4 text-center">
                                     <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
@@ -933,6 +935,45 @@
         }
     }
 
+    private async Task RecalculateRecoveryFee(decimal customFeeRate)
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            showRecoveryModal = false;
+            notificationComponent.ShowErrorMessage("Wallet password expired");
+            return;
+        }
+
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+
+            // Create a custom fee estimation with the provided rate
+            var customFeeEstimation = new FeeEstimation
+                {
+                    FeeRate = (int)customFeeRate,
+                    Confirmations = 1 // Custom fees typically assume fast confirmation
+                };
+
+            feeData.SelectedFeeEstimation = customFeeEstimation;
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+
+            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(
+                accountInfo.GetNextChangeReceiveAddress(),
+                unsignedRecoveryTransaction,
+                words,
+                accountInfo,
+                feeData.SelectedFeeEstimation.FeeRate);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
+        }
+    }
+
     private async Task RecoverCoins()
     {
         PrepareToRecoverCoinsConfirmSpinner = true;
@@ -960,7 +1001,7 @@
 
             project.RecoveryTransactionId = recoveryTransaction.Transaction.GetHash().ToString();
             project.AmountInRecovery = totalsats;
-                      
+
 
             storage.UpdateInvestmentProject(project);
 
@@ -1073,6 +1114,49 @@
         }
     }
 
+    private async Task RecalculateReleaseFee(decimal customFeeRate)
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            showRecoveryReleaseModal = false;
+            notificationComponent.ShowErrorMessage("Wallet password expired");
+            return;
+        }
+
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+
+            // Create a custom fee estimation with the provided rate
+            var customFeeEstimation = new FeeEstimation
+                {
+                    FeeRate = (int)customFeeRate,
+                    Confirmations = 1 // Custom fees typically assume fast confirmation
+                };
+
+            feeData.SelectedFeeEstimation = customFeeEstimation;
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
+
+            releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(
+                project.ProjectInfo,
+                investmentTransaction,
+                recoveryTransaction.Transaction,
+                accountInfo.GetNextChangeReceiveAddress(),
+                feeData.SelectedFeeEstimation,
+                Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
+        }
+    }
+
+
+
     private async Task ReleaseCoins()
     {
         PrepareToReleaseCoinsConfirmSpinner = true;
@@ -1096,11 +1180,11 @@
             }
 
             project.RecoveryReleaseTransactionId = releaseRecoveryTransaction.Transaction.GetHash().ToString();
-                       
+
             storage.UpdateInvestmentProject(project);
 
             _walletUIService.AddTransactionToPending(releaseRecoveryTransaction.Transaction);
-            
+
             await RefreshInvestments();
 
             notificationComponent.ShowNotificationMessage("Transaction submitted successfully", 5);
@@ -1204,6 +1288,49 @@
         }
     }
 
+
+    private async Task RecalculateEndOfProjectFee(decimal customFeeRate)
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            showEndOfProjectModal = false;
+            notificationComponent.ShowErrorMessage("Wallet password expired");
+            return;
+        }
+
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+
+            // Create a custom fee estimation with the provided rate
+            var customFeeEstimation = new FeeEstimation
+                {
+                    FeeRate = (int)customFeeRate,
+                    Confirmations = 1 // Custom fees typically assume fast confirmation
+                };
+
+            feeData.SelectedFeeEstimation = customFeeEstimation;
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
+            var fromStage = StageInfo.Items.First(f => f.IsSpent == false);
+
+            endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(
+                investmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                project.ProjectInfo,
+                fromStage.StageIndex,
+                accountInfo.GetNextChangeReceiveAddress(),
+                Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()),
+                feeData.SelectedFeeEstimation);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
+        }
+    }
+
     private async Task EndOfProjectCoins()
     {
         PrepareEndOfProjectCoinsConfirmSpinner = true;
@@ -1230,7 +1357,7 @@
             storage.UpdateInvestmentProject(project);
 
             _walletUIService.AddTransactionToPending(endOfProjectTransaction.Transaction);
-            
+
             await RefreshInvestments();
 
             notificationComponent.ShowNotificationMessage("Transaction submitted successfully", 5);
