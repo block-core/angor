@@ -59,7 +59,7 @@ services:
       ELECTRUM_PORT: "5001"
       ELECTRUM_TLS_ENABLED: "false"
       CORE_RPC_HOST: "node"
-      CORE_RPC_PORT: "38333"
+      CORE_RPC_PORT: "38332"
       CORE_RPC_USERNAME: "rpcuser"
       CORE_RPC_PASSWORD: "rpcpassword"
       DATABASE_ENABLED: "true"
@@ -75,7 +75,7 @@ services:
       VIRTUAL_PORT: 8999
       VIRTUAL_PROTO: http
       VIRTUAL_NETWORK: proxy
-      LETSENCRYPT_HOST: tbtc.indexer.angor.io
+      LETSENCRYPT_HOST: test.indexer.angor.io
       LETSENCRYPT_EMAIL: admin@blockcore.net
       ASPNETCORE_URLS: http://+:8999
     restart: unless-stopped
