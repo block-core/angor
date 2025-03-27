@@ -27,6 +27,9 @@ public static class ProjectDataExtensions
 
             Name = data.NostrMetadata.Name,
             ShortDescription = data.NostrMetadata.About,
+            FounderKey = data.ProjectInfo.FounderKey,
+            FounderRecoveryKey = data.ProjectInfo.FounderRecoveryKey,
+            ExpiryDate = data.ProjectInfo.ExpiryDate,
 
             Picture = string.IsNullOrWhiteSpace(data.NostrMetadata.Picture)
                 ? null
@@ -37,7 +40,7 @@ public static class ProjectDataExtensions
                 : new Uri(data.NostrMetadata.Banner),
 
             TargetAmount = data.ProjectInfo.TargetAmount,
-            StartingDate = DateOnly.FromDateTime(data.ProjectInfo.StartDate),
+            StartingDate = data.ProjectInfo.StartDate,
             PenaltyDuration = TimeSpan.FromDays(data.ProjectInfo.PenaltyDays),
 
             NostrNpubKey = data.ProjectInfo.NostrPubKey,
@@ -50,7 +53,7 @@ public static class ProjectDataExtensions
         project.Stages = data.ProjectInfo.Stages
             .Select((stage, index) => new Stage
             {
-                ReleaseDate = DateOnly.FromDateTime(stage.ReleaseDate),
+                ReleaseDate = stage.ReleaseDate,
                 Amount = (long)(stage.AmountToRelease / 100 * data.ProjectInfo.TargetAmount * 1_0000_0000),
                 Index = index + 1,
                 Weight = (double)(stage.AmountToRelease / 100)

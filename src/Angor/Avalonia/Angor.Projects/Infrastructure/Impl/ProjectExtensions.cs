@@ -1,5 +1,7 @@
 using Angor.Projects.Application.Dtos;
 using Angor.Projects.Domain;
+using Angor.Shared.Models;
+using Stage = Angor.Shared.Models.Stage;
 
 namespace Angor.Projects.Infrastructure.Impl;
 
@@ -13,7 +15,7 @@ public static class ProjectExtensions
             Name = project.Name,
             ShortDescription = project.ShortDescription,
             StartingDate = project.StartingDate,
-            TargetAmount = (long)(project.TargetAmount *  1_0000_0000),
+            TargetAmount = project.TargetAmount,
             Stages = project.Stages.Select(stage => new StageDto
             {
                 Amount = stage.Amount,
@@ -21,6 +23,25 @@ public static class ProjectExtensions
                 Weight = stage.Weight,
                 ReleaseDate = stage.ReleaseDate,
             }).ToList()
+        };
+    }
+    
+    public static ProjectInfo ToSharedModel(this Project project)
+    {
+        return new ProjectInfo
+        {
+            TargetAmount = project.TargetAmount,
+            Stages = project.Stages.Select(stage => new Stage
+            {
+                ReleaseDate = stage.ReleaseDate,
+                AmountToRelease = stage.Amount,
+            }).ToList(),
+            FounderKey = project.FounderKey,
+            FounderRecoveryKey = project.FounderRecoveryKey,
+            PenaltyDays = project.PenaltyDuration.Days,
+            ProjectIdentifier = project.Id.Value,
+            StartDate = project.StartingDate,
+            ExpiryDate = project.ExpiryDate,
         };
     }
 }

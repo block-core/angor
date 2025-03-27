@@ -15,7 +15,7 @@ public class ProjectAppService(
     IInvestorKeyProvider investorKeyProvider)
     : IProjectAppService
 {
-    public async Task<Result> Invest(Guid walletId, ProjectId projectId, Amount amount, ModelFeeRate feeRate)
+    public async Task<Result> Invest(Guid walletId, ProjectId projectId, Amount amount)
     {
         var projectResult = await projectRepository.Get(projectId);
         if (projectResult.IsFailure)
@@ -25,9 +25,8 @@ public class ProjectAppService(
 
         var project = projectResult.Value;
 
-        var projectInfo = new ProjectInfo()
-        {
-        };
+        // Map project to ProjectInfo
+        var projectInfo = project.ToSharedModel();
 
         // 2. Get investor data
         var investorKeyResult = await investorKeyProvider.InvestorKey(walletId, project.FounderKey);
