@@ -1677,7 +1677,7 @@ else
             return false;
         }
 
-        if (accountBalanceInfo.TotalBalance > 100)
+        if (accountBalanceInfo.TotalBalance.ToUnitBtc() > 100)
         {
             return false;
         }
