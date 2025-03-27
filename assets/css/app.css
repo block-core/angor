@@ -193,7 +193,7 @@
 .btn.bg-gradient-primary:not(:disabled):not(.disabled).active,
 .btn.bg-gradient-primary:not(:disabled):not(.disabled):active,
 .show>.btn.bg-gradient-primary.dropdown-toggle {
-    color: color-yiq(var(--angor-primary));
+    color: var(--angor-primary);
     background-color: var(--angor-primary);
     border-color: var(--angor-primary);
 }
@@ -228,7 +228,7 @@
 .btn.bg-gradient-secondary:not(:disabled):not(.disabled).active,
 .btn.bg-gradient-secondary:not(:disabled):not(.disabled):active,
 .show>.btn.bg-gradient-secondary.dropdown-toggle {
-    color: color-yiq(var(--angor-secondary));
+    color: var(--angor-secondary);
     background-color: var(--angor-secondary);
     border-color: var(--angor-secondary);
 }
@@ -254,6 +254,7 @@
 
 ::-webkit-scrollbar-thumb {
     background: rgba(8, 108, 129, 0.3);
+    -webkit-backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
     border-radius: 3px;
 }
@@ -782,7 +783,14 @@ tr[style*="cursor: pointer;"]:hover {
     justify-content: center;
     align-items: center;
     z-index: 1000000;
+    -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
+    overflow: hidden; 
+}
+
+ body.modal-open {
+    overflow: hidden;  
+    padding-right: var(--scrollbar-width, 0px); 
 }
 
 .card-img-top {
@@ -1109,10 +1117,8 @@ h1:focus-visible {
 img,
 a {
     -webkit-user-drag: none;
-    -khtml-user-drag: none;
     -moz-user-drag: none;
     -o-user-drag: none;
-    user-drag: none;
 }
 
 .disabled {
@@ -1276,6 +1282,7 @@ a p {
 .feature-box {
     transition: all 0.3s ease;
     border-radius: 15px;
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     padding: 2rem;
     height: 100%;
@@ -1749,6 +1756,7 @@ button:hover:not(:disabled) {
     gap: 1rem;
     background: rgba(2, 103, 126, 0.85);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 3px solid rgba(255, 71, 87, 0.8);
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(8, 59, 70, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -1871,6 +1879,7 @@ button:hover:not(:disabled) {
 
 .form-check-label {
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
     margin: 0;
 }
@@ -1883,6 +1892,7 @@ button:hover:not(:disabled) {
 .stat-card {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     transition: all 0.3s ease;
 }
 
@@ -1970,6 +1980,7 @@ button:hover:not(:disabled) {
     background: var(--angor-modal-bg, rgba(255, 255, 255, 0.98));
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     max-width: 90vw;
     transition: all 0.3s ease;
     margin: auto;
@@ -2503,6 +2514,9 @@ button:hover:not(:disabled) {
     cursor: pointer;
     outline: none;
     user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     -webkit-tap-highlight-color: transparent;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -2804,6 +2818,7 @@ input[type=number]::-webkit-outer-spin-button {
 
 input[type=number] {
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .modal-footer .d-flex {
@@ -3898,6 +3913,7 @@ input[type=number] {
 .glass-effect {
     background: rgba(255,255,255,0.05);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.1);
     box-shadow: 0 8px 32px rgba(0,0,0,0.1);
 }
