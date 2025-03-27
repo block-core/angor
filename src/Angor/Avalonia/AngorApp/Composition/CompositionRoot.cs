@@ -33,7 +33,7 @@ public static class CompositionRoot
         ProjectServices.Register(services, logger);
 
         // Integration services
-        services.AddSingleton<ISensibleDataProvider, SensibleDataProvider>();
+        services.AddSingleton<IInvestorKeyProvider, InvestorKeyProvider>();
 
         var serviceProvider = services.BuildServiceProvider();
 

@@ -2,7 +2,7 @@
 
 namespace Angor.Projects.Infrastructure.Interfaces;
 
-public interface ISensibleDataProvider
+public interface IInvestorKeyProvider
 {
-    Task<Result<(string seed, Maybe<string> passphrase)>> GetSecrets(Guid walletId);
+    Task<Result<string>> InvestorKey(Guid walletId, string founderKey);
 }

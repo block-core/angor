@@ -9,6 +9,7 @@ using Angor.Wallet.Infrastructure.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using ILogger = Serilog.ILogger;
 
 namespace Angor.Wallet.Infrastructure;
@@ -17,8 +18,7 @@ public static class WalletServices
 {
     public static ServiceCollection Register(ServiceCollection services, ILogger logger, BitcoinNetwork bitcoinNetwork)
     {
-        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        
+        RegisterLogger(services, logger);
         services.TryAddSingleton<IStore>(new InMemoryStore());
         services.AddSingleton<IWalletAppService, WalletAppService>();
         services.AddSingleton<IHdOperations, HdOperations>();
@@ -36,8 +36,14 @@ public static class WalletServices
         services.AddHttpClient();
         services.AddSingleton<ITransactionWatcher, TransactionWatcher>();
         
-        services.TryAddSingleton(loggerFactory);
-
         return services;
+    }
+    
+    private static void RegisterLogger(ServiceCollection services, ILogger logger)
+    {
+        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+        services.TryAddSingleton(loggerFactory);
+        services.AddLogging(builder => builder.AddSerilog());
+        services.TryAddSingleton(logger);
     }
 }
