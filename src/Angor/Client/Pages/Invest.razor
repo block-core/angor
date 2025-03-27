@@ -783,7 +783,7 @@ else
         }
     }
 
-    private async Task RecalculateFee(decimal customFeeRate, int confirmations = 0)
+    private async Task RecalculateFee(long customFeeRate, int confirmations = 0)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -798,7 +798,7 @@ else
 
             var customFeeEstimation = new FeeEstimation
                 {
-                    FeeRate = (int)customFeeRate,
+                    FeeRate = customFeeRate,
                     Confirmations = confirmations
                 };
 

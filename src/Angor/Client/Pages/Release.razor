@@ -446,7 +446,7 @@
         }
     }
 
-    private async Task RecalculateReleaseFee(decimal customFeeRate, int confirmations = 0)
+    private async Task RecalculateReleaseFee(long customFeeRate, int confirmations = 0)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -461,7 +461,7 @@
 
             var customFeeEstimation = new FeeEstimation
                 {
-                    FeeRate = (int)customFeeRate,
+                    FeeRate = customFeeRate,
                     Confirmations = confirmations
                 };
 

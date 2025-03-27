@@ -918,7 +918,7 @@
         }
     }
 
-    private async Task RecalculateRecoveryFee(decimal customFeeRate, int confirmations = 0)
+    private async Task RecalculateRecoveryFee(long customFeeRate, int confirmations = 0)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -933,7 +933,7 @@
 
             var customFeeEstimation = new FeeEstimation
                 {
-                    FeeRate = (int)customFeeRate,
+                    FeeRate = customFeeRate,
                     Confirmations = confirmations
                 };
 
@@ -1069,18 +1069,15 @@
 
         if (selected != null && int.TryParse(selected, out int res) && res <= feeData.FeeEstimations.Fees.Count)
         {
-            // Set the selected position for UI
             feeData.FeePosition = res;
 
-            // Get the fee estimation based on the slider position
             var selectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
 
-            // Use the common method to recalculate the fee with the selected fee rate and confirmation blocks
             await RecalculateReleaseFee(selectedFeeEstimation.FeeRate, selectedFeeEstimation.Confirmations);
         }
     }
 
-    private async Task RecalculateReleaseFee(decimal customFeeRate, int confirmations = 0)
+    private async Task RecalculateReleaseFee(long customFeeRate, int confirmations = 0)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -1093,10 +1090,9 @@
         {
             var words = await passwordComponent.GetWalletAsync();
 
-            // Create a custom fee estimation with the provided rate and confirmations
             var customFeeEstimation = new FeeEstimation
                 {
-                    FeeRate = (int)customFeeRate,
+                    FeeRate = customFeeRate,
                     Confirmations = confirmations
                 };
 
@@ -1234,7 +1230,7 @@
         }
     }
 
-    private async Task RecalculateEndOfProjectFee(decimal customFeeRate, int confirmations = 0)
+    private async Task RecalculateEndOfProjectFee(long customFeeRate, int confirmations = 0)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -1247,10 +1243,9 @@
         {
             var words = await passwordComponent.GetWalletAsync();
 
-            // Create a custom fee estimation with the provided rate and confirmations
             var customFeeEstimation = new FeeEstimation
                 {
-                    FeeRate = (int)customFeeRate,
+                    FeeRate = customFeeRate,
                     Confirmations = confirmations
                 };
 
