@@ -12,14 +12,14 @@ public class ProjectDesign : IProject
     public string ShortDescription { get; set; } = "Short description of the project";
     public string BitcoinAddress { get; } = "some address";
     public decimal TargetAmount { get; } = 50m;
-    public DateOnly StartingDate { get; } = DateOnly.FromDateTime(DateTime.Now);
+    public DateTime StartingDate { get; } = DateTime.Now;
 
     public IEnumerable<IStage> Stages { get; } =
     [
-        new StageDesign() { ReleaseDate = DateOnly.FromDateTime(DateTime.Today), Amount = 1000_000, Index = 1, Weight = 0.25d },
-        new StageDesign() { ReleaseDate = DateOnly.FromDateTime(DateTime.Today).AddDays(20), Amount = 400_0000, Index = 2, Weight = 0.25d },
-        new StageDesign() { ReleaseDate = DateOnly.FromDateTime(DateTime.Today).AddDays(40), Amount = 800_0000, Index = 3, Weight = 0.25d },
-        new StageDesign() { ReleaseDate = DateOnly.FromDateTime(DateTime.Today).AddDays(60), Amount = 1000_0000, Index = 4, Weight = 0.25d }
+        new StageDesign() { ReleaseDate = DateTime.Today, Amount = 1000_000, Index = 1, Weight = 0.25d },
+        new StageDesign() { ReleaseDate = DateTime.Today.AddDays(20), Amount = 400_0000, Index = 2, Weight = 0.25d },
+        new StageDesign() { ReleaseDate = DateTime.Today.AddDays(40), Amount = 800_0000, Index = 3, Weight = 0.25d },
+        new StageDesign() { ReleaseDate = DateTime.Today.AddDays(60), Amount = 1000_0000, Index = 4, Weight = 0.25d }
     ];
 
     public string NpubKey { get; } = "npub17a0glwdvr5wjyjdh5eu4xmh4swtaqrmhcgss22unvr6p3spyyq7qeh4kaz";

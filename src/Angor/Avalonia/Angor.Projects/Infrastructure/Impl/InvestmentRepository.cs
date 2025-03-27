@@ -6,13 +6,13 @@ namespace Angor.Projects;
 
 public class InvestmentRepository : IInvestmentRepository
 {
-    public Task<Result> Save(Investment investment)
+    public async Task<Result> Save(Investment investment)
     {
-        throw new NotImplementedException();
+        return Result.Success();
     }
 
-    public Task<Result<IEnumerable<Investment>>> Get(ProjectId projectId)
+    public async Task<Result<IEnumerable<Investment>>> Get(ProjectId projectId)
     {
-        throw new NotImplementedException();
+        return Result.Success<IEnumerable<Investment>>(new List<Investment>());
     }
 }

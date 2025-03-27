@@ -1,3 +1,3 @@
 ﻿namespace Angor.Projects.Domain;
 
-public record class ProjectId(string IndexerDataProjectIdentifier);
+public record class ProjectId(string Value);
