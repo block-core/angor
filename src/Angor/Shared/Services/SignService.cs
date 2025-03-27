@@ -46,7 +46,7 @@ namespace Angor.Shared.Services
             
             var sentEvent = await SendNostrEventAsync(rumor,privateKey,founderNostrPubKey);
 
-            return (sentEvent.CreatedAt!.Value, sentEvent.Id);
+            return (rumor.CreatedAt!.Value, rumor.DeepCloneWithPubKey(privateKey.DerivePublicKey().Hex).ComputeId());
         }
 
         public void LookupSignatureForInvestmentRequest(string investorNsec, string projectNostrPubKey, DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action)
@@ -77,6 +77,7 @@ namespace Angor.Shared.Services
                     .Where(_ => _ != null)
                     .Where(_ => _?.Kind == _privateMessageKind)
                     .Where(_ => _.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
+                    .Where(x => x.CreatedAt >= sigRequestSentTime && x.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier) == sigRequestEventId)
                     .Subscribe(_ => { action.Invoke(_.Content); });
 
                 _subscriptionsHanding.TryAddRelaySubscription(projectNostrPubKey, subscription);
@@ -88,9 +89,9 @@ namespace Angor.Shared.Services
               //  Authors = new[] { projectNostrPubKey }, //From founder
                 P = new[] { investorNostrPubKey }, // To investor
                 Kinds = new[] { _nup17Kind },
-                Since = sigRequestSentTime,
-                E = new [] { sigRequestEventId },
-                Limit = 1,
+                // Since = sigRequestSentTime,
+                // E = new [] { sigRequestEventId },
+                // Limit = 1,
             }));
         }
 
@@ -147,10 +148,10 @@ namespace Angor.Shared.Services
             return Task.CompletedTask;
         }
 
-        public void LookupInvestmentRequestApprovals(string investorNsec, Action<string, DateTime, string> action, Action onAllMessagesReceived)
+        public void LookupInvestmentRequestApprovals(string recipientNsec, Action<string, DateTime, string> action, Action onAllMessagesReceived)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            var nostrPubKey = NostrPrivateKey.FromHex(investorNsec).DerivePublicKey().Hex;
+            var nostrPubKey = NostrPrivateKey.FromHex(recipientNsec).DerivePublicKey().Hex;
             var subscriptionKey = nostrPubKey + "sig_res";
 
             if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
@@ -162,7 +163,7 @@ namespace Angor.Shared.Services
                     .SelectMany(async x => {
                         try
                         {
-                            return await _nip59Actions.UnwrapEventAsync(x.Event!, investorNsec);
+                            return await _nip59Actions.UnwrapEventAsync(x.Event!, recipientNsec);
                         }
                         catch (Exception ex)
                         {
@@ -333,7 +334,75 @@ namespace Angor.Shared.Services
             }));
         }
 
-        
+        public Task LookupAllRequestsAsync(string founderNsec, Action<string, string, string, string, DateTime> action, Action onAllMessagesReceived)
+        {
+            var projectNpub = NostrPrivateKey.FromHex(founderNsec).DerivePublicKey().Hex;
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            var subscriptionKey = $"All {_nip59Actions.WrappedMessageKind} events";
+
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .DistinctUntilChanged(x => x.Event?.Id)
+                    .Where(x => x.Event?.Kind == _nup17Kind)
+                    .SelectMany(async x =>
+                    {
+                        try
+                        {
+                            return await _nip59Actions.UnwrapEventAsync(x.Event!, founderNsec);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log the exception but don't rethrow to avoid breaking the subscription
+                            Console.WriteLine($"Error processing event: {ex.Message}");
+                            return null; // Return null to avoid breaking the subscription
+                        }
+                    })
+                    .Where(_ => _ != null)
+                    .Where(x => x.Kind == _privateMessageKind)
+                    //.Where(x => x.Tags.FindFirstTagValue("subject") == "Investment offer")
+                    .Subscribe(async x =>
+                    {
+                        action.Invoke(x.Id ,x.Tags.FindFirstTagValue("subject"), x.Pubkey, x.Content, x.CreatedAt.Value);
+                    });
+
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
+
+            var nostrFilter = new NostrFilter
+            {
+                P = [projectNpub], //To founder,
+                Kinds = [_nup17Kind]
+            };
+            
+            nostrClient.Send(new NostrRequest(subscriptionKey, nostrFilter));
+
+            return Task.CompletedTask;
+        }
+
+        public async Task<string> SendApprovedListOfProjectsToStorageKeyAsync(string content, string storageKey, string founderPubKey)
+        {
+            var privateKey = NostrPrivateKey.FromHex(storageKey);
+            
+            var rumor = new NostrEvent
+            {
+                Kind = _privateMessageKind,
+                CreatedAt = DateTime.UtcNow,
+                Content = content,
+                Tags = new NostrEventTags(new NostrEventTag("subject","Store approved investments"))
+            };
+            
+            var sentEvent = await SendNostrEventAsync(rumor,privateKey,founderPubKey);
+
+            //TODO add subscription for OK event to confirm the event was processed
+            
+            return sentEvent.Id;
+        }
+
+
         private async Task<NostrEvent> SendNostrEventAsync(NostrEvent rumor, NostrPrivateKey privateKey, string recipientNpub)
         {
             var validEvent = rumor.DeepCloneWithPubKey(privateKey.DerivePublicKey().Hex);

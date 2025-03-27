@@ -1049,7 +1049,7 @@ else
 
         var encrypted = await encryption.EncryptData(serializer.Serialize(investments), password);
 
-        _RelayService.SendDirectMessagesForPubKeyAsync(storageKeyHex, storageAccountKey, encrypted, x =>
+        await _RelayService.SendDirectMessagesForPubKeyAsync(storageKeyHex, storageAccountKey, serializer.Serialize(investments), x =>
         {
             if (!x.Accepted)
             {

@@ -22,4 +22,10 @@ public interface ISignService
     void LookupReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Action<string> action, Action onAllMessagesReceived);
 
     void LookupSignedReleaseSigs(string projectNostrPubKey, Action<SignServiceLookupItem> action, Action onAllMessagesReceived);
+    
+    
+    
+    Task LookupAllRequestsAsync(string founderNsec, Action<string,string, string, string, DateTime> action, Action onAllMessagesReceived);
+    
+    Task<string> SendApprovedListOfProjectsToStorageKeyAsync(string content, string storageKey, string founderPubKey);
 }

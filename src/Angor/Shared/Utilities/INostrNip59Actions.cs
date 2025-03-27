@@ -5,6 +5,9 @@ namespace Angor.Shared.Utilities;
 
 public interface INostrNip59Actions
 {
+    NostrKind WrappedMessageKind => (NostrKind)1059;
+    NostrKind InternalDMMessageKind => (NostrKind)14;
+    
     Task<NostrEvent> SealEvent(NostrEvent rumor, NostrPrivateKey privateKey, string recipientNpub);
 
     Task<NostrEvent> WrapEventAsync(NostrEvent nostrEvent, string recipeintNpub,

@@ -1,26 +1,23 @@
 ﻿@page "/signatures/{ProjectIdentifier}"
+@using System.Reflection.Metadata
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
-@using Angor.Client.Services
 @using Angor.Shared.ProtocolNew
 @using Angor.Client.Models
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
-@using System.Text.Json
 @using Angor.Shared.Services
 @using System.Security.Cryptography
-
-@inject IJSRuntime JS
 
 @inject ILogger<Signatures> Logger
 @inject IDerivationOperations DerivationOperations
 @inject IClientStorage Storage;
 @inject ISignService SignService
+@inject IRelayService RelayService
 @inject IInvestorTransactionActions InvestorTransactionActions
 @inject IFounderTransactionActions FounderTransactionActions
 @inject ISerializer serializer
-@inject IEncryptionService encryption
 @inject NavMenuState NavMenuState
 
 @inherits BaseComponent
@@ -203,6 +200,9 @@
     private int numOfSignatureToSign = 0;
     private int numOfSignaturesSigned = 0;
 
+    private DateTime? lastApprovedListTime;
+    private List<ApprovedInvestment>? _approvedInvestments;
+    
     protected override async Task OnInitializedAsync()
     {
         NavMenuState.SetActivePage("founder");
@@ -220,38 +220,31 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         Logger.LogDebug("OnAfterRenderAsync");
-        WalletWords words;
-            
-        if (passwordComponent.HasPassword())
+
+        if (firstRender)
         {
-            words = await passwordComponent.GetWalletAsync();
-            await FetchPendingSignatures(FounderProject, words);
+            await RefreshSignaturesInternal();
         }
-        else
-        {
-            passwordComponent.ShowPassword(async () =>
-            {
-                words = await passwordComponent.GetWalletAsync();
-                await FetchPendingSignatures(FounderProject, words);
-            });
-        }
-        await FetchSignaturesCheckPassword();
     }
 
-    protected async Task FetchSignaturesCheckPassword()
-    {
-        if (signaturesRequests.Any(x => x.AmountToInvest == null))
-        {
-            if (passwordComponent.HasPassword())
-            {
-                await FetchSignatures();
-            }
-            else
-            {
-                passwordComponent.ShowPassword(FetchSignatures);
-            }
-        }
-    }
+    // protected async Task FetchSignaturesCheckPassword()
+    // {
+    //     if (signaturesRequests.Any(x => x.AmountToInvest == null))
+    //     {
+    //         var words = await passwordComponent.GetWalletAsync();
+    //         var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
+    //         var nsec = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+    //         
+    //         if (passwordComponent.HasPassword())
+    //         {
+    //             await HandleFetchedApprovalsOfSignatures(nsec);
+    //         }
+    //         else
+    //         {
+    //             passwordComponent.ShowPassword(() => HandleFetchedApprovalsOfSignatures(nsec));
+    //         }
+    //     }
+    // }
 
     private async Task RefreshSignaturesInternal()
     {
@@ -276,40 +269,132 @@
         try
         {
             var words = await passwordComponent.GetWalletAsync();
-            await FetchPendingSignatures(FounderProject, words);
-            await FetchSignatures();
-            await Task.Delay(1000);
+            var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
+            var nsec = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+            await FetchAndProcessAllIncomingRequestsAsync(nsec);
+            //await FetchPendingSignatures(nsec);
+            //await HandleFetchedApprovalsOfSignatures(nsec);
+            //await Task.Delay(1000);
         }
         catch (Exception e)
         {
             Logger.LogError($"Error fetching signatures: {e.Message}");
-        }
-        finally
-        {
-
             refreshButtonSpinner = false;
             StateHasChanged();
         }
     }
+    
+    private async Task FetchAndProcessAllIncomingRequestsAsync(string nsec)
+    {
+        await SignService.LookupAllRequestsAsync(nsec, (eventId, subject, senderPubKey, message, messageTimeStamp) =>
+        {
+            try
+            {
+                Logger.LogDebug($"kind 1059 received senderPubKey: {senderPubKey} - messagetimeStamp: {messageTimeStamp}");
 
-    protected async Task FetchSignatures()
+                messagesReceived = true;
+
+                switch (subject)
+                {
+                    case "Investment offer":
+                        ProcessIncomingSignatureRequests(eventId, senderPubKey, message, messageTimeStamp);
+                        break;
+                    case "Store approved investments":
+                        ProcessIncomingListOfApprovedInvestments(message, messageTimeStamp);
+                        break;
+                    default: Logger.LogDebug($"received message with subject {subject} and senderPubKey {senderPubKey}"); break;
+                }
+
+
+                Logger.LogDebug("kind 1059 finidhed processing");
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, $"Error processing kind 1059 with from sender {senderPubKey}");
+            }
+        }, () =>
+        {
+            
+            UpdateSignatureRequestsWithApprovalList();
+            UpdateSignatureRequestsAmounts();
+            
+            Logger.LogDebug("kind 1059 finidhed processing");
+            
+            refreshButtonSpinner = false;
+            messagesReceived = false;
+            StateHasChanged();
+        });
+    }
+    
+    
+    private void ProcessIncomingSignatureRequests(string eventId,string  investorNostrPubKey, string message, DateTime timeArrived)
+    {
+        Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
+
+        var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
+
+        if (sigReq != null)
+        {
+            if (sigReq.TimeArrived >= timeArrived)
+            {
+                return; // ignoring older messages
+            }
+
+            Logger.LogDebug($"Sig request event received is replaced");
+
+            // this is a newer sig request so replace it
+            signaturesRequests.Remove(sigReq);
+        }
+
+        Logger.LogDebug($"Sig request event received is new");
+        
+        var signatureRequest = new SignatureItem
+        {
+            investorNostrPubKey = investorNostrPubKey,
+            TimeArrived = timeArrived,
+            SignRecoveryRequest = serializer.Deserialize<SignRecoveryRequest>(message),
+            EventId = eventId
+        };
+
+        signaturesRequests.Add(signatureRequest);
+        Logger.LogDebug($"Added to pendingSignatures");
+    }
+
+    
+    private void ProcessIncomingListOfApprovedInvestments(string message, DateTime messageTimeStamp)
+    {
+        if (lastApprovedListTime != null && lastApprovedListTime >= messageTimeStamp) 
+            return;
+        
+        Logger.LogDebug($"Received a newer list of approved investments");
+        
+        lastApprovedListTime = messageTimeStamp;
+        
+        _approvedInvestments = serializer.Deserialize<List<ApprovedInvestment>>(message);;
+    }
+    
+    private void UpdateSignatureRequestsWithApprovalList()
+    {
+        if (_approvedInvestments == null)
+            return;
+        
+        foreach (var approvedInvestment in _approvedInvestments)
+        {
+            var signatureRequest = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == approvedInvestment.InvestorNPub);
+
+            if (signatureRequest == null || signatureRequest.EventId != approvedInvestment.RequestEventId)
+                continue;
+            
+            signatureRequest.TimeApproved = approvedInvestment.ApprovalTime;
+        }
+    }
+
+    private void UpdateSignatureRequestsAmounts()
     {
         Logger.LogDebug($"handled = {signaturesRequests.Count(x => x.AmountToInvest.HasValue)}, total = {signaturesRequests.Count}");
 
         if (signaturesRequests.Any(x => x.AmountToInvest == null))
         {
-            if (!scanedForApprovals)
-            {
-                FetchFounderApprovalsSignatures(FounderProject);
-                return;
-            }
-
-            if (!passwordComponent.HasPassword())
-            {
-                notificationComponent.ShowErrorMessage("no wallet password");
-                return;
-            }
-            
             foreach (var pendingSignature in signaturesRequests.Where(_ => _.AmountToInvest == null))
             {
                 try
@@ -337,120 +422,14 @@
                 }
             }
 
-            Logger.LogDebug($"Calling StateHasChanged in OnAfterRenderAsync");
-            messagesReceived = false;
-            StateHasChanged();
+            Logger.LogDebug($"Calling StateHasChanged in OnAfterRenderAsync"); ;
         }
 
         Logger.LogDebug("OnAfterRenderAsync Completed");
         Logger.LogDebug($"Signatures retrieved: {signaturesRequests.Count}");
     }
 
-    private async Task FetchPendingSignatures(FounderProject project, WalletWords words)
-    {
-        var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, project.ProjectInfo.FounderKey);
-        
-        await SignService.LookupInvestmentRequestsAsync(Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes()), null, null,// project.LastRequestForSignaturesTime , async
-            (eventId, investorNostrPubKey, message, timeArrived) =>
-            {
-                Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
-
-                var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
-
-                if (sigReq != null)
-                {
-                    if (sigReq.TimeArrived >= timeArrived)
-                    {
-                        return; //multiple relays could mean the same massage multiple times
-                    }
-
-                    Logger.LogDebug($"Sig request event received is replaced");
-
-                    // this is a newer sig request so replace it
-                    signaturesRequests.Remove(sigReq);
-                }
-
-                Logger.LogDebug($"Sig request event received is new");
-
-                messagesReceived = true;
-
-                var signatureRequest = new SignatureItem
-                    {
-                        investorNostrPubKey = investorNostrPubKey,
-                        TimeArrived = timeArrived,
-                        SignRecoveryRequest = serializer.Deserialize<SignRecoveryRequest>(message),
-                        EventId = eventId
-                    };
-
-                signaturesRequests.Add(signatureRequest);
-                Logger.LogDebug($"Added to pendingSignatures");
-            },
-            () =>
-            {
-                Logger.LogDebug($"End of messages");
-
-                if (!messagesReceived)
-                    return;
-
-                Logger.LogDebug($"Calling StateHasChanged in EOSE");
-                StateHasChanged();
-            });
-    }
-
-    private void FetchFounderApprovalsSignatures(FounderProject project)
-    {
-        SignService.LookupInvestmentRequestApprovals(project.ProjectInfo.NostrPubKey,
-            (investorNostrPubKey, timeApproved, reqEventId) =>
-            {
-                Logger.LogDebug($"Sig response event received investorNostrPubKey: {investorNostrPubKey} - timeApproved: {timeApproved} - reqEventId: {reqEventId}");
-
-                var signatureRequest = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey);
-
-                if (signatureRequest is null || signatureRequest.TimeApproved != null)
-                    return; //multiple relays could mean the same massage multiple times
-
-                if (signatureRequest.TimeArrived > timeApproved)
-                {
-                    Logger.LogDebug($"The event received is replaced by time");
-                    return; // sig of an old request
-                }
-
-                if (reqEventId != null && signatureRequest.EventId != reqEventId)
-                {
-                    Logger.LogDebug($"The event received is replaced by eventid");
-                    return; // sig of an old request
-                }
-
-                Logger.LogDebug($"The event received is new");
-
-                signatureRequest.TimeApproved = timeApproved;
-
-                Logger.LogDebug($"Added to pendingSignatures");
-            },
-            () =>
-            {
-                scanedForApprovals = true;
-
-                if (signaturesRequests.Any(_ => _.TimeApproved != null))
-                {
-                    var latestApprovedTime = signaturesRequests
-                        .Where(x => x.TimeApproved != null)
-                        .Max(x => x.TimeArrived);
-
-                    if (FounderProject.LastRequestForSignaturesTime is null || FounderProject.LastRequestForSignaturesTime < latestApprovedTime)
-                    {
-                        FounderProject.LastRequestForSignaturesTime = latestApprovedTime;
-                        Storage.UpdateFounderProject(FounderProject);
-                    }
-                }
-
-                Logger.LogDebug($"Calling StateHasChanged in EOSE");
-                StateHasChanged();
-                Logger.LogDebug($"End of messages on EOSE");
-            });
-    }
-
-    protected async Task ApproveSignatureCheckPassword(SignatureItem signature)
+    private async Task ApproveSignatureCheckPassword(SignatureItem signature)
     {
         if (passwordComponent.HasPassword())
         {
@@ -480,6 +459,8 @@
             {
                 notificationComponent.ShowErrorMessage(operationResult.Message);
             }
+
+            await SaveApprovalsAsync(words);
         }
         catch (Exception e)
         {
@@ -530,6 +511,8 @@
                 numOfSignaturesSigned++;
                 StateHasChanged();
             }
+
+            await SaveApprovalsAsync(words);
         }
         catch (Exception e)
         {
@@ -557,7 +540,7 @@
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
             FounderProject.LastRequestForSignaturesTime = await SignService.SendSignaturesToInvestorAsync(sigJson, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
-
+            
             Storage.UpdateFounderProject(FounderProject);
 
             signaturesRequests.Single(_ => _.investorNostrPubKey == signature.investorNostrPubKey && _.TimeApproved is null)
@@ -586,7 +569,29 @@
 
         return sig;
     }
+    
+    private async Task SaveApprovalsAsync(WalletWords words)
+    {
+        var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
+        var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
+        var approvedProjectsList = signaturesRequests
+            .Where(x => x.TimeApproved.HasValue)
+            .Select(x => new ApprovedInvestment
+            {
+                ApprovalTime = x.TimeApproved.Value,
+                InvestorNPub = x.investorNostrPubKey,
+                RequestEventId = x.EventId,
+            });
+
+        var listJson = serializer.Serialize(approvedProjectsList);
+
+        var eventId = SignService.SendApprovedListOfProjectsToStorageKeyAsync(listJson, nostrPrivateKeyHex,
+            FounderProject.ProjectInfo.NostrPubKey);
+        
+        Logger.LogDebug("Saved the approved investment list with the event id {0}", eventId);
+    }
+    
     public class SignatureItem
     {
         public string investorNostrPubKey { get; set; }

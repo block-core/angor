@@ -18,6 +18,7 @@ public interface IRelayService
     
     Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Func<NostrEvent,Task> onResponseAction, string? fromNpub);
     
-    string SendDirectMessagesForPubKeyAsync(string senderNosterPrivateKey, string nostrPubKey, string encryptedMessage,
+    Task<string> SendDirectMessagesForPubKeyAsync(string senderNosterPrivateKey, string nostrPubKey,
+        string encryptedMessage,
         Action<NostrOkResponse> onResponseAction);
 }

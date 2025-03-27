@@ -1,5 +1,6 @@
 ﻿using System.Reactive.Linq;
 using Angor.Shared.Models;
+using Angor.Shared.Utilities;
 using Nostr.Client.Requests;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Keys;
@@ -16,15 +17,17 @@ namespace Angor.Shared.Services
         private readonly INetworkService _networkService;
         private readonly IRelaySubscriptionsHandling _subscriptionsHandling;
         private readonly ISerializer _serializer;
+        private readonly INostrNip59Actions _nip59Actions;
         
         
-        public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService, IRelaySubscriptionsHandling subscriptionsHanding, ISerializer serializer)
+        public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService, IRelaySubscriptionsHandling subscriptionsHanding, ISerializer serializer, INostrNip59Actions nip59Actions)
         {
             _logger = logger;
             _communicationFactory = communicationFactory;
             _networkService = networkService;
             _subscriptionsHandling = subscriptionsHanding;
             _serializer = serializer;
+            _nip59Actions = nip59Actions;
         }
 
         public void LookupProjectsInfoByEventIds<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,
@@ -100,8 +103,20 @@ namespace Angor.Shared.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
-                    .Where(_ => _.Event is not null)
-                    .Select(_ => _.Event)
+                    .DistinctUntilChanged(x => x.Event?.Id)
+                    .SelectMany(async x =>
+                    {
+                        try
+                        {
+                            return await _nip59Actions.UnwrapEventAsync(x.Event!, nostrPubKey);
+                        }
+                        catch (Exception e)
+                        {
+                            _logger.LogError(e, "Failed to get the event");
+                            return null; // Return null to avoid breaking the subscription;
+                        }
+                    })
+                    .Where(x => x?.Kind == _nip59Actions.InternalDMMessageKind)
                     .Subscribe(onResponseAction!);
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
@@ -110,7 +125,7 @@ namespace Angor.Shared.Services
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 P = new[] { nostrPubKey },
-                Kinds = new[] { NostrKind.EncryptedDm },
+                Kinds = new[] { _nip59Actions.WrappedMessageKind },
                 Since = since,
                 Limit = limit
             }));
@@ -151,29 +166,28 @@ namespace Angor.Shared.Services
             return Task.CompletedTask;
         }
 
-        public string SendDirectMessagesForPubKeyAsync(string senderNosterPrivateKey, string nostrPubKey, string encryptedMessage, Action<NostrOkResponse> onResponseAction)
+        public async Task<string> SendDirectMessagesForPubKeyAsync(string senderNosterPrivateKey, string nostrPubKey, string encryptedMessage, Action<NostrOkResponse> onResponseAction)
         {
             var sender = NostrPrivateKey.FromHex(senderNosterPrivateKey);
             
-            var client = _communicationFactory.GetOrCreateClient(_networkService);
-
             var ev = new NostrEvent
             {
-                Kind = NostrKind.EncryptedDm,
+                Kind = _nip59Actions.InternalDMMessageKind,
                 CreatedAt = DateTime.UtcNow,
                 Content = encryptedMessage,
                 Tags = new NostrEventTags(NostrEventTag.Profile(nostrPubKey))
             };
             
-            var signed = ev.Sign(sender);
+            var rumor = ev.DeepCloneWithPubKey(sender.DerivePublicKey().Hex);
             
-            if (!_subscriptionsHandling.TryAddOKAction(signed.Id!,onResponseAction))
+            if (!_subscriptionsHandling.TryAddOKAction(rumor.Id!,onResponseAction))
                 throw new InvalidOperationException(
-                    $"Failed to add ok action to monitoring of relay results {signed.Id}");
+                    $"Failed to add ok action to monitoring of relay results {rumor.Id}");
             
-            client.Send(new NostrEventRequest(signed));
+            
+            var sentEvent = await SendNostrEventAsync(rumor, sender, nostrPubKey);
 
-            return signed.Id!;
+            return sentEvent.Id!;
         }
 
         public void CloseConnection()
@@ -281,27 +295,20 @@ namespace Angor.Shared.Services
             };
             return ev;
         }
-        
-        private static NostrEvent GetNip99NostrEvent(ProjectInfo project, string content)
+
+        private async Task<NostrEvent> SendNostrEventAsync(NostrEvent rumor, NostrPrivateKey privateKey, string recipientNpub)
         {
-            var ev = new NostrEvent
-            {
-                Kind = (NostrKind)30402,
-                CreatedAt = DateTime.UtcNow,
-                Content = content,
-                Tags = new NostrEventTags( //TODO need to find the correct tags for the event
-                    new NostrEventTag("d", "AngorApp", "Create a new project event"),
-                    new NostrEventTag("title", "New project :)"),
-                    new NostrEventTag("published_at", DateTime.UtcNow.ToString()),
-                    new NostrEventTag("t","#AngorProjectInfo"),
-                    new NostrEventTag("image",""),
-                    new NostrEventTag("summary","A new project that will save the world"),
-                    new NostrEventTag("location",""),
-                    new NostrEventTag("price","1","BTC"))
-            };
+            var validEvent = rumor.DeepCloneWithPubKey(privateKey.DerivePublicKey().Hex);
             
-            return ev;
+            var sealedEvent = await _nip59Actions.SealEvent(validEvent, privateKey, recipientNpub);
+            var wrappedEvent = await _nip59Actions.WrapEventAsync(sealedEvent, recipientNpub);
+            
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            nostrClient.Send(new NostrEventRequest(wrappedEvent));
+            return wrappedEvent;
         }
+        
+        
     }
 
 }
