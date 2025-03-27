@@ -1,7 +1,8 @@
 using Angor.Projects.Domain;
+using Angor.Projects.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Projects.Infrastructure.Impl;
+namespace Angor.Projects;
 
 public class InvestmentRepository : IInvestmentRepository
 {

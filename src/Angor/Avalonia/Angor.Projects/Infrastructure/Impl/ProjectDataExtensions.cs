@@ -2,7 +2,7 @@ using Angor.Projects.Domain;
 
 namespace Angor.Projects.Infrastructure.Impl;
 
-public static class ProjectMapper
+public static class ProjectDataExtensions
 {
     public static Project ToProject(this ProjectData data)
     {

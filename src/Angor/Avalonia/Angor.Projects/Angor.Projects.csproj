@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Client\Angor.Client.csproj" />
     <ProjectReference Include="..\..\Shared\Angor.Shared.csproj" />
+    <ProjectReference Include="..\Angor.Wallet\Angor.Wallet.csproj" />
   </ItemGroup>
 
 </Project>

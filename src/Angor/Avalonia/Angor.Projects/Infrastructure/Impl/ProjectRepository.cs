@@ -2,7 +2,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using Angor.Projects.Domain;
-using Angor.Projects.Infrastructure.Interfaces;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
@@ -11,20 +10,12 @@ using Zafiro.Reactive;
 namespace Angor.Projects.Infrastructure.Impl;
 
 public class ProjectRepository(
-    IProjectRepository projectRepository,
-    IInvestmentRepository investmentRepository,
-    IInvestmentService bitcoinService,
     IRelayService relayService,
     IIndexerService indexerService) : IProjectRepository
 {
     public Task<Result<Project>> Get(ProjectId id)
     {
         return FindById(id);
-    }
-
-    public Task<Result> SaveAsync(Project project)
-    {
-        throw new NotImplementedException();
     }
 
     public Task<IList<Project>> Latest()
