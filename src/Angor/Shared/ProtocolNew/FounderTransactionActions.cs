@@ -107,7 +107,7 @@ public class FounderTransactionActions : IFounderTransactionActions
             .ToList();
 
         var txSize = spendingTransaction.GetVirtualSize();
-        var minimumFee = new FeeRate(Money.Satoshis(1000)).GetFee(txSize); //1000 sats per kilobyte
+        var minimumFee = new FeeRate(Money.Satoshis(1100)).GetFee(txSize); //1000 sats per kilobyte
         
         var totalFee = nbitcoinNetwork
             .CreateTransactionBuilder()
@@ -198,7 +198,7 @@ public class FounderTransactionActions : IFounderTransactionActions
          var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Founder);
          
          // use fake data for fee estimation
-         var sigPlaceHolder = new byte[64];
+         var sigPlaceHolder = new byte[65];
 
          input.WitScript = new WitScript(Op.GetPushOp(sigPlaceHolder), Op.GetPushOp(scriptStages.Founder.ToBytes()),
              Op.GetPushOp(controlBlock.ToBytes()));
