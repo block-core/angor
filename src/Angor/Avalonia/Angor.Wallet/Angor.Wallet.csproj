@@ -10,17 +10,12 @@
         <PackageReference Include="CSharpFunctionalExtensions" />
         <PackageReference Include="Microsoft.Extensions.Http" />
         <PackageReference Include="Serilog" />
+        <PackageReference Include="Serilog.Extensions.Logging" />
     </ItemGroup>
     
     <ItemGroup>
       <ProjectReference Include="..\..\Client\Angor.Client.csproj" />
       <ProjectReference Include="..\..\Shared\Angor.Shared.csproj" />
-    </ItemGroup>
-    
-    <ItemGroup>
-      <Reference Include="Serilog.Extensions.Logging">
-        <HintPath>..\..\..\..\..\..\..\..\..\home\jmn\.nuget\packages\serilog.extensions.logging\9.0.0\lib\net9.0\Serilog.Extensions.Logging.dll</HintPath>
-      </Reference>
     </ItemGroup>
 
 </Project>
