@@ -742,7 +742,7 @@
         {
             if (!string.IsNullOrEmpty(infoOutput.SpentInTransaction))
             {
-                modified |= LinqExtension.TryRemoveOutpoint(unconfirmedOutbound, new Outpoint(StageInfo.TransactionInfo.TransactionId, infoOutput.Index));
+                modified |= unconfirmedOutbound.TryRemoveOutpoint(new Outpoint(StageInfo.TransactionInfo.TransactionId, infoOutput.Index));
             }
         }
 
