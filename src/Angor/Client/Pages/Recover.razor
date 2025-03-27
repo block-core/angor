@@ -742,7 +742,7 @@
         {
             if (!string.IsNullOrEmpty(infoOutput.SpentInTransaction))
             {
-                modified |= LinqExtension.Remove(unconfirmedOutbound, new Outpoint(StageInfo.TransactionInfo.TransactionId, infoOutput.Index));
+                modified |= LinqExtension.TryRemoveOutpoint(unconfirmedOutbound, new Outpoint(StageInfo.TransactionInfo.TransactionId, infoOutput.Index));
             }
         }
 
@@ -755,7 +755,7 @@
 
         foreach (var item in StageInfo.Items)
         {
-            if (LinqExtension.Contains(unconfirmedOutbound, new Outpoint(StageInfo.TransactionInfo.TransactionId, item.Outputindex)))
+            if (unconfirmedOutbound.ContainsOutpoint(new Outpoint(StageInfo.TransactionInfo.TransactionId, item.Outputindex)))
             {
                 item.IsSpent = true;
                 item.SpentTo = "pending confirmations";

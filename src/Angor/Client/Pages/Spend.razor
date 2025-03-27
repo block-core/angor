@@ -27,6 +27,7 @@
 @inject IInvestorTransactionActions _investorTransactionActions
 @inject ILogger<Recover> Logger;
 @inject IClipboardService _clipboardService
+@inject IInvestorTransactionActions _InvestorTransactionActions
 
 @inherits BaseComponent
 
@@ -350,10 +351,27 @@
                                 @foreach (var transaction in stage.Items)
                                 {
                                     bool isTicked = IsUtxoSelected(transaction.Trxid, transaction.Outputindex);
-                                    string statusClass = transaction.IsSpent ? "bg-warning text-dark" : "bg-success text-light";
-                                    string statusText = transaction.IsSpent ?
-                                    (transaction.SpentType == "founder" ? "Spent by founder" : "Withdrawn by investor") :
-                                    "Available";
+                                    string statusClass = "bg-success text-light";
+                                    string statusText = "Available";
+
+                                    if (transaction.IsSpent)
+                                    {
+                                        if (transaction.SpentType == "pending")
+                                        {
+                                            statusClass = "bg-light text-dark";
+                                            statusText = "pending";
+                                        }
+                                        else if (transaction.SpentType == "founder")
+                                        {
+                                            statusClass = "bg-warning text-dark";
+                                            statusText = "Spent by founder";
+                                        }
+                                        else
+                                        {
+                                            statusClass = "bg-danger text-dark";
+                                            statusText = "Withdrawn by investor";
+                                        }
+                                    }
 
                                     <div class="d-flex align-items-center mb-2 p-2 border rounded hover-effect"
                                          title="@(transaction.InvestorNpub != null ? $"Investor: {transaction.InvestorNpub}" : "")">
@@ -595,6 +613,7 @@
         public bool IsSpent;
         public string SpentType;  // "founder" or "investor"
         public string InvestorNpub;  // Optional, can be null
+        public ProjectScriptType ProjectScriptType;
     }
 
     List<StageData> stageDatas = new();
@@ -753,6 +772,8 @@
         }
     }
 
+    Dictionary<string, Transaction> trxsHexCache = new();
+
     private async Task CheckSpentFund()
     {
         List<QueryTransaction> trxs = new();
@@ -763,7 +784,7 @@
         {
             foreach (var item in stageData.Items)
             {
-                if (item.IsSpent)
+                if (item.IsSpent && item.SpentType != "pending")
                     continue;
 
                 QueryTransaction? trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
@@ -771,7 +792,6 @@
                 if (trx == null)
                 {
                     trx = await _IndexerService.GetTransactionInfoByIdAsync(item.Trxid);
-
                     trxs.Add(trx);
                 }
 
@@ -781,12 +801,49 @@
                 {
                     item.IsSpent = true;
 
-                    updateUnconfirmedOutbound |= LinqExtension.Remove(unconfirmedOutbound, new Outpoint(item.Trxid, item.Outputindex));
+                    updateUnconfirmedOutbound |= unconfirmedOutbound.TryRemoveOutpoint(new Outpoint(item.Trxid, item.Outputindex));
+
+                    // try to resolve the destination
+                    var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+
+                    var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == item.Trxid && input.InputIndex == item.Outputindex);
+
+                    var investmentTransaction = trxsHexCache.TryGet(item.Trxid);
+                    if (investmentTransaction == null)
+                    {
+                        investmentTransaction = network.CreateTransaction(await _IndexerService.GetTransactionHexByIdAsync(item.Trxid));
+                        trxsHexCache.Add(item.Trxid, investmentTransaction);
+                    }
+
+                    if (input != null && investmentTransaction != null)
+                    {
+                        item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project, investmentTransaction, stageData.StageIndex - 1, input.WitScript);
+
+                        switch (item.ProjectScriptType.ScriptType)
+                        {
+                            case ProjectScriptTypeEnum.Founder:
+                            {
+                                item.SpentType = "founder";
+                                break;
+                            }
+                            case ProjectScriptTypeEnum.InvestorWithPenalty:
+                            case ProjectScriptTypeEnum.EndOfProject:
+                            case ProjectScriptTypeEnum.InvestorNoPenalty:
+                            {
+                                item.SpentType = "investor";
+                                break;
+                            }
+                        }
+                    }
 
                     continue;
                 }
 
-                item.IsSpent = LinqExtension.Contains(unconfirmedOutbound, new Outpoint(item.Trxid, item.Outputindex));
+                item.IsSpent = unconfirmedOutbound.ContainsOutpoint(new Outpoint(item.Trxid, item.Outputindex));
+                if (item.IsSpent)
+                {
+                    item.SpentType = "pending";
+                }
             }
         }
 
