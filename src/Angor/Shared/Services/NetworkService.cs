@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Blockcore.Networks;
@@ -51,7 +52,7 @@ namespace Angor.Shared.Services
                 if (setNetwork != null)
                 {
                     network = AngorNetworksSelector.NetworkByName(setNetwork);
-                } 
+                }
                 else if (url.Contains("test"))
                 {
                     network = new Angornet();
@@ -97,7 +98,7 @@ namespace Angor.Shared.Services
         {
             var settings = _networkStorage.GetSettings();
 
-            foreach (var indexerUrl  in settings.Indexers)
+            foreach (var indexerUrl in settings.Indexers)
             {
                 if (force || (DateTime.UtcNow - indexerUrl.LastCheck).Minutes > 10)
                 {
@@ -106,7 +107,7 @@ namespace Angor.Shared.Services
                     try
                     {
                         var uri = new Uri(indexerUrl.Url);
-                        
+
                         var blockUrl = Path.Combine(uri.AbsoluteUri, "api", "v1", "block-height", "0");
 
                         var response = await _httpClient.GetAsync(blockUrl);
@@ -137,18 +138,23 @@ namespace Angor.Shared.Services
 
                     try
                     {
-                        var uri = new Uri(explorerUrl.Url);
-                        
-                         var heartbeatUrl = new Uri(uri, "api/stats/heartbeat").ToString();
-                         var response = await _httpClient.GetAsync(heartbeatUrl);
+                        string apiUrl = $"https://urlstatus.netlify.app/api/status?url={explorerUrl.Url}";
 
-                        if (response.IsSuccessStatusCode)
+                        var response = await _httpClient.GetAsync(apiUrl);
+                        response.EnsureSuccessStatusCode();
+
+                        string jsonResponse = await response.Content.ReadAsStringAsync();
+                        var statusResponse = JsonSerializer.Deserialize<WebsiteStatusResponse>(jsonResponse,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                        if (statusResponse != null && statusResponse.IsUp)
                         {
                             explorerUrl.Status = UrlStatus.Online;
                         }
                         else
                         {
-                            _logger.LogError($"Failed to check explorer status url = {explorerUrl.Url}, StatusCode = {response.StatusCode}");
+                            explorerUrl.Status = UrlStatus.Offline;
+                            _logger.LogError($"Explorer is down: url = {explorerUrl.Url}, Status = {statusResponse?.Status}");
                         }
                         OnStatusChanged?.Invoke();
                     }
@@ -284,5 +290,14 @@ namespace Angor.Shared.Services
                 });
             }
         }
+    }
+    public class WebsiteStatusResponse
+    {
+        public string Url { get; set; }
+        public int Status { get; set; }
+        public long ResponseTime { get; set; }
+        public bool IsUp { get; set; }
+        public DateTime LastChecked { get; set; }
+        public string Error { get; set; }
     }
 }
