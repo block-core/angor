@@ -1,6 +1,8 @@
+using Angor.Projects.Application.Dtos;
+using Angor.Projects.Domain;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Projects.Domain;
+namespace Angor.Projects.Infrastructure.Interfaces;
 
 public interface IInvestmentRepository
 {
