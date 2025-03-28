@@ -51,6 +51,11 @@ public class ProjectAppService(
         return Result.Success();
     }
 
+    public Task<Result<IList<InvestmentDto>>> GetInvestments(ProjectId projectId)
+    {
+        return investmentRepository.GetByProject(projectId);
+    }
+
     public async Task<IList<ProjectDto>> Latest()
     {
         var projects = await projectRepository.Latest();
