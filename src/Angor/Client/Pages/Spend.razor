@@ -352,24 +352,29 @@
                                 {
                                     bool isTicked = IsUtxoSelected(transaction.Trxid, transaction.Outputindex);
                                     string statusClass = "bg-success text-light";
-                                    string statusText = "Available";
+                                    string statusText = "Unspent";
 
                                     if (transaction.IsSpent)
                                     {
                                         if (transaction.SpentType == "pending")
                                         {
                                             statusClass = "bg-light text-dark";
-                                            statusText = "pending";
+                                            statusText = "Pending";
                                         }
                                         else if (transaction.SpentType == "founder")
                                         {
                                             statusClass = "bg-warning text-dark";
                                             statusText = "Spent by founder";
                                         }
-                                        else
+                                        else if (transaction.SpentType == "investor")
                                         {
                                             statusClass = "bg-danger text-dark";
                                             statusText = "Withdrawn by investor";
+                                        }
+                                        else
+                                        {
+                                            statusClass = "bg-info text-dark";
+                                            statusText = "Unknown";
                                         }
                                     }
 
@@ -773,7 +778,9 @@
         {
             foreach (var item in stageData.Items)
             {
-                if (item.IsSpent && item.SpentType != "pending")
+                // if the item is already spent by founder or investor, we skip it
+                // because we have already processed this item and we know the outcome.
+                if (item.IsSpent && ((item.SpentType != "founder") || (item.SpentType != "investor")))
                     continue;
 
                 QueryTransaction? trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
