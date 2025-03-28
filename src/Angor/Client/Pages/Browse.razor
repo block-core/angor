@@ -272,7 +272,7 @@ else
     {
         // Set active menu
         NavMenuState.SetActivePage("browse");
-        
+
         await GetAllProjects();
         projects = SessionStorage.GetProjectIndexerData() ?? new List<ProjectIndexerData>();
 
@@ -325,26 +325,26 @@ else
             var primaryRelay = _NetworkService.GetPrimaryRelay();
 
             // Initialize flags to track service availability
-          
+
             //bool explorerAvailable = false;
             bool indexerAvailable = false;
             bool relayAvailable = false;
 
             // Check if the primary explorer is available
-            if (primaryExplorer != null)
-            {
-                // await _NetworkService.CheckServices(false); // Refresh service status
-                // explorerAvailable = primaryExplorer.Status == UrlStatus.Online;
-                // if (!explorerAvailable)
-                // {
-                //     notificationComponent.ShowNotificationMessage("Primary explorer is offline. Please check your network settings.");
-                // }
-            }
-            else
+            if (primaryExplorer == null)
             {
                 notificationComponent.ShowNotificationMessage("No primary explorer configured. Please add one in settings.");
             }
-           
+            // If you need to check explorer availability, uncomment and modify this:
+            // else
+            // {
+            //     await _NetworkService.CheckServices(false);
+            //     if (primaryExplorer.Status != UrlStatus.Online)
+            //     {
+            //         notificationComponent.ShowNotificationMessage("Primary explorer is offline. Please check your network settings.");
+            //     }
+            // }
+
             // Check if the primary indexer is available
             if (primaryIndexer != null)
             {
