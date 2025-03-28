@@ -255,7 +255,7 @@
 
             if (InvestorProject.UnfundedReleaseTransactionId != null)
             {
-                explorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/transaction/{InvestorProject.UnfundedReleaseTransactionId}";
+                explorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{InvestorProject.UnfundedReleaseTransactionId}";
             }
 
             signedTransactionHex = InvestorProject.SignedTransactionHex;
@@ -384,7 +384,8 @@
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            var accountInfo = Storage.GetAccountInfo(network.Name);
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+            var accountInfo = accountBalanceInfo.AccountInfo;
             var words = await passwordComponent.GetWalletAsync();
 
             var investorPrivateKey = DerivationOperations.DeriveInvestorPrivateKey(words, InvestorProject.ProjectInfo.FounderKey);
@@ -415,7 +416,7 @@
             // add fee to the recovery trx
             releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedReleaseTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
-            explorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/transaction/{InvestorProject.UnfundedReleaseTransactionId}";
+            explorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{InvestorProject.UnfundedReleaseTransactionId}";
 
             Logger.LogInformation($"recoveryTransaction={releaseTransaction.Transaction.GetHash().ToString()}");
 
