@@ -9,4 +9,9 @@ public interface IProjectAppService
     Task<IList<ProjectDto>> Latest();
     Task<Maybe<ProjectDto>> FindById(ProjectId projectId);
     Task<Result> Invest(Guid walletId, ProjectId projectId, Amount amount);
+    Task<Result<IList<InvestmentDto>>> GetInvestments(ProjectId projectId);
+}
+
+public class InvestmentDto
+{
 }
