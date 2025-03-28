@@ -30,6 +30,8 @@ public class ProjectAppServiceTests(ITestOutputHelper output)
         var sut = CreateSut();
         var projectId = new ProjectId("angor1qptj5qunu2mnwmfcspqc5pxlfscazcqlswt7d74");
         var result = await sut.GetInvestments(projectId);
+        Assert.True(result.IsSuccess);
+        Assert.NotEmpty(result.Value);
     }
     
     [Fact]

@@ -11,7 +11,3 @@ public interface IProjectAppService
     Task<Result> Invest(Guid walletId, ProjectId projectId, Amount amount);
     Task<Result<IList<InvestmentDto>>> GetInvestments(ProjectId projectId);
 }
-
-public class InvestmentDto
-{
-}
