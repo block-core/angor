@@ -10,7 +10,7 @@ public class Investment
     public string TransactionId { get; private set; }
     public InvestmentStatus Status { get; private set; }
     
-    public static Investment Create(ProjectId projectId, string investorId, long amountInSatoshis)
+    public static Investment Create(ProjectId projectId, string investorId, long amountInSatoshis, string transactionId)
     {
         return new Investment
         {
@@ -19,7 +19,8 @@ public class Investment
             InvestorPubKey = investorId,
             AmountInSatoshis = amountInSatoshis,
             InvestmentDate = DateTime.UtcNow,
-            Status = InvestmentStatus.Pending
+            Status = InvestmentStatus.Pending,
+            TransactionId = transactionId,
         };
     }
     

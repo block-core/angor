@@ -1,54 +1,21 @@
 ﻿using Angor.Projects.Application.Dtos;
 using Angor.Projects.Domain;
 using Angor.Projects.Infrastructure.Interfaces;
-using Angor.Shared.Models;
-using Angor.Shared.ProtocolNew;
 using CSharpFunctionalExtensions;
 using Zafiro.CSharpFunctionalExtensions;
+using Amount = Angor.Projects.Domain.Amount;
 
 namespace Angor.Projects.Infrastructure.Impl;
 
 public class ProjectAppService(
     IProjectRepository projectRepository,
-    IInvestmentRepository investmentRepository,
-    IInvestorTransactionActions investorTransactionActions,
-    IInvestorKeyProvider investorKeyProvider)
+    IInvestmentRepository investmentRepository, InvestCommandFactory investmentCommandFactory)
     : IProjectAppService
 {
-    public async Task<Result> Invest(Guid walletId, ProjectId projectId, Amount amount)
+    public Task<Result> Invest(Guid walletId, ProjectId projectId, Amount amount)
     {
-        var projectResult = await projectRepository.Get(projectId);
-        if (projectResult.IsFailure)
-        {
-            return Result.Failure(projectResult.Error);
-        }
-
-        var project = projectResult.Value;
-
-        // Map project to ProjectInfo
-        var projectInfo = project.ToSharedModel();
-
-        // 2. Get investor data
-        var investorKeyResult = await investorKeyProvider.InvestorKey(walletId, project.FounderKey);
-
-        if (investorKeyResult.IsFailure)
-        {
-            return Result.Failure(investorKeyResult.Error);
-        }
-
-        // 3. Create invest transaction
-        var transactionResult = Result.Try(() => investorTransactionActions.CreateInvestmentTransaction(projectInfo, investorKeyResult.Value, amount.Sats));
-        
-        if (transactionResult.IsFailure)
-        {
-            return Result.Failure(transactionResult.Error);
-        }
-
-        // 4. Create and save investment
-        var investment = Investment.Create(project.Id, investorKeyResult.Value, amount.Sats);
-        await investmentRepository.Save(investment);
-
-        return Result.Success();
+        var command = investmentCommandFactory.Create(walletId, projectId, amount);
+        return command.Execute();
     }
 
     public Task<Result<IList<InvestmentDto>>> GetInvestments(ProjectId projectId)

@@ -25,6 +25,7 @@ public class ProjectServices
         networkConfiguration.SetNetwork(new Angornet());
 
         services.AddSingleton<IProjectAppService, ProjectAppService>();
+        services.AddSingleton<InvestCommandFactory>();
         services.AddSingleton<IInvestmentRepository, InvestmentRepository>();
         services.AddSingleton<IProjectRepository, ProjectRepository>();
         
