@@ -478,8 +478,7 @@
                                          FeePosition="@feeData.FeePosition"
                                          FeeMin="@feeData.FeeMin"
                                          FeeMax="@feeData.FeeMax"
-                                         OnFeePositionChanged="@(value => FeeRangeChanged(new ChangeEventArgs { Value = value }))"
-                                         OnCustomFeeRateChanged="@(value => RecalculateFee(value))" />
+                                         OnFeeChanged="@HandleFeeChanged" />
                         </div>
                         @if (selectedUtxos.Where(u => u.Value).Count() > 0)
                         {
@@ -866,48 +865,34 @@
     }
 
 
-    private async Task FeeRangeChanged(ChangeEventArgs e)
+    private async Task HandleFeeChanged(FeeCalculation feeCalc)
     {
-        var selectedItem = e.Value?.ToString();
-
-        if (selectedItem != null && int.TryParse(selectedItem, out int res) && res <= feeData.FeeEstimations.Fees.Count)
-        {
-            feeData.FeePosition = res;
-
-            var selectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-            await RecalculateFee(selectedFeeEstimation.FeeRate, selectedFeeEstimation.Confirmations);
-        }
-    }
-
-    private async Task RecalculateFee(long customFeeRate, int confirmations = 0)
-    {
-        if (!passwordComponent.HasPassword())
-        {
-            showCreateModal = false;
-            notificationComponent.ShowErrorMessage("Wallet password expired");
-            return;
-        }
-
         try
         {
-            var words = await passwordComponent.GetWalletAsync();
-
-            var customFeeEstimation = new FeeEstimation
-                {
-                    FeeRate = customFeeRate,
-                    Confirmations = confirmations
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
+            {
+                feeData.SelectedFeeEstimation = new FeeEstimation 
+                { 
+                    FeeRate = feeCalc.CustomFee.Value,
+                    Confirmations = 0 // Custom fee doesn't have block count
                 };
-
-            feeData.SelectedFeeEstimation = customFeeEstimation;
+            }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
+            {
+                feeData.FeePosition = feeCalc.Position.Value;
+                feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees
+                    .OrderBy(fee => fee.Confirmations)
+                    .ToList()[feeData.FeePosition - 1];
+            }
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var address = accountInfo.GetNextReceiveAddress();
             var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
-
+            
+            var words = await passwordComponent.GetWalletAsync();
             var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
             var key = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
-
+            
             signedTransaction = _founderTransactionActions.SpendFounderStage(
                 founderContext.ProjectInfo,
                 founderContext.InvestmentTrasnactionsHex,
@@ -920,7 +905,8 @@
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
+            Logger.LogError(ex, "Error calculating fee");
+            notificationComponent.ShowErrorMessage("Error calculating fee"); 
         }
     }
 

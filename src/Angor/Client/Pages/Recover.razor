@@ -345,8 +345,7 @@
                                              FeePosition="@feeData.FeePosition"
                                              FeeMin="@feeData.FeeMin"
                                              FeeMax="@feeData.FeeMax"
-                                             OnFeePositionChanged="@(value => RecoveryFeeRangeChanged(new ChangeEventArgs { Value = value }))"
-                                             OnCustomFeeRateChanged="@(value => RecalculateRecoveryFee(value))" />
+                                             OnFeeChanged="@HandleRecoveryFeeChanged" />
 
                                 <div class="confirmation-section mt-4 text-center">
                                     <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
@@ -425,8 +424,7 @@
                                              FeePosition="@feeData.FeePosition"
                                              FeeMin="@feeData.FeeMin"
                                              FeeMax="@feeData.FeeMax"
-                                             OnFeePositionChanged="@(value => ReleaseFeeRangeChanged(new ChangeEventArgs { Value = value }))"
-                                             OnCustomFeeRateChanged="@(value => RecalculateReleaseFee(value))" />
+                                             OnFeeChanged="@HandleReleaseFeeChanged" />
 
                                 <div class="confirmation-section mt-4 text-center">
                                     <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
@@ -506,8 +504,7 @@
                                              FeePosition="@feeData.FeePosition"
                                              FeeMin="@feeData.FeeMin"
                                              FeeMax="@feeData.FeeMax"
-                                             OnFeePositionChanged="@(value => EndOfProjectFeeRangeChanged(new ChangeEventArgs { Value = value }))"
-                                             OnCustomFeeRateChanged="@(value => RecalculateEndOfProjectFee(value))" />
+                                             OnFeeChanged="@HandleEndOfProjectFeeChanged" />
 
                                 <div class="confirmation-section mt-4 text-center">
                                     <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
@@ -904,21 +901,7 @@
         StateHasChanged();
     }
 
-    private async Task RecoveryFeeRangeChanged(ChangeEventArgs e)
-    {
-        var selected = e.Value?.ToString();
-
-        if (selected != null && int.TryParse(selected, out int res) && res <= feeData.FeeEstimations.Fees.Count)
-        {
-            feeData.FeePosition = res;
-
-            var selectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-            await RecalculateRecoveryFee(selectedFeeEstimation.FeeRate, selectedFeeEstimation.Confirmations);
-        }
-    }
-
-    private async Task RecalculateRecoveryFee(long customFeeRate, int confirmations = 0)
+    private async Task HandleRecoveryFeeChanged(FeeCalculation feeCalc)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -929,16 +912,23 @@
 
         try
         {
-            var words = await passwordComponent.GetWalletAsync();
-
-            var customFeeEstimation = new FeeEstimation
-                {
-                    FeeRate = customFeeRate,
-                    Confirmations = confirmations
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
+            {
+                feeData.SelectedFeeEstimation = new FeeEstimation 
+                { 
+                    FeeRate = feeCalc.CustomFee.Value,
+                    Confirmations = 0
                 };
+            }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
+            {
+                feeData.FeePosition = feeCalc.Position.Value;
+                feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees
+                    .OrderBy(fee => fee.Confirmations)
+                    .ToList()[feeCalc.Position.Value - 1];
+            }
 
-            feeData.SelectedFeeEstimation = customFeeEstimation;
-
+            var words = await passwordComponent.GetWalletAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(
@@ -1063,21 +1053,7 @@
         StateHasChanged();
     }
 
-    private async Task ReleaseFeeRangeChanged(ChangeEventArgs e)
-    {
-        var selected = e.Value?.ToString();
-
-        if (selected != null && int.TryParse(selected, out int res) && res <= feeData.FeeEstimations.Fees.Count)
-        {
-            feeData.FeePosition = res;
-
-            var selectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-            await RecalculateReleaseFee(selectedFeeEstimation.FeeRate, selectedFeeEstimation.Confirmations);
-        }
-    }
-
-    private async Task RecalculateReleaseFee(long customFeeRate, int confirmations = 0)
+    private async Task HandleReleaseFeeChanged(FeeCalculation feeCalc)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -1088,16 +1064,23 @@
 
         try
         {
-            var words = await passwordComponent.GetWalletAsync();
-
-            var customFeeEstimation = new FeeEstimation
-                {
-                    FeeRate = customFeeRate,
-                    Confirmations = confirmations
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
+            {
+                feeData.SelectedFeeEstimation = new FeeEstimation 
+                { 
+                    FeeRate = feeCalc.CustomFee.Value,
+                    Confirmations = 0
                 };
+            }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
+            {
+                feeData.FeePosition = feeCalc.Position.Value;
+                feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees
+                    .OrderBy(fee => fee.Confirmations)
+                    .ToList()[feeCalc.Position.Value - 1];
+            }
 
-            feeData.SelectedFeeEstimation = customFeeEstimation;
-
+            var words = await passwordComponent.GetWalletAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
 
@@ -1213,24 +1196,7 @@
         StateHasChanged();
     }
 
-    private async Task EndOfProjectFeeRangeChanged(ChangeEventArgs e)
-    {
-        var selected = e.Value?.ToString();
-
-        if (selected != null && int.TryParse(selected, out int res) && res <= feeData.FeeEstimations.Fees.Count)
-        {
-            // Set the selected position for UI
-            feeData.FeePosition = res;
-
-            // Get the fee estimation based on the slider position
-            var selectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-            // Use the common method to recalculate the fee with the selected fee rate and confirmation blocks
-            await RecalculateEndOfProjectFee(selectedFeeEstimation.FeeRate, selectedFeeEstimation.Confirmations);
-        }
-    }
-
-    private async Task RecalculateEndOfProjectFee(long customFeeRate, int confirmations = 0)
+    private async Task HandleEndOfProjectFeeChanged(FeeCalculation feeCalc)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -1241,16 +1207,23 @@
 
         try
         {
-            var words = await passwordComponent.GetWalletAsync();
-
-            var customFeeEstimation = new FeeEstimation
-                {
-                    FeeRate = customFeeRate,
-                    Confirmations = confirmations
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
+            {
+                feeData.SelectedFeeEstimation = new FeeEstimation 
+                { 
+                    FeeRate = feeCalc.CustomFee.Value,
+                    Confirmations = 0
                 };
+            }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
+            {
+                feeData.FeePosition = feeCalc.Position.Value;
+                feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees
+                    .OrderBy(fee => fee.Confirmations)
+                    .ToList()[feeCalc.Position.Value - 1];
+            }
 
-            feeData.SelectedFeeEstimation = customFeeEstimation;
-
+            var words = await passwordComponent.GetWalletAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
             var fromStage = StageInfo.Items.First(f => f.IsSpent == false);

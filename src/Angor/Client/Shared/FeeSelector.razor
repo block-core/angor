@@ -1,3 +1,4 @@
+@using Angor.Client.Models
 @using Angor.Shared.Models
 @using Microsoft.Extensions.Logging
 @inject ILogger<FeeSelector> Logger
@@ -97,7 +98,7 @@
     public int FeeBlockCount { get; set; }
 
     [Parameter]
-    public int FeePosition { get; set; } = 2; // Default to Standard
+    public int FeePosition { get; set; } = 2;
 
     [Parameter]
     public int FeeMin { get; set; } = 1;
@@ -109,10 +110,7 @@
     public long RecommendedMinFee { get; set; } = 5;
 
     [Parameter]
-    public EventCallback<int> OnFeePositionChanged { get; set; }
-
-    [Parameter]
-    public EventCallback<long> OnCustomFeeRateChanged { get; set; }
+    public EventCallback<FeeCalculation> OnFeeChanged { get; set; }
 
     private bool UseCustomFee { get; set; }
     private long CustomFeeRate { get; set; } = 10;
@@ -123,69 +121,50 @@
         
         if (FeePosition < FeeMin || FeePosition > FeeMax)
         {
-            FeePosition = 2; // Default to Standard if invalid
+            FeePosition = 2;
         }
     }
 
-    private async Task SetFeePosition(int position)
+    private async Task RecalculateFee(FeeCalculation calc)
     {
         try
         {
-            if (position >= FeeMin && position <= FeeMax)
+            if (calc.UseCustomFee && calc.CustomFee.HasValue && calc.CustomFee.Value > 0)
             {
-                FeePosition = position;
-                await OnFeePositionChanged.InvokeAsync(position);
-
-                if (UseCustomFee)
-                {
-                    CustomFeeRate = FeeRate;
-                    await CustomFeeRateChanged();
-                }
+                UseCustomFee = true;
+                CustomFeeRate = calc.CustomFee.Value;
             }
+            else if (calc.Position.HasValue && calc.Position.Value >= FeeMin && calc.Position.Value <= FeeMax)
+            {
+                UseCustomFee = false;
+                FeePosition = calc.Position.Value;
+            }
+
+            await OnFeeChanged.InvokeAsync(calc);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error setting fee position to {Position}", position);
+            Logger.LogError(ex, "Error recalculating fee");
         }
     }
 
-    private async Task CustomFeeRateChanged()
-    {
-        try
-        {
-            if (UseCustomFee && CustomFeeRate > 0)
-            {
-                await OnCustomFeeRateChanged.InvokeAsync(CustomFeeRate);
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error changing custom fee rate to {Rate}", CustomFeeRate);
-        }
-    }
+    private Task SetFeePosition(int position) => 
+        RecalculateFee(new FeeCalculation { Position = position });
+
+    private Task CustomFeeRateChanged() => 
+        RecalculateFee(new FeeCalculation { CustomFee = CustomFeeRate, UseCustomFee = true });
 
     private async Task HandleCustomFeeToggle(ChangeEventArgs e)
     {
-        try
+        if (e.Value is bool isChecked)
         {
-            if (e.Value is bool isChecked)
-            {
-                UseCustomFee = isChecked;
-
-                if (isChecked)
-                {
-                    CustomFeeRate = FeeRate;
-                    await CustomFeeRateChanged();
-                }
-                else
-                {
-                    await SetFeePosition(FeePosition);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error toggling custom fee mode to {IsEnabled}", UseCustomFee);
+            UseCustomFee = isChecked;
+            await RecalculateFee(new FeeCalculation 
+            { 
+                UseCustomFee = isChecked,
+                CustomFee = isChecked ? FeeRate : null,
+                Position = isChecked ? null : FeePosition
+            });
         }
     }
 }

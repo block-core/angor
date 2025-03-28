@@ -1,13 +1,14 @@
 ﻿@page "/wallet"
 
 @using System.Text.Json
+@using Angor.Client.Models
+@using Angor.Client.Shared
 @using Angor.Client.Storage
 @using Angor.Shared
 @using Angor.Shared.Models
 @using Angor.Shared.Utilities
 @using Blockcore.NBitcoin
 @using Blockcore.Networks
-@using Angor.Client.Shared
 @inherits BaseComponent
 @inject HttpClient _httpClient;
 @inject IClientStorage storage;
@@ -779,17 +780,15 @@ else
                                             </div>
                                         </div>
 
-                                        <FeeSelector SendFee="@_sendInfo.SendFee"
-                                                     CoinTicker="@network.CoinTicker"
-                                                     FeeRate="@_sendInfo.FeeRate"
-                                                     FeeBlockCount="@_sendInfo.FeeBlockCount"
-                                                     FeePosition="@FeePosition"
-                                                     FeeMin="@FeeMin"
-                                                     FeeMax="@_feeMax"
-                                                     RecommendedMinFee="@GetRecommendedMinFee()"
-                                                     OnFeePositionChanged="@(value => FeeRangeChanged(new ChangeEventArgs { Value = value }))"
-                                                     OnCustomFeeRateChanged="@(value => RecalculateFee(value))" />
-
+           <FeeSelector SendFee="@_sendInfo.SendFee"
+             CoinTicker="@network.CoinTicker"
+             FeeRate="@_sendInfo.FeeRate"
+             FeeBlockCount="@_sendInfo.FeeBlockCount"
+             FeePosition="@FeePosition"
+             FeeMin="@FeeMin"
+             FeeMax="@_feeMax"
+             RecommendedMinFee="@GetRecommendedMinFee()"
+             OnFeeChanged="@HandleFeeChanged"></FeeSelector>
                                         @if (_sendInfo.SendUtxos.Any())
                                         {
                                             <div class="info-card utxo-details p-3 rounded mt-4">
@@ -1887,4 +1886,33 @@ else
             ? Math.Max(1, FeeEstimations.Fees.Min(f => f.FeeRate))
             : 5;
     }
+ private async Task HandleFeeChanged(FeeCalculation feeCalc)
+    {
+        try
+        {
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
+            {
+                _sendInfo.FeeRate = feeCalc.CustomFee.Value;
+                _sendInfo.FeeBlockCount = 0; // Custom fee doesn't have block count
+            }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= FeeEstimations.Fees.Count)
+            {
+                FeePosition = feeCalc.Position.Value;
+                var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[FeePosition - 1];
+                _sendInfo.FeeRate = estimationsFee.FeeRate;
+                _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
+            }
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, _sendInfo.FeeRate);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error calculating fee");
+            notificationComponent.ShowErrorMessage("Error calculating fee");
+        }
+    }
+    
 }

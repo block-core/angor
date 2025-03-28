@@ -192,8 +192,7 @@
                                      FeePosition="@feeData.FeePosition"
                                      FeeMin="@feeData.FeeMin"
                                      FeeMax="@feeData.FeeMax"
-                                     OnFeePositionChanged="@(value => ReleaseInvestorFeeRangeChanged(new ChangeEventArgs { Value = value }))"
-                                     OnCustomFeeRateChanged="@(value => RecalculateReleaseFee(value))" />
+                                     OnFeeChanged="@HandleFeeChanged" />
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-border-warning" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">Cancel</button>
@@ -432,21 +431,7 @@
         }
     }
 
-    private async Task ReleaseInvestorFeeRangeChanged(ChangeEventArgs e)
-    {
-        var selected = e.Value?.ToString();
-
-        if (selected != null && int.TryParse(selected, out int res) && res <= feeData.FeeEstimations.Fees.Count)
-        {
-            feeData.FeePosition = res;
-
-            var selectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-            await RecalculateReleaseFee(selectedFeeEstimation.FeeRate, selectedFeeEstimation.Confirmations);
-        }
-    }
-
-    private async Task RecalculateReleaseFee(long customFeeRate, int confirmations = 0)
+    private async Task HandleFeeChanged(FeeCalculation feeCalc)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -457,16 +442,23 @@
 
         try
         {
-            var words = await passwordComponent.GetWalletAsync();
-
-            var customFeeEstimation = new FeeEstimation
-                {
-                    FeeRate = customFeeRate,
-                    Confirmations = confirmations
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
+            {
+                feeData.SelectedFeeEstimation = new FeeEstimation 
+                { 
+                    FeeRate = feeCalc.CustomFee.Value,
+                    Confirmations = 0 // Custom fee doesn't have block count
                 };
+            }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
+            {
+                feeData.FeePosition = feeCalc.Position.Value;
+                feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees
+                    .OrderBy(fee => fee.Confirmations)
+                    .ToList()[feeCalc.Position.Value - 1];
+            }
 
-            feeData.SelectedFeeEstimation = customFeeEstimation;
-
+            var words = await passwordComponent.GetWalletAsync();
             var accountInfo = Storage.GetAccountInfo(network.Name);
 
             releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(
@@ -483,6 +475,7 @@
             notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
     }
+
     private async Task ReleaseInvestorCoins()
     {
         prepareToReleaseCoinsConfirmSpinner = true;
