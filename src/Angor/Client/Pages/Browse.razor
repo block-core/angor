@@ -325,19 +325,18 @@ else
             var primaryRelay = _NetworkService.GetPrimaryRelay();
 
             // Initialize flags to track service availability
-            bool explorerAvailable = false;
             bool indexerAvailable = false;
             bool relayAvailable = false;
 
             // Check if the primary explorer is available
             if (primaryExplorer != null)
             {
-                await _NetworkService.CheckServices(false); // Refresh service status
-                explorerAvailable = primaryExplorer.Status == UrlStatus.Online;
-                if (!explorerAvailable)
-                {
-                    notificationComponent.ShowNotificationMessage("Primary explorer is offline. Please check your network settings.");
-                }
+                // await _NetworkService.CheckServices(false); // Refresh service status
+                // explorerAvailable = primaryExplorer.Status == UrlStatus.Online;
+                // if (!explorerAvailable)
+                // {
+                //     notificationComponent.ShowNotificationMessage("Primary explorer is offline. Please check your network settings.");
+                // }
             }
             else
             {
