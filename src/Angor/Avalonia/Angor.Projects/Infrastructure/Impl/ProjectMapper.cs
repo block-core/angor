@@ -1,8 +1,11 @@
-namespace Angor.UI.Model.Implementation.Projects;
+using Angor.Projects.Application.Dtos;
+using Angor.Projects.Domain;
+
+namespace Angor.Projects.Infrastructure.Impl;
 
 public static class ProjectMapper
 {
-    public static IProject ToProject(this ProjectData data)
+    public static ProjectDto ToProject(this ProjectData data)
     {
         if (data is null)
         {
@@ -19,9 +22,9 @@ public static class ProjectMapper
             throw new ArgumentException("ProjectData.NostrMetadata cannot be null.", nameof(data));
         }
 
-        var project = new Project
+        var project = new ProjectDto()
         {
-            Id = data.IndexerData?.ProjectIdentifier,
+            Id = new ProjectId(data.IndexerData.ProjectIdentifier),
 
             Name = data.NostrMetadata.Name,
             ShortDescription = data.NostrMetadata.About,
@@ -33,8 +36,6 @@ public static class ProjectMapper
             Icon = string.IsNullOrWhiteSpace(data.NostrMetadata.Banner)
                 ? null
                 : new Uri(data.NostrMetadata.Banner),
-
-            BitcoinAddress = data.ProjectInfo.FounderRecoveryKey,
 
             TargetAmount = data.ProjectInfo.TargetAmount,
             StartingDate = DateOnly.FromDateTime(data.ProjectInfo.StartDate),
@@ -49,14 +50,13 @@ public static class ProjectMapper
         };
 
         project.Stages = data.ProjectInfo.Stages
-            .Select((stage, index) => new Stage
+            .Select((stage, index) => new StageDto
             {
                 ReleaseDate = DateOnly.FromDateTime(stage.ReleaseDate),
                 Amount = (long)(stage.AmountToRelease/100 * data.ProjectInfo.TargetAmount * 1_0000_0000),
                 Index = index + 1,
                 Weight = (double)(stage.AmountToRelease / 100)
             })
-            .Cast<IStage>()
             .ToList();
 
         return project;
