@@ -352,24 +352,29 @@
                                 {
                                     bool isTicked = IsUtxoSelected(transaction.Trxid, transaction.Outputindex);
                                     string statusClass = "bg-success text-light";
-                                    string statusText = "Available";
+                                    string statusText = "Unspent";
 
                                     if (transaction.IsSpent)
                                     {
                                         if (transaction.SpentType == "pending")
                                         {
                                             statusClass = "bg-light text-dark";
-                                            statusText = "pending";
+                                            statusText = "Pending";
                                         }
                                         else if (transaction.SpentType == "founder")
                                         {
                                             statusClass = "bg-warning text-dark";
                                             statusText = "Spent by founder";
                                         }
-                                        else
+                                        else if (transaction.SpentType == "investor")
                                         {
                                             statusClass = "bg-danger text-dark";
                                             statusText = "Withdrawn by investor";
+                                        }
+                                        else
+                                        {
+                                            statusClass = "bg-info text-dark";
+                                            statusText = "Unknown";
                                         }
                                     }
 
@@ -488,26 +493,15 @@
                             </div>
                         </div>
 
-                        <div class="fee-section mb-4">
-                            <h6 class="section-title">
-                                <Icon IconName="fee" Height="20" Width="20" class="me-2" />
-                                Network Fee Rate
-                            </h6>
-                            <div class="fee-slider-container">
-                                <input type="range"
-                                       class="form-range custom-range"
-                                       id="feeRange"
-                                       @bind="feeData.FeePosition"
-                                       @oninput="FeeRangeChanged"
-                                       min="@feeData.FeeMin"
-                                       max="@feeData.FeeMax">
-                                <div class="fee-info">
-                                    <small class="text-muted">
-                                        Estimated confirmation in @feeData.SelectedFeeEstimation.Confirmations blocks
-                                        (@feeData.SelectedFeeEstimation.FeeRate sats/byte)
-                                    </small>
-                                </div>
-                            </div>
+                        <div class="mb-4">
+                            <FeeSelector SendFee="@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                         CoinTicker="@network.CoinTicker"
+                                         FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                         FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                         FeePosition="@feeData.FeePosition"
+                                         FeeMin="@feeData.FeeMin"
+                                         FeeMax="@feeData.FeeMax"
+                                         OnFeeChanged="@HandleFeeChanged" />
                         </div>
                         @if (selectedUtxos.Where(u => u.Value).Count() > 0)
                         {
@@ -784,7 +778,9 @@
         {
             foreach (var item in stageData.Items)
             {
-                if (item.IsSpent && item.SpentType != "pending")
+                // if the item is already spent by founder or investor, we skip it
+                // because we have already processed this item and we know the outcome.
+                if (item.IsSpent && ((item.SpentType != "founder") || (item.SpentType != "investor")))
                     continue;
 
                 QueryTransaction? trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
@@ -936,38 +932,41 @@
     }
 
 
-    private async Task FeeRangeChanged(ChangeEventArgs e)
+    private async Task HandleFeeChanged(FeeCalculation feeCalc)
     {
-        var selectedItem = e.Value?.ToString();
-
-        if (selectedItem != null)
+        try
         {
-            if (int.TryParse(selectedItem, out int res))
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
             {
-                if (res <= feeData.FeeEstimations.Fees.Count)
-                {
-                    if (!passwordComponent.HasPassword())
-                    {
-                        showCreateModal = false;
-                        notificationComponent.ShowErrorMessage("Wallet password expired");
-                        return;
-                    }
-
-                    var words = await passwordComponent.GetWalletAsync();
-                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-                    var accountInfo = storage.GetAccountInfo(network.Name);
-                    var address = accountInfo.GetNextReceiveAddress();
-                    var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
-
-                    var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
-                    var key = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
-
-                    signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
-
-                    StateHasChanged();
-                }
+                feeData.SetCustomFee(feeCalc.CustomFee.Value);
             }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
+            {
+                feeData.SelectFee(feeCalc.Position.Value);
+            }
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var address = accountInfo.GetNextReceiveAddress();
+            var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
+            
+            var words = await passwordComponent.GetWalletAsync();
+            var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
+            var key = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
+            
+            signedTransaction = _founderTransactionActions.SpendFounderStage(
+                founderContext.ProjectInfo,
+                founderContext.InvestmentTrasnactionsHex,
+                selectedStageId,
+                addressScript,
+                Encoders.Hex.EncodeData(key.ToBytes()),
+                feeData.SelectedFeeEstimation);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error calculating fee");
+            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
     }
 
