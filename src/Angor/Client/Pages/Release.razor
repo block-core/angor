@@ -444,18 +444,11 @@
         {
             if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
             {
-                feeData.SelectedFeeEstimation = new FeeEstimation 
-                { 
-                    FeeRate = feeCalc.CustomFee.Value,
-                    Confirmations = 0 // Custom fee doesn't have block count
-                };
+                feeData.SetCustomFee(feeCalc.CustomFee.Value);
             }
             else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
             {
-                feeData.FeePosition = feeCalc.Position.Value;
-                feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees
-                    .OrderBy(fee => fee.Confirmations)
-                    .ToList()[feeCalc.Position.Value - 1];
+                feeData.SelectFee(feeCalc.Position.Value);
             }
 
             var words = await passwordComponent.GetWalletAsync();
@@ -472,6 +465,7 @@
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Error calculating fee");
             notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
     }

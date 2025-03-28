@@ -1577,31 +1577,41 @@ else
         }
     }
 
-    private async Task FeeRangeChanged(ChangeEventArgs e)
+    private long GetRecommendedMinFee()
     {
-        var selected = e.Value?.ToString();
-
-        if (selected != null && int.TryParse(selected, out var position))
-        {
-            FeePosition = position;
-
-            if (position <= FeeEstimations.Fees.Count)
-            {
-                var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[position - 1];
-                await RecalculateFee(estimationsFee.FeeRate, estimationsFee.Confirmations);
-            }
-        }
+        // Return a recommended minimum fee rate based on network conditions
+        return FeeEstimations.Fees.Any()
+            ? Math.Max(1, FeeEstimations.Fees.Min(f => f.FeeRate))
+            : 5;
     }
 
-    private async Task RecalculateFee(long feeRate, int blockCount = 0)
+    private async Task HandleFeeChanged(FeeCalculation feeCalc)
     {
-        _sendInfo.FeeRate = feeRate;
-        _sendInfo.FeeBlockCount = blockCount;
+        try
+        {
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
+            {
+                _sendInfo.FeeRate = feeCalc.CustomFee.Value;
+                _sendInfo.FeeBlockCount = 0; // Custom fee doesn't have block count
+            }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= FeeEstimations.Fees.Count)
+            {
+                FeePosition = feeCalc.Position.Value;
+                var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[FeePosition - 1];
+                _sendInfo.FeeRate = estimationsFee.FeeRate;
+                _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
+            }
 
-        var accountInfo = storage.GetAccountInfo(network.Name);
-        _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, feeRate);
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, _sendInfo.FeeRate);
 
-        StateHasChanged();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error calculating fee");
+            notificationComponent.ShowErrorMessage("Error calculating fee");
+        }
     }
 
     private void showCoinControlModal()
@@ -1878,41 +1888,4 @@ else
         NavMenuState.SetActivePage("wallet");
         base.OnInitialized();
     }
-
-    private long GetRecommendedMinFee()
-    {
-        // Return a recommended minimum fee rate based on network conditions
-        return FeeEstimations.Fees.Any()
-            ? Math.Max(1, FeeEstimations.Fees.Min(f => f.FeeRate))
-            : 5;
-    }
- private async Task HandleFeeChanged(FeeCalculation feeCalc)
-    {
-        try
-        {
-            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
-            {
-                _sendInfo.FeeRate = feeCalc.CustomFee.Value;
-                _sendInfo.FeeBlockCount = 0; // Custom fee doesn't have block count
-            }
-            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= FeeEstimations.Fees.Count)
-            {
-                FeePosition = feeCalc.Position.Value;
-                var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[FeePosition - 1];
-                _sendInfo.FeeRate = estimationsFee.FeeRate;
-                _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
-            }
-
-            var accountInfo = storage.GetAccountInfo(network.Name);
-            _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, _sendInfo.FeeRate);
-
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error calculating fee");
-            notificationComponent.ShowErrorMessage("Error calculating fee");
-        }
-    }
-    
 }
