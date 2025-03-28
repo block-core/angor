@@ -811,7 +811,8 @@
                     var investmentTransaction = trxsHexCache.TryGet(item.Trxid);
                     if (investmentTransaction == null)
                     {
-                        investmentTransaction = network.CreateTransaction(await _IndexerService.GetTransactionHexByIdAsync(item.Trxid));
+                        var fetchTrx = await _IndexerService.GetTransactionHexByIdAsync(item.Trxid);
+                        investmentTransaction = network.CreateTransaction(fetchTrx);
                         trxsHexCache.Add(item.Trxid, investmentTransaction);
                     }
 
@@ -842,7 +843,9 @@
                 item.IsSpent = unconfirmedOutbound.ContainsOutpoint(new Outpoint(item.Trxid, item.Outputindex));
                 if (item.IsSpent)
                 {
-                    item.SpentType = "pending";
+                    // the trx is unconfirmed, we wait till
+                    // it gets confirmed to discover who spent it
+                    item.SpentType = "pending"; 
                 }
             }
         }
