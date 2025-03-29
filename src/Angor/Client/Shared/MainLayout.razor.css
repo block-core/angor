@@ -1,0 +1,21 @@
+.main-content {
+    position: relative;
+    margin-left: 300px;
+    transition: all 0.4s ease;
+    z-index: 10;
+}
+
+.sidenav-show.sidenav-hidden .main-content {
+    margin-left: 100px;
+}
+
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 85px;
+        width: calc(100% - 85px);
+    }
+    
+    .sidenav-show.sidenav-hidden .main-content {
+        margin-left: 85px;
+    }
+}

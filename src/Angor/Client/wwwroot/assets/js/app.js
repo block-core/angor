@@ -26,5 +26,67 @@ window.angor = {
         if (loader) {
             loader.classList.remove('dark');
         }
+    },
+
+    initializeSidebar: function () {
+        const sidebar = document.querySelector(".sidebar");
+        const sidebarToggler = document.querySelector(".sidebar-toggler");
+        const menuToggler = document.querySelector(".menu-toggler");
+        
+        // Ensure these heights match the CSS sidebar height values
+        const collapsedSidebarHeight = "56px";
+        const fullSidebarHeight = "calc(100vh - 32px)";
+
+        if (sidebarToggler) {
+            sidebarToggler.addEventListener("click", () => {
+                sidebar.classList.toggle("collapsed");
+            });
+        }
+
+        const toggleMenu = (isMenuActive) => {
+            sidebar.style.height = isMenuActive ? `${sidebar.scrollHeight}px` : collapsedSidebarHeight;
+            const span = menuToggler.querySelector("span");
+            if (span) {
+                span.innerText = isMenuActive ? "close" : "menu";
+            }
+        };
+
+        if (menuToggler) {
+            menuToggler.addEventListener("click", () => {
+                toggleMenu(sidebar.classList.toggle("menu-active"));
+            });
+        }
+
+        window.addEventListener("resize", () => {
+            if (window.innerWidth >= 1024) {
+                sidebar.style.height = fullSidebarHeight;
+            } else {
+                sidebar.classList.remove("collapsed");
+                sidebar.style.height = "auto";
+                toggleMenu(sidebar.classList.contains("menu-active"));
+            }
+        });
+    },
+
+    toggleSidebar: function () {
+        const sidebar = document.querySelector(".sidebar");
+        if (sidebar) {
+            sidebar.classList.toggle("collapsed");
+        }
+    },
+
+    toggleMenu: function () {
+        const sidebar = document.querySelector(".sidebar");
+        const menuToggler = document.querySelector(".menu-toggler");
+        if (sidebar && menuToggler) {
+            const isMenuActive = sidebar.classList.toggle("menu-active");
+            sidebar.style.height = isMenuActive ? `${sidebar.scrollHeight}px` : "56px";
+            const span = menuToggler.querySelector("span");
+            if (span) {
+                span.innerText = isMenuActive ? "close" : "menu";
+            }
+        }
     }
 };
+
+

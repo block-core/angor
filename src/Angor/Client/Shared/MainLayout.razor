@@ -14,12 +14,9 @@
 @inject INetworkStorage _networkStorage
 @inject IClientStorage storage;
 
-<div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show @sidenavClass ">
-    <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 b-shadow overflow-x-hidden" id="sidenav-main">
-        <NavMenu ToggleSidenavCallback="ToggleSidenavMobile" ToggleSidenavTextCallback="ToggleSidenav" ToggleleLockMenuCallback="ToggleLockMenu" />
-    </aside>
-
-    <main class="main-content d-flex flex-column min-vh-100">
+<div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show @(isSidebarCollapsed ? "sidenav-hidden" : "")">
+    <NavMenu @bind-IsCollapsed="isSidebarCollapsed" />
+    <main class="main-content">
         <!-- Navbar -->
         <nav class="navbar navbar-main navbar-expand-lg px-0 border-radius-xl position-sticky mt-3 z-index-sticky left-auto ms-2 me-2" id="navbarBlur">
             <div class="container-fluid">
@@ -59,7 +56,7 @@
         </nav>
         <!-- End Navbar -->
 
-        <div class="container mt-4 mb-2">
+        <div class="container-fluid py-4">
             @Body
         </div>
 
@@ -84,6 +81,7 @@
     private bool isLockMenu = false;
     private string themeIcon = "light_mode";
     private string sidenavClass = "sidenav-hidden";
+    private bool isSidebarCollapsed;
 
     private string networkText = string.Empty;
 
@@ -214,26 +212,12 @@
 
     private void ToggleSidenavMobile()
     {
-        if (isLockMenu)
-        {
-            sidenavClass = "";
-        }
-        else
-        {
-            sidenavClass = "sidenav-hidden";
-        }
+        isSidebarCollapsed = !isSidebarCollapsed;
     }
 
     private void ToggleSidenav()
     {
-        if (isLockMenu)
-        {
-            sidenavClass = (sidenavClass == "sidenav-pinned") ? "" : "sidenav-pinned";
-        }
-        else
-        {
-            sidenavClass = (sidenavClass == "sidenav-hidden") ? "sidenav-pinned" : "sidenav-hidden";
-        }
+        isSidebarCollapsed = !isSidebarCollapsed;
     }
 
     private void ToggleLockMenu()
