@@ -232,25 +232,25 @@
                 <div class="info-card mb-4 slide-in">
                     <!-- Start Date -->
                     <div class="mb-3">
-                        <label for="startDate" class="form-label">Start Date</label>
+                        <label for="startDate" class="form-label">Start Date - if the target amount was not reached by this date coins can be returned to the investors</label>
                         <InputDate id="startDate" @bind-Value="project.ProjectInfo.StartDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
-                    </div>
-
-                    <!-- Penalty Date -->
-                    <div class="mb-3">
-                        <label for="penaltyDays" class="form-label">Penalty Days</label>
-                        <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
 
                     <!-- Expiry Date -->
                     <div class="mb-3">
-                        <label for="expiryDate" class="form-label">Expiry Date</label>
+                        <label for="expiryDate" class="form-label">Expiry Date - after this date any unspent coins can be claimed back by the investors</label>
                         <InputDate id="expiryDate" @bind-Value="project.ProjectInfo.ExpiryDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
+                    </div>
+
+                    <!-- Penalty Date -->
+                    <div class="mb-3">
+                        <label for="penaltyDays" class="form-label">Penalty Days - choose the number of days you wish to lock a departing investors funds for</label>
+                        <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
 
                     <!-- Target Amount -->
                     <div class="mb-3">
-                        <label for="targetAmount" class="form-label">Target Amount</label>
+                        <label for="targetAmount" class="form-label">Target Amount - the minimum amount of @network.CoinTicker this project is trying to raise</label>
                         <InputNumber id="targetAmount" @bind-Value="targetAmountInBTC" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
 
@@ -277,7 +277,7 @@
                             <label for="stagePreset" class="form-label">Select Stage Preset</label>
                             <select id="stagePreset" class="form-control" @onchange="OnStagePresetChange" disabled="@nostrApplicationSpecificDataCreated">
                                 <option value="">Select a preset...</option>
-                                <option value="preset1">Preset 1: 3 Stages (10%, 30%, 60%)</option>
+                                <option value="preset1" selected>Preset 1: 3 Stages (10%, 30%, 60%)</option>
                                 <option value="preset2">Preset 2: 4 Stages (25%, 25%, 25%, 25%)</option>
                                 <option value="preset3">Preset 3: 3 Stages (60%, 20%, 20%)</option>
                             </select>
@@ -317,7 +317,7 @@
                             {
                                 var previousStage = project.ProjectInfo.Stages[project.ProjectInfo.Stages.IndexOf(stage) - 1];
                                 var daysBetween = (stage.ReleaseDate - previousStage.ReleaseDate).Days;
-                                <p class="text-muted">Days since last stage: @daysBetween days</p>
+                                <p class="text-muted">Days since previous stage: @daysBetween days</p>
                             }
                         </div>
                     }
@@ -480,7 +480,7 @@
                                     </div>
 
                                     <p class="text-muted mb-4 ps-2">Your project needs a public profile on the Nostr network. This information establishes your project's identity.</p>
-                                 
+
                                     <div class="info-alert my-4 ">
                                         <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
                                         <p class="text-warning">
@@ -650,7 +650,7 @@
 
                         <div class="modal-body modal-body-scroll py-4">
 
-                            <div class="row g-4">
+                            <div class="row g-4 mb-4">
                                 <div class="col-md-12">
                                     <div class="info-card h-100">
                                         <div class="info-label">Project Identifier</div>
@@ -700,14 +700,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <hr>
 
-                            <div class="info-card mb-3">
-                                <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                                <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
-                            </div>
-
-                            <hr>
+                            <FeeSelector SendFee="@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                         CoinTicker="@network.CoinTicker"
+                                         FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                         FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                         FeePosition="@feeData.FeePosition"
+                                         FeeMin="@feeData.FeeMin"
+                                         FeeMax="@feeData.FeeMax"
+                                         OnFeeChanged="@HandleFeeChanged" />
 
                             <h6 class="mt-3 mb-2">Stages</h6>
                             @foreach (var stage in project.ProjectInfo.Stages)
@@ -1168,34 +1169,35 @@
         }
     }
 
-    private async Task FeeRangeChanged(ChangeEventArgs e)
+    private async Task HandleFeeChanged(FeeCalculation feeCalc)
     {
-        var selected = e.Value?.ToString();
-
-        if (selected != null)
+        try
         {
-            if (int.TryParse(selected, out int res))
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
             {
-                if (res <= feeData.FeeEstimations.Fees.Count)
-                {
-                    if (!passwordComponent.HasPassword())
-                    {
-                        showCreateModal = false;
-                        notificationComponent.ShowErrorMessage("Wallet password expired");
-                        return;
-                    }
-
-                    var words = await passwordComponent.GetWalletAsync();
-                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-                    var accountInfo = storage.GetAccountInfo(network.Name);
-                    var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
-
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
-
-                    StateHasChanged();
-                }
+                feeData.SetCustomFee(feeCalc.CustomFee.Value);
             }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
+            {
+                feeData.SelectFee(feeCalc.Position.Value);
+            }
+
+            var words = await passwordComponent.GetWalletAsync();
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                accountInfo.GetNextChangeReceiveAddress(),
+                unsignedTransaction,
+                words,
+                accountInfo,
+                feeData.SelectedFeeEstimation.FeeRate);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogError(ex, "Error calculating fee");
+            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
     }
 

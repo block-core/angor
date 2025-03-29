@@ -166,15 +166,46 @@
                             </div>
 
                             <div class="stat-row">
-                                <span class="stat-label">Status</span>
-                                @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
-                                {
-                                    <span class="status-badge status-funding">Funding</span>
-                                }
-                                else
-                                {
-                                    <span class="status-badge status-live">Live</span>
-                                }
+                                <span class="stat-label">Project Status</span>
+                                    @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+                                    {
+                                        <span class="status-badge status-funding">Funding</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-live">Live</span>
+                                    }
+                            </div>
+
+                            <div class="stat-row">
+                                <span class="stat-label">My Investment Status</span>
+                                    @if (!string.IsNullOrEmpty(project.TransactionId))
+                                    {
+                                        @if (!string.IsNullOrEmpty(project.EndOfProjectTransactionId))
+                                        {
+                                            <span class="status-badge status-success">End of project recovered</span>
+                                        }
+                                        else if (!string.IsNullOrEmpty(project.UnfundedReleaseTransactionId))
+                                        {
+                                            <span class="status-badge status-warning">Unfunded project (coins released)</span>
+                                        }
+                                        else if (!string.IsNullOrEmpty(project.RecoveryReleaseTransactionId))
+                                        {
+                                            <span class="status-badge status-success">Recovered after penalty</span>
+                                        }
+                                        else if (!string.IsNullOrEmpty(project.RecoveryTransactionId))
+                                        {
+                                            <span class="status-badge status-warning">In recovery</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge status-success">Invested</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-pending">Pending</span>
+                                    }
                             </div>
 
                             <div class="stat-row">
@@ -192,11 +223,11 @@
                                     }
                                 </div>
                             </div>
-
+                            
                             <div class="stat-row">
                                 <span class="stat-label">Founder Status</span>
                                 <div class="stat-value-group">
-                                    @if (hasInvestmentRequests)
+                                    @if (!string.IsNullOrEmpty(project.TransactionId) || hasInvestmentRequests)
                                     {
                                         <span class="status-badge status-approved">Approved</span>
                                     }

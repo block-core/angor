@@ -559,75 +559,96 @@
                            <Icon IconName="link"></Icon>
                        </button> *@
                     </div>
-
-
-                    @if (founder)
+                    
+                    @if (invested)
                     {
-                        <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                            <button @onclick="OpenInHUBAsync" class="btn btn-border-success mt-4 mr-1">
-                                <Icon IconName="link" Class="me-2" />
-                                Open in Angor Hub
+                        var invpub = (project as InvestorProject).InvestorNPub;
+                        var invNpub = NostrHelper.ConvertHexToNpub(invpub);
+
+                        <br />  <br />
+                        <label for="NostrNpubPublicKey" class="form-label">Investor NOSTR public key (npub)</label>
+
+                        <div class="input-group">
+                            <InputText id="NostrNpubPublicKey" @bind-Value="@invNpub" class="form-control" placeholder="@Npub" readonly />
+                            <button @onclick="OpenInHUBAsync" class="btn btn-border">
+                                <i>
+                                    <Icon IconName="link"/>
+                                </i>
                             </button>
+                        </div>
+                        <br/>
+                        <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
+                        <div class="input-group">
+                            <InputText id="NostrHexPublicKey" @bind-Value="@invpub" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
+                            @*<button @onclick="OpenInHUBAsync" class="btn btn-border">
+                                <Icon IconName="link"></Icon>
+                            </button> *@
+                        </div>
+
+                    }
+                   
+                    <div class="action-buttons d-flex justify-content-center item-center mt-4">
+                        <button @onclick="OpenInHUBAsync" class="btn btn-border-success mt-4 mr-1">
+                            <Icon IconName="link" Class="me-2" />
+                            Open in Angor Hub
+                        </button>
+                       
+                        @if (founder)
+                        {
                             <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning mt-4 mr-1">
-                                <Icon IconName="edit" Class="me-2" />
+                                <Icon IconName="edit" Class="me-2"/>
                                 Edit project profile
                             </button>
+                        }
+
+                        @if (invested || founder)
+                        {
                             <button @onclick="ShowNsecAsync" class="btn btn-border-danger mt-4">
-                                <Icon IconName="shield" Class="me-2" />
+                                <Icon IconName="shield" Class="me-2"/>
                                 View nsec
                             </button>
+                        }
+                    </div>
+
+                    @if (isGeneratingNsec)
+                    {
+                        <div class="d-flex justify-content-center mt-4">
+                            <div class="loader"></div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="mt-2 text-danger">
+                            <span>@errorMessage</span>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(NostrHexSecKey) || !string.IsNullOrEmpty(NostrNsecSecKey))
+                    {
+                        <br />
+                        <label for="NostrNsecSecKey" class="form-label mt-4"> @(invested ? "Investor" : "Project") NOSTR private key (nsec)</label>
+                        <div class="input-group">
+                            <InputText id="NostrNsecSecKey" @bind-Value="NostrNsecSecKey" class="form-control nsec-box" readonly />
+                            <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border">
+                                <i>
+                                    <Icon IconName="copy" />
+                                </i>
+                            </button>
                         </div>
 
-
-
-                        @if (isGeneratingNsec)
-                        {
-                            <div class="d-flex justify-content-center mt-4">
-                                <div class="loader"></div>
-                            </div>
-                        }
-
-                        @if (!string.IsNullOrEmpty(errorMessage))
-                        {
-                            <div class="mt-2 text-danger">
-                                <span>@errorMessage</span>
-                            </div>
-                        }
-
-                        @if (!string.IsNullOrEmpty(NostrHexSecKey) || !string.IsNullOrEmpty(NostrNsecSecKey))
-                        {
-                            <br />
-                            <label for="NostrNsecSecKey" class="form-label mt-4">Project NOSTR private key (nsec)</label>
-                            <div class="input-group">
-                                <InputText id="NostrNsecSecKey" @bind-Value="NostrNsecSecKey" class="form-control nsec-box" readonly />
-                                <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border">
-                                    <i>
-                                        <Icon IconName="copy" />
-                                    </i>
-                                </button>
-                            </div>
-
-                            <br />
-                            <label for="NostrHexSecKey" class="form-label mt-4">Project NOSTR private key (hex)</label>
-                            <div class="input-group">
-                                <InputText id="NostrHexSecKey" @bind-Value="NostrHexSecKey" class="form-control nsec-box" readonly />
-                                <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border">
-                                    <i>
-                                        <Icon IconName="copy" />
-                                    </i>
-                                </button>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                            <button @onclick="OpenInHUBAsync" class="btn btn-border-success mt-4 mr-1">
-                                <Icon IconName="link" Class="me-2" />
-                                Open in Angor Hub
+                        <br />
+                        <label for="NostrHexSecKey" class="form-label mt-4">@(invested ? "Investor" : "Project") NOSTR private key (hex)</label>
+                        <div class="input-group">
+                            <InputText id="NostrHexSecKey" @bind-Value="NostrHexSecKey" class="form-control nsec-box" readonly />
+                            <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border">
+                                <i>
+                                    <Icon IconName="copy" />
+                                </i>
                             </button>
                         </div>
                     }
+
                 </div>
             }
 
@@ -909,6 +930,14 @@
                 NostrHexSecKey = Encoders.Hex.EncodeData(nostrKey.ToBytes());
                 NostrNsecSecKey = NostrHelper.ConvertHexToNsec(NostrHexSecKey)!;
 
+                StateHasChanged();
+            }
+            else if (project is InvestorProject investorProject)
+            {
+                var words = await passwordComponent.GetWalletAsync();
+                var nostrKey = _derivationOperations.DeriveInvestorPrivateKey(words, investorProject.ProjectInfo.FounderKey);
+                NostrHexSecKey = Encoders.Hex.EncodeData(nostrKey.ToBytes());
+                NostrNsecSecKey = NostrHelper.ConvertHexToNsec(NostrHexSecKey)!;
                 StateHasChanged();
             }
         }
