@@ -8,13 +8,7 @@
 @inject INetworkService _networkService;
 
 <div class="sidenav-header">
-    <div class="menu-text">
-        <i class="cursor-pointer opacity-5 position-absolute end-2 top-1  d-xl-none" aria-hidden="true" id="iconSidenav" @onclick="ToggleSidenav">
-            <Icon IconName="close-circle" />
-        </i>
-    </div>
-
-    <a class="navbar-brand m-0" href="" @onclick="ToggleSidenav">
+    <a class="navbar-brand m-0" href="">
         <Icon IconName="angor-logo" />
         <span class="ms-1 font-weight-bold menu-text h5">Angor</span>
     </a>
@@ -23,7 +17,7 @@
 <hr class="horizontal mt-0 mb-2" />
 
 <div class="collapse navbar-collapse w-auto overflow-x-hidden" id="sidenav-collapse-main">
-    <ul class="navbar-nav" @onclick="ToggleSidenav">
+    <ul class="navbar-nav">
         <li class="nav-item">
             <NavLink class="@GetNavLinkClass("wallet")" href="wallet">
                 <i class="me-1">
@@ -79,10 +73,8 @@
 <div class="sidenav-footer position-absolute w-100 bottom-0">
     <ul class="navbar-nav">
 
-        <li class="nav-item d-flex align-items-center justify-content-@betweenOrEnd">
-            @if (!islockMenu)
-            {
-                <span class="nav-link menu-text" @onclick="ToggleSidenavText">
+        <li class="nav-item d-none d-xl-flex align-items-center justify-content-between">
+                <span class="nav-link menu-text" @onclick="ToggleSidenav">
                     <i class="ms--4">
                         @if (isSidenavHide)
                         {
@@ -94,7 +86,6 @@
                         }
                     </i>
                 </span>
-            }
         </li>
 
         <li class="nav-item">
@@ -113,20 +104,9 @@
 @code {
 
     [Parameter]
-    public EventCallback ToggleSidenavCallback { get; set; }
-
-    [Parameter]
     public EventCallback ToggleSidenavTextCallback { get; set; }
 
-    [Parameter]
-    public EventCallback ToggleleLockMenuCallback { get; set; }
-
     private bool hasWallet;
-    private string betweenOrEnd = "between";
-
-
-    private bool islockMenu = false;
-
 
     private bool isSidenavHide = true;
     private Timer? _timer;
@@ -143,29 +123,9 @@
 
     private async Task ToggleSidenav()
     {
-        await ToggleSidenavCallback.InvokeAsync();
-    }
-
-
-    private async Task ToggleSidenavText()
-    {
         await ToggleSidenavTextCallback.InvokeAsync();
 
         isSidenavHide = !isSidenavHide;
-
-    }
-
-    private async Task ToggleLockMenu()
-    {
-        await ToggleleLockMenuCallback.InvokeAsync();
-
-        islockMenu = !islockMenu;
-        UpdateLockMenuIcon(islockMenu);
-
-    }
-    private void UpdateLockMenuIcon(bool islockMenu)
-    {
-        betweenOrEnd = islockMenu ? "end" : "between";
     }
 
     private bool IsInvestorPage(string page)

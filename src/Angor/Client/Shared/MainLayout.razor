@@ -16,7 +16,7 @@
 
 <div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show @sidenavClass ">
     <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 b-shadow overflow-x-hidden" id="sidenav-main">
-        <NavMenu ToggleSidenavCallback="ToggleSidenavMobile" ToggleSidenavTextCallback="ToggleSidenav" ToggleleLockMenuCallback="ToggleLockMenu" />
+        <NavMenu ToggleSidenavTextCallback="ToggleSidenav" />
     </aside>
 
     <main class="main-content d-flex flex-column min-vh-100">
@@ -81,7 +81,6 @@
 @code {
     private string _softwareVersion = "0.0.0";
     private bool isDarkTheme = false;
-    private bool isLockMenu = false;
     private string themeIcon = "light_mode";
     private string sidenavClass = "sidenav-hidden";
 
@@ -212,37 +211,9 @@
         await Js.InvokeVoidAsync("localStorage.setItem", "theme", isDark ? "dark" : "light");
     }
 
-    private void ToggleSidenavMobile()
-    {
-        if (isLockMenu)
-        {
-            sidenavClass = "";
-        }
-        else
-        {
-            sidenavClass = "sidenav-hidden";
-        }
-    }
-
     private void ToggleSidenav()
     {
-        if (isLockMenu)
-        {
-            sidenavClass = (sidenavClass == "sidenav-pinned") ? "" : "sidenav-pinned";
-        }
-        else
-        {
-            sidenavClass = (sidenavClass == "sidenav-hidden") ? "sidenav-pinned" : "sidenav-hidden";
-        }
+        sidenavClass = (sidenavClass == "sidenav-hidden") ? "sidenav-pinned" : "sidenav-hidden";
     }
 
-    private void ToggleLockMenu()
-    {
-        isLockMenu = !isLockMenu;
-
-        if (isLockMenu)
-        {
-            sidenavClass = "";
-        }
-    }
 }
