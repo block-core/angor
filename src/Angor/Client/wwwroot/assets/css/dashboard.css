@@ -24526,44 +24526,6 @@ body:not(.dark) .sidenav.bg-transparent .collapse .nav-item .nav-link.active.tex
             height: 0;
         }
 
-        .sidenav-hidden .navbar-vertical:hover {
-            max-width: 13.625rem !important;
-        }
-
-            .sidenav-hidden .navbar-vertical:hover.fixed-start + .main-content {
-                margin-left: 15.125rem;
-            }
-
-            .sidenav-hidden .navbar-vertical:hover .navbar-brand span {
-                opacity: 1;
-            }
-
-            .sidenav-hidden .navbar-vertical:hover .nav-item .nav-link .nav-link-text,
-            .sidenav-hidden .navbar-vertical:hover .nav-item .nav-link .sidenav-normal {
-                opacity: 1;
-                width: auto;
-            }
-
-            .sidenav-hidden .navbar-vertical:hover .nav-item .nav-link[data-bs-toggle="collapse"]:after {
-                content: "\f107";
-                opacity: 1;
-            }
-
-            .sidenav-hidden .navbar-vertical:hover .nav-item .collapse .nav .nav-item .collapse .nav,
-            .sidenav-hidden .navbar-vertical:hover .nav-item .collapse .nav .nav-item .collapsing .nav {
-                margin-left: 0 !important;
-                padding-left: 0 !important;
-            }
-
-            .sidenav-hidden .navbar-vertical:hover .card.card-background .icon-shape {
-                margin-bottom: 1rem !important;
-            }
-
-            .sidenav-hidden .navbar-vertical:hover .card.card-background .docs-info {
-                opacity: 1;
-                width: auto;
-                height: auto;
-            }
 }
 
 .nav.nav-pills {
