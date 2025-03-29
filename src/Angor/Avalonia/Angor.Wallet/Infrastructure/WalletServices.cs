@@ -9,6 +9,7 @@ using Angor.Wallet.Infrastructure.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using ILogger = Serilog.ILogger;
 
 namespace Angor.Wallet.Infrastructure;
@@ -17,11 +18,8 @@ public static class WalletServices
 {
     public static ServiceCollection Register(ServiceCollection services, ILogger logger, BitcoinNetwork bitcoinNetwork)
     {
-        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        
+        RegisterLogger(services, logger);
         services.TryAddSingleton<IStore>(new InMemoryStore());
-        logger.Warning("Registering default Store: {Store}", services.First(x => x.ServiceType.IsAssignableTo(typeof(IStore))).ServiceType);
-        
         services.AddSingleton<IWalletAppService, WalletAppService>();
         services.AddSingleton<IHdOperations, HdOperations>();
         var networkConfiguration = new NetworkConfiguration();
@@ -30,7 +28,7 @@ public static class WalletServices
         services.AddSingleton<INetworkConfiguration>(networkConfiguration);
         services.AddSingleton<INetworkService, NetworkService>();
         services.AddSingleton<INetworkStorage, NetworkStorage>();
-        services.AddSingleton<IIndexerService>(provider => new IndexerService(provider.GetRequiredService<INetworkConfiguration>(), provider.GetRequiredService<IHttpClientFactory>().CreateClient(), provider.GetRequiredService<INetworkService>()));
+        services.TryAddSingleton<IIndexerService>(provider => new IndexerService(provider.GetRequiredService<INetworkConfiguration>(), provider.GetRequiredService<IHttpClientFactory>().CreateClient(), provider.GetRequiredService<INetworkService>()));
         services.AddSingleton<IWalletFactory, WalletFactory>();
         services.AddSingleton<IWalletOperations, WalletOperations>();
         services.AddSingleton<ISensitiveWalletDataProvider, SensitiveWalletDataProvider>();
@@ -38,8 +36,14 @@ public static class WalletServices
         services.AddHttpClient();
         services.AddSingleton<ITransactionWatcher, TransactionWatcher>();
         
-        services.TryAddSingleton(loggerFactory);
-
         return services;
+    }
+    
+    private static void RegisterLogger(ServiceCollection services, ILogger logger)
+    {
+        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+        services.TryAddSingleton(loggerFactory);
+        services.AddLogging(builder => builder.AddSerilog());
+        services.TryAddSingleton(logger);
     }
 }

@@ -1,36 +1,35 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using Angor.Projects.Domain;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Zafiro.Reactive;
 
-namespace Angor.UI.Model.Implementation.Projects;
+namespace Angor.Projects.Infrastructure.Impl;
 
-public class ProjectService : IProjectService
+public class ProjectRepository(
+    IRelayService relayService,
+    IIndexerService indexerService) : IProjectRepository
 {
-    private readonly IIndexerService indexerService;
-    private readonly IRelayService relayService;
-
-    public ProjectService(IIndexerService indexerService, IRelayService relayService)
+    public Task<Result<Project>> Get(ProjectId id)
     {
-        this.indexerService = indexerService;
-        this.relayService = relayService;
+        return FindById(id);
     }
 
-    public async Task<Maybe<IProject>> FindById(string projectId)
-    {
-        var project = (await indexerService.GetProjectByIdAsync(projectId)).AsMaybe();
-        return await project.Map(async data => await ProjectsFrom(new[] { data }.ToObservable()).FirstAsync());
-    }
-
-    public Task<IList<IProject>> Latest()
+    public Task<IList<Project>> Latest()
     {
         return ProjectsFrom(indexerService.GetLatest()).ToList().ToTask();
     }
 
-    public IObservable<IProject> ProjectsFrom(IObservable<ProjectIndexerData> projectIndexerDatas)
+    public async Task<Result<Project>> FindById(ProjectId projectId)
+    {
+        var project = (await indexerService.GetProjectByIdAsync(projectId.Value)).AsMaybe();
+        return await project.Map(async data => await ProjectsFrom(new[] { data }.ToObservable()).FirstAsync()).ToResult("Not Found");
+    }
+
+    private IObservable<Project> ProjectsFrom(IObservable<ProjectIndexerData> projectIndexerDatas)
     {
         var tuples = projectIndexerDatas.ToList().SelectMany(lists => ProjectInfos(lists)
             .ToList()

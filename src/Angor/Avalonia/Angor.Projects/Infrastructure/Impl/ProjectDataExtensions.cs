@@ -1,8 +1,10 @@
-namespace Angor.UI.Model.Implementation.Projects;
+using Angor.Projects.Domain;
 
-public static class ProjectMapper
+namespace Angor.Projects.Infrastructure.Impl;
+
+public static class ProjectDataExtensions
 {
-    public static IProject ToProject(this ProjectData data)
+    public static Project ToProject(this ProjectData data)
     {
         if (data is null)
         {
@@ -19,12 +21,15 @@ public static class ProjectMapper
             throw new ArgumentException("ProjectData.NostrMetadata cannot be null.", nameof(data));
         }
 
-        var project = new Project
+        var project = new Project()
         {
-            Id = data.IndexerData?.ProjectIdentifier,
+            Id = new ProjectId(data.IndexerData.ProjectIdentifier),
 
             Name = data.NostrMetadata.Name,
             ShortDescription = data.NostrMetadata.About,
+            FounderKey = data.ProjectInfo.FounderKey,
+            FounderRecoveryKey = data.ProjectInfo.FounderRecoveryKey,
+            ExpiryDate = data.ProjectInfo.ExpiryDate,
 
             Picture = string.IsNullOrWhiteSpace(data.NostrMetadata.Picture)
                 ? null
@@ -34,10 +39,8 @@ public static class ProjectMapper
                 ? null
                 : new Uri(data.NostrMetadata.Banner),
 
-            BitcoinAddress = data.ProjectInfo.FounderRecoveryKey,
-
             TargetAmount = data.ProjectInfo.TargetAmount,
-            StartingDate = DateOnly.FromDateTime(data.ProjectInfo.StartDate),
+            StartingDate = data.ProjectInfo.StartDate,
             PenaltyDuration = TimeSpan.FromDays(data.ProjectInfo.PenaltyDays),
 
             NpubKey = data.ProjectInfo.NostrPubKey,
@@ -51,12 +54,11 @@ public static class ProjectMapper
         project.Stages = data.ProjectInfo.Stages
             .Select((stage, index) => new Stage
             {
-                ReleaseDate = DateOnly.FromDateTime(stage.ReleaseDate),
-                Amount = (long)(stage.AmountToRelease/100 * data.ProjectInfo.TargetAmount * 1_0000_0000),
+                ReleaseDate = stage.ReleaseDate,
+                Amount = (long)(stage.AmountToRelease / 100 * data.ProjectInfo.TargetAmount * 1_0000_0000),
                 Index = index + 1,
                 Weight = (double)(stage.AmountToRelease / 100)
             })
-            .Cast<IStage>()
             .ToList();
 
         return project;

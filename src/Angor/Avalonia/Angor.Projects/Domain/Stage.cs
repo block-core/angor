@@ -1,8 +1,6 @@
-using Angor.UI.Model;
+namespace Angor.Projects.Domain;
 
-namespace AngorApp.Sections.Browse;
-
-public class StageDesign : IStage
+public class Stage
 {
     public DateTime ReleaseDate { get; set; }
     public long Amount { get; set; }

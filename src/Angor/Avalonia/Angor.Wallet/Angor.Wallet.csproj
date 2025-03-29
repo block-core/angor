@@ -10,6 +10,7 @@
         <PackageReference Include="CSharpFunctionalExtensions" />
         <PackageReference Include="Microsoft.Extensions.Http" />
         <PackageReference Include="Serilog" />
+        <PackageReference Include="Serilog.Extensions.Logging" />
     </ItemGroup>
     
     <ItemGroup>
