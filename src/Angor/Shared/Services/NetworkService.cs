@@ -129,36 +129,36 @@ namespace Angor.Shared.Services
                 }
             }
 
-            foreach (var explorerUrl in settings.Explorers)
-            {
-                if (force || (DateTime.UtcNow - explorerUrl.LastCheck).Minutes > 10)
-                {
-                    explorerUrl.LastCheck = DateTime.UtcNow;
+            //foreach (var explorerUrl in settings.Explorers)
+            //{
+            //    if (force || (DateTime.UtcNow - explorerUrl.LastCheck).Minutes > 10)
+            //    {
+            //        explorerUrl.LastCheck = DateTime.UtcNow;
 
-                    try
-                    {
-                        var uri = new Uri(explorerUrl.Url);
+            //        try
+            //        {
+            //            var uri = new Uri(explorerUrl.Url);
                         
-                         var heartbeatUrl = new Uri(uri, "api/stats/heartbeat").ToString();
-                         var response = await _httpClient.GetAsync(heartbeatUrl);
+            //             var heartbeatUrl = new Uri(uri, "api/stats/heartbeat").ToString();
+            //             var response = await _httpClient.GetAsync(heartbeatUrl);
 
-                        if (response.IsSuccessStatusCode)
-                        {
-                            explorerUrl.Status = UrlStatus.Online;
-                        }
-                        else
-                        {
-                            _logger.LogError($"Failed to check explorer status url = {explorerUrl.Url}, StatusCode = {response.StatusCode}");
-                        }
-                        OnStatusChanged?.Invoke();
-                    }
-                    catch (Exception ex)
-                    {
-                        explorerUrl.Status = UrlStatus.Offline;
-                        _logger.LogError(ex, $"Failed to check explorer status url = {explorerUrl.Url}");
-                    }
-                }
-            }
+            //            if (response.IsSuccessStatusCode)
+            //            {
+            //                explorerUrl.Status = UrlStatus.Online;
+            //            }
+            //            else
+            //            {
+            //                _logger.LogError($"Failed to check explorer status url = {explorerUrl.Url}, StatusCode = {response.StatusCode}");
+            //            }
+            //            OnStatusChanged?.Invoke();
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            explorerUrl.Status = UrlStatus.Offline;
+            //            _logger.LogError(ex, $"Failed to check explorer status url = {explorerUrl.Url}");
+            //        }
+            //    }
+            //}
 
             var nostrHeaderMediaType = new MediaTypeWithQualityHeaderValue("application/nostr+json");
             _httpClient.DefaultRequestHeaders.Accept.Add(nostrHeaderMediaType);
