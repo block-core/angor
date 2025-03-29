@@ -565,8 +565,7 @@
                         var invpub = (project as InvestorProject).InvestorNPub;
                         var invNpub = NostrHelper.ConvertHexToNpub(invpub);
 
-                        <br />  <br />
-                        <label for="NostrNpubPublicKey" class="form-label">Investor NOSTR public key (npub)</label>
+                        <label for="NostrNpubPublicKey" class="form-label mt-6">Investor NOSTR public key (npub)</label>
 
                         <div class="input-group">
                             <InputText id="NostrNpubPublicKey" @bind-Value="@invNpub" class="form-control" placeholder="@Npub" readonly />
@@ -577,7 +576,7 @@
                             </button>
                         </div>
                         <br/>
-                        <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
+                        <label for="NostrHexPublicKey" class="form-label">Investor NOSTR public key (hex)</label>
                         <div class="input-group">
                             <InputText id="NostrHexPublicKey" @bind-Value="@invpub" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
                             @*<button @onclick="OpenInHUBAsync" class="btn btn-border">
