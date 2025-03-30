@@ -1,6 +1,7 @@
 .main-content {
     position: relative;
     margin-left: 300px;
+    height: 100vh;
     transition: all 0.4s ease;
     z-index: 10;
 }
@@ -9,13 +10,20 @@
     margin-left: 100px;
 }
 
-@media (max-width: 1024px) {
+.footer {
+    position: absolute;
+    bottom: 1rem;
+    left: 0;
+    right: 0;
+}
+
+@media (max-width: 1280px) {
     .main-content {
-        margin-left: 85px;
-        width: calc(100% - 85px);
+        margin-left: 0;
+        width: calc(100% - 0);
     }
     
     .sidenav-show.sidenav-hidden .main-content {
-        margin-left: 85px;
+        margin-left: 0;
     }
 }

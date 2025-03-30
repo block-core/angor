@@ -81,6 +81,7 @@
   position: fixed;
   width: 270px;
   margin-left: 16px;
+  margin-bottom: 20px;
   border-radius: 16px;
   background: #083b46;
   height: calc(100vh - 32px);
@@ -100,6 +101,14 @@
   align-items: center;
   justify-content: space-between;
 }
+.sidebar-header .header-logo{
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  transition: all 0.1s ease !important;
+  cursor: pointer !important;
+  text-align: center !important;
+}
 .sidebar-header .header-logo img {
   width: 46px;
   height: 46px;
@@ -107,14 +116,25 @@
   object-fit: contain;
   border-radius: 50%;
 }
+.sidebar-header .header-logo .angor-label{
+  color: #c4c3c3 !important;
+  font-size: 1.3rem !important;
+  font-weight: 100 !important;
+  align-self: flex-start !important;
+  transition: opacity 0.1s ease !important;
+}
+.sidebar.collapsed .header-logo .angor-label {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 .sidebar-header .toggler {
   height: 35px;
   width: 35px;
-  color: #083b46;
+  color: grey;
   border: none;
   cursor: pointer;
   display: flex;
-  background: #fff;
+  background: transparent;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
@@ -131,7 +151,7 @@
   transform: translate(-4px, 65px);
 }
 .sidebar-header .toggler:hover {
-  background: #dde4fb;
+  background: #b8b9bd;
 }
 .sidebar-header .toggler span {
   font-size: 1.75rem;
@@ -143,19 +163,20 @@
 .sidebar-nav .nav-list {
   list-style: none;
   display: flex;
-  gap: 4px;
+  gap: 1rem;
   padding: 0 15px;
   flex-direction: column;
   transform: translateY(15px);
-  transition: 0.4s ease;
+  transition: 0.3s ease;
 }
 .sidebar.collapsed .sidebar-nav .primary-nav {
   transform: translateY(65px);
 }
-.sidebar-nav .nav-link {
-  color: rgba(255, 255, 255, 0.85);
+.sidebar-nav ::deep .nav-link {
+  color: rgb(255, 255, 255);
   display: flex;
-  gap: 12px;
+  gap: 0.6rem;
+  font-size: 1rem;
   white-space: nowrap;
   border-radius: 12px;
   padding: 12px 16px;
@@ -168,18 +189,12 @@
   border-radius: 12px;
 }
 .sidebar .sidebar-nav .nav-link .nav-label {
+  color: rgb(255, 255, 255);
   transition: opacity 0.3s ease;
 }
 .sidebar.collapsed .sidebar-nav .nav-link .nav-label {
   opacity: 0;
   pointer-events: none;
-}
-.sidebar-nav .nav-link:hover,
-.sidebar-nav .nav-link.active {
-  color: #083b46;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transform: translateX(4px);
 }
 .sidebar-nav .nav-item {
   position: relative;
@@ -212,18 +227,24 @@
 }
 .sidebar-nav .secondary-nav {
   position: absolute;
-  bottom: 30px;
+  background: #083b46;
+  border-radius: 16px;
+  bottom: 0;
   width: 100%;
 }
 /* Responsive media query code for small screens */
-@media (max-width: 1024px) {
+@media (max-width: 1280px) {
   .sidebar {
-    width: 85px;
+    width: 270px;
+    margin-left: 16px;
+    margin-bottom: 20px;
+    transform: translateX(-150%);
     margin: 16px 8px;
     height: calc(100vh - 32px);
     overflow-y: visible;
   }
   .sidebar.menu-active {
+    transform: translateX(0); /* Slide in when open */
     width: 270px;
     background: rgba(8, 59, 70, 0.98);
     -webkit-backdrop-filter: blur(10px);
@@ -266,9 +287,9 @@
     font-size: 1.37rem;
   }
   .sidebar-nav .secondary-nav {
-    position: relative;
+    position: absolute;
     bottom: 0;
-    margin: 40px 0 30px;
+    width: 100%;
   }
   .sidebar-nav .nav-tooltip {
     background: rgba(255, 255, 255, 0.98);
@@ -277,45 +298,13 @@
   }
 }
 
-@media (max-width: 1024px) {
-    .sidebar {
-        width: 85px;
-        margin: 0px 8px;
-        height: calc(100vh - 32px);
-        overflow-y: visible;
-    }
+/* Ensure the sidebar is always visible for larger devices */
+@media (min-width: 1280px) {
+  .sidebar {
+      transform: translateX(0); /* Always visible */
+  }
 
-    .sidebar .sidebar-header {
-        padding: 15px 10px;
-    }
-
-    .sidebar-nav .nav-link .nav-label {
-        display: none;
-    }
-
-    .sidebar-nav .nav-tooltip {
-        display: block;
-    }
-
-    .sidebar.menu-active {
-        width: 270px;
-    }
-
-    .sidebar.menu-active .nav-label {
-        display: block;
-    }
-
-    .sidebar.menu-active .nav-tooltip {
-        display: none;
-    }
-
-    .sidebar-header .menu-toggler {
-        display: flex;
-        position: absolute;
-        right: 10px;
-    }
-
-    .sidebar-header .sidebar-toggler {
-        display: none;
-    }
+  .sidebar.menu-acive {
+      transform: translateX(0); /* No drawer behavior */
+  }
 }

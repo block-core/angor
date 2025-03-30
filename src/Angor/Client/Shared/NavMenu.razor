@@ -7,10 +7,11 @@
 @inject NavMenuState NavMenuState;
 @inject INetworkService _networkService;
 
-<aside class="sidebar @(IsCollapsed ? "collapsed" : "")">
+<aside class="sidebar @(IsCollapsed ? "collapsed" : "")  @(IsOpenMobile ? "menu-active" : "")">
     <header class="sidebar-header">
         <a href="" class="header-logo">
             <Icon IconName="angor-logo" />
+            <span class="angor-label">Angor</span>
         </a>
         <button class="toggler sidebar-toggler" @onclick="ToggleCollapse">
             <span class="material-symbols-rounded">
@@ -20,6 +21,7 @@
     </header>
 
     <nav class="sidebar-nav">
+        <hr class="horizontal mt-0 mb-2 @(IsCollapsed ? "d-none" : "")" />
         <ul class="nav-list primary-nav">
             <li class="nav-item">
                 <NavLink class="nav-link" href="wallet">
@@ -66,6 +68,7 @@
 
         <ul class="nav-list secondary-nav">
             <li class="nav-item">
+                <hr class="horizontal mt-0 mb-2" />
                 <a class="nav-link" href="https://hub.angor.io">
                     <span class="nav-icon"><Icon IconName="project_explorer" /></span>
                     <span class="nav-label">Angor Hub</span>
@@ -83,6 +86,12 @@
 
     [Parameter]
     public EventCallback ToggleSidenavTextCallback { get; set; }
+
+    [Parameter] 
+    public bool IsOpenMobile { get; set; }
+    
+    [Parameter] 
+    public EventCallback OnCloseMobile { get; set; }
 
     [Parameter]
     public EventCallback ToggleleLockMenuCallback { get; set; }
