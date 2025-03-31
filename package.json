@@ -19,10 +19,11 @@
   },
   "private": true,
   "dependencies": {
-    "js-base64": "^3.7.7"
+    "js-base64": "^3.7.7",
+    "nostr-tools": "^2.11.0"
   },
   "devDependencies": {
-    "cypress": "^13.9.0",
-    "@tauri-apps/cli": "^2.1.0"
+    "@tauri-apps/cli": "^2.1.0",
+    "cypress": "^13.9.0"
   }
 }
