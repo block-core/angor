@@ -8,7 +8,7 @@ public interface INostrCommunicationFactory
     void CloseClientConnection();
     int GetNumberOfRelaysConnected();
     bool EoseEventReceivedOnAllRelays(string subscription);
-    void MonitoringEoseReceivedOnSubscription(string subscription);
+    bool MonitoringEoseReceivedOnSubscription(string subscription);
     void ClearEoseReceivedOnSubscriptionMonitoring(string subscription);
     bool OkEventReceivedOnAllRelays(string eventId);
     void MonitoringOkReceivedOnSubscription(string eventId);

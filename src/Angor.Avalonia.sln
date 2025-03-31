@@ -7,7 +7,26 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngorApp", "Angor\Avalonia\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngorApp.Desktop", "Angor\Avalonia\AngorApp.Desktop\AngorApp.Desktop.csproj", "{B0BFAC0F-9F74-4770-9B12-A3A478DB0A71}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngorApp.Browser", "Angor\Avalonia\AngorApp.Browser\AngorApp.Browser.csproj", "{0A7F0377-628B-41A8-8849-00A3664B69B7}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A02A88B0-7199-4506-82FF-82390EC6D18B}"
+	ProjectSection(SolutionItems) = preProject
+		Angor\Avalonia\Directory.Packages.props = Angor\Avalonia\Directory.Packages.props
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.UI.Model", "Angor\Avalonia\Angor.UI.Model\Angor.UI.Model.csproj", "{BCCAC388-AC7D-4BA4-9C1E-58D3FAF5D0D5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Shared", "Angor\Shared\Angor.Shared.csproj", "{700DF0C4-C965-4662-A91F-CD3BE043AC9E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.UI.Model.Implementation", "Angor\Avalonia\Angor.UI.Model.Implementation\Angor.UI.Model.Implementation.csproj", "{539B4D21-F2A9-46A6-84F1-9A51884A62E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.UI.Model.Implementation.Tests", "Angor\Avalonia\Angor.UI.Model.Implementation.Tests\Angor.UI.Model.Implementation.Tests.csproj", "{B84751C6-1B82-4DE8-9FBE-F0A67D981C43}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Wallet", "Angor\Avalonia\Angor.Wallet\Angor.Wallet.csproj", "{287F370D-D680-4BE5-8577-7A180BD0A0E3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Wallet.Tests", "Angor\Avalonia\Angor.Wallet.Tests\Angor.Wallet.Tests.csproj", "{F281FE2A-3416-400A-8C9A-D88760908EA9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Client", "Angor\Client\Angor.Client.csproj", "{4F515C47-D1BA-481D-B159-DA203CB6296A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,15 +42,48 @@ Global
 		{B0BFAC0F-9F74-4770-9B12-A3A478DB0A71}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B0BFAC0F-9F74-4770-9B12-A3A478DB0A71}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B0BFAC0F-9F74-4770-9B12-A3A478DB0A71}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0A7F0377-628B-41A8-8849-00A3664B69B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0A7F0377-628B-41A8-8849-00A3664B69B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0A7F0377-628B-41A8-8849-00A3664B69B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0A7F0377-628B-41A8-8849-00A3664B69B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCCAC388-AC7D-4BA4-9C1E-58D3FAF5D0D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCCAC388-AC7D-4BA4-9C1E-58D3FAF5D0D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCCAC388-AC7D-4BA4-9C1E-58D3FAF5D0D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCCAC388-AC7D-4BA4-9C1E-58D3FAF5D0D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{700DF0C4-C965-4662-A91F-CD3BE043AC9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{700DF0C4-C965-4662-A91F-CD3BE043AC9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{700DF0C4-C965-4662-A91F-CD3BE043AC9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{700DF0C4-C965-4662-A91F-CD3BE043AC9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{539B4D21-F2A9-46A6-84F1-9A51884A62E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{539B4D21-F2A9-46A6-84F1-9A51884A62E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{539B4D21-F2A9-46A6-84F1-9A51884A62E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{539B4D21-F2A9-46A6-84F1-9A51884A62E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B84751C6-1B82-4DE8-9FBE-F0A67D981C43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B84751C6-1B82-4DE8-9FBE-F0A67D981C43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B84751C6-1B82-4DE8-9FBE-F0A67D981C43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B84751C6-1B82-4DE8-9FBE-F0A67D981C43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{287F370D-D680-4BE5-8577-7A180BD0A0E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{287F370D-D680-4BE5-8577-7A180BD0A0E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{287F370D-D680-4BE5-8577-7A180BD0A0E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{287F370D-D680-4BE5-8577-7A180BD0A0E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F281FE2A-3416-400A-8C9A-D88760908EA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F281FE2A-3416-400A-8C9A-D88760908EA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F281FE2A-3416-400A-8C9A-D88760908EA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F281FE2A-3416-400A-8C9A-D88760908EA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F515C47-D1BA-481D-B159-DA203CB6296A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F515C47-D1BA-481D-B159-DA203CB6296A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F515C47-D1BA-481D-B159-DA203CB6296A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F515C47-D1BA-481D-B159-DA203CB6296A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {83CB65B8-011F-4ED7-BCD3-A6CFA935EF7E}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BCCAC388-AC7D-4BA4-9C1E-58D3FAF5D0D5} = {5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}
+		{539B4D21-F2A9-46A6-84F1-9A51884A62E9} = {5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}
+		{B84751C6-1B82-4DE8-9FBE-F0A67D981C43} = {5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}
+		{700DF0C4-C965-4662-A91F-CD3BE043AC9E} = {5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}
+		{287F370D-D680-4BE5-8577-7A180BD0A0E3} = {5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}
+		{F281FE2A-3416-400A-8C9A-D88760908EA9} = {5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}
+		{4F515C47-D1BA-481D-B159-DA203CB6296A} = {5B7EE527-242E-4C87-9BB7-AD4E05EABC4C}
 	EndGlobalSection
 EndGlobal

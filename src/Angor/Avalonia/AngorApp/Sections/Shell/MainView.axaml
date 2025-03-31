@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
+             xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="AngorApp.Sections.Shell.MainView"
+             x:DataType="shell:MainViewModel">
+
+    <Design.DataContext>
+        <shell:MainViewModelDesign  />
+    </Design.DataContext>
+
+    <DockPanel Margin="10">
+        <shell:Sidebar Margin="10 20 10 20" />
+        <shell:Network DockPanel.Dock="Top" Margin="10 20 10 10" />
+        <ScrollViewer Margin="0 0 0 10">
+            <Interaction.Behaviors>
+                <behaviors:NestedScrollViewerBehavior />
+            </Interaction.Behaviors>
+            <ContentControl MinWidth="300" MinHeight="300" Margin="10 10 10 10" Content="{Binding CurrentContent^}" ClipToBounds="False" />
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

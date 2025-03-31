@@ -61,7 +61,7 @@ namespace Angor.Test
 
 
                 var founderKey = derivationOperations.DeriveFounderKey(new WalletWords { Words = mnemonic.ToString() }, 1);
-                var projectId = derivationOperations.DeriveProjectId(founderKey);
+                var projectId = derivationOperations.DeriveUniqueProjectIdentifier(founderKey);
                 var angorKey = derivationOperations.DeriveAngorKey(founderKey, rootKey);
                 var script = derivationOperations.AngorKeyToScript(angorKey);
             }
@@ -75,8 +75,8 @@ namespace Angor.Test
 
                 var words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor";
                 var founderKey = derivationOperations.DeriveFounderKey(new WalletWords { Words = words }, 1);
-                var founderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(new WalletWords { Words = words }, 1);
-                var projectId = derivationOperations.DeriveProjectId(founderKey);
+                var founderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(new WalletWords { Words = words }, founderKey);
+                var projectId = derivationOperations.DeriveUniqueProjectIdentifier(founderKey);
                 var angorKey = derivationOperations.DeriveAngorKey(founderKey, rootKey);
                 var script = derivationOperations.AngorKeyToScript(angorKey);
 
@@ -210,11 +210,10 @@ namespace Angor.Test
                 var derivationOperations = new DerivationOperations(new HdOperations(), _logger, _networkConfiguration.Object);
                 var words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor";
                 var walletWords = new WalletWords { Words = words };
-                int index = 1;
 
                 // Act
                 var tasks = Enumerable.Range(1, 10)
-                    .Select(i => derivationOperations.DeriveProjectNostrPrivateKeyAsync(walletWords, i));
+                    .Select(i => derivationOperations.DeriveProjectNostrPrivateKeyAsync(walletWords, new Key().PubKey.ToHex()));
 
                 var results = await Task.WhenAll(tasks);
 

@@ -63,9 +63,15 @@ public class FounderTransactionActions : IFounderTransactionActions
             var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
-            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}");
-
             var sig = key.SignTaprootKeySpend(hash, sigHash).ToString();
+
+            var hashHex = Encoders.Hex.EncodeData(hash.ToBytes());
+
+            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}; encodedHash={hashHex} signature-hex={sig}");
+
+            var result = key.PubKey.GetTaprootFullPubKey().VerifySignature(hash, TaprootSignature.Parse(sig).SchnorrSignature);
+
+            _logger.LogInformation($"verification = {result}");
 
             info.Signatures.Add(new SignatureInfoItem { Signature = sig, StageIndex = stageIndex });
         }
@@ -100,12 +106,17 @@ public class FounderTransactionActions : IFounderTransactionActions
             .Select(trx => AddInputToSpendingTransaction(projectInfo, stageNumber, trx, spendingTransaction))
             .ToList();
 
+        var txSize = spendingTransaction.GetVirtualSize();
+        var minimumFee = new FeeRate(Money.Satoshis(1100)).GetFee(txSize); //1000 sats per kilobyte
+        
         var totalFee = nbitcoinNetwork
             .CreateTransactionBuilder()
             .AddCoins(stageOutputs.Select(_ => _.ToCoin()))
             .EstimateFees(spendingTransaction, new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(fee.FeeRate)));
 
-        spendingTransaction.Outputs[0].Value -= totalFee;
+        spendingTransaction.Outputs[0].Value -= totalFee < minimumFee ? minimumFee : totalFee;
+
+        _logger.LogInformation($"Unsigned spendingTransaction hex {spendingTransaction.ToHex()}");
 
         // Step 4 - sign the taproot inputs
         var trxData = spendingTransaction.PrecomputeTransactionData(stageOutputs.Select(_ => _.TxOut).ToArray());
@@ -117,11 +128,15 @@ public class FounderTransactionActions : IFounderTransactionActions
         {
             var scriptToExecute = new NBitcoin.Script(input.WitScript[1]);
             var controlBlock = input.WitScript[2];
-            
+
             var execData = new TaprootExecutionData(inputIndex, scriptToExecute.TaprootV1LeafHash) { SigHash = sigHash };
             var hash = spendingTransaction.GetSignatureHashTaproot(trxData, execData);
-            
+
+            _logger.LogInformation($"sig hash of inputIndex {inputIndex} spendingTransaction hex {hash.ToString()}");
+
             var sig = key.SignTaprootKeySpend(hash, sigHash);
+
+            _logger.LogInformation($"sig of inputIndex {inputIndex} spendingTransaction hex {sig.ToString()}");
 
             // todo: throw a proper exception
             Debug.Assert(key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature));
@@ -131,9 +146,13 @@ public class FounderTransactionActions : IFounderTransactionActions
                 Op.GetPushOp(scriptToExecute.ToBytes()),
                 Op.GetPushOp(controlBlock));
 
+            _logger.LogInformation($"WitScript of inputIndex {inputIndex} spendingTransaction hex {input.WitScript.ToString()}");
+
             inputIndex++;
         }
 
+        _logger.LogInformation($"signed spendingTransaction hex {spendingTransaction.ToHex()}");
+        
         var finalTrx = network.CreateTransaction(spendingTransaction.ToHex());
 
         return new TransactionInfo {Transaction = finalTrx, TransactionFee = totalFee};
@@ -179,7 +198,7 @@ public class FounderTransactionActions : IFounderTransactionActions
          var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Founder);
          
          // use fake data for fee estimation
-         var sigPlaceHolder = new byte[64];
+         var sigPlaceHolder = new byte[65];
 
          input.WitScript = new WitScript(Op.GetPushOp(sigPlaceHolder), Op.GetPushOp(scriptStages.Founder.ToBytes()),
              Op.GetPushOp(controlBlock.ToBytes()));

@@ -4,6 +4,7 @@ public class SettingsInfo
 {
     public List<SettingsUrl> Indexers { get; set; } = new();
     public List<SettingsUrl> Relays { get; set; } = new();
+    public List<SettingsUrl> Explorers { get; set; } = new();
 }
 
 public class SettingsUrl

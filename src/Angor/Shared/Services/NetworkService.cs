@@ -74,6 +74,12 @@ namespace Angor.Shared.Services
         {
             var settings = _networkStorage.GetSettings();
 
+            if (!settings.Explorers.Any())
+            {
+                settings.Explorers.AddRange(_networkConfiguration.GetDefaultExplorerUrls());
+                _networkStorage.SetSettings(settings);
+            }
+
             if (!settings.Indexers.Any())
             {
                 settings.Indexers.AddRange(_networkConfiguration.GetDefaultIndexerUrls());
@@ -100,7 +106,10 @@ namespace Angor.Shared.Services
                     try
                     {
                         var uri = new Uri(indexerUrl.Url);
-                        var response = await _httpClient.GetAsync($"{uri}api/stats/heartbeat");
+                        
+                        var blockUrl = Path.Combine(uri.AbsoluteUri, "api", "v1", "block-height", "0");
+
+                        var response = await _httpClient.GetAsync(blockUrl);
 
                         if (response.IsSuccessStatusCode)
                         {
@@ -120,6 +129,37 @@ namespace Angor.Shared.Services
                 }
             }
 
+            //foreach (var explorerUrl in settings.Explorers)
+            //{
+            //    if (force || (DateTime.UtcNow - explorerUrl.LastCheck).Minutes > 10)
+            //    {
+            //        explorerUrl.LastCheck = DateTime.UtcNow;
+
+            //        try
+            //        {
+            //            var uri = new Uri(explorerUrl.Url);
+                        
+            //             var heartbeatUrl = new Uri(uri, "api/stats/heartbeat").ToString();
+            //             var response = await _httpClient.GetAsync(heartbeatUrl);
+
+            //            if (response.IsSuccessStatusCode)
+            //            {
+            //                explorerUrl.Status = UrlStatus.Online;
+            //            }
+            //            else
+            //            {
+            //                _logger.LogError($"Failed to check explorer status url = {explorerUrl.Url}, StatusCode = {response.StatusCode}");
+            //            }
+            //            OnStatusChanged?.Invoke();
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            explorerUrl.Status = UrlStatus.Offline;
+            //            _logger.LogError(ex, $"Failed to check explorer status url = {explorerUrl.Url}");
+            //        }
+            //    }
+            //}
+
             var nostrHeaderMediaType = new MediaTypeWithQualityHeaderValue("application/nostr+json");
             _httpClient.DefaultRequestHeaders.Accept.Add(nostrHeaderMediaType);
             foreach (var relayUrl in settings.Relays)
@@ -131,8 +171,10 @@ namespace Angor.Shared.Services
                     try
                     {
                         var uri = new Uri(relayUrl.Url);
-                        var httpUri = uri.Scheme == "wss" ? new Uri($"https://{uri.Host}/") : new Uri($"http://{uri.Host}/");
-                        
+                        var httpUri = uri.Scheme == "wss"
+                            ? new Uri($"https://{uri.Host}/")
+                            : new Uri($"http://{uri.Host}/");
+
                         var response = await _httpClient.GetAsync(httpUri);
 
                         if (response.IsSuccessStatusCode)
@@ -143,7 +185,8 @@ namespace Angor.Shared.Services
                         }
                         else
                         {
-                            _logger.LogError($"Failed to check relay status url = {relayUrl.Url}, StatusCode = {response.StatusCode}");
+                            _logger.LogError(
+                                $"Failed to check relay status url = {relayUrl.Url}, StatusCode = {response.StatusCode}");
                         }
                     }
                     catch (Exception ex)
@@ -184,7 +227,6 @@ namespace Angor.Shared.Services
             }
 
             return ret;
-
         }
 
         public List<SettingsUrl> GetRelays()
@@ -192,6 +234,20 @@ namespace Angor.Shared.Services
             var settings = _networkStorage.GetSettings();
 
             return settings.Relays;
+        }
+
+        public SettingsUrl GetPrimaryExplorer()
+        {
+            var settings = _networkStorage.GetSettings();
+
+            var ret = settings.Explorers.FirstOrDefault(p => p.IsPrimary);
+
+            if (ret == null)
+            {
+                throw new ApplicationException("No explorer found go to settings to add an explorer.");
+            }
+
+            return ret;
         }
 
         public void CheckAndHandleError(HttpResponseMessage httpResponseMessage)
@@ -202,7 +258,8 @@ namespace Angor.Shared.Services
                 {
                     var settings = _networkStorage.GetSettings();
 
-                    var host = settings.Indexers.FirstOrDefault(a => new Uri(a.Url).Host == httpResponseMessage.RequestMessage?.RequestUri?.Host);
+                    var host = settings.Indexers.FirstOrDefault(a =>
+                        new Uri(a.Url).Host == httpResponseMessage.RequestMessage?.RequestUri?.Host);
 
                     if (host != null)
                     {

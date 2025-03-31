@@ -1,6 +1,7 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
+using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP39;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -35,7 +36,7 @@ public class AngorTestData
         startDate ??= DateTime.UtcNow;
         
         var projectInvestmentInfo = new ProjectInfo();
-        projectInvestmentInfo.TargetAmount = 3;
+        projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
         projectInvestmentInfo.StartDate = startDate.Value;
         projectInvestmentInfo.ExpiryDate = startDate.Value.AddDays(5);
         projectInvestmentInfo.PenaltyDays = 10;
@@ -46,9 +47,8 @@ public class AngorTestData
             new() { AmountToRelease = (decimal)0.4, ReleaseDate = startDate.Value.AddDays(3) }
         };
         projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
-        projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, 1);
-        projectInvestmentInfo.ProjectIdentifier =
-            _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+        projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
+        projectInvestmentInfo.ProjectIdentifier = _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
         
         projectInvestmentInfo.ProjectSeeders = new ProjectSeeders { Threshold = 2 };
         return projectInvestmentInfo;

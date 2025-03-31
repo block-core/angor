@@ -1,4 +1,5 @@
 using Angor.Shared.Models;
+using Blockcore.NBitcoin;
 
 namespace Angor.Client.Models;
 
@@ -58,7 +59,7 @@ public class FlattenedProjectTest
             StartDate = StartDate,
             PenaltyDays = PenaltyDays,
             ExpiryDate = ExpiryDate,
-            TargetAmount = TargetAmount,
+            TargetAmount = Money.Satoshis(TargetAmount),
             Stages = new List<Stage>(Stages),
             //CreationTransactionId = CreationTransactionId,
             ProjectSeeders = ProjectSeeders

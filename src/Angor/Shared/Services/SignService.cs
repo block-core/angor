@@ -1,6 +1,8 @@
 ﻿using System.Reactive.Linq;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using Newtonsoft.Json;
+using Nostr.Client.Json;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 using Nostr.Client.Requests;
@@ -20,17 +22,17 @@ namespace Angor.Client.Services
             _subscriptionsHanding = subscriptionsHanding;
         }
 
-        public (DateTime,string) RequestInvestmentSigs(SignRecoveryRequest signRecoveryRequest)
+        public (DateTime,string) RequestInvestmentSigs(string encryptedContent, string investorNostrPrivateKey, string founderNostrPubKey)
         {
-            var sender = NostrPrivateKey.FromHex(signRecoveryRequest.InvestorNostrPrivateKey);
+            var sender = NostrPrivateKey.FromHex(investorNostrPrivateKey);
 
             var ev = new NostrEvent
             {
                 Kind = NostrKind.EncryptedDm,
                 CreatedAt = DateTime.UtcNow,
-                Content = signRecoveryRequest.EncryptedContent,
+                Content = encryptedContent,
                 Tags = new NostrEventTags(
-                    NostrEventTag.Profile(signRecoveryRequest.NostrPubKey),
+                    NostrEventTag.Profile(founderNostrPubKey),
                     new NostrEventTag("subject","Investment offer"))
             };
 
@@ -46,7 +48,7 @@ namespace Angor.Client.Services
             return (signed.CreatedAt!.Value, signed.Id);
         }
 
-        public void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime sigRequestSentTime, string sigRequestEventId, Func<string, Task> action)
+        public void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
@@ -55,6 +57,7 @@ namespace Angor.Client.Services
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == projectNostrPubKey)
                     .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
                     .Subscribe(_ => { action.Invoke(_.Event.Content); });
 
                 _subscriptionsHanding.TryAddRelaySubscription(projectNostrPubKey, subscription);
@@ -82,6 +85,7 @@ namespace Angor.Client.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Investment offer")
                     .Select(_ => _.Event)
                     .Subscribe(nostrEvent =>
                     {
@@ -116,6 +120,7 @@ namespace Angor.Client.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
                     .Select(_ => _.Event)
                     .Subscribe(nostrEvent =>
                     {
@@ -159,9 +164,106 @@ namespace Angor.Client.Services
             return ev.CreatedAt.Value;
         }
 
+        public DateTime SendReleaseSigsToInvestor(string encryptedReleaseSigInfo, string nostrPrivateKeyHex, string investorNostrPubKey, string eventId)
+        {
+            var nostrPrivateKey = NostrPrivateKey.FromHex(nostrPrivateKeyHex);
+
+            var ev = new NostrEvent
+            {
+                Kind = NostrKind.EncryptedDm,
+                CreatedAt = DateTime.UtcNow,
+                Content = encryptedReleaseSigInfo,
+                Tags = new NostrEventTags(new[]
+                {
+                    NostrEventTag.Profile(investorNostrPubKey),
+                    NostrEventTag.Event(eventId),
+                    new NostrEventTag("subject", "Release transaction signatures"),
+                })
+            };
+
+            var signed = ev.Sign(nostrPrivateKey);
+
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            nostrClient.Send(new NostrEventRequest(signed));
+
+            return ev.CreatedAt.Value;
+        }
+
+        public void LookupReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Action<string> action, Action onAllMessagesReceived)
+        {
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            var subscriptionKey = projectNostrPubKey.Substring(0, 20) + "rel_sigs";
+
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Release transaction signatures")
+                    .Subscribe(_ => { action.Invoke(_.Event.Content); });
+
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
+
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                Authors = new[] { projectNostrPubKey }, // From founder
+                P = new[] { investorNostrPubKey }, // To investor
+                Kinds = new[] { NostrKind.EncryptedDm }, 
+                Since = releaseRequestSentTime,
+                E = new[] { releaseRequestEventId },
+                Limit = 1,
+            }));
+        }
+
+        public void LookupSignedReleaseSigs(string projectNostrPubKey, Action<SignServiceLookupItem> action, Action onAllMessagesReceived)
+        {
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            var subscriptionKey = projectNostrPubKey.Substring(0, 20) + "sing_sigs";
+
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Release transaction signatures")
+                    .Select(_ => _.Event)
+                    .Subscribe(nostrEvent =>
+                    {
+                        action.Invoke(new SignServiceLookupItem
+                        {
+                            NostrEvent = nostrEvent,
+                            ProfileIdentifier = nostrEvent.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier),
+                            EventCreatedAt = nostrEvent.CreatedAt.Value,
+                            EventIdentifier = nostrEvent.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier)
+                        });
+                    });
+
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
+
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilterWithSubject
+            {
+                Authors = new[] { projectNostrPubKey }, // From founder
+                Kinds = new[] { NostrKind.EncryptedDm },
+                //Subject =  "Release transaction signatures"
+            }));
+        }
+
         public void CloseConnection()
         {
             _subscriptionsHanding.Dispose();
         }
+    }
+    
+    public class NostrFilterWithSubject : NostrFilter
+    {
+        /// <summary>A list of subjects to filter by, corresponding to the "subject" tag</summary>
+        [JsonProperty("#subject")]
+        public string? Subject { get; set; }
     }
 }

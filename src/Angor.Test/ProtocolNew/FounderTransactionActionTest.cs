@@ -3,7 +3,6 @@ using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
-using Angor.Shared.ProtocolNew.TransactionBuilders;
 using Angor.Test.DataBuilders;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
@@ -72,7 +71,7 @@ public class FounderTransactionActionTest : AngorTestData
         projectInvestmentInfo.ProjectSeeders.SecretHashes.Add(seederContext.InvestorSecretHash);
 
         return operations.CreateInvestmentTransaction(network, seederContext,
-            Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+            projectInvestmentInfo.TargetAmount);
     }
 
     private Transaction GivenAnInvestorTransaction(ProjectInfo projectInvestmentInfo)
@@ -88,8 +87,7 @@ public class FounderTransactionActionTest : AngorTestData
         context.InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes());
         context.ChangeAddress = seederChangeKey.PubKey.GetSegwitAddress(network).ToString();
 
-        return operations.CreateInvestmentTransaction(network, context,
-            Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+        return operations.CreateInvestmentTransaction(network, context, projectInvestmentInfo.TargetAmount);
     }
 
     /// <summary>
@@ -98,22 +96,20 @@ public class FounderTransactionActionTest : AngorTestData
     [Fact]
     public void SignInvestorRecoveryTransactions_CreatesValidSignatures()
     {
-        var words = new WalletWords
-            { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+        var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
         var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
 
-        var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, 1);
+        var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, projectInvestmentInfo.FounderKey);
 
-        var investmentTrxHex =
-            "010000080005c0c62d0000000000160014e503a24793c82bf7f7eb18cfca6589df1360dcf40000000000000000236a21038a7eedf38d874799c0d7579d5f08d605ca039da7f6dc7c57e6abd82f0f380334e0930400000000002251207aade2c416ca565c1b66041eac56d707a26aa8bab7d217190ecf3aa57899c9a360e316000000000022512048dc0a52f43379c6515962a40eec91d183582c8e2c861d612e4e564617d08a67804f120000000000225120f57ad9ed9e0fb880cda0847cfea668a4c3ccb1b9a08bdbcc3f029e8ad0380c9d00000000";
-        var recoveryTrxHex = "010000000396174a48b38bc96a0addafd1ccfdc478a53aae572c3cc5240b33231939eb67880200000000ffffffff96174a48b38bc96a0addafd1ccfdc478a53aae572c3cc5240b33231939eb67880300000000ffffffff96174a48b38bc96a0addafd1ccfdc478a53aae572c3cc5240b33231939eb67880400000000ffffffff03e09304000000000022002012f9e11fd7142b631007a4c8cde632a0f851fcc6b61fbd6f09ceebf30ea6d4eb60e316000000000022002012f9e11fd7142b631007a4c8cde632a0f851fcc6b61fbd6f09ceebf30ea6d4eb804f12000000000022002012f9e11fd7142b631007a4c8cde632a0f851fcc6b61fbd6f09ceebf30ea6d4eb00000000";
+        var investmentTrxHex = "01000008000500c06e31d910010016001416623eb694e4db75d29e5a1cdf7c278b92cc40e10000000000000000236a21038a8157a3a5c6acb0e8b52798e5ed04bc7fc10226b6ab771ec4ffdb43b2ca909400e057eb481b0000225120dc7dea05eee77059b9a3752e364d8347f5021f92f4031888be106848c5b859e40060b7986c8800002251207d3252a2f7778d5fc18b7186ecbf091ce7951878ded82d4136c4a0991ae9f04c00805fad236d00002251207ac912655a09ff2231a6675dd9c796692ceb51733edd78031f965d94e938d10100000000";
+        var recoveryTrxHex = "0100000003e3bc520467543c1c47d51c70fa06178892306b1431f7e6770ddde2330f3887460200000000ffffffffe3bc520467543c1c47d51c70fa06178892306b1431f7e6770ddde2330f3887460300000000ffffffffe3bc520467543c1c47d51c70fa06178892306b1431f7e6770ddde2330f3887460400000000ffffffff0300e057eb481b0000220020428faca0638007b13911825a7845cd7a8bc682e58688b89396afc45cf69d98180060b7986c880000220020428faca0638007b13911825a7845cd7a8bc682e58688b89396afc45cf69d981800805fad236d0000220020428faca0638007b13911825a7845cd7a8bc682e58688b89396afc45cf69d981800000000";
         var recoveryTransaction = Networks.Bitcoin.Testnet().CreateTransaction(recoveryTrxHex);
         var key = new NBitcoin.Key(founderRecoveryPrivateKey.ToBytes());
         var expectedHashes = new List<NBitcoin.uint256>()
         {
-            new(Encoders.Hex.DecodeData("76e77d8738586b9bafd708421371314872165e9f113946a11bc1112e2fbc8f41")),
-            new(Encoders.Hex.DecodeData("7f0fa60f9f991f291bdaea122635eaab8f3e1a7b29fcb4e5f2e270f0c11ba435")),
-            new (Encoders.Hex.DecodeData("4e4f9533500faea374fd71e59ae3ef20cc9bb397f6a95ee6dcf47fc17e10708b"))
+            new(Encoders.Hex.DecodeData("bc319cc189ac8ef54e2c3b0051bccf77db0d9dec9c39142ac011e98a4f3b4610")),
+            new(Encoders.Hex.DecodeData("0d0735181252e9fb4b28644c8d9b0131aa7d9d65c374e406309783548623a82a")),
+            new (Encoders.Hex.DecodeData("a1b81722e2946e2679561f7ec3b475a35f0d3624a20b7366f6fcb94769fb080e"))
         };
         
         var result = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, investmentTrxHex, recoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
@@ -201,30 +197,32 @@ public class FounderTransactionActionTest : AngorTestData
             transactionList.Select(_ => _.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1).ToCoin()));
     }
 
+    // a method to generate test data
     public void GenerateVectorsFor_SignInvestorRecoveryTransactions_CreatesValidSignatures()
     {
-        // this cod generates text vectors for SignInvestorRecoveryTransactions_CreatesValidSignatures
+        // this code generates text vectors for SignInvestorRecoveryTransactions_CreatesValidSignatures
 
         //InvestorTransactionActions _investorTransactionActions;  // needed to recreate the vector parameters
 
-        // needed to recreate the vector parameters
-        //_investorTransactionActions = new InvestorTransactionActions(
-        //    new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), 
+        //// needed to recreate the vector parameters
+        //_investorTransactionActions = new InvestorTransactionActions(NullLogger<InvestorTransactionActions>.Instance,
+        //    new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
         //    new ProjectScriptsBuilder(_derivationOperations),
         //    new SpendingTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
-        //    new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder())), 
+        //    new InvestmentTransactionBuilder(_networkConfiguration.Object, new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder()),
         //    new TaprootScriptBuilder(),
         //    _networkConfiguration.Object);
 
-        // and in the method SignInvestorRecoveryTransactions use the method
-        // Encoders.Hex.Encode() on the hash of each GetSignatureHashTaproot
+        //var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+        //var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
+        //var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, projectInvestmentInfo.FounderKey);
+
+        //// and in the method SignInvestorRecoveryTransactions use the method
+        ////Encoders.Hex.Encode() on the hash of each GetSignatureHashTaproot
         //var investorKey = _derivationOperations.DeriveInvestorKey(words, projectInvestmentInfo.FounderKey);
-        //var build_investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, investorKey,
-        //    Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
-        //var build_recoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInvestmentInfo,
-        //    build_investmentTransaction);
-        //var build_founderSignatures = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo,
-        //    build_investmentTransaction.ToHex(), build_recoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+        //var build_investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, investorKey, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
+        //var build_recoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInvestmentInfo, build_investmentTransaction);
+        //var build_founderSignatures = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, build_investmentTransaction.ToHex(), build_recoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
         //var build_investmentTransactionHex = build_investmentTransaction.ToHex();
         //var build_recoveryTransactionHex = build_recoveryTransaction.ToHex();
 

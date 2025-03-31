@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Blockcore.Consensus.ScriptInfo;
@@ -40,7 +37,7 @@ public class WalletOperations : IWalletOperations
     }
     
     public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
+        WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -55,7 +52,7 @@ public class WalletOperations : IWalletOperations
             .AddKeys(coins.keys.ToArray())
             .SetChange(BitcoinAddress.Create(changeAddress, network))
             .ContinueToBuild(transaction)
-            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate.FeeRate)))
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
             .CoverTheRest();
 
         var signTransaction = builder.BuildTransaction(true);
@@ -73,38 +70,68 @@ public class WalletOperations : IWalletOperations
 
         var minerFee = totaInInputs - totaInOutputs;
 
+        var txSize = signTransaction.GetVirtualSize(4);
+        var minimumFee = new FeeRate(Money.Satoshis(1000)).GetFee(txSize); //1000 sats per kilobyte
+        
+        if (minerFee < minimumFee) //Fixed a bug in the builder that creates a fee that is too small
+        {
+            builder.SendFees(minimumFee);
+            signTransaction = builder.BuildTransaction(true);
+        }
+
         return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
     }
 
     public TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, FeeEstimation feeRate)
+        WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
+        // Clone transaction for modification
         var clonedTransaction = network.CreateTransaction(transaction.ToHex());
+        var changeOutput =
+            clonedTransaction.AddOutput(Money.Zero, BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
 
-        var changeOutput = clonedTransaction.AddOutput(Money.Zero, BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
+        // Step 1: Estimate fee for the transaction WITHOUT inputs
+        var initialSize = clonedTransaction.GetVirtualSize(4);
+        var initialFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(initialSize);
 
-        var virtualSize = clonedTransaction.GetVirtualSize(4);
-        var fee = new FeeRate(Money.Satoshis(feeRate.FeeRate)).GetFee(virtualSize);
-        
-        var utxoDataWithPaths = FindOutputsForTransaction((long)fee, accountInfo);
+        // Step 2: Find UTXOs to fund the total cost of transaction (outputs + initial fee)
+        var utxoDataWithPaths = FindOutputsForTransaction((long)initialFee, accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
-        // todo: dan - the fee here is calculated for the trx size before adding inputs,
-        // we must increase the fee to account also for the new inputs that the fee is paid from.
-
-        var totalSats = coins.coins.Sum(s => s.Amount.Satoshi);
-        totalSats -= fee;
-        changeOutput.Value = new Money(totalSats);
-
-        // add all inputs
+        // Step 3: Add inputs and recalculate the transaction size
         foreach (var coin in coins.coins)
         {
-            clonedTransaction.AddInput(new TxIn(coin.Outpoint, null));
+            if (clonedTransaction.Inputs.Any(x => x.PrevOut == coin.Outpoint))
+                continue;
+            var txin = new TxIn(coin.Outpoint, null);
+            txin.WitScript = new WitScript(Op.GetPushOp(new byte[72]), Op.GetPushOp(new byte[33])); // for total size calculation
+            clonedTransaction.AddInput(txin);
         }
 
-        // sign each new input
+        var totalSize = clonedTransaction.GetVirtualSize(4);
+
+        // Step 4: Calculate fee again, based on the UPDATED size with inputs
+        var totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize);
+
+        // Step 5: Adjust the change output (remaining coins after paying the fee)
+        var totalSats = coins.coins.Sum(s => s.Amount.Satoshi);
+        totalSats -= totalFee;
+
+        // Handle cases where change is below "dust threshold" for SegWit
+        if (totalSats <= 294)
+        {
+            // Absorb small change into the transaction fee
+            changeOutput.Value = Money.Zero;
+            totalFee += totalSats; // Add leftover to fee
+        }
+        else
+        {
+            changeOutput.Value = Money.Satoshis(totalSats);
+        }
+
+        // Step 6: Sign inputs
         var index = 0;
         foreach (var coin in coins.coins)
         {
@@ -117,32 +144,34 @@ public class WalletOperations : IWalletOperations
             index++;
         }
 
-        return new TransactionInfo { Transaction = clonedTransaction, TransactionFee = fee };
+        return new TransactionInfo { Transaction = clonedTransaction, TransactionFee = totalFee };
     }
 
-    public async Task<OperationResult<Transaction>> SendAmountToAddress(WalletWords walletWords, SendInfo sendInfo) //TODO change the passing of wallet words as parameter after refactoring is complete
+    public async Task<OperationResult<Transaction>>
+        SendAmountToAddress(WalletWords walletWords,
+            SendInfo sendInfo) //TODO change the passing of wallet words as parameter after refactoring is complete
     {
         Network network = _networkConfiguration.GetNetwork();
 
-        if (sendInfo.SendAmountSat > sendInfo.SendUtxos.Values.Sum(s => s.UtxoData.value))
+        if (sendInfo.SendAmount > sendInfo.SendUtxos.Values.Sum(s => s.UtxoData.value))
         {
             throw new ApplicationException("not enough funds");
         }
-        
+
         var (coins, keys) =
-            GetUnspentOutputsForTransaction(walletWords,sendInfo.SendUtxos.Values.ToList());
-        
+            GetUnspentOutputsForTransaction(walletWords, sendInfo.SendUtxos.Values.ToList());
+
         if (coins == null)
         {
             return new OperationResult<Transaction> { Success = false, Message = "not enough funds" };
         }
 
         var builder = new TransactionBuilder(network)
-            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), Money.Coins(sendInfo.SendAmount))
+            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), Money.Satoshis(sendInfo.SendAmount))
             .AddCoins(coins)
             .AddKeys(keys.ToArray())
             .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network))
-            .SendEstimatedFees(new FeeRate(Money.Coins(sendInfo.FeeRate)));
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(sendInfo.FeeRate)));
 
         var signedTransaction = builder.BuildTransaction(true);
 
@@ -539,7 +568,7 @@ public class WalletOperations : IWalletOperations
             var feeEstimations = await _indexerService.GetFeeEstimationAsync(blocks);
 
             if (feeEstimations == null || (!feeEstimations.Fees?.Any() ?? true))
-                return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRate = 10000 / _});
+                return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRate = 10000 / _}); // default to 1 satoshi per byte for 10 blocks and 10 satoshi for 1 block  
 
             _logger.LogInformation($"fee estimation is {string.Join(", ", feeEstimations.Fees.Select(f => f.Confirmations.ToString() + "-" + f.FeeRate))}");
 
@@ -558,7 +587,7 @@ public class WalletOperations : IWalletOperations
 
         if (sendInfo.SendUtxos.Count == 0)
         {
-            var utxosToSpend = FindOutputsForTransaction(sendInfo.SendAmountSat, accountInfo);
+            var utxosToSpend = FindOutputsForTransaction(sendInfo.SendAmount, accountInfo);
 
             foreach (var data in utxosToSpend) //TODO move this out of the fee calculation
             {
@@ -572,7 +601,7 @@ public class WalletOperations : IWalletOperations
                 Money.Satoshis(_.value), Script.FromHex(_.scriptHex)));
 
         var builder = new TransactionBuilder(network)
-            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), sendInfo.SendAmountSat)
+            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), sendInfo.SendAmount)
             .AddCoins(coins)
             .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network));
 

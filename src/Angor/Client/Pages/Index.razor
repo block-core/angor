@@ -1,16 +1,93 @@
 ﻿@page "/"
+@inject NavMenuState NavMenuState
+@implements IDisposable
+
 <PageTitle>Angor</PageTitle>
-<div class="card">
-    <div class="row g-0">
-        <div class=" d-flex align-items-center justify-content-center position-relative">
-            <!-- Loader for Card -->
-            <div class="card-body card-loader loading text-center">
-                 <span class="main-logo mb-3">
-                    <Icon IconName="angor-logo" Width="72" Height="72" />
-                </span>
-                <h5 class="card-title text-center">Welcome to Angor</h5>
-                <p class="card-text text-center">A decentralized crowdfunding protocol built on Bitcoin and Nostr</p>
+
+<div class="card b-shadow">
+    <div class="card-body text-center py-5">
+        <div class="animate-fade-in">
+            <span class="main-logo mb-4 d-block">
+                <Icon IconName="angor-logo" Width="96" Height="96" />
+            </span>
+            <h2 class="mb-3 text-primary">Welcome to Angor</h2>
+            <p class="lead mb-4">A P2P funding protocol built on Bitcoin and Nostr</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="/wallet" class="btn btn-border">Get Started</a>
+                <a href="https://docs.angor.io" target="_blank" class="btn btn-border">Learn More</a>
             </div>
         </div>
     </div>
 </div>
+
+<div class="mt-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4">
+        <div class="col">
+            <a href="/wallet" class="text-decoration-none h-100 d-block">
+                <div class="card b-shadow hover-effect h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="mb-3 text-primary d-flex justify-content-center">
+                            <Icon IconName="wallet" Width="48" Height="48" />
+                        </i>
+                        <h4 class="card-title h5 mb-3 mt-4">Create Your Wallet</h4>
+                        <p class="card-text text-muted">Create a new wallet or recover your existing one to get started with Angor</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="/browse" class="text-decoration-none h-100 d-block">
+                <div class="card b-shadow hover-effect h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="mb-3 text-primary d-flex justify-content-center">
+                            <Icon IconName="browse" Width="48" Height="48" />
+                        </i>
+                        <h4 class="card-title h5 mb-3 mt-4">Explore Opportunities</h4>
+                        <p class="card-text text-muted">Browse through innovative projects and find your next investment</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="/founder" class="text-decoration-none h-100 d-block">
+                <div class="card b-shadow hover-effect h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="mb-3 text-primary d-flex justify-content-center">
+                            <Icon IconName="founder" Width="48" Height="48" />
+                        </i>
+                        <h4 class="card-title h5 mb-3 mt-4">Launch Your Project</h4>
+                        <p class="card-text text-muted">Start your fundraising journey and launch your project on Angor</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="/investor" class="text-decoration-none h-100 d-block">
+                <div class="card b-shadow hover-effect h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="mb-3 text-primary d-flex justify-content-center">
+                            <Icon IconName="portfolio" Width="48" Height="48" />
+                        </i>
+                        <h4 class="card-title h5 mb-3 mt-4">Invest & Grow</h4>
+                        <p class="card-text text-muted">Invest in promising projects and be part of their success story</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        NavMenuState.SetActivePage("");
+    }
+
+    public void Dispose()
+    {
+        // Clean up if needed
+    }
+}
