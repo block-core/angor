@@ -102,8 +102,7 @@
 
         if (exception != null)
         {
-            Logger.LogError(exception, "An error occurred: {Message}", message ?? exception.Message);
-            exceptionDetails = $"Exception Type: {exception.GetType().Name}\n" +
+             exceptionDetails = $"Exception Type: {exception.GetType().Name}\n" +
                              $"Message: {exception.Message}\n" +
                              $"Stack Trace:\n{exception.StackTrace}";
         }
