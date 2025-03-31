@@ -736,7 +736,7 @@
                 return;
             }
 
-            newExplorerLink = $"{uri.Scheme}://{uri.Authority}".TrimEnd('/');
+            newExplorerLink = $"{uri.Scheme}://{uri.Authority}";
 
             if (settingsInfo.Explorers.Any(a => a.Url == newExplorerLink))
             {
@@ -779,7 +779,7 @@
                 return;
             }
 
-            newChatAppLink = $"{uri.Scheme}://{uri.Authority}".TrimEnd('/');
+            newChatAppLink = $"{uri.Scheme}://{uri.Authority}";
 
             if (settingsInfo.ChatApps.Any(a => a.Url == newChatAppLink))
             {
