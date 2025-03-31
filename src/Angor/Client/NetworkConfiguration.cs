@@ -147,7 +147,7 @@ public class NetworkConfiguration : INetworkConfiguration
 
         throw new ApplicationException("Network not set");
     }
-    
+
     public string GetGenesisBlockHash()
     {
         // Determine the correct genesis block hash based on the network type
@@ -161,7 +161,7 @@ public class NetworkConfiguration : INetworkConfiguration
             _ => throw new NotSupportedException($"Network type {currentNetwork.NetworkType.ToString()} is not supported")
         };
     }
-    
+
     public string GetNetworkNameFromGenesisBlockHash(string genesisBlockHash)
     {
         return genesisBlockHash switch
@@ -177,19 +177,10 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public List<SettingsUrl> GetDefaultChatAppUrls()
     {
-        if (currentNetwork.NetworkType == NetworkType.Mainnet)
-        {
-            return new List<SettingsUrl>
+        return new List<SettingsUrl>
             {
                 new SettingsUrl { Name = "Angor Chat", Url = "https://chat.angor.io/dm", IsPrimary = true },
                 new SettingsUrl { Name = "Primal", Url = "https://primal.net/dms", IsPrimary = false },
             };
-        }
-
-        return new List<SettingsUrl>
-        {
-                new SettingsUrl { Name = "Angor Chat", Url = "https://chat.angor.io/dm", IsPrimary = true },
-                new SettingsUrl { Name = "Primal", Url = "https://primal.net/dms", IsPrimary = false }
-      };
     }
 }
