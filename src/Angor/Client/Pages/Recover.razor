@@ -958,7 +958,9 @@
 
             if (!response.Success)
             {
-                notificationComponent.ShowErrorMessage(response.Message);
+                var transactionException = new Exception(response.Message);
+                Logger.LogError(transactionException, "Transaction publishing failed");
+                notificationComponent.ShowErrorMessage("Transaction failed", transactionException);
                 return;
             }
 
@@ -1106,7 +1108,9 @@
 
             if (!response.Success)
             {
-                notificationComponent.ShowErrorMessage(response.Message);
+                var transactionException = new Exception(response.Message);
+                Logger.LogError(transactionException, "Transaction publishing failed");
+                notificationComponent.ShowErrorMessage("Transaction failed", transactionException);
                 return;
             }
 
@@ -1244,7 +1248,9 @@
 
             if (!response.Success)
             {
-                notificationComponent.ShowErrorMessage(response.Message);
+                var transactionException = new Exception(response.Message);
+                Logger.LogError(transactionException, "Transaction publishing failed");
+                notificationComponent.ShowErrorMessage("Transaction failed", transactionException);
                 return;
             }
 

@@ -1214,7 +1214,9 @@
 
             if (!response.Success)
             {
-                notificationComponent.ShowErrorMessage(response.Message);
+                var transactionException = new Exception(response.Message);
+                _Logger.LogError(transactionException, "Transaction publishing failed");
+                notificationComponent.ShowErrorMessage("Transaction failed", transactionException);
                 return;
             }
 
