@@ -980,9 +980,7 @@ else
 
             if (!response.Success)
             {
-                var transactionException = new Exception(response.Message);
-                _Logger.LogError(transactionException, "Transaction publishing failed");
-                notificationComponent.ShowErrorMessage("Transaction failed", transactionException);
+                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
                 return;
             }
 
