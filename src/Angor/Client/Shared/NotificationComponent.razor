@@ -118,6 +118,9 @@
         }
 
         errorMessage = message ?? exception?.Message ?? "An unexpected error occurred.";
+      
+        Logger.LogError(exception, errorMessage);
+       
         showExceptionDetails = false;
         StateHasChanged();
     }
