@@ -29,6 +29,7 @@
 @inject ISignService _SignService;
 @inject IRelayService _RelayService;
 @inject IWalletUIService _walletUIService
+@inject IIndexerService _IndexerService
 
 @inject IInvestorTransactionActions _InvestorTransactionActions;
 
@@ -689,20 +690,6 @@ else
 
     private async Task InvestFunds()
     {
-        var words = await passwordComponent.GetWalletAsync();
-
-        if (project != null)
-        {
-            var investorPubKey = _DerivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
-
-            var isAlreadyInvested = await IsInvestorAlreadyInvestedAsync(project.ProjectInfo.ProjectIdentifier, investorPubKey);
-            if (isAlreadyInvested)
-            {
-                notificationComponent.ShowErrorMessage("You are already invested in this project.");
-                return;
-            }
-        }
-
         if (Investment.IsSeeder)
         {
             bool isTestnet = network.NetworkType == NetworkType.Testnet;
@@ -750,14 +737,24 @@ else
 
         try
         {
+            var words = await passwordComponent.GetWalletAsync();
+
             var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
-            
+
             InvestorPubKey = _derivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
+
+            var isAlreadyInvested = await IsInvestorAlreadyInvestedAsync(words, project.ProjectInfo.ProjectIdentifier, InvestorPubKey);
+
+            if (isAlreadyInvested)
+            {
+                notificationComponent.ShowErrorMessage("You are already invested in this project.");
+                return;
+            }
 
             if (Investment.IsSeeder)
             {
@@ -1135,12 +1132,22 @@ else
         notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
     }
     
-    public async Task<bool> IsInvestorAlreadyInvestedAsync(string projectId, string investorPubKey)
+    public async Task<bool> IsInvestorAlreadyInvestedAsync(WalletWords words, string projectId, string investorPubKey)
     {
-        // Step 1: Fetch investments for the given project
-        var investments = await _IndexerService.GetInvestmentsAsync(projectId);
+        if (project != null)
+        {
+            var investments = await _IndexerService.GetInvestmentsAsync(projectId);
 
-        // Step 2: Check if the investor's public key exists in the list of investments
-        return investments.Any(investment => investment.InvestorPublicKey == investorPubKey);
+            var isAlreadyInvested = investments.Any(investment => investment.InvestorPublicKey == investorPubKey);
+
+
+            if (isAlreadyInvested)
+            {
+                
+                return true;
+            }
+        }
+
+        return false;
     }
 }
