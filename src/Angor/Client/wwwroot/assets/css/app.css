@@ -4219,3 +4219,18 @@ select.form-control {
     display: none;
   }
   
+  .technical-details {
+    background-color: rgba(0, 0, 0, 0.2);
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.9em;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.error-details {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+}
