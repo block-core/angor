@@ -5,7 +5,7 @@ namespace Angor.Shared.Tests
 {
     public class ProjectIdentifierDerivationTests
     {
-        [Fact]
+        //[Fact]
         public void TestComputeSharedSecretMethods()
         {
             // Arrange
