@@ -92,7 +92,12 @@
             StateHasChanged();
         });
     }
-    
+
+    public void ShowErrorMessage(string message, string detailedMessage)
+    {
+        ShowErrorMessage(message, new Exception(detailedMessage));
+    }
+
     public void ShowErrorMessage(string message, Exception exception = null)
     {
         if (string.IsNullOrEmpty(message) && exception == null)
