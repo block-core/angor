@@ -77,20 +77,24 @@ namespace Angor.Shared.Services
             if (!settings.Explorers.Any())
             {
                 settings.Explorers.AddRange(_networkConfiguration.GetDefaultExplorerUrls());
-                _networkStorage.SetSettings(settings);
             }
 
             if (!settings.Indexers.Any())
             {
                 settings.Indexers.AddRange(_networkConfiguration.GetDefaultIndexerUrls());
-                _networkStorage.SetSettings(settings);
             }
 
             if (!settings.Relays.Any())
             {
                 settings.Relays.AddRange(_networkConfiguration.GetDefaultRelayUrls());
-                _networkStorage.SetSettings(settings);
             }
+
+            if (!settings.ChatApps.Any())
+            {
+                settings.ChatApps.AddRange(_networkConfiguration.GetDefaultChatAppUrls());
+            }
+
+            _networkStorage.SetSettings(settings);
         }
 
         public async Task CheckServices(bool force = false)
@@ -245,6 +249,20 @@ namespace Angor.Shared.Services
             if (ret == null)
             {
                 throw new ApplicationException("No explorer found go to settings to add an explorer.");
+            }
+
+            return ret;
+        }
+
+        public SettingsUrl GetPrimaryChatApp()
+        {
+            var settings = _networkStorage.GetSettings();
+
+            var ret = settings.ChatApps.FirstOrDefault(p => p.IsPrimary);
+
+            if (ret == null)
+            {
+                throw new ApplicationException("No chat application found go to settings to add a chat application.");
             }
 
             return ret;

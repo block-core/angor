@@ -175,6 +175,21 @@ public class NetworkConfiguration : INetworkConfiguration
         };
     }
 
+    public List<SettingsUrl> GetDefaultChatAppUrls()
+    {
+        if (currentNetwork.NetworkType == NetworkType.Mainnet)
+        {
+            return new List<SettingsUrl>
+            {
+                new SettingsUrl { Name = "Angor Chat", Url = "https://chat.angor.io/dm", IsPrimary = true },
+                new SettingsUrl { Name = "Primal", Url = "https://primal.net/dms", IsPrimary = false },
+            };
+        }
 
-
+        return new List<SettingsUrl>
+        {
+                new SettingsUrl { Name = "Angor Chat", Url = "https://chat.angor.io/dm", IsPrimary = true },
+                new SettingsUrl { Name = "Primal", Url = "https://primal.net/dms", IsPrimary = false }
+      };
+    }
 }

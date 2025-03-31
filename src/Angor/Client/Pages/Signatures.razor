@@ -24,6 +24,7 @@
 @inject IEncryptionService encryption
 @inject NavMenuState NavMenuState
 @inject NostrConversionHelper NostrHelper
+@inject INetworkService _networkService
 
 @inherits BaseComponent
 
@@ -618,8 +619,8 @@
 
         if (!string.IsNullOrEmpty(npub))
         {
-            var url = $"https://chat.angor.io/dm/{npub}";
-
+            var primaryChatApp = _networkService.GetPrimaryChatApp();
+            var url = $"{primaryChatApp.Url}/{npub}";
             await JS.InvokeVoidAsync("window.open", url, "_blank");
         }
         else
