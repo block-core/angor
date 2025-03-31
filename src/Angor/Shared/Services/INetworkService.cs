@@ -7,6 +7,7 @@ public interface INetworkService
     Task CheckServices(bool force = false);
     void AddSettingsIfNotExist();
     SettingsUrl GetPrimaryIndexer();
+    SettingsUrl GetPrimaryExplorer();
     SettingsUrl GetPrimaryRelay();
     List<SettingsUrl> GetRelays();
     void CheckAndHandleError(HttpResponseMessage httpResponseMessage);

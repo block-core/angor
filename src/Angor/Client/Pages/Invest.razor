@@ -5,7 +5,6 @@
 @using Blockcore.NBitcoin
 @using Angor.Shared.ProtocolNew
 @using Blockcore.NBitcoin.DataEncoders
-@using JSException = Microsoft.JSInterop.JSException
 @using Money = Blockcore.NBitcoin.Money
 @using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
 @using Angor.Shared.Services
@@ -14,29 +13,31 @@
 @using Angor.Client.Models
 @using Blockcore.Networks
 @using System.Text.Json
-
+@using Angor.Shared.Utilities
+@using Angor.Client.Shared
 
 @inherits BaseComponent
 
 @inject IJSRuntime JS
-
+@inject NavMenuState NavMenuState
 @inject ILogger<Invest> _Logger;
-@inject IDerivationOperations _derivationOperations
+@inject IDerivationOperations _derivationOperations;
 @inject IClientStorage storage;
 @inject ICacheStorage SessionStorage;
-@inject IWalletOperations _WalletOperations
-@inject IIndexerService _IndexerService
-@inject IDerivationOperations _DerivationOperations
-@inject ISignService _SignService
-@inject IRelayService _RelayService
+@inject IWalletOperations _WalletOperations;
+@inject IApplicationLogicService applicationLogicService;
+@inject ISignService _SignService;
+@inject IRelayService _RelayService;
+@inject IWalletUIService _walletUIService
 
-@inject IInvestorTransactionActions _InvestorTransactionActions
+@inject IInvestorTransactionActions _InvestorTransactionActions;
 
 @inject ISerializer serializer
 @inject IEncryptionService encryption
 
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
+<RawTransactionModal RawTransactionJson="@transactionJson" IsVisible="@showTransactionJsonModal" IsVisibleChanged="HandleTransactionJsonModalVisibility" />
 
 @if (!hasWallet)
 {
@@ -44,31 +45,92 @@
     return;
 }
 
-<div class="row">
+<div class="header-container slide-in">
     <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="portfolio" Height="42" Width="42" />
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="portfolio" Width="32" Height="32" />
                 </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Investment
-                    </h5>
-
-                </div>
+                <h5 class="header-text">Project Investment</h5>
             </div>
-
-
+            <div class="header-actions">
+            </div>
         </div>
     </div>
 </div>
+
+<div class="row mt-4 slide-in">
+    <div class="card card-body">
+        <div class="header-container">
+            <div class="header-content">
+                <div class="header-title animate-fade-in">
+                    <span class="header-icon-wrapper">
+                        <Icon IconName="info" Width="32" Height="32" />
+                    </span>
+                    <h5 class="header-text">Investment Information</h5>
+                </div>
+            </div>
+        </div>
+
+        <p class="mb-4 mt-4">
+            To invest in this project, the founder must sign a recovery agreement.
+            This ensures that you can recover your funds if the project does not succeed.
+        </p>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="stat-card p-3 rounded-3 border hover-effect animate-fade-in">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted">Target Amount</h6>
+                            <h4 class="mb-0">@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</h4>
+                        </div>
+                        <div class="stat-icon">
+                            <Icon IconName="balance" Height="32" Width="32" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="stat-card p-3 rounded-3 border hover-effect animate-fade-in">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted">Start Date</h6>
+                            <h4 class="mb-0">@project.ProjectInfo.StartDate.ToString("dd/MM/yyyy")</h4>
+                        </div>
+                        <div class="stat-icon">
+                            <Icon IconName="calendar" Height="32" Width="32" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="stat-card p-3 rounded-3 border hover-effect animate-fade-in">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted">Total Stages</h6>
+                            <h4 class="mb-0">@project.ProjectInfo.Stages.Count()</h4>
+                        </div>
+                        <div class="stat-icon">
+                            <Icon IconName="stages" Height="32" Width="32" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
 
 
 @if (invested)
 {
     <div class="row mt-4">
-        <div class="card card-body angor-alert-info pt-2 pb-2">
+        <div class="card card-body angor-alert-info pt-2 pb-2 animate-fade-in">
             <div class="d-flex align-items-center align-items-center">
                 <span class="me-3 user-select-none">
                     <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
@@ -85,7 +147,7 @@
 @if (founder)
 {
     <div class="row mt-4">
-        <div class="card card-body angor-alert-info pt-2 pb-2">
+        <div class="card card-body angor-alert-info pt-2 pb-2 animate-fade-in">
             <div class="d-flex align-items-center align-items-center">
                 <span class="me-3 user-select-none">
                     <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
@@ -102,7 +164,7 @@
 @if (project == null)
 {
     <div class="row mt-4">
-        <div class="card card-body angor-alert-info pt-2 pb-2">
+        <div class="card card-body angor-alert-info pt-2 pb-2 animate-fade-in">
             <div class="d-flex align-items-center align-items-center">
                 <span class="me-3 user-select-none">
                     <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
@@ -116,167 +178,214 @@
     return;
 }
 
-
-<div class="row mt-4">
-    <div class="card card-body">
-
-        <p>Here is a small explanation of the project. You can <a href="view/@ProjectId">view more details about the project here</a>.</p>
-        <p>
-            To invest in this project, the founder must sign a recovery agreement.
-            <br>
-            This agreement ensures that in the event the project does not succeed, you will be able to recover your funds.
-            <br>
-            This provides a safety net for your investment, giving you peace of mind that your financial contribution is protected.
-        </p>
-
-
-        <p>ProjectId: @ProjectId</p>
-        <p>Target amount: @project.ProjectInfo.TargetAmount BTC</p>
-        <p>Starting in: @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy")</p>
-
-    </div>
-</div>
-
-
-
 @if (project is not InvestorProject investorProject)
 {
-    <div class="row mt-4">
-        <div class="card card-body">
-            <EditForm Model="Investment" OnValidSubmit="InvestFundsAndCheckPassword">
+    <div class="animate-fade-in mt-4">
+        <div class="card card-body slide-in">
+            <div class="header-container">
+                <div class="header-content">
+                    <div class="header-title animate-fade-in">
+                        <span class="header-icon-wrapper">
+                            <Icon IconName="investment" Width="32" Height="32" />
+                        </span>
+                        <h5 class="header-text">Investment Details</h5>
+                    </div>
+                </div>
+            </div>
+
+            <EditForm Model="Investment" OnValidSubmit="InvestFundsAndCheckPassword" class="investment-form">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
-                <div class="form-group">
-                    <label for="investmentAmount">Investment Amount</label>
-                    <InputNumber class="form-control" id="investmentAmount" @bind-Value="@Investment.InvestmentAmount" @oninput="UpdateStagesBreakdown" />
+                <div class="form-group mb-4">
+
+                    <label for="investmentAmount" class="form-label d-flex align-items-center gap-2 mb-3 mt-3">
+                        <Icon IconName="investment" Width="20" Height="20" />
+                        <span>Investment Amount</span>
+                    </label>
+                    <div class="input-group border border-warning rounded p-2 text-warning bg-opacity-10
+            shadow-sm transition focus-within-shadow-lg">
+                        <InputNumber type="number" step="0.00000001" min="0"
+                                     class="form-control bg-transparent border-0 shadow-none text-warning fw-bold"
+                                     id="investmentAmount" @bind-Value="@Investment.InvestmentAmountBtc"
+                                     @oninput="UpdateStagesBreakdown" />
+                        <span class="border-0 d-flex align-items-center justify-content-center px-3 text-warning fw-bold">
+                            @network.CoinTicker
+                        </span>
+                    </div>
+
                 </div>
 
-                @*   <div class="form-check">
-            <InputCheckbox class="form-check-input" id="isSeeder" @bind-Value="@Investment.IsSeeder" disabled="@(!IsSeederTimePassed)" />
-            <label class="form-check-label" for="isSeeder">
-            Do you want to invest as a Seeder?
-            </label>
-            </div>
-
-            @if (!IsSeederTimePassed)
-            {
-            <div class="alert alert-info mt-2">
-            <strong>Seeder Requirements:</strong> Here are the requirements for a Seeder...
-            </div>
-            } *@
-
-                <button type="submit" class="btn btn-border mt-3" disabled="@buildSpinner">
+                <button type="submit" class="btn btn-border-success w-100" disabled="@buildSpinner">
                     @if (buildSpinner)
                     {
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span>Building trx...</span>
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Building Transaction...</span>
                     }
                     else
                     {
-                        <span data-cy="NEXT_BUTTON">Next</span>
+                        <Icon IconName="arrow-right" Height="20" Width="20" class="me-2" />
+                        <span>Continue to Confirmation</span>
                     }
                 </button>
             </EditForm>
+
+            @if (StagesBreakdown?.Any() == true)
+            {
+                <div class="stages-section mt-4">
+                    <h6 class="section-title mb-3">
+                        <Icon IconName="stage" Height="32" Width="32" class="me-2" />
+                        Investment Stages Breakdown
+                    </h6>
+                    <div class="stages-grid">
+                        @foreach (var stage in StagesBreakdown)
+                        {
+                            <div class="stage-card animate-fade-up">
+                                <div class="stage-header">
+                                    <h6 class="mb-0">Stage @stage.StageNumber</h6>
+                                    <span class="badge bg-primary">@stage.AmountBtc @network.CoinTicker</span>
+                                </div>
+                                <div class="stage-body">
+                                    <p class="mb-2">
+                                        <Icon IconName="calendar" Height="16" Width="16" class="me-2" />
+                                        Release: @stage.StageDateTime.ToString("dd/MM/yyyy")
+                                    </p>
+                                    <p class="mb-0">
+                                        <Icon IconName="clock-square" Height="16" Width="16" class="me-2" />
+                                        @stage.DaysFromStartDate days from start
+                                    </p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
         </div>
     </div>
 
+
     @if (showCreateModal)
     {
-        <!-- Confirmation Modal -->
-                           
         <div class="modal-wrapper">
-            <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Confirmation</h5>
-                        <span type="button" data-cy="close-show-wallet-words" @onclick="() => showCreateModal = false" aria-label="Close">
-                            <Icon IconName="close-circle" />
-                        </span>
-                    </div>
-                    <div class="modal-body modal-body-scroll">
-                        <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier</p>
-                        <p class="mb-1"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
-
-                        <p class="mb-1"><strong>Target amount:</strong> @project.ProjectInfo.TargetAmount @network.CoinTicker</p>
-
-                        <p class="mb-1"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
-                        <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
-                        <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
-
-                        <p class="mb-1"><strong>Miner fee:</strong> @Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-                        <p class="mb-1"><strong>Angor fee:</strong> @signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-
-                        <hr>
-
-                        <div class="mb-3">
-                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+            <div class="modal fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content modern-modal animate-fade-in">
+                        <div class="modal-header border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <Icon IconName="transaction" Height="32" Width="32" class="me-2" />
+                                <h5 class="modal-title">Investment Confirmation</h5>
+                            </div>
+                            <button class="btn-close-custom" @onclick="() => showCreateModal = false">
+                                <Icon IconName="close-circle" Height="24" Width="24" />
+                            </button>
                         </div>
 
-                        <hr>
-
-                        <h6 class="mt-3 mb-2">Stages</h6>
-                        @{
-                            int index = 0;
-                            @foreach (var stage in project.ProjectInfo.Stages)
-                            {
-                                <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
-                                    <p class="mb-1"><strong>Stage amount:</strong> @StagesBreakdown[index++].Amount BTC - @stage.AmountToRelease % </p>
-                                    <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts </p>
+                        <div class="modal-body modal-body-scroll py-4">
+                            <div class="mb-4">
+                                <div class="project-id-card mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <Icon IconName="project" Height="24" Width="24" class="me-2" />
+                                        <div class="d-flex flex-column flex-grow-1 overflow-hidden">
+                                            <div class="info-label mb-1">Project ID</div>
+                                            <div class="project-id-value text-truncate" title="@project.ProjectInfo.ProjectIdentifier">
+                                                @project.ProjectInfo.ProjectIdentifier
+                                            </div>
+                                        </div>
+                                        <i class="ms-2" role="button" @onclick="() => CopyToClipboard(project.ProjectInfo.ProjectIdentifier)">
+                                            <Icon IconName="copy" Height="24" Width="24" />
+                                        </i>
+                                    </div>
                                 </div>
-                            }
-                        }
-                        <hr>
 
-                        <p class="mt-3">Are you sure you want to continue?</p>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div class="info-card flex-grow-1 me-2">
+                                        <div class="info-label">Amount to Invest</div>
+                                        <div class="info-value text-success">
+                                            @Investment.InvestmentAmountBtc @network.CoinTicker
+                                        </div>
+                                    </div>
+                                    <div class="info-card flex-grow-1 ms-2">
+                                        <div class="info-label">Miner Fee</div>
+                                        <div class="info-value text-warning">
+                                            @Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                        </div>
+                                    </div>
+                                </div>
 
+                                <div class="info-card mb-4">
+                                    <div class="info-label">Angor Fee</div>
+                                    <div class="info-value">
+                                        @signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                    </div>
+                                </div>
+                            </div>
+
+                            <FeeSelector SendFee="@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                         CoinTicker="@network.CoinTicker"
+                                         FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                         FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                         FeePosition="@feeData.FeePosition"
+                                         FeeMin="@feeData.FeeMin"
+                                         FeeMax="@feeData.FeeMax"
+                                         OnFeeChanged="@HandleFeeChanged" />
+
+                            <div class="stages-section mb-4 mt-4">
+                                <h6 class="section-title">
+                                    <Icon IconName="stage" Height="20" Width="20" class="me-2" />
+                                    Investment Stages
+                                </h6>
+                                <div class="stages-list">
+                                    @{
+                                        int index = 0;
+                                        @foreach (var stage in project.ProjectInfo.Stages)
+                                        {
+                                            <div class="info-card mb-3 p-3 shadow-sm rounded animate-fade-in">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <div class="info-label">Stage @(++index):</div>
+                                                        <div class="info-value">@StagesBreakdown[index - 1].AmountBtc @network.CoinTicker</div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="info-label">Release:</div>
+                                                        <div class="info-value">@stage.ReleaseDate.ToString("dd/MM/yyyy")</div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-muted small mt-2">
+                                                    @stage.AmountToRelease% of investment - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after start
+                                                </div>
+                                            </div>
+
+                                        }
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="confirmation-section mt-4 text-center">
+                                <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
+                                <p class="confirmation-text">
+                                    Please review the investment details carefully before confirming.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer border-0 pt-0">
+                            <button class="btn btn-border-warning" @onclick="ShowTransactionJsonModal">
+                                View Details
+                            </button>
+                            <button type="button" class="btn btn-border-success" @onclick="Send" disabled="@investSpinner">
+                                @if (investSpinner)
+                                {
+                                    <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Processing...</span>
+                                }
+                                else
+                                {
+                                    <span>Confirm Investment</span>
+                                }
+                            </button>
+                        </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-border" @onclick="Send" disabled="@investSpinner">
-                            @if (investSpinner)
-                            {
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <span>Confirm...</span>
-                            }
-                            else
-                            {
-                                <span>Confirm</span>
-                            }
-                        </button>
-                    </div>
-                    <button class="btn btn-primary" @onclick="ShowTransactionJsonModal">
-                        Show Transaction Details
-                    </button>
-
-                    <RawTransactionModal RawTransactionJson="@transactionJson" IsVisible="@showTransactionJsonModal" IsVisibleChanged="HandleTransactionJsonModalVisibility"/>
                 </div>
-            </div>
-        </div>
-        </div>
-    }
-
-    <!-- Stages Breakdown -->
-    @if (StagesBreakdown != null)
-    {
-        <div class="row mt-4">
-            <div class="card card-body">
- 
-                <div class="d-flex align-items-center">
-                    <span class="user-select-none">
-                        <Icon IconName="stage"></Icon>
-                    </span>
-                    <div class="h-100 ms-3">
-                        <h5 class="mb-0 font-weight-bolder">
-                            Stages Breakdown
-                        </h5>
-                    </div>
-                </div>
-                @foreach (var stage in StagesBreakdown)
-                {
-                    <div class="form-control mt-4 p-3">Stage @stage.StageNumber: invest @stage.Amount BTC that will released on @stage.StageDateTime.ToString("dd/MM/yyyy") (@stage.DaysFromStartDate days) </div>
-                }
             </div>
         </div>
     }
@@ -285,62 +394,94 @@ else
 {
     if (investorProject.WaitingForFounderResponse())
     {
-        <div class="card mt-4 text-center">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h4>Waiting for the founder to approve</h4>
-                <div>
-                    <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
-                    <button class="btn btn-border" @onclick="RefreshSignatures" disabled="@refreshSpinner">
-                        @if (refreshSpinner)
-                        {
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            <span>Refresh...</span>
-                        }
-                        else
-                        {
-                            <span>Refresh</span>
-                        }
-                    </button>
+        <div class="card card-body hover-effect animate-fade-in mt-4">
+            <div class="header-container">
+                <div class="header-content">
+                    <div class="header-title animate-fade-in">
+                        <span class="header-icon-wrapper">
+                            <Icon IconName="pending" Width="32" Height="32" />
+                        </span>
+                        <h5 class="header-text">Waiting for the founder to approve</h5>
+                    </div>
+                    <div class="header-actions">
+                        <button type="button" class="btn btn-border-danger" @onclick="CancelInvestment">
+                            <Icon IconName="close-circle" Width="20" Height="20" />
+                            <span class="button-text ms-2">Cancel</span>
+                        </button>
+                        <button class="btn btn-border ms-2" @onclick="RefreshSignatures" disabled="@refreshSpinner">
+                            @if (refreshSpinner)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                <span class="button-text ms-2">Refreshing...</span>
+                            }
+                            else
+                            {
+                                <Icon IconName="refresh" Width="20" Height="20" />
+                                <span class="button-text ms-2">Refresh</span>
+                            }
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="card-body">
+
+            <div class="d-flex justify-content-center align-items-center mt-4">
                 <div class="loader-slow"></div>
             </div>
         </div>
-
     }
     else
     {
         @if (investorProject.ReceivedFounderSignatures() && !investorProject.InvestedInProject())
         {
-            <div class="card mt-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4>Founder has signed</h4>
-                    <button type="button" class="btn btn-danger" @onclick="CancelInvestment">Cancel</button>
+            <div class="card mt-4 animate-fade-in">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                    <h4 class="mb-0">Founder has signed</h4>
+                    <button type="button" class="btn btn-border-danger animate-scale mt-2 mt-md-0" @onclick="CancelInvestment">
+                        <Icon IconName="cancel" Width="20" Height="20" class="me-1" />
+                        <span>Cancel</span>
+                    </button>
                 </div>
                 <div class="card-body">
-                    <p class="modal-title">The founder has signed a transaction agreement ensuring that you can recover your funds if the project does not succeed, you may now invest.</p>
-                    <br />
-                    <button type="button" class="btn btn-success" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
-                        @if (publishSpinner)
-                        {
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            <span>Confirm...</span>
-                        }
-                        else
-                        {
-                            <span>Invest</span>
-                        }
-                    </button>
+                    <p class="modal-title">
+                        The founder has signed a transaction agreement ensuring that you can recover your funds if the project does not succeed, you may now invest.
+                    </p>
+                    <div class="d-flex justify-content-center align-items-center mt-4">
+                        <button type="button" class="btn btn-border-success animate-scale" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
+                            @if (publishSpinner)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Confirm...</span>
+                            }
+                            else
+                            {
+                                <Icon IconName="shield-star" Width="32" Height="32" class="me-1" />
+                                <h4 class="mb-0">Invest</h4>
+                            }
+                        </button>
+                    </div>
 
                     @if (investorProject.SignaturesInfo != null)
                     {
-                        <div class="mt-3">
-                            <h5>Transaction Details</h5>
-                            <div class="mb-1">
-                                <strong>Amount to invest:</strong>  @Money.Satoshis((investorProject.AmountInvested ?? 0)).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                <p><strong>Date:</strong> @investorProject?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("MM/dd/yyyy HH:mm")</p>
-                                <p><strong>Project Name: </strong> @investorProject?.Metadata?.Name</p>
+                        <div class="transaction-details mt-4">
+                            <h5 class="section-title">
+                                <Icon IconName="details" Height="20" Width="20" class="me-2" />
+                                Transaction Details
+                            </h5>
+                            <div class="info-card p-3 rounded-3 border animate-fade-in">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>Amount to invest:</strong>
+                                        <p>@Money.Satoshis((investorProject.AmountInvested ?? 0)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+                                    </div>
+                                    <div>
+                                        <strong>Date:</strong>
+                                        <p>@investorProject?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("dd/MM/yyyy HH:mm")</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <strong>Project Name:</strong>
+                                    <p>@investorProject?.Metadata?.Name</p>
+                                </div>
                             </div>
                         </div>
                     }
@@ -350,8 +491,6 @@ else
 
     }
 }
-
-
 
 @code {
 
@@ -365,7 +504,7 @@ else
     private bool showTransactionJsonModal = false;
     private string transactionJson;
 
-    public InvestmentModel Investment { get; set; } = new InvestmentModel { InvestmentAmount = 10 };
+    public InvestmentModel Investment { get; set; } = new InvestmentModel { InvestmentAmountBtc = 0.01m };
     private bool IsSeederTimePassed { get; set; }
     private List<StageBreakdown> StagesBreakdown { get; set; } = new();
     bool founder = false;
@@ -381,6 +520,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // Set active menu
+        NavMenuState.SetActivePage("invest");
+
         if (!hasWallet)
         {
             NavigationManager.NavigateTo($"/wallet");
@@ -415,38 +557,17 @@ else
                 }
             }
         }
-        
+
+        if (!applicationLogicService.IsInvestmentWindowOpen(project?.ProjectInfo))
+        {
+            notificationComponent.ShowNotificationMessage("You cannot invest in this project.", 5);
+            NavigationManager.NavigateTo($"/view/{ProjectId}");
+            return;
+        }
+
         await CheckIfSeederTimeHasPassed();
-        UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmount });
-    }
 
-    private async Task CheckForExistingProjectAndCheckPassword()
-    {
-        if (!passwordComponent.HasPassword())
-        {
-            passwordComponent.ShowPassword(CheckForExistingInvestedProjects);
-        }
-        else
-        {
-            await CheckForExistingInvestedProjects();
-        }
-    }
-    
-    private async Task CheckForExistingInvestedProjects()
-    {
-        if (project != null)
-        {
-            
-            var words = await passwordComponent.GetWalletAsync();
-            var investorPubKey = _DerivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
-
-            var isAlreadyInvested = await IsInvestorAlreadyInvestedAsync(project.ProjectInfo.ProjectIdentifier, investorPubKey);
-            if (isAlreadyInvested)
-            {
-                notificationComponent.ShowErrorMessage("You are already invested in this project.");
-                NavigationManager.NavigateTo($"/view/{ProjectId}");
-            }
-        }
+        UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmountBtc });
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -500,20 +621,20 @@ else
             {
                 var words = await passwordComponent.GetWalletAsync();
 
-                var nostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
+                var nostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
 
                 var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
                 _SignService.LookupSignatureForInvestmentRequest(
-                    investmentProject.InvestorNPub, 
-                    project.ProjectInfo.NostrPubKey, 
-                    investmentProject.SignaturesInfo!.TimeOfSignatureRequest!.Value, 
+                    investmentProject.InvestorNPub,
+                    project.ProjectInfo.NostrPubKey,
+                    investmentProject.SignaturesInfo!.TimeOfSignatureRequest!.Value,
                     investmentProject.SignaturesInfo!.SignatureRequestEventId!,
                     signatures => HandleSignatureReceivedAsync(nostrPrivateKeyHex, signatures));
             }
             catch (Exception e)
             {
-                notificationComponent.ShowErrorMessage(e.Message,e);
+                notificationComponent.ShowErrorMessage(e.Message, e);
             }
             finally
             {
@@ -536,15 +657,11 @@ else
         return Task.CompletedTask;
     }
 
-
-
-
-
     private void UpdateStagesBreakdown(ChangeEventArgs e)
     {
-        if (decimal.TryParse(e.Value.ToString(), out decimal amount))
+        if (decimal.TryParse(e.Value.ToString(), out decimal amountBtc))
         {
-            Investment.InvestmentAmount = amount;
+            Investment.InvestmentAmountBtc = amountBtc;
 
             StagesBreakdown.Clear();
             int index = 1;
@@ -554,7 +671,7 @@ else
                 var insert = new StageBreakdown
                     {
                         StageNumber = index++,
-                        Amount = Investment.InvestmentAmount * (stage.AmountToRelease / 100),
+                        AmountBtc = Investment.InvestmentAmountBtc * (stage.AmountToRelease / 100),
                         StageDateTime = stage.ReleaseDate,
                         DaysFromStartDate = (stage.ReleaseDate - project.ProjectInfo.StartDate).Days
                     };
@@ -595,25 +712,28 @@ else
         if (Investment.IsSeeder)
         {
             bool isTestnet = network.NetworkType == NetworkType.Testnet;
-            decimal maxInvestmentAmount = isTestnet ? decimal.MaxValue : 0.1m; // 0.1 BTC for mainnet, unlimited for testnet
-            decimal minInvestmentAmount = 0.001m; // Minimum investment for all networks
-            if (Investment.InvestmentAmount < minInvestmentAmount)
+            decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.1m; // 0.1 BTC for mainnet, unlimited for testnet
+            decimal minInvestmentBtc = 0.001m; // Minimum investment for all networks
+
+            if (Investment.InvestmentAmountBtc < minInvestmentBtc)
             {
-                notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minInvestmentAmount} BTC was not reached");
+                notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minInvestmentBtc} BTC was not reached");
                 return;
             }
-            
-            if (Investment.InvestmentAmount > maxInvestmentAmount)
+
+            if (Investment.InvestmentAmountBtc > maxInvestmentBtc)
             {
-                notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentAmount} BTC on the mainnet");
+                notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentBtc} BTC on the mainnet");
                 return;
             }
         }
         else
         {
-            if (Investment.InvestmentAmount < (decimal)0.001)
+            decimal minInvestmentBtc = 0.001m;
+
+            if (Investment.InvestmentAmountBtc < minInvestmentBtc)
             {
-                notificationComponent.ShowErrorMessage($"Investor minimum investment amount is {0.001} BTC");
+                notificationComponent.ShowErrorMessage($"Investor minimum investment amount is {minInvestmentBtc} BTC");
                 return;
             }
         }
@@ -636,7 +756,7 @@ else
 
         try
         {
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
@@ -647,18 +767,18 @@ else
 
             if (Investment.IsSeeder)
             {
-                var seederHash = _derivationOperations.DeriveSeederSecretHash(words, project.ProjectInfo.FounderKey);
+                var seederHash = _derivationOperations.DeriveLeadInvestorSecretHash(words, project.ProjectInfo.FounderKey);
             }
 
-            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmount).Satoshi);
+            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
             showCreateModal = true;
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
@@ -668,34 +788,40 @@ else
         StateHasChanged();
     }
 
-    private async Task FeeRangeChanged(ChangeEventArgs e)
+    private async Task HandleFeeChanged(FeeCalculation feeCalc)
     {
-        var selected = e.Value?.ToString();
-
-        if (selected != null)
+        if (!passwordComponent.HasPassword())
         {
-            if (int.TryParse(selected, out int res))
+            showCreateModal = false;
+            notificationComponent.ShowErrorMessage("Wallet password expired");
+            return;
+        }
+
+        try
+        {
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
             {
-                if (res <= feeData.FeeEstimations.Fees.Count)
-                {
-                    if (!passwordComponent.HasPassword())
-                    {
-                        showCreateModal = false;
-                        notificationComponent.ShowErrorMessage("Wallet password expired");
-                        return;
-                    }
-
-                    var words = await passwordComponent.GetWalletAsync();
-
-                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-                    var accountInfo = storage.GetAccountInfo(network.Name);
-
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
-                    
-                    StateHasChanged();
-                }
+                feeData.SetCustomFee(feeCalc.CustomFee.Value);
             }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
+            {
+                feeData.SelectFee(feeCalc.Position.Value);
+            }
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                accountInfo.GetNextChangeReceiveAddress(),
+                unSignedTransaction,
+                await passwordComponent.GetWalletAsync(),
+                accountInfo,
+                feeData.SelectedFeeEstimation.FeeRate);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogError(ex, "Error calculating fee");
+            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
     }
 
@@ -723,7 +849,7 @@ else
                     Metadata = project.Metadata,
                     SignedTransactionHex = signedTransaction!.Transaction!.ToHex(),
                     CreationTransactionId = project.CreationTransactionId,
-                    AmountInvested = new Money(Investment.InvestmentAmount, MoneyUnit.BTC).Satoshi,
+                    AmountInvested = Investment.InvestmentAmountBtc.ToUnitSatoshi(),
                     InvestorPublicKey = InvestorPubKey ?? throw new ArgumentNullException("The investor pub key is not populated")
                 };
 
@@ -742,26 +868,31 @@ else
 
             var words = await passwordComponent.GetWalletAsync();
 
-            var nostrPrivateKey = _derivationOperations.DeriveProjectNostrInvestorPrivateKey(words, project.ProjectInfo.ProjectIdentifier);
+            var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
+            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
 
-            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+            var releaseAddress = accountInfo.GetNextReceiveAddress();
+
+            SignRecoveryRequest signRecoveryRequest = new()
+                {
+                    ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
+                    InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                    UnfundedReleaseAddress = releaseAddress
+                };
+
+            var sigJson = serializer.Serialize(signRecoveryRequest);
 
             var encryptedContent = await encryption.EncryptNostrContentAsync(
                 nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey,
-                strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory));
+                sigJson);
 
-            var investmentSigsRequest = _SignService.RequestInvestmentSigs(new SignRecoveryRequest
-                {
-                    ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
-                    EncryptedContent = encryptedContent,
-                    NostrPubKey = investorProject.ProjectInfo.NostrPubKey,
-                    InvestorNostrPrivateKey = nostrPrivateKeyHex
-                });
+            var investmentSigsRequest = _SignService.RequestInvestmentSigs(encryptedContent, nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey);
 
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
             investorProject.InvestorNPub = NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex;
-            
+            investorProject.UnfundedReleaseAddress = releaseAddress;
+
             storage.AddInvestmentProject(investorProject);
 
             foreach (var input in strippedInvestmentTransaction.Inputs)
@@ -780,7 +911,7 @@ else
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
@@ -899,7 +1030,7 @@ else
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
@@ -910,23 +1041,30 @@ else
     private async Task SaveInvestmentsListToNostrAsync()
     {
         var words = await passwordComponent.GetWalletAsync();
-        var rootNostrPrivateKey = await _derivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 0);
-        var rootNostrPrivateKeyHex = Encoders.Hex.EncodeData(rootNostrPrivateKey.ToBytes());
+        var storageAccountKey = _derivationOperations.DeriveNostrStoragePubKeyHex(words);
+        var storageKey = _derivationOperations.DeriveNostrStorageKey(words);
+        var storageKeyHex = Encoders.Hex.EncodeData(storageKey.ToBytes());
 
-        var nostrDMKey = _derivationOperations.DeriveNostrPubKey(words, 1);
+        var password = _derivationOperations.DeriveNostrStoragePassword(words);
 
         Investments investments = new()
             {
                 ProjectIdentifiers = storage.GetInvestmentProjects()
-                        .Where(x => x.InvestedInProject())
-                        .Select(x => new InvestmentState { ProjectIdentifier = x.ProjectInfo.ProjectIdentifier, investorPubKey = x.InvestorPublicKey, InvestmentTransactionHash = x.TransactionId})
-                        .ToList()
+                                                .Where(x => x.InvestedInProject())
+                                                .Select(x => new InvestmentState
+                                                {
+                                                    ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
+                                                    InvestorPubKey = x.InvestorPublicKey,
+                                                    InvestmentTransactionHash = x.TransactionId,
+                                                    UnfundedReleaseAddress = x.UnfundedReleaseAddress,
+                                                })
+                                                .ToList()
             };
 
-        var encryptedProjectIdList = await encryption.EncryptNostrContentAsync(
-            rootNostrPrivateKeyHex, nostrDMKey, serializer.Serialize(investments));
 
-        _RelayService.SendDirectMessagesForPubKeyAsync(rootNostrPrivateKeyHex, nostrDMKey, encryptedProjectIdList, x =>
+        var encrypted = await encryption.EncryptData(serializer.Serialize(investments), password);
+
+        _RelayService.SendDirectMessagesForPubKeyAsync(storageKeyHex, storageAccountKey, encrypted, x =>
         {
             if (!x.Accepted)
             {
@@ -937,53 +1075,70 @@ else
 
     public class InvestmentModel
     {
-        public decimal InvestmentAmount { get; set; }
+        /// <summary>
+        /// Amount in BTC, this is a parameter that is bind to the users input,
+        /// so it makes sense to keep it in btc format (instead of satoshis)
+        /// </summary>
+        public decimal InvestmentAmountBtc { get; set; }
+
         public bool IsSeeder { get; set; }
     }
 
     public class StageBreakdown
     {
         public int StageNumber { get; set; }
-        public decimal Amount { get; set; }
+        public decimal AmountBtc { get; set; }
         public DateTime StageDateTime { get; set; }
         public int DaysFromStartDate { get; set; }
     }
-    
-    private async Task PrepareInvestmentTransactionJson()
+
+    private async Task ShowTransactionJsonModal()
     {
+        if (project == null || signedTransaction?.Transaction == null) return;
+
         var transactionDetails = new
         {
             ProjectIdentifier = project.ProjectInfo.ProjectIdentifier,
             FounderKey = project.ProjectInfo.FounderKey.Substring(0, 10) + "...",
+            InvestmentAmount = Investment.InvestmentAmountBtc,
             TargetAmount = $"{project.ProjectInfo.TargetAmount} {network.CoinTicker}",
             StartDate = project.ProjectInfo.StartDate.ToString("dd/MM/yyyy"),
             ExpiryDate = project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy"),
             PenaltyDays = project.ProjectInfo.PenaltyDays,
-            MinerFee = Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC),
-            AngorFee = signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) ?? 0,
-            FeeRate = $"{feeData.SelectedFeeEstimation.FeeRate} sats",
-            Confirmations = feeData.SelectedFeeEstimation.Confirmations,
-            Stages = project.ProjectInfo.Stages.Select((stage, index) => new
+            MinerFee = Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC),
+            AngorFee = signedTransaction.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC),
+            FeeRate = $"{feeData.SelectedFeeEstimation.FeeRate} sats/byte",
+            EstimatedConfirmation = $"{feeData.SelectedFeeEstimation.Confirmations} blocks",
+            Stages = StagesBreakdown.Select(stage => new
             {
-                StageAmount = $"{StagesBreakdown[index].Amount} BTC - {stage.AmountToRelease}%",
-                StageDate = stage.ReleaseDate.ToString("dd/MM/yyyy"),
-                DaysAfterStart = (stage.ReleaseDate - project.ProjectInfo.StartDate).Days
-            }).ToList()
+                StageNumber = stage.StageNumber,
+                Amount = stage.AmountBtc,
+                ReleaseDate = stage.StageDateTime.ToString("dd/MM/yyyy"),
+                DaysFromStart = stage.DaysFromStartDate,
+                AmountToRelease = project.ProjectInfo.Stages[stage.StageNumber - 1].AmountToRelease
+            }).ToList(),
+            RawTransaction = signedTransaction.Transaction.ToHex()
         };
 
-        transactionJson = JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions { WriteIndented = true });
-    }
+        transactionJson = JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
 
-    
-    private async Task ShowTransactionJsonModal()
-    {
-        await PrepareInvestmentTransactionJson();
         showTransactionJsonModal = true;
+        StateHasChanged();
     }
 
     private void HandleTransactionJsonModalVisibility(bool isVisible)
     {
         showTransactionJsonModal = isVisible;
+        StateHasChanged();
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
     }
     
     public async Task<bool> IsInvestorAlreadyInvestedAsync(string projectId, string investorPubKey)

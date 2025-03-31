@@ -44,79 +44,14 @@ public class NetworkConfiguration : INetworkConfiguration
         return currentNetwork;
     }
 
-    public SettingsUrl GetIndexerUrl()
-    {
-        if (currentNetwork.NetworkType == NetworkType.Mainnet)
-        {
-            return new SettingsUrl { Name = "", Url = "https://btc.indexer.angor.io/api" };
-        }
-
-        if (currentNetwork.NetworkType == NetworkType.Testnet)
-        {
-            if (currentNetwork.Name == "Angornet")
-            {
-                return new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io/api" };
-            }
-
-            if (currentNetwork.Name == "Testnet")
-            {
-                // todo find indexer url
-            }
-
-            if (currentNetwork.Name == "Testnet4")
-            {
-                // todo find indexer url
-            }
-
-            if (currentNetwork.Name == "Signet")
-            {
-                // todo find indexer url
-            }
-        }
-
-        throw new ApplicationException("Network not set");
-    }
-
-    public SettingsUrl GetExplorerUrl()
-    {
-        if (currentNetwork.NetworkType == NetworkType.Mainnet)
-        {
-            return new SettingsUrl { Name = "", Url = "https://explorer.angor.io/btc/explorer" };
-        }
-
-        if (currentNetwork.NetworkType == NetworkType.Testnet)
-        {
-            if (currentNetwork.Name == "Angornet")
-            {
-                return new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer" };
-            }
-
-            if (currentNetwork.Name == "Testnet")
-            {
-                // todo find explorer url
-            }
-
-            if (currentNetwork.Name == "Testnet4")
-            {
-                // todo find explorer url
-            }
-
-            if (currentNetwork.Name == "Signet")
-            {
-                // todo find explorer url
-            }
-        }
-
-        throw new ApplicationException("Network not set");
-    }
-
     public List<SettingsUrl> GetDefaultIndexerUrls()
     {
         if (currentNetwork.NetworkType == NetworkType.Mainnet)
         {
             return new List<SettingsUrl>
             {
-                new SettingsUrl { Name = "", Url = "https://btc.indexer.angor.io", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "https://indexer.angor.io", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "https://btc.indexer.angor.io", IsPrimary = false }
             };
         }
 
@@ -126,7 +61,8 @@ public class NetworkConfiguration : INetworkConfiguration
             {
                 return new List<SettingsUrl>
                 {
-                    new SettingsUrl { Name = "", Url = "https://tbtc.indexer.angor.io", IsPrimary = true },
+                    new SettingsUrl { Name = "", Url = "https://test.indexer.angor.io", IsPrimary = true },
+                    new SettingsUrl { Name = "", Url = "https://mempool.thedude.pro", IsPrimary = false },
                 };
             }
 
@@ -152,20 +88,33 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public List<SettingsUrl> GetDefaultRelayUrls()
     {
+        if (currentNetwork.NetworkType == NetworkType.Mainnet)
+        {
+            return new List<SettingsUrl>
+            {
+                new SettingsUrl { Name = "", Url = "wss://relay.angor.io", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "wss://relay2.angor.io", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "wss://purplepag.es", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "wss://relay.primal.net", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "wss://nos.lol", IsPrimary = true },
+            };
+        }
+
         return new List<SettingsUrl>
         {
             new SettingsUrl { Name = "", Url = "wss://relay.angor.io", IsPrimary = true },
             new SettingsUrl { Name = "", Url = "wss://relay2.angor.io", IsPrimary = true },
+
         };
     }
 
-    public List<SettingsUrl> GetDefaultExplorerUrl()
+    public List<SettingsUrl> GetDefaultExplorerUrls()
     {
         if (currentNetwork.NetworkType == NetworkType.Mainnet)
         {
             return new List<SettingsUrl>
             {
-                new SettingsUrl { Name = "", Url = "https://explorer.angor.io/btc/explorer", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "https://explorer.angor.io", IsPrimary = true },
             };
         }
 
@@ -175,7 +124,8 @@ public class NetworkConfiguration : INetworkConfiguration
             {
                 return new List<SettingsUrl>
                 {
-                    new SettingsUrl { Name = "", Url = "https://explorer.angor.io/tbtc/explorer", IsPrimary = true },
+                    new SettingsUrl { Name = "", Url = "https://test.explorer.angor.io", IsPrimary = true },
+                    new SettingsUrl { Name = "", Url = "https://explorer.thedude.pro", IsPrimary = false },
                 };
             }
 
@@ -203,7 +153,7 @@ public class NetworkConfiguration : INetworkConfiguration
         // Determine the correct genesis block hash based on the network type
         return currentNetwork.Name switch
         {
-            "Mainnet" => "000000000019d6689c085ae165831e93",
+            "Main" => "000000000019d6689c085ae165831e93",
             "Testnet" => "000000000933ea01ad0ee984209779ba",
             "Signet" => "00000000020f01e33f91b6c7c5d3a3f8",
             "Regtest" => "0f9195cbdb894feda6ee07798e0d597d",
@@ -216,7 +166,7 @@ public class NetworkConfiguration : INetworkConfiguration
     {
         return genesisBlockHash switch
         {
-            "000000000019d6689c085ae165831e93" => "Mainnet",
+            "000000000019d6689c085ae165831e93" => "Main",
             "000000000933ea01ad0ee984209779ba" => "Testnet",
             "00000000020f01e33f91b6c7c5d3a3f8" => "Signet",
             "0f9195cbdb894feda6ee07798e0d597d" => "Regtest",

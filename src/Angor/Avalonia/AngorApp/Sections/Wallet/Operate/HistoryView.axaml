@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
+             xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Wallet.Operate.HistoryView"
+             x:DataType="operate:IWalletViewModel">
+
+    <Design.DataContext>
+        <operate:WalletViewModelDesign />
+    </Design.DataContext>
+
+    <controls:Pane IsTitleVisible="True" Title="Addresses and amounts">
+        <controls:Pane.TitleIcon>
+            <i:Icon Value="fa-solid fa-cube" />
+        </controls:Pane.TitleIcon>
+
+        <z:SlimDataGrid Margin="10" ItemsSource="{Binding History}">
+            <z:SlimDataGrid.Styles>
+                <Style Selector="TextBlock">
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                    <Setter Property="ToolTip.Tip" Value="{Binding $self.Text}" />
+                </Style>
+                
+            </z:SlimDataGrid.Styles>
+            <z:SlimDataGrid.Columns>
+                <z:Column Header="ADDRESS" Width="3*" Binding="{Binding Content.Address}" />
+                <z:Column Header="AMOUNT" Width="3*"
+                          Binding="{Binding Content.Amount, Converter={x:Static controls:MiscConverters.SatsToBtc}, StringFormat={x:Static controls:MiscConverters.AmountBtcFormat}}" />
+                <z:Column Header="UTXO COUNT" Width="2*" Binding="{Binding Content.UtxoCount}" />
+                <z:Column Header="TXN" Width="Auto" Binding="{Binding Content.ShowJson}">
+                    <z:Column.CellTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding}"
+                                    i:Attached.Icon="fa-solid fa-ellipsis" />
+                        </DataTemplate>
+                    </z:Column.CellTemplate>
+                </z:Column>
+            </z:SlimDataGrid.Columns>
+        </z:SlimDataGrid>
+    </controls:Pane>
+
+</UserControl>

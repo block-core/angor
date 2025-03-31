@@ -7,8 +7,10 @@
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin.DataEncoders
 @using Nostr.Client.Messages
+@using Angor.Client.Shared
 
 @inject ILogger<Investor> _Logger
+@inject NavMenuState NavMenuState
 @inject IClientStorage storage;
 @inject NavigationManager NavigationManager
 @inject IWalletStorage _walletStorage;
@@ -30,37 +32,45 @@
     return;
 }
 
-
-<div class="row">
+<div class="header-container slide-in">
     <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between flex-wrap">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="portfolio" Height="42" Width="42" />
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="portfolio" Width="32" Height="32" />
                 </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Invested Portfolio
-                    </h5>
-                </div>
+                <h5 class="header-text">Portfolio</h5>
             </div>
-            <div class="d-flex align-items-center justify-content-end w-100 w-lg-auto mt-3 mt-lg-0">
-                <button class="btn btn-border w-100 w-lg-auto me-3 mb-lg-0" @onclick="GetProjectsAndUpdateAsync">
-                    <i class="@(RefreshBalanceTriggered ? "rotate-icon" : "")">
-                        <Icon IconName="refresh" Width="24" Height="24"></Icon>
-                    </i>
-                </button>
-
-                <button class="btn btn-border w-100 w-lg-auto" @onclick="NavigateToPenalties" data-toggle="tooltip" title="Penalties return control to investors but put Bitcoin on hold for a penalty duration.">
-                    <i>
-                        <Icon IconName="sad-circle" Width="24" Height="24"></Icon>
-                    </i>
-                    <span class="nav-link-text ms-1">Penalties</span>
-                </button>
+            <div class="header-actions">
+                <div class="d-flex align-items-center justify-content-end wallet-actions">
+                    <button class="btn btn-border-success refresh-btn h-100"
+                            @onclick="GetProjectsAndUpdateAsync"
+                            disabled="@RefreshBalanceTriggered">
+                        @if (RefreshBalanceTriggered)
+                        {
+                            <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content"
+                                  role="status"
+                                  aria-hidden="true">
+                            </span>
+                        }
+                        else
+                        {
+                            <Icon IconName="refresh" Height="24" Width="24" />
+                            <span class="button-text ms-2">Refresh</span>
+                        }
+                    </button>
+                    <button class="btn btn-border-warning test-coins-btn h-100" @onclick="NavigateToPenalties" data-toggle="tooltip" title="Penalties return control to investors but put Bitcoin on hold for a penalty duration.">
+                        <i>
+                            <Icon IconName="sad-circle" Width="24" Height="24"></Icon>
+                        </i>
+                        <span class="button-text ms-2">Penalties</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 
 
 
@@ -70,48 +80,51 @@
     <PasswordComponent @ref="passwordComponent" />
 
     <!-- Summary Statistics -->
-    <div class="row g-4 mb-4">
-        <div class="col-12 col-md-6 col-lg-3">
-            <div class="card text-white">
-                <div class="card-body text-center">
-                    <span class="user-select-none">
-                        <Icon IconName="founder" Height="42" Width="42" />
-                    </span>
-                    <h5 class="card-title mt-4">Funded Projects</h5>
-                    <p class="card-text">@TotalFundedProjects</p>
+    <div class="stats-container">
+        <div class="stats-card">
+            <div class="stats-content">
+                <div class="stats-icon">
+                    <Icon IconName="portfolio" Height="32" Width="32" />
+                </div>
+                <div class="stats-info">
+                    <h6 class="stats-title">Funded Projects</h6>
+                    <p class="stats-value">@TotalFundedProjects</p>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-6 col-lg-3">
-            <div class="card text-white">
-                <div class="card-body text-center">
-                    <span class="user-select-none">
-                        <Icon IconName="btc" Height="42" Width="42" />
-                    </span>
-                    <h5 class="card-title mt-4">Total invested</h5>
-                    <p class="card-text">@Money.Satoshis(TotalInvested).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+
+        <div class="stats-card">
+            <div class="stats-content">
+                <div class="stats-icon">
+                    <Icon IconName="btc" Height="32" Width="32" />
+                </div>
+                <div class="stats-info">
+                    <h6 class="stats-title">Total invested</h6>
+                    <p class="stats-value">@Money.Satoshis(TotalInvested).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-6 col-lg-3">
-            <div class="card text-white">
-                <div class="card-body text-center">
-                    <span class="user-select-none">
-                        <Icon IconName="wallet" Height="42" Width="42" />
-                    </span>
-                    <h5 class="card-title mt-4">Wallet</h5>
-                    <p class="card-text">@Money.Satoshis(TotalWallet).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+
+        <div class="stats-card">
+            <div class="stats-content">
+                <div class="stats-icon">
+                    <Icon IconName="recovery" Height="32" Width="32" />
+                </div>
+                <div class="stats-info">
+                    <h6 class="stats-title">Recovered to penalty</h6>
+                    <p class="stats-value">@Money.Satoshis(TotalInRecovery).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-6 col-lg-3">
-            <div class="card text-white">
-                <div class="card-body text-center">
-                    <span class="user-select-none">
-                        <Icon IconName="recovery" Height="42" Width="42" />
-                    </span>
-                    <h5 class="card-title mt-4">In Recovery</h5>
-                    <p class="card-text">@Money.Satoshis(TotalInRecovery).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
+
+        <div class="stats-card">
+            <div class="stats-content">
+                <div class="stats-icon">
+                    <Icon IconName="recovery" Height="32" Width="32" />
+                </div>
+                <div class="stats-info">
+                    <h6 class="stats-title">Projects in Recovery</h6>
+                    <p class="stats-value">@ProjectsInRecovery</p>
                 </div>
             </div>
         </div>
@@ -120,135 +133,165 @@
     <!-- List of Projects -->
     @if (projects.Count > 0)
     {
-        <div class="row mt-4">
-            <div class="col-md-12">
+        <div class="projects-container mt-4">
 
-                <div class="card card-body">
+            <div class="projects-grid">
+                @foreach (var project in projects)
+                {
+                    Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
+                    var nostrPubKey = project.ProjectInfo.NostrPubKey;
+                    investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
+                    releaseRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentReleaseRequests);
 
-                    <div class="d-flex align-items-center">
-                        <span class="user-select-none">
-                            <Icon IconName="project_explorer"></Icon>
-                        </span>
-                        <div class="h-100 ms-3">
-                            <h5 class="mb-0 font-weight-bolder">
-                                Your Projects
-                            </h5>
+                    <div class="card card-body p-4">
+                        <div class="project-header">
+                            <div class="project-icon">
+                                <Icon IconName="project_explorer" Height="24" Width="24" />
+                            </div>
+                            <h6 class="project-title">@project.Metadata?.Name</h6>
                         </div>
-                    </div>
-                </div>
 
-                <div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-2 g-4 card-container mt-0">
-                    @foreach (var project in projects)
-                    {
-                        Stats.TryGetValue(project.ProjectInfo.ProjectIdentifier, out var stats);
-                        var nostrPubKey = project.ProjectInfo.NostrPubKey;
-                        investmentRequestsMap.TryGetValue(nostrPubKey, out bool hasInvestmentRequests);
+                        <div class="project-stats">
+                            <div class="stat-row">
+                                <span class="stat-label">Target</span>
+                                <span class="stat-value">@Money.Satoshis(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+                            </div>
 
-                        <div class="col">
-
-          
-
-                            <div class="card card-body">
-                                <div class="d-flex align-items-center">
-                                    <span class="user-select-none">
-                                        <Icon IconName="project_explorer"></Icon>
-                                    </span>
-                                    <div class="h-100 ms-3">
-                                        <h5 class="mb-0 font-weight-bolder">
-                                            @project.Metadata?.Name
-                                        </h5>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3 mt-4 d-flex justify-content-between">
-                                    <span>Funding Target:</span>
-                                    <strong>@project.ProjectInfo.TargetAmount @network.CoinTicker</strong>
-                                </div>
-
-                                <div class="mb-3 d-flex justify-content-between">
-                                    <span>Raised:</span>
-                                    <strong>@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
-                                </div>
-
-                                <div class="mb-3 d-flex justify-content-between">
-                                    <span>Raised (% Target):</span>
-                                    <strong>@((stats?.AmountInvested ?? 0) * 100 / Money.Coins(project.ProjectInfo.TargetAmount).Satoshi) %</strong>
-                                </div>
-
-                                <div class="mb-3 d-flex justify-content-between">
-                                    <span>Status:</span>
-                                    @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
-                                    {
-                                        <strong class="text-warning">Funding</strong>
-                                    }
-                                    else
-                                    {
-                                        <strong class="text-success">Live</strong>
-                                    }
-                                </div>
-
-                                <div class="mb-3 d-flex justify-content-between">
-                                    <span>My Investment:</span>
-                                    <div>
-                                        @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
-                                        {
-                                            <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-sm btn-border ms-2" title="Pending">
-                                                <i class="oi oi-clock">
-                                                    <Icon IconName="clock-square" Width="24" Height="24"></Icon>
-                                                </i>
-                                            </a>
-                                         }     
-                                        <strong>@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
-
-                                    </div>
-           
-                                </div>
-
-                                <div class="mb-3 d-flex justify-content-between">
-                                    <span>Spent by Founder:</span>
-                                    <strong>-</strong>
-                                </div>
-
-                                <div class="mb-3 d-flex justify-content-between">
-                                    <span>Available to Founder:</span>
-                                    <strong>-</strong>
-                                </div>
-
-                                <div class="mb-3 d-flex justify-content-between">
-                                    <span>In Recovery:</span>
-                                    <strong>@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong>
-                                </div>
-
-                                <div class="mb-3 d-flex justify-content-between">
-                                    <span>Founder Approval:</span>
-                                    @if (hasInvestmentRequests)
-                                    {
-                                        <strong class="text-primary">Approved</strong>
-                                    }
-                                    else
-                                    {
-                                        <strong class="text-danger">Pending</strong>
-                                    }
-                                </div>
-                                <div class="card-footer">
-                                    <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border w-100">
-                                        View Project
-                                    </a>
+                            <div class="stat-row">
+                                <span class="stat-label">Raised</span>
+                                <div class="stat-value-group">
+                                    <span class="stat-percentage">(@((stats?.AmountInvested ?? 0) * 100 / project.ProjectInfo.TargetAmount)%)</span>
+                                    <span class="stat-value">@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
                                 </div>
                             </div>
 
-            
+                            <div class="stat-row">
+                                <span class="stat-label">Project Status</span>
+                                    @if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+                                    {
+                                        <span class="status-badge status-funding">Funding</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-live">Live</span>
+                                    }
+                            </div>
 
+                            <div class="stat-row">
+                                <span class="stat-label">My Investment Status</span>
+                                    @if (!string.IsNullOrEmpty(project.TransactionId))
+                                    {
+                                        @if (!string.IsNullOrEmpty(project.EndOfProjectTransactionId))
+                                        {
+                                            <span class="status-badge status-success">End of project recovered</span>
+                                        }
+                                        else if (!string.IsNullOrEmpty(project.UnfundedReleaseTransactionId))
+                                        {
+                                            <span class="status-badge status-warning">Unfunded project (coins released)</span>
+                                        }
+                                        else if (!string.IsNullOrEmpty(project.RecoveryReleaseTransactionId))
+                                        {
+                                            <span class="status-badge status-success">Recovered after penalty</span>
+                                        }
+                                        else if (!string.IsNullOrEmpty(project.RecoveryTransactionId))
+                                        {
+                                            <span class="status-badge status-warning">In recovery</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge status-success">Invested</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-pending">Pending</span>
+                                    }
+                            </div>
+
+                            <div class="stat-row">
+                                <span class="stat-label">My Investment</span>
+                                <div class="stat-value-group">
+                                    @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
+                                    {
+                                        <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") title="Pending">
+                                            <span class="stat-value text-warning">@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="stat-value">@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+                                    }
+                                </div>
+                            </div>
+                            
+                            <div class="stat-row">
+                                <span class="stat-label">Founder Status</span>
+                                <div class="stat-value-group">
+                                    @if (!string.IsNullOrEmpty(project.TransactionId) || hasInvestmentRequests)
+                                    {
+                                        <span class="status-badge status-approved">Approved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-pending">Pending</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="stat-row">
+                                <span class="stat-label">In Recovery</span>
+                                <span class="stat-value">@Money.Satoshis(project.AmountInRecovery ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+                            </div>
+
+                            <div class="stat-row">
+                                <span class="stat-label">Recovery Status</span>
+                                <div class="stat-value-group">
+                                    @if (project.AmountInRecovery > 0)
+                                    {
+                                        @if (string.IsNullOrEmpty(project.RecoveryReleaseTransactionId))
+                                        {
+                                            <span class="status-badge status-success">Recovered</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge status-warning">In Progress</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-inactive">None</span>
+                                    }
+                                </div>
+                            </div>
                         </div>
-                    }
-                </div>
-
+                        <div class="project-actions d-flex flex-column flex-lg-row gap-2">
+                            @if (hasInvestmentReleaseRequests && project.UnfundedReleaseTransactionId == null)
+                            {
+                                <a href=@($"/release/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-warning flex-fill">
+                                    Release Funds
+                                </a>
+                            }
+                            <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border flex-fill">
+                                View Project
+                            </a>
+                            @if (string.IsNullOrWhiteSpace(project.TransactionId))
+                            {
+                                <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success flex-fill">
+                                    Completed Investment
+                                </a>
+                            }
+                            else
+                            {
+                                <a href=@($"/recover/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success flex-fill">
+                                    Manage Investment
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
             </div>
-
         </div>
     }
-
-
 </div>
 @code {
 
@@ -261,8 +304,10 @@
     long TotalWallet = 0;
     int TotalFundedProjects = 0;
     long TotalInRecovery = 0;
+    int ProjectsInRecovery = 0;
 
     private Dictionary<string, bool> investmentRequestsMap = new Dictionary<string, bool>();
+    private Dictionary<string, bool> releaseRequestsMap = new Dictionary<string, bool>();
 
     public Dictionary<string, ProjectStats> Stats = new();
 
@@ -270,6 +315,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Set active menu
+        NavMenuState.SetActivePage("investor");
+
         hasWallet = _walletStorage.HasWallet();
 
         if (hasWallet)
@@ -286,9 +334,11 @@
             TotalInvested = projects.Sum(s => s.AmountInvested ?? 0);
             TotalWallet = abi.TotalBalance;
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
+            ProjectsInRecovery = projects.Count(s => s.AmountInRecovery > 0);
 
             var refreshTask = RefreshBalance();
             CheckSignatureFromFounder();
+            CheckReleaseFromFounder();
             await refreshTask;
         }
     }
@@ -328,6 +378,7 @@
             TotalInvested = projects.Sum(s => s.AmountInvested ?? 0);
             TotalWallet = abi.TotalBalance;
             TotalInRecovery = projects.Sum(s => s.AmountInRecovery ?? 0);
+            ProjectsInRecovery = projects.Count(s => s.AmountInRecovery > 0);
 
             await RefreshBalance();
         }
@@ -343,6 +394,15 @@
         }
 
         return Task.CompletedTask;
+    }
+
+    private void HandleReleaseSignatureReceivedAsync(string nostrPubKey, string signatureContent)
+    {
+        if (releaseRequestsMap.ContainsKey(nostrPubKey))
+        {
+            releaseRequestsMap[nostrPubKey] = true;
+            StateHasChanged();
+        }
     }
 
     private void CheckSignatureFromFounder()
@@ -361,6 +421,21 @@
         }
     }
 
+    private void CheckReleaseFromFounder()
+    {
+        foreach (var project in projects)
+        {
+            releaseRequestsMap[project.ProjectInfo.NostrPubKey] = false;
+
+            _SignService.LookupReleaseSigs(
+                project.InvestorNPub,
+                project.ProjectInfo.NostrPubKey,
+                null,
+                project.SignaturesInfo.SignatureRequestEventId,
+                signatureContent => HandleReleaseSignatureReceivedAsync(project.ProjectInfo.NostrPubKey, signatureContent)
+                , () => { });
+        }
+    }
 
     private async Task RefreshBalance()
     {
@@ -373,7 +448,7 @@
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage(ex.Message,ex);
+            notificationComponent.ShowErrorMessage(ex.Message, ex);
         }
     }
 
@@ -395,25 +470,21 @@
         }
 
         RefreshBalanceTriggered = true;
+
         var words = await passwordComponent.GetWalletAsync();
-        var NostrDMPrivateKey = await _DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, 1);
-        var NostrDMPrivateKeyHex = Encoders.Hex.EncodeData(NostrDMPrivateKey.ToBytes());
-        var NostrDMPubkey = _DerivationOperations.DeriveNostrPubKey(words, 1);
+        var storageAccountKey = _DerivationOperations.DeriveNostrStoragePubKeyHex(words);
+        var password = _DerivationOperations.DeriveNostrStoragePassword(words);
 
         CheckSignatureFromFounder();
 
-        var rootNostrPubKeyHex = _DerivationOperations.DeriveNostrPubKey(words, 0);
-
-
-        await _RelayService.LookupDirectMessagesForPubKeyAsync(NostrDMPrivateKey.PubKey.ToHex()[2..], null, 1,
+        await _RelayService.LookupDirectMessagesForPubKeyAsync(storageAccountKey, null, 1,
             async x =>
             {
                 try
                 {
-                    var decryptedString = await _encryptionService.DecryptNostrContentAsync(
-                        NostrDMPrivateKeyHex, rootNostrPubKeyHex, x.Content);
+                    var decrypted = await _encryptionService.DecryptData(x.Content, password);
 
-                    var projectIdList = serializer.Deserialize<Investments>(decryptedString);
+                    var projectIdList = serializer.Deserialize<Investments>(decrypted);
 
                     bool foundNewProjects = false;
                     foreach (var investment in projectIdList.ProjectIdentifiers)
@@ -437,10 +508,9 @@
                 {
                     _Logger.LogError(e, "failed to get handle investment list event from relay");
                 }
-            }, rootNostrPubKeyHex);
+            }, storageAccountKey);
     }
 
-    
     //TODO David check if we should replace the logic to get all projects first and then get signatures for them?
     private void FetchProjectsData(params string[] eventIds)
     {
@@ -461,7 +531,7 @@
                     {
                         var project = projects.FirstOrDefault(x => x.ProjectInfo.NostrPubKey == projectNpub);
                         if (project is { Metadata: null }) { project.Metadata = metadata; }
-                    }, 
+                    },
                     () =>
                     {
                         if (eventIds.Length != projects.Count)
@@ -471,9 +541,9 @@
                         StateHasChanged();
                     },
                     projects.Select(x => x.ProjectInfo.NostrPubKey).ToArray());
-            },eventIds);
+            }, eventIds);
     }
-    
+
     private async Task GetInvestmentProjectDataAsync(InvestmentState investmentState)
     {
         var projectIndexerData = await _IndexerService.GetProjectByIdAsync(investmentState.ProjectIdentifier);
@@ -483,19 +553,19 @@
 
         var words = await passwordComponent.GetWalletAsync();
 
-        var investment = await _IndexerService.GetInvestmentAsync(investmentState.ProjectIdentifier, investmentState.investorPubKey);
+        var investment = await _IndexerService.GetInvestmentAsync(investmentState.ProjectIdentifier, investmentState.InvestorPubKey);
 
         if (investment == null)
             return;
 
-        var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrInvestorPrivateKey(words, projectIndexerData.ProjectIdentifier);
+        var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrPrivateKey(words, projectIndexerData.FounderKey);
 
         var investorProject = new InvestorProject
-        {
-            TransactionId = investment.TransactionId,
-            AmountInvested = investment.TotalAmount,
-            InvestorNPub = investorNostrPrivateKey.PubKey.ToHex()[2..]
-        };
+            {
+                TransactionId = investment.TransactionId,
+                AmountInvested = investment.TotalAmount,
+                InvestorNPub = investorNostrPrivateKey.PubKey.ToHex()[2..],
+            };
 
         DateTime? createdAt = null;
         string? eventId = null;
@@ -511,6 +581,11 @@
             },
             () =>
             {
+                if (investorProject.ProjectInfo == null)
+                {
+                    _Logger.LogError("Failed to get project info for project {0}", investmentState.ProjectIdentifier);
+                    return;
+                }
                 _RelayService.LookupNostrProfileForNPub(
                     (_, metadata) => { investorProject.Metadata ??= metadata; },
                     () =>
@@ -562,7 +637,6 @@
     {
         NavigationManager.NavigateTo("/penalties");
     }
-    
 
 
 }

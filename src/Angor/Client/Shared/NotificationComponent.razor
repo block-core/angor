@@ -19,16 +19,14 @@
 
 @if (!string.IsNullOrEmpty(notificationMessage))
 {
-    <div class="row">
-        <div class="col z-index-4">
-            <div class="row justify-content-center">
-                <div class="col-lg-8 col-md-10">
-                    <div class="alert alert-success angor-alert-success fixed-bottom w-50 d-flex justify-content-between align-items-center alert-message" role="alert" data-cy="alert">
-                        @notificationMessage
-                        <span type="button" data-bs-dismiss="alert" aria-label="Close" @onclick="closeAlert">
-                            <Icon IconName="close-circle" />
-                        </span>
-                    </div>
+    <div class="row notification-wrapper">
+        <div class="col-12">
+            <div class="alert alert-success angor-alert-success notification-alert" role="alert" data-cy="alert">
+                <div class="notification-content">
+                    <span class="notification-text text-truncate">@notificationMessage</span>
+                    <button type="button" class="btn-close-custom" @onclick="closeAlert">
+                        <Icon IconName="close-circle" Color="#fff" />
+                    </button>
                 </div>
             </div>
         </div>
@@ -37,10 +35,9 @@
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
-    <div class="row">
-        <div class="col">
+
             <div class="modal-wrapper">
-                <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                <div class="modal show d-block" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content bg-danger">
                             <div class="modal-header text-white">
@@ -59,8 +56,7 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+
 }
 
 @code {

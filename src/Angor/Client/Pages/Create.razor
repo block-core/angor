@@ -5,6 +5,7 @@
 @using Angor.Shared.Models
 @using Angor.Shared.ProtocolNew
 @using Angor.Shared.Services
+@using Angor.Shared.Utilities
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.Networks
@@ -19,10 +20,14 @@
 @inject IRelayService _RelayService
 @inject ILogger<Create> _Logger;
 @inject IHtmlStripperService HtmlStripperService;
+@inject IJSRuntime JS;
+@inject NavMenuState NavMenuState
+
+@inject IWalletUIService _walletUIService;
 
 @inject IFounderTransactionActions _founderTransactionActions
-<NotificationComponent @ref="notificationComponent"/>
-<PasswordComponent @ref="passwordComponent"/>
+<NotificationComponent @ref="notificationComponent" />
+<PasswordComponent @ref="passwordComponent" />
 
 @if (!hasWallet)
 {
@@ -30,125 +35,130 @@
     return;
 }
 
-
-<div class="row">
+@if (!isValid)
+{
+    <div class="alert alert-danger">
+        <h4>Error</h4>
+        <p>@errorMessage</p>
+    </div>
+}
+<div class="header-container slide-in">
     <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="add" Height="42" Width="42"/>
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="add" Width="32" Height="32" />
                 </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Create New Project
-                    </h5>
-
-                </div>
+                <h5 class="header-text">Create New Project</h5>
+            </div>
+            <div class="header-actions">
             </div>
         </div>
     </div>
 </div>
-<div class="row mt-4">
-    <div class="row d-flex justify-content-center text-center align-items-center">
-        <div class="col-lg-3 col-sm-6 mt-lg-0 mt-sm-4">
-            <div class="card h-100 @(activeTab == 1 ? "active" : "")" id="tab1">
-                <div class="card-body d-flex flex-column justify-content-center text-center" role="button" @onclick="() => ChangeTab(1)">
-                    <span class="mb-3 @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
-                        <Icon IconName="relay"></Icon>
-                    </span>
-                    <h5> Project Metadata </h5>
+
+<div class="slide-in mt-4">
+    <div class="tab-container">
+        <div class="tabs-wrapper">
+            <div class="tab-item @(activeTab == 1 ? "active" : "")" @onclick="() => SetActiveTab(1)" data-cy="metadata-tab">
+                <div class="tab-content">
+                    <div class="tab-icon @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
+                        <Icon IconName="relay" Height="32" Width="32" />
+                    </div>
+                    <span class="tab-label">Profile</span>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-3 col-sm-6 mt-4 mt-lg-0 mt-sm-4">
-            <div class="card h-100 @(activeTab == 2 ? "active" : "")" id="tab2">
-                <div class="card-body d-flex flex-column justify-content-center text-center" role="button" @onclick="() => ChangeTab(2)">
-                    <span class="mb-3 @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
-                        <Icon IconName="view-project"></Icon>
-                    </span>
-                    <h5> Project Info </h5>
+
+            <div class="tab-item @(activeTab == 2 ? "active" : "")" @onclick="() => SetActiveTab(2)" data-cy="info-tab">
+                <div class="tab-content">
+                    <div class="tab-icon @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
+                        <Icon IconName="view-project" Height="32" Width="32" />
+                    </div>
+                    <span class="tab-label">Details</span>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-3 col-sm-6 mt-4 mt-lg-0 mt-sm-4">
-            <div class="card h-100 @(activeTab == 3 ? "active" : "")" id="tab3">
-                <div class="card-body d-flex flex-column justify-content-center text-center" role="button" @onclick="() => ChangeTab(3)">
-                    <span class="mb-3 @(activeTab == 3 ? "heartbeat" : "")" aria-hidden="true">
-                        <Icon IconName="addresses"></Icon>
-                    </span>
-                    <h5> On Chain </h5>
+
+            <div class="tab-item @(activeTab == 3 ? "active" : "")" @onclick="() => SetActiveTab(3)" data-cy="onchain-tab">
+                <div class="tab-content">
+                    <div class="tab-icon @(activeTab == 3 ? "heartbeat" : "")" aria-hidden="true">
+                        <Icon IconName="addresses" Height="32" Width="32" />
+                    </div>
+                    <span class="tab-label">Deploy</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-
-<div class="card card-body mt-4">
+<div class="card card-body mt-4 slide-in">
     @if (activeTab == 1)
     {
-        <div class="row g-4">
+        <div class="row g-4 animate-fade-in">
             <div class="col-lg-7 col-12">
+
                 <EditForm Model="project.Metadata">
-                    <div class="mb-3">
-                        <label for="NostrMetadataName" class="form-label">Project name</label>
-                        <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated"/>
+
+                    <div class="info-card">
+                        <div class="mb-3">
+                            <label for="NostrMetadataName" class="form-label">Project name</label>
+                            <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="NostrMetadataAbout" class="form-label">About</label>
+                            <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="NostrMetadataWebsite" class="form-label">Project website</label>
+                            <InputText id="NostrMetadataWebsite" autocomplete="off" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the URL of the project website" disabled="@nostrMetadataCreated" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="NostrMetadataBanner" class="form-label">Banner</label>
+                            <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="NostrMetadataPicture" class="form-label">Image</label>
+                            <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated" />
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="NostrMetadataAbout" class="form-label">About</label>
-                        <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated"/>
-                    </div>
 
-                    <div class="mb-3">
-                        <label for="NostrMetadataWebsite" class="form-label">Project website</label>
-                        <InputText id="NostrMetadataWebsite" autocomplete="off" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the URL of the project website" disabled="@nostrMetadataCreated"/>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="NostrMetadataBanner" class="form-label">Banner</label>
-                        <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated"/>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="NostrMetadataPicture" class="form-label">Image</label>
-                        <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated"/>
-                    </div>
-
-                    <!-- Restore the form submit button -->
-                    <div class="card card-body mt-4">
+                    <div class="info-card mt-4">
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-success" @onclick="() => ChangeTab(2)">
-                                <span>Next</span>
+                            <button class="btn btn-border-success d-flex align-items-center" @onclick="() => SetActiveTab(2)">
+                                Next
+                                <Icon IconName="arrow-right" Width="18" Height="18" Class="ms-2" />
+
                             </button>
                         </div>
                     </div>
                 </EditForm>
             </div>
 
-            <!-- Project Preview Section -->
             <div class="col-lg-5 col-12">
                 <div class="d-flex align-items-stretch">
-                    <div class="card w-100 project-card me-0 ms-0">
-                        <label class="form-label">Project Preview</label>
+                    <div class="border card w-100 project-card me-0 ms-0">
                         <a class="d-block">
                             <div class="banner-container">
                                 @if (string.IsNullOrEmpty(project.Metadata?.Banner))
                                 {
-                                    <img class="banner-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
+                                    <img class="banner-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                 }
                                 else
                                 {
-                                    <img class="banner-image" src="@project.Metadata.Banner" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
+                                    <img class="banner-image" src="@project.Metadata.Banner" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                 }
                                 <div class="profile-container">
                                     @if (string.IsNullOrEmpty(project.Metadata?.Picture))
                                     {
-                                        <img class="profile-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
+                                        <img class="profile-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                     }
                                     else
                                     {
-                                        <img class="profile-image" src="@project.Metadata.Picture" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';"/>
+                                        <img class="profile-image" src="@project.Metadata.Picture" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                     }
                                 </div>
                             </div>
@@ -156,7 +166,7 @@
 
                         <div class="card-body pb-0">
                             <div class="d-flex align-items-center mb-4">
-                                <span class="user-select-none">
+                                <span class="user-select-none animate-rotate">
                                     <Icon IconName="view" Height="24" Width="24"></Icon>
                                 </span>
                                 <div class="h-100 ms-3">
@@ -173,20 +183,19 @@
                                 </div>
                             </div>
 
-                                @if (string.IsNullOrEmpty(project.Metadata?.About))
-                                {
-                                    <p class="mb-0 line-clamp-3">About</p>
-                                }
-                                else
-                                {
-                                    <p class="mb-0 line-clamp-3">@ConvertToMarkupString(project.Metadata.About)</p>
-                                }
-
+                            @if (string.IsNullOrEmpty(project.Metadata?.About))
+                            {
+                                <p class="mb-0 line-clamp-3">About</p>
+                            }
+                            else
+                            {
+                                <p class="mb-0 line-clamp-3">@ConvertToMarkupString(project.Metadata.About)</p>
+                            }
                         </div>
                         <div class="card-footer pt-0">
                             <hr class="horizontal light mt-3">
                             <span role="button" class="d-flex align-items-center btn btn-border w-100-m">
-                                <span class="user-select-none">
+                                <span class="user-select-none animate-rotate">
                                     <Icon IconName="view-project" Height="24" Width="24"></Icon>
                                 </span>
                                 <div class="h-100 ms-3">
@@ -202,340 +211,586 @@
         </div>
     }
 
-
     @if (activeTab == 2)
     {
-        <EditForm Model="project">
-            <!-- Angor Fee Key -->
-            <div class="mb-3">
-                <label for="angorFeeKey" class="form-label">Project identifier</label>
-                <InputText id="angorFeeKey" @bind-Value="project.ProjectInfo.ProjectIdentifier" class="form-control" placeholder="Enter angor fee key" readonly disabled="@nostrApplicationSpecificDataCreated"/>
-            </div>
+        <div class="animate-fade-in">
+            <EditForm Model="project">
+                <div class="info-card mb-4 slide-in">
+                    <!-- Angor Fee Key -->
+                    <div class="mb-3">
+                        <label for="angorFeeKey" class="form-label">Project identifier</label>
+                        <InputText id="angorFeeKey" @bind-Value="project.ProjectInfo.ProjectIdentifier" class="form-control" placeholder="Enter angor fee key" readonly disabled="@nostrApplicationSpecificDataCreated" />
+                    </div>
 
-            <!-- Founder Key -->
-            <div class="mb-3">
-                <label for="founderKey" class="form-label">Founder Key</label>
-                <InputText id="founderKey" @bind-Value="project.ProjectInfo.FounderKey" class="form-control" placeholder="Enter founder key" readonly disabled="@nostrApplicationSpecificDataCreated"/>
-            </div>
+                    <!-- Founder Key -->
+                    <div class="mb-3">
+                        <label for="founderKey" class="form-label">Founder Key</label>
+                        <InputText id="founderKey" @bind-Value="project.ProjectInfo.FounderKey" class="form-control" placeholder="Enter founder key" readonly disabled="@nostrApplicationSpecificDataCreated" />
+                    </div>
+                </div>
 
-            <!-- Start Date -->
-            <div class="mb-3">
-                <label for="startDate" class="form-label">Start Date</label>
-                <InputDate id="startDate" @bind-Value="project.ProjectInfo.StartDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated"/>
-            </div>
+                <div class="info-card mb-4 slide-in">
+                    <!-- Start Date -->
+                    <div class="mb-3">
+                        <label for="startDate" class="form-label">Start Date - if the target amount was not reached by this date coins can be returned to the investors</label>
+                        <InputDate id="startDate" @bind-Value="project.ProjectInfo.StartDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
+                    </div>
 
-            <!-- Penalty Date -->
-            <div class="mb-3">
-                <label for="penaltyDays" class="form-label">Penalty Days</label>
-                <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" class="form-control" disabled="@nostrApplicationSpecificDataCreated"/>
-            </div>
+                    <!-- Expiry Date -->
+                    <div class="mb-3">
+                        <label for="expiryDate" class="form-label">Expiry Date - after this date any unspent coins can be claimed back by the investors</label>
+                        <InputDate id="expiryDate" @bind-Value="project.ProjectInfo.ExpiryDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
+                    </div>
 
-            <!-- Expiry Date -->
-            <div class="mb-3">
-                <label for="expiryDate" class="form-label">Expiry Date</label>
-                <InputDate id="expiryDate" @bind-Value="project.ProjectInfo.ExpiryDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated"/>
-            </div>
+                    <!-- Penalty Date -->
+                    <div class="mb-3">
+                        <label for="penaltyDays" class="form-label">Penalty Days - choose the number of days you wish to lock a departing investors funds for</label>
+                        <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
+                    </div>
 
-            <!-- Target Amount -->
-            <div class="mb-3">
-                <label for="targetAmount" class="form-label">Target Amount</label>
-                <InputNumber id="targetAmount" @bind-Value="project.ProjectInfo.TargetAmount" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated"/>
-            </div>
+                    <!-- Target Amount -->
+                    <div class="mb-3">
+                        <label for="targetAmount" class="form-label">Target Amount - the minimum amount of @network.CoinTicker this project is trying to raise</label>
+                        <InputNumber id="targetAmount" @bind-Value="targetAmountInBTC" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated" />
+                    </div>
 
-            <!-- Presets for Stages -->
-            <!-- Toggle Button -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <button class="btn btn-primary" @onclick="ToggleStageMode">
+                    <!-- Presets for Stages -->
+                    <!-- Toggle Button -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <button class="btn btn-border-success" @onclick="ToggleStageMode" disabled="@nostrApplicationSpecificDataCreated">
+                            @if (isPresetMode)
+                            {
+                                <span>Switch to Manual Helper</span>
+                            }
+                            else
+                            {
+                                <span>Switch to Presets</span>
+                            }
+                        </button>
+                    </div>
+
+                    <!-- Conditionally Render Presets or Automatic Inputs -->
                     @if (isPresetMode)
                     {
-                    <span>Switch to Manual Helper</span>
+                        <!-- Preset Selection -->
+                        <div class="mb-3">
+                            <label for="stagePreset" class="form-label">Select Stage Preset</label>
+                            <select id="stagePreset" class="form-control" @onchange="OnStagePresetChange" disabled="@nostrApplicationSpecificDataCreated">
+                                <option value="">Select a preset...</option>
+                                <option value="preset1" selected>Preset 1: 3 Stages (10%, 30%, 60%)</option>
+                                <option value="preset2">Preset 2: 4 Stages (25%, 25%, 25%, 25%)</option>
+                                <option value="preset3">Preset 3: 3 Stages (60%, 20%, 20%)</option>
+                            </select>
+                        </div>
                     }
                     else
                     {
-                    <span>Switch to Presets</span>
+                        <!-- Automatic Generation Inputs -->
+                        <div class="mb-3">
+                            <label for="totalDuration" class="form-label">Total Project Duration (in days)</label>
+                            <InputNumber id="totalDuration" @bind-Value="totalDuration" class="form-control" placeholder="Enter total duration in days" disabled="@nostrApplicationSpecificDataCreated" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="numberOfStages" class="form-label">Number of Stages</label>
+                            <InputNumber id="numberOfStages" @bind-Value="numberOfStages" class="form-control" placeholder="Enter number of stages" disabled="@nostrApplicationSpecificDataCreated" />
+                        </div>
+                        <button type="button" class="btn btn-border-success mb-3" @onclick="GenerateSmartStages" disabled="@nostrApplicationSpecificDataCreated">
+                            <Icon IconName="server-path" Height="20" Width="20" Color="var(--angor-primary)" Class="me-2"></Icon>
+                            Generate Stages
+                        </button>
                     }
-                </button>
-            </div>
 
-            <!-- Conditionally Render Presets or Automatic Inputs -->
-            @if (isPresetMode)
-            {
-            <!-- Preset Selection -->
-            <div class="mb-3">
-                <label for="stagePreset" class="form-label">Select Stage Preset</label>
-                <select id="stagePreset" class="form-select" @onchange="OnStagePresetChange">
-                    <option value="">Select a preset...</option>
-                    <option value="preset1">Preset 1: 3 Stages (10%, 30%, 60%)</option>
-                    <option value="preset2">Preset 2: 4 Stages (25%, 25%, 25%, 25%)</option>
-                    <option value="preset3">Preset 3: 3 Stages (60%, 20%, 20%)</option>
-                </select>
-            </div>
-            }
-            else
-            {
-            <!-- Automatic Generation Inputs -->
-            <div class="mb-3">
-                <label for="totalDuration" class="form-label">Total Project Duration (in days)</label>
-                <InputNumber id="totalDuration" @bind-Value="totalDuration" class="form-control" placeholder="Enter total duration in days" />
-            </div>
-            <div class="mb-3">
-                <label for="numberOfStages" class="form-label">Number of Stages</label>
-                <InputNumber id="numberOfStages" @bind-Value="numberOfStages" class="form-control" placeholder="Enter number of stages" />
-            </div>
-            <button type="button" class="btn btn-border mb-3" @onclick="GenerateSmartStages">Generate Stages</button>
-            }
-
-            <!-- Stages -->
-            <h3 class="mb-3">Stages</h3>
-            @foreach (var stage in project.ProjectInfo.Stages)
-            {
-            <div class="mb-3">
-                <label class="form-label">The amount in % to allocate for stage @(project.ProjectInfo.Stages.IndexOf(stage) + 1)</label>
-                <div class="input-group">
-                    <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1" disabled="@nostrApplicationSpecificDataCreated" />
-                    <InputDate @bind-Value="stage.ReleaseDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
-                    <button type="button" class="btn btn-danger" @onclick="() => RemoveStage(stage)">Remove</button>
-                </div>
-                @if (project.ProjectInfo.Stages.IndexOf(stage) > 0)
-                {
-                var previousStage = project.ProjectInfo.Stages[project.ProjectInfo.Stages.IndexOf(stage) - 1];
-                var daysBetween = (stage.ReleaseDate - previousStage.ReleaseDate).Days;
-                <p class="text-muted">Days since last stage: @daysBetween days</p>
-                }
-            </div>
-            }
-            
+                    <!-- Stages -->
+                    <h3 class="mb-3">Stages</h3>
+                    @foreach (var stage in project.ProjectInfo.Stages)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">The amount in % to allocate for stage @(project.ProjectInfo.Stages.IndexOf(stage) + 1)</label>
+                            <div class="input-group">
+                                <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1" disabled="@nostrApplicationSpecificDataCreated" />
+                                <InputDate @bind-Value="stage.ReleaseDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
+                                <button type="button" class="btn btn-border-danger" @onclick="() => RemoveStage(stage)">
+                                    <Icon IconName="delete" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
+                                </button>
+                            </div>
+                            @if (project.ProjectInfo.Stages.IndexOf(stage) > 0)
+                            {
+                                var previousStage = project.ProjectInfo.Stages[project.ProjectInfo.Stages.IndexOf(stage) - 1];
+                                var daysBetween = (stage.ReleaseDate - previousStage.ReleaseDate).Days;
+                                <p class="text-muted">Days since previous stage: @daysBetween days</p>
+                            }
+                        </div>
+                    }
 
 
-            <button type="button" class="btn btn-border mb-3" @onclick="AddStage" disabled="@nostrApplicationSpecificDataCreated">Add Stage</button>
 
-            <div class="card card-body mt-4">
-                <div class="d-flex justify-content-between">
-                    <button type="button" class="btn btn-success" @onclick="() => ChangeTab(1)">
-                        <span>Previous</span>
-                    </button>
-                    
-                    <button type="submit" class="btn btn-success" @onclick="() => ChangeTab(3)">
-                        <span>Next</span>
+                    <button type="button" class="btn btn-border-warning mb-3" @onclick="AddStage" disabled="@nostrApplicationSpecificDataCreated">
+                        <Icon IconName="add" Height="20" Width="20" Color="var(--angor-primary)" Class="me-2"></Icon>
+                        Add Stage
                     </button>
                 </div>
-            </div>
-        </EditForm>
+
+                <div class="info-card mt-4 slide-in">
+                    <div class="d-flex justify-content-between">
+
+                        <button class="btn btn-border-warning d-flex align-items-center" @onclick="() => SetActiveTab(1)">
+                            <Icon IconName="arrow-left" Width="18" Height="18" Class="me-2" />
+                            Previous
+                        </button>
+
+                        <button class="btn btn-border-success d-flex align-items-center" @onclick="() => SetActiveTab(3)">
+                            Next
+                            <Icon IconName="arrow-right" Width="18" Height="18" Class="ms-2" />
+
+                        </button>
+
+                    </div>
+                </div>
+            </EditForm>
+        </div>
     }
 
     @if (activeTab == 3)
     {
-        <div class="form-control mt-1 d-flex align-items-center">
-            <Icon IconName="name"></Icon>
-            <p class="card-text ms-2">
-                <strong>Project Name:</strong> @project.Metadata.Name
-            </p>
-        </div>
-        <div class="form-control mt-1 d-flex align-items-center">
-            <Icon IconName="about"></Icon>
-            <p class="card-text ms-2">
-                <strong>Project About:</strong> @((MarkupString)project.Metadata.About)
-            </p>
-        </div>
-        <div class="form-control mt-1 d-flex align-items-center">
-            <Icon IconName="identifier"></Icon>
-            <p class="card-text ms-2">
-                <strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier
-            </p>
-        </div>
-        <div class="form-control mt-1 d-flex align-items-center">
-            <Icon IconName="key"></Icon>
-            <p class="card-text ms-2"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
-        </div>
-        <div class="form-control mt-1 d-flex align-items-center">
-            <Icon IconName="balance"></Icon>
-            <p class="card-text ms-2">
-                <strong>Target amount:</strong> @project.ProjectInfo.TargetAmount @network.CoinTicker
-            </p>
-        </div>
-        <div class="form-control mt-1 d-flex align-items-center">
-            <Icon IconName="calendar"></Icon>
-            <p class="card-text ms-2"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
-        </div>
-        <div class="form-control mt-1 d-flex align-items-center">
-            <Icon IconName="calendar"></Icon>
-            <p class="card-text ms-2"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
-        </div>
-        <div class="form-control mt-1 d-flex align-items-center">
-            <Icon IconName="sad-circle"></Icon>
-            <p class="card-text ms-2"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
-        </div>
-
-
-        <h6 class="mt-4 mb-4">Stages</h6>
-
-        @foreach (var stage in project.ProjectInfo.Stages)
-        {
-            <div class="form-control card mt-2 p-3">
-                <div class="d-flex align-items-center">
-                    <Icon IconName="percent"></Icon>
-                    <p class="card-text ms-2 mb-1"><strong>Stage Percent:</strong> @stage.AmountToRelease %</p>
-                </div>
-                <div class="d-flex align-items-center">
-                    <Icon IconName="calendar"></Icon>
-                    <p class="card-text ms-2 mb-1"><strong>Stage Date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
-                </div>
+        <div class="slide-in mt-4 mb-4">
+            <h5 class="mb-4">Project Information</h5>
+            <div class="row g-4">
+                @foreach (var info in GetProjectInfoData())
+                {
+                    <div class="col-12">
+                        <div class="stat-card p-3 rounded-3 border hover-effect">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="text-muted">@info.Label</h6>
+                                    <h5 class="mb-0 text-break">@info.Value</h5>
+                                </div>
+                                <div class="stat-icon">
+                                    <Icon IconName="@info.IconName" Height="32" Width="32" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
-        }
 
-        <div class="mb-4">
-            <h5>Current Step</h5>
-            <div class="text-center">
-                @GetProgressMessage()
+            <div class="row g-4 mt-0">
+                @foreach (var info in GetAdditionalProjectInfo())
+                {
+                    <div class="col-md-6 col-12">
+                        <div class="stat-card p-3 rounded-3 border hover-effect">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="text-muted">@info.Label</h6>
+                                    <h5 class="mb-0 text-break @info.color">@info.Value</h5>
+                                </div>
+                                <div class="stat-icon">
+                                    <Icon IconName="@info.IconName" Height="32" Width="32" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
-        <button class="btn btn-success mt-4 me-3" @onclick="ConfirmFinalizeNostrProfileCreation" disabled="@nostrMetadataCreated">
-            @if (createProfileSpinner)
-            {
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                <span>Creating Nostr Profile...</span>
-            }
-            else
-            {
-                <span>Create Nostr Profile</span>
-            }
-        </button>
 
-        <button class="btn btn-primary mt-4" @onclick="ConfirmFinalizeProjectInfoCreation" disabled="@(!nostrMetadataCreated || nostrApplicationSpecificDataCreated)">
-            @if (createApplicationDataSpinner)
+        <div class="info-card mb-4">
+            <h5 class="mb-4">Stages</h5>
+            @foreach (var stage in project.ProjectInfo.Stages)
             {
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                <span>Creating Project Info...</span>
+                <div class="stage-card mt-4 p-3">
+                    <div class="stage-content">
+                        <div class="stage-icon">
+                            <Icon IconName="percent" Height="32" Width="32" />
+                        </div>
+                        <div class="stage-info">
+                            <p class="stage-text"><strong>Stage Percent:</strong> @stage.AmountToRelease %</p>
+                        </div>
+                    </div>
+                    <div class="stage-content">
+                        <div class="stage-icon">
+                            <Icon IconName="calendar" Height="32" Width="32" />
+                        </div>
+                        <div class="stage-info">
+                            <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
+                        </div>
+                    </div>
+                </div>
             }
-            else
-            {
-                <span>Create Project Info</span>
-            }
-        </button>
+        </div>
 
-        <button type="button" class="btn btn-success mt-4" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
-            @if (creatProjectSpinner)
-            {
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                <span>Create Project...</span>
-            }
-            else
-            {
-                <span>Create Project</span>
-            }
-        </button>
-        <div class="card card-body mt-4">
+        <div class="info-card">
+
+
+            <div class="wizard-container">
+                <!-- Modern Progress Indicators -->
+                <div class="d-flex justify-content-between mb-4 position-relative">
+
+                    <!-- Step Indicators with Icons -->
+                    <div class="d-flex flex-column align-items-center position-relative z-1">
+                        <div class="step-circle d-flex align-items-center justify-content-center rounded-circle @(currentStep >= 1 ? "bg-success text-white" : " border")"
+                             style="width: 40px; height: 40px; transition: all 0.3s ease;">
+                            @if (currentStep > 1)
+                            {
+                                <Icon IconName="check-circle" Width="20" Height="20" />
+                            }
+                            else
+                            {
+                                <span class="fw-bold">1</span>
+                            }
+                        </div>
+                        <span class="step-label mt-2 small fw-semibold @(currentStep >= 1 ? "text-success" : "text-muted")">Profile</span>
+                    </div>
+
+                    <div class="d-flex flex-column align-items-center position-relative z-1">
+                        <div class="step-circle d-flex align-items-center justify-content-center rounded-circle @(currentStep >= 2 ? "bg-success text-white" : " border")"
+                             style="width: 40px; height: 40px; transition: all 0.3s ease;">
+                            @if (currentStep > 2)
+                            {
+                                <Icon IconName="check-circle" Width="20" Height="20" />
+                            }
+                            else
+                            {
+                                <span class="fw-bold">2</span>
+                            }
+                        </div>
+                        <span class="step-label mt-2 small fw-semibold @(currentStep >= 2 ? "text-success" : "text-muted")">Details</span>
+                    </div>
+
+                    <div class="d-flex flex-column align-items-center position-relative z-1">
+                        <div class="step-circle d-flex align-items-center justify-content-center rounded-circle @(currentStep >= 3 ? "bg-success text-white" : " border")"
+                             style="width: 40px; height: 40px; transition: all 0.3s ease;">
+                            <span class="fw-bold">3</span>
+                        </div>
+                        <span class="step-label mt-2 small fw-semibold @(currentStep >= 3 ? "text-success" : "text-muted")">Deploy</span>
+                    </div>
+                </div>
+
+                <!-- Step Content Card with Clean Design -->
+                <div class="card border-0 shadow-sm animate-fade-in mb-4">
+                    <div class="card-body p-4">
+                        @switch (currentStep)
+                        {
+                            case 1:
+                                <div class="animate-fade-in">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3">
+                                            <Icon IconName="nostr" Width="24" Height="24" Color="var(--angor-primary)" />
+                                        </div>
+                                        <h5 class="mb-0 fw-bold">Create Nostr Profile</h5>
+                                    </div>
+
+                                    <p class="text-muted mb-4 ps-2">Your project needs a public profile on the Nostr network. This information establishes your project's identity.</p>
+
+                                    <div class="info-alert my-4 ">
+                                        <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+                                        <p class="text-warning">
+                                            Once created, profile information cannot be modified
+                                        </p>
+                                    </div>
+
+                                    <button class="btn btn-lg btn-border-success w-100 d-flex align-items-center justify-content-center"
+                                            @onclick="ConfirmFinalizeNostrProfileCreation"
+                                            disabled="@nostrMetadataCreated">
+                                        @if (createProfileSpinner)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                            <span>Creating Profile...</span>
+                                        }
+                                        else
+                                        {
+                                            <Icon IconName="nostr" Width="20" Height="20" Class="me-2" />
+                                            <span>Create Nostr Profile</span>
+                                        }
+                                    </button>
+
+                                    @if (nostrMetadataCreated)
+                                    {
+                                        <div class="text-center mt-3">
+                                            <span class="badge bg-success d-inline-flex align-items-center gap-1 px-3 py-2">
+                                                <Icon IconName="check" Width="16" Height="16" />
+                                                Profile Created
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+                                break;
+
+                            case 2:
+                                <div class="animate-fade-in">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3">
+                                            <Icon IconName="project" Width="24" Height="24" Color="var(--angor-primary)" />
+                                        </div>
+                                        <h5 class="mb-0 fw-bold">Project Information</h5>
+                                    </div>
+
+                                    <p class="text-muted mb-4 ps-2">Define technical details and funding structure for your project. These settings will be published to the Nostr network.</p>
+
+                                    <button class="btn btn-lg btn-border-success w-100 d-flex align-items-center justify-content-center"
+                                            @onclick="ConfirmFinalizeProjectInfoCreation"
+                                            disabled="@(!nostrMetadataCreated || nostrApplicationSpecificDataCreated)">
+                                        @if (createApplicationDataSpinner)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                            <span>Publishing Project Info...</span>
+                                        }
+                                        else
+                                        {
+                                            <Icon IconName="project" Width="20" Height="20" Class="me-2" />
+                                            <span>Publish Project Info</span>
+                                        }
+                                    </button>
+
+                                    @if (nostrApplicationSpecificDataCreated)
+                                    {
+                                        <div class="text-center mt-3">
+                                            <span class="badge bg-success d-inline-flex align-items-center gap-1 px-3 py-2">
+                                                <Icon IconName="check" Width="16" Height="16" />
+                                                Project Info Published
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+                                break;
+
+                            case 3:
+                                <div class="animate-fade-in">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3">
+                                            <Icon IconName="deploy" Width="24" Height="24" Color="var(--angor-primary)" />
+                                        </div>
+                                        <h5 class="mb-0 fw-bold">Deploy Project</h5>
+                                    </div>
+
+                                    <p class="text-muted mb-4 ps-2">Deploy your project to the blockchain. This final step creates the on-chain contract for your project.</p>
+
+                                    <div class="info-alert my-4 ">
+                                        <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+                                        <p class="text-warning">
+                                            This action cannot be undone. Your project will be live after this step.
+                                        </p>
+                                    </div>
+
+                                    <button class="btn btn-lg btn-border-success w-100 d-flex align-items-center justify-content-center"
+                                            @onclick="CreatProjectTransactionAnCheckPassword"
+                                            disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
+                                        @if (creatProjectSpinner)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                            <span>Deploying Project...</span>
+                                        }
+                                        else
+                                        {
+                                            <Icon IconName="deploy" Width="20" Height="20" Class="me-2" />
+                                            <span>Deploy to Blockchain</span>
+                                        }
+                                    </button>
+                                </div>
+                                break;
+                        }
+                    </div>
+                </div>
+
+                <!-- Navigation Bar with Improved Design -->
+                <div class="d-flex justify-content-between align-items-center">
+                    @if (currentStep > 1)
+                    {
+                        <button class="btn btn-border-warning d-flex align-items-center" @onclick="() => currentStep--">
+                            <Icon IconName="arrow-left" Width="18" Height="18" Class="me-2" />
+                            Previous
+                        </button>
+                    }
+                    else
+                    {
+                        <div></div> <!-- Spacer -->
+                    }
+
+                    @if (currentStep < 3 && CanProceedToNextStep())
+                    {
+                        <button class="btn btn-border-success d-flex align-items-center" @onclick="() => currentStep++">
+                            Continue
+                            <Icon IconName="arrow-right" Width="18" Height="18" Class="ms-2" />
+                        </button>
+                    }
+                    else
+                    {
+                        <div></div> <!-- Spacer -->
+                    }
+                </div>
+            </div>
+
+
+        </div>
+
+        <div class="info-card mt-4">
             <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-success" @onclick="() => ChangeTab(2)">
-                    <span>Previous</span>
+                <button class="btn btn-border-warning d-flex align-items-center" @onclick="() => SetActiveTab(2)">
+                    <Icon IconName="arrow-left" Width="18" Height="18" Class="me-2" />
+                    Previous
                 </button>
             </div>
         </div>
     }
 
-
-@if (showCreateModal)
-{
-    <!-- Confirmation Modal -->
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-        <div class="modal-dialog">
-            <div class="modal-content">
-
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmation</h5>
-                    <span type="button" data-cy="close-show-wallet-words" @onclick="() => showCreateModal = false" aria-label="Close">
-                        <Icon IconName="close-circle"/>
-                    </span>
-                </div>
-
-
-                <div class="modal-body modal-body-scroll">
-                    <p class="mb-1">
-                        <strong>Project Identifier:</strong> @project.ProjectInfo.ProjectIdentifier
-                    </p>
-                    <p class="mb-1"><strong>Founder Key:</strong> @project.ProjectInfo.FounderKey.Substring(0, 10)...</p> <!-- Display only the first 10 characters -->
-
-                    <p class="mb-1">
-                        <strong>Target amount:</strong> @project.ProjectInfo.TargetAmount @network.CoinTicker
-                    </p>
-
-                    <p class="mb-1"><strong>Start date:</strong> @project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days</p>
-                    <p class="mb-1"><strong>Expiry date:</strong> @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days</p>
-                    <p class="mb-1"><strong>Penalty days:</strong> @project.ProjectInfo.PenaltyDays days</p>
-
-                    <p class="mb-1">
-                        <strong>Miner fee:</strong> @Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                    </p>
-                    <p class="mb-1">
-                        <strong>Angor fee:</strong> @signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                    </p>
-
-                    <hr>
-
-                    <div class="mb-3">
-                        <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                        <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
-                    </div>
-
-                    <hr>
-
-                    <h6 class="mt-3 mb-2">Stages</h6>
-                    @foreach (var stage in project.ProjectInfo.Stages)
-                    {
-                        <div style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px; font-size: 0.85em;">
-                            <p class="mb-1"><strong>Stage percent:</strong> @stage.AmountToRelease % </p>
-                            <p class="mb-1"><strong>Stage date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts </p>
+    @if (showCreateModal)
+    {
+        <div class="modal-wrapper">
+            <div class="modal fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content modern-modal">
+                        <div class="modal-header border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <Icon IconName="check-circle" Height="32" Width="32" class="me-2" />
+                                <h5 class="modal-title">Confirmation</h5>
+                            </div>
+                            <button class="btn-close-custom" @onclick="() => showCreateModal = false">
+                                <Icon IconName="close-circle" Height="24" Width="24" />
+                            </button>
                         </div>
-                    }
 
-                    <hr>
+                        <div class="modal-body modal-body-scroll py-4">
 
-                    <p class="mt-3">Are you sure you want to continue?</p>
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-12">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Project Identifier</div>
+                                        <div class="info-value">@project.ProjectInfo.ProjectIdentifier</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Founder Key</div>
+                                        <div class="info-value">@project.ProjectInfo.FounderKey</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Target Amount</div>
+                                        <div class="info-value text-success">@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Start Date</div>
+                                        <div class="info-value">@project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") (in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days)</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Expiry Date</div>
+                                        <div class="info-value text-warning">@project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") (in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days)</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Penalty Days</div>
+                                        <div class="info-value text-danger">@project.ProjectInfo.PenaltyDays days</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Miner Fee</div>
+                                        <div class="info-value text-warning">@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Angor Fee</div>
+                                        <div class="info-value text-success">@signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
+                                    </div>
+                                </div>
+                            </div>
 
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-border" @onclick="Send" disabled="@publishProjectSpinner">
-                        @if (publishProjectSpinner)
-                        {
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            <span>Confirm...</span>
-                        }
-                        else
-                        {
-                            <span>Confirm</span>
-                        }
-                    </button>
+                            <FeeSelector SendFee="@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                         CoinTicker="@network.CoinTicker"
+                                         FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                         FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                         FeePosition="@feeData.FeePosition"
+                                         FeeMin="@feeData.FeeMin"
+                                         FeeMax="@feeData.FeeMax"
+                                         OnFeeChanged="@HandleFeeChanged" />
 
+                            <h6 class="mt-3 mb-2">Stages</h6>
+                            @foreach (var stage in project.ProjectInfo.Stages)
+                            {
+                                <div class="stage-card mt-4 p-3">
+                                    <div class="stage-content">
+                                        <div class="stage-icon">
+                                            <Icon IconName="percent" Height="32" Width="32" />
+                                        </div>
+                                        <div class="stage-info">
+                                            <p class="stage-text"><strong>Stage Percent:</strong> @stage.AmountToRelease %</p>
+                                        </div>
+                                    </div>
+                                    <div class="stage-content">
+                                        <div class="stage-icon">
+                                            <Icon IconName="calendar" Height="32" Width="32" />
+                                        </div>
+                                        <div class="stage-info">
+                                            <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
 
+                            <hr>
+
+                            <div class="confirmation-section mt-4 text-center">
+                                <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
+                                <p class="confirmation-text">
+                                    Please review the transaction details carefully before confirming.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer border-0 pt-0">
+                            <button class="btn btn-border-success" @onclick="Send" disabled="@publishProjectSpinner">
+                                @if (publishProjectSpinner)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Confirming...</span>
+                                }
+                                else
+                                {
+                                    <span>Confirm</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-}
+    }
 
-@if (showConfirmationModal)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmation</h5>
-                    <button type="button" class="btn-close" @onclick="CloseConfirmationModal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>@confirmationMessage</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CloseConfirmationModal">Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="PerformFinalizeAction">Confirm</button>
+    @if (showConfirmationModal)
+    {
+        <div class="modal-wrapper">
+            <div class="modal fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content modern-modal">
+                        <div class="modal-header border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <Icon IconName="alert-circle" Height="32" Width="32" class="me-2" />
+                                <h5 class="modal-title">Confirmation</h5>
+                            </div>
+                            <button class="btn-close-custom" @onclick="CloseConfirmationModal">
+                                <Icon IconName="close-circle" Height="24" Width="24" />
+                            </button>
+                        </div>
+
+                        <div class="modal-body modal-body-scroll">
+                            <p class="mb-1">@confirmationMessage</p>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-border-warning" @onclick="CloseConfirmationModal">Cancel</button>
+                            <button type="button" class="btn btn-border-success" @onclick="PerformFinalizeAction">Confirm</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-}
-
-
-
+    }
 </div>
 
 
@@ -557,19 +812,26 @@
     private readonly FeeData feeData = new();
 
     private FounderProject project = new();
-    
+
     private readonly Dictionary<string, (int[] Percentages, int IntervalDays)> presets = new()
     {
         { "preset1", (new[] { 10, 30, 60 }, 10) },
         { "preset2", (new[] { 25, 25, 25, 25 }, 10) },
         { "preset3", (new[] { 60, 20, 20 }, 15) }
     };
-    
+
+    private decimal targetAmountInBTC
+    {
+        get => Money.Satoshis(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC);
+        set => project.ProjectInfo.TargetAmount = Money.Coins(value).Satoshi;
+    }
 
     private int activeTab = 1;
-    
+
     private int totalDuration;
     private int numberOfStages;
+    private bool isValid = true;
+    private string errorMessage;
 
     bool createProfileSpinner;
     bool createApplicationDataSpinner;
@@ -579,42 +841,69 @@
     bool nostrMetadataCreated;
     bool nostrApplicationSpecificDataCreated;
 
+    private int currentStep = 1;
+
+    private int GetProgressPercentage() => (currentStep - 1) * 50;
+
+    private void NextStep()
+    {
+        if (currentStep < 3)
+        {
+            currentStep++;
+        }
+    }
+
+    private void PreviousStep()
+    {
+        if (currentStep > 1)
+        {
+            currentStep--;
+        }
+    }
+
+    private bool CanProceedToNextStep()
+    {
+        return currentStep switch
+        {
+            1 => nostrMetadataCreated,
+            2 => nostrApplicationSpecificDataCreated,
+            _ => false
+        };
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        NavMenuState.SetActivePage("founder");
+
         if (!hasWallet)
         {
             return;
         }
 
-        var projects = storage.GetFounderProjects() ?? new List<FounderProject>();
+        var projects = storage.GetFounderProjects();
+
         var keys = _walletStorage.GetFounderKeys();
 
-        if (projects.Count(p => !string.IsNullOrEmpty(p.CreationTransactionId)) >= keys.Keys.Count)
+        // if CreationTransactionId is not null this means the project was published to the blockchain
+        var startedProjects = projects.Where(p => !string.IsNullOrEmpty(p.CreationTransactionId)).ToList();
+
+        if (startedProjects.Count >= keys.Keys.Count)
         {
-            notificationComponent.ShowErrorMessage("All founder keys have been used for this wallet!");
+            errorMessage = "All founder keys have been used for this wallet!";
+            isValid = false;
             return;
         }
 
-        var latestProject = projects.Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).MaxBy(p => p.ProjectIndex);
+        var latestProject = startedProjects.MaxBy(p => p.ProjectIndex);
         var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectIndex + 1 ?? 1);
 
         project = projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier)
-                  ?? new FounderProject
-                  {
-                      ProjectIndex = projectsKeys.Index,
-                      Metadata = new ProjectMetadata(),
-                      ProjectInfo = new ProjectInfo
-                      {
-                          FounderKey = projectsKeys.FounderKey,
-                          FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
-                          ProjectIdentifier = projectsKeys.ProjectIdentifier,
-                          NostrPubKey = projectsKeys.NostrPubKey,
-                              StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
-                          PenaltyDays = 90,
-                          ExpiryDate = DateTime.UtcNow.AddDays(120),
-                          TargetAmount = 50
-                      }
-                  };
+                  ?? CreateDefaultProject(projectsKeys);
+
+        if (network.NetworkType == NetworkType.Testnet)
+        {
+            PopulateTestnetData(project);
+        }
 
         // save project to storage immediately if new
         if (!projects.Any(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier))
@@ -625,8 +914,14 @@
         // check if the project was already published to nostr
         nostrMetadataCreated = project.NostrProfileCreated;
         nostrApplicationSpecificDataCreated = !string.IsNullOrEmpty(project.ProjectInfoEventId);
-    }
 
+        // Select a preset
+        if (!project.ProjectInfo.Stages.Any())
+        {
+            isPresetMode = true;
+            OnStagePresetChange(new ChangeEventArgs { Value = "preset1" });
+        }
+    }
 
     private string GetActiveClass(int tabNumber)
     {
@@ -712,7 +1007,7 @@
         }
         else
         {
-            await CreatNostrProfile();    
+            await CreatNostrProfile();
         }
     }
 
@@ -725,10 +1020,10 @@
         try
         {
             var words = await passwordComponent.GetWalletAsync();
-            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectIndex);
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
 
             var resultId = await _RelayService.CreateNostrProfileAsync(
-                project.Metadata.ToNostrMetadata(), 
+                project.Metadata.ToNostrMetadata(),
                 NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()),
                 _ =>
                 {
@@ -787,7 +1082,7 @@
         try
         {
             var words = await passwordComponent.GetWalletAsync();
-            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectIndex);
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
 
             var nostrKeyHex = Encoders.Hex.EncodeData(nostrKey.ToBytes());
 
@@ -848,7 +1143,8 @@
         try
         {
             var words = await passwordComponent.GetWalletAsync();
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+            var accountInfo = accountBalanceInfo.AccountInfo;
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
@@ -857,14 +1153,14 @@
 
             unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), NetworkConfiguration.AngorCreateFeeSats, NetworkConfiguration.NostrEventIdKeyType, project.ProjectInfoEventId);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
             showCreateModal = true;
         }
         catch (Exception e)
         {
             _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
@@ -872,35 +1168,36 @@
             StateHasChanged();
         }
     }
-    
-    private async Task FeeRangeChanged(ChangeEventArgs e)
+
+    private async Task HandleFeeChanged(FeeCalculation feeCalc)
     {
-        var selected = e.Value?.ToString();
-
-        if (selected != null)
+        try
         {
-            if (int.TryParse(selected, out int res))
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
             {
-                if (res <= feeData.FeeEstimations.Fees.Count)
-                {
-                    if (!passwordComponent.HasPassword())
-                    {
-                        showCreateModal = false;
-                        notificationComponent.ShowErrorMessage("Wallet password expired");
-                        return;
-                    }
-
-                    var words = await passwordComponent.GetWalletAsync();
-                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-                    var accountInfo = storage.GetAccountInfo(network.Name);
-                    var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
-
-                    signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation);
-
-                    StateHasChanged();
-                }
+                feeData.SetCustomFee(feeCalc.CustomFee.Value);
             }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
+            {
+                feeData.SelectFee(feeCalc.Position.Value);
+            }
+
+            var words = await passwordComponent.GetWalletAsync();
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                accountInfo.GetNextChangeReceiveAddress(),
+                unsignedTransaction,
+                words,
+                accountInfo,
+                feeData.SelectedFeeEstimation.FeeRate);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogError(ex, "Error calculating fee");
+            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
     }
 
@@ -936,7 +1233,7 @@
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
@@ -975,7 +1272,7 @@
         return new MarkupString(sanitizedInput);
     }
 
-    private void ChangeTab(int tabNumber)
+    private async void SetActiveTab(int tabNumber)
     {
         if (!nostrMetadataCreated)
         {
@@ -985,6 +1282,11 @@
 
         activeTab = tabNumber;
         StateHasChanged();
+
+        // Add a slight delay before scrolling to the top
+        // This ensures the tab content has been rendered
+        await Task.Delay(10);
+        await JS.InvokeVoidAsync("window.scrollTo", 0, 0);
     }
 
     private string GetProgressMessage()
@@ -1047,10 +1349,10 @@
                 return false;
             }
 
-            if (project.ProjectInfo.TargetAmount < (decimal)0.1)
+            if (targetAmountInBTC < (decimal)0.1)
             {
                 // temporary limit to not allow users to put too much in an Angor contract
-    
+
                 notificationComponent.ShowErrorMessage("Project target amount must be higher than 0.1 BTC");
                 return false;
             }
@@ -1093,6 +1395,15 @@
             return false;
         }
 
+        foreach (var stage in project.ProjectInfo.Stages)
+        {
+            if (stage.AmountToRelease <= 0 || stage.AmountToRelease > 100)
+            {
+                notificationComponent.ShowErrorMessage("Stage percentage must be between 1 and 100.");
+                return false;
+            }
+        }
+
         var projects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
 
         if (projects.Any(a => project.ProjectInfo.ProjectIdentifier == a.ProjectInfo.ProjectIdentifier))
@@ -1101,22 +1412,33 @@
             return false;
         }
 
-        var prev = DateTime.UtcNow;
-        foreach (var stage in project.ProjectInfo.Stages)
+        if (project.ProjectInfo.Stages.Any())
         {
-            if ((stage.ReleaseDate - prev).Days < 0)
+            // First check if first stage is after project start
+            if (project.ProjectInfo.Stages.First().ReleaseDate < project.ProjectInfo.StartDate)
             {
-                notificationComponent.ShowErrorMessage("Stages must be chronological");
+                notificationComponent.ShowErrorMessage("First stage must be after project start date");
                 return false;
             }
 
-            prev = stage.ReleaseDate;
+            // Then check stages are in order
+            var sortedStages = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).ToList();
+            for (int i = 0; i < sortedStages.Count - 1; i++)
+            {
+                if (sortedStages[i].ReleaseDate >= sortedStages[i + 1].ReleaseDate)
+                {
+                    notificationComponent.ShowErrorMessage($"Stage {i + 2} must be after stage {i + 1}");
+                    return false;
+                }
+            }
+
+            // Keep stages sorted
+            project.ProjectInfo.Stages = sortedStages;
         }
 
-        // If all checks pass, return true
         return true;
     }
-    
+
     private List<Stage> GenerateStages(int[] percentages, int intervalDays)
     {
         var stages = new List<Stage>();
@@ -1125,10 +1447,10 @@
         for (int i = 0; i < percentages.Length; i++)
         {
             stages.Add(new Stage
-            {
-                AmountToRelease = percentages[i],
-                ReleaseDate = currentDate
-            });
+                {
+                    AmountToRelease = percentages[i],
+                    ReleaseDate = currentDate
+                });
 
             if (i > 0)
             {
@@ -1141,7 +1463,7 @@
 
         return stages;
     }
-    
+
     private void GenerateSmartStages()
     {
         if (totalDuration <= 0 || numberOfStages <= 0)
@@ -1158,10 +1480,10 @@
         for (int i = 0; i < numberOfStages; i++)
         {
             project.ProjectInfo.Stages.Add(new Stage
-            {
-                AmountToRelease = stagePercentage,
-                ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
-            });
+                {
+                    AmountToRelease = stagePercentage,
+                    ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
+                });
         }
 
         StateHasChanged();
@@ -1172,4 +1494,101 @@
         isPresetMode = !isPresetMode; // Toggle between Presets and Automatic
         StateHasChanged(); // Update the UI
     }
+
+    private readonly string[] spacePhotos = new[]
+    {
+        "https://images-assets.nasa.gov/image/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA22081/PIA22081~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000282/GSFC_20171208_Archive_e000282~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001894/GSFC_20171208_Archive_e001894~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA08216/PIA08216~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001465/GSFC_20171208_Archive_e001465~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001518/GSFC_20171208_Archive_e001518~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA25433/PIA25433~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA15415/PIA15415~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002086/GSFC_20171208_Archive_e002086~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA14731/PIA14731~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002020/GSFC_20171208_Archive_e002020~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/0203048/0203048~thumb.jpg?as=webp"
+    };
+
+    private FounderProject CreateDefaultProject(FounderKeys projectsKeys)
+    {
+        return new FounderProject
+            {
+                ProjectIndex = projectsKeys.Index,
+                Metadata = new ProjectMetadata(),
+                ProjectInfo = new ProjectInfo
+                {
+                    FounderKey = projectsKeys.FounderKey,
+                    FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
+                    ProjectIdentifier = projectsKeys.ProjectIdentifier,
+                    NostrPubKey = projectsKeys.NostrPubKey,
+                    StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
+                    PenaltyDays = 90,
+                    ExpiryDate = DateTime.UtcNow.AddDays(120),
+                    TargetAmount = Money.Coins(50).Satoshi
+                }
+            };
+    }
+    private void PopulateTestnetData(FounderProject project)
+    {
+        var random = new Random();
+
+        // Set random photos for testnet
+        if (string.IsNullOrEmpty(project.Metadata.Banner))
+        {
+            project.Metadata.Banner = spacePhotos[random.Next(spacePhotos.Length)];
+        }
+
+        if (string.IsNullOrEmpty(project.Metadata.Picture))
+        {
+            project.Metadata.Picture = spacePhotos[random.Next(spacePhotos.Length)];
+        }
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
+    }
+
+
+    private IEnumerable<(string IconName, string Label, string Value)> GetProjectInfo()
+    {
+        return new List<(string, string, string)>
+        {
+            ("name", "Project Name", project.Metadata.Name),
+            ("about", "Project About", ((MarkupString)project.Metadata.About).ToString()),
+            ("identifier", "Project Identifier", project.ProjectInfo.ProjectIdentifier),
+            ("key", "Founder Key", project.ProjectInfo.FounderKey)
+        };
+    }
+
+    private IEnumerable<(string IconName, string Label, string Value)> GetProjectInfoData()
+    {
+        return new List<(string, string, string)>
+        {
+            ("name", "Project Name", project.Metadata.Name),
+            ("about", "Project About", ((MarkupString)project.Metadata.About).ToString()),
+            ("identifier", "Project Identifier", project.ProjectInfo.ProjectIdentifier),
+            ("key", "Founder Key", project.ProjectInfo.FounderKey)
+        };
+    }
+
+    private IEnumerable<(string IconName, string Label, string Value, string color)> GetAdditionalProjectInfo()
+    {
+        return new List<(string, string, string, string)>
+        {
+            ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}","text-success"),
+            ("calendar", "Start date", $"{project.ProjectInfo.StartDate:dd/MM/yyyy} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days","text-warning"),
+            ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate:dd/MM/yyyy} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days","text-warning"),
+            ("sad-circle", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days","text-warning")
+        };
+    }
+
 }

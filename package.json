@@ -1,14 +1,14 @@
 {
   "name": "angor",
-  "version": "0.0.76",
+  "version": "0.0.82",
   "license": "MIT",
   "scripts": {
     "version": "node -p \"require('./package.json').version\"",
     "changelog": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md",
     "build": "dotnet build src/Angor/Client",
     "start": "dotnet run --project src/Angor/Client",
-    "cypress:open": "cypress open --config-file src/testing/cypress.config.js",
-    "cypress:run": "cypress run --config-file src/testing/cypress.config.js",
+    "cypress:open": "cypress open --config-file src/Testing/cypress.config.js",
+    "cypress:run": "cypress run --config-file src/Testing/cypress.config.js",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "tauri:build:win-x64": "tauri build --target x86_64-pc-windows-msvc",

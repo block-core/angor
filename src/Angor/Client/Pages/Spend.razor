@@ -11,23 +11,29 @@
 @using Angor.Shared.Utilities
 @using ITransactionSignature = NBitcoin.ITransactionSignature
 @using System.Text.Json
+@using Angor.Client.Models
+@using Angor.Client.Shared
+@using Angor.Client.Components
 
 
 @inject IClientStorage storage;
+@inject NavMenuState NavMenuState
 @inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IDerivationOperations _derivationOperations
 @inject IWalletOperations _WalletOperations
 @inject IFounderTransactionActions _founderTransactionActions
+@inject IInvestorTransactionActions _investorTransactionActions
 @inject ILogger<Recover> Logger;
 @inject IClipboardService _clipboardService
+@inject IInvestorTransactionActions _InvestorTransactionActions
 
 @inherits BaseComponent
 
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
-<RawTransactionModal RawTransactionJson="@rawTransactionJson" IsVisible="@showRawTransactionModal" IsVisibleChanged="HandleRawTransactionModalVisibility"/>
+<RawTransactionModal RawTransactionJson="@rawTransactionJson" IsVisible="@showRawTransactionModal" IsVisibleChanged="HandleRawTransactionModalVisibility" />
 
 
 @if (!hasWallet)
@@ -35,222 +41,530 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
-
-<div class="row mb-4">
+<div class="header-container slide-in">
     <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="spend" Height="42" Width="42" />
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="spend" Width="32" Height="32" />
                 </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Founder Stage Claim
-                    </h5>
-                </div>
+                <h5 class="header-text"> Founder Stage Claim</h5>
             </div>
-            <button class="btn btn-border mb-2" @onclick="RefreshBalance" disabled="@refreshSpinner">
-
-                <i class="@(refreshSpinner ? "rotate-icon" : "")">
-                    <Icon IconName="refresh" Width="24" Height="24"></Icon>
-                </i>
-                <span class="nav-link-text ms-1">Refresh</span>
-            </button>
+            <div class="header-actions">
+                <button class="btn btn-border-success"
+                        @onclick="RefreshBalance"
+                        disabled="@refreshSpinner"
+                        title="Refresh">
+                    @if (refreshSpinner)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <Icon IconName="refresh" Height="24" Width="24" />
+                        <span class="button-text ms-2">Refresh</span>
+                    }
+                </button>
+            </div>
         </div>
-        <p class="mb-0 font-weight-normal text-sm text-truncate mt-4">
-            Project Identifier: @project.ProjectIdentifier
+    </div>
+</div>
+
+<div class="row slide-in mt-4">
+    <div class="card card-body">
+        <p class="mb-0 font-weight-normal text-sm animate-fade-in-delayed">
+            Project ID: @project.ProjectIdentifier
         </p>
     </div>
 </div>
 
 
+<div class="slide-in mt-4">
 
     @if (firstTimeRefreshSpinner && refreshSpinner)
     {
-        <div class="d-flex justify-content-center">
-            <div class="loader"></div>
+        <div class="row card card-body">
+            <div class="d-flex justify-content-center">
+                <div class="loader"></div>
+            </div>
         </div>
     }
-
-
-    @foreach (var stage in stageDatas)
+    else
     {
-        bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
-        var investedCount = stage.Items.Count(c => c.IsSpent == false);
-        var investedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
-        bool noCoinsToClaim = investedCount == 0 || stage.StageSpinner == true;
+        @if (totalInvestedAmount < founderProject.ProjectInfo.TargetAmount && founderProject.ProjectHasStarted())
+        {
+            <div class="card card-body slide-in mt-4">
 
+                <div class="info-alert">
+                    <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+                    <p class="text-warning">The target investment amount has not been reached. As founder, you can only release the funds back to the investors.</p>
+                </div>
 
-        <div class="mb-4">
-            <div class="card card-body">
-                <div class="d-flex justify-content-between">
-                    <h5 class="card-title">Stage @stage.StageIndex (@stage.Stage.AmountToRelease %) - @investedAmount @network.CoinTicker (@investedCount trx) </h5>
-                    @if (stageisActive)
-                    {
-
-                        <button class="btn @((noCoinsToClaim) ? "btn-light" : "btn-success")" disabled="@((noCoinsToClaim || !IsCheckboxSelectedForStage(stage.StageIndex)))" @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
-                            @if (stage.StageSpinner)
+                <div class="row g-4 mt-2">
+                    <div class="col-md-6">
+                        <div class="stat-card p-3 rounded-3 border hover-effect h-100 position-relative overflow-hidden">
+                            @if (founderProject.ProjectInfo.TargetAmount > 0)
                             {
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <span>Building trx...</span>
+                                var progressPercentage = (int)((double)totalInvestedAmount / founderProject.ProjectInfo.TargetAmount * 100);
+                                <div class="progress-background" style="position: absolute; bottom: 0; left: 0; width: @(progressPercentage)%; height: 100%; background-color: rgba(40, 167, 69, 0.15); z-index: 0;"></div>
+                            }
+                            <div class="d-flex justify-content-between h-100 position-relative" style="z-index: 1;">
+                                <div>
+                                    <h6 class="text-muted">Current Amount</h6>
+                                    <h4 class="mb-0">
+                                        @Money.Satoshis(totalInvestedAmount).ToUnit(MoneyUnit.BTC)
+                                        <small class="currency">@network.CoinTicker</small>
+                                    </h4>
+                                    @if (founderProject.ProjectInfo.TargetAmount > 0)
+                                    {
+                                        <span class="badge bg-warning mt-2">
+                                            @((int)((double)totalInvestedAmount / founderProject.ProjectInfo.TargetAmount * 100))%
+                                        </span>
+                                    }
+                                </div>
+                                <div class="stat-icon">
+                                    <Icon IconName="wallet" Height="32" Width="32" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="stat-card p-3 rounded-3 border hover-effect h-100">
+                            <div class="d-flex justify-content-between h-100">
+                                <div>
+                                    <h6 class="text-muted">Target Amount</h6>
+                                    <h4 class="mb-0">
+                                        @Money.Satoshis(founderProject.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC)
+                                        <small class="currency">@network.CoinTicker</small>
+                                    </h4>
+                                </div>
+                                <div class="stat-icon">
+                                    <Icon IconName="balance" Height="32" Width="32" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center mt-4">
+                    <button class="btn btn-border-warning animate-scale" @onclick="ReleaseFundsToInvestors">
+                        <div class="d-flex align-items-center">
+                            <Icon IconName="refund" Height="24" Width="24" Class="me-2" />
+                            <span>Release Funds to Investors</span>
+                            <Icon IconName="arrow-right" Height="20" Width="20" Class="ms-2" />
+                        </div>
+                    </button>
+                </div>
+            </div>
+        }
+
+        <div class="card card-body slide-up mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="card-title d-flex align-items-center">
+                    <span class="user-select-none animate-rotate">
+                        <Icon IconName="statistics" Height="42" Width="42" />
+                    </span>
+
+                    <div class="h-100 ms-3">
+                        Project Statistics
+                    </div>
+                </h5>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="stat-card p-3 rounded-3 border hover-effect">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="text-muted">Total Investment</h6>
+                                <h4 class="mb-0">@(Money.Satoshis((totalAvailableInvestedAmount + totalSpentAmount)).ToUnit(MoneyUnit.BTC)) @network.CoinTicker</h4>
+                            </div>
+                            <div class="stat-icon">
+                                <Icon IconName="investment" Height="32" Width="32" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="stat-card p-3 rounded-3 border hover-effect">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="text-muted">Available Balance</h6>
+                                <h4 class="mb-0">@Money.Satoshis(totalAvailableInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h4>
+                            </div>
+                            <div class="stat-icon">
+                                <Icon IconName="wallet" Height="32" Width="32" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="stat-card p-3 rounded-3 border hover-effect">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="text-muted">Withdrawable</h6>
+                                <h4 class="mb-0">@Money.Satoshis(currentWithdrawableAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</h4>
+                            </div>
+                            <div class="stat-icon">
+                                <Icon IconName="withdraw" Height="32" Width="32" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="stat-card p-3 rounded-3 border hover-effect">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="text-muted">Total Stages</h6>
+                                <h4 class="mb-0">@totalStages</h4>
+                            </div>
+                            <div class="stat-icon">
+                                <Icon IconName="stages" Height="32" Width="32" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="stat-card p-3 rounded-3 border hover-effect h-100">
+                        <div class="d-flex flex-column h-100">
+                            <h6 class="text-muted mb-4">Transaction Statistics</h6>
+                            <div class="d-flex justify-content-around text-center flex-grow-1">
+                                <div class="stat-item">
+                                    <div class="stat-value mb-2">@totalInvestedTransactions</div>
+                                    <div class="stat-label">Total</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value text-success mb-2">@(totalInvestedTransactions - totalSpentTransactions)</div>
+                                    <div class="stat-label">Available</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value text-warning mb-2">@totalSpentTransactions</div>
+                                    <div class="stat-label">Spent</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="stat-card p-3 rounded-3 border hover-effect h-100">
+                        <div class="d-flex flex-column h-100">
+                            <h6 class="text-muted mb-4">Next Stage</h6>
+                            @if (timeUntilNextStage.HasValue)
+                            {
+                                <div class="d-flex align-items-center justify-content-center flex-grow-1">
+                                    <div class="countdown-wrapper">
+                                        <Icon IconName="time" Height="24" Width="24" class="me-3" />
+                                        <div class="countdown-timer">
+                                            <div class="time-block">
+                                                <span class="time-value">@timeUntilNextStage.Value.Days</span>
+                                                <span class="time-label">days</span>
+                                            </div>
+                                            <div class="time-block">
+                                                <span class="time-value">@timeUntilNextStage.Value.Hours</span>
+                                                <span class="time-label">hours</span>
+                                            </div>
+                                            <div class="time-block">
+                                                <span class="time-value">@timeUntilNextStage.Value.Minutes</span>
+                                                <span class="time-label">mins</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             }
                             else
                             {
-                                @if (investedCount == 0)
+                                <div class="d-flex align-items-center justify-content-center flex-grow-1">
+                                    <p class="mb-0">No upcoming stages</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row animate-fade-up mt-4">
+            @foreach (var stage in stageDatas)
+            {
+                bool stageisActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
+                var investedCount = stage.Items.Count(c => c.IsSpent == false);
+                var unspentInvestedAmount = stage.Items.Where(c => c.IsSpent == false).Sum(c => c.Amount);
+                bool noCoinsToClaim = investedCount == 0 || stage.StageSpinner == true;
+
+                <div class="col-12 mb-4 animate-card">
+                    <div class="card card-body hover-effect b-shadow">
+                        <p class="mb-4">
+                            Click on the expand button to view and select transactions. After selecting transactions, use the Claim button at the bottom to process them.
+                        </p>
+
+                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                            <h5 class="card-title mb-2">
+                                Stage @stage.StageIndex
+                                <span class="badge bg-primary ms-2"
+                                      title="Amount left to spend: @Money.Satoshis(unspentInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker">
+                                    @Money.Satoshis(unspentInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                </span>
+                                <span class="badge bg-secondary ms-2">@investedCount transactions</span>
+                            </h5>
+
+                            <button @onclick="() => Expand(stage.StageIndex)"
+                                    class="btn btn-border animate-scale d-flex align-items-center w-100-m">
+                                @if (stage.StageIndex == expandedStageId)
                                 {
-                                    <span>Claimed</span>
+                                    <Icon IconName="collapse" Width="20" Height="20" />
+                                    <span class="ms-2">Collapse</span>
                                 }
                                 else
                                 {
-                                    <span>Claim Coins</span>
+                                    <Icon IconName="expand" Width="20" Height="20" />
+                                    <span class="ms-2">Expand</span>
                                 }
-                            }
-                        </button>
-                    }
-                    else
-                    {
-                        <button class="btn btn-warning" disabled>In @((stage.Stage.ReleaseDate - DateTime.UtcNow).Days) Days</button>
-                    }
+                            </button>
+                        </div>
 
-                </div>
-                <p class="card-subtitle text-muted mb-2">Estimated completion time: @stage.Stage.ReleaseDate.ToString("dd/MM/yyyy")</p>
+                        <p class="card-subtitle text-muted mb-2 mt-4">
+                            Estimated completion: @stage.Stage.ReleaseDate.ToString("dd/MM/yyyy")
+                        </p>
 
-                <button @onclick="() => Expand(stage.StageIndex)" class="btn btn-border d-block">
-                    <i class="bi bi-chevron-double-down"></i> Expand
-                </button>
-
-
-                @if (stage.StageIndex == expandedStageId)
-                {
-                    <div class="mt-3">
-                        @foreach (var transaction in stage.Items)
+                        @if (stage.StageIndex == expandedStageId)
                         {
-                            bool isTicked = IsUtxoSelected(transaction.Trxid, transaction.Outputindex);
-                            string statusClass = transaction.IsSpent ? "bg-warning text-dark" : "bg-success text-light";
-                            string statusText = transaction.IsSpent ? "Spent" : "Unspent";
+                            <div class="mt-3 animate-fade-in">
+                                @if (stage.Items.Any(x => !x.IsSpent))
+                                {
+                                    <div class="d-flex justify-content-start mb-3">
+                                        <button class="btn btn-border btn-sm"
+                                                @onclick="() => SelectAllUnspentUtxos(stage.StageIndex)">
+                                            <span class="ms-1">@(AreAllUnspentUtxosSelected(stage.StageIndex) ? "Deselect All" : "Select All Available")</span>
+                                        </button>
+                                    </div>
+                                }
 
-                            <div class="d-flex mb-2">
-                                <input id="@transaction.Trxid" type="checkbox" disabled="@(!stageisActive || transaction.IsSpent)" checked="@isTicked" @onclick="() => HandleCheckboxChange(transaction.Trxid, transaction.Outputindex)"/>
-                                <label for="@transaction.Trxid">
-                                    @transaction.Amount @network.CoinTicker - utxo :
-                                    <span style="cursor: pointer; text-decoration: underline;" @onclick="() => CopyTRXToClipboard(transaction.Trxid)">@transaction.Trxid</span> -@transaction.Outputindex
-                                    <span class="p-1 rounded @statusClass">
-                                        @statusText
-                                    </span>
-                                </label>
+                                @foreach (var transaction in stage.Items)
+                                {
+                                    bool isTicked = IsUtxoSelected(transaction.Trxid, transaction.Outputindex);
+                                    string statusClass = "bg-success text-light";
+                                    string statusText = "Unspent";
+
+                                    if (transaction.IsSpent)
+                                    {
+                                        if (transaction.SpentType == "pending")
+                                        {
+                                            statusClass = "bg-light text-dark";
+                                            statusText = "Pending";
+                                        }
+                                        else if (transaction.SpentType == "founder")
+                                        {
+                                            statusClass = "bg-warning text-dark";
+                                            statusText = "Spent by founder";
+                                        }
+                                        else if (transaction.SpentType == "investor")
+                                        {
+                                            statusClass = "bg-danger text-dark";
+                                            statusText = "Withdrawn by investor";
+                                        }
+                                        else
+                                        {
+                                            statusClass = "bg-info text-dark";
+                                            statusText = "Unknown";
+                                        }
+                                    }
+
+                                    <div class="d-flex align-items-center mb-2 p-2 border rounded hover-effect"
+                                         title="@(transaction.InvestorNpub != null ? $"Investor: {transaction.InvestorNpub}" : "")">
+                                        <div class="me-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input"
+                                                       type="checkbox"
+                                                       checked="@isTicked"
+                                                       disabled="@(!stageisActive || transaction.IsSpent)"
+                                                       @onchange="(e) => HandleCheckboxChange(transaction.Trxid, transaction.Outputindex)"
+                                                       id="@($"utxo_{transaction.Trxid}_{transaction.Outputindex}")" />
+                                                <label class="form-check-label" for="@($"utxo_{transaction.Trxid}_{transaction.Outputindex}")">
+                                                    <span>@Money.Satoshis(transaction.Amount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 d-flex justify-content-between align-items-center">
+                                            <span class="text-primary cursor-pointer small"
+                                                  @onclick="() => CopyTRXToClipboard(transaction.Trxid)"
+                                                  title="Click to copy transaction ID">
+                                                @transaction.Trxid.Substring(0, 8)...
+                                            </span>
+                                            <span class="badge @statusClass">@statusText</span>
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         }
 
+                        @if (stageisActive && stage.StageIndex == expandedStageId)
+                        {
+                            <div class="card-footer text-end mt-4 p-0">
+                                <button class="btn @((noCoinsToClaim) ? "btn-border" : "btn-border-success") animate-scale w-100-m"
+                                        disabled="@((noCoinsToClaim || !IsCheckboxSelectedForStage(stage.StageIndex)))"
+                                        @onclick="() => ClaimCoinsCheckPassword(stage.StageIndex)">
+                                    @if (stage.StageSpinner)
+                                    {
+                                        <span class=" spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Building trx...</span>
+                                    }
+                                    else
+                                    {
+                                        <Icon IconName="claim" Width="24" Height="24" />
+                                        <span class="m-2">@(investedCount == 0 ? "Claimed" : "Claim Selected Coins")</span>
+                                    }
+                                </button>
+                            </div>
+                        }
+                        else if (!stageisActive)
+                        {
+                            <div class="card-footer text-end mt-4 p-0">
+                                <button class="btn btn-border-warning animate-scale w-100-m" disabled>
+                                    <Icon IconName="clock-square" Width="24" Height="24" />
+                                    <span class="m-2"> Available in @((stage.Stage.ReleaseDate - DateTime.UtcNow).Days) Days </span>
+                                </button>
+                            </div>
+                        }
                     </div>
-                }
-            </div>
+                </div>
+            }
         </div>
     }
 
 
-    @if (showCreateModal)
-    {
-        <!-- Confirmation Modal -->
-        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Confirmation</h5>
-                         <span type="button" @onclick="() => showCreateModal = false">
-                            <Icon IconName="close-circle" />
-                        </span>
+</div>
+
+
+@if (showCreateModal)
+{
+    <div class="modal-wrapper">
+        <div class="modal fade show d-block" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modern-modal">
+                    <div class="modal-header border-0 pb-0">
+                        <div class="d-flex align-items-center">
+                            <Icon IconName="transaction" Height="32" Width="32" class="me-2" />
+                            <h5 class="modal-title">Transaction Confirmation</h5>
+                        </div>
+                        <button class="btn-close-custom" @onclick="() => showCreateModal = false">
+                            <Icon IconName="close-circle" Height="24" Width="24" />
+                        </button>
                     </div>
-                    <div class="modal-body modal-body-scroll">
 
-                        <p class="mb-1"><strong>Project Identifier:</strong> @project.ProjectIdentifier</p>
+                    <div class="modal-body modal-body-scroll py-4">
+                        <div class="transaction-info-section mb-4">
+                            <div class="project-id-card mb-3">
+                                <div class="d-flex align-items-center">
+                                    <Icon IconName="project" Height="24" Width="24" class="me-2" />
+                                    <div class="d-flex flex-column flex-grow-1 overflow-hidden">
+                                        <div class="info-label mb-1">Project ID</div>
+                                        <div class="project-id-value text-truncate" title="@project.ProjectIdentifier">
+                                            @project.ProjectIdentifier
+                                        </div>
+                                    </div>
+                                    <i class="ms-2" role="button" @onclick="() => CopyToClipboard(project.ProjectIdentifier)">
+                                        <Icon IconName="copy" Height="24" Width="24" />
+                                    </i>
+                                </div>
+                            </div>
 
-                        <p class="mb-1">The transactions to be spent @signedTransaction.Transaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) @network.CoinTicker</p>
-                        <p class="mb-1">Miner fee @Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-
-                        <hr>
-
-                        <div class="mb-3">
-                            <label for="feeRange" class="form-label">Feerate for @feeData.SelectedFeeEstimation.Confirmations blocks is @feeData.SelectedFeeEstimation.FeeRate sats</label>
-                            <input type="range" class="form-range" id="feeRange" @bind="feeData.FeePosition" @oninput="FeeRangeChanged" min="@feeData.FeeMin" max="@feeData.FeeMax">
+                            <div class="d-flex justify-content-between mb-3">
+                                <div class="info-card flex-grow-1 me-2">
+                                    <div class="info-label">Amount to Spend</div>
+                                    <div class="info-value text-success">
+                                        @signedTransaction.Transaction.Outputs.Sum(s => s.Value.ToUnit(MoneyUnit.BTC)) @network.CoinTicker
+                                    </div>
+                                </div>
+                                <div class="info-card flex-grow-1 ms-2">
+                                    <div class="info-label">Miner Fee</div>
+                                    <div class="info-value text-warning">
+                                        @Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <hr>
-
-                        <h6 class="mt-3 mb-2">Stages</h6>
-                        @foreach (var utxo in selectedUtxos)
+                        <div class="mb-4">
+                            <FeeSelector SendFee="@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                         CoinTicker="@network.CoinTicker"
+                                         FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                         FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                         FeePosition="@feeData.FeePosition"
+                                         FeeMin="@feeData.FeeMin"
+                                         FeeMax="@feeData.FeeMax"
+                                         OnFeeChanged="@HandleFeeChanged" />
+                        </div>
+                        @if (selectedUtxos.Where(u => u.Value).Count() > 0)
                         {
-                            if (utxo.Value) // check if the UTXO is selected
-                            {
-                                var utxoKey = utxo.Key;
-                                
-                                var stageIndex = GetStageIndexForUtxo(utxoKey);
-
-                                <p style="font-size: 0.7em;" class="mb-1">Stage: @stageIndex, Transaction: @utxoKey.Trxid, Output Index: @utxoKey.Outputindex</p>
-                            }
+                            <div class="selected-utxos-section">
+                                <h6 class="section-title">
+                                    <Icon IconName="list" Height="20" Width="20" class="me-2" />
+                                    Selected Transactions
+                                </h6>
+                                <div class="utxo-list">
+                                    @foreach (var utxo in selectedUtxos.Where(u => u.Value))
+                                    {
+                                        var stageIndex = GetStageIndexForUtxo(utxo.Key);
+                                        <div class="utxo-item">
+                                            <div class="stage-badge">Stage @stageIndex</div>
+                                            <div class="transaction-details">
+                                                <small class="text-muted">TX: @utxo.Key.Trxid.Substring(0, 8)...</small>
+                                                <small class="text-muted">Output: @utxo.Key.Outputindex</small>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
                         }
 
-
-                        <hr>
-
-                        <p class="mt-3">Are you sure you want to continue?</p>
-
+                        <div class="confirmation-section mt-4 text-center">
+                            <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
+                            <p class="confirmation-text">
+                                Please review the transaction details carefully before confirming.
+                            </p>
+                        </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-border" @onclick="Send" disabled="@spendSpinner">
+
+                    <div class="modal-footer border-0 pt-0">
+                        <button class="btn btn-border-warning" @onclick="ShowTransactionJsonModal">
+                            View Details
+                        </button>
+                        <button class="btn btn-border-success"
+                                @onclick="Send"
+                                disabled="@spendSpinner">
                             @if (spendSpinner)
                             {
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <span>Confirm...</span>
+                                <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                                <span>Processing...</span>
                             }
                             else
                             {
-                                <span>Confirm</span>
+                                <span>Confirm Transaction</span>
                             }
-                        </button>
-                        <button class="btn btn-primary" @onclick="ShowTransactionJsonModal">
-                            Show Transaction Details
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-
-
-    }
-
-
-    <div class="mt-4">
-        <div class="card card-body">
-            <div class="d-flex justify-content-between">
-                <h5 class="card-title">Project Statistics</h5>
-            </div>
-            <p class="card-subtitle text-muted mb-2">Total Invested Amount (Spent + Unspent): @(totalAvailableInvestedAmount + totalSpentAmount) @network.CoinTicker</p>
-            <p class="card-subtitle text-muted mb-2">Total Unspent Invested Amount: @totalAvailableInvestedAmount @network.CoinTicker</p>
-            <p class="card-subtitle text-muted mb-2">Total Withdrawable Amount: @currentWithdrawableAmount @network.CoinTicker</p>
-            <p class="card-subtitle text-muted mb-2">Total Transactions: @totalInvestedTransactions</p>
-            <p class="card-subtitle text-muted mb-2">Total Unspent Transactions: @(totalInvestedTransactions - totalSpentTransactions) </p>
-            <p class="card-subtitle text-muted mb-2">Total Spent Amount: @totalSpentAmount @network.CoinTicker</p>
-            <p class="card-subtitle text-muted mb-2">Total Spent Transactions: @totalSpentTransactions</p>
-            <p class="card-subtitle text-muted mb-2">Total Stages: @totalStages</p>
-            @if (timeUntilNextStage.HasValue)
-            {
-                <p class="card-subtitle text-muted mb-2">Time until next stage: @timeUntilNextStage.Value.Days days, @timeUntilNextStage.Value.Hours hours, @timeUntilNextStage.Value.Minutes minutes</p>
-            }
-            else
-            {
-                <p class="card-subtitle text-muted mb-2">No upcoming stages.</p>
-            }
-        </div>
     </div>
+}
 
 
 @code {
-    [Parameter]
-    public string ProjectId { get; set; }
+    [Parameter] public string ProjectId { get; set; }
 
     private int? expandedStageId;
     private bool showCreateModal;
-    
+
     private bool showRawTransactionModal = false;
     private string rawTransactionJson;
 
@@ -258,15 +572,17 @@
     private bool firstTimeRefreshSpinner = false;
     private bool spendSpinner = false;
 
-    decimal totalAvailableInvestedAmount = 0.0m;
+    long totalAvailableInvestedAmount = 0;
+    long totalInvestedAmount = 0;
     int totalInvestedTransactions = 0;
-    decimal totalSpentAmount = 0.0m;
+    long totalSpentAmount = 0;
     int totalSpentTransactions = 0;
-    decimal currentWithdrawableAmount = 0.0m;
+    long currentWithdrawableAmount = 0;
     int totalStages;
     TimeSpan? timeUntilNextStage;
 
     private ProjectInfo project;
+    private FounderProject founderProject;
 
     private FeeData feeData = new();
 
@@ -287,8 +603,11 @@
         public string Trxid;
         public int Outputindex;
         public string OutputAddress;
-        public decimal Amount;
+        public long Amount;
         public bool IsSpent;
+        public string SpentType;  // "founder" or "investor"
+        public string InvestorNpub;  // Optional, can be null
+        public ProjectScriptType ProjectScriptType;
     }
 
     List<StageData> stageDatas = new();
@@ -297,11 +616,15 @@
     FounderContext founderContext;
     int selectedStageId;
 
+    private long amount;
+
     protected override async Task OnInitializedAsync()
     {
+        // Set active menu for founder page
+        NavMenuState.SetActivePage("founder");
 
-
-        project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId)?.ProjectInfo;
+        founderProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
+        project = founderProject?.ProjectInfo;
 
         firstTimeRefreshSpinner = true;
 
@@ -313,25 +636,28 @@
         totalStages = stageDatas.Any() ? stageDatas.Count() : 1;
 
         var nextStage = stageDatas.Where(stage => stage.Stage.ReleaseDate > DateTime.UtcNow)
-                                .OrderBy(stage => stage.Stage.ReleaseDate)
-                                .FirstOrDefault();
+            .OrderBy(stage => stage.Stage.ReleaseDate)
+            .FirstOrDefault();
         timeUntilNextStage = nextStage != null ? nextStage.Stage.ReleaseDate - DateTime.UtcNow : (TimeSpan?)null;
-        totalAvailableInvestedAmount = 0.0m;
+        totalAvailableInvestedAmount = 0;
         totalInvestedTransactions = 0;
-        totalSpentAmount = 0.0m;
+        totalSpentAmount = 0;
         totalSpentTransactions = 0;
-        currentWithdrawableAmount = 0.0m;
+        currentWithdrawableAmount = 0;
+        totalInvestedAmount = 0;
 
         foreach (var stage in stageDatas)
         {
             var stageIsActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
             var totalStageTransactions = stage.Items.Count();
+            var investedAmount = stage.Items.Sum(c => c.Amount);
             var availableInvestedAmount = stage.Items.Where(c => !c.IsSpent).Sum(c => c.Amount);
             var spentStageAmount = stage.Items.Where(c => c.IsSpent).Sum(c => c.Amount);
             var spentStageTransactions = stage.Items.Count(c => c.IsSpent);
             var daysUntilRelease = (stage.Stage.ReleaseDate - DateTime.UtcNow).Days;
             var stageReleasePercentage = stage.Stage.AmountToRelease;
 
+            totalInvestedAmount += investedAmount;
             totalAvailableInvestedAmount += availableInvestedAmount;
             totalInvestedTransactions += totalStageTransactions;
             totalSpentAmount += spentStageAmount;
@@ -369,7 +695,7 @@
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
@@ -390,11 +716,11 @@
 
         var tasks = trxs
             .Where(a => trxList.All(b => b.TrxId != a.TransactionId))
-        .Select(async _ =>
-        {
-            var hex = await _IndexerService.GetTransactionHexByIdAsync(_.TransactionId);
-            return new { hex, _.TransactionId };
-        });
+            .Select(async _ =>
+            {
+                var hex = await _IndexerService.GetTransactionHexByIdAsync(_.TransactionId);
+                return new { hex, _.TransactionId };
+            });
 
         var trxHexList = await Task.WhenAll(tasks);
 
@@ -411,7 +737,6 @@
             int stageIndex = 0;
             foreach (var stage in project.Stages)
             {
-
                 var stageItem = new StageData
                     {
                         Stage = stage,
@@ -432,7 +757,7 @@
                         Trxid = item.TrxId,
                         OutputAddress = item.Transaction.Outputs[stageItem.StageIndex + 1].ScriptPubKey.WitHash.GetAddress(network).ToString(),
                         Outputindex = stageItem.StageIndex + 1,
-                        Amount = item.Transaction.Outputs[stageItem.StageIndex + 1].Value.ToUnit(MoneyUnit.BTC),
+                        Amount = item.Transaction.Outputs[stageItem.StageIndex + 1].Value.Satoshi,
                     };
 
                 stageItem.Items.Add(insert);
@@ -440,6 +765,8 @@
             }
         }
     }
+
+    Dictionary<string, Transaction> trxsHexCache = new();
 
     private async Task CheckSpentFund()
     {
@@ -451,7 +778,9 @@
         {
             foreach (var item in stageData.Items)
             {
-                if (item.IsSpent)
+                // if the item is already spent by founder or investor, we skip it
+                // because we have already processed this item and we know the outcome.
+                if (item.IsSpent && ((item.SpentType != "founder") || (item.SpentType != "investor")))
                     continue;
 
                 QueryTransaction? trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
@@ -459,7 +788,6 @@
                 if (trx == null)
                 {
                     trx = await _IndexerService.GetTransactionInfoByIdAsync(item.Trxid);
-
                     trxs.Add(trx);
                 }
 
@@ -469,12 +797,52 @@
                 {
                     item.IsSpent = true;
 
-                    updateUnconfirmedOutbound |= LinqExtension.Remove(unconfirmedOutbound, new Outpoint(item.Trxid, item.Outputindex));
+                    updateUnconfirmedOutbound |= unconfirmedOutbound.TryRemoveOutpoint(new Outpoint(item.Trxid, item.Outputindex));
+
+                    // try to resolve the destination
+                    var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+
+                    var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == item.Trxid && input.InputIndex == item.Outputindex);
+
+                    var investmentTransaction = trxsHexCache.TryGet(item.Trxid);
+                    if (investmentTransaction == null)
+                    {
+                        var fetchTrx = await _IndexerService.GetTransactionHexByIdAsync(item.Trxid);
+                        investmentTransaction = network.CreateTransaction(fetchTrx);
+                        trxsHexCache.Add(item.Trxid, investmentTransaction);
+                    }
+
+                    if (input != null && investmentTransaction != null)
+                    {
+                        item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project, investmentTransaction, stageData.StageIndex - 1, input.WitScript);
+
+                        switch (item.ProjectScriptType.ScriptType)
+                        {
+                            case ProjectScriptTypeEnum.Founder:
+                            {
+                                item.SpentType = "founder";
+                                break;
+                            }
+                            case ProjectScriptTypeEnum.InvestorWithPenalty:
+                            case ProjectScriptTypeEnum.EndOfProject:
+                            case ProjectScriptTypeEnum.InvestorNoPenalty:
+                            {
+                                item.SpentType = "investor";
+                                break;
+                            }
+                        }
+                    }
 
                     continue;
                 }
 
-                item.IsSpent = LinqExtension.Contains(unconfirmedOutbound, new Outpoint(item.Trxid, item.Outputindex));
+                item.IsSpent = unconfirmedOutbound.ContainsOutpoint(new Outpoint(item.Trxid, item.Outputindex));
+                if (item.IsSpent)
+                {
+                    // the trx is unconfirmed, we wait till
+                    // it gets confirmed to discover who spent it
+                    item.SpentType = "pending"; 
+                }
             }
         }
 
@@ -486,16 +854,19 @@
 
     protected async Task ClaimCoinsCheckPassword(int stageId)
     {
+        if (totalInvestedAmount < founderProject.ProjectInfo.TargetAmount)
+        {
+            notificationComponent.ShowErrorMessage("Target investment amount has not been reached, you can only release the funds back to the investors");
+            return;
+        }
+
         if (passwordComponent.HasPassword())
         {
             await ClaimCoins(stageId);
         }
         else
         {
-            passwordComponent.ShowPassword(async () =>
-            {
-                await ClaimCoins(stageId);
-            });
+            passwordComponent.ShowPassword(async () => { await ClaimCoins(stageId); });
         }
     }
 
@@ -543,55 +914,59 @@
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
         {
             CalculateTotalValues();
-            
+
             if (selectedUtxos.Keys.Any(utxoKey => GetStageIndexForUtxo(utxoKey) == selectedStageId))
             {
                 selectedUtxos.Clear();
             }
+
             stage.StageSpinner = false;
         }
-        
+
         StateHasChanged();
     }
 
 
-    private async Task FeeRangeChanged(ChangeEventArgs e)
+    private async Task HandleFeeChanged(FeeCalculation feeCalc)
     {
-        var selectedItem = e.Value?.ToString();
-
-        if (selectedItem != null)
+        try
         {
-            if (int.TryParse(selectedItem, out int res))
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
             {
-                if (res <= feeData.FeeEstimations.Fees.Count)
-                {
-                    if (!passwordComponent.HasPassword())
-                    {
-                        showCreateModal = false;
-                        notificationComponent.ShowErrorMessage("Wallet password expired");
-                        return;
-                    }
-
-                    var words = await passwordComponent.GetWalletAsync();
-                    feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[res - 1];
-
-                    var accountInfo = storage.GetAccountInfo(network.Name);
-                    var address = accountInfo.GetNextReceiveAddress();
-                    var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
-
-                    var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
-                    var key = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
-
-                    signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
-
-                    StateHasChanged();
-                }
+                feeData.SetCustomFee(feeCalc.CustomFee.Value);
             }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
+            {
+                feeData.SelectFee(feeCalc.Position.Value);
+            }
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var address = accountInfo.GetNextReceiveAddress();
+            var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
+            
+            var words = await passwordComponent.GetWalletAsync();
+            var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
+            var key = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
+            
+            signedTransaction = _founderTransactionActions.SpendFounderStage(
+                founderContext.ProjectInfo,
+                founderContext.InvestmentTrasnactionsHex,
+                selectedStageId,
+                addressScript,
+                Encoders.Hex.EncodeData(key.ToBytes()),
+                feeData.SelectedFeeEstimation);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error calculating fee");
+            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
     }
 
@@ -636,7 +1011,7 @@
         }
         catch (Exception e)
         {
-            notificationComponent.ShowErrorMessage(e.Message,e);
+            notificationComponent.ShowErrorMessage(e.Message, e);
             passwordComponent.ClearPassword();
         }
         finally
@@ -664,7 +1039,7 @@
             selectedUtxos[key] = true;
         }
     }
-    
+
     private bool IsUtxoSelected(string trxId, int outputIndex)
     {
         return selectedUtxos.ContainsKey(new UtxoKey(trxId, outputIndex));
@@ -692,7 +1067,13 @@
         await _clipboardService.WriteTextAsync(trxData);
         StateHasChanged();
     }
-    
+
+    private async Task CopyToClipboard(string text)
+    {
+        await _clipboardService.WriteTextAsync(text);
+        notificationComponent.ShowNotificationMessage("Copied to clipboard", 1);
+    }
+
     public struct UtxoKey
     {
         public string Trxid { get; set; }
@@ -748,5 +1129,37 @@
     private void HandleRawTransactionModalVisibility(bool isVisible)
     {
         showRawTransactionModal = isVisible;
+    }
+
+    private void ReleaseFundsToInvestors(MouseEventArgs e)
+    {
+        NavigationManager.NavigateTo($"/unfunded/{ProjectId}");
+    }
+
+    private void SelectAllUnspentUtxos(int stageIndex)
+    {
+        var stage = stageDatas.First(s => s.StageIndex == stageIndex);
+        bool areAllSelected = AreAllUnspentUtxosSelected(stageIndex);
+
+        foreach (var transaction in stage.Items.Where(x => !x.IsSpent))
+        {
+            var key = new UtxoKey(transaction.Trxid, transaction.Outputindex);
+            if (areAllSelected)
+            {
+                selectedUtxos.Remove(key);
+            }
+            else if (!selectedUtxos.ContainsKey(key))
+            {
+                selectedUtxos[key] = true;
+            }
+        }
+    }
+
+    private bool AreAllUnspentUtxosSelected(int stageIndex)
+    {
+        var stage = stageDatas.First(s => s.StageIndex == stageIndex);
+        var unspentUtxos = stage.Items.Where(x => !x.IsSpent);
+        return unspentUtxos.All(transaction =>
+            selectedUtxos.ContainsKey(new UtxoKey(transaction.Trxid, transaction.Outputindex)));
     }
 }

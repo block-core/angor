@@ -12,6 +12,7 @@ using Blazored.LocalStorage;
 using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using System.Globalization;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -37,7 +38,8 @@ builder.Services.AddScoped<NavMenuState>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ICurrencyRateService, CurrencyRateService>();
 
-builder.Services.AddScoped<IIndexerService, IndexerService>();
+//builder.Services.AddScoped<IIndexerService, IndexerService>();
+builder.Services.AddScoped<IIndexerService, MempoolSpaceIndexerApi>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
 
 builder.Services.AddTransient<IRelayService, RelayService>();
@@ -53,6 +55,8 @@ builder.Services.AddTransient<IInvestmentTransactionBuilder, InvestmentTransacti
 builder.Services.AddTransient<ISeederScriptTreeBuilder, SeederScriptTreeBuilder>();
 builder.Services.AddTransient<ITaprootScriptBuilder, TaprootScriptBuilder>();
 
+builder.Services.AddScoped<IApplicationLogicService, ApplicationLogicService>();
+
 builder.Services.AddSingleton<INostrCommunicationFactory, NostrCommunicationFactory>();
 builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
 builder.Services.AddSingleton<IPasswordCacheService, PasswordCacheService>();
@@ -62,4 +66,14 @@ builder.Services.AddScoped<NostrConversionHelper>();
 
 builder.Services.AddScoped<IconService>();
 
-await builder.Build().RunAsync();
+builder.Services.AddScoped<IWalletUIService, WalletUIService>();
+
+// to change culture dynamically during startup,
+// set <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+// in the application's project file.)
+// CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+// CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
+
+var app = builder.Build();
+
+await app.RunAsync();

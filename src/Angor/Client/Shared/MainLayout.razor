@@ -21,36 +21,35 @@
 
     <main class="main-content d-flex flex-column min-vh-100">
         <!-- Navbar -->
-        <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 border-radius-xl position-sticky mt-3 z-index-sticky left-auto" id="navbarBlur" data-scroll="true">
-            <div class="container-fluid py-1 px-3">
-                <nav>
-                    <div class="mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-                        <div class="text-sm">
-                            <h6 class="font-weight-bolder" title="Alpha app - only use test wallets.">Network - @networkText</h6>
-                        </div>
+        <nav class="navbar navbar-main navbar-expand-lg px-0 border-radius-xl position-sticky mt-3 z-index-sticky left-auto ms-2 me-2" id="navbarBlur">
+            <div class="container-fluid">
+                <nav class="d-flex align-items-center">
+                    <div class="text-sm">
+                        <h6 class="font-weight-bolder m-0" title="@networkText">
+                            <Icon IconName="network" class="me-2" />
+                            <span>@networkText</span>
+                        </h6>
                     </div>
                 </nav>
-                <div class="collapse navbar-collapse" id="navbar">
-                    <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-                    </div>
-                    <ul class="navbar-nav justify-content-end user-select-none">
-                        <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
-                            <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="iconNavbarSidenav" @onclick="ToggleSidenav" data-tooltip="Open menu">
+                <div class="navbar-collapse">
+                    <ul class="navbar-nav user-select-none">
+                        <li class="nav-item d-xl-none">
+                            <span role="button" id="iconNavbarSidenav" @onclick="ToggleSidenav" data-tooltip="Menu">
                                 <Icon IconName="hamburger-menu" />
                             </span>
                         </li>
-                        <li class="nav-item ps-3 d-flex align-items-center d-none" id="updateButton">
-                            <span @onclick="UpdateApp" role="button" data-tooltip="Get latest version">
+                        <li class="nav-item d-none" id="updateButton">
+                            <span role="button" @onclick="UpdateApp" data-tooltip="Update application">
                                 <Icon IconName="update" />
                             </span>
                         </li>
-                        <li class="nav-item ps-3 d-flex align-items-center" id="dark" @onclick="ToggleTheme">
-                            <span role="button" id="theme-icon" data-tooltip="Toggle theme">
+                        <li class="nav-item" id="dark" @onclick="ToggleTheme">
+                            <span role="button" id="theme-icon" data-tooltip="Switch theme">
                                 <Icon IconName=@themeIcon />
                             </span>
                         </li>
-                        <li class="nav-item ps-3 d-flex align-items-center d-none" id="installButton">
-                            <span @onclick="InstallApp" role="button" data-tooltip="Install app">
+                        <li class="nav-item d-none" id="installButton">
+                            <span role="button" @onclick="InstallApp" data-tooltip="Install application">
                                 <Icon IconName="install" />
                             </span>
                         </li>
@@ -60,11 +59,11 @@
         </nav>
         <!-- End Navbar -->
 
-        <div class="container my-4">
+        <div class="container mt-4 mb-2">
             @Body
         </div>
 
-        <footer class="footer mt-auto py-3 px-0 mx-3 left-auto">
+        <footer class="footer mt-auto py-3 px-0 mx-2 left-auto">
             <div class="row">
                 <div class="nav nav-footer justify-content-center">
                     <div class="card card-body border-radius-lg d-flex align-items-center flex-row p-3 ms-0 me-0">
@@ -164,6 +163,14 @@
         {
             isDarkTheme = storedTheme == "dark";
             await UpdateThemeIcon(isDarkTheme);
+            if (isDarkTheme)
+            {
+                await Js.InvokeVoidAsync("angor.addDarkBackground");
+            }
+            else
+            {
+                await Js.InvokeVoidAsync("angor.addLightBackground");
+            }
         }
     }
 
