@@ -574,10 +574,9 @@ else
     {
         if (firstRender)
         {
-            if (!hasWallet)
+            if (hasWallet)
             {
-                NavigationManager.NavigateTo($"/wallet");
-                return;
+                await RefreshSignatures();
             }
         }
     }
