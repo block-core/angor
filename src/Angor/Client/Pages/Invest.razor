@@ -579,11 +579,6 @@ else
                 NavigationManager.NavigateTo($"/wallet");
                 return;
             }
-
-            if (passwordComponent != null)
-            {
-                await CheckForExistingProjectAndCheckPassword();
-            }
         }
     }
 
