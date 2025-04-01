@@ -35,33 +35,48 @@
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
-
-            <div class="modal-wrapper">
-                <div class="modal show d-block" tabindex="-1">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content bg-danger">
-                            <div class="modal-header text-white">
-                                <h5 class="modal-title">
-                                    <i class="bi bi-exclamation-triangle-fill"></i>
-                                    Error
-                                </h5>
-                                <span type="button" @onclick="ClearErrorMessage">
-                                    <Icon IconName="close-circle" Color="var(--angor-primary)" />
-                                </span>
+    <div class="modal-wrapper">
+        <div class="modal show d-block" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-danger">
+                    <div class="modal-header text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            Error
+                        </h5>
+                        <span type="button" @onclick="ClearErrorMessage">
+                            <Icon IconName="close-circle" Color="var(--angor-primary)" />
+                        </span>
+                    </div>
+                    <div class="modal-body modal-body-scroll">
+                        <p class="text-white mb-2">@errorMessage</p>
+                        @if (exceptionDetails != null)
+                        {
+                            <div class="error-details">
+                                <a role="button" class="pointer text-white p-0 mb-2" @onclick="ToggleExceptionDetails">
+                                    <i class="bi @(showExceptionDetails ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                                    Technical Details
+                                </a>
+                                @if (showExceptionDetails)
+                                {
+                                    <div class="technical-details p-2 rounded">
+                                        <pre class="text-white mb-0"><code>@exceptionDetails</code></pre>
+                                    </div>
+                                }
                             </div>
-                            <div class="modal-body modal-body-scroll">
-                                <p class="text-white">@errorMessage</p>
-                            </div>
-                        </div>
+                        }
                     </div>
                 </div>
             </div>
-
+        </div>
+    </div>
 }
 
 @code {
     private string notificationMessage;
     private string errorMessage;
+    private string exceptionDetails;
+    private bool showExceptionDetails;
     private bool isLoading;
 
     public void ShowNotificationMessage(string message, int delaySeconds = 5)
@@ -77,37 +92,56 @@
             StateHasChanged();
         });
     }
-    
+
+    public void ShowErrorMessage(string message, string detailedMessage)
+    {
+        ShowErrorMessage(message, new Exception(detailedMessage));
+    }
+
     public void ShowErrorMessage(string message, Exception exception = null)
     {
         if (string.IsNullOrEmpty(message) && exception == null)
         {
-            return; // No error to handle
+            return;
         }
 
-        // Log the error with or without an exception
         if (exception != null)
         {
-            Logger.LogError(exception, "An error occurred: {Message}", message ?? exception.Message);
+             exceptionDetails = $"Exception Type: {exception.GetType().Name}\n" +
+                             $"Message: {exception.Message}\n" +
+                             $"Stack Trace:\n{exception.StackTrace}";
         }
         else
         {
             Logger.LogError("An error occurred: {Message}", message);
+            exceptionDetails = null;
         }
+
         errorMessage = message ?? exception?.Message ?? "An unexpected error occurred.";
+      
+        Logger.LogError(exception, errorMessage);
+       
+        showExceptionDetails = false;
         StateHasChanged();
     }
-
 
     private void ClearErrorMessage()
     {
         errorMessage = string.Empty;
+        exceptionDetails = null;
+        showExceptionDetails = false;
         StateHasChanged();
     }
 
     private void closeAlert()
     {
         notificationMessage = string.Empty;
+        StateHasChanged();
+    }
+
+    private void ToggleExceptionDetails()
+    {
+        showExceptionDetails = !showExceptionDetails;
         StateHasChanged();
     }
 

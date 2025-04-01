@@ -13,6 +13,7 @@ public interface INetworkConfiguration
     List<SettingsUrl> GetDefaultIndexerUrls();
     List<SettingsUrl> GetDefaultRelayUrls();
     List<SettingsUrl> GetDefaultExplorerUrls();
+    List<SettingsUrl> GetDefaultChatAppUrls();
 
     int GetAngorInvestFeePercentage { get; }
     string GetAngorKey();

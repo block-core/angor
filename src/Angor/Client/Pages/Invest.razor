@@ -980,7 +980,7 @@ else
 
             if (!response.Success)
             {
-                notificationComponent.ShowErrorMessage(response.Message);
+                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
                 return;
             }
 

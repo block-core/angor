@@ -10,6 +10,7 @@
 @using System.Text.Json
 @using Angor.Shared.Services
 @using System.Security.Cryptography
+@using Angor.Shared.Utilities
 
 @inject IJSRuntime JS
 
@@ -22,6 +23,8 @@
 @inject ISerializer serializer
 @inject IEncryptionService encryption
 @inject NavMenuState NavMenuState
+@inject NostrConversionHelper NostrHelper
+@inject INetworkService _networkService
 
 @inherits BaseComponent
 
@@ -132,6 +135,7 @@
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investment</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Chat</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -168,6 +172,12 @@
                                                 Approved on @signature.TimeApproved.Value.ToString("dd/MM/yyyy HH:mm")
                                             </span>
                                         }
+                                    </td>
+                                    <td class="d-flex justify-content-end align-items-center">
+                                        <button class="btn btn-sm btn-border-success " @onclick="() => OpenInChat(signature.investorNostrPubKey)">
+                                            <Icon IconName="chat" Width="16" Height="16" class="me-1" />
+                                            Chat
+                                        </button>
                                     </td>
                                 </tr>
                             }
@@ -601,5 +611,21 @@
         public string? EncryptedMessage { get; set; }
 
         public string EventId { get; set; }
+    }
+
+    private async void OpenInChat(string NostrPubKey)
+    {
+        var npub = NostrHelper.ConvertHexToNpub(NostrPubKey);
+
+        if (!string.IsNullOrEmpty(npub))
+        {
+            var primaryChatApp = _networkService.GetPrimaryChatApp();
+            var url = $"{primaryChatApp.Url}/{npub}";
+            await JS.InvokeVoidAsync("window.open", url, "_blank");
+        }
+        else
+        {
+            notificationComponent.ShowNotificationMessage("Public key is not available.", 3);
+        }
     }
 }
