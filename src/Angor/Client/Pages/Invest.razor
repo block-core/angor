@@ -205,7 +205,7 @@
                         <span>Investment Amount</span>
                     </label>
                     <div class="input-group border border-warning rounded p-2 text-warning bg-opacity-10
-            shadow-sm transition focus-within-shadow-lg">
+                             shadow-sm transition focus-within-shadow-lg">
                         <InputNumber type="number" step="0.00000001" min="0"
                                      class="form-control bg-transparent border-0 shadow-none text-warning fw-bold"
                                      id="investmentAmount" @bind-Value="@Investment.InvestmentAmountBtc"
@@ -213,6 +213,16 @@
                         <span class="border-0 d-flex align-items-center justify-content-center px-3 text-warning fw-bold">
                             @network.CoinTicker
                         </span>
+                    </div>
+                    
+                    <label for="additionalNpub" class="form-label d-flex align-items-center gap-2 mb-3 mt-3">
+                        <Icon IconName="investment" Width="20" Height="20" />
+                        <span>Additional npub</span>
+                    </label>
+                    <div class="input-group border border-warning rounded p-2 text-warning bg-opacity-10
+                            shadow-sm transition focus-within-shadow-lg">
+                        <InputText type="text" class="form-control bg-transparent border-0 shadow-none text-warning fw-bold"
+                                     id="additionalNpub" @bind-Value="@Investment.AdditionalNpub" />
                     </div>
 
                 </div>
@@ -731,6 +741,17 @@ else
             return;
         }
 
+        if (!string.IsNullOrEmpty(Investment.AdditionalNpub))
+        {
+            var npubValid = Nostr.Client.Utils.NostrConverter.TryToHex(Investment.AdditionalNpub, out string? hex, out string? hrp);
+
+            if (!npubValid || hrp != "npub")
+            {
+                notificationComponent.ShowErrorMessage("Additional npub is not valid");
+                return;
+            }
+        }
+
         buildSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
@@ -868,7 +889,8 @@ else
                 {
                     ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
                     InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
-                    UnfundedReleaseAddress = releaseAddress
+                    UnfundedReleaseAddress = releaseAddress,
+                    AdditionalNpub = Investment.AdditionalNpub
                 };
 
             var sigJson = serializer.Serialize(signRecoveryRequest);
@@ -883,6 +905,7 @@ else
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
             investorProject.InvestorNPub = NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex;
             investorProject.UnfundedReleaseAddress = releaseAddress;
+            investorProject.AdditionalNpub = Investment.AdditionalNpub;
 
             storage.AddInvestmentProject(investorProject);
 
@@ -1073,6 +1096,8 @@ else
         public decimal InvestmentAmountBtc { get; set; }
 
         public bool IsSeeder { get; set; }
+
+        public string AdditionalNpub { get; set; }
     }
 
     public class StageBreakdown

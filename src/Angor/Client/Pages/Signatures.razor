@@ -135,6 +135,7 @@
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investment</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Npub</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Chat</th>
                             </tr>
                         </thead>
@@ -172,6 +173,10 @@
                                                 Approved on @signature.TimeApproved.Value.ToString("dd/MM/yyyy HH:mm")
                                             </span>
                                         }
+                                    </td>
+                                    <td>
+                                        Investment npub: @NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey) <br />
+                                        Additional npub: @signature.SignRecoveryRequest?.AdditionalNpub
                                     </td>
                                     <td class="d-flex justify-content-end align-items-center">
                                         <button class="btn btn-sm btn-border-success " @onclick="() => OpenInChat(signature.investorNostrPubKey)">
