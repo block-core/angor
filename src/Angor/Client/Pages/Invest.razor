@@ -748,7 +748,7 @@ else
 
             InvestorPubKey = _derivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
 
-            var isAlreadyInvested = await IsInvestorAlreadyInvestedAsync(words, project.ProjectInfo.ProjectIdentifier, InvestorPubKey);
+            var isAlreadyInvested = await IsInvestorAlreadyInvestedAsync(project.ProjectInfo.ProjectIdentifier, InvestorPubKey);
 
             if (isAlreadyInvested)
             {
@@ -1132,7 +1132,7 @@ else
         notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
     }
     
-    public async Task<bool> IsInvestorAlreadyInvestedAsync(WalletWords words, string projectId, string investorPubKey)
+    public async Task<bool> IsInvestorAlreadyInvestedAsync(string projectId, string investorPubKey)
     {
         if (project != null)
         {
