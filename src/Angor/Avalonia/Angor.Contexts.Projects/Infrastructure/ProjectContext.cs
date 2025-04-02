@@ -17,9 +17,7 @@ using EncryptionService = Angor.Contexts.Projects.Infrastructure.Impl.Encryption
 
 namespace Angor.Contexts.Projects.Infrastructure;
 
-using EncryptionService = Impl.EncryptionService;
-
-public class ProjectServices
+public class ProjectContext
 {
     public static ServiceCollection Register(ServiceCollection services, ILogger logger)
     {
