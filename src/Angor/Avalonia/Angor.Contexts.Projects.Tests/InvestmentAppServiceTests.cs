@@ -4,6 +4,7 @@ using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure;
 using Angor.Contexts.Projects.Tests.TestDoubles;
 using Angor.Shared;
+using CSharpFunctionalExtensions;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Xunit.Abstractions;
@@ -24,7 +25,7 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
         var sut = CreateSut();
         var projectId = new ProjectId("angor1qptj5qunu2mnwmfcspqc5pxlfscazcqlswt7d74");
         var result = await sut.CreateInvestmentTransaction(Guid.Empty, projectId, new Amount(12345));
-        Assert.True(result.IsSuccess);
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error : string.Empty);
         //Assert.NotEmpty(result.Value);
     }
 

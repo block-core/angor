@@ -20,8 +20,9 @@ public class NostrSignatureRequestService(
 {
     public async Task<Result> SendSignatureRequest(Guid walletId, string founderPubKey, ProjectId projectId, TransactionInfo signedTransaction)
     {
-        try {
-            // 1. Obtener las palabras (semilla) de la billetera
+        try
+        {
+            // Obtener seedwords
             var wordsResult = await seedwordsProvider.GetSensitiveData(walletId);
             if (wordsResult.IsFailure)
             {
@@ -29,40 +30,52 @@ public class NostrSignatureRequestService(
             }
 
             var words = wordsResult.Value.ToWalletWords();
-            
-            // 2. Derivar claves para Nostr
-            var senderPubKey = derivationOperations.DeriveNostrStoragePubKeyHex(words);
+
+            // Derivar claves Nostr asegurándose que tengan el formato correcto
             var senderPrivateKey = derivationOperations.DeriveNostrStorageKey(words);
             var senderPrivateKeyHex = Encoders.Hex.EncodeData(senderPrivateKey.ToBytes());
-            
-            // 3. Crear la solicitud de firma
+
+            // Verificar que la clave pública del fundador tenga el formato correcto
+            // (normalmente debería ser una clave hex de 64 caracteres)
+            if (string.IsNullOrEmpty(founderPubKey) || founderPubKey.Length != 64)
+            {
+                return Result.Failure("La clave pública del fundador no tiene el formato correcto");
+            }
+
+            // Estructura de datos simple para evitar problemas de serialización
             var signRequest = new SignRecoveryRequest
             {
                 ProjectIdentifier = projectId.Value,
                 TransactionHex = signedTransaction.Transaction.ToHex()
             };
 
-            // 4. Serializar la solicitud
             var serialized = serializer.Serialize(signRequest);
-            
-            // 5. Enviar mensaje directo al fundador
-            bool requestSent = false;
+
+            // Manejo de respuesta async con timeout
+            var tcs = new TaskCompletionSource<(bool Success, string Message)>();
+
             relayService.SendDirectMessagesForPubKeyAsync(
                 senderPrivateKeyHex,
                 founderPubKey,
                 serialized,
-                x => {
-                    requestSent = x.Accepted;
-                });
+                response => { tcs.TrySetResult((response.Accepted, response.Message ?? "Sin mensaje")); });
 
-            // 6. Esperar un tiempo razonable para que se procese el envío
-            await Task.Delay(500);
-            
-            return requestSent 
-                ? Result.Success() 
-                : Result.Failure("No se pudo enviar la solicitud de firmas al fundador");
+            // Esperar con timeout y capturar tanto éxito como mensaje de error
+            var timeoutTask = Task.Delay(10000); // Aumentar timeout a 10 segundos
+            var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+
+            if (completedTask == timeoutTask)
+            {
+                return Result.Failure("Timeout al esperar respuesta del relay");
+            }
+
+            var result = await tcs.Task;
+            return result.Success
+                ? Result.Success()
+                : Result.Failure($"Error del relay: {result.Message}");
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             return Result.Failure($"Error al enviar solicitud de firma: {ex.Message}");
         }
     }
