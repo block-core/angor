@@ -12,6 +12,8 @@ public static class ProjectExtensions
         return new ProjectDto
         {
             Id = project.Id,
+            Banner = project.Banner,
+            Picture = project.Picture,
             Name = project.Name,
             ShortDescription = project.ShortDescription,
             StartingDate = project.StartingDate,

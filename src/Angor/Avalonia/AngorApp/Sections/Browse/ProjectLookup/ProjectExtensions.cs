@@ -15,7 +15,7 @@ public static class ProjectExtensions
             InformationUri = dto.InformationUri,
             Name = dto.Name,
             NpubKey = dto.NostrNpubKey,
-            NpubKeyHex = dto.NpubKeyHex,
+            NostrNpubKey = dto.NostrNpubKey,
             Picture = dto.Picture,
             ShortDescription = dto.ShortDescription,
             Stages = dto.Stages
