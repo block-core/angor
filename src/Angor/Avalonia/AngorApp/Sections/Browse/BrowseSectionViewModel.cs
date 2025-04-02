@@ -1,4 +1,4 @@
-using Angor.Contexts.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Wallet.Application;
 using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.UI.Services;

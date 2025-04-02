@@ -26,7 +26,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Contexts.Wallet.Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Client", "Angor\Client\Angor.Client.csproj", "{4F515C47-D1BA-481D-B159-DA203CB6296A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Contexts.Projects", "Angor\Avalonia\Angor.Contexts.Projects\Angor.Contexts.Projects.csproj", "{BDDA38DA-A2CF-1AEA-062F-4DC5285FCF26}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Contexts.Funding", "Angor\Avalonia\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj", "{BDDA38DA-A2CF-1AEA-062F-4DC5285FCF26}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Contexts.Projects.Tests", "Angor\Avalonia\Angor.Contexts.Projects.Tests\Angor.Contexts.Projects.Tests.csproj", "{50A31C70-6B1F-4197-868C-4C5CD69EABAE}"
 EndProject

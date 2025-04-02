@@ -1,6 +1,6 @@
+using Angor.Contexts.Funding;
+using Angor.Contexts.Funding.Projects.Infrastructure;
 using Angor.Contexts.Integration.WalletProject;
-using Angor.Contexts.Projects.Infrastructure;
-using Angor.Contexts.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
@@ -31,7 +31,7 @@ public static class CompositionRoot
         ProjectContext.Register(services, logger);
 
         // Integration services
-        services.AddSingleton<IInvestorKeyProvider, InvestorKeyProvider>();
+        services.AddSingleton<ISeedwordsProvider, SeedwordsProvider>();
 
         var serviceProvider = services.BuildServiceProvider();
 

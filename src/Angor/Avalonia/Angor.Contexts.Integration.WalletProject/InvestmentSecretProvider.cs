@@ -1,5 +1,5 @@
 using Angor.Contests.CrossCutting;
-using Angor.Contexts.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding;
 using Angor.Shared;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
@@ -7,7 +7,7 @@ using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Integration.WalletProject;
 
-public class InvestorKeyProvider(IDerivationOperations derivationOperations, ISensitiveWalletDataProvider sensitiveWalletDataProvider) : IInvestorKeyProvider
+public class SeedwordsProvider(IDerivationOperations derivationOperations, ISensitiveWalletDataProvider sensitiveWalletDataProvider) : ISeedwordsProvider
 {
     public Task<Result<string>> InvestorKey(Guid walletId, string founderKey)
     {

@@ -20,7 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Angor.Contexts.Projects\Angor.Contexts.Projects.csproj" />
+      <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj" />
     </ItemGroup>
 
 </Project>

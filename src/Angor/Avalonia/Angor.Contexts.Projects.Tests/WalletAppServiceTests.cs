@@ -1,5 +1,6 @@
-﻿using Angor.Contexts.Projects.Infrastructure;
-using Angor.Contexts.Projects.Infrastructure.Interfaces;
+﻿using Angor.Contexts.Funding;
+using Angor.Contexts.Funding.Projects.Infrastructure;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Projects.Tests.TestDoubles;
 using Angor.Shared;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +25,7 @@ public class ProjectAppServiceTests(ITestOutputHelper output)
 
         var logger = new LoggerConfiguration().WriteTo.TestOutput(output).CreateLogger();
         ProjectContext.Register(serviceCollection, logger);
-        serviceCollection.AddSingleton<IInvestorKeyProvider>(sp => new TestingInvestorKeyProvider("print foil moment average quarter keep amateur shell tray roof acoustic where", "", sp.GetRequiredService<IDerivationOperations>()));
+        serviceCollection.AddSingleton<ISeedwordsProvider>(sp => new TestingSeedwordsProvider("print foil moment average quarter keep amateur shell tray roof acoustic where", "", sp.GetRequiredService<IDerivationOperations>()));
 
         var serviceProvider = serviceCollection.BuildServiceProvider();
         var projectAppService = serviceProvider.GetService<IProjectAppService>();
