@@ -15,14 +15,14 @@ public class NostrSignatureRequestService(
     IRelayService relayService,
     ISerializer serializer,
     IDerivationOperations derivationOperations,
-    ISeedwordsProvider passwordComponent)
+    ISeedwordsProvider seedwordsProvider)
     : ISignatureRequestService
 {
     public async Task<Result> SendSignatureRequest(Guid walletId, string founderPubKey, ProjectId projectId, TransactionInfo signedTransaction)
     {
         try {
             // 1. Obtener las palabras (semilla) de la billetera
-            var wordsResult = await passwordComponent.GetSensitiveData(walletId);
+            var wordsResult = await seedwordsProvider.GetSensitiveData(walletId);
             if (wordsResult.IsFailure)
             {
                 return Result.Failure($"Error while retrieving sensitive data: {wordsResult.Error}");
