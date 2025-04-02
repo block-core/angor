@@ -17,6 +17,16 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
     {
         CreateSut();
     }
+    
+    [Fact]
+    public async Task CreateInvestmentTransaction()
+    {
+        var sut = CreateSut();
+        var projectId = new ProjectId("angor1qptj5qunu2mnwmfcspqc5pxlfscazcqlswt7d74");
+        var result = await sut.CreateInvestmentTransaction(Guid.Empty, projectId, new Amount(12345));
+        Assert.True(result.IsSuccess);
+        //Assert.NotEmpty(result.Value);
+    }
 
     [Fact]
     public async Task GetInvestments()

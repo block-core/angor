@@ -116,4 +116,24 @@ public class CreateInvestmentTransactionCommand(
         
         return signedTransactionResult;
     }
+
+    public class Factory(IProjectRepository projectRepository,
+        IInvestorTransactionActions investorTransactionActions,
+        IInvestorKeyProvider investorKeyProvider,
+        IWalletOperations walletOperations,
+        ISignatureRequestService signatureRequestService)
+    {
+        public CreateInvestmentTransactionCommand Create(Guid walletId, ProjectId projectId, Amount amount)
+        {
+            return new CreateInvestmentTransactionCommand(
+                projectRepository: projectRepository, 
+                investorTransactionActions: investorTransactionActions, 
+                investorKeyProvider: investorKeyProvider,
+                walletOperations: walletOperations, 
+                signatureRequestService: signatureRequestService, 
+                walletId: walletId, 
+                projectId: projectId, 
+                amount: amount);
+        }
+    }
 }
