@@ -5,7 +5,7 @@ using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Integration.WalletProject;
+namespace Angor.Contexts.Integration.WalletFunding;
 
 public class SeedwordsProvider(IDerivationOperations derivationOperations, ISensitiveWalletDataProvider sensitiveWalletDataProvider) : ISeedwordsProvider
 {

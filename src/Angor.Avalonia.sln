@@ -38,7 +38,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{4B0A97D7-B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Contexts.CrossCutting", "Angor\Avalonia\Angor.Contexts.CrossCutting\Angor.Contexts.CrossCutting.csproj", "{73E8FABE-65F7-47E5-ABFA-289945FC627C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Contexts.Integration.WalletProject", "Angor\Avalonia\Angor.Contexts.Integration.WalletProject\Angor.Contexts.Integration.WalletProject.csproj", "{8E529B00-5BC0-4EBE-AA5E-6E5C91FA2BEC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Contexts.Integration.WalletFunding", "Angor\Avalonia\Angor.Contexts.Integration.WalletFunding\Angor.Contexts.Integration.WalletFunding.csproj", "{8E529B00-5BC0-4EBE-AA5E-6E5C91FA2BEC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
