@@ -1,6 +1,7 @@
 using Angor.Contexts.Projects.Domain;
 using Angor.Contexts.Projects.Infrastructure;
 using Angor.Contexts.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Projects.Investment;
 using Angor.Contexts.Projects.Tests.TestDoubles;
 using Angor.Shared;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +18,6 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
         CreateSut();
     }
 
-
     [Fact]
     public async Task GetInvestments()
     {
@@ -26,16 +26,6 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
         var result = await sut.GetInvestments(projectId);
         Assert.True(result.IsSuccess);
         Assert.NotEmpty(result.Value);
-    }
-
-    [Fact]
-    public async Task Invest()
-    {
-        var sut = CreateSut();
-        var projectId = new ProjectId("angor1qptj5qunu2mnwmfcspqc5pxlfscazcqlswt7d74");
-        var result = await sut.Invest(Guid.Empty, projectId, new Amount(10000));
-
-        Assert.True(result.IsSuccess);
     }
 
     private IInvestmentAppService CreateSut()

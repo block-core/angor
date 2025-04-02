@@ -1,6 +1,7 @@
 ﻿using Angor.Contexts.Projects.Application.Dtos;
 using Angor.Contexts.Projects.Domain;
 using Angor.Contexts.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Projects.Projects.Domain;
 using CSharpFunctionalExtensions;
 using Zafiro.CSharpFunctionalExtensions;
 using Amount = Angor.Contexts.Projects.Domain.Amount;

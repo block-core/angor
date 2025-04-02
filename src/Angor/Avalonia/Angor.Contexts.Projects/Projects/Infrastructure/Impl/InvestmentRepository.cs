@@ -3,17 +3,17 @@ using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Projects.Application.Dtos;
 using Angor.Contexts.Projects.Domain;
-using Angor.Contexts.Projects.Infrastructure.Impl.Commands;
 using Angor.Contexts.Projects.Infrastructure.Impl.Commands.CreateInvestment;
 using Angor.Contexts.Projects.Infrastructure.Impl.Commands.Investment.CreateInvestment;
 using Angor.Contexts.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Projects.Projects.Domain;
 using Angor.Shared;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Projects.Infrastructure.Impl;
+namespace Angor.Contexts.Projects.Projects.Infrastructure.Impl;
 
 public class InvestmentRepository(
     IIndexerService indexerService,
@@ -23,7 +23,7 @@ public class InvestmentRepository(
     IInvestorKeyProvider investorKeyProvider,
     IRelayService relayService) : IInvestmentRepository
 {
-    public async Task<Result> Add(Guid walletId, Investment newInvestment)
+    public async Task<Result> Add(Guid walletId, Contexts.Projects.Domain.Investment newInvestment)
     {
         // Obtener todas las inversiones confirmadas existentes
         var confirmedInvestments = await GetAllConfirmedInvestments();
@@ -90,10 +90,10 @@ public class InvestmentRepository(
         throw new NotImplementedException();
     }
 
-    private async Task<List<Investment>> GetAllConfirmedInvestments()
+    private async Task<List<Contexts.Projects.Domain.Investment>> GetAllConfirmedInvestments()
     {
         var allProjects = await indexerService.GetProjectsAsync(0, 20);
-        var investments = new List<Investment>();
+        var investments = new List<Contexts.Projects.Domain.Investment>();
 
         foreach (var project in allProjects)
         {
@@ -109,9 +109,9 @@ public class InvestmentRepository(
         return investments;
     }
 
-    private Task<Result<IEnumerable<Investment>>> GetProjectInvestments(ProjectId projectId)
+    private Task<Result<IEnumerable<Contexts.Projects.Domain.Investment>>> GetProjectInvestments(ProjectId projectId)
     {
         return Result.Try(() => indexerService.GetInvestmentsAsync(projectId.Value))
-            .Map(investments => investments.Select(inv => Investment.Create(projectId, inv.InvestorPublicKey, inv.TotalAmount, inv.TransactionId)));
+            .Map(investments => investments.Select(inv => Contexts.Projects.Domain.Investment.Create(projectId, inv.InvestorPublicKey, inv.TotalAmount, inv.TransactionId)));
     }
 }

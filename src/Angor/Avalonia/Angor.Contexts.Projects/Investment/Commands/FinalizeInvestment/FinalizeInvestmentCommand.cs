@@ -1,5 +1,6 @@
 using Angor.Contexts.Projects.Domain;
 using Angor.Contexts.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Projects.Projects.Domain;
 using Angor.Shared;
 using CSharpFunctionalExtensions;
 

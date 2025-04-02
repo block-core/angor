@@ -3,6 +3,9 @@ using Angor.Client.Services;
 using Angor.Contexts.Projects.Domain;
 using Angor.Contexts.Projects.Infrastructure.Impl;
 using Angor.Contexts.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Projects.Investment;
+using Angor.Contexts.Projects.Projects.Domain;
+using Angor.Contexts.Projects.Projects.Infrastructure.Impl;
 using Angor.Shared;
 using Angor.Shared.Networks;
 using Angor.Shared.ProtocolNew;
@@ -25,6 +28,7 @@ public class ProjectContext
         networkConfiguration.SetNetwork(new Angornet());
 
         services.AddSingleton<IProjectAppService, ProjectAppService>();
+        services.AddSingleton<IInvestmentAppService, InvestmentAppService>();
         services.AddSingleton<InvestCommandFactory>();
         services.AddSingleton<IInvestmentRepository, InvestmentRepository>();
         services.AddSingleton<IProjectRepository, ProjectRepository>();

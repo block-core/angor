@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Infrastructure\Impl\Investment\Commands\" />
+    <Folder Include="Projects\" />
   </ItemGroup>
 
 </Project>

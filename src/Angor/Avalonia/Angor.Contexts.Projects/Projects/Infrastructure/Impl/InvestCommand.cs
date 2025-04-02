@@ -1,6 +1,7 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Projects.Domain;
 using Angor.Contexts.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Projects.Projects.Domain;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.ProtocolNew;
@@ -30,7 +31,7 @@ public class InvestCommand(IProjectRepository projectRepository,
             from tx in Broadcast(signedTransaction)
             select new { tx, investorKey };
 
-        return transactionResult.Bind(id => AddInvestment(Investment.Create(projectId, id.investorKey, amount.Sats, id.tx.Value)));
+        return transactionResult.Bind(id => AddInvestment(Domain.Investment.Create(projectId, id.investorKey, amount.Sats, id.tx.Value)));
     }
 
     private async Task<Result<string>> GetInvestorKey(string founderKey)
@@ -108,7 +109,7 @@ public class InvestCommand(IProjectRepository projectRepository,
         return Result.Success(new TxId("61a34ef983bf8d37e3862a0537734b942c627e0904ef4e2277b6185a7355a3c3"));
     }
 
-    private async Task<Result> AddInvestment(Investment investment)
+    private async Task<Result> AddInvestment(Domain.Investment investment)
     {
         return await investmentRepository.Add(walletId, investment);
     }
