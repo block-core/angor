@@ -32,7 +32,7 @@ public class InvestCommand(IProjectRepository projectRepository,
 
         return transactionResult.Bind(id => Save(Investment.Create(projectId, id.investorKey, amount.Sats, id.tx.Value)));
     }
-    
+
     private async Task<Result<string>> GetInvestorKey(string founderKey)
     {
         var investorKeyResult = await investorKeyProvider.InvestorKey(walletId, founderKey);
@@ -42,6 +42,18 @@ public class InvestCommand(IProjectRepository projectRepository,
         }
 
         return investorKeyResult;
+    }
+
+    private Result<Transaction> CreateInvestmentTransaction(Project project, Result<string> investorKey)
+    {
+        var transactionResult = Result.Try(() => investorTransactionActions.CreateInvestmentTransaction(project.ToSharedModel(), investorKey.Value, amount.Sats));
+        
+        if (transactionResult.IsFailure)
+        {
+            return Result.Failure<Transaction>(transactionResult.Error);
+        }
+
+        return transactionResult;
     }
 
     private async Task<Result<TransactionInfo>> SignTransaction(Transaction transaction)
@@ -85,28 +97,15 @@ public class InvestCommand(IProjectRepository projectRepository,
             transaction, 
             walletWords, 
             accountInfo, 
-            feerate
-            );
+            feerate);
         
         return signedTransaction;
     }
-    
+
     private async Task<Result<TxId>> Broadcast(TransactionInfo transaction)
     {
         // TODO: implement broadcast
         return Result.Success(new TxId("61a34ef983bf8d37e3862a0537734b942c627e0904ef4e2277b6185a7355a3c3"));
-    }
-
-    private Result<Transaction> CreateInvestmentTransaction(Project project, Result<string> investorKey)
-    {
-        var transactionResult = Result.Try(() => investorTransactionActions.CreateInvestmentTransaction(project.ToSharedModel(), investorKey.Value, amount.Sats));
-        
-        if (transactionResult.IsFailure)
-        {
-            return Result.Failure<Transaction>(transactionResult.Error);
-        }
-
-        return transactionResult;
     }
 
     private async Task<Result> Save(Investment investment)
