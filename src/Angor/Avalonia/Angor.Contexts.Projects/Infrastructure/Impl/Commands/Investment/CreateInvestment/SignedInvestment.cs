@@ -1,6 +1,6 @@
 using Angor.Contexts.Projects.Domain;
 
-namespace Angor.Contexts.Projects.Infrastructure.Impl.Commands;
+namespace Angor.Contexts.Projects.Infrastructure.Impl.Commands.CreateInvestment;
 
 public record SignedInvestment(
     ProjectId ProjectId, 

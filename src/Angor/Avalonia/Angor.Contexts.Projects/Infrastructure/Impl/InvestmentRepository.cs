@@ -3,6 +3,8 @@ using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Projects.Application.Dtos;
 using Angor.Contexts.Projects.Domain;
+using Angor.Contexts.Projects.Infrastructure.Impl.Commands;
+using Angor.Contexts.Projects.Infrastructure.Impl.Commands.CreateInvestment;
 using Angor.Contexts.Projects.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Services;
@@ -75,6 +77,16 @@ public class InvestmentRepository(
             Amount = inv.AmountInSatoshis,
             TransactionId = inv.TransactionId
         }));
+    }
+
+    public Task<Result<PendingInvestment>> GetPendingInvestment(Guid walletId, ProjectId projectId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<SignedInvestment>> GetSignedInvestment(Guid walletId, ProjectId projectId)
+    {
+        throw new NotImplementedException();
     }
 
     private async Task<List<Investment>> GetAllConfirmedInvestments()
