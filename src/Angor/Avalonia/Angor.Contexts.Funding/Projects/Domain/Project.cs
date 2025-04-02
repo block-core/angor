@@ -16,7 +16,6 @@ public class Project
     public string FounderRecoveryKey { get; set; }
     public DateTime ExpiryDate { get; set; }
     public Uri? Banner { get; set; }
-    public string NostrNpubKey { get; set; }
 
     public override string ToString()
     {

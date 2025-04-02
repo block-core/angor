@@ -30,6 +30,7 @@ public static class ProjectDataExtensions
             FounderKey = data.ProjectInfo.FounderKey,
             FounderRecoveryKey = data.ProjectInfo.FounderRecoveryKey,
             ExpiryDate = data.ProjectInfo.ExpiryDate,
+            NostrPubKey = data.ProjectInfo.NostrPubKey,
 
             Picture = string.IsNullOrWhiteSpace(data.NostrMetadata.Picture)
                 ? null
@@ -42,9 +43,7 @@ public static class ProjectDataExtensions
             TargetAmount = data.ProjectInfo.TargetAmount,
             StartingDate = data.ProjectInfo.StartDate,
             PenaltyDuration = TimeSpan.FromDays(data.ProjectInfo.PenaltyDays),
-
-            NostrNpubKey = data.ProjectInfo.NostrPubKey,
-
+            
             InformationUri = string.IsNullOrWhiteSpace(data.NostrMetadata.Website)
                 ? null
                 : new Uri(data.NostrMetadata.Website)
