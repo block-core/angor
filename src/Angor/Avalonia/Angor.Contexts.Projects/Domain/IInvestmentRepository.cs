@@ -2,6 +2,7 @@ using Angor.Contexts.Projects.Application.Dtos;
 using Angor.Contexts.Projects.Domain;
 using Angor.Contexts.Projects.Infrastructure.Impl.Commands;
 using Angor.Contexts.Projects.Infrastructure.Impl.Commands.CreateInvestment;
+using Angor.Contexts.Projects.Infrastructure.Impl.Commands.Investment.CreateInvestment;
 using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Projects.Infrastructure.Interfaces;

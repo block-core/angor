@@ -8,42 +8,18 @@ using Angor.Shared.ProtocolNew;
 using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Projects.Infrastructure.Impl.Commands;
+namespace Angor.Contexts.Projects.Infrastructure.Impl.Commands.Investment.CreateInvestment;
 
-public class CreateInvestmentTransactionCommand
+public class CreateInvestmentTransactionCommand(
+    IProjectRepository projectRepository,
+    IInvestorTransactionActions investorTransactionActions,
+    IInvestorKeyProvider investorKeyProvider,
+    IWalletOperations walletOperations,
+    ISignatureRequestService signatureRequestService,
+    Guid walletId,
+    ProjectId projectId,
+    Amount amount)
 {
-    private readonly IProjectRepository projectRepository;
-    private readonly IInvestorTransactionActions investorTransactionActions;
-    private readonly IInvestorKeyProvider investorKeyProvider;
-    private readonly IWalletOperations walletOperations;
-    private readonly ISignatureRequestService signatureRequestService;
-    private readonly Guid walletId;
-    private readonly ProjectId projectId;
-    private readonly Amount amount;
-
-    public CreateInvestmentTransactionCommand(
-        IProjectRepository projectRepository,
-        IInvestorTransactionActions investorTransactionActions,
-        IInvestorKeyProvider investorKeyProvider,
-        IWalletOperations walletOperations,
-        ISignatureRequestService signatureRequestService,
-        Guid walletId,
-        ProjectId projectId,
-        Amount amount)
-    {
-        this.projectRepository = projectRepository;
-        this.investorTransactionActions = investorTransactionActions;
-        this.investorKeyProvider = investorKeyProvider;
-        this.walletOperations = walletOperations;
-        this.signatureRequestService = signatureRequestService;
-        this.walletId = walletId;
-        this.projectId = projectId;
-        this.amount = amount;
-    }
-    
-    
-
-
     public async Task<Result<PendingInvestment>> Execute()
     {
         try
