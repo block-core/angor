@@ -31,6 +31,8 @@
 @inject IWalletUIService _walletUIService
 @inject IIndexerService _IndexerService
 
+@inject INetworkService _networkService
+@inject NostrConversionHelper NostrHelper
 @inject IInvestorTransactionActions _InvestorTransactionActions;
 
 @inject ISerializer serializer
@@ -431,6 +433,10 @@ else
                                 <span class="button-text ms-2">Refresh</span>
                             }
                         </button>
+                        <button class="btn btn-border-primary ms-2" @onclick="ShowChatModal">
+                             <Icon IconName="chat" Width="16" Height="16" class="me-1" />
+                            <span class="button-text ms-2">Chat</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -503,6 +509,74 @@ else
     }
 }
 
+@if (showChatModal)
+{
+    <div class="modal-wrapper">
+        <div class="modal fade show d-block" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modern-modal animate-fade-in">
+                    <div class="modal-header border-0 pb-0">
+                        <div class="d-flex align-items-center">
+                            <Icon IconName="message" Height="32" Width="32" class="me-2" />
+                            <h5 class="modal-title">Chat Options</h5>
+                        </div>
+                        <button class="btn-close-custom" @onclick="() => showChatModal = false">
+                            <Icon IconName="close-circle" Height="24" Width="24" />
+                        </button>
+                    </div>
+
+                    <div class="modal-body py-4">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="info-card p-3 mt-2 animate-fade-in">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="info-label mb-2">NPUB:</div>
+                                    <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(npubValue)">
+                                        <Icon IconName="copy" Width="16" Height="16" />
+                                    </button>
+                                </div>
+                                <div class="info-value text-break word-wrap">
+                                    @npubValue
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="btn btn-border-primary w-100" @onclick="OpenChatApp">
+                                <Icon IconName="message" Width="20" Height="20" class="me-2" />
+                                <span>Open Chat App</span>
+                            </button>
+                            
+                            <button type="button" class="btn btn-border-warning w-100" @onclick="ShowNsecAndCheckPassword">
+                                <Icon IconName="key" Width="20" Height="20" class="me-2" />
+                                <span>Show NSEC</span>
+                            </button>
+                            
+                            @if (showNsec)
+                            {
+                                <div class="info-card p-3 mt-2 animate-fade-in">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="info-label mb-2">NSEC:</div>
+                                        <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(nsecValue)">
+                                            <Icon IconName="copy" Width="16" Height="16" />
+                                        </button>
+                                    </div>
+                                    <div class="info-value text-break word-wrap">
+                                        @nsecValue
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-border-secondary" @onclick="() => showChatModal = false">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
 
     [Parameter]
@@ -514,6 +588,10 @@ else
     private bool refreshSpinner = false;
     private bool showTransactionJsonModal = false;
     private string transactionJson;
+    private bool showChatModal = false;
+    private bool showNsec = false;
+    private string nsecValue = "";
+    private string npubValue = "";
 
     public InvestmentModel Investment { get; set; } = new InvestmentModel { InvestmentAmountBtc = 0.01m };
     private bool IsSeederTimePassed { get; set; }
@@ -1172,5 +1250,75 @@ else
         }
 
         return false;
+    }
+
+    private void ShowChatModal()
+    {
+        showChatModal = true;
+        showNsec = false;
+        var investorProject = project as InvestorProject;
+        npubValue = NostrHelper.ConvertHexToNpub(investorProject?.InvestorNPub ?? "") ?? investorProject?.InvestorNPub ?? "";
+        StateHasChanged();
+    }
+    
+    private void ShowNsecAndCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            showChatModal = false;
+            passwordComponent.ShowPassword(RetrieveAndShowNsec);
+        }
+        else
+        {
+            RetrieveAndShowNsec();
+        }
+    }
+    
+    private async Task RetrieveAndShowNsec()
+    {
+        await ShowNsec();
+    }
+    
+    private async Task ShowNsec()
+    {
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+            
+            if (project != null)
+            {
+                var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
+                var nostrHexSecKey = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
+                nsecValue = NostrHelper.ConvertHexToNsec(nostrHexSecKey)!;
+                showChatModal = true;
+                showNsec = true;
+                StateHasChanged();
+            }
+            else
+            {
+                notificationComponent.ShowErrorMessage("Project information not available");
+            }
+        }
+        catch (Exception e)
+        {
+            notificationComponent.ShowErrorMessage("Failed to retrieve NSEC: " + e.Message);
+        }
+    }
+
+    private async void OpenChatApp()
+    {
+        if (project != null)
+        {
+            var primaryChatApp = _networkService.GetPrimaryChatApp();
+            var url = $"{primaryChatApp.Url}/{project.ProjectInfo.NostrPubKey}";
+
+            // Open chat app with project information
+            // NavigationManager.NavigateTo($"{url}", true);
+            await JS.InvokeVoidAsync("window.open", url, "_blank");
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage("Project information not available");
+        }
     }
 }
