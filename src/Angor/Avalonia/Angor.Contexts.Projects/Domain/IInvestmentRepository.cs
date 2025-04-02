@@ -6,7 +6,6 @@ namespace Angor.Contexts.Projects.Infrastructure.Interfaces;
 
 public interface IInvestmentRepository
 {
-    Task<Result> Save(Investment investment);
-    Task<Result<IEnumerable<Investment>>> Get(ProjectId projectId);
-    Task<Result<IList<InvestmentDto>>> GetByProject(ProjectId projectId);
+    Task<Result> Add(Guid walletId, Investment investment);
+    Task<Result<IEnumerable<InvestmentDto>>> GetByProject(ProjectId projectId);
 }

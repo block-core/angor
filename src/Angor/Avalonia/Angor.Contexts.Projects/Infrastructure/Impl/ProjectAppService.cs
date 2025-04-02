@@ -19,7 +19,7 @@ public class ProjectAppService(
         return command.Execute();
     }
 
-    public Task<Result<IList<InvestmentDto>>> GetInvestments(ProjectId projectId)
+    public Task<Result<IEnumerable<InvestmentDto>>> GetInvestments(ProjectId projectId)
     {
         return investmentRepository.GetByProject(projectId);
     }

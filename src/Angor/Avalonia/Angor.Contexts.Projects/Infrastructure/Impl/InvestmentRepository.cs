@@ -1,10 +1,10 @@
 using Angor.Client.Models;
 using Angor.Client.Services;
+using Angor.Contests.CrossCutting;
 using Angor.Contexts.Projects.Application.Dtos;
 using Angor.Contexts.Projects.Domain;
 using Angor.Contexts.Projects.Infrastructure.Interfaces;
 using Angor.Shared;
-using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
@@ -17,95 +17,88 @@ public class InvestmentRepository(
     IEncryptionService encryptionService,
     IDerivationOperations derivationOperations,
     ISerializer serializer,
+    IInvestorKeyProvider investorKeyProvider,
     IRelayService relayService) : IInvestmentRepository
 {
-    public async Task<Result> Save(Investment investment)
+    public async Task<Result> Add(Guid walletId, Investment newInvestment)
     {
-        try
+        // Obtener todas las inversiones confirmadas existentes
+        var confirmedInvestments = await GetAllConfirmedInvestments();
+
+        // Agregar la nueva inversión si no existe ya
+        if (!confirmedInvestments.Any(x => x.ProjectId.Value == newInvestment.ProjectId.Value
+                                           && x.InvestorPubKey == newInvestment.InvestorPubKey))
         {
-            var words = GetTestSeedwords();
-
-            var storageAccountKey = derivationOperations.DeriveNostrStoragePubKeyHex(words);
-            var storageKey = derivationOperations.DeriveNostrStorageKey(words);
-            var storageKeyHex = Encoders.Hex.EncodeData(storageKey.ToBytes());
-            var password = derivationOperations.DeriveNostrStoragePassword(words);
-
-            var allProjects = await indexerService.GetProjectsAsync(0, 20);
-            var investmentStates = new List<InvestmentState>();
-
-            foreach (var project in allProjects)
-            {
-                var projectId = new ProjectId(project.ProjectIdentifier);
-                var projectInvestments = await GetByProject(projectId);
-
-                if (projectInvestments.IsSuccess)
-                {
-                    foreach (var inv in projectInvestments.Value)
-                    {
-                        investmentStates.Add(new InvestmentState
-                        {
-                            ProjectIdentifier = inv.ProjectId.Value,
-                            InvestorPubKey = inv.InvestorKey,
-                            InvestmentTransactionHash = inv.TransactionId,
-                        });
-                    }
-                }
-            }
-
-            investmentStates.Add(new InvestmentState
-            {
-                ProjectIdentifier = investment.ProjectId.Value,
-                InvestorPubKey = investment.InvestorPubKey,
-                InvestmentTransactionHash = investment.TransactionId
-            });
-
-            var investments = new Investments { ProjectIdentifiers = investmentStates };
-            var encrypted = await encryptionService.EncryptData(serializer.Serialize(investments), password);
-
-            var tcs = new TaskCompletionSource<bool>();
-            relayService.SendDirectMessagesForPubKeyAsync(storageKeyHex, storageAccountKey, encrypted,
-                x => { tcs.SetResult(x.Accepted); });
-
-            var result = await tcs.Task;
-            return result
-                ? Result.Success()
-                : Result.Failure($"Error saving the investment");
+            confirmedInvestments.Add(newInvestment);
         }
-        catch (Exception ex)
+
+        var investmentStates = confirmedInvestments.Select(inv => new InvestmentState
         {
-            return Result.Failure($"Error saving the investment: {ex.Message}");
+            ProjectIdentifier = inv.ProjectId.Value,
+            InvestorPubKey = inv.InvestorPubKey,
+            InvestmentTransactionHash = inv.TransactionId
+        }).ToList();
+        
+        var investments = new Investments { ProjectIdentifiers = investmentStates };
+
+        // Encriptar y enviar todo junto a Nostr
+        var sensiveDataResult = await investorKeyProvider.GetSensitiveData(walletId);
+        if (sensiveDataResult.IsFailure)
+        {
+            return Result.Failure(sensiveDataResult.Error);
         }
-    }
 
-    private WalletWords GetTestSeedwords()
-    {
-        var words = "print foil moment average quarter keep amateur shell tray roof acoustic where";
-        var passphrase = "";
-        return new WalletWords()
+        var words = sensiveDataResult.Value.ToWalletWords();
+        var storageAccountKey = derivationOperations.DeriveNostrStoragePubKeyHex(words);
+        var storageKey = derivationOperations.DeriveNostrStorageKey(words);
+        var storageKeyHex = Encoders.Hex.EncodeData(storageKey.ToBytes());
+        var password = derivationOperations.DeriveNostrStoragePassword(words);
+
+        var encrypted = await encryptionService.EncryptData(serializer.Serialize(investments), password);
+
+        var tcs = new TaskCompletionSource<bool>();
+        relayService.SendDirectMessagesForPubKeyAsync(storageKeyHex, storageAccountKey, encrypted, result =>
         {
-            Words = words,
-            Passphrase = passphrase
-        };
+            tcs.SetResult(result.Accepted);
+        });
+
+        var success = await tcs.Task;
+        return success ? Result.Success() : Result.Failure("Error adding investment");
     }
 
-    public async Task<Result<IEnumerable<Investment>>> Get(ProjectId projectId)
+    public Task<Result<IEnumerable<InvestmentDto>>> GetByProject(ProjectId projectId)
     {
-        // TODO: Get investments for the project
-        return Result.Success<IEnumerable<Investment>>(new List<Investment>());
-    }
-
-    public async Task<Result<IList<InvestmentDto>>> GetByProject(ProjectId projectId)
-    {
-        var investments = await indexerService.GetInvestmentsAsync(projectId.Value);
-
-        var investmentDtos = investments.Select(inv => new InvestmentDto
+        return GetProjectInvestments(projectId).Map(enumerable => enumerable.Select(inv => new InvestmentDto
         {
             ProjectId = projectId,
-            InvestorKey = inv.InvestorPublicKey,
-            Amount = inv.TotalAmount,
+            InvestorKey = inv.InvestorPubKey,
+            Amount = inv.AmountInSatoshis,
             TransactionId = inv.TransactionId
-        }).ToList();
+        }));
+    }
 
-        return investmentDtos;
+    private async Task<List<Investment>> GetAllConfirmedInvestments()
+    {
+        var allProjects = await indexerService.GetProjectsAsync(0, 20);
+        var investments = new List<Investment>();
+
+        foreach (var project in allProjects)
+        {
+            var projectId = new ProjectId(project.ProjectIdentifier);
+            var projectInvestments = await GetProjectInvestments(projectId);
+
+            if (projectInvestments.IsSuccess)
+            {
+                investments.AddRange(projectInvestments.Value);
+            }
+        }
+
+        return investments;
+    }
+
+    private Task<Result<IEnumerable<Investment>>> GetProjectInvestments(ProjectId projectId)
+    {
+        return Result.Try(() => indexerService.GetInvestmentsAsync(projectId.Value))
+            .Map(investments => investments.Select(inv => Investment.Create(projectId, inv.InvestorPublicKey, inv.TotalAmount, inv.TransactionId)));
     }
 }

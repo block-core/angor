@@ -30,7 +30,7 @@ public class InvestCommand(IProjectRepository projectRepository,
             from tx in Broadcast(signedTransaction)
             select new { tx, investorKey };
 
-        return transactionResult.Bind(id => Save(Investment.Create(projectId, id.investorKey, amount.Sats, id.tx.Value)));
+        return transactionResult.Bind(id => AddInvestment(Investment.Create(projectId, id.investorKey, amount.Sats, id.tx.Value)));
     }
 
     private async Task<Result<string>> GetInvestorKey(string founderKey)
@@ -108,8 +108,8 @@ public class InvestCommand(IProjectRepository projectRepository,
         return Result.Success(new TxId("61a34ef983bf8d37e3862a0537734b942c627e0904ef4e2277b6185a7355a3c3"));
     }
 
-    private async Task<Result> Save(Investment investment)
+    private async Task<Result> AddInvestment(Investment investment)
     {
-        return await investmentRepository.Save(investment);
+        return await investmentRepository.Add(walletId, investment);
     }
 }
