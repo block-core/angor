@@ -1,6 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
-using Angor.Wallet.Application;
+using Angor.Contexts.Wallet.Application;
 using AngorApp.Sections.Wallet.CreateAndRecover;
 using AngorApp.Sections.Wallet.Operate;
 using AngorApp.UI.Services;

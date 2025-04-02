@@ -1,5 +1,5 @@
-using Angor.Wallet.Domain;
-using Angor.Wallet.Infrastructure.Interfaces;
+using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Avalonia.Threading;
 using CSharpFunctionalExtensions;
 using ReactiveUI.Validation.Extensions;

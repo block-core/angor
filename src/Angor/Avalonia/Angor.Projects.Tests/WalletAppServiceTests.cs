@@ -1,6 +1,6 @@
-﻿using Angor.Projects.Domain;
-using Angor.Projects.Infrastructure;
-using Angor.Projects.Infrastructure.Interfaces;
+﻿using Angor.Contexts.Projects.Domain;
+using Angor.Contexts.Projects.Infrastructure;
+using Angor.Contexts.Projects.Infrastructure.Interfaces;
 using Angor.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;

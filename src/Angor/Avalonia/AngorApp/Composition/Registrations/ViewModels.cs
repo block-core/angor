@@ -1,4 +1,4 @@
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Domain;
 using AngorApp.Sections;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder;

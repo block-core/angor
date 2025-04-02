@@ -1,4 +1,4 @@
-﻿using Angor.Wallet.Domain;
+﻿using Angor.Contexts.Wallet.Domain;
 using Xunit.Abstractions;
 
 namespace Angor.Wallet.Tests.Infrastructure;

@@ -1,5 +1,5 @@
-using Angor.Wallet.Application;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Application;
+using Angor.Contexts.Wallet.Domain;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;

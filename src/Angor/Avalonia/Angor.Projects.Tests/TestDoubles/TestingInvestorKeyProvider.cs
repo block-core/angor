@@ -1,4 +1,4 @@
-using Angor.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Projects.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
@@ -21,6 +21,11 @@ public class TestingInvestorKeyProvider : IInvestorKeyProvider
     public async Task<Result<string>> InvestorKey(Guid walletId, string founderKey)
     {
         return Result.Try(() => DeriveInvestorKey(founderKey));
+    }
+
+    public Task<Result<(string Words, Maybe<string> Passphrase)>> GetSensitiveData(Guid walletId)
+    {
+        throw new NotImplementedException();
     }
 
     private string DeriveInvestorKey(string founderKey)

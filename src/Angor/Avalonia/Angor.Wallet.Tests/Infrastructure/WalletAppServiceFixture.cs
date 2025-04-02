@@ -2,10 +2,10 @@ using Angor.Client;
 using Angor.Shared;
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
-using Angor.Wallet.Application;
-using Angor.Wallet.Domain;
-using Angor.Wallet.Infrastructure.Impl;
-using Angor.Wallet.Infrastructure.Interfaces;
+using Angor.Contexts.Wallet.Application;
+using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Angor.Wallet.Tests.Infrastructure.TestDoubles;
 using Microsoft.Extensions.Logging;
 
@@ -14,7 +14,7 @@ namespace Angor.Wallet.Tests.Infrastructure;
 public class WalletAppServiceFixture : IAsyncLifetime
 {
     public IWalletAppService WalletAppService { get; private set; }
-    public WalletId WalletId { get; } = Wallet.Infrastructure.Impl.WalletAppService.SingleWalletId;
+    public WalletId WalletId { get; } = Contexts.Wallet.Infrastructure.Impl.WalletAppService.SingleWalletId;
 
     public async Task InitializeAsync()
     {

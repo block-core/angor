@@ -1,4 +1,4 @@
-using Angor.Wallet.Infrastructure.Interfaces;
+using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 
 namespace Angor.Wallet.Tests.Infrastructure;
 

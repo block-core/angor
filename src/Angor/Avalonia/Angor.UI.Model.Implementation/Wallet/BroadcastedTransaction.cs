@@ -1,4 +1,4 @@
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Domain;
 
 namespace Angor.UI.Model.Implementation.Wallet;
 

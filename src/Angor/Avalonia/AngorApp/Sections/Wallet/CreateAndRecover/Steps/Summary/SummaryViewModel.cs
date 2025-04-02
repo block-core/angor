@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
-using Angor.Wallet.Application;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Application;
+using Angor.Contexts.Wallet.Domain;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;

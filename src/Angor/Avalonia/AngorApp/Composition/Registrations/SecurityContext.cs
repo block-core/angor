@@ -1,7 +1,7 @@
 using Angor.UI.Model.Implementation.Wallet;
 using Angor.UI.Model.Implementation.Wallet.Password;
-using Angor.Wallet.Infrastructure.Impl;
-using Angor.Wallet.Infrastructure.Interfaces;
+using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AngorApp.Composition.Registrations;

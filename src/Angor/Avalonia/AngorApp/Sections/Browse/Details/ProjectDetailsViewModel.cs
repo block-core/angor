@@ -1,8 +1,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Angor.Wallet.Application;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Application;
+using Angor.Contexts.Wallet.Domain;
 using AngorApp.Sections.Browse.Details.Invest.Amount;
 using AngorApp.UI.Controls.Common.Success;
 using AngorApp.UI.Controls.Common.TransactionDraft;

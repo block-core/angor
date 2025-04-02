@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="CSharpFunctionalExtensions" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Shared\Angor.Shared.csproj" />
+      <ProjectReference Include="..\Angor.Contexts.CrossCutting\Angor.Contexts.CrossCutting.csproj" />
+      <ProjectReference Include="..\Angor.Contexts.Projects\Angor.Contexts.Projects.csproj" />
+      <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj" />
+    </ItemGroup>
+
+</Project>

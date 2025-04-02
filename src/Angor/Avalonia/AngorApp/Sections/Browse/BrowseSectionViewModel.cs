@@ -1,5 +1,5 @@
-using Angor.Projects.Infrastructure.Interfaces;
-using Angor.Wallet.Application;
+using Angor.Contexts.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Wallet.Application;
 using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;

@@ -41,11 +41,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\Angor.Integration.WalletProject\Angor.Integration.WalletProject.csproj"/>
-        <ProjectReference Include="..\Angor.Projects\Angor.Projects.csproj"/>
+        <ProjectReference Include="..\Angor.Contexts.Integration.WalletProject\Angor.Contexts.Integration.WalletProject.csproj" />
         <ProjectReference Include="..\Angor.UI.Model.Implementation\Angor.UI.Model.Implementation.csproj"/>
         <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj"/>
-        <ProjectReference Include="..\Angor.Wallet\Angor.Wallet.csproj"/>
+        <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj" />
+        <ProjectReference Include="..\Angor.Contexts.Projects\Angor.Contexts.Projects.csproj" />
     </ItemGroup>
 
 </Project>
