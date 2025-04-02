@@ -1,7 +1,6 @@
-using Angor.Projects.Domain;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Projects.Infrastructure.Interfaces;
+namespace Angor.Projects.Domain;
 
 public interface IProjectRepository
 {
