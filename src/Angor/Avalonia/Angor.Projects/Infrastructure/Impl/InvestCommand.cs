@@ -1,5 +1,7 @@
 using Angor.Projects.Domain;
 using Angor.Projects.Infrastructure.Interfaces;
+using Angor.Shared;
+using Angor.Shared.Models;
 using Angor.Shared.ProtocolNew;
 using Angor.Wallet.Domain;
 using Blockcore.Consensus.TransactionInfo;
@@ -12,6 +14,7 @@ public class InvestCommand(IProjectRepository projectRepository,
     IInvestmentRepository investmentRepository,
     IInvestorTransactionActions investorTransactionActions,
     IInvestorKeyProvider investorKeyProvider,
+    IWalletOperations walletOperations,
     Guid walletId,
     ProjectId projectId,
     Amount amount)
@@ -21,7 +24,7 @@ public class InvestCommand(IProjectRepository projectRepository,
         var transactionResult = from project in projectRepository.Get(projectId)
             from investorKey in GetInvestorKey(project.FounderKey)
             from unsignedTransaction in CreateInvestmentTransaction(project, investorKey)
-            from signedTransaction in SignTransaction(project, unsignedTransaction)
+            from signedTransaction in SignTransaction(unsignedTransaction)
             from tx in Broadcast(signedTransaction)
             select new { tx, investorKey };
 
@@ -39,13 +42,43 @@ public class InvestCommand(IProjectRepository projectRepository,
         return investorKeyResult;
     }
 
-    private async Task<Result<Transaction>> SignTransaction(Project project, Transaction transaction)
+    private async Task<Result<TransactionInfo>> SignTransaction(Transaction transaction)
     {
-        // TODO: implement signing
-        return transaction;
+        var words = new WalletWords();
+        
+        var accountInfo = walletOperations.BuildAccountInfoForWalletWords(words);
+        await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+        
+        var changeAddressResult = Result.Try(() => accountInfo.GetNextChangeReceiveAddress())
+            .Ensure(s => !string.IsNullOrEmpty(s), "Change address cannot be empty");
+
+        if (changeAddressResult.IsFailure)
+        {
+            return Result.Failure<TransactionInfo>(changeAddressResult.Error);
+        }
+        
+        var changeAddress = changeAddressResult.Value!;
+
+        var feeEstimationResult = await Result.Try(walletOperations.GetFeeEstimationAsync);
+        if (feeEstimationResult.IsFailure)
+        {
+            return Result.Failure<TransactionInfo>("Error getting fee estimation");
+        }
+
+        var feerate = feeEstimationResult.Value.FirstOrDefault()?.FeeRate ?? 1;
+        
+        TransactionInfo signedTransaction = walletOperations.AddInputsAndSignTransaction(
+            changeAddress, 
+            transaction, 
+            words, 
+            accountInfo, 
+            feerate
+            );
+        
+        return signedTransaction;
     }
     
-    private async Task<Result<TxId>> Broadcast(Transaction transaction)
+    private async Task<Result<TxId>> Broadcast(TransactionInfo transaction)
     {
         // TODO: implement broadcast
         return Result.Success(new TxId("61a34ef983bf8d37e3862a0537734b942c627e0904ef4e2277b6185a7355a3c3"));
