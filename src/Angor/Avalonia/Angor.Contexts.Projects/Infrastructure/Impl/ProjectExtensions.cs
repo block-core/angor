@@ -36,7 +36,7 @@ public static class ProjectExtensions
             Stages = project.Stages.Select(stage => new Stage
             {
                 ReleaseDate = stage.ReleaseDate,
-                AmountToRelease = stage.Amount,
+                AmountToRelease = (decimal)stage.Amount / 1_0000_0000,
             }).ToList(),
             FounderKey = project.FounderKey,
             FounderRecoveryKey = project.FounderRecoveryKey,
