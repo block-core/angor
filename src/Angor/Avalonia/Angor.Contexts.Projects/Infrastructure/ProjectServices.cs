@@ -49,6 +49,7 @@ public class ProjectServices
         services.TryAddSingleton<ISpendingTransactionBuilder, SpendingTransactionBuilder>();
         services.TryAddSingleton<IInvestmentTransactionBuilder, InvestmentTransactionBuilder>();
         services.TryAddSingleton<ITaprootScriptBuilder, TaprootScriptBuilder>();
+        services.TryAddSingleton<IWalletOperations, WalletOperations>();
         services.AddHttpClient();
 
         return services;

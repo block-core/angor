@@ -92,14 +92,14 @@ public class InvestCommand(IProjectRepository projectRepository,
 
         var feerate = feeEstimationResult.Value.FirstOrDefault()?.FeeRate ?? 1;
         
-        TransactionInfo signedTransaction = walletOperations.AddInputsAndSignTransaction(
+        var signedTransactionResult = Result.Try(() => walletOperations.AddInputsAndSignTransaction(
             changeAddress, 
             transaction, 
             walletWords, 
             accountInfo, 
-            feerate);
+            feerate));
         
-        return signedTransaction;
+        return signedTransactionResult;
     }
 
     private async Task<Result<TxId>> Broadcast(TransactionInfo transaction)

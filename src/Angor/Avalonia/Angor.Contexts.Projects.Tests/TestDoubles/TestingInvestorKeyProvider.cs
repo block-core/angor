@@ -3,7 +3,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Projects.Tests;
+namespace Angor.Contexts.Projects.Tests.TestDoubles;
 
 public class TestingInvestorKeyProvider : IInvestorKeyProvider
 {
@@ -23,9 +23,9 @@ public class TestingInvestorKeyProvider : IInvestorKeyProvider
         return Result.Try(() => DeriveInvestorKey(founderKey));
     }
 
-    public Task<Result<(string Words, Maybe<string> Passphrase)>> GetSensitiveData(Guid walletId)
+    public async Task<Result<(string Words, Maybe<string> Passphrase)>> GetSensitiveData(Guid walletId)
     {
-        throw new NotImplementedException();
+        return (seed, passphrase);
     }
 
     private string DeriveInvestorKey(string founderKey)
