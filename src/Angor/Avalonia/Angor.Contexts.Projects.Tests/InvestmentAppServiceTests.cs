@@ -43,7 +43,7 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
         var serviceCollection = new ServiceCollection();
 
         var logger = new LoggerConfiguration().WriteTo.TestOutput(output).CreateLogger();
-        ProjectContext.Register(serviceCollection, logger);
+        FundingContext.Register(serviceCollection, logger);
         serviceCollection.AddSingleton<ISeedwordsProvider>(sp => new TestingSeedwordsProvider("print foil moment average quarter keep amateur shell tray roof acoustic where", "", sp.GetRequiredService<IDerivationOperations>()));
 
         var serviceProvider = serviceCollection.BuildServiceProvider();

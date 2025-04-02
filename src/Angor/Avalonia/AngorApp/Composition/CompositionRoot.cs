@@ -28,7 +28,7 @@ public static class CompositionRoot
         UIServices.Register(services, topLevelView);
         SecurityContext.Register(services);
         RegisterWalletServices(services, logger);
-        ProjectContext.Register(services, logger);
+        FundingContext.Register(services, logger);
 
         // Integration services
         services.AddSingleton<ISeedwordsProvider, SeedwordsProvider>();
