@@ -529,7 +529,7 @@ else
                         <div class="d-flex flex-column gap-3">
                             <div class="info-card p-3 mt-2 animate-fade-in">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <div class="info-label mb-2">NPUB:</div>
+                                    <div class="info-label mb-2">Investor NPUB:</div>
                                     <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(npubValue)">
                                         <Icon IconName="copy" Width="16" Height="16" />
                                     </button>
@@ -539,6 +539,18 @@ else
                                 </div>
                             </div>
                             
+                            <div class="info-card p-3 mt-2 animate-fade-in">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="info-label mb-2">Founder NPUB:</div>
+                                    <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(founderNpub)">
+                                        <Icon IconName="copy" Width="16" Height="16" />
+                                    </button>
+                                </div>
+                                <div class="info-value text-break word-wrap">
+                                    @founderNpub
+                                </div>
+                            </div>
+
                             <button type="button" class="btn btn-border-primary w-100" @onclick="OpenChatApp">
                                 <Icon IconName="message" Width="20" Height="20" class="me-2" />
                                 <span>Open Chat App</span>
@@ -592,6 +604,7 @@ else
     private bool showNsec = false;
     private string nsecValue = "";
     private string npubValue = "";
+    private string founderNpub = "";
 
     public InvestmentModel Investment { get; set; } = new InvestmentModel { InvestmentAmountBtc = 0.01m };
     private bool IsSeederTimePassed { get; set; }
@@ -1258,6 +1271,11 @@ else
         showNsec = false;
         var investorProject = project as InvestorProject;
         npubValue = NostrHelper.ConvertHexToNpub(investorProject?.InvestorNPub ?? "") ?? investorProject?.InvestorNPub ?? "";
+
+        // Get founder's npub
+        founderNpub = NostrHelper.ConvertHexToNpub(investorProject.ProjectInfo.NostrPubKey) ??
+                      investorProject.ProjectInfo.NostrPubKey;
+
         StateHasChanged();
     }
     
@@ -1310,7 +1328,7 @@ else
         if (project != null)
         {
             var primaryChatApp = _networkService.GetPrimaryChatApp();
-            var url = $"{primaryChatApp.Url}/{project.ProjectInfo.NostrPubKey}";
+            var url = $"{primaryChatApp.Url}/{founderNpub}";
 
             // Open chat app with project information
             // NavigationManager.NavigateTo($"{url}", true);
