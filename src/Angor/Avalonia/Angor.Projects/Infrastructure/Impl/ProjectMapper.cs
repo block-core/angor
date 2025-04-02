@@ -41,8 +41,7 @@ public static class ProjectMapper
             StartingDate = DateOnly.FromDateTime(data.ProjectInfo.StartDate),
             PenaltyDuration = TimeSpan.FromDays(data.ProjectInfo.PenaltyDays),
 
-            NpubKey = data.ProjectInfo.NostrPubKey,
-            NpubKeyHex = data.IndexerData?.NostrEventId,
+            NostrNpubKey = data.ProjectInfo.NostrPubKey,
 
             InformationUri = string.IsNullOrWhiteSpace(data.NostrMetadata.Website)
                 ? null

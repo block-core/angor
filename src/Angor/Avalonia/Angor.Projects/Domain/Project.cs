@@ -10,8 +10,7 @@ public class Project
     public decimal TargetAmount { get; set; }
     public DateOnly StartingDate { get; set; }
     public IEnumerable<Stage> Stages { get; set; }
-    public string NpubKey { get; set; }
-    public string NpubKeyHex { get; set; }
+    public string NostrPubKey { get; set; }
     public TimeSpan PenaltyDuration { get; set; }
     public Uri InformationUri { get; set; }
 
