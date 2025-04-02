@@ -1,4 +1,4 @@
-namespace Angor.Wallet.Tests.Infrastructure;
+namespace Angor.Contexts.Wallet.Tests.Infrastructure;
 
 [CollectionDefinition("IntegrationTests")]
 public class IntegrationTestsCollection : ICollectionFixture<WalletAppServiceFixture>

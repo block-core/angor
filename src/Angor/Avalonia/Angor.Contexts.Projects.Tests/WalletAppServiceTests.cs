@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Xunit.Abstractions;
 
-namespace Angor.Projects.Tests;
+namespace Angor.Contexts.Projects.Tests;
 
 public class ProjectAppServiceTests(ITestOutputHelper output)
 {

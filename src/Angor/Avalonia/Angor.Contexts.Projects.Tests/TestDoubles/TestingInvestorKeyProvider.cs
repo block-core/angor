@@ -3,7 +3,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Projects.Tests;
+namespace Angor.Contexts.Projects.Tests;
 
 public class TestingInvestorKeyProvider : IInvestorKeyProvider
 {

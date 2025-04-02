@@ -1,6 +1,6 @@
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 
-namespace Angor.Wallet.Tests.Infrastructure;
+namespace Angor.Contexts.Wallet.Tests.Infrastructure;
 
 public class TestSecurityContext : IWalletSecurityContext
 {

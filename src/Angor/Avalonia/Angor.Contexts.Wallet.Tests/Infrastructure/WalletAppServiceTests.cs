@@ -1,7 +1,7 @@
 ﻿using Angor.Contexts.Wallet.Domain;
 using Xunit.Abstractions;
 
-namespace Angor.Wallet.Tests.Infrastructure;
+namespace Angor.Contexts.Wallet.Tests.Infrastructure;
 
 [Collection("IntegrationTests")]
 public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>

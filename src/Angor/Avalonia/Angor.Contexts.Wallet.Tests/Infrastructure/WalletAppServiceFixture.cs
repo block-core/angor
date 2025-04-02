@@ -6,10 +6,10 @@ using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
-using Angor.Wallet.Tests.Infrastructure.TestDoubles;
+using Angor.Contexts.Wallet.Tests.Infrastructure.TestDoubles;
 using Microsoft.Extensions.Logging;
 
-namespace Angor.Wallet.Tests.Infrastructure;
+namespace Angor.Contexts.Wallet.Tests.Infrastructure;
 
 public class WalletAppServiceFixture : IAsyncLifetime
 {
