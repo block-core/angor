@@ -10,7 +10,7 @@ public static class ProjectExtensions
     {
         return new Project
         {
-            Icon = dto.Icon,
+            Banner = dto.Banner,
             Id = dto.Id.ToString(),
             InformationUri = dto.InformationUri,
             Name = dto.Name,
@@ -19,7 +19,7 @@ public static class ProjectExtensions
             Picture = dto.Picture,
             ShortDescription = dto.ShortDescription,
             Stages = dto.Stages
-                .Select((stage, index) => new Stage()
+                .Select(stage => new Stage
                 {
                     Amount = stage.Amount,
                     Index = stage.Index,

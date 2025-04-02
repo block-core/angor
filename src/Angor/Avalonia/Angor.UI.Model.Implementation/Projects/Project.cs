@@ -5,7 +5,7 @@ public class Project : IProject
     public string Id { get; set; }
     public string Name { get; set; }
     public Uri Picture { get; set; }
-    public Uri Icon { get; set; }
+    public Uri Banner { get; set; }
     public string ShortDescription { get; set; }
     public string BitcoinAddress { get; set; }
     public decimal TargetAmount { get; set; }

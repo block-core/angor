@@ -42,7 +42,7 @@
                 <DataTemplate DataType="browse:IProjectViewModel">
                     <controls:Pane Margin="20" IsHeaderVisible="True" MaxHeight="600"
                             HeaderBackground="{Binding Project.Picture}"
-                            HeaderIcon="{Binding Project.Icon}"
+                            HeaderIcon="{Binding Project.Banner}"
                             Title="{Binding Project.Name}"
                             IsTitleVisible="True">
                         <controls:Pane.TitleIcon>

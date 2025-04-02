@@ -33,7 +33,7 @@ public static class ProjectMapper
                 ? null
                 : new Uri(data.NostrMetadata.Picture),
 
-            Icon = string.IsNullOrWhiteSpace(data.NostrMetadata.Banner)
+            Banner = string.IsNullOrWhiteSpace(data.NostrMetadata.Banner)
                 ? null
                 : new Uri(data.NostrMetadata.Banner),
 

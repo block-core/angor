@@ -8,7 +8,7 @@ public record ProjectDto
     public string Name { get; set; }
     public string ShortDescription { get; set; }
     public Uri? Picture { get; set; }
-    public Uri? Icon { get; set; }
+    public Uri? Banner { get; set; }
     public long TargetAmount { get; set; }
     public DateOnly StartingDate { get; set; }
     public TimeSpan PenaltyDuration { get; set; }

@@ -19,7 +19,7 @@
         <DataTemplate DataType="browse:IProjectViewModel">
             <Panel>
                 <DockPanel Background="Transparent">
-                    <asyncImageLoader:AdvancedImage MaxWidth="200" MaxHeight="200" Margin="10" Source="{Binding Project.Icon}" />
+                    <asyncImageLoader:AdvancedImage MaxWidth="200" MaxHeight="200" Margin="10" Source="{Binding Project.Banner}" />
                     <StackPanel Spacing="10" VerticalAlignment="Center" Margin="10">
                         <TextBlock Classes="SizeBig" TextWrapping="Wrap" Text="{Binding Project.Name}" TextTrimming="CharacterEllipsis" />
                         <TextBlock Classes="SizeNormal" MaxLines="3" TextWrapping="Wrap" Text="{Binding Project.ShortDescription}" TextTrimming="CharacterEllipsis" />
