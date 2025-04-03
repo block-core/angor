@@ -32,15 +32,8 @@
             <Setter Property="Height" Value="{StaticResource IconSize}" />
         </Style>
         <Style Selector="controls|Pane">
-            <Setter Property="Width" Value="{StaticResource CollapsedWidth}" />
+            <Setter Property="Width" Value="{StaticResource ExpandedWidth}" /> <!-- Always Expanded -->
             <Setter Property="Padding" Value="10" />
-            <Setter Property="Transitions">
-                <Setter.Value>
-                    <Transitions>
-                        <DoubleTransition Property="Width" Duration="{StaticResource ExpandToggleDuration}" />
-                    </Transitions>
-                </Setter.Value>
-            </Setter>
         </Style>
         <Style Selector="controls|Pane TextBlock">
             <Setter Property="Opacity" Value="0" />
@@ -51,12 +44,7 @@
                 </Transitions>
             </Setter>
         </Style>
-        <Style Selector="controls|Pane:pointerover">
-            <Setter Property="Width" Value="{StaticResource ExpandedWidth}" />
-        </Style>
-        <Style Selector="controls|Pane:pointerover TextBlock">
-            <Setter Property="Opacity" Value="1" />
-        </Style>
+        <!-- Removed auto-expand on hover -->
     </UserControl.Styles>
 
     <controls:Pane>
