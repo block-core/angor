@@ -10,6 +10,7 @@ public interface IWalletOperations
     string GenerateWalletWords();
     Task<OperationResult<Transaction>> SendAmountToAddress(WalletWords walletWords, SendInfo sendInfo);
     AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords);
+    AccountInfo BuildAccountInfoForExtPubKey(string extPubKey);
     Task UpdateDataForExistingAddressesAsync(AccountInfo accountInfo);
     Task UpdateAccountInfoWithNewAddressesAsync(AccountInfo accountInfo);
     Task<(string address, List<UtxoData> data)> FetchUtxoForAddressAsync(string adddress);
