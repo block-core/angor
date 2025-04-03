@@ -25,13 +25,13 @@
 @inject ISignService SignService
 @inject ICurrencyService _currencyService
 @inject NavMenuState NavMenuState
-
+@inject IJSRuntime JS
+@inject NostrConversionHelper NostrHelper
 
 @inherits BaseComponent
 
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
-
 
 @if (!hasWallet)
 {
@@ -62,11 +62,14 @@
                         <span class="button-text ms-2">Refresh</span>
                     }
                 </button>
+                <button class="btn btn-border-success ms-2" @onclick="ShowChatModal" title="Chat">
+                    <Icon IconName="chat" Width="24" Height="24" />
+                    <span class="button-text ms-2">Chat</span>
+                </button>
             </div>
         </div>
     </div>
 </div>
-
 
 <div class="row slide-in mt-4">
     <div class="card card-body">
@@ -75,7 +78,6 @@
         </p>
     </div>
 </div>
-
 
 <div class="slide-in mt-4">
     @if (firstTimeRefreshSpinner && refreshSpinner)
@@ -155,8 +157,6 @@
                         </div>
                     </div>
                 </div>
-
-
             </div>
 
             @if (StageInfo.CanRelease)
@@ -181,7 +181,7 @@
             @if (releaseSigsfound)
             {
                 <div class="d-flex justify-content-between mt-4">
-                    <button class="btn btn-border me-2 btn-border-warning" @onclick="NavigatetoReleaseSigs">Target not met go to Release Funds</button>
+                    <button class="btn btn-border-warning me-2 btn-border-warning" @onclick="NavigatetoReleaseSigs">Target not met go to Release Funds</button>
                 </div>
             }
             else
@@ -243,8 +243,6 @@
 
                 </div>
             }
-
-
 
             @if (StageInfo.Items.Count() > 0)
             {
@@ -533,9 +531,88 @@
                 </div>
             </div>
         }
+
+        @if (showChatModal)
+        {
+            <div class="modal-wrapper">
+                <div class="modal fade show d-block" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content modern-modal animate-fade-in">
+                            <div class="modal-header border-0 pb-0">
+                                <div class="d-flex align-items-center">
+                                    <Icon IconName="message" Height="32" Width="32" class="me-2" />
+                                    <h5 class="modal-title">Chat Options</h5>
+                                </div>
+                                <button class="btn-close-custom" @onclick="() => showChatModal = false">
+                                    <Icon IconName="close-circle" Height="24" Width="24" />
+                                </button>
+                            </div>
+
+                            <div class="modal-body py-4">
+                                <div class="d-flex flex-column gap-3">
+                                    <div class="info-card p-3 mt-2 animate-fade-in">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="info-label mb-2">Investor NPUB:</div>
+                                            <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(npubValue)">
+                                                <Icon IconName="copy" Width="16" Height="16" />
+                                            </button>
+                                        </div>
+                                        <div class="info-value text-break word-wrap">
+                                            @npubValue
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="info-card p-3 mt-2 animate-fade-in">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="info-label mb-2">Founder NPUB:</div>
+                                            <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(founderNpub)">
+                                                <Icon IconName="copy" Width="16" Height="16" />
+                                            </button>
+                                        </div>
+                                        <div class="info-value text-break word-wrap">
+                                            @founderNpub
+                                        </div>
+                                    </div>
+
+                                    <button type="button" class="btn btn-border-success w-100" @onclick="OpenChatApp">
+                                        <Icon IconName="message" Width="20" Height="20" class="me-2" />
+                                        <span>Open Chat App</span>
+                                    </button>
+                                    
+                                    <button type="button" class="btn btn-border-warning w-100" @onclick="ShowNsecAndCheckPassword">
+                                        <Icon IconName="key" Width="20" Height="20" class="me-2" />
+                                        <span>Show NSEC</span>
+                                    </button>
+                                    
+                                    @if (showNsec)
+                                    {
+                                        <div class="info-card p-3 mt-2 animate-fade-in">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="info-label mb-2">NSEC:</div>
+                                                <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(nsecValue)">
+                                                    <Icon IconName="copy" Width="16" Height="16" />
+                                                </button>
+                                            </div>
+                                            <div class="info-value text-break word-wrap">
+                                                @nsecValue
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="modal-footer border-0 pt-0">
+                                <button type="button" class="btn btn-border-warning" @onclick="() => showChatModal = false">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
     }
 </div>
-
 
 @code {
     [Parameter] public string ProjectIdentifier { get; set; }
@@ -544,6 +621,11 @@
     private bool showRecoveryModal = false;
     private bool showRecoveryReleaseModal = false;
     private bool showEndOfProjectModal = false;
+    private bool showChatModal = false;
+    private bool showNsec = false;
+    private string nsecValue = "";
+    private string npubValue = "";
+    private string founderNpub = "";
 
     private bool refreshSpinner = false;
     private bool firstTimeRefreshSpinner = false;
@@ -958,7 +1040,7 @@
 
             if (!response.Success)
             {
-                notificationComponent.ShowErrorMessage(response.Message);
+                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
                 return;
             }
 
@@ -1106,7 +1188,7 @@
 
             if (!response.Success)
             {
-                notificationComponent.ShowErrorMessage(response.Message);
+                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
                 return;
             }
 
@@ -1244,7 +1326,7 @@
 
             if (!response.Success)
             {
-                notificationComponent.ShowErrorMessage(response.Message);
+                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
                 return;
             }
 
@@ -1272,5 +1354,82 @@
     private void NavigatetoReleaseSigs()
     {
         NavigationManager.NavigateTo($"/release/{ProjectIdentifier}");
+    }
+
+    private void ShowChatModal()
+    {
+        showChatModal = true;
+        showNsec = false;
+
+        // Set npub based on the project or recovery information
+        if (project != null)
+        {
+            var investorProject = project as InvestorProject;
+            npubValue = NostrHelper.ConvertHexToNpub(investorProject?.InvestorNPub ?? "") ?? investorProject?.InvestorNPub ?? "";
+
+            founderNpub = NostrHelper.ConvertHexToNpub(investorProject.ProjectInfo.NostrPubKey) ??
+                          investorProject.ProjectInfo.NostrPubKey;
+        }
+
+        StateHasChanged();
+    }
+
+    private void ShowNsecAndCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            showChatModal = false;
+            passwordComponent.ShowPassword(RetrieveAndShowNsec);
+        }
+        else
+        {
+            RetrieveAndShowNsec();
+        }
+    }
+
+    private async Task RetrieveAndShowNsec()
+    {
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+
+            if (project != null)
+            {
+                var privateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
+                var nostrHexSecKey = Encoders.Hex.EncodeData(privateKey.ToBytes());
+                nsecValue = NostrHelper.ConvertHexToNsec(nostrHexSecKey)!;
+                showChatModal = true;
+                showNsec = true;
+                StateHasChanged();
+            }
+            else
+            {
+                notificationComponent.ShowErrorMessage("Project information not available");
+            }
+        }
+        catch (Exception e)
+        {
+            notificationComponent.ShowErrorMessage("Failed to retrieve NSEC: " + e.Message);
+        }
+    }
+
+    private async void OpenChatApp()
+    {
+        if (!string.IsNullOrEmpty(npubValue))
+        {
+            var primaryChatApp = _NetworkService.GetPrimaryChatApp();
+            var url = $"{primaryChatApp.Url}/{founderNpub}";
+            await JS.InvokeVoidAsync("window.open", url, "_blank");
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage("NPUB information not available");
+        }
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
     }
 }

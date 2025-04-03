@@ -10,6 +10,8 @@ public interface INetworkService
     SettingsUrl GetPrimaryExplorer();
     SettingsUrl GetPrimaryRelay();
     List<SettingsUrl> GetRelays();
+    SettingsUrl GetPrimaryChatApp();
+
     void CheckAndHandleError(HttpResponseMessage httpResponseMessage);
     void HandleException(Exception exception);
     void CheckAndSetNetwork(string url, string? setNetwork = null);
