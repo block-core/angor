@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Investor.CreateInvestment;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Investor.Requests.CreateInvestment;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -8,5 +9,6 @@ namespace Angor.Contexts.Funding.Investor;
 public interface IInvestmentAppService
 {
     Task<Result<IEnumerable<InvestmentDto>>> GetInvestments(ProjectId projectId);
-    Task<Result<PendingInvestment>> CreateInvestmentTransaction(Guid walletId, ProjectId projectId, Amount amount);
+    Task<Result<InvestmentTransaction>> CreateInvestmentTransaction(Guid walletId, ProjectId projectId, Amount amount);
+    Task<Result<FounderSignature>> RequestFounderSignatures(ProjectId projectId, InvestmentTransaction investmentTransaction);
 }

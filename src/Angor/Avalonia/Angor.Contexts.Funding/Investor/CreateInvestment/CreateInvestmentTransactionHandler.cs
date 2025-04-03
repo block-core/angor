@@ -1,5 +1,6 @@
 using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Investor.Requests.CreateInvestment;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Shared;
@@ -11,10 +12,11 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
+using SignRecoveryRequest = Angor.Contexts.Funding.Investor.Requests.CreateInvestment.SignRecoveryRequest;
 
-namespace Angor.Contexts.Funding.Investor.Requests.CreateInvestment;
+namespace Angor.Contexts.Funding.Investor.CreateInvestment;
 
-public class CreateInvestmentHandler(
+public class CreateInvestmentTransactionHandler(
     IProjectRepository projectRepository,
     IInvestorTransactionActions investorTransactionActions,
     ISeedwordsProvider seedwordsProvider,
@@ -22,60 +24,70 @@ public class CreateInvestmentHandler(
     IDerivationOperations derivationOperations,
     IEncryptionService encryptionService,
     ISerializer serializer,
-    IRelayService relayService) : IRequestHandler<CreateInvestmentRequest, Result<PendingInvestment>>
+    IRelayService relayService) : IRequestHandler<CreateInvestmentTransactionRequest, Result<InvestmentTransaction>>
 {
-    public async Task<Result<PendingInvestment>> Handle(CreateInvestmentRequest request, CancellationToken cancellationToken)
+    public async Task<Result<InvestmentTransaction>> Handle(CreateInvestmentTransactionRequest transactionRequest, CancellationToken cancellationToken)
     {
         try
         {
             // Get the project and investor key
-            var projectResult = await projectRepository.Get(request.ProjectId);
+            var projectResult = await projectRepository.Get(transactionRequest.ProjectId);
             if (projectResult.IsFailure)
-                return Result.Failure<PendingInvestment>(projectResult.Error);
+            {
+                return Result.Failure<InvestmentTransaction>(projectResult.Error);
+            }
 
-            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId);
+            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(transactionRequest.WalletId);
 
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
 
             var investorKey = derivationOperations.DeriveInvestorKey(walletWords, projectResult.Value.FounderKey);
 
             if (sensitiveDataResult.IsFailure)
-                return Result.Failure<PendingInvestment>(sensitiveDataResult.Error);
+            {
+                return Result.Failure<InvestmentTransaction>(sensitiveDataResult.Error);
+            }
 
             var transactionResult = Result.Try(() => investorTransactionActions.CreateInvestmentTransaction(
                 projectResult.Value.ToSharedModel(),
                 investorKey,
-                request.Amount.Sats));
+                transactionRequest.Amount.Sats));
 
             if (transactionResult.IsFailure)
-                return Result.Failure<PendingInvestment>(transactionResult.Error);
+                return Result.Failure<InvestmentTransaction>(transactionResult.Error);
 
             var signedTxResult = await SignTransaction(walletWords, transactionResult.Value);
             if (signedTxResult.IsFailure)
             {
-                return Result.Failure<PendingInvestment>(signedTxResult.Error);
+                return Result.Failure<InvestmentTransaction>(signedTxResult.Error);
             }
 
-            var requestResult = await SendSignatureRequest(
-                walletWords,
-                projectResult.Value,
-                signedTxResult.Value);
+            var signedTxHex = signedTxResult.Value.Transaction.ToHex();
+            return new InvestmentTransaction(investorKey, signedTxHex, signedTxResult.Value.Transaction.GetHash().ToString());
 
-            if (requestResult.IsFailure)
-                return Result.Failure<PendingInvestment>(requestResult.Error);
-
-            var pendingInvestment = new PendingInvestment(
-                projectResult.Value.Id,
-                investorKey,
-                request.Amount,
-                signedTxResult.Value.Transaction.GetHash().ToString(),
-                signedTxResult.Value.Transaction.ToHex());
-
-            return Result.Success(pendingInvestment);
+            //var transaction = transactionResult.Value;
+            // var strippedInvestmentTransaction = network.CreateTransaction(investorProject.SignedTransactionHex);
+            // strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
+            // var requestResult = await SendSignatureRequest(
+            //     walletWords,
+            //     projectResult.Value,
+            //     signedTxResult.Value);
+            //
+            // if (requestResult.IsFailure)
+            //     return Result.Failure<PendingInvestment>(requestResult.Error);
+            //
+            // var pendingInvestment = new PendingInvestment(
+            //     projectResult.Value.Id,
+            //     investorKey,
+            //     request.Amount,
+            //     signedTxResult.Value.Transaction.GetHash().ToString(),
+            //     signedTxResult.Value.Transaction.ToHex());
+            //
+            // return Result.Success(pendingInvestment);
         }
         catch (Exception ex)
         {
-            return Result.Failure<PendingInvestment>($"Error creating investment transaction: {ex.Message}");
+            return Result.Failure<InvestmentTransaction>($"Error creating investment transaction: {ex.Message}");
         }
     }
 
@@ -112,6 +124,7 @@ public class CreateInvestmentHandler(
         return signedTransactionResult;
     }
 
+    // TODO: Let's move it later to another API method
     private async Task<Result> SendSignatureRequest(WalletWords walletWords, Project project, TransactionInfo signedTransaction)
     {
         try

@@ -1,6 +1,7 @@
 ﻿using Angor.Client;
 using Angor.Client.Services;
 using Angor.Contexts.Funding.Investor;
+using Angor.Contexts.Funding.Investor.CreateInvestment;
 using Angor.Contexts.Funding.Investor.Requests.CreateInvestment;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -31,7 +32,7 @@ public class FundingContext
         services.AddSingleton<IInvestmentRepository, InvestmentRepository>();
         services.AddSingleton<IProjectRepository, ProjectRepository>();
         services.AddSingleton<ISignatureRequestService, NostrSignatureRequestService>();
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateInvestmentHandler).Assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateInvestmentTransactionHandler).Assembly));
         
         services.TryAddSingleton<ISerializer, Serializer>();
         services.TryAddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
