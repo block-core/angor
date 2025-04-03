@@ -2,7 +2,7 @@ using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Funding.Investment.Commands.CreateInvestment;
+namespace Angor.Contexts.Funding;
 
 public interface ISignatureRequestService
 {

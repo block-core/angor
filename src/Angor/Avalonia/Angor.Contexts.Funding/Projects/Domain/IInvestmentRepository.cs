@@ -1,5 +1,5 @@
-using Angor.Contexts.Funding.Investment.Commands.CreateInvestment;
-using Angor.Contexts.Funding.Investment.Dtos;
+using Angor.Contexts.Funding.Investor.Dtos;
+using Angor.Contexts.Funding.Investor.Requests.CreateInvestment;
 using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Funding.Projects.Domain;

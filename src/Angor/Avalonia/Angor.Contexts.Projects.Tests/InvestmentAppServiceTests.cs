@@ -1,5 +1,5 @@
 using Angor.Contexts.Funding;
-using Angor.Contexts.Funding.Investment;
+using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure;
 using Angor.Contexts.Projects.Tests.TestDoubles;

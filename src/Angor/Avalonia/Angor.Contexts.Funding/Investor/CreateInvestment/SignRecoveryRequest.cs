@@ -1,4 +1,4 @@
-namespace Angor.Contexts.Funding.Investment.Commands.CreateInvestment;
+namespace Angor.Contexts.Funding.Investor.Requests.CreateInvestment;
 
 public class SignRecoveryRequest
 {

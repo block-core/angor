@@ -1,8 +1,8 @@
 using Angor.Client.Models;
 using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
-using Angor.Contexts.Funding.Investment.Commands.CreateInvestment;
-using Angor.Contexts.Funding.Investment.Dtos;
+using Angor.Contexts.Funding.Investor.Dtos;
+using Angor.Contexts.Funding.Investor.Requests.CreateInvestment;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Shared;
 using Angor.Shared.Services;
@@ -69,7 +69,7 @@ public class InvestmentRepository(
         {
             ProjectId = projectId,
             InvestorKey = inv.InvestorPubKey,
-            Amount = inv.AmountInSatoshis,
+            AmountInSats = inv.Amount.Sats,
             TransactionId = inv.TransactionId
         }));
     }
@@ -106,6 +106,6 @@ public class InvestmentRepository(
     private Task<Result<IEnumerable<Domain.Investment>>> GetProjectInvestments(ProjectId projectId)
     {
         return Result.Try(() => indexerService.GetInvestmentsAsync(projectId.Value))
-            .Map(investments => investments.Select(inv => Domain.Investment.Create(projectId, inv.InvestorPublicKey, inv.TotalAmount, inv.TransactionId)));
+            .Map(investments => investments.Select(inv => Domain.Investment.Create(projectId, inv.InvestorPublicKey, new Amount(inv.TotalAmount), inv.TransactionId)));
     }
 }

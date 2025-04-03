@@ -1,6 +1,5 @@
 using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
-using Angor.Contexts.Funding.Investment.Commands.CreateInvestment;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Shared;
@@ -11,11 +10,11 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
-using SignRecoveryRequest = Angor.Contexts.Funding.Investment.Commands.CreateInvestment.SignRecoveryRequest;
+using MediatR;
 
 namespace Angor.Contexts.Funding.Investor.Requests.CreateInvestment;
 
-public class CreateInvestmentTransactionRequest(
+public class CreateInvestmentHandler(
     IProjectRepository projectRepository,
     IInvestorTransactionActions investorTransactionActions,
     ISeedwordsProvider seedwordsProvider,
@@ -23,18 +22,18 @@ public class CreateInvestmentTransactionRequest(
     IDerivationOperations derivationOperations,
     IEncryptionService encryptionService,
     ISerializer serializer,
-    IRelayService relayService)
+    IRelayService relayService) : IRequestHandler<CreateInvestmentRequest, Result<PendingInvestment>>
 {
-    public async Task<Result<PendingInvestment>> Execute(Guid walletId, ProjectId projectId, Amount amount)
+    public async Task<Result<PendingInvestment>> Handle(CreateInvestmentRequest request, CancellationToken cancellationToken)
     {
         try
         {
             // Get the project and investor key
-            var projectResult = await projectRepository.Get(projectId);
+            var projectResult = await projectRepository.Get(request.ProjectId);
             if (projectResult.IsFailure)
                 return Result.Failure<PendingInvestment>(projectResult.Error);
 
-            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
+            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId);
 
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
 
@@ -46,7 +45,7 @@ public class CreateInvestmentTransactionRequest(
             var transactionResult = Result.Try(() => investorTransactionActions.CreateInvestmentTransaction(
                 projectResult.Value.ToSharedModel(),
                 investorKey,
-                amount.Sats));
+                request.Amount.Sats));
 
             if (transactionResult.IsFailure)
                 return Result.Failure<PendingInvestment>(transactionResult.Error);
@@ -65,11 +64,10 @@ public class CreateInvestmentTransactionRequest(
             if (requestResult.IsFailure)
                 return Result.Failure<PendingInvestment>(requestResult.Error);
 
-
             var pendingInvestment = new PendingInvestment(
                 projectResult.Value.Id,
                 investorKey,
-                amount.Sats,
+                request.Amount,
                 signedTxResult.Value.Transaction.GetHash().ToString(),
                 signedTxResult.Value.Transaction.ToHex());
 

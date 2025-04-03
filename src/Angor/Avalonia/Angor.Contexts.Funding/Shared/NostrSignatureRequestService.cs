@@ -1,6 +1,5 @@
 using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
-using Angor.Contexts.Funding.Investment.Commands.CreateInvestment;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -8,7 +7,7 @@ using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
-using SignRecoveryRequest = Angor.Contexts.Funding.Investment.Commands.CreateInvestment.SignRecoveryRequest;
+using SignRecoveryRequest = Angor.Contexts.Funding.Investor.Requests.CreateInvestment.SignRecoveryRequest;
 
 namespace Angor.Contexts.Funding;
 

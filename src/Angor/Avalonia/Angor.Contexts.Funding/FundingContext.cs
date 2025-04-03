@@ -1,7 +1,5 @@
 ﻿using Angor.Client;
 using Angor.Client.Services;
-using Angor.Contexts.Funding.Investment;
-using Angor.Contexts.Funding.Investment.Commands.CreateInvestment;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Requests.CreateInvestment;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -19,7 +17,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 using EncryptionService = Angor.Contexts.Funding.Projects.Infrastructure.Impl.EncryptionService;
 
-namespace Angor.Contexts.Funding.Projects.Infrastructure;
+namespace Angor.Contexts.Funding;
 
 public class FundingContext
 {
@@ -33,7 +31,7 @@ public class FundingContext
         services.AddSingleton<IInvestmentRepository, InvestmentRepository>();
         services.AddSingleton<IProjectRepository, ProjectRepository>();
         services.AddSingleton<ISignatureRequestService, NostrSignatureRequestService>();
-        services.AddSingleton<CreateInvestmentTransactionRequest>();
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateInvestmentHandler).Assembly));
         
         services.TryAddSingleton<ISerializer, Serializer>();
         services.TryAddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();

@@ -22,7 +22,7 @@
                             <MultiBinding StringFormat="Stage {0}: invest {1} sats that will be released on {2:d}">
                                 <Binding Path="Index" />
                                 <MultiBinding Converter="{x:Static controls:MathConverters.Evaluate}" ConverterParameter="{}{0}*{1}">
-                                    <ReflectionBinding Path="$parent[amount:StagesBreakdown].DataContext.Amount" />
+                                    <ReflectionBinding Path="$parent[amount:StagesBreakdown].DataContext.AmountInSats" />
                                     <Binding Path="Weight" />
                                 </MultiBinding>
                                 <Binding Path="ReleaseDate" />

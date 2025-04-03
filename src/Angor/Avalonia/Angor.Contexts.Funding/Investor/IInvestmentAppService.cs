@@ -1,9 +1,9 @@
-using Angor.Contexts.Funding.Investment.Commands.CreateInvestment;
-using Angor.Contexts.Funding.Investment.Dtos;
+using Angor.Contexts.Funding.Investor.Dtos;
+using Angor.Contexts.Funding.Investor.Requests.CreateInvestment;
 using Angor.Contexts.Funding.Projects.Domain;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Funding.Investment;
+namespace Angor.Contexts.Funding.Investor;
 
 public interface IInvestmentAppService
 {

@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="CSharpFunctionalExtensions" />
+    <PackageReference Include="MediatR" />
     <PackageReference Include="Zafiro" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Serilog" />
