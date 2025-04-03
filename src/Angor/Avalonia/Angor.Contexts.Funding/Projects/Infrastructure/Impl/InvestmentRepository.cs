@@ -22,10 +22,10 @@ public class InvestmentRepository(
 {
     public async Task<Result> Add(Guid walletId, Domain.Investment newInvestment)
     {
-        // Obtener todas las inversiones confirmadas existentes
+        // Get all confirmed investments
         var confirmedInvestments = await GetAllConfirmedInvestments();
 
-        // Agregar la nueva inversión si no existe ya
+        // Add the new investment if it doesn't already exist
         if (!confirmedInvestments.Any(x => x.ProjectId.Value == newInvestment.ProjectId.Value
                                            && x.InvestorPubKey == newInvestment.InvestorPubKey))
         {
@@ -38,10 +38,10 @@ public class InvestmentRepository(
             InvestorPubKey = inv.InvestorPubKey,
             InvestmentTransactionHash = inv.TransactionId
         }).ToList();
-        
+
         var investments = new Investments { ProjectIdentifiers = investmentStates };
 
-        // Encriptar y enviar todo junto a Nostr
+        // Encrypt and send the investments
         var sensiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
         if (sensiveDataResult.IsFailure)
         {
@@ -57,10 +57,7 @@ public class InvestmentRepository(
         var encrypted = await encryptionService.EncryptData(serializer.Serialize(investments), password);
 
         var tcs = new TaskCompletionSource<bool>();
-        relayService.SendDirectMessagesForPubKeyAsync(storageKeyHex, storageAccountKey, encrypted, result =>
-        {
-            tcs.SetResult(result.Accepted);
-        });
+        relayService.SendDirectMessagesForPubKeyAsync(storageKeyHex, storageAccountKey, encrypted, result => { tcs.SetResult(result.Accepted); });
 
         var success = await tcs.Task;
         return success ? Result.Success() : Result.Failure("Error adding investment");

@@ -24,4 +24,19 @@
     <Folder Include="Projects\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Investor\Commands\FinalizeInvestment\**" />
+    <Compile Remove="Investor\Commands\ProcessFounderSignatures\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="Investor\Commands\FinalizeInvestment\**" />
+    <EmbeddedResource Remove="Investor\Commands\ProcessFounderSignatures\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Investor\Commands\FinalizeInvestment\**" />
+    <None Remove="Investor\Commands\ProcessFounderSignatures\**" />
+  </ItemGroup>
+
 </Project>
