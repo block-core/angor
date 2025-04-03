@@ -64,26 +64,6 @@ public class CreateInvestmentTransactionHandler(
 
             var signedTxHex = signedTxResult.Value.Transaction.ToHex();
             return new InvestmentTransaction(investorKey, signedTxHex, signedTxResult.Value.Transaction.GetHash().ToString());
-
-            //var transaction = transactionResult.Value;
-            // var strippedInvestmentTransaction = network.CreateTransaction(investorProject.SignedTransactionHex);
-            // strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
-            // var requestResult = await SendSignatureRequest(
-            //     walletWords,
-            //     projectResult.Value,
-            //     signedTxResult.Value);
-            //
-            // if (requestResult.IsFailure)
-            //     return Result.Failure<PendingInvestment>(requestResult.Error);
-            //
-            // var pendingInvestment = new PendingInvestment(
-            //     projectResult.Value.Id,
-            //     investorKey,
-            //     request.Amount,
-            //     signedTxResult.Value.Transaction.GetHash().ToString(),
-            //     signedTxResult.Value.Transaction.ToHex());
-            //
-            // return Result.Success(pendingInvestment);
         }
         catch (Exception ex)
         {

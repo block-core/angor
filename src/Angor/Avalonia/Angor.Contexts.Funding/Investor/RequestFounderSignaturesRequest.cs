@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Angor.Contexts.Funding.Investor;
 
-public class RequestFounderSignaturesRequest(ProjectId projectId, InvestmentTransaction investmentTransaction) : IRequest<Result<FounderSignature>>
+public class RequestFounderSignaturesRequest(ProjectId projectId, InvestmentTransaction investmentTransaction) : IRequest<Result<Guid>>
 {
     public ProjectId ProjectId { get; } = projectId;
     public InvestmentTransaction InvestmentTransaction { get; } = investmentTransaction;

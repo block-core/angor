@@ -4,7 +4,6 @@ using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Angor.Shared.ProtocolNew;
 using Angor.Shared.Services;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
@@ -17,75 +16,60 @@ namespace Angor.Contexts.Funding.Investor.CreateInvestment;
 
 public class RequestFounderSignaturesHandler(
     IProjectRepository projectRepository,
-    IInvestorTransactionActions investorTransactionActions,
     ISeedwordsProvider seedwordsProvider,
-    IWalletOperations walletOperations,
     IDerivationOperations derivationOperations,
     IEncryptionService encryptionService,
+    INetworkConfiguration networkConfiguration,
     ISerializer serializer,
-    IRelayService relayService) : IRequestHandler<RequestFounderSignaturesRequest, Result<FounderSignature>>
+    IRelayService relayService) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
 {
-    public async Task<Result<FounderSignature>> Handle(RequestFounderSignaturesRequest requestFounderSignaturesRequest, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(RequestFounderSignaturesRequest requestFounderSignaturesRequest, CancellationToken cancellationToken)
     {
         var txnHex = requestFounderSignaturesRequest.InvestmentTransaction.SignedTxHex;
+        var network = networkConfiguration.GetNetwork();
+        var strippedInvestmentTransaction = network.CreateTransaction(txnHex);
+        strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = WitScript.Empty);
+        
+        var projectResult = await projectRepository.Get(requestFounderSignaturesRequest.ProjectId);
+        
+        if (projectResult.IsFailure)
+        {
+            return Result.Failure<Guid>(projectResult.Error);
+        }
+        
+        var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(Guid.Empty);
+        
+        if (sensitiveDataResult.IsFailure)
+        {
+            return Result.Failure<Guid>(sensitiveDataResult.Error);
+        }
 
-        //var transaction = transactionResult.Value;
-        // var strippedInvestmentTransaction = network.CreateTransaction(investorProject.SignedTransactionHex);
-        // strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
-        // var requestResult = await SendSignatureRequest(
-        //     walletWords,
-        //     projectResult.Value,
-        //     signedTxResult.Value);
-        //
-        // if (requestResult.IsFailure)
-        //     return Result.Failure<PendingInvestment>(requestResult.Error);
-        //
-        // var pendingInvestment = new PendingInvestment(
-        //     projectResult.Value.Id,
-        //     investorKey,
-        //     request.Amount,
-        //     signedTxResult.Value.Transaction.GetHash().ToString(),
-        //     signedTxResult.Value.Transaction.ToHex());
-        //
-        // return Result.Success(pendingInvestment);
+        var walletWords = sensitiveDataResult.Value.ToWalletWords();
+        var project = projectResult.Value;
+        
+        var sendSignatureResult = await SendSignatureRequest(walletWords, project, strippedInvestmentTransaction.ToHex());
+        
+        var requestId = sendSignatureResult.Value;
+
+        if (sendSignatureResult.IsFailure)
+        {
+            return Result.Failure<Guid>(sendSignatureResult.Error);
+        }
+
+        // TODO: Don't forget to uncomment. We really need to save info
+        //var saveResult = await Save(requestId, txnHex, requestFounderSignaturesRequest.InvestmentTransaction.InvestorKey, requestFounderSignaturesRequest.ProjectId);
+        
+        //return saveResult;
+        return Result.Success(Guid.Empty);
+    }
+
+    private async Task<Result<Guid>> Save(string requestId, string transactionHex, string investorKey, ProjectId projectId)
+    {
+        // TODO: Implement the save logic
         throw new NotImplementedException();
     }
 
-    private async Task<Result<TransactionInfo>> SignTransaction(WalletWords walletWords, Transaction transaction)
-    {
-        var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
-        await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
-
-        var changeAddressResult = Result.Try(() => accountInfo.GetNextChangeReceiveAddress())
-            .Ensure(s => !string.IsNullOrEmpty(s), "Change address cannot be empty");
-
-        if (changeAddressResult.IsFailure)
-        {
-            return Result.Failure<TransactionInfo>(changeAddressResult.Error);
-        }
-
-        var changeAddress = changeAddressResult.Value!;
-
-        var feeEstimationResult = await Result.Try(walletOperations.GetFeeEstimationAsync);
-        if (feeEstimationResult.IsFailure)
-        {
-            return Result.Failure<TransactionInfo>("Error getting fee estimation");
-        }
-
-        var feerate = feeEstimationResult.Value.FirstOrDefault()?.FeeRate ?? 1;
-
-        var signedTransactionResult = Result.Try(() => walletOperations.AddInputsAndSignTransaction(
-            changeAddress,
-            transaction,
-            walletWords,
-            accountInfo,
-            feerate));
-
-        return signedTransactionResult;
-    }
-
-    // TODO: Let's move it later to another API method
-    private async Task<Result> SendSignatureRequest(WalletWords walletWords, Project project, TransactionInfo signedTransaction)
+    private async Task<Result<string>> SendSignatureRequest(WalletWords walletWords, Project project, string signedTransactionHex)
     {
         try
         {
@@ -97,7 +81,7 @@ public class RequestFounderSignaturesHandler(
             var signRequest = new SignRecoveryRequest
             {
                 ProjectIdentifier = project.Id.Value,
-                TransactionHex = signedTransaction.Transaction.ToHex()
+                TransactionHex = signedTransactionHex
             };
 
             var serialized = serializer.Serialize(signRequest);
@@ -109,25 +93,25 @@ public class RequestFounderSignaturesHandler(
 
             var tcs = new TaskCompletionSource<(bool Success, string Message)>();
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
-            // Registrar la cancelación para completar el TCS si hay timeout
+            
             cts.Token.Register(() =>
-                    tcs.TrySetResult((false, "Timeout al esperar respuesta del relay")),
+                    tcs.TrySetResult((false, "Timeout while waiting the response from the relay")),
                 useSynchronizationContext: false);
 
-            relayService.SendDirectMessagesForPubKeyAsync(
+            var eventId = relayService.SendDirectMessagesForPubKeyAsync(
                 senderPrivateKeyHex,
                 nostrPubKey,
                 encryptedContent,
-                response => { tcs.TrySetResult((response.Accepted, response.Message ?? "Sin mensaje")); });
+                response => { tcs.TrySetResult((response.Accepted, response.Message ?? "No message")); });
 
             var result = await tcs.Task;
             return result.Success
-                ? Result.Success()
-                : Result.Failure($"Error del relay: {result.Message}");
+                ? Result.Success(eventId)
+                : Result.Failure<string>($"Relay error: {result.Message}");
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error al enviar solicitud de firma: {ex.Message}");
+            return Result.Failure<string>($"Error while sending the signature request {ex.Message}");
         }
     }
 }

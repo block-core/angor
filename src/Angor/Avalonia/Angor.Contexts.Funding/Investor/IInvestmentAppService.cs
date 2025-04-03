@@ -10,5 +10,5 @@ public interface IInvestmentAppService
 {
     Task<Result<IEnumerable<InvestmentDto>>> GetInvestments(ProjectId projectId);
     Task<Result<InvestmentTransaction>> CreateInvestmentTransaction(Guid walletId, ProjectId projectId, Amount amount);
-    Task<Result<FounderSignature>> RequestFounderSignatures(ProjectId projectId, InvestmentTransaction investmentTransaction);
+    Task<Result<Guid>> RequestFounderSignatures(ProjectId projectId, InvestmentTransaction investmentTransaction);
 }
