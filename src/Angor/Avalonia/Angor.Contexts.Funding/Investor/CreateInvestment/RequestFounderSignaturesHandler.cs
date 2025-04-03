@@ -1,7 +1,6 @@
 using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
-using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
@@ -49,17 +48,15 @@ public class RequestFounderSignaturesHandler(
         
         var sendSignatureResult = await SendSignatureRequest(walletWords, project, strippedInvestmentTransaction.ToHex());
         
-        var requestId = sendSignatureResult.Value;
-
         if (sendSignatureResult.IsFailure)
         {
             return Result.Failure<Guid>(sendSignatureResult.Error);
         }
 
+        var requestId = sendSignatureResult.Value;
         // TODO: Don't forget to uncomment. We really need to save info
         //var saveResult = await Save(requestId, txnHex, requestFounderSignaturesRequest.InvestmentTransaction.InvestorKey, requestFounderSignaturesRequest.ProjectId);
-        
-        //return saveResult;
+        //return saveResult.Value;
         return Result.Success(Guid.Empty);
     }
 
@@ -90,7 +87,7 @@ public class RequestFounderSignaturesHandler(
                 senderPrivateKeyHex,
                 nostrPubKey,
                 serialized);
-
+            
             var tcs = new TaskCompletionSource<(bool Success, string Message)>();
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
             
