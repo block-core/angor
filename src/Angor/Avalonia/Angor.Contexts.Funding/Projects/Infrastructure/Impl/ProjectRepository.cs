@@ -26,7 +26,7 @@ public class ProjectRepository(
     public async Task<Result<Project>> FindById(ProjectId projectId)
     {
         var project = (await indexerService.GetProjectByIdAsync(projectId.Value)).AsMaybe();
-        return await project.Map(async data => await ProjectsFrom(new[] { data }.ToObservable()).FirstAsync()).ToResult("Not Found");
+        return await project.Map(async data => await ProjectsFrom(new[] { data }.ToObservable()).FirstAsync()).ToResult($"Project {projectId} not Found");
     }
 
     private IObservable<Project> ProjectsFrom(IObservable<ProjectIndexerData> projectIndexerDatas)

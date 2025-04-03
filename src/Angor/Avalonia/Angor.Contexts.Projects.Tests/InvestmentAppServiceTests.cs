@@ -1,10 +1,8 @@
 using Angor.Contexts.Funding;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
-using Angor.Contexts.Funding.Projects.Infrastructure;
 using Angor.Contexts.Projects.Tests.TestDoubles;
 using Angor.Shared;
-using CSharpFunctionalExtensions;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Xunit.Abstractions;
@@ -23,7 +21,7 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
     public async Task CreateInvestmentTransaction()
     {
         var sut = CreateSut();
-        var projectId = new ProjectId("angor1qptj5qunu2mnwmfcspqc5pxlfscazcqlswt7d74");
+        var projectId = new ProjectId("angor1qzd42rmpz3ha94zutfdaurdfxvfquj8zlt73rt2");
         var result = await sut.CreateInvestmentTransaction(Guid.Empty, projectId, new Amount(12345));
         Assert.True(result.IsSuccess, result.IsFailure ? result.Error : string.Empty);
         //Assert.NotEmpty(result.Value);
@@ -33,7 +31,7 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
     public async Task GetInvestments()
     {
         var sut = CreateSut();
-        var projectId = new ProjectId("angor1qptj5qunu2mnwmfcspqc5pxlfscazcqlswt7d74");
+        var projectId = new ProjectId("angor1qzd42rmpz3ha94zutfdaurdfxvfquj8zlt73rt2");
         var result = await sut.GetInvestments(projectId);
         Assert.True(result.IsSuccess);
         Assert.NotEmpty(result.Value);
