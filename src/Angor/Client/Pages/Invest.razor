@@ -196,43 +196,51 @@
                 </div>
             </div>
 
-            <EditForm Model="Investment" OnValidSubmit="InvestFundsAndCheckPassword" class="investment-form">
+            <EditForm Model="Investment" OnValidSubmit="InvestFundsAndCheckPassword" class="investment-form mt-6">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
                 <div class="form-group mb-4">
-
-                    <label for="investmentAmount" class="form-label d-flex align-items-center gap-2 mb-3 mt-3">
-                        <Icon IconName="investment" Width="20" Height="20" />
-                        <span>Investment Amount</span>
-                    </label>
-                    <div class="input-group border border-warning rounded p-2 text-warning bg-opacity-10
-                             shadow-sm transition focus-within-shadow-lg">
-                        <InputNumber type="number" step="0.00000001" min="0"
-                                     class="form-control bg-transparent border-0 shadow-none text-warning fw-bold"
-                                     id="investmentAmount" @bind-Value="@Investment.InvestmentAmountBtc"
-                                     @oninput="UpdateStagesBreakdown" />
-                        <span class="border-0 d-flex align-items-center justify-content-center px-3 text-warning fw-bold">
-                            @network.CoinTicker
-                        </span>
-                    </div>
-                    
-                    <label for="additionalNpub" class="form-label d-flex align-items-center gap-2 mb-3 mt-3">
-                        <Icon IconName="investment" Width="20" Height="20" />
-                        <span>Additional npub</span>
-                    </label>
-                    <div class="input-group border border-warning rounded p-2 text-warning bg-opacity-10
-                            shadow-sm transition focus-within-shadow-lg">
-                        <InputText type="text" class="form-control bg-transparent border-0 shadow-none text-warning fw-bold"
-                                     id="additionalNpub" @bind-Value="@Investment.AdditionalNpub" />
+                    <div class="field-container mb-4">
+                        <label for="investmentAmount" class="form-label d-flex align-items-center gap-2 mb-2">
+                            <Icon IconName="investment" Width="20" Height="20" />
+                            <span>Investment Amount</span>
+                        </label>
+                        <div class="input-container position-relative">
+                            <InputNumber @bind-Value="@Investment.InvestmentAmountBtc"
+                                         @oninput="UpdateStagesBreakdown"
+                                         id="investmentAmount"
+                                         type="number"
+                                         step="0.00000001"
+                                         min="0"
+                                         class="angor-input" />
+                            <span class="currency-ticker">@network.CoinTicker</span>
+                        </div>
+                        <small class="text-muted mt-1">Enter your investment amount</small>
                     </div>
 
+                    <div class="field-container mb-4">
+                        <label for="additionalNpub" class="form-label d-flex align-items-center gap-2 mb-2">
+                            <Icon IconName="key" Width="20" Height="20" />
+                            <span>Additional npub</span>
+                        </label>
+                        <div class="input-container position-relative">
+                            <InputText @bind-Value="@Investment.AdditionalNpub"
+                                       id="additionalNpub"
+                                       type="text"
+                                       placeholder="npub1..."
+                                       class="angor-input" />
+                        </div>
+                        <small class="text-muted mt-1">Optional: Enter additional Nostr public key</small>
+                    </div>
                 </div>
 
-                <button type="submit" class="btn btn-border-success w-100" disabled="@buildSpinner">
+                <button type="submit" class="btn btn-border-success w-100 d-flex align-items-center justify-content-center" disabled="@buildSpinner">
                     @if (buildSpinner)
                     {
-                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <div class="spinner">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                        </div>
                         <span>Building Transaction...</span>
                     }
                     else
@@ -241,6 +249,7 @@
                         <span>Continue to Confirmation</span>
                     }
                 </button>
+
             </EditForm>
 
             @if (StagesBreakdown?.Any() == true)
@@ -434,7 +443,7 @@ else
                             }
                         </button>
                         <button class="btn btn-border-primary ms-2" @onclick="ShowChatModal">
-                             <Icon IconName="chat" Width="16" Height="16" class="me-1" />
+                            <Icon IconName="chat" Width="16" Height="16" class="me-1" />
                             <span class="button-text ms-2">Chat</span>
                         </button>
                     </div>
@@ -538,7 +547,7 @@ else
                                     @npubValue
                                 </div>
                             </div>
-                            
+
                             <div class="info-card p-3 mt-2 animate-fade-in">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="info-label mb-2">Founder NPUB:</div>
@@ -555,12 +564,12 @@ else
                                 <Icon IconName="message" Width="20" Height="20" class="me-2" />
                                 <span>Open Chat App</span>
                             </button>
-                            
+
                             <button type="button" class="btn btn-border-warning w-100" @onclick="ShowNsecAndCheckPassword">
                                 <Icon IconName="key" Width="20" Height="20" class="me-2" />
                                 <span>Show NSEC</span>
                             </button>
-                            
+
                             @if (showNsec)
                             {
                                 <div class="info-card p-3 mt-2 animate-fade-in">
@@ -1155,15 +1164,15 @@ else
         Investments investments = new()
             {
                 ProjectIdentifiers = storage.GetInvestmentProjects()
-                                                .Where(x => x.InvestedInProject())
-                                                .Select(x => new InvestmentState
-                                                {
-                                                    ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
-                                                    InvestorPubKey = x.InvestorPublicKey,
-                                                    InvestmentTransactionHash = x.TransactionId,
-                                                    UnfundedReleaseAddress = x.UnfundedReleaseAddress,
-                                                })
-                                                .ToList()
+                                                    .Where(x => x.InvestedInProject())
+                                                    .Select(x => new InvestmentState
+                                                    {
+                                                        ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
+                                                        InvestorPubKey = x.InvestorPublicKey,
+                                                        InvestmentTransactionHash = x.TransactionId,
+                                                        UnfundedReleaseAddress = x.UnfundedReleaseAddress,
+                                                    })
+                                                    .ToList()
             };
 
 
@@ -1247,7 +1256,7 @@ else
         await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
         notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
     }
-    
+
     public async Task<bool> IsInvestorAlreadyInvestedAsync(string projectId, string investorPubKey)
     {
         if (project != null)
@@ -1278,7 +1287,7 @@ else
 
         StateHasChanged();
     }
-    
+
     private void ShowNsecAndCheckPassword()
     {
         if (!passwordComponent.HasPassword())
@@ -1291,18 +1300,18 @@ else
             RetrieveAndShowNsec();
         }
     }
-    
+
     private async Task RetrieveAndShowNsec()
     {
         await ShowNsec();
     }
-    
+
     private async Task ShowNsec()
     {
         try
         {
             var words = await passwordComponent.GetWalletAsync();
-            
+
             if (project != null)
             {
                 var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
