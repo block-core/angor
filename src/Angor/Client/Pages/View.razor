@@ -373,14 +373,19 @@
                         @for (var index = 0; index < project.ProjectInfo.Stages.Count; index++)
                         {
                             var stage = project.ProjectInfo.Stages[index];
-                            var daysUntilStage = (stage.ReleaseDate - currentDate).Days;
+                            var daysUntilStage = (stage.ReleaseDate.Date - currentDate.Date).Days;
+
                             var amountInStage = Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) * stage.AmountToRelease / 100;
                             <tr>
                                 <td>@(index + 1)</td>
                                 <td>@stage.AmountToRelease %</td>
                                 <td>@stage.ReleaseDate.ToString("dd/MM/yyyy")</td>
                                 <td>
-                                    @if (daysUntilStage < 0)
+                                    @if (daysUntilStage == 0)
+                                    {
+                                        <span>Just Released</span>
+                                    }
+                                    else if (daysUntilStage < 0)
                                     {
                                         <span>Released</span>
                                     }
