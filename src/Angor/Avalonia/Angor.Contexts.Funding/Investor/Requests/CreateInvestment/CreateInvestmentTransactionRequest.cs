@@ -59,7 +59,7 @@ public class CreateInvestmentTransactionRequest(
 
             var requestResult = await SendSignatureRequest(
                 walletWords,
-                projectId,
+                projectResult.Value,
                 signedTxResult.Value);
 
             if (requestResult.IsFailure)
@@ -67,7 +67,7 @@ public class CreateInvestmentTransactionRequest(
 
 
             var pendingInvestment = new PendingInvestment(
-                projectId,
+                projectResult.Value.Id,
                 investorKey,
                 amount.Sats,
                 signedTxResult.Value.Transaction.GetHash().ToString(),
@@ -114,17 +114,10 @@ public class CreateInvestmentTransactionRequest(
         return signedTransactionResult;
     }
 
-    private async Task<Result> SendSignatureRequest(WalletWords walletWords, ProjectId projectId, TransactionInfo signedTransaction)
+    private async Task<Result> SendSignatureRequest(WalletWords walletWords, Project project, TransactionInfo signedTransaction)
     {
         try
         {
-            var projectResult = await projectRepository.Get(projectId);
-            if (projectResult.IsFailure)
-            {
-                return Result.Failure("Project not found");
-            }
-
-            var project = projectResult.Value;
             string nostrPubKey = project.NostrPubKey;
 
             var senderPrivateKey = derivationOperations.DeriveNostrStorageKey(walletWords);
@@ -132,7 +125,7 @@ public class CreateInvestmentTransactionRequest(
 
             var signRequest = new SignRecoveryRequest
             {
-                ProjectIdentifier = projectId.Value,
+                ProjectIdentifier = project.Id.Value,
                 TransactionHex = signedTransaction.Transaction.ToHex()
             };
 
@@ -144,20 +137,17 @@ public class CreateInvestmentTransactionRequest(
                 serialized);
 
             var tcs = new TaskCompletionSource<(bool Success, string Message)>();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+            // Registrar la cancelación para completar el TCS si hay timeout
+            cts.Token.Register(() => 
+                    tcs.TrySetResult((false, "Timeout al esperar respuesta del relay")), 
+                useSynchronizationContext: false);
 
             relayService.SendDirectMessagesForPubKeyAsync(
                 senderPrivateKeyHex,
                 nostrPubKey,
                 encryptedContent,
                 response => { tcs.TrySetResult((response.Accepted, response.Message ?? "Sin mensaje")); });
-
-            var timeoutTask = Task.Delay(8000);
-            var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
-
-            if (completedTask == timeoutTask)
-            {
-                return Result.Failure("Timeout al esperar respuesta del relay");
-            }
 
             var result = await tcs.Task;
             return result.Success
