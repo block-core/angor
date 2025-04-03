@@ -4273,9 +4273,6 @@ select.form-control {
 }
 
 .currency-ticker {
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
     color: var(--angor-secondary);
     font-weight: 600;
     padding: 0.35rem 0.75rem;
