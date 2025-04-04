@@ -232,25 +232,25 @@
                 <div class="info-card mb-4 slide-in">
                     <!-- Start Date -->
                     <div class="mb-3">
-                        <label for="startDate" class="form-label">Start Date - if the target amount was not reached by this date coins can be returned to the investors</label>
+                        <label for="startDate" class="form-label">Start Date - If your project did not reach the funding goal by this date, you will not receive anything. You will only be able to return the funds to investors.</label>
                         <InputDate id="startDate" @bind-Value="project.ProjectInfo.StartDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
 
                     <!-- Expiry Date -->
                     <div class="mb-3">
-                        <label for="expiryDate" class="form-label">Expiry Date - after this date any unspent coins can be claimed back by the investors</label>
+                        <label for="expiryDate" class="form-label">Expiry Date - After this date any unspent coins can be claimed back by the investors</label>
                         <InputDate id="expiryDate" @bind-Value="project.ProjectInfo.ExpiryDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
 
                     <!-- Penalty Date -->
                     <div class="mb-3">
-                        <label for="penaltyDays" class="form-label">Penalty Days - choose the number of days you wish to lock a departing investors funds for</label>
+                        <label for="penaltyDays" class="form-label">Penalty Days - Choose the number of days you wish to lock a departing investors funds for</label>
                         <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
 
                     <!-- Target Amount -->
                     <div class="mb-3">
-                        <label for="targetAmount" class="form-label">Target Amount - the minimum amount of @network.CoinTicker this project is trying to raise</label>
+                        <label for="targetAmount" class="form-label">Target Amount - The minimum amount of @network.CoinTicker this project is trying to raise</label>
                         <InputNumber id="targetAmount" @bind-Value="targetAmountInBTC" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
 
@@ -1351,8 +1351,6 @@
 
             if (targetAmountInBTC < (decimal)0.1)
             {
-                // temporary limit to not allow users to put too much in an Angor contract
-
                 notificationComponent.ShowErrorMessage("Project target amount must be higher than 0.1 BTC");
                 return false;
             }
