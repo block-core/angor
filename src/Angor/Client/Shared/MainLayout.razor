@@ -15,7 +15,7 @@
 @inject IClientStorage storage;
 
 <div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show @(isSidebarCollapsed ? "sidenav-hidden" : "")">
-    <NavMenu @bind-IsCollapsed="isSidebarCollapsed" IsOpenMobile="isOpenMobile" OnCloseMobile="ToggleMenuMobile"/>
+    <NavMenu @bind-IsCollapsed="isSidebarCollapsed" IsDarkTheme="isDarkTheme"/>
     <main class="main-content">
         <!-- Navbar -->
         <nav class="navbar navbar-main navbar-expand-lg px-0 border-radius-xl position-sticky mt-3 z-index-sticky left-auto ms-2 me-2" id="navbarBlur">
@@ -30,11 +30,6 @@
                 </nav>
                 <div class="navbar-collapse">
                     <ul class="navbar-nav user-select-none">
-                        <li class="menu-toggler nav-item d-xl-none">
-                            <span role="button" id="iconNavbarSidenav" @onclick="ToggleMenuMobile" data-tooltip="Menu">
-                                <Icon IconName="hamburger-menu" />
-                            </span>
-                        </li>
                         <li class="nav-item d-none" id="updateButton">
                             <span role="button" @onclick="UpdateApp" data-tooltip="Update application">
                                 <Icon IconName="update" />
@@ -81,7 +76,6 @@
     private bool isLockMenu = false;
     private string themeIcon = "light_mode";
     private string sidenavClass = "sidenav-hidden";
-    private bool isOpenMobile = false;
     private bool isSidebarCollapsed;
 
     private string networkText = string.Empty;
@@ -219,11 +213,6 @@
     private void ToggleSidenav()
     {
         isSidebarCollapsed = !isSidebarCollapsed;
-    }
-
-    void ToggleMenuMobile()
-    {
-        isOpenMobile = !isOpenMobile;
     }
 
     private void ToggleLockMenu()

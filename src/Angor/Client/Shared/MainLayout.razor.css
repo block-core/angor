@@ -10,20 +10,14 @@
     margin-left: 100px;
 }
 
-.footer {
-    position: absolute;
-    bottom: 1rem;
-    left: 0;
-    right: 0;
-}
 
 @media (max-width: 1280px) {
     .main-content {
-        margin-left: 0;
-        width: calc(100% - 0);
+        margin-left: 100px;
+        width: calc(100% - 100px);
     }
     
     .sidenav-show.sidenav-hidden .main-content {
-        margin-left: 0;
+        margin-left: 100px;
     }
 }

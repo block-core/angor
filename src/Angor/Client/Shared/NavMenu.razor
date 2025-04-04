@@ -7,7 +7,7 @@
 @inject NavMenuState NavMenuState;
 @inject INetworkService _networkService;
 
-<aside class="sidebar @(IsCollapsed ? "collapsed" : "")  @(IsOpenMobile ? "menu-active" : "")">
+<aside class="sidebar @(IsCollapsed ? "collapsed" : "") @(IsDarkTheme ? "" : "white") ">
     <header class="sidebar-header">
         <a href="" class="header-logo">
             <Icon IconName="angor-logo" />
@@ -87,17 +87,14 @@
     [Parameter]
     public EventCallback ToggleSidenavTextCallback { get; set; }
 
-    [Parameter] 
-    public bool IsOpenMobile { get; set; }
-    
-    [Parameter] 
-    public EventCallback OnCloseMobile { get; set; }
-
     [Parameter]
     public EventCallback ToggleleLockMenuCallback { get; set; }
 
     [Parameter]
     public bool IsCollapsed { get; set; }
+
+    [Parameter]
+    public bool IsDarkTheme { get; set; }
 
     [Parameter]
     public EventCallback<bool> IsCollapsedChanged { get; set; }
@@ -108,7 +105,6 @@
     private bool isSidenavHide = true;
     private Timer? _timer;
     private int _elapsedCount = 0;
-    private bool isMobileMenuOpen;
 
     protected override async Task OnInitializedAsync()
     {
@@ -159,11 +155,6 @@
     {
         IsCollapsed = !IsCollapsed;
         await IsCollapsedChanged.InvokeAsync(IsCollapsed);
-    }
-
-    private void ToggleMobileMenu()
-    {
-        isMobileMenuOpen = !isMobileMenuOpen;
     }
 
     /// <inheritdoc />
