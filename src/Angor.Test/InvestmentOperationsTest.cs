@@ -1,11 +1,11 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
+using Angor.Shared.Services;
 using Angor.Test.DataBuilders;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NBitcoin;
@@ -21,6 +21,7 @@ namespace Angor.Test
     {
         private Mock<IWalletOperations> _walletOperations;
         private Mock<INetworkConfiguration> _networkConfiguration;
+        protected IBitcoinTransactionBuilder _transactionBuilder;
 
         private string angorRootKey =
             "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
@@ -57,6 +58,8 @@ namespace Angor.Test
 
             _networkConfiguration.Setup(_ => _.GetNetwork())
                 .Returns(Networks.Bitcoin.Testnet());
+
+            _transactionBuilder = new AngorBtcTransactionBuilder();
         }
 
         [Fact]
@@ -64,7 +67,7 @@ namespace Angor.Test
         {
             DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
                 new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _transactionBuilder);
 
             var network = Networks.Bitcoin.Testnet();
 
@@ -224,7 +227,7 @@ namespace Angor.Test
         {
             DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
                 new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _transactionBuilder);
 
             var network = Networks.Bitcoin.Testnet();
 
@@ -277,7 +280,7 @@ namespace Angor.Test
         {
             DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
                 new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _transactionBuilder);
 
             var network = Networks.Bitcoin.Testnet();
 
@@ -330,7 +333,7 @@ namespace Angor.Test
         {
             DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
                 new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _transactionBuilder);
 
             var network = Networks.Bitcoin.Testnet();
 
@@ -388,7 +391,7 @@ namespace Angor.Test
         {
             DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
                 new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _transactionBuilder);
 
             var network = Networks.Bitcoin.Testnet();
 
@@ -484,7 +487,7 @@ namespace Angor.Test
                 DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
                     new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
                 InvestmentOperations operations =
-                    new InvestmentOperations(_walletOperations.Object, derivationOperations);
+                    new InvestmentOperations(_walletOperations.Object, _transactionBuilder);
 
                 var network = Networks.Bitcoin.Testnet();
 
@@ -600,7 +603,7 @@ namespace Angor.Test
                 DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
                     new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
                 InvestmentOperations operations =
-                    new InvestmentOperations(_walletOperations.Object, derivationOperations);
+                    new InvestmentOperations(_walletOperations.Object, _transactionBuilder);
 
                 var network = Networks.Bitcoin.Testnet();
 
@@ -704,7 +707,7 @@ namespace Angor.Test
         {
             DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
                 new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _transactionBuilder);
 
             var network = Networks.Bitcoin.Testnet();
 

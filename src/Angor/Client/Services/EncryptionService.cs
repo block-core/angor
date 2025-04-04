@@ -1,8 +1,7 @@
-﻿using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.Crypto;
+﻿
+using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.JSInterop;
-using NBitcoin.Crypto;
 
 namespace Angor.Client.Services
 {

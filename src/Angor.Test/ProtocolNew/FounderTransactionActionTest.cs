@@ -56,7 +56,7 @@ public class FounderTransactionActionTest : AngorTestData
 
     private Transaction GivenASeederTransaction(ProjectInfo projectInvestmentInfo)
     {
-        InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _derivationOperations);
+        InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _transactionBuilder.Object);
         var network = Networks.Bitcoin.Testnet();
         var seederKey = new Key();
         var seederSecret = new Key();
@@ -76,7 +76,7 @@ public class FounderTransactionActionTest : AngorTestData
 
     private Transaction GivenAnInvestorTransaction(ProjectInfo projectInvestmentInfo)
     {
-        InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _derivationOperations);
+        InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _transactionBuilder.Object);
 
         var network = Networks.Bitcoin.Testnet();
         var seederKey = new Key();
