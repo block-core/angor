@@ -800,27 +800,25 @@ else
 
     private async Task InvestFunds()
     {
+        bool isTestnet = network.NetworkType == NetworkType.Testnet;
+        decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.1m; // 0.1 BTC for mainnet, unlimited for testnet
+        decimal minInvestmentBtc = 0.001m; // Minimum investment for all networks
+
         if (Investment.IsSeeder)
         {
-            bool isTestnet = network.NetworkType == NetworkType.Testnet;
-            decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.1m; // 0.1 BTC for mainnet, unlimited for testnet
-            decimal minInvestmentBtc = 0.001m; // Minimum investment for all networks
-
             if (Investment.InvestmentAmountBtc < minInvestmentBtc)
             {
                 notificationComponent.ShowErrorMessage($"Seeder minimum investment amount of {minInvestmentBtc} BTC was not reached");
                 return;
             }
-
-            if (Investment.InvestmentAmountBtc > maxInvestmentBtc)
+        }
+        else
+        {
+            if (!isTestnet && Investment.InvestmentAmountBtc > maxInvestmentBtc)
             {
                 notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentBtc} BTC on the mainnet");
                 return;
             }
-        }
-        else
-        {
-            decimal minInvestmentBtc = 0.001m;
 
             if (Investment.InvestmentAmountBtc < minInvestmentBtc)
             {

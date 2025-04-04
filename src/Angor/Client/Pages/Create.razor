@@ -1351,8 +1351,6 @@
 
             if (targetAmountInBTC < (decimal)0.1)
             {
-                // temporary limit to not allow users to put too much in an Angor contract
-
                 notificationComponent.ShowErrorMessage("Project target amount must be higher than 0.1 BTC");
                 return false;
             }
