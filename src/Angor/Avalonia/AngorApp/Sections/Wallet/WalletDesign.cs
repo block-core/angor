@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Domain;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Wallet.Operate;
 using Zafiro.UI;

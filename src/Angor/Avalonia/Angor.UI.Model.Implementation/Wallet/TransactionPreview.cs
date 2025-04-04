@@ -1,5 +1,5 @@
-using Angor.Wallet.Application;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Application;
+using Angor.Contexts.Wallet.Domain;
 using CSharpFunctionalExtensions;
 
 namespace Angor.UI.Model.Implementation.Wallet;

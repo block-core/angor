@@ -1,5 +1,5 @@
 using System.Windows.Input;
-using Angor.Wallet.Application;
+using Angor.Contexts.Wallet.Application;
 using AngorApp.Sections.Browse.Details;
 using AngorApp.UI.Services;
 using Zafiro.Avalonia.Controls.Navigation;

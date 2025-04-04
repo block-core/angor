@@ -1,5 +1,5 @@
 using System.Windows.Input;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Domain;
 using ReactiveUI.SourceGenerators;
 using SuppaWallet.Gui.Wallet.Main;
 using Zafiro.UI;

@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Angor.UI.Model.Implementation.Wallet;
-using Angor.Wallet.Application;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Application;
+using Angor.Contexts.Wallet.Domain;
 
 namespace AngorApp.UI.Services;
 

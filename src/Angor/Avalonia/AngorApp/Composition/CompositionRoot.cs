@@ -1,8 +1,10 @@
-using System.Linq;
-using Angor.Wallet.Domain;
-using Angor.Wallet.Infrastructure;
-using Angor.Wallet.Infrastructure.Impl;
-using Angor.Wallet.Infrastructure.Interfaces;
+using Angor.Contexts.Funding;
+using Angor.Contexts.Funding.Projects.Infrastructure;
+using Angor.Contexts.Integration.WalletFunding;
+using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.Wallet.Infrastructure;
+using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using AngorApp.Composition.Registrations;
 using AngorApp.Sections.Shell;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,12 +23,15 @@ public static class CompositionRoot
         RegisterLogger(services, logger);
         services.AddSingleton<Func<BitcoinNetwork>>(() => BitcoinNetwork.Testnet);
 
-        AngorServices.Register(services);
         ModelServices.Register(services);
         ViewModels.Register(services);
         UIServices.Register(services, topLevelView);
         SecurityContext.Register(services);
         RegisterWalletServices(services, logger);
+        FundingContext.Register(services, logger);
+
+        // Integration services
+        services.AddSingleton<ISeedwordsProvider, SeedwordsProvider>();
 
         var serviceProvider = services.BuildServiceProvider();
 
