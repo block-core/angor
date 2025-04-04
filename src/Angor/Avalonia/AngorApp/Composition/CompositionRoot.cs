@@ -1,4 +1,6 @@
 using System.Linq;
+using Angor.Projects;
+using Angor.Projects.Infrastructure;
 using Angor.Wallet.Domain;
 using Angor.Wallet.Infrastructure;
 using Angor.Wallet.Infrastructure.Impl;
@@ -21,12 +23,12 @@ public static class CompositionRoot
         RegisterLogger(services, logger);
         services.AddSingleton<Func<BitcoinNetwork>>(() => BitcoinNetwork.Testnet);
 
-        AngorServices.Register(services);
         ModelServices.Register(services);
         ViewModels.Register(services);
         UIServices.Register(services, topLevelView);
         SecurityContext.Register(services);
         RegisterWalletServices(services, logger);
+        ProjectServices.Register(services, logger);
 
         var serviceProvider = services.BuildServiceProvider();
 

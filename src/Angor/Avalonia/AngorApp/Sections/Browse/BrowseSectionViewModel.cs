@@ -1,12 +1,9 @@
-using System.Reactive.Linq;
-using Angor.UI.Model;
+using Angor.Projects.Infrastructure.Interfaces;
 using Angor.Wallet.Application;
 using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.UI.Services;
-using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Controls.Navigation;
-using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
 
 namespace AngorApp.Sections.Browse;
@@ -17,13 +14,14 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
 
     [ObservableAsProperty] private IList<IProjectViewModel>? projects;
 
-    public BrowseSectionViewModel(IWalletAppService walletAppService, IProjectService projectService, INavigator navigator,
+    public BrowseSectionViewModel(IWalletAppService walletAppService, IProjectAppService projectService, INavigator navigator,
         UIServices uiServices)
     {
         ProjectLookupViewModel = new ProjectLookupViewModel(projectService, walletAppService, navigator, uiServices);
 
         LoadLatestProjects = ReactiveCommand.CreateFromObservable(() => Observable.FromAsync(projectService.Latest)
             .Flatten()
+            .Select(dto => dto.ToProject())
             .Select(IProjectViewModel (project) => new ProjectViewModel(walletAppService, project, navigator, uiServices))
             .ToList());
 
