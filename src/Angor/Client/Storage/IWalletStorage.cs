@@ -8,6 +8,7 @@ public interface IWalletStorage
     void SaveWalletWords(Wallet wallet);
     void DeleteWallet();
     Wallet GetWallet();
+    bool HasExtPubKey();
     
     
     void SetFounderKeys(FounderKeyCollection founderPubKeys);
