@@ -29,7 +29,10 @@
 @inject ISignService _SignService;
 @inject IRelayService _RelayService;
 @inject IWalletUIService _walletUIService
+@inject IIndexerService _IndexerService
 
+@inject INetworkService _networkService
+@inject NostrConversionHelper NostrHelper
 @inject IInvestorTransactionActions _InvestorTransactionActions;
 
 @inject ISerializer serializer
@@ -193,33 +196,51 @@
                 </div>
             </div>
 
-            <EditForm Model="Investment" OnValidSubmit="InvestFundsAndCheckPassword" class="investment-form">
+            <EditForm Model="Investment" OnValidSubmit="InvestFundsAndCheckPassword" class="investment-form mt-6">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
                 <div class="form-group mb-4">
-
-                    <label for="investmentAmount" class="form-label d-flex align-items-center gap-2 mb-3 mt-3">
-                        <Icon IconName="investment" Width="20" Height="20" />
-                        <span>Investment Amount</span>
-                    </label>
-                    <div class="input-group border border-warning rounded p-2 text-warning bg-opacity-10
-            shadow-sm transition focus-within-shadow-lg">
-                        <InputNumber type="number" step="0.00000001" min="0"
-                                     class="form-control bg-transparent border-0 shadow-none text-warning fw-bold"
-                                     id="investmentAmount" @bind-Value="@Investment.InvestmentAmountBtc"
-                                     @oninput="UpdateStagesBreakdown" />
-                        <span class="border-0 d-flex align-items-center justify-content-center px-3 text-warning fw-bold">
-                            @network.CoinTicker
-                        </span>
+                    <div class="field-container mb-4">
+                        <label for="investmentAmount" class="form-label d-flex align-items-center gap-2 mb-2">
+                            <Icon IconName="investment" Width="20" Height="20" />
+                            <span>Investment Amount</span>
+                        </label>
+                        <div class="input-container position-relative">
+                            <InputNumber @bind-Value="@Investment.InvestmentAmountBtc"
+                                         @oninput="UpdateStagesBreakdown"
+                                         id="investmentAmount"
+                                         type="number"
+                                         step="0.00000001"
+                                         min="0"
+                                         class="angor-input" />
+                            <span class="currency-ticker">@network.CoinTicker</span>
+                        </div>
+                        <small class="text-muted mt-1">Enter your investment amount</small>
                     </div>
 
+                    <div class="field-container mb-4">
+                        <label for="additionalNpub" class="form-label d-flex align-items-center gap-2 mb-2">
+                            <Icon IconName="key" Width="20" Height="20" />
+                            <span>Additional npub</span>
+                        </label>
+                        <div class="input-container position-relative">
+                            <InputText @bind-Value="@Investment.AdditionalNpub"
+                                       id="additionalNpub"
+                                       type="text"
+                                       placeholder="npub1..."
+                                       class="angor-input" />
+                        </div>
+                        <small class="text-muted mt-1">Optional: Enter additional Nostr public key</small>
+                    </div>
                 </div>
 
-                <button type="submit" class="btn btn-border-success w-100" disabled="@buildSpinner">
+                <button type="submit" class="btn btn-border-success w-100 d-flex align-items-center justify-content-center" disabled="@buildSpinner">
                     @if (buildSpinner)
                     {
-                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <div class="spinner">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                        </div>
                         <span>Building Transaction...</span>
                     }
                     else
@@ -228,6 +249,7 @@
                         <span>Continue to Confirmation</span>
                     }
                 </button>
+
             </EditForm>
 
             @if (StagesBreakdown?.Any() == true)
@@ -420,6 +442,10 @@ else
                                 <span class="button-text ms-2">Refresh</span>
                             }
                         </button>
+                        <button class="btn btn-border-success ms-2" @onclick="ShowChatModal">
+                            <Icon IconName="chat" Width="16" Height="16" class="me-1" />
+                            <span class="button-text ms-2">Chat</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -492,6 +518,86 @@ else
     }
 }
 
+@if (showChatModal)
+{
+    <div class="modal-wrapper">
+        <div class="modal fade show d-block" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modern-modal animate-fade-in">
+                    <div class="modal-header border-0 pb-0">
+                        <div class="d-flex align-items-center">
+                            <Icon IconName="message" Height="32" Width="32" class="me-2" />
+                            <h5 class="modal-title">Chat Options</h5>
+                        </div>
+                        <button class="btn-close-custom" @onclick="() => showChatModal = false">
+                            <Icon IconName="close-circle" Height="24" Width="24" />
+                        </button>
+                    </div>
+
+                    <div class="modal-body py-4">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="info-card p-3 mt-2 animate-fade-in">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="info-label mb-2">Investor NPUB:</div>
+                                    <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(npubValue)">
+                                        <Icon IconName="copy" Width="16" Height="16" />
+                                    </button>
+                                </div>
+                                <div class="info-value text-break word-wrap">
+                                    @npubValue
+                                </div>
+                            </div>
+
+                            <div class="info-card p-3 mt-2 animate-fade-in">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="info-label mb-2">Founder NPUB:</div>
+                                    <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(founderNpub)">
+                                        <Icon IconName="copy" Width="16" Height="16" />
+                                    </button>
+                                </div>
+                                <div class="info-value text-break word-wrap">
+                                    @founderNpub
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-border-success w-100" @onclick="OpenChatApp">
+                                <Icon IconName="message" Width="20" Height="20" class="me-2" />
+                                <span>Open Chat App</span>
+                            </button>
+
+                            <button type="button" class="btn btn-border-warning w-100" @onclick="ShowNsecAndCheckPassword">
+                                <Icon IconName="key" Width="20" Height="20" class="me-2" />
+                                <span>Show NSEC</span>
+                            </button>
+
+                            @if (showNsec)
+                            {
+                                <div class="info-card p-3 mt-2 animate-fade-in">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="info-label mb-2">NSEC:</div>
+                                        <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(nsecValue)">
+                                            <Icon IconName="copy" Width="16" Height="16" />
+                                        </button>
+                                    </div>
+                                    <div class="info-value text-break word-wrap">
+                                        @nsecValue
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-border-warning" @onclick="() => showChatModal = false">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
 
     [Parameter]
@@ -503,6 +609,11 @@ else
     private bool refreshSpinner = false;
     private bool showTransactionJsonModal = false;
     private string transactionJson;
+    private bool showChatModal = false;
+    private bool showNsec = false;
+    private string nsecValue = "";
+    private string npubValue = "";
+    private string founderNpub = "";
 
     public InvestmentModel Investment { get; set; } = new InvestmentModel { InvestmentAmountBtc = 0.01m };
     private bool IsSeederTimePassed { get; set; }
@@ -526,6 +637,7 @@ else
         if (!hasWallet)
         {
             NavigationManager.NavigateTo($"/wallet");
+            return;
         }
 
         Project? findProject = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
@@ -579,6 +691,7 @@ else
             }
         }
     }
+
 
     private async Task RefreshSignatures()
     {
@@ -728,12 +841,25 @@ else
             return;
         }
 
+        if (!string.IsNullOrEmpty(Investment.AdditionalNpub))
+        {
+            var npubValid = Nostr.Client.Utils.NostrConverter.TryToHex(Investment.AdditionalNpub, out string? hex, out string? hrp);
+
+            if (!npubValid || hrp != "npub")
+            {
+                notificationComponent.ShowErrorMessage("Additional npub is not valid");
+                return;
+            }
+        }
+
         buildSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
 
         try
         {
+            var words = await passwordComponent.GetWalletAsync();
+
             var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
 
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
@@ -741,9 +867,15 @@ else
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
             feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
 
-            var words = await passwordComponent.GetWalletAsync();
-
             InvestorPubKey = _derivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
+
+            var isAlreadyInvested = await IsInvestorAlreadyInvestedAsync(project.ProjectInfo.ProjectIdentifier, InvestorPubKey);
+
+            if (isAlreadyInvested)
+            {
+                notificationComponent.ShowErrorMessage("You are already invested in this project.");
+                return;
+            }
 
             if (Investment.IsSeeder)
             {
@@ -857,7 +989,8 @@ else
                 {
                     ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
                     InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
-                    UnfundedReleaseAddress = releaseAddress
+                    UnfundedReleaseAddress = releaseAddress,
+                    AdditionalNpub = Investment.AdditionalNpub
                 };
 
             var sigJson = serializer.Serialize(signRecoveryRequest);
@@ -872,6 +1005,7 @@ else
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
             investorProject.InvestorNPub = NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex;
             investorProject.UnfundedReleaseAddress = releaseAddress;
+            investorProject.AdditionalNpub = Investment.AdditionalNpub;
 
             storage.AddInvestmentProject(investorProject);
 
@@ -1030,15 +1164,15 @@ else
         Investments investments = new()
             {
                 ProjectIdentifiers = storage.GetInvestmentProjects()
-                                                .Where(x => x.InvestedInProject())
-                                                .Select(x => new InvestmentState
-                                                {
-                                                    ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
-                                                    InvestorPubKey = x.InvestorPublicKey,
-                                                    InvestmentTransactionHash = x.TransactionId,
-                                                    UnfundedReleaseAddress = x.UnfundedReleaseAddress,
-                                                })
-                                                .ToList()
+                                                    .Where(x => x.InvestedInProject())
+                                                    .Select(x => new InvestmentState
+                                                    {
+                                                        ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
+                                                        InvestorPubKey = x.InvestorPublicKey,
+                                                        InvestmentTransactionHash = x.TransactionId,
+                                                        UnfundedReleaseAddress = x.UnfundedReleaseAddress,
+                                                    })
+                                                    .ToList()
             };
 
 
@@ -1062,6 +1196,8 @@ else
         public decimal InvestmentAmountBtc { get; set; }
 
         public bool IsSeeder { get; set; }
+
+        public string AdditionalNpub { get; set; }
     }
 
     public class StageBreakdown
@@ -1119,5 +1255,97 @@ else
     {
         await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
         notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
+    }
+
+    public async Task<bool> IsInvestorAlreadyInvestedAsync(string projectId, string investorPubKey)
+    {
+        if (project != null)
+        {
+            var investments = await _IndexerService.GetInvestmentsAsync(projectId);
+
+            var isAlreadyInvested = investments.Any(investment => investment.InvestorPublicKey == investorPubKey);
+
+            if (isAlreadyInvested)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void ShowChatModal()
+    {
+        showChatModal = true;
+        showNsec = false;
+        var investorProject = project as InvestorProject;
+        npubValue = NostrHelper.ConvertHexToNpub(investorProject?.InvestorNPub ?? "") ?? investorProject?.InvestorNPub ?? "";
+
+        // Get founder's npub
+        founderNpub = NostrHelper.ConvertHexToNpub(investorProject.ProjectInfo.NostrPubKey) ??
+                      investorProject.ProjectInfo.NostrPubKey;
+
+        StateHasChanged();
+    }
+
+    private void ShowNsecAndCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            showChatModal = false;
+            passwordComponent.ShowPassword(RetrieveAndShowNsec);
+        }
+        else
+        {
+            RetrieveAndShowNsec();
+        }
+    }
+
+    private async Task RetrieveAndShowNsec()
+    {
+        await ShowNsec();
+    }
+
+    private async Task ShowNsec()
+    {
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+
+            if (project != null)
+            {
+                var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
+                var nostrHexSecKey = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
+                nsecValue = NostrHelper.ConvertHexToNsec(nostrHexSecKey)!;
+                showChatModal = true;
+                showNsec = true;
+                StateHasChanged();
+            }
+            else
+            {
+                notificationComponent.ShowErrorMessage("Project information not available");
+            }
+        }
+        catch (Exception e)
+        {
+            notificationComponent.ShowErrorMessage("Failed to retrieve NSEC: " + e.Message);
+        }
+    }
+
+    private async void OpenChatApp()
+    {
+        if (project != null)
+        {
+            var primaryChatApp = _networkService.GetPrimaryChatApp();
+            var url = $"{primaryChatApp.Url}/{founderNpub}";
+
+            // Open chat app with project information
+            // NavigationManager.NavigateTo($"{url}", true);
+            await JS.InvokeVoidAsync("window.open", url, "_blank");
+        }
+        else
+        {
+            notificationComponent.ShowErrorMessage("Project information not available");
+        }
     }
 }

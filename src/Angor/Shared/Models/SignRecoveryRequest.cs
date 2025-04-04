@@ -9,4 +9,6 @@ public class SignRecoveryRequest
     public string UnfundedReleaseKey { get; set; }
 
     public string InvestmentTransactionHex { get; set; }
+
+    public string AdditionalNpub { get; set; }
 }

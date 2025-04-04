@@ -922,19 +922,10 @@
 
         try
         {
-            if (project is FounderProject founderProject)
+            if (project is FounderProject || project is InvestorProject)
             {
                 var words = await passwordComponent.GetWalletAsync();
-                var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, founderProject.ProjectInfo.FounderKey);
-                NostrHexSecKey = Encoders.Hex.EncodeData(nostrKey.ToBytes());
-                NostrNsecSecKey = NostrHelper.ConvertHexToNsec(NostrHexSecKey)!;
-
-                StateHasChanged();
-            }
-            else if (project is InvestorProject investorProject)
-            {
-                var words = await passwordComponent.GetWalletAsync();
-                var nostrKey = _derivationOperations.DeriveInvestorPrivateKey(words, investorProject.ProjectInfo.FounderKey);
+                var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
                 NostrHexSecKey = Encoders.Hex.EncodeData(nostrKey.ToBytes());
                 NostrNsecSecKey = NostrHelper.ConvertHexToNsec(NostrHexSecKey)!;
                 StateHasChanged();
