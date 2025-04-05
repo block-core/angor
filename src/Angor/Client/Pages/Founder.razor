@@ -5,6 +5,8 @@
 @using Angor.Shared.Services
 @using Nostr.Client.Messages
 @using Angor.Client.Shared
+@using System.Threading
+@using System.Threading.Tasks
 
 @inject NavigationManager NavigationManager
 @inject NavMenuState NavMenuState
@@ -106,7 +108,7 @@
     bool scanningForProjects;
 
     private NotificationComponent notificationComponent;
-
+    private CancellationTokenSource _scanCts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -118,100 +120,148 @@
         if (hasWallet)
         {
             founderProjects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
+            
+            // Check if we need to perform an automatic rescan
+            if (_walletStorage.NeedsRescan())
+            {
+                notificationComponent?.ShowInfo("Performing automatic rescan after wallet restore...");
+                await LookupProjectKeysOnIndexerAsync(isAutoRescan: true);
+                _walletStorage.SetNeedsRescan(false);
+            }
         }
     }
 
-    private async Task LookupProjectKeysOnIndexerAsync()
+    private async Task LookupProjectKeysOnIndexerAsync(bool isAutoRescan = false)
     {
-        scanningForProjects = true;
-
-        var keys = _walletStorage.GetFounderKeys();
-        var founderProjectsToLookup = new Dictionary<string, ProjectIndexerData>();
-
-        foreach (var key in keys.Keys)
+        if (scanningForProjects)
         {
-            if (founderProjects.Any(_ => _.ProjectInfo.ProjectIdentifier == key.ProjectIdentifier))
-                continue;
-
-            var indexerProject = await _IndexerService.GetProjectByIdAsync(key.ProjectIdentifier);
-
-            if (indexerProject != null) //TODO we need to talk about supporting projects that are created with gaps
-                founderProjectsToLookup.Add(key.NostrPubKey, indexerProject);
-        }
-
-        if (!founderProjectsToLookup.Any())
-        {
-            scanningForProjects = false;
+            notificationComponent?.ShowWarning("A scan is already in progress");
             return;
         }
 
-        RelayService.RequestProjectCreateEventsByPubKey(
-            e =>
+        scanningForProjects = true;
+        StateHasChanged();
+
+        try 
+        {
+            // Create new CancellationTokenSource with 5-minute timeout
+            _scanCts?.Dispose();
+            _scanCts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+
+            var keys = _walletStorage.GetFounderKeys();
+            var founderProjectsToLookup = new Dictionary<string, ProjectIndexerData>();
+
+            foreach (var key in keys.Keys)
             {
-                switch (e)
-                {
-                    case { Kind: NostrKind.Metadata }:
-                        var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
-                        var existingProject = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
+                // Check for cancellation
+                _scanCts.Token.ThrowIfCancellationRequested();
+                
+                if (founderProjects.Any(_ => _.ProjectInfo.ProjectIdentifier == key.ProjectIdentifier))
+                    continue;
 
-                        if (existingProject != null)
-                        {
-                            existingProject.Metadata ??= nostrMetadata;
-                        }
-                        else
-                        {
-                            var founderProject = CreateFounderProject(founderProjectsToLookup, e);
-                            founderProject.Metadata = nostrMetadata;
-                            founderProjects.Add(founderProject);
-                        }
+                var indexerProject = await _IndexerService.GetProjectByIdAsync(key.ProjectIdentifier);
 
-                        break;
+                if (indexerProject != null)
+                    founderProjectsToLookup.Add(key.NostrPubKey, indexerProject);
+            }
 
-                    case { Kind: NostrKind.ApplicationSpecificData }:
-
-                        if (e.Id != founderProjectsToLookup[e.Pubkey].NostrEventId)
-                            return;
-
-                        var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
-                        var project = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
-
-                        if (project != null)
-                        {
-                            if (!string.IsNullOrEmpty(project.ProjectInfo.ProjectIdentifier))
-                                return;
-
-                            project.ProjectInfo = projectInfo;
-                        }
-                        else
-                        {
-                            project ??= CreateFounderProject(founderProjectsToLookup, e, projectInfo);
-                            founderProjects.Add(project);
-                        }
-
-                        break;
-                }
-            },
-            () =>
+            if (!founderProjectsToLookup.Any())
             {
                 scanningForProjects = false;
-
-                // Merge or update projects in storage
-                foreach (var project in founderProjects)
+                if (isAutoRescan)
                 {
-                    var existing = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
-                    if (existing == null)
-                    {
-                        storage.AddFounderProject(new[] { project });
-                    }
-                    else
-                    {
-                        storage.UpdateFounderProject(project);
-                    }
+                    notificationComponent?.ShowSuccess("Automatic rescan complete - No new projects found");
                 }
+                return;
+            }
 
-                StateHasChanged();
-            },
-            founderProjectsToLookup.Keys.ToArray());
+            RelayService.RequestProjectCreateEventsByPubKey(
+                e =>
+                {
+                    // Check for cancellation in the event handler
+                    if (_scanCts.Token.IsCancellationRequested) return;
+                    
+                    switch (e)
+                    {
+                        case { Kind: NostrKind.Metadata }:
+                            var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
+                            var existingProject = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
+
+                            if (existingProject != null)
+                            {
+                                existingProject.Metadata ??= nostrMetadata;
+                            }
+                            else
+                            {
+                                var founderProject = CreateFounderProject(founderProjectsToLookup, e);
+                                founderProject.Metadata = nostrMetadata;
+                                founderProjects.Add(founderProject);
+                            }
+
+                            break;
+
+                        case { Kind: NostrKind.ApplicationSpecificData }:
+                            if (e.Id != founderProjectsToLookup[e.Pubkey].NostrEventId)
+                                return;
+
+                            var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
+                            var project = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
+
+                            if (project != null)
+                            {
+                                if (!string.IsNullOrEmpty(project.ProjectInfo.ProjectIdentifier))
+                                    return;
+
+                                project.ProjectInfo = projectInfo;
+                            }
+                            else
+                            {
+                                project ??= CreateFounderProject(founderProjectsToLookup, e, projectInfo);
+                                founderProjects.Add(project);
+                            }
+
+                            break;
+                    }
+                },
+                () =>
+                {
+                    scanningForProjects = false;
+
+                    // Merge or update projects in storage
+                    foreach (var project in founderProjects)
+                    {
+                        var existing = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier);
+                        if (existing == null)
+                        {
+                            storage.AddFounderProject(new[] { project });
+                        }
+                        else
+                        {
+                            storage.UpdateFounderProject(project);
+                        }
+                    }
+
+                    if (isAutoRescan)
+                    {
+                        notificationComponent?.ShowSuccess($"Automatic rescan complete - Found {founderProjectsToLookup.Count} project(s)");
+                    }
+
+                    StateHasChanged();
+                },
+                founderProjectsToLookup.Keys.ToArray());
+        }
+        catch (OperationCanceledException)
+        {
+            scanningForProjects = false;
+            notificationComponent?.ShowWarning("Scan operation timed out. Please try again.");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            scanningForProjects = false;
+            notificationComponent?.ShowError($"Error during {(isAutoRescan ? "automatic " : "")}rescan: {ex.Message}");
+            StateHasChanged();
+        }
     }
 
     private FounderProject CreateFounderProject(Dictionary<string, ProjectIndexerData> founderProjectsToLookup,
@@ -247,5 +297,8 @@
         return "Create a new project.";
     }
 
-
+    public void Dispose()
+    {
+        _scanCts?.Dispose();
+    }
 }

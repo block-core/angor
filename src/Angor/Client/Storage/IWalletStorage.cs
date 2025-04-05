@@ -12,4 +12,6 @@ public interface IWalletStorage
     
     void SetFounderKeys(FounderKeyCollection founderPubKeys);
     FounderKeyCollection GetFounderKeys();
+    bool NeedsRescan();
+    void SetNeedsRescan(bool value);
 }
