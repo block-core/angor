@@ -18,6 +18,13 @@
                 <Icon IconName="menu_close" Height="24" Width="24" />
             </span>
         </button>
+        
+        @* Mobile expand button - only visible in mobile view *@
+        <button class="toggler mobile-expand d-block d-xl-none" @onclick="ToggleCollapse">
+            <span class="material-symbols-rounded">
+                <Icon IconName="menu_open" Height="24" Width="24" />
+            </span>
+        </button>
     </header>
 
     <nav class="sidebar-nav">
