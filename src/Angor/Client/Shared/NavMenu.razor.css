@@ -139,11 +139,16 @@
   border: none;
   cursor: pointer;
   display: flex;
-  background: transparent;
+  background-color: rgba(0, 0, 0, 0.1);
   align-items: center;
   justify-content: center;
   border-radius: 8px;
   transition: all 0.4s ease;
+  transform-origin: center;
+}
+
+.sidebar-header .toggler.rotate {
+  transform: rotate(180deg);
 }
 
 .sidebar-header .toggler:hover {
@@ -156,10 +161,13 @@
   top: 85px;
   transform: translateX(-50%);
   background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  height: 35px;
+  width: 35px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar.collapsed .sidebar-header .toggler.rotate {
+  transform: translateX(-50%) rotate(180deg);
 }
 
 /* Navigation sections */
