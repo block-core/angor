@@ -170,6 +170,11 @@
   overflow: hidden;
 }
 
+/* Add margin-top when sidebar is collapsed to accommodate the toggle button position */
+.sidebar.collapsed .sidebar-nav {
+  margin-top: 40px;
+}
+
 /* Primary nav with scrolling */
 .sidebar .sidebar-nav .primary-nav {
   flex: 1;

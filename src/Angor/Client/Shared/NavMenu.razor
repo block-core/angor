@@ -12,9 +12,9 @@
             <Icon IconName="angor-logo" />
             <span class="angor-label">Angor</span>
         </a>
-        <button class="toggler d-none d-xl-flex" @onclick="ToggleCollapse">
+        <button class="toggler d-none d-xl-flex @(IsCollapsed ? "rotate" : "")" @onclick="ToggleCollapse">
             <span class="material-symbols-rounded">
-                <Icon IconName="@(IsCollapsed ? "menu_close" : "menu_close")" Height="24" Width="24" />
+                <Icon IconName="menu_close" Height="24" Width="24" />
             </span>
         </button>
     </header>
