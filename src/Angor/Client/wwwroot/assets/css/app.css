@@ -245,9 +245,14 @@ body{
     background-image: linear-gradient(195deg, var(--angor-primary) 0%, var(--angor-primary) 100%);
 }
 
+body::-webkit-scrollbar {
+    width: 0px !important;
+    height: 0px !important;
+}
+
 ::-webkit-scrollbar {
-    width: 0px;
-    height: 0px;
+    width: 5px;
+    height: 5px;
     transition: all 0.3s ease;
     background-color: transparent;
 }
@@ -4193,11 +4198,18 @@ select.form-control {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ffffff' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
+    padding-right: 30px !important;
+    cursor: pointer;
+    background-color: var(--form-bg);
     background-repeat: no-repeat;
     background-position: calc(100% - 12px) center;
-    background-size: 12px;
-    padding-right: 30px !important;
+  }
+  
+  select.form-control {
+    background-image: linear-gradient(45deg, transparent 50%, var(--form-text) 50%),
+                      linear-gradient(135deg, var(--form-text) 50%, transparent 50%);
+    background-size: 6px 6px, 6px 6px;
+    background-position: calc(100% - 15px) center, calc(100% - 10px) center;
   }
   
   select.form-control:hover {
@@ -4206,8 +4218,8 @@ select.form-control {
   }
   
   select.form-control:focus {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364a6fd' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-    box-shadow: 0 0 0 0.25rem rgba(100, 166, 253, 0.25);
+    border-color: var(--form-focus-border);
+    box-shadow: 0 0 0 0.25rem var(--form-focus-shadow);
   }
   
   select::-ms-expand {
