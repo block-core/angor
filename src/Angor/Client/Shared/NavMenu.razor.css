@@ -378,6 +378,14 @@
         white-space: nowrap;
     }
     
+    .sidebar.collapsed .sidebar-nav {
+        margin-top: 0;
+    }
+
+    .sidebar.collapsed .sidebar-nav ::deep .nav-link .nav-label {
+        display: block;
+    }
+    
     .sidebar-nav ::deep .nav-icon {
         width: 24px;
         height: 24px;
