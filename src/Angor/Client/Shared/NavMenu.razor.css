@@ -304,27 +304,99 @@
 /* Mobile view */
 @media (max-width: 1280px) {
   .sidebar {
-    width: 85px;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    padding-left: 8px;
+    padding-right: 8px;
   }
   
+  .sidebar.collapsed {
+    width: 100%; /* Always full width in mobile */
+  }
+  
+  /* Hide the header with logo in mobile view */
   .sidebar .sidebar-header {
-    justify-content: center;
-    padding: 0 10px;
-  }
-  
-  .sidebar .header-logo .angor-label {
     display: none;
   }
   
-  .sidebar-header .toggler {
-    display: none !important;
+  .sidebar-nav {
+    margin-top: 0;
+  }
+  
+  .sidebar-nav .nav-list {
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 5px;
+  }
+  
+  .sidebar .sidebar-nav .primary-nav {
+    padding: 8px 0;
+    margin: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: row;
+  }
+  
+  .sidebar-nav .nav-item {
+    flex: 1;
+    text-align: center;
+    padding: 0;
+    margin: 0 3px;
+    max-width: 80px;
+  }
+  
+  .sidebar-nav .nav-item:first-of-type,
+  .sidebar-nav .nav-item:last-of-type {
+    padding: 0;
   }
   
   .sidebar-nav ::deep .nav-link {
+    flex-direction: column;
+    padding: 8px 5px;
+    gap: 5px;
     justify-content: center;
+    align-items: center;
+    height: auto;
+    line-height: normal;
   }
   
-  .sidebar .sidebar-nav ::deep .nav-link .nav-label {
+  .sidebar-nav ::deep .nav-link .nav-label {
+    font-size: 0.7rem;
+    display: block;
+    white-space: nowrap;
+  }
+  
+  .sidebar-nav ::deep .nav-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .sidebar-nav .nav-tooltip {
+    display: none !important;
+  }
+  
+  .sidebar-nav .secondary-nav {
     display: none;
+  }
+  
+  /* Active state styling for mobile */
+  .sidebar-nav ::deep .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Add safe area padding for iOS devices */
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .sidebar {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
   }
 }

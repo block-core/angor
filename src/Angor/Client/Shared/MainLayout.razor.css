@@ -22,6 +22,12 @@
 
 .page-content {
     flex-grow: 1;
+    padding-left: 216px; /* Default padding with sidebar visible (200px width + 16px margin) */
+    transition: padding-left 0.4s ease;
+}
+
+.page-content.sidebar-collapsed {
+    padding-left: 101px; /* Reduced padding when sidebar is collapsed (85px width + 16px margin) */
 }
 
 .footer {
@@ -30,11 +36,26 @@
 
 @media (max-width: 1280px) {
     .main-content {
-        margin-left: 105px; /* Match desktop collapsed margin */
-        width: calc(100% - 105px);
+        margin-left: 0px;
+        width: 100%;
     }
     
     .sidenav-show.sidenav-hidden .main-content {
-        margin-left: 105px;
+        margin-left: 0px;
+    }
+
+    .page-content, 
+    .page-content.sidebar-collapsed {
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-bottom: 80px; /* Add bottom padding to prevent content from being hidden under mobile menu */
+    }
+
+    /* Add iOS safe area support */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        .page-content, 
+        .page-content.sidebar-collapsed {
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+        }
     }
 }

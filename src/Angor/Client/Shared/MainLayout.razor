@@ -52,7 +52,7 @@
         <!-- End Navbar -->
 
         <div class="content-wrapper">
-            <div class="container-fluid py-4 page-content">
+            <div class="container-fluid py-4 page-content @(isSidebarCollapsed ? "sidebar-collapsed" : "")">
                 @Body
             </div>
 
