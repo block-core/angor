@@ -51,22 +51,24 @@
         </nav>
         <!-- End Navbar -->
 
-        <div class="container-fluid py-4">
-            @Body
-        </div>
+        <div class="content-wrapper">
+            <div class="container-fluid py-4 page-content">
+                @Body
+            </div>
 
-        <footer class="footer mt-auto py-3 px-0 mx-2 left-auto">
-            <div class="row">
-                <div class="nav nav-footer justify-content-center">
-                    <div class="card card-body border-radius-lg d-flex align-items-center flex-row p-3 ms-0 me-0">
-                        <h6 class="mb-0">Version: @_softwareVersion</h6>
-                        <a href="https://github.com/block-core/angor" class="ms-auto text-dark cursor-pointer" target="_blank">
-                            <Icon IconName="github" />
-                        </a>
+            <footer class="footer py-3 px-0 mx-2">
+                <div class="row">
+                    <div class="nav nav-footer justify-content-center">
+                        <div class="card card-body border-radius-lg d-flex align-items-center flex-row p-3 ms-0 me-0">
+                            <h6 class="mb-0">Version: @_softwareVersion</h6>
+                            <a href="https://github.com/block-core/angor" class="ms-auto text-dark cursor-pointer" target="_blank">
+                                <Icon IconName="github" />
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </footer>
+            </footer>
+        </div>
     </main>
 </div>
 
