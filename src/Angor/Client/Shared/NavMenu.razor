@@ -22,14 +22,14 @@
     <nav class="sidebar-nav">
         <ul class="nav-list primary-nav">
             <li class="nav-item">
-                <NavLink class="nav-link" href="wallet">
+                <NavLink class="@GetNavLinkClass("wallet")" href="wallet">
                     <span class="nav-icon"><Icon IconName="wallet" /></span>
                     <span class="nav-label">Wallet</span>
                 </NavLink>
                 <span class="nav-tooltip">Wallet</span>
             </li>
             <li class="nav-item">
-                <NavLink class="nav-link" href="browse">
+                <NavLink class="@GetNavLinkClass("browse")" href="browse">
                     <span class="nav-icon"><Icon IconName="browse" /></span>
                     <span class="nav-label">Browse</span>
                 </NavLink>
@@ -39,7 +39,7 @@
             @if (hasWallet)
             {
                 <li class="nav-item">
-                    <NavLink class="nav-link" href="investor">
+                    <NavLink class="@GetNavLinkClassForInvestor()" href="investor">
                         <span class="nav-icon"><Icon IconName="portfolio" /></span>
                         <span class="nav-label">Portfolio</span>
                     </NavLink>
@@ -47,7 +47,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <NavLink class="nav-link" href="founder">
+                    <NavLink class="@GetNavLinkClass("founder")" href="founder">
                         <span class="nav-icon"><Icon IconName="founder" /></span>
                         <span class="nav-label">Founder</span>
                     </NavLink>
@@ -56,7 +56,7 @@
             }
 
             <li class="nav-item">
-                <NavLink class="nav-link" href="settings">
+                <NavLink class="@GetNavLinkClass("settings")" href="settings">
                     <span class="nav-icon"><Icon IconName="settings" /></span>
                     <span class="nav-label">Settings</span>
                 </NavLink>
