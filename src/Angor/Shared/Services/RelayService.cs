@@ -156,6 +156,7 @@ namespace Angor.Shared.Services
             return Task.CompletedTask;
         }
 
+        //dm lookups
         public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Func<NostrEvent,Task> onResponseAction, string? senderNpub = null)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
