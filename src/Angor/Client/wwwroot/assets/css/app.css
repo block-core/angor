@@ -4329,3 +4329,37 @@ select.form-control {
 }
 
 
+.input-with-ticker {
+    padding-right: 4.5rem !important;
+}
+
+.currency-ticker-inside {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--angor-secondary);
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    background-color: rgba(var(--angor-secondary-rgb), 0.1);
+    pointer-events: none; 
+    z-index: 2;
+}
+
+.dark .currency-ticker-inside {
+    background-color: rgba(10, 140, 167, 0.2);
+    color: var(--form-text);
+}
+
+@media (max-width: 768px) {
+    .currency-ticker-inside {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.9rem;
+        right: 8px;
+    }
+    
+    .input-with-ticker {
+        padding-right: 4rem !important;
+    }
+}
