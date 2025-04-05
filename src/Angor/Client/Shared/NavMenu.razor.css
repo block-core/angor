@@ -112,7 +112,7 @@
   padding: 0 10px;
 }
 
-/* Logo and label */
+/* Logo styling */
 .sidebar-header .header-logo {
   display: flex;
   align-items: center;
@@ -131,7 +131,7 @@
   opacity: 0;
 }
 
-/* Toggle buttons */
+/* Toggle button */
 .sidebar-header .toggler {
   height: 35px;
   width: 35px;
@@ -143,14 +143,13 @@
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  transition: 0.4s ease;
+  transition: all 0.4s ease;
 }
 
 .sidebar-header .toggler:hover {
   background: rgba(34, 32, 32, 0.1);
 }
 
-/* Position the toggle button in collapsed mode */
 .sidebar.collapsed .sidebar-header .toggler {
   position: absolute;
   left: 50%;
@@ -163,7 +162,7 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
-/* Navigation container */
+/* Navigation sections */
 .sidebar-nav {
   display: flex;
   flex-direction: column;
@@ -171,59 +170,70 @@
   overflow: hidden;
 }
 
-/* Navigation lists */
-.sidebar-nav .nav-list {
-  list-style: none;
-  display: flex;
-  gap: 1rem;
-  padding: 0 15px;
-  flex-direction: column;
-}
-
-/* Primary nav section - with scrolling */
+/* Primary nav with scrolling */
 .sidebar .sidebar-nav .primary-nav {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 5px;
-  margin: 15px 0;
+  padding: 15px;
+  margin-bottom: 10px;
 }
 
-/* Secondary nav (footer) */
-.sidebar-nav .secondary-nav {
-  padding-bottom: 15px;
+/* Navigation items */
+.sidebar-nav .nav-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
 }
 
-/* Navigation links */
+.sidebar-nav .nav-item {
+  position: relative;
+  padding: 0;
+}
+
+/* Links styling */
 .sidebar-nav ::deep .nav-link {
   color: white;
   display: flex;
-  gap: 0.6rem;
-  font-size: 1rem;
-  white-space: nowrap;
-  border-radius: 12px;
-  padding: 12px;
   align-items: center;
+  padding: 12px;
+  border-radius: 12px;
   text-decoration: none;
+  gap: 12px;
 }
 
 .sidebar.collapsed .sidebar-nav ::deep .nav-link {
   justify-content: center;
 }
 
-.sidebar .sidebar-nav .nav-link .nav-label {
+.sidebar-nav ::deep .nav-link .nav-label {
   color: white;
-  transition: opacity 0.3s ease;
 }
 
-.sidebar.collapsed .sidebar-nav .nav-link .nav-label {
+.sidebar.collapsed .sidebar-nav ::deep .nav-link .nav-label {
   display: none;
 }
 
-/* Tooltip for collapsed mode */
+/* Nav icons */
+.sidebar-nav ::deep .nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+/* Secondary nav (footer) */
+.sidebar-nav .secondary-nav {
+  padding: 0 15px 15px 15px;
+}
+
+/* Tooltip styles */
 .sidebar-nav .nav-tooltip {
   position: fixed;
-  top: auto;
   opacity: 0;
   color: #083b46;
   display: none;
@@ -231,11 +241,12 @@
   padding: 8px 16px;
   border-radius: 8px;
   white-space: nowrap;
-  background: rgba(255, 255, 255, 0.98);
+  background: white;
   left: calc(100% + 10px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
   z-index: 1060;
   transform: translateY(-50%);
+  transition: opacity 0.3s ease;
 }
 
 .sidebar.collapsed .sidebar-nav .nav-tooltip {
@@ -248,35 +259,36 @@
   pointer-events: auto;
 }
 
-/* Light theme variation */
-.sidebar.white {
-  background: #f5fdff;
-}
-
-.sidebar.white .sidebar-nav .nav-link .nav-label,
-.sidebar.white .sidebar-header .header-logo .angor-label {
-  color: #000;
-}
-
-.sidebar.white .nav-item ::deep a.active {
-  background-color: rgba(24, 23, 23, 0.25);
-}
-
-.sidebar.white .nav-item ::deep a:hover {
-  background-color: rgba(34, 32, 32, 0.1);
-}
-
 /* Active and hover states */
-.nav-item ::deep a.active {
+.sidebar-nav ::deep .nav-link.active {
   background-color: rgba(14, 13, 13, 0.25);
   color: white;
 }
 
-.nav-item ::deep a:hover {
+.sidebar-nav ::deep .nav-link:hover {
   background-color: rgba(255,255,255,0.1);
+  color: white;
 }
 
-/* Mobile-specific adjustments */
+/* White theme variation */
+.sidebar.white {
+  background: #f5fdff;
+}
+
+.sidebar.white .sidebar-nav ::deep .nav-link .nav-label,
+.sidebar.white .sidebar-header .header-logo .angor-label {
+  color: #000;
+}
+
+.sidebar.white .sidebar-nav ::deep .nav-link.active {
+  background-color: rgba(24, 23, 23, 0.25);
+}
+
+.sidebar.white .sidebar-nav ::deep .nav-link:hover {
+  background-color: rgba(34, 32, 32, 0.1);
+}
+
+/* Mobile view */
 @media (max-width: 1280px) {
   .sidebar {
     width: 85px;
@@ -291,39 +303,15 @@
     display: none;
   }
   
-  .sidebar-header .sidebar-toggler {
-    display: none;
+  .sidebar-header .toggler {
+    display: none !important;
   }
   
   .sidebar-nav ::deep .nav-link {
     justify-content: center;
   }
   
-  .sidebar .sidebar-nav .nav-link .nav-label {
+  .sidebar .sidebar-nav ::deep .nav-link .nav-label {
     display: none;
-  }
-  
-  /* Mobile expand button */
-  .sidebar-header .mobile-expand {
-    position: absolute;
-    left: 50%;
-    top: 85px;
-    transform: translateX(-50%);
-    z-index: 100;
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-  }
-}
-
-/* Ensure sidebar is always visible */
-@media (min-width: 1280px) {
-  .sidebar {
-    transform: translateX(0);
   }
 }
