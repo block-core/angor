@@ -65,6 +65,10 @@
     --form-focus-shadow: rgba(10, 140, 167, 0.25);
 }
 
+body{
+    overflow-x: hidden !important;
+}
+
 .col-form-label {
     color: var(--angor-primary);
 }

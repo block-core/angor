@@ -94,6 +94,8 @@
 }
 .sidebar.collapsed {
   width: 85px;
+  overflow-x: hidden; /* Prevent content from spilling outside */
+  overflow-y: visible;
 }
 .sidebar .sidebar-header {
   display: flex;
@@ -103,6 +105,16 @@
   padding: 27px;
   align-items: center;
   justify-content: space-between;
+}
+.sidebar.collapsed .sidebar-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-radius: 16px;
+  padding: 20px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .sidebar-header .header-logo{
   display: flex !important;
@@ -127,6 +139,7 @@
   transition: opacity 0.1s ease !important;
 }
 .sidebar.collapsed .header-logo .angor-label {
+  display: none;
   opacity: 0 !important;
   pointer-events: none !important;
 }
@@ -151,7 +164,11 @@
   display: none;
 }
 .sidebar.collapsed .sidebar-header .toggler {
-  transform: translate(-4px, 65px);
+  position: absolute;
+  right: 8px; /* Adjust position to be visible within the collapsed sidebar */
+  top: 75px; /* Move the toggle button down to align with the first menu item */
+  z-index: 100; /* Ensure it appears above other elements */
+  transform: none; /* Reset any transforms that might affect positioning */
 }
 .sidebar-header .toggler:hover {
   background: rgba(34, 32, 32, 0.1);
@@ -177,7 +194,8 @@
   transition: 0.3s ease;
 }
 .sidebar.collapsed .sidebar-nav .primary-nav {
-  transform: translateY(65px);
+  transform: translateY(0) !important;
+  overflow: visible;
 }
 .sidebar .sidebar-nav .primary-nav {
   height: calc(100vh - 250px);
@@ -194,6 +212,9 @@
   text-decoration: none;
   transition: all 0.3s ease;
 }
+.sidebar.collapsed .sidebar-nav ::deep .nav-link {
+  justify-content: center;
+}
 .sidebar.collapsed .sidebar-nav .nav-link {
   border-radius: 12px;
 }
@@ -202,8 +223,7 @@
   transition: opacity 0.3s ease;
 }
 .sidebar.collapsed .sidebar-nav .nav-link .nav-label {
-  opacity: 0;
-  pointer-events: none;
+  display: none;
 }
 .sidebar-nav .nav-item {
   position: relative;
@@ -228,6 +248,10 @@
 }
 .sidebar.collapsed .sidebar-nav .nav-tooltip {
   display: block;
+  left: 85px; /* Position tooltip right after sidebar width */
+  background: rgba(255, 255, 255, 0.98);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
 }
 .sidebar-nav .nav-item:hover .nav-tooltip {
   opacity: 1;
@@ -261,11 +285,36 @@
   background-color: rgba(34, 32, 32, 0.1);
 }
 
+/* Ensure consistent styling between collapsed desktop and mobile views */
+.sidebar.collapsed {
+  width: 85px;
+  overflow-x: hidden; /* Prevent content from spilling outside */
+  overflow-y: visible;
+}
+
+.sidebar.collapsed .sidebar-header {
+  padding: 20px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-nav ::deep .nav-link {
+  justify-content: center;
+}
+
+.sidebar.collapsed .header-logo .angor-label {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Responsive media query code for small screens */
 @media (max-width: 1280px) {
   .sidebar {
-    width: 5rem;
+    width: 85px; /* Match collapsed desktop width */
     height: calc(100vh - 32px);
+    overflow-x: hidden; /* Prevent horizontal overflow */
     overflow-y: visible;
   }
   .sidebar .sidebar-header {
@@ -301,6 +350,7 @@
   }
   .sidebar .sidebar-nav .primary-nav {
     transform: translateY(0) !important;
+    overflow: visible; /* Allow tooltips to show */
   }
   
   .sidebar-header .menu-toggler {
