@@ -79,7 +79,7 @@
 
 .sidebar {
   position: fixed;
-  width: 270px;
+  width: 200px;
   margin-left: 16px;
   margin-bottom: 20px;
   border-radius: 16px;
@@ -99,7 +99,7 @@
   position: relative;
   height: 4.875rem;
   border-radius: 16px;
-  padding: 25px 20px;
+  padding: 27px;
   align-items: center;
   justify-content: space-between;
 }
@@ -153,10 +153,14 @@
   transform: translate(-4px, 65px);
 }
 .sidebar-header .toggler:hover {
-  background: #b8b9bd;
+  background: rgba(34, 32, 32, 0.1);
 }
+
+.dark .sidebar-header .toggler:hover {
+  background: rgba(255,255,255,0.1);
+}
+
 .sidebar-header .toggler span {
-  font-size: 1.75rem;
   transition: 0.4s ease;
 }
 .sidebar.collapsed .sidebar-header .toggler span {
@@ -176,7 +180,6 @@
 }
 .sidebar .sidebar-nav .primary-nav {
   height: calc(100vh - 250px);
-  overflow: auto;
 }
 .sidebar-nav ::deep .nav-link {
   color: rgb(255, 255, 255);
@@ -185,11 +188,10 @@
   font-size: 1rem;
   white-space: nowrap;
   border-radius: 12px;
-  padding: 12px 16px;
+  padding: 12px;
   align-items: center;
   text-decoration: none;
   transition: all 0.3s ease;
-  margin-bottom: 4px;
 }
 .sidebar.collapsed .sidebar-nav .nav-link {
   border-radius: 12px;
@@ -233,7 +235,6 @@
 }
 .sidebar-nav .secondary-nav {
   position: absolute;
-  background: #083b46;
   border-radius: 16px;
   bottom: 0;
   width: 100%;
@@ -241,16 +242,12 @@
 .sidebar.white{
   background: #f5fdff;
 }
-.sidebar.white .sidebar-header {
-  background: #f5fdff;
-}
-.sidebar.white .sidebar-nav .secondary-nav {
-  background: #f5fdff;
-}
+
 .sidebar.white .sidebar-nav .nav-link .nav-label {
   color: rgb(0, 0, 0);
   transition: opacity 0.3s ease;
 }
+
 .sidebar.white .sidebar-header .header-logo .angor-label{
   color: #000000 !important;
 }
@@ -275,16 +272,18 @@
     top: 0;
     z-index: 20;
     border-radius: 16px;
-    background: #083b46;
     padding: 20px 10px;
     display: flex;
     align-items: center;
-    justify-content: space-around;
+    justify-content: center;
   }
   .sidebar .sidebar-nav {
     height: 92%;
     display: flex;
     flex-direction: column;
+  }
+  .sidebar-nav ::deep .nav-link {
+    justify-content: center;
   }
   .sidebar-header .header-logo svg.icon {
     width: 40px;

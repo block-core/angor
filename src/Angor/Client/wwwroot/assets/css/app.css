@@ -1558,7 +1558,6 @@ button:disabled {
 
 button:hover:not(:disabled) {
     transform: scale(1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 @keyframes bounceIn {
@@ -2757,7 +2756,6 @@ button:hover:not(:disabled) {
 
 .nav-item {
     align-items: center;
-    padding: 0.25rem;
 }
 
 .nav-item span[role="button"] {
@@ -2775,11 +2773,7 @@ button:hover:not(:disabled) {
     transform: scale(1.1);
 }
 
-@media (max-width: 576px) {
-    .navbar .container-fluid {
-        padding: 0.25rem 0.5rem;
-    }
-    
+@media (max-width: 576px) { 
     .nav-item span[role="button"] {
         width: 1.75rem;
         height: 1.75rem;
@@ -4317,3 +4311,5 @@ select.form-control {
         font-size: 0.9rem;
     }
 }
+
+

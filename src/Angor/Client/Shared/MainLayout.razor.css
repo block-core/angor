@@ -1,13 +1,13 @@
 .main-content {
     position: relative;
-    margin-left: 290px;
+    margin-left: 220px;
     height: 100vh;
     transition: all 0.4s ease;
     z-index: 10;
 }
 
 .sidenav-show.sidenav-hidden .main-content {
-    margin-left: 100px;
+    margin-left: 105px;
 }
 
 
@@ -18,6 +18,6 @@
     }
     
     .sidenav-show.sidenav-hidden .main-content {
-        margin-left: 100px;
+        margin-left: 105px;
     }
 }
