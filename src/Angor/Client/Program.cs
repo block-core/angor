@@ -67,6 +67,7 @@ builder.Services.AddScoped<NostrConversionHelper>();
 builder.Services.AddScoped<IconService>();
 
 builder.Services.AddScoped<IWalletUIService, WalletUIService>();
+builder.Services.AddScoped<INostrEventCacheService, NostrEventCacheService>();
 
 // to change culture dynamically during startup,
 // set <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
