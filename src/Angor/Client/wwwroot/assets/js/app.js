@@ -1,5 +1,22 @@
 ﻿'use strict';
 
+(function() {
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme === 'dark') {
+        document.body.classList.add('dark');
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+            sidebar.classList.remove('white');
+        }
+    } else {
+        document.body.classList.remove('dark');
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+            sidebar.classList.add('white');
+        }
+    }
+})();
+
 window.angor = {
     installApp: function () {
         window.AngorAPP.installPWA();
@@ -18,6 +35,11 @@ window.angor = {
         if (loader) {
             loader.classList.add('dark');
         }
+        
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+            sidebar.classList.remove('white');
+        }
     },
 
     addLightBackground: function () {
@@ -26,6 +48,11 @@ window.angor = {
         if (loader) {
             loader.classList.remove('dark');
         }
+        
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+            sidebar.classList.add('white');
+        }
     },
 
     initializeSidebar: function () {
@@ -33,7 +60,6 @@ window.angor = {
         const sidebarToggler = document.querySelector(".sidebar-toggler");
         const menuToggler = document.querySelector(".menu-toggler");
         
-        // Ensure these heights match the CSS sidebar height values
         const collapsedSidebarHeight = "56px";
         const fullSidebarHeight = "calc(100vh - 32px)";
 
