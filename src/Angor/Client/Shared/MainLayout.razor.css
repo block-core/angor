@@ -1,6 +1,6 @@
 .main-content {
     position: relative;
-    margin-left: 220px;
+    margin-left: 210px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -10,7 +10,7 @@
 }
 
 .sidenav-show.sidenav-hidden .main-content {
-    margin-left: 105px;
+    margin-left: 95px;
 }
 
 .content-wrapper {
@@ -23,41 +23,70 @@
 .page-content {
     flex-grow: 1;
     margin: auto;
-    max-width: 1280px;;
+    max-width: 1280px;
 }
 
 .page-content.sidebar-collapsed {
-    padding-left: 101px; /* Reduced padding when sidebar is collapsed (85px width + 16px margin) */
+    padding-left: 101px;
 }
 
 .footer {
     position: relative;
 }
 
-@media (max-width: 1280px) {
+.mobile-logo {
+    display: none;
+}
+
+@media (min-width: 768px) and (max-width: 1280px) {
+    .main-content {
+        margin-left: 210px;
+        width: calc(100% - 210px);
+    }
+    
+    .sidenav-show.sidenav-hidden .main-content {
+        margin-left: 95px;
+        width: calc(100% - 95px);
+    }
+}
+
+@media (max-width: 768px) {
     .main-content {
         margin-left: 0px;
         width: 100%;
+        padding-bottom: 80px;
+    }
+    
+    .mobile-logo {
+        display: flex;
+        align-items: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+    
+    .text-sm h6 {
+        font-size: 0.9rem;
+    }
+    
+    .text-sm h6 span {
+        font-weight: 400;
     }
     
     .sidenav-show.sidenav-hidden .main-content {
         margin-left: 0px;
     }
-
+    
     .page-content, 
     .page-content.sidebar-collapsed {
         padding-left: 16px;
         padding-right: 16px;
-        padding-bottom: 80px; /* Reserve 80px at the bottom for mobile menu */
-        margin-bottom: 0; /* Ensure no additional margin */
+        padding-bottom: 80px;
     }
     
-    /* Hide footer in mobile view */
     .footer {
         display: none;
     }
-
-    /* Add iOS safe area support */
+    
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
         .page-content, 
         .page-content.sidebar-collapsed {

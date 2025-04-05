@@ -81,7 +81,7 @@
 .sidebar {
   position: fixed;
   width: 200px;
-  margin: 16px;
+  margin: 16px 16px 16px 8px;
   border-radius: 16px;
   background: #083b46;
   height: calc(100vh - 32px);
@@ -301,8 +301,35 @@
   background-color: rgba(34, 32, 32, 0.1);
 }
 
-/* Mobile view */
-@media (max-width: 1280px) {
+/* Keep all desktop styles as they are until max-width: 768px */
+
+/* Add tablet-specific styles to ensure toggler is visible */
+@media (min-width: 768px) and (max-width: 1280px) {
+  .sidebar {
+    /* Keep the sidebar styles like desktop */
+    position: fixed;
+    width: 200px;
+    margin: 16px 16px 16px 8px;
+    border-radius: 16px;
+    height: calc(100vh - 32px);
+  }
+  
+  .sidebar.collapsed {
+    width: 85px;
+  }
+  
+  /* Ensure the toggler is visible in tablet view */
+  .sidebar-header .toggler {
+    display: flex !important;
+  }
+  
+  /* Adjust header spacing if needed */
+  .sidebar .sidebar-header {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 768px) {
   .sidebar {
     width: 100%;
     height: auto;
@@ -316,6 +343,7 @@
     z-index: 1000;
     padding-left: 8px;
     padding-right: 8px;
+    max-height: 80px; /* Strict 80px maximum height for mobile menu */
   }
   
   .sidebar.collapsed {
@@ -344,6 +372,7 @@
     overflow-y: hidden;
     display: flex;
     flex-direction: row;
+    max-height: 80px; /* Ensure no overflow beyond 80px */
   }
   
   .sidebar-nav .nav-item {
@@ -361,7 +390,6 @@
   
   .sidebar-nav ::deep .nav-link {
     flex-direction: column;
-    padding: 8px 5px;
     gap: 5px;
     justify-content: center;
     align-items: center;

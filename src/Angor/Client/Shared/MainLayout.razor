@@ -21,9 +21,16 @@
         <nav class="navbar navbar-main navbar-expand-lg px-0 border-radius-xl position-sticky mt-3 z-index-sticky left-auto ms-2 me-2" id="navbarBlur">
             <div class="container-fluid">
                 <nav class="d-flex align-items-center">
+                    <!-- Logo for mobile view -->
+                    <div class="mobile-logo d-lg-none me-2">
+                        <a href="/" class="d-flex align-items-center text-decoration-none">
+                            <Icon IconName="angor-logo" />
+                            <span class="angor-label ms-2">Angor</span>
+                        </a>
+                    </div>
                     <div class="text-sm">
                         <h6 class="font-weight-bolder m-0" title="@networkText">
-                            <Icon IconName="network" class="me-2" />
+                            <Icon IconName="network" class="me-2 d-none d-lg-inline" />
                             <span>@networkText</span>
                         </h6>
                     </div>
