@@ -2457,7 +2457,7 @@ button:hover:not(:disabled) {
 
 .notification-wrapper {
     position: fixed;
-    bottom: 20px;
+    bottom: 100px;
     left: 0;
     right: 0;
     z-index: 99999999;
