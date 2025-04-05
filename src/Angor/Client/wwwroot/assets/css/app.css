@@ -246,8 +246,8 @@ body{
 }
 
 ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 0px;
+    height: 0px;
     transition: all 0.3s ease;
     background-color: transparent;
 }

@@ -22,8 +22,8 @@
 
 .page-content {
     flex-grow: 1;
-    padding-left: 216px; /* Default padding with sidebar visible (200px width + 16px margin) */
-    transition: padding-left 0.4s ease;
+    margin: auto;
+    max-width: 1280px;;
 }
 
 .page-content.sidebar-collapsed {
@@ -48,7 +48,13 @@
     .page-content.sidebar-collapsed {
         padding-left: 16px;
         padding-right: 16px;
-        padding-bottom: 80px; /* Add bottom padding to prevent content from being hidden under mobile menu */
+        padding-bottom: 80px; /* Reserve 80px at the bottom for mobile menu */
+        margin-bottom: 0; /* Ensure no additional margin */
+    }
+    
+    /* Hide footer in mobile view */
+    .footer {
+        display: none;
     }
 
     /* Add iOS safe area support */
