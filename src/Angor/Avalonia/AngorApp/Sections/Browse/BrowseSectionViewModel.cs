@@ -1,5 +1,6 @@
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Wallet.Application;
+using AngorApp.Sections.Browse.Details;
 using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
@@ -14,15 +15,17 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
 
     [ObservableAsProperty] private IList<IProjectViewModel>? projects;
 
-    public BrowseSectionViewModel(IWalletAppService walletAppService, IProjectAppService projectService, INavigator navigator,
+    public BrowseSectionViewModel(IWalletAppService walletAppService, 
+        IProjectAppService projectService, INavigator navigator,
+        InvestWizard investWizard,
         UIServices uiServices)
     {
-        ProjectLookupViewModel = new ProjectLookupViewModel(projectService, walletAppService, navigator, uiServices);
+        ProjectLookupViewModel = new ProjectLookupViewModel(projectService, walletAppService, navigator, investWizard, uiServices);
 
         LoadLatestProjects = ReactiveCommand.CreateFromObservable(() => Observable.FromAsync(projectService.Latest)
             .Flatten()
             .Select(dto => dto.ToProject())
-            .Select(IProjectViewModel (project) => new ProjectViewModel(walletAppService, project, navigator, uiServices))
+            .Select(IProjectViewModel (project) => new ProjectViewModel(walletAppService, project, navigator, uiServices, investWizard))
             .ToList());
 
         OpenHub = ReactiveCommand.CreateFromTask(() =>

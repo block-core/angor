@@ -11,7 +11,7 @@ public static class ProjectExtensions
         return new Project
         {
             Banner = dto.Banner,
-            Id = dto.Id.ToString(),
+            Id = dto.Id.Value,
             InformationUri = dto.InformationUri,
             Name = dto.Name,
             NpubKey = dto.NostrNpubKey,

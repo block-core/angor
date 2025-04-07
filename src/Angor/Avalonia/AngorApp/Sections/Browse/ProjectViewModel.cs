@@ -10,11 +10,11 @@ public class ProjectViewModel(
     IWalletAppService walletAppService,
     IProject project,
     INavigator navigator,
-    UIServices uiServices)
+    UIServices uiServices, InvestWizard investWizard)
     : ReactiveObject, IProjectViewModel
 {
     public IProject Project { get; } = project;
 
     public ICommand GoToDetails { get; set; } = ReactiveCommand.Create(() =>
-        navigator.Go(() => new ProjectDetailsViewModel(walletAppService, project, uiServices)));
+        navigator.Go(() => new ProjectDetailsViewModel(walletAppService, project, investWizard, uiServices)));
 }

@@ -25,6 +25,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
         LoadBalance.Execute().Subscribe();
     }
 
+    public Maybe<string> Title => $"Invest in {Project.Name}";
     public ReactiveCommand<Unit,long> LoadBalance { get; }
     public IProject Project { get; }
     public IObservable<bool> IsValid => this.IsValid();

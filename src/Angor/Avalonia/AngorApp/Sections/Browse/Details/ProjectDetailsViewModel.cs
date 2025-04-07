@@ -3,13 +3,9 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
-using AngorApp.Sections.Browse.Details.Invest.Amount;
-using AngorApp.UI.Controls.Common.Success;
 using AngorApp.UI.Controls.Common.TransactionDraft;
 using AngorApp.UI.Services;
 using Avalonia.Threading;
-using Zafiro.Avalonia.Controls.Wizards.Builder;
-using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI;
 
 namespace AngorApp.Sections.Browse.Details;
@@ -17,10 +13,12 @@ namespace AngorApp.Sections.Browse.Details;
 public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 {
     private readonly IProject project;
+    private readonly InvestWizard investWizard;
 
-    public ProjectDetailsViewModel(IWalletAppService walletAppService, IProject project, UIServices uiServices)
+    public ProjectDetailsViewModel(IWalletAppService walletAppService, IProject project, InvestWizard investWizard, UIServices uiServices)
     {
         this.project = project;
+        this.investWizard = investWizard;
         Invest = ReactiveCommand.CreateFromTask(() =>
         {
             return walletAppService.GetMetadatas()
@@ -64,23 +62,8 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
     public double CurrentInvestment { get; } = 0.79d;
     public IProject Project => project;
 
-    private static async Task<Maybe<Unit>> DoInvest(WalletId walletId, IWalletAppService walletAppService, IProject project, UIServices uiServices)
+    private Task<Maybe<Unit>> DoInvest(WalletId walletId, IWalletAppService walletAppService, IProject project, UIServices uiServices)
     {
-        return await Observable
-            .Defer(() => Observable.FromAsync(() =>
-            {
-                var wizard = WizardBuilder.StartWith(() => new AmountViewModel(walletId, walletAppService, project))
-                    .Then(viewModel =>
-                    {
-                        var destination = new Destination(project.Name, viewModel.Amount!.Value, project.BitcoinAddress);
-                        return new TransactionDraftViewModel(walletId, walletAppService, destination, uiServices);
-                    })
-                    .Then(_ => new SuccessViewModel("Transaction confirmed!", "Success"))
-                    .FinishWith(model => Unit.Default);
-                
-                return uiServices.Dialog.ShowWizard(wizard, @$"Invest in ""{project}""");
-            }))
-            .SubscribeOn(RxApp.MainThreadScheduler)
-            .FirstAsync();
+        return investWizard.Invest(walletId, project);
     }
 }

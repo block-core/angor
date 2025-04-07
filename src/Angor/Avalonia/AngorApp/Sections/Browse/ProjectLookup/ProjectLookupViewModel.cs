@@ -7,6 +7,7 @@ using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.UI.Model;
 using Angor.Contexts.Wallet.Application;
 using AngorApp.Core;
+using AngorApp.Sections.Browse.Details;
 using AngorApp.UI.Services;
 using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
@@ -29,6 +30,7 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
         IProjectAppService projectService,
         IWalletAppService walletAppService,
         INavigator navigator,
+        InvestWizard investWizard,
         UIServices uiServices)
     {
         lookupResults = new SafeMaybe<IList<IProjectViewModel>>(Maybe<IList<IProjectViewModel>>.None);
@@ -41,7 +43,7 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
 
                 return maybeProject.Map<IProject, IList<IProjectViewModel>>(project =>
                 {
-                    var vm = new ProjectViewModel(walletAppService, project, navigator, uiServices);
+                    var vm = new ProjectViewModel(walletAppService, project, navigator, uiServices, investWizard);
                     return new List<IProjectViewModel> { vm };
                 }).AsSafeMaybe();
             }

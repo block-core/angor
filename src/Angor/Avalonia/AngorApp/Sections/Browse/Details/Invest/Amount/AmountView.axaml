@@ -23,31 +23,8 @@
 
     <Panel>
         <StackPanel Spacing="20" IsVisible="{Binding !IsBusy^}">
-            <TextBlock TextWrapping="Wrap">
-                <TextBlock.Inlines>
-                    <Run>
-                        Here is a small explanation of the project.
-                    </Run>
-                    <Run>You can view more details about the project </Run>
-                    <InlineUIContainer>
-                        <HyperlinkButton Content="here" Padding="0" NavigateUri="{Binding Project.InformationUri}" />
-                    </InlineUIContainer>
-                </TextBlock.Inlines>
-            </TextBlock>
-            <TextBlock TextWrapping="Wrap">
-                To invest in this project, the founder must sign a recovery agreement.
-                This agreement ensures that in the event the project does not succeed, you will be able to recover your funds.
-                This provides a safety net for your investment, giving you peace of mind that your financial contribution is protected.
-            </TextBlock>
-            <Separator />
             <StackPanel Spacing="10" Grid.IsSharedSizeScope="True">
-                <HeaderedContentControl Theme="{StaticResource Inline}" Header="Project Id:"
-                                        Content="{Binding Project.Id}" />
-                <HeaderedContentControl Theme="{StaticResource Inline}" Header="Target Amount:"
-                                        Content="{Binding Project.TargetAmount, StringFormat={x:Static controls:MiscConverters.BigBtcFormat} }" />
-                <HeaderedContentControl Theme="{StaticResource Inline}" Header="Starting in:"
-                                        Content="{Binding Project.StartingDate}" />
-                <Separator />
+
                 <controls:AmountControl Satoshis="{Binding Amount}">
                     <Interaction.Behaviors>
                         <behaviors:UntouchedClassBehavior />
