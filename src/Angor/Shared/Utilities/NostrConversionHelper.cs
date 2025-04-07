@@ -59,5 +59,18 @@ namespace Angor.Shared.Utilities
         {
             return NostrConverter.ToNote(hexKey);
         }
+        
+        public string? ConvertNoteIdToNote(string noteId)
+        {
+            try
+            {
+                return NostrConverter.ToNote(noteId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error converting noteId to note: {ex.Message}");
+                return null;
+            }
+        }
     }
 }
