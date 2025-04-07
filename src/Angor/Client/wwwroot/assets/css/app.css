@@ -65,6 +65,10 @@
     --form-focus-shadow: rgba(10, 140, 167, 0.25);
 }
 
+body{
+    overflow-x: hidden !important;
+}
+
 .col-form-label {
     color: var(--angor-primary);
 }
@@ -239,6 +243,11 @@
 
 .card.card-background.card-background-mask-primary:after {
     background-image: linear-gradient(195deg, var(--angor-primary) 0%, var(--angor-primary) 100%);
+}
+
+body::-webkit-scrollbar {
+    width: 0px !important;
+    height: 0px !important;
 }
 
 ::-webkit-scrollbar {
@@ -1558,7 +1567,6 @@ button:disabled {
 
 button:hover:not(:disabled) {
     transform: scale(1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 @keyframes bounceIn {
@@ -2454,7 +2462,7 @@ button:hover:not(:disabled) {
 
 .notification-wrapper {
     position: fixed;
-    bottom: 20px;
+    bottom: 100px;
     left: 0;
     right: 0;
     z-index: 99999999;
@@ -2757,7 +2765,6 @@ button:hover:not(:disabled) {
 
 .nav-item {
     align-items: center;
-    padding: 0.25rem;
 }
 
 .nav-item span[role="button"] {
@@ -2775,11 +2782,7 @@ button:hover:not(:disabled) {
     transform: scale(1.1);
 }
 
-@media (max-width: 576px) {
-    .navbar .container-fluid {
-        padding: 0.25rem 0.5rem;
-    }
-    
+@media (max-width: 576px) { 
     .nav-item span[role="button"] {
         width: 1.75rem;
         height: 1.75rem;
@@ -4195,11 +4198,18 @@ select.form-control {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ffffff' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
+    padding-right: 30px !important;
+    cursor: pointer;
+    background-color: var(--form-bg);
     background-repeat: no-repeat;
     background-position: calc(100% - 12px) center;
-    background-size: 12px;
-    padding-right: 30px !important;
+  }
+  
+  select.form-control {
+    background-image: linear-gradient(45deg, transparent 50%, var(--form-text) 50%),
+                      linear-gradient(135deg, var(--form-text) 50%, transparent 50%);
+    background-size: 6px 6px, 6px 6px;
+    background-position: calc(100% - 15px) center, calc(100% - 10px) center;
   }
   
   select.form-control:hover {
@@ -4208,8 +4218,8 @@ select.form-control {
   }
   
   select.form-control:focus {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364a6fd' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-    box-shadow: 0 0 0 0.25rem rgba(100, 166, 253, 0.25);
+    border-color: var(--form-focus-border);
+    box-shadow: 0 0 0 0.25rem var(--form-focus-shadow);
   }
   
   select::-ms-expand {
@@ -4315,5 +4325,41 @@ select.form-control {
     .currency-ticker {
         padding: 0.3rem 0.6rem;
         font-size: 0.9rem;
+    }
+}
+
+
+.input-with-ticker {
+    padding-right: 4.5rem !important;
+}
+
+.currency-ticker-inside {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--angor-secondary);
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    background-color: rgba(var(--angor-secondary-rgb), 0.1);
+    pointer-events: none; 
+    z-index: 2;
+}
+
+.dark .currency-ticker-inside {
+    background-color: rgba(10, 140, 167, 0.2);
+    color: var(--form-text);
+}
+
+@media (max-width: 768px) {
+    .currency-ticker-inside {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.9rem;
+        right: 8px;
+    }
+    
+    .input-with-ticker {
+        padding-right: 4rem !important;
     }
 }
