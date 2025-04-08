@@ -29,6 +29,7 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
         GetReceiveAddress = ReactiveCommand.CreateFromTask(async () => new ResultViewModel<string>(await Wallet.GenerateReceiveAddress()));
         receiveAddressResultHelper = GetReceiveAddress.ToProperty(this, x => x.ReceiveAddressResult);
         SyncCommand = wallet.SyncCommand;
+        SyncCommand.StartReactive.HandleErrorsWith(uiServices.NotificationService);
 
         var isInitialized = wallet.SyncCommand.StartReactive.Any().StartWith(false);
         var isSyncing = wallet.SyncCommand.IsExecuting;

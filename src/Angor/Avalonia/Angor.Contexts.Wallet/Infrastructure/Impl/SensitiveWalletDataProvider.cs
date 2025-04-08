@@ -43,8 +43,10 @@ public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecuri
 
         // Decrypt the wallet
         var decryptedResult = await walletSecurityContext.WalletEncryption.Decrypt(encryptedWalletResult.Value, encryptionKey.Value);
-        if (decryptedResult.IsFailure || decryptedResult.Value.SeedWords == null)
-            return Result.Failure<(string, Maybe<string>)>("Seed words not found");
+        if (decryptedResult.IsFailure)
+        {
+            return Result.Failure<(string, Maybe<string>)>("Invalid encryption key");
+        }
 
         Maybe<string> passphrase = Maybe<string>.None;
         if (decryptedResult.Value.RequiresPassphrase)

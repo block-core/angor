@@ -2,13 +2,13 @@ using Angor.Contexts.Funding;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.CreateInvestment;
 using Angor.Contexts.Funding.Projects.Domain;
-using Angor.Contexts.Projects.Tests.TestDoubles;
+using Angor.Contexts.Funding.Tests.TestDoubles;
 using Angor.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Xunit.Abstractions;
 
-namespace Angor.Contexts.Projects.Tests;
+namespace Angor.Contexts.Funding.Tests;
 
 public class InvestmentAppServiceTests(ITestOutputHelper output)
 {

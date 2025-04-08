@@ -3,7 +3,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Projects.Tests.TestDoubles;
+namespace Angor.Contexts.Funding.Tests.TestDoubles;
 
 public class TestingSeedwordsProvider : ISeedwordsProvider
 {
