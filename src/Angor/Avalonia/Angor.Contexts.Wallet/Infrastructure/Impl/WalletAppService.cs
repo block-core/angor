@@ -34,12 +34,14 @@ public class WalletAppService : IWalletAppService
         this.walletStore = walletStore;
     }
 
+    [MemoizeTimed(ExpirationInSeconds = 300)]
     public Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
     {
         List<WalletMetadata> singleWalletList = [new(SingleWalletName, SingleWalletId)];
         return walletStore.GetAll().Map(wallets => wallets.Any() ? singleWalletList : []).Map(metadatas => metadatas.AsEnumerable());
     }
 
+    [MemoizeTimed(ExpirationInSeconds = 300)]
     public async Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletId walletId)
     {
         try
@@ -92,20 +94,22 @@ public class WalletAppService : IWalletAppService
                 }
             }
 
-            return Result.Success(transactions.OrderByDescending(t => t.BlockTime ?? DateTimeOffset.MaxValue).AsEnumerable());
+            var list = transactions.OrderByDescending(t => t.BlockTime ?? DateTimeOffset.MaxValue).ToList();
+            return Result.Success<IEnumerable<BroadcastedTransaction>>(list);
         }
         catch (Exception ex)
         {
             return Result.Failure<IEnumerable<BroadcastedTransaction>>($"Error getting transactions: {ex.Message}");
         }
     }
-
+    
+    [MemoizeTimed(ExpirationInSeconds = 300)]
     public Task<Result<Balance>> GetBalance(WalletId walletId)
     {
         return GetTransactions(walletId).Map(txns => txns.Sum(x => x.Balance.Value)).Map(l => new Balance(l));
-        
     }
 
+    [MemoizeTimed(ExpirationInSeconds = 300)]
     public async Task<Result<Fee>> EstimateFee(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate)
     {
         if (walletId != SingleWalletId)
@@ -149,6 +153,8 @@ public class WalletAppService : IWalletAppService
             return Result.Failure<Fee>($"Error estimating fee: {ex.Message}");
         }
     }
+    
+    [MemoizeTimed(ExpirationInSeconds = 300)]
     public async Task<Result<Address>> GetNextReceiveAddress(WalletId walletId)
     {
         if (walletId != SingleWalletId)

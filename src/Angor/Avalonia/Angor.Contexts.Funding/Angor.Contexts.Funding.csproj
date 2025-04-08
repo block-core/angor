@@ -20,24 +20,5 @@
     <ProjectReference Include="..\Angor.Contexts.CrossCutting\Angor.Contexts.CrossCutting.csproj" />
     <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Projects\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Investor\Commands\FinalizeInvestment\**" />
-    <Compile Remove="Investor\Commands\ProcessFounderSignatures\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Remove="Investor\Commands\FinalizeInvestment\**" />
-    <EmbeddedResource Remove="Investor\Commands\ProcessFounderSignatures\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Investor\Commands\FinalizeInvestment\**" />
-    <None Remove="Investor\Commands\ProcessFounderSignatures\**" />
-  </ItemGroup>
-
+  
 </Project>

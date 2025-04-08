@@ -9,7 +9,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="AspectInjector" />
         <PackageReference Include="CSharpFunctionalExtensions" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     </ItemGroup>
     
     <ItemGroup>

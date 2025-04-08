@@ -1,4 +1,5 @@
-﻿using Angor.Contexts.Funding.Projects.Application.Dtos;
+﻿using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
@@ -10,6 +11,7 @@ public class ProjectAppService(
     IProjectRepository projectRepository)
     : IProjectAppService
 {
+    [MemoizeTimed]
     public async Task<IList<ProjectDto>> Latest()
     {
         var projects = await projectRepository.Latest();
