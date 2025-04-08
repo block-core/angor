@@ -52,4 +52,8 @@ public class DraftViewModelDesign : IDraftViewModel
              }
              """;
     }
+
+    public IObservable<bool> IsValid { get; }
+    public IObservable<bool> IsBusy { get; }
+    public bool AutoAdvance { get; }
 }
