@@ -314,11 +314,28 @@
 
                 <!-- Chat Input -->
                 <div class="chat-input">
+                    @* @if (showEmojiPicker)
+                    {
+                        <div class="emoji-picker card card-body mb-2">
+                            <div class="d-flex flex-wrap">
+                                @foreach (var emoji in commonEmojis)
+                                {
+                                    <button class="btn btn-sm" @onclick="() => InsertEmoji(emoji)">
+                                        <span style="font-size: 1.2rem;">@emoji</span>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    } *@
+                    
                     <div class="input-group">
+                        @* <button class="btn btn-border" title="Add emoji" @onclick="ToggleEmojiPicker">
+                            <span role="img" aria-label="emoji">😊</span>
+                        </button> *@
                         <textarea class="form-control"
                                   placeholder="Type a message..."
                                   @bind="newMessage"
-                                  @onkeypress="@(async e => { if(e.Key is "Enter" or "NumpadEnter") await SendMessageAndCheckPassword(); })"
+                                  @onkeydown="@(async e => { if((e.Key is "Enter" or "NumpadEnter") && !e.ShiftKey) { await SendMessageAndCheckPassword(); } })"
                                   disabled="@isSendingMessage" />
                         <button class="btn btn-border-success"
                                 @onclick="SendMessageAndCheckPassword"
@@ -1677,4 +1694,21 @@
             return "0000000000000000000000000000000000000000000000000000000000000000";
         }
     }
+
+    @* private bool showEmojiPicker = false;
+    private string[] commonEmojis = new[] { 
+        "😊", "👍", "🎉", "❤️", "👋", "🙏", "👀", "🔥", 
+        "⭐", "🚀", "✅", "😂", "🤔", "😍", "👏", "💯" 
+    };
+
+    private void ToggleEmojiPicker()
+    {
+        showEmojiPicker = !showEmojiPicker;
+    }
+
+    private void InsertEmoji(string emoji)
+    {
+        newMessage += emoji;
+        showEmojiPicker = false;
+    } *@
 }
