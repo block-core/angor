@@ -5,7 +5,6 @@ using AngorApp.Sections.Wallet.CreateAndRecover;
 using AngorApp.Sections.Wallet.Operate;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
-using SuppaWallet.Gui.Wallet.Main;
 using Zafiro.CSharpFunctionalExtensions;
 using WalletViewModel = AngorApp.Sections.Wallet.Operate.WalletViewModel;
 
@@ -25,11 +24,14 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
             .Select(w => new WalletViewModel(w, walletAppService, uiServices))
             .ToProperty(this, x => x.Wallet);
         
-        SetDefaultWallet = ReactiveCommand.CreateFromTask(() => DoSetDefaultWallet(walletAppService, walletBuilder, uiServices));
-        SetDefaultWallet.Execute().Subscribe();
+        TryLoadExistingWallet = ReactiveCommand.CreateFromTask(() => SetDefaultWalletIfAny(walletAppService, walletBuilder, uiServices));
+        TryLoadExistingWallet.Execute().Subscribe();
+        IsBusy = TryLoadExistingWallet.IsExecuting;
     }
-    
-    private static async Task DoSetDefaultWallet(IWalletAppService walletAppService, IWalletBuilder walletBuilder, UIServices uiServices)
+
+    public IObservable<bool> IsBusy { get; }
+
+    private static async Task SetDefaultWalletIfAny(IWalletAppService walletAppService, IWalletBuilder walletBuilder, UIServices uiServices)
     {
         var result = await walletAppService.GetMetadatas().Map(tuples => tuples.ToList());
         if (result.IsFailure)
@@ -48,7 +50,7 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
             .Tap(w => uiServices.ActiveWallet.Current = w.AsMaybe());
     }
 
-    public ReactiveCommand<Unit,Unit> SetDefaultWallet { get; }
+    public ReactiveCommand<Unit,Unit> TryLoadExistingWallet { get; }
 
     public ReactiveCommand<Unit, Maybe<Unit>> CreateWallet { get; }
     public ReactiveCommand<Unit, Maybe<Unit>> RecoverWallet { get; }

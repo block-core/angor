@@ -5,8 +5,9 @@
              xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
              xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:c="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.Sections.Wallet.WalletSectionView" x:DataType="wallet:WalletSectionViewModel">
+             x:Class="AngorApp.Sections.Wallet.WalletSectionView" x:DataType="wallet:IWalletSectionViewModel">
 
     <UserControl.Styles>
         <Style Selector="WrapPanel > :is(Control)">
@@ -15,14 +16,17 @@
     </UserControl.Styles>
 
     <Panel>
-        <StackPanel IsVisible="{Binding Path=Wallet, Converter={x:Static ObjectConverters.IsNull}}">
-            <controls:Pane Title="Setup your wallet" IsTitleVisible="True">
-                <WrapPanel HorizontalAlignment="Center" Margin="-10">
-                    <Button Content="Create wallet" Command="{Binding CreateWallet}" />
-                    <Button Content="Recover wallet" Command="{Binding RecoverWallet}" />
-                </WrapPanel>
-            </controls:Pane>
-        </StackPanel>
-        <operate:WalletView IsVisible="{Binding Path=., Converter={x:Static ObjectConverters.IsNotNull}}" DataContext="{Binding Wallet}" />
+        <Panel IsVisible="{Binding !IsBusy^}">
+            <StackPanel IsVisible="{Binding Path=Wallet, Converter={x:Static ObjectConverters.IsNull}}">
+                <controls:Pane Title="Setup your wallet" IsTitleVisible="True">
+                    <WrapPanel HorizontalAlignment="Center" Margin="-10">
+                        <Button Content="Create wallet" Command="{Binding CreateWallet}" />
+                        <Button Content="Recover wallet" Command="{Binding RecoverWallet}" />
+                    </WrapPanel>
+                </controls:Pane>
+            </StackPanel>
+            <operate:WalletView IsVisible="{Binding Path=., Converter={x:Static ObjectConverters.IsNotNull}}" DataContext="{Binding Wallet}" />
+        </Panel>
+        <c:ProgressRing IsVisible="{Binding IsBusy^}" IsIndeterminate="True" Height="100" Width="100" />
     </Panel>
 </UserControl>

@@ -29,7 +29,7 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
                 {
                     if (maybeMetadata.HasValue)
                     {
-                        return Result.Success(Observable.FromAsync(() => DoInvest(maybeMetadata.Value.Id, walletAppService, project, uiServices))
+                        return Result.Success(Observable.FromAsync(() => DoInvest(maybeMetadata.Value.Id, project, uiServices))
                             .SubscribeOn(RxApp.MainThreadScheduler)
                             .ToTask());
                     }
@@ -66,7 +66,7 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
     public double CurrentInvestment { get; } = 0.79d;
     public IProject Project => project;
 
-    private Task<Maybe<Unit>> DoInvest(WalletId walletId, IWalletAppService walletAppService, IProject project, UIServices uiServices)
+    private Task<Maybe<Unit>> DoInvest(WalletId walletId, IProject project, UIServices uiServices)
     {
         return investWizard.Invest(walletId, project);
     }

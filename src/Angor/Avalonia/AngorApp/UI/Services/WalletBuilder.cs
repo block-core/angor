@@ -9,6 +9,8 @@ public class WalletBuilder(IWalletAppService walletAppService, ITransactionWatch
 {
     public async Task<Result<IWallet>> Create(WalletId walletId)
     {
-        return new DynamicWallet(walletId, walletAppService, transactionWatcher);
+        var dynamicWallet = new DynamicWallet(walletId, walletAppService, transactionWatcher);
+        var syncResult = await dynamicWallet.SyncCommand.StartReactive.Execute().FirstAsync();
+        return syncResult.Map(IWallet (_) => dynamicWallet);
     }
 }

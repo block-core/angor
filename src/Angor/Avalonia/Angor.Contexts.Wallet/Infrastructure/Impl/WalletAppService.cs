@@ -41,7 +41,6 @@ public class WalletAppService : IWalletAppService
         return walletStore.GetAll().Map(wallets => wallets.Any() ? singleWalletList : []).Map(metadatas => metadatas.AsEnumerable());
     }
 
-    [MemoizeTimed(ExpirationInSeconds = 300)]
     public async Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletId walletId)
     {
         try
@@ -103,13 +102,11 @@ public class WalletAppService : IWalletAppService
         }
     }
     
-    [MemoizeTimed(ExpirationInSeconds = 300)]
     public Task<Result<Balance>> GetBalance(WalletId walletId)
     {
         return GetTransactions(walletId).Map(txns => txns.Sum(x => x.Balance.Value)).Map(l => new Balance(l));
     }
 
-    [MemoizeTimed(ExpirationInSeconds = 300)]
     public async Task<Result<Fee>> EstimateFee(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate)
     {
         if (walletId != SingleWalletId)
@@ -154,7 +151,6 @@ public class WalletAppService : IWalletAppService
         }
     }
     
-    [MemoizeTimed(ExpirationInSeconds = 300)]
     public async Task<Result<Address>> GetNextReceiveAddress(WalletId walletId)
     {
         if (walletId != SingleWalletId)
