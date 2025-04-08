@@ -63,7 +63,11 @@ public class CreateInvestmentTransactionHandler(
             }
 
             var signedTxHex = signedTxResult.Value.Transaction.ToHex();
-            return new InvestmentTransaction(investorKey, signedTxHex, signedTxResult.Value.Transaction.GetHash().ToString());
+            var totalFee = signedTxResult.Value.TransactionFee;
+            return new InvestmentTransaction(investorKey, 
+                signedTxHex, 
+                signedTxResult.Value.Transaction.GetHash().ToString(),
+                new Amount(totalFee));
         }
         catch (Exception ex)
         {

@@ -3,11 +3,39 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:draft="clr-namespace:AngorApp.Sections.Browse.Details.Invest.Draft"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="850"
              x:Class="AngorApp.Sections.Browse.Details.Invest.Draft.DraftView"
              x:DataType="draft:IDraftViewModel">
-    <StackPanel>
-        <TextBlock Text="{Binding SatsToInvest}" />
-        <Button Content="Create preview" Command="{Binding CreateDraft}" />
+
+    <Design.DataContext>
+        <angorApp:DraftViewModelDesign />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="StackPanel">
+            <Setter Property="Spacing" Value="10" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Grid.IsSharedSizeScope="True">
+        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Amount to invest">
+            <TextBlock Text="{Binding SatsToInvest, StringFormat={x:Static controls:MiscConverters.Sats}}" />
+        </HeaderedContentControl>
+        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Feerate">
+            <NumericUpDown ShowButtonSpinner="False" MaxWidth="250" HorizontalAlignment="Left" Value="{Binding Feerate, Mode=TwoWay}">
+                <NumericUpDown.InnerRightContent>
+                    <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">sats/vByte</TextBlock>
+                </NumericUpDown.InnerRightContent>
+            </NumericUpDown>
+        </HeaderedContentControl>
+        <Panel>
+            <StackPanel>
+                <HeaderedContentControl Header="Fee" Theme="{StaticResource Inline}">
+                    <TextBlock Text="{Binding Draft.TotalFee, StringFormat={x:Static controls:MiscConverters.Sats}}" />
+                </HeaderedContentControl>
+            </StackPanel>
+        </Panel>
     </StackPanel>
 </UserControl>

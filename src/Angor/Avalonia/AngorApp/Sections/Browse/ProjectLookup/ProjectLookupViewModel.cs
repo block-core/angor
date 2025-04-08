@@ -1,15 +1,11 @@
-using System.Diagnostics;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Windows.Input;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.UI.Model;
 using Angor.Contexts.Wallet.Application;
 using AngorApp.Core;
 using AngorApp.Sections.Browse.Details;
 using AngorApp.UI.Services;
-using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using Serilog;
 using Zafiro.Avalonia.Controls.Navigation;

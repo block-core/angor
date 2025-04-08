@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Angor.Contexts.Wallet.Application;
@@ -27,7 +28,9 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
                 {
                     if (maybeMetadata.HasValue)
                     {
-                        return Result.Success(DoInvest(maybeMetadata.Value.Id, walletAppService, project, uiServices));
+                        return Result.Success(Observable.FromAsync(() => DoInvest(maybeMetadata.Value.Id, walletAppService, project, uiServices))
+                            .SubscribeOn(RxApp.MainThreadScheduler)
+                            .ToTask());
                     }
                     else
                     {
