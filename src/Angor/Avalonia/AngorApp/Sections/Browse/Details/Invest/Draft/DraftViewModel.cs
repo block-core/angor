@@ -3,7 +3,6 @@ using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Wallet.Domain;
 using ReactiveUI.SourceGenerators;
-using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
 
@@ -11,7 +10,7 @@ namespace AngorApp.Sections.Browse.Details.Invest.Draft;
 
 public partial class DraftViewModel : ReactiveObject, IDraftViewModel
 {
-    private BehaviorSubject<bool> isBusy = new(false);
+    private readonly BehaviorSubject<bool> isBusy = new(true);
     
     public DraftViewModel(IInvestmentAppService investmentAppService, WalletId walletId, long sats, IProject project)
     {
@@ -32,7 +31,6 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel
         
         draftHelper = drafts.ToProperty(this, x => x.Draft);
         IsValid = this.WhenAnyValue(x => x.Draft).NotNull();
-        IsValid.Subscribe(b => { });
     }
 
     [ObservableAsProperty] private InvestmentDraft? draft;
