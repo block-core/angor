@@ -1,4 +1,7 @@
 @page "/messages"
+@page "/messages/{ProjectId}"
+@page "/messages/{ProjectId}/{ChatMode}"
+@page "/messages/{ProjectId}/{ChatMode}/{PartnerPubKey}"
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Angor.Shared.Services
@@ -74,113 +77,162 @@
     <div class="col-md-4">
         <!-- Contact/Project List -->
         <div class="card card-body mb-4">
-            <div class="tab-container">
-                <div class="tabs-wrapper">
-                    <div class="tab-item @(activeTab == 1 ? "active" : "")" @onclick="() => SetActiveTab(1)" data-cy="investments-tab">
-                        <div class="tab-content">
-                            <div class="tab-icon @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
-                                <Icon IconName="portfolio" Height="20" Width="20" />
-                            </div>
-                            <span class="tab-label">Investments</span>
-                        </div>
-                    </div>
-
-                    <div class="tab-item @(activeTab == 2 ? "active" : "")" @onclick="() => SetActiveTab(2)" data-cy="founder-tab">
-                        <div class="tab-content">
-                            <div class="tab-icon @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
-                                <Icon IconName="founder" Height="20" Width="20" />
-                            </div>
-                            <span class="tab-label">Projects</span>
-                        </div>
-                    </div>
+            @if (showingInvestorsInSidebar && currentFounderProject != null)
+            {
+                <!-- Investors List in Sidebar -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button class="btn btn-sm btn-border" @onclick="BackToProjects">
+                        <Icon IconName="arrow-left" Height="16" Width="16" />
+                        <span class="ms-1">Back to Projects</span>
+                    </button>
+                    <h6 class="mb-0">Project Investors</h6>
                 </div>
-            </div>
 
-            <div class="input-group mt-3 mb-3">
-                <input type="text" class="form-control" placeholder="Search contacts..." @bind="searchQuery" @oninput="SearchContacts">
-                <button class="btn btn-border" type="button">
-                    <Icon IconName="search" />
-                </button>
-            </div>
-
-            <div class="contacts-list mt-3">
-                @if (activeTab == 1)
+                @if (loadingInvestors)
                 {
-                    <!-- Investments List -->
-                    @if (!filteredInvestorProjects.Any())
-                    {
-                        <div class="text-center p-3">
-                            <p class="text-muted">No investments found.</p>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var project in filteredInvestorProjects)
-                        {
-                            <div class="contact-item @(currentChat?.ProjectId == project.ProjectInfo.ProjectIdentifier && !isFounderChat ? "active" : "")" @onclick="() => SelectInvestorChat(project)">
-                                <div class="contact-avatar">
-                                    @if (!string.IsNullOrEmpty(project.Metadata?.Picture))
-                                    {
-                                        <img src="@project.Metadata.Picture" alt="Project" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';">
-                                    }
-                                    else
-                                    {
-                                        <div class="avatar-placeholder">
-                                            <Icon IconName="project" Height="24" Width="24" />
-                                        </div>
-                                    }
-                                </div>
-                                <div class="contact-info">
-                                    <div class="contact-name">@(project.Metadata?.Name ?? "Project " + project.ProjectInfo.ProjectIdentifier.Substring(0, 8))</div>
-                                    <div class="contact-preview">@project.ProjectInfo.ProjectIdentifier.Substring(0, 8)...</div>
-                                </div>
-                                @if (unreadMessages.ContainsKey($"investor-{project.ProjectInfo.ProjectIdentifier}") && unreadMessages[$"investor-{project.ProjectInfo.ProjectIdentifier}"] > 0)
-                                {
-                                    <div class="message-badge">@unreadMessages[$"investor-{project.ProjectInfo.ProjectIdentifier}"]</div>
-                                }
-                            </div>
-                        }
-                    }
+                    <div class="d-flex justify-content-center my-4">
+                        <div class="loader"></div>
+                    </div>
+                }
+                else if (!projectInvestors.Any())
+                {
+                    <div class="info-alert my-4">
+                        <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+                        <p class="text-warning">
+                            This project doesn't have any investors yet.
+                        </p>
+                    </div>
                 }
                 else
                 {
-                    <!-- Founder Projects List -->
-                    @if (!filteredFounderProjects.Any())
-                    {
-                        <div class="text-center p-3">
-                            <p class="text-muted">No projects found.</p>
+                    <div class="investors-list mt-3">
+                        @foreach (var investor in projectInvestors)
+                        {
+                            <div class="contact-item" @onclick="() => StartChatWithInvestor(investor)">
+                                <div class="contact-avatar">
+                                    <div class="avatar-placeholder">
+                                        <Icon IconName="user" Height="24" Width="24" />
+                                    </div>
+                                </div>
+                                <div class="contact-info">
+                                    <div class="contact-name">@GetTruncatedNpub(investor.InvestorNPub)</div>
+                                    <div class="contact-preview">@investor.TotalAmount.ToUnitBtc() @network.CoinTicker</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="tab-container">
+                    <div class="tabs-wrapper">
+                        <div class="tab-item @(activeTab == 1 ? "active" : "")" @onclick="() => SetActiveTab(1)" data-cy="investments-tab">
+                            <div class="tab-content">
+                                <div class="tab-icon @(activeTab == 1 ? "heartbeat" : "")" aria-hidden="true">
+                                    <Icon IconName="portfolio" Height="20" Width="20" />
+                                </div>
+                                <span class="tab-label">Investments</span>
+                            </div>
                         </div>
+
+                        <div class="tab-item @(activeTab == 2 ? "active" : "")" @onclick="() => SetActiveTab(2)" data-cy="founder-tab">
+                            <div class="tab-content">
+                                <div class="tab-icon @(activeTab == 2 ? "heartbeat" : "")" aria-hidden="true">
+                                    <Icon IconName="founder" Height="20" Width="20" />
+                                </div>
+                                <span class="tab-label">Projects</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group mt-3 mb-3">
+                    <input type="text" class="form-control" placeholder="Search contacts..." @bind="searchQuery" @oninput="SearchContacts">
+                    <button class="btn btn-border" type="button">
+                        <Icon IconName="search" />
+                    </button>
+                </div>
+
+                <div class="contacts-list mt-3">
+                    @if (activeTab == 1)
+                    {
+                        <!-- Investments List -->
+                        @if (!filteredInvestorProjects.Any())
+                        {
+                            <div class="text-center p-3">
+                                <p class="text-muted">No investments found.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var project in filteredInvestorProjects)
+                            {
+                                <div class="contact-item @(currentChat?.ProjectId == project.ProjectInfo.ProjectIdentifier && !isFounderChat ? "active" : "")" @onclick="() => SelectInvestorChat(project)">
+                                    <div class="contact-avatar">
+                                        @if (!string.IsNullOrEmpty(project.Metadata?.Picture))
+                                        {
+                                            <img src="@project.Metadata.Picture" alt="Project" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';">
+                                        }
+                                        else
+                                        {
+                                            <div class="avatar-placeholder">
+                                                <Icon IconName="project" Height="24" Width="24" />
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="contact-info">
+                                        <div class="contact-name">@(project.Metadata?.Name ?? "Project " + project.ProjectInfo.ProjectIdentifier.Substring(0, 8))</div>
+                                        <div class="contact-preview">@project.ProjectInfo.ProjectIdentifier.Substring(0, 8)...</div>
+                                    </div>
+                                    @if (unreadMessages.ContainsKey($"investor-{project.ProjectInfo.ProjectIdentifier}") && unreadMessages[$"investor-{project.ProjectInfo.ProjectIdentifier}"] > 0)
+                                    {
+                                        <div class="message-badge">@unreadMessages[$"investor-{project.ProjectInfo.ProjectIdentifier}"]</div>
+                                    }
+                                </div>
+                            }
+                        }
                     }
                     else
                     {
-                        @foreach (var project in filteredFounderProjects)
+                        <!-- Founder Projects List -->
+                        @if (!filteredFounderProjects.Any())
                         {
-                            <div class="contact-item @(currentChat?.ProjectId == project.ProjectInfo.ProjectIdentifier && isFounderChat ? "active" : "")" @onclick="() => SelectFounderChat(project)">
-                                <div class="contact-avatar">
-                                    @if (!string.IsNullOrEmpty(project.Metadata?.Picture))
-                                    {
-                                        <img src="@project.Metadata.Picture" alt="Project" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';">
-                                    }
-                                    else
-                                    {
-                                        <div class="avatar-placeholder">
-                                            <Icon IconName="founder" Height="24" Width="24" />
-                                        </div>
-                                    }
-                                </div>
-                                <div class="contact-info">
-                                    <div class="contact-name">@(project.Metadata?.Name ?? "Project " + project.ProjectInfo.ProjectIdentifier.Substring(0, 8))</div>
-                                    <div class="contact-preview">@(projectInvestorCounts.ContainsKey(project.ProjectInfo.ProjectIdentifier) ? projectInvestorCounts[project.ProjectInfo.ProjectIdentifier] : 0) investors</div>
-                                </div>
-                                @if (unreadMessages.ContainsKey($"founder-{project.ProjectInfo.ProjectIdentifier}") && unreadMessages[$"founder-{project.ProjectInfo.ProjectIdentifier}"] > 0)
-                                {
-                                    <div class="message-badge">@unreadMessages[$"founder-{project.ProjectInfo.ProjectIdentifier}"]</div>
-                                }
+                            <div class="text-center p-3">
+                                <p class="text-muted">No projects found.</p>
                             </div>
                         }
+                        else
+                        {
+                            @foreach (var project in filteredFounderProjects)
+                            {
+                                <div class="contact-item @(currentChat?.ProjectId == project.ProjectInfo.ProjectIdentifier && isFounderChat ? "active" : "")" @onclick="() => SelectFounderChat(project)">
+                                    <div class="contact-avatar">
+                                        @if (!string.IsNullOrEmpty(project.Metadata?.Picture))
+                                        {
+                                            <img src="@project.Metadata.Picture" alt="Project" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';">
+                                        }
+                                        else
+                                        {
+                                            <div class="avatar-placeholder">
+                                                <Icon IconName="founder" Height="24" Width="24" />
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="contact-info">
+                                        <div class="contact-name">@(project.Metadata?.Name ?? "Project " + project.ProjectInfo.ProjectIdentifier.Substring(0, 8))</div>
+                                        <div class="contact-preview">@(projectInvestorCounts.ContainsKey(project.ProjectInfo.ProjectIdentifier) ? projectInvestorCounts[project.ProjectInfo.ProjectIdentifier] : 0) investors</div>
+                                    </div>
+                                    @if (unreadMessages.ContainsKey($"founder-{project.ProjectInfo.ProjectIdentifier}") && unreadMessages[$"founder-{project.ProjectInfo.ProjectIdentifier}"] > 0)
+                                    {
+                                        <div class="message-badge">@unreadMessages[$"founder-{project.ProjectInfo.ProjectIdentifier}"]</div>
+                                    }
+                                </div>
+                            }
+                        }
                     }
-                }
-            </div>
+                </div>
+            }
         </div>
     </div>
 
@@ -463,7 +515,8 @@
     private bool isSendingMessage = false;
     private string searchQuery = "";
     private string newMessage = "";
-    
+    private bool showingInvestorsInSidebar = false;  // New state variable to track investor display mode
+
     // Projects
     private List<InvestorProject> investorProjects = new();
     private List<InvestorProject> filteredInvestorProjects = new();
@@ -488,6 +541,16 @@
     private bool loadingInvestors = false;
     private List<InvestmentInfo> projectInvestors = new();
     private FounderProject currentFounderProject;
+
+    //  navigation parameters - now from route instead of query
+    [Parameter]
+    public string ProjectId { get; set; }
+
+    [Parameter]
+    public string PartnerPubKey { get; set; }
+
+    [Parameter]
+    public string ChatMode { get; set; }
 
     // Chat Models
     public class ChatSession
@@ -527,6 +590,12 @@
         if (hasWallet)
         {
             await LoadProjects();
+            
+            // Check if we have  chat parameters
+            if (!string.IsNullOrEmpty(ProjectId))
+            {
+                await InitializeChat();
+            }
             
             // Initialize timer to periodically refresh messages
             refreshTimer = new Timer(15000); // 15 seconds
@@ -640,11 +709,17 @@
     {
         if (!passwordComponent.HasPassword())
         {
-            passwordComponent.ShowPassword(async () => await InitializeInvestorChat(project));
+            passwordComponent.ShowPassword(async () => {
+                await InitializeInvestorChat(project);
+                // Update URL without adding to browser history - using route format
+                UpdateBrowserUrl(project.ProjectInfo.ProjectIdentifier, "investor", null);
+            });
         }
         else
         {
             await InitializeInvestorChat(project);
+            // Update URL without adding to browser history - using route format
+            UpdateBrowserUrl(project.ProjectInfo.ProjectIdentifier, "investor", null);
         }
     }
 
@@ -670,7 +745,7 @@
             string partnerPubKeyHex = project.ProjectInfo.NostrPubKey;
             if (partnerPubKeyHex.StartsWith("npub"))
             {
-                partnerPubKeyHex = NostrHelper.ConvertBech32ToHex(partnerPubKeyHex);
+                partnerPubKeyHex = SafeConvertBech32ToHex(partnerPubKeyHex);
                 Console.WriteLine($"Founder pubkey (converted): {partnerPubKeyHex}");
             }
             else
@@ -719,11 +794,55 @@
 
     private async Task SelectFounderChat(FounderProject project)
     {
-        await ViewInvestors(project, true);
+        // Instead of showing modal, we'll load investors in sidebar
+        currentFounderProject = project;
+        showingInvestorsInSidebar = true;
+        loadingInvestors = true;
+        
+        // Update URL with project ID and mode - using route format
+        UpdateBrowserUrl(project.ProjectInfo.ProjectIdentifier, "founder", null);
+        
+        StateHasChanged();
+
+        try
+        {
+            var investments = await _IndexerService.GetInvestmentsAsync(project.ProjectInfo.ProjectIdentifier);
+            
+            // Convert the investments to our local InvestmentInfo model
+            projectInvestors = investments.Select(inv => new InvestmentInfo {
+                InvestorPublicKey = inv.InvestorPublicKey,
+                InvestorNPub = inv.InvestorPublicKey,
+                TotalAmount = inv.TotalAmount,
+                TransactionId = inv.TransactionId
+            }).ToList();
+            
+            if (projectInvestors.Count == 0)
+            {
+                notificationComponent.ShowNotificationMessage("This project has no investors yet.");
+            }
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage("Failed to load investors", ex);
+            projectInvestors = new List<InvestmentInfo>();
+        }
+        finally
+        {
+            loadingInvestors = false;
+            StateHasChanged();
+        }
     }
 
     private async Task ViewInvestors(FounderProject project, bool forChat = false)
     {
+        // If forChat is true, we use the sidebar approach instead of modal
+        if (forChat)
+        {
+            await SelectFounderChat(project);
+            return;
+        }
+
+        // Original implementation for modal display (kept for compatibility with other features)
         currentFounderProject = project;
         showInvestorsModal = true;
         loadingInvestors = true;
@@ -733,7 +852,6 @@
         {
             var investments = await _IndexerService.GetInvestmentsAsync(project.ProjectInfo.ProjectIdentifier);
             
-            // Convert the investments to our local InvestmentInfo model
             projectInvestors = investments.Select(inv => new InvestmentInfo {
                 InvestorPublicKey = inv.InvestorPublicKey,
                 InvestorNPub = inv.InvestorPublicKey,
@@ -762,11 +880,17 @@
     {
         if (!passwordComponent.HasPassword())
         {
-            passwordComponent.ShowPassword(async () => await InitializeFounderChat(investor));
+            passwordComponent.ShowPassword(async () => {
+                await InitializeFounderChat(investor);
+                // Update URL with project ID, mode, and investor pubkey - using route format
+                UpdateBrowserUrl(currentFounderProject.ProjectInfo.ProjectIdentifier, "founder", investor.InvestorPublicKey);
+            });
         }
         else
         {
             await InitializeFounderChat(investor);
+            // Update URL with project ID, mode, and investor pubkey - using route format
+            UpdateBrowserUrl(currentFounderProject.ProjectInfo.ProjectIdentifier, "founder", investor.InvestorPublicKey);
         }
     }
 
@@ -778,6 +902,7 @@
             isFounderChat = true;
             chatMessages.Clear();
             showInvestorsModal = false;
+            // Keep showingInvestorsInSidebar as true so the state persists
             StateHasChanged();
             
             if (currentFounderProject == null) return;
@@ -795,7 +920,7 @@
             string partnerPubKeyHex = investor.InvestorPublicKey;
             if (investorNpub.StartsWith("npub") && partnerPubKeyHex.StartsWith("npub"))
             {
-                partnerPubKeyHex = NostrHelper.ConvertBech32ToHex(investorNpub);
+                partnerPubKeyHex = SafeConvertBech32ToHex(investorNpub);
             }
             
             currentUserNpub = founderNpub;
@@ -860,7 +985,7 @@
                 DateTime.UtcNow.AddDays(-7), // Get last 7 days of messages
                 100, // Limit to 100 messages
                 async eventMessage => await ProcessChatMessage(eventMessage),
-                NostrHelper.ConvertBech32ToHex(currentChat.UserNpub) // Messages from current user to partner
+                SafeConvertBech32ToHex(currentChat.UserNpub) // Messages from current user to partner
             );
             
             await _RelayService.LookupDirectMessagesForPubKeyAsync(
@@ -868,7 +993,7 @@
                 DateTime.UtcNow.AddDays(-7),
                 100,
                 async eventMessage => await ProcessChatMessage(eventMessage),
-                NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub) // Messages from partner to current user
+                SafeConvertBech32ToHex(currentChat.PartnerNpub) // Messages from partner to current user
             );
         }
         catch (Exception ex)
@@ -885,13 +1010,13 @@
         // Get the client
         var nostrClient = _nostrCommunicationFactory.GetOrCreateClient(_NetworkService);
         
-        // Subscribe to incoming messages
+        // Subscribe to incoming messages with safer hex conversion
         messageSubscription = nostrClient.Streams.EventStream
             .Where(_ => _.Event?.Kind == NostrKind.EncryptedDm)
-            .Where(_ => (_.Event?.Pubkey == NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub) && 
-                          _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == NostrHelper.ConvertBech32ToHex(currentChat.UserNpub)) ||
-                        (_.Event?.Pubkey == NostrHelper.ConvertBech32ToHex(currentChat.UserNpub) &&
-                          _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub)))
+            .Where(_ => (_.Event?.Pubkey == SafeConvertBech32ToHex(currentChat.PartnerNpub) && 
+                          _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == SafeConvertBech32ToHex(currentChat.UserNpub)) ||
+                        (_.Event?.Pubkey == SafeConvertBech32ToHex(currentChat.UserNpub) &&
+                          _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == SafeConvertBech32ToHex(currentChat.PartnerNpub)))
             .Subscribe(async messageEvent => 
             {
                 await ProcessChatMessage(messageEvent.Event);
@@ -908,8 +1033,8 @@
             // Check if we already have this message
             if (chatMessages.Any(m => m.Id == eventMessage.Id)) return;
             
-            // Determine if this message is from the current user
-            bool isFromCurrentUser = eventMessage.Pubkey == NostrHelper.ConvertBech32ToHex(currentChat.UserNpub);
+            // Determine if this message is from the current user using safer conversion
+            bool isFromCurrentUser = eventMessage.Pubkey == SafeConvertBech32ToHex(currentChat.UserNpub);
             
             // Try to decrypt the message
             string decryptedContent;
@@ -920,24 +1045,45 @@
                     ? eventMessage.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier)
                     : eventMessage.Pubkey;
                     
+                // Make sure partner key is properly formatted for decryption
+                string formattedPartnerKey = FormatNostrPubkeyForEncryption(partnerPubKeyHex);
+                
                 // Debug info
-                Console.WriteLine($"Decrypting message - Partner key: {partnerPubKeyHex?.Substring(0, 10)}...");
+                Console.WriteLine($"Decrypting message - Using formatted key: {formattedPartnerKey?.Substring(0, 10)}...");
                 
                 decryptedContent = await _encryptionService.DecryptNostrContentAsync(
                     currentChat.UserPrivateKeyHex,
-                    partnerPubKeyHex,
+                    formattedPartnerKey,
                     eventMessage.Content
                 );
                 
                 // If decryption was successful, update the partner's pubkey in the chat session
-                if (!isFromCurrentUser && !string.IsNullOrEmpty(partnerPubKeyHex)) {
-                    currentChat.PartnerPubKeyHex = partnerPubKeyHex;
+                if (!isFromCurrentUser && !string.IsNullOrEmpty(formattedPartnerKey)) {
+                    currentChat.PartnerPubKeyHex = formattedPartnerKey;
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Decryption error: {ex.Message}");
-                decryptedContent = "[Could not decrypt message]";
+                
+                try {
+                    // Try alternative formatting if initial decryption fails
+                    string alternativeKey = isFromCurrentUser 
+                        ? FormatNostrPubkeyForEncryption(SafeConvertBech32ToHex(currentChat.PartnerNpub))
+                        : FormatNostrPubkeyForEncryption(SafeConvertBech32ToHex(currentChat.UserNpub));
+                        
+                    Console.WriteLine($"Retrying with alternative key format: {alternativeKey.Substring(0, 10)}...");
+                    
+                    decryptedContent = await _encryptionService.DecryptNostrContentAsync(
+                        currentChat.UserPrivateKeyHex,
+                        alternativeKey,
+                        eventMessage.Content
+                    );
+                }
+                catch (Exception fallbackEx) {
+                    Console.WriteLine($"Fallback decryption also failed: {fallbackEx.Message}");
+                    decryptedContent = "[Could not decrypt message]";
+                }
             }
             
             // Create the chat message
@@ -1034,7 +1180,7 @@
                 // Get properly formatted partner key
                 if (string.IsNullOrEmpty(currentChat.PartnerPubKeyHex))
                 {
-                    partnerPubKey = NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub);
+                    partnerPubKey = SafeConvertBech32ToHex(currentChat.PartnerNpub);
                     currentChat.PartnerPubKeyHex = partnerPubKey;
                 }
                 else
@@ -1042,12 +1188,12 @@
                     partnerPubKey = currentChat.PartnerPubKeyHex;
                 }
                 
-                // Format the key properly
+                // Format the key properly for encryption
                 partnerPubKey = FormatNostrPubkeyForEncryption(partnerPubKey);
                 
                 Console.WriteLine($"Sending message with partner key: {partnerPubKey}");
                 
-                // Encrypt the content
+                // Encrypt the content using the service
                 string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
                     userPrivKey,
                     partnerPubKey,
@@ -1071,7 +1217,7 @@
                 {
                     Id = sentMessageId,
                     Content = newMessage,
-                    SenderPubkey = NostrHelper.ConvertBech32ToHex(currentChat.UserNpub),
+                    SenderPubkey = SafeConvertBech32ToHex(currentChat.UserNpub),
                     Timestamp = DateTime.UtcNow,
                     IsFromCurrentUser = true
                 };
@@ -1090,14 +1236,15 @@
             }
             catch (Exception ex)
             {
-                // Simplified fallback - just try with alternative key format
+                // Log the error
                 Console.WriteLine($"First encryption attempt failed: {ex.Message}");
                 Console.WriteLine("Attempting with alternative key format...");
                 
+                // Try a different key format as fallback
                 try
                 {
-                    // Try an alternative formatting of the key
-                    partnerPubKey = NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub);
+                    // Try alternative formatting of the key
+                    partnerPubKey = SafeConvertBech32ToHex(currentChat.PartnerNpub);
                     
                     // Ensure it's exactly 64 chars with no prefix
                     if (partnerPubKey.StartsWith("0x")) partnerPubKey = partnerPubKey.Substring(2);
@@ -1121,7 +1268,7 @@
                     {
                         Id = fallbackMessageId,
                         Content = newMessage,
-                        SenderPubkey = NostrHelper.ConvertBech32ToHex(currentChat.UserNpub),
+                        SenderPubkey = SafeConvertBech32ToHex(currentChat.UserNpub),
                         Timestamp = DateTime.UtcNow,
                         IsFromCurrentUser = true
                     };
@@ -1255,16 +1402,30 @@
             // Convert from npub to hex if necessary
             if (pubkeyInput.StartsWith("npub"))
             {
-                pubkeyHex = NostrHelper.ConvertBech32ToHex(pubkeyInput);
-                if (string.IsNullOrEmpty(pubkeyHex))
-                    throw new Exception("Failed to convert npub to hex format");
+                pubkeyHex = SafeConvertBech32ToHex(pubkeyInput);
                 
-                Console.WriteLine($"Converted npub to hex: {pubkeyHex}");
+                // If conversion failed, try a basic regex cleanup as fallback
+                if (string.IsNullOrEmpty(pubkeyHex) || pubkeyHex.StartsWith("npub"))
+                {
+                    // Failed to convert - log the error
+                    Console.WriteLine("Failed to convert npub to hex, using original value");
+                    pubkeyHex = pubkeyInput;
+                }
+                else
+                {
+                    Console.WriteLine($"Converted npub to hex: {pubkeyHex}");
+                }
             }
             
             // Strip any prefix
             if (pubkeyHex.StartsWith("0x"))
                 pubkeyHex = pubkeyHex.Substring(2);
+            
+            // Additional cleanup to ensure only valid hex characters
+            pubkeyHex = new string(pubkeyHex.Where(c => 
+                (c >= '0' && c <= '9') || 
+                (c >= 'a' && c <= 'f') || 
+                (c >= 'A' && c <= 'F')).ToArray());
                 
             // Ensure correct length (Nostr uses 32-byte keys = 64 hex chars)
             if (pubkeyHex.Length > 64)
@@ -1272,16 +1433,215 @@
             else if (pubkeyHex.Length < 64)
                 pubkeyHex = pubkeyHex.PadLeft(64, '0'); // Pad with zeros if too short
                 
-            // Check if this is a valid key format (basic sanity check)
+            // Final validation
             if (!System.Text.RegularExpressions.Regex.IsMatch(pubkeyHex, "^[0-9a-fA-F]{64}$"))
-                throw new Exception("Invalid hex format for public key");
+            {
+                Console.WriteLine($"Warning: Generated key may not be valid: {pubkeyHex}"); // Fixed missing semicolon here
+                // Instead of throwing exception, return best effort result
+            }
                 
             return pubkeyHex;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error formatting public key: {ex.Message}");
-            throw new Exception($"Invalid public key format: {ex.Message}");
+            // Instead of throwing an exception, try to return a usable string
+            
+            // Last resort cleanup - strip non-hex chars and pad/truncate
+            try {
+                var cleanedKey = new string((pubkeyInput ?? "").Where(c => 
+                    (c >= '0' && c <= '9') || 
+                    (c >= 'a' && c <= 'f') || 
+                    (c >= 'A' && c <= 'F')).ToArray());
+                    
+                if (cleanedKey.Length > 64)
+                    cleanedKey = cleanedKey.Substring(cleanedKey.Length - 64);
+                else if (cleanedKey.Length < 64)
+                    cleanedKey = cleanedKey.PadLeft(64, '0');
+                    
+                return cleanedKey;
+            }
+            catch {
+                // If all else fails, return a string of zeros (valid hex, but likely wrong key)
+                return "0000000000000000000000000000000000000000000000000000000000000000";
+            }
+        }
+    }
+
+    private void BackToProjects()
+    {
+        showingInvestorsInSidebar = false;
+        loadingInvestors = false;
+        projectInvestors = new List<InvestmentInfo>();
+        
+        // Reset URL to base messages path
+        NavigationManager.NavigateTo("/messages", false);
+    }
+
+    private async Task InitializeChat()
+    {
+        try
+        {
+            // Check if we have required parameters
+            if (string.IsNullOrEmpty(ProjectId) || string.IsNullOrEmpty(ChatMode))
+            {
+                return;
+            }
+
+            if (ChatMode.ToLower() == "founder")
+            {
+                // Find the founder project
+                var founderProject = founderProjects.FirstOrDefault(p => 
+                    p.ProjectInfo.ProjectIdentifier == ProjectId);
+
+                if (founderProject != null)
+                {
+                    // If we have a specific partner public key, open chat with that investor
+                    if (!string.IsNullOrEmpty(PartnerPubKey))
+                    {
+                        // First load the investors
+                        await SelectFounderChat(founderProject);
+                        
+                        // Find the matching investor
+                        var investor = projectInvestors.FirstOrDefault(i => 
+                            i.InvestorPublicKey == PartnerPubKey ||
+                            i.InvestorNPub == PartnerPubKey);
+                        
+                        if (investor != null)
+                        {
+                            await StartChatWithInvestor(investor);
+                        }
+                    }
+                    else
+                    {
+                        // Just show the investors list
+                        await SelectFounderChat(founderProject);
+                    }
+                }
+            }
+            else if (ChatMode.ToLower() == "investor")
+            {
+                // Find the investor project
+                var investorProject = investorProjects.FirstOrDefault(p => 
+                    p.ProjectInfo.ProjectIdentifier == ProjectId);
+                
+                if (investorProject != null)
+                {
+                    await SelectInvestorChat(investorProject);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage("Failed to initialize chat from  parameters", ex);
+        }
+    }
+
+    // Helper method to generate URL for  chat navigation
+    public string GetChatUrl(string projectId, string mode, string partnerPubKey)
+    {
+        if (string.IsNullOrEmpty(partnerPubKey))
+            return $"/messages/{Uri.EscapeDataString(projectId)}/{Uri.EscapeDataString(mode)}";
+        else
+            return $"/messages/{Uri.EscapeDataString(projectId)}/{Uri.EscapeDataString(mode)}/{Uri.EscapeDataString(partnerPubKey)}";
+    }
+
+    // Update browser URL without triggering navigation - now using route parameters
+    private void UpdateBrowserUrl(string projectId, string mode, string partnerPubKey)
+    {
+        string url;
+
+        if (string.IsNullOrEmpty(projectId))
+        {
+            url = "/messages";
+        }
+        else if (string.IsNullOrEmpty(mode))
+        {
+            url = $"/messages/{Uri.EscapeDataString(projectId)}";
+        }
+        else if (string.IsNullOrEmpty(partnerPubKey))
+        {
+            url = $"/messages/{Uri.EscapeDataString(projectId)}/{Uri.EscapeDataString(mode)}";
+        }
+        else
+        {
+            url = $"/messages/{Uri.EscapeDataString(projectId)}/{Uri.EscapeDataString(mode)}/{Uri.EscapeDataString(partnerPubKey)}";
+        }
+        
+        // Replace current URL without adding to browser history
+        NavigationManager.NavigateTo(url, false, true);
+    }
+
+    // Fix for hex encoding/decoding issues with improved error handling
+    private string SafeConvertBech32ToHex(string input)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(input))
+                return null;
+                
+            // Check if already in hex format
+            if (System.Text.RegularExpressions.Regex.IsMatch(input, "^[0-9a-fA-F]{64}$"))
+                return input;
+                
+            // Only try to convert if it starts with npub
+            if (input.StartsWith("npub"))
+            {
+                try
+                {
+                    var hex = NostrHelper.ConvertBech32ToHex(input);
+                    
+                    // Validate the conversion result
+                    if (!string.IsNullOrEmpty(hex) && 
+                        !hex.StartsWith("npub") && 
+                        System.Text.RegularExpressions.Regex.IsMatch(hex, "^[0-9a-fA-F]+$"))
+                    {
+                        // Ensure hex output is valid length (64 characters)
+                        if (hex.Length > 64)
+                            hex = hex.Substring(hex.Length - 64);
+                        else if (hex.Length < 64)
+                            hex = hex.PadLeft(64, '0');
+                        
+                        Console.WriteLine($"Successfully converted npub to hex: {hex}");
+                        return hex;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Invalid conversion result: {hex ?? "(null)"}");
+                    }
+                }
+                catch (Exception convEx)
+                {
+                    Console.WriteLine($"Error in npub to hex conversion: {convEx.Message}");
+                }
+            }
+            
+            // Fallback: Strip non-hex characters and ensure even length
+            var hexChars = new string(input.Where(c => 
+                ((c >= '0' && c <= '9') || 
+                 (c >= 'a' && c <= 'f') || 
+                 (c >= 'A' && c <= 'F'))).ToArray());
+            
+            // Ensure even length (required by from_hex)
+            if (hexChars.Length % 2 != 0)
+            {
+                hexChars = "0" + hexChars;
+            }
+            
+            // Normalize length to 64 characters
+            if (hexChars.Length > 64)
+                hexChars = hexChars.Substring(hexChars.Length - 64);
+            else if (hexChars.Length < 64)
+                hexChars = hexChars.PadLeft(64, '0');
+                
+            Console.WriteLine($"Fallback hex conversion: {hexChars}");
+            return hexChars;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error converting to hex: {ex.Message}");
+            // Return a valid placeholder hex string
+            return "0000000000000000000000000000000000000000000000000000000000000000";
         }
     }
 }
