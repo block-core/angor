@@ -28,7 +28,7 @@ public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
 
         var changes = transactionsSource.Connect();
 
-        SyncCommand = StoppableCommand.Create(() => transactionWatcher.Watch(Id).TakeWhile(result => result.IsSuccess), Maybe<IObservable<bool>>.None);
+        SyncCommand = StoppableCommand.Create(() => transactionWatcher.Watch(Id), Maybe<IObservable<bool>>.None);
         
         transactionsSource.PopulateFrom(SyncCommand.StartReactive.Successes());
 

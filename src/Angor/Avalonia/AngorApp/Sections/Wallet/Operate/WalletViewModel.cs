@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Windows.Input;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
@@ -11,6 +12,7 @@ using ReactiveUI.SourceGenerators;
 using SuppaWallet.Gui.Wallet.Main;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
+using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
 
 namespace AngorApp.Sections.Wallet.Operate;
@@ -31,8 +33,20 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
         SyncCommand = wallet.SyncCommand;
         SyncCommand.StartReactive.HandleErrorsWith(uiServices.NotificationService);
 
-        var isInitialized = wallet.SyncCommand.StartReactive.Any().StartWith(false);
+        var isInitialized = wallet.SyncCommand.StartReactive.Any(result => result.IsSuccess).StartWith(false);
         var isSyncing = wallet.SyncCommand.IsExecuting;
+
+        // Auto stop the sync command if it fails with "Invalid" error
+        SyncCommand.StartReactive
+            .Failures()
+            .Do(s =>
+            {
+                if (s.Contains("Invalid"))
+                {
+                    SyncCommand.StopReactive.Execute().Subscribe();
+                }
+            })
+            .Subscribe();
 
         walletDisplayStatusHelper = isInitialized.CombineLatest(isSyncing, (initialized, syncing) => GetStatus(syncing, initialized)).ToProperty(this, x => x.WalletDisplayStatus);
 
