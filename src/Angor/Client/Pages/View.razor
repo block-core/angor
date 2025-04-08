@@ -555,55 +555,70 @@
                     <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                     <div class="input-group">
                         <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                        @*<button @onclick="OpenInHUBAsync" class="btn btn-border">
-                           <Icon IconName="link"></Icon>
-                       </button> *@
+                        <button @onclick="() => CopyToClipboard(project.ProjectInfo.NostrPubKey)" class="btn btn-border">
+                            <Icon IconName="copy"></Icon>
+                        </button>
                     </div>
-                    
+
                     @if (invested)
                     {
-                        var invpub = (project as InvestorProject).InvestorNPub;
-                        var invNpub = NostrHelper.ConvertHexToNpub(invpub);
+                        var invPubKey = (project as InvestorProject).InvestorNPub;
+                        var invNpub = NostrHelper.ConvertHexToNpub(invPubKey);
 
-                        <label for="NostrNpubPublicKey" class="form-label mt-6">Investor NOSTR public key (npub)</label>
+                        <label for="InvestorNostrNpubPublicKey" class="form-label mt-4">Investor NOSTR public key (npub)</label>
 
                         <div class="input-group">
-                            <InputText id="NostrNpubPublicKey" @bind-Value="@invNpub" class="form-control" placeholder="@Npub" readonly />
-                            <button @onclick="OpenInHUBAsync" class="btn btn-border">
+                            <InputText id="InvestorNostrNpubPublicKey" @bind-Value="@invNpub" class="form-control" placeholder="@invNpub" readonly />
+                            <button @onclick="() => CopyToClipboard(invNpub)" class="btn btn-border">
                                 <i>
-                                    <Icon IconName="link"/>
+                                    <Icon IconName="copy" />
                                 </i>
                             </button>
                         </div>
-                        <br/>
-                        <label for="NostrHexPublicKey" class="form-label">Investor NOSTR public key (hex)</label>
+                        <br />
+                        <label for="InvestorNostrHexPublicKey" class="form-label">Investor NOSTR public key (hex)</label>
                         <div class="input-group">
-                            <InputText id="NostrHexPublicKey" @bind-Value="@invpub" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                            @*<button @onclick="OpenInHUBAsync" class="btn btn-border">
-                                <Icon IconName="link"></Icon>
-                            </button> *@
+                            <InputText id="InvestorNostrHexPublicKey" @bind-Value="@invPubKey" class="form-control" placeholder="@invPubKey" readonly />
+                            <button @onclick="() => CopyToClipboard(invPubKey)" class="btn btn-border">
+                                <i>
+                                    <Icon IconName="copy" />
+                                </i>
+                            </button>
                         </div>
 
                     }
-                   
+
                     <div class="action-buttons d-flex justify-content-center item-center mt-4">
                         <button @onclick="OpenInHUBAsync" class="btn btn-border-success mt-4 mr-1">
                             <Icon IconName="link" Class="me-2" />
                             Open in Angor Hub
                         </button>
-                       
+
+                        @if (invested)
+                        {
+                            <button @onclick="OpenChatWithFounder" class="btn btn-border-success mt-4 mr-1">
+                                <Icon IconName="chat" Class="me-2" />
+                                Chat with Project Founder
+                            </button>
+                        }
+
                         @if (founder)
                         {
                             <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning mt-4 mr-1">
-                                <Icon IconName="edit" Class="me-2"/>
+                                <Icon IconName="edit" Class="me-2" />
                                 Edit project profile
+                            </button>
+
+                            <button @onclick="OpenInvestorMessages" class="btn btn-border-success mt-4 mr-1">
+                                <Icon IconName="chat" Class="me-2" />
+                                Investor Messages
                             </button>
                         }
 
                         @if (invested || founder)
                         {
                             <button @onclick="ShowNsecAsync" class="btn btn-border-danger mt-4">
-                                <Icon IconName="shield" Class="me-2"/>
+                                <Icon IconName="shield" Class="me-2" />
                                 View nsec
                             </button>
                         }
@@ -1008,6 +1023,24 @@
         var url = $"https://hub.angor.io/project/{project.ProjectInfo.ProjectIdentifier}";
 
         await Js.InvokeVoidAsync("window.open", url, "_blank");
+    }
+    
+    private void OpenChatWithFounder()
+    {
+        if (project?.ProjectInfo != null && project is InvestorProject invProject)
+        {
+            // Navigate to messages with the project ID and proper mode
+            NavigationManager.NavigateTo($"/messages/{project.ProjectInfo.ProjectIdentifier}/investor", true);
+        }
+    }
+
+    private void OpenInvestorMessages()
+    {
+        if (project?.ProjectInfo != null)
+        {
+            // Navigate to messages page with founder mode
+            NavigationManager.NavigateTo($"/messages/{project.ProjectInfo.ProjectIdentifier}/founder", true);
+        }
     }
 
     public MarkupString ConvertToMarkupString(string input)

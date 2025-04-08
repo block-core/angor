@@ -175,10 +175,31 @@
                                         }
                                     </td>
                                     <td>
-                                        Investment npub: @NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey) <br />
-                                        Additional npub: @signature.SignRecoveryRequest?.AdditionalNpub
+                                        <div class="d-flex flex-column">
+                                            <div class="mb-1">
+                                                <div class="d-flex align-items-center">
+                                                    <small class="text-muted">Investment npub:</small>
+                                                    <button class="btn btn-sm btn-icon ms-1" @onclick="() => CopyToClipboard(NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey))" title="Copy npub">
+                                                        <Icon IconName="copy" Width="12" Height="12" />
+                                                    </button>
+                                                </div>
+                                                <span class="d-block text-truncate" style="max-width: 200px;">@NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey)</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(signature.SignRecoveryRequest?.AdditionalNpub))
+                                            {
+                                                <div>
+                                                    <div class="d-flex align-items-center">
+                                                        <small class="text-muted">Additional npub:</small>
+                                                        <button class="btn btn-sm btn-icon ms-1" @onclick="() => CopyToClipboard(signature.SignRecoveryRequest.AdditionalNpub)" title="Copy npub">
+                                                            <Icon IconName="copy" Width="12" Height="12" />
+                                                        </button>
+                                                    </div>
+                                                    <span class="d-block text-truncate" style="max-width: 200px;">@signature.SignRecoveryRequest?.AdditionalNpub</span>
+                                                </div>
+                                            }
+                                        </div>
                                     </td>
-                                    <td class="d-flex justify-content-end align-items-center">
+                                    <td>
                                         <button class="btn btn-sm btn-border-success" @onclick="() => ShowChatModal(signature.investorNostrPubKey)">
                                             <Icon IconName="chat" Width="16" Height="16" class="me-1" />
                                             Chat
@@ -766,8 +787,12 @@
     
     private async void OpenChatApp()
     {
-        var primaryChatApp = _networkService.GetPrimaryChatApp();
-        var url = $"{primaryChatApp.Url}/{currentInvestorNpub}";
-        await JS.InvokeVoidAsync("window.open", url, "_blank");
+        // First priority: Navigate to the built-in messages page
+        NavigationManager.NavigateTo($"/messages/{ProjectIdentifier}/founder/{currentInvestorHexPub}", true);
+        
+        // Alternatively, open external chat app (commented out for now)
+        // var primaryChatApp = _networkService.GetPrimaryChatApp();
+        // var url = $"{primaryChatApp.Url}/{currentInvestorNpub}";
+        // await JS.InvokeVoidAsync("window.open", url, "_blank");
     }
 }

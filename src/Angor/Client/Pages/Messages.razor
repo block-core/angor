@@ -315,13 +315,13 @@
                 <!-- Chat Input -->
                 <div class="chat-input">
                     <div class="input-group">
-                        <textarea class="form-control" 
-                                placeholder="Type a message..." 
-                                @bind="newMessage" 
-                                @onkeydown="HandleKeyDown"
-                                disabled="@isSendingMessage" />
-                        <button class="btn btn-border-success" 
-                                @onclick="SendMessageAndCheckPassword" 
+                        <textarea class="form-control"
+                                  placeholder="Type a message..."
+                                  @bind="newMessage"
+                                  @onkeypress="@(async e => { if(e.Key is "Enter" or "NumpadEnter") await SendMessageAndCheckPassword(); })"
+                                  disabled="@isSendingMessage" />
+                        <button class="btn btn-border-success"
+                                @onclick="SendMessageAndCheckPassword"
                                 disabled="@isSendingMessage">
                             @if (isSendingMessage)
                             {
@@ -524,7 +524,7 @@
     private List<FounderProject> filteredFounderProjects = new();
     private Dictionary<string, int> projectInvestorCounts = new();
     private Dictionary<string, int> unreadMessages = new();
-    
+
     // Chat properties
     private bool showIdentitiesModal = false;
     private bool isFounderChat = false;
@@ -589,14 +589,21 @@
 
         if (hasWallet)
         {
-            await LoadProjects();
-            
-            // Check if we have  chat parameters
-            if (!string.IsNullOrEmpty(ProjectId))
+            try
             {
-                await InitializeChat();
+                await LoadProjects();
+
+                // Check if we have chat parameters
+                if (!string.IsNullOrEmpty(ProjectId))
+                {
+                    await InitializeChat();
+                }
             }
-            
+            catch (Exception ex)
+            {
+                notificationComponent?.ShowErrorMessage("An error occurred during initialization", ex);
+            }
+
             // Initialize timer to periodically refresh messages
             refreshTimer = new Timer(15000); // 15 seconds
             refreshTimer.Elapsed += async (sender, e) => await RefreshCurrentChat();
@@ -611,7 +618,7 @@
         {
             // No need for additional initialization
         }
-        
+
         // Scroll to bottom of the messages container when new messages arrive
         if (messagesContainerRef.Context != null && chatMessages.Any())
         {
@@ -627,17 +634,19 @@
         try
         {
             // Load investor projects
-            investorProjects = storage.GetInvestmentProjects()
+            investorProjects = storage?.GetInvestmentProjects()
                 .Where(p => !string.IsNullOrEmpty(p.TransactionId))
-                .ToList();
+                .ToList() ?? new List<InvestorProject>();
+
             filteredInvestorProjects = investorProjects.ToList();
-            
+
             // Load founder projects
-            founderProjects = storage.GetFounderProjects()
+            founderProjects = storage?.GetFounderProjects()
                 .Where(p => !string.IsNullOrEmpty(p.CreationTransactionId))
-                .ToList();
+                .ToList() ?? new List<FounderProject>();
+
             filteredFounderProjects = founderProjects.ToList();
-            
+
             // Get investor counts for founder projects
             foreach (var project in founderProjects)
             {
@@ -647,7 +656,7 @@
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage("Failed to load projects", ex);
+            notificationComponent?.ShowErrorMessage("Failed to load projects", ex);
         }
         finally
         {
@@ -678,7 +687,7 @@
     {
         var query = e.Value?.ToString().ToLower() ?? "";
         searchQuery = query;
-        
+
         if (string.IsNullOrWhiteSpace(query))
         {
             filteredInvestorProjects = investorProjects.ToList();
@@ -687,16 +696,16 @@
         else
         {
             filteredInvestorProjects = investorProjects
-                .Where(p => p.Metadata?.Name?.ToLower().Contains(query) == true || 
+                .Where(p => p.Metadata?.Name?.ToLower().Contains(query) == true ||
                            p.ProjectInfo.ProjectIdentifier.ToLower().Contains(query))
                 .ToList();
-            
+
             filteredFounderProjects = founderProjects
-                .Where(p => p.Metadata?.Name?.ToLower().Contains(query) == true || 
+                .Where(p => p.Metadata?.Name?.ToLower().Contains(query) == true ||
                             p.ProjectInfo.ProjectIdentifier.ToLower().Contains(query))
                 .ToList();
         }
-        
+
         StateHasChanged();
     }
 
@@ -709,7 +718,8 @@
     {
         if (!passwordComponent.HasPassword())
         {
-            passwordComponent.ShowPassword(async () => {
+            passwordComponent.ShowPassword(async () =>
+            {
                 await InitializeInvestorChat(project);
                 // Update URL without adding to browser history - using route format
                 UpdateBrowserUrl(project.ProjectInfo.ProjectIdentifier, "investor", null);
@@ -731,15 +741,15 @@
             isFounderChat = false;
             chatMessages.Clear();
             StateHasChanged();
-            
+
             var words = await passwordComponent.GetWalletAsync();
             var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
             currentUserPrivateKeyHex = nostrPrivateKeyHex;
-            
+
             string investorNpub = NostrHelper.ConvertHexToNpub(project.InvestorNPub) ?? project.InvestorNPub;
             string founderNpub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey) ?? project.ProjectInfo.NostrPubKey;
-            
+
             // Get the raw format of the partner's public key (not npub format)
             // Store both hex and npub formats to ensure proper communication
             string partnerPubKeyHex = project.ProjectInfo.NostrPubKey;
@@ -752,21 +762,21 @@
             {
                 Console.WriteLine($"Founder pubkey (hex): {partnerPubKeyHex}");
             }
-            
+
             currentUserNpub = investorNpub;
             partnerNpub = founderNpub;
 
             currentChat = new ChatSession
-            {
-                ProjectId = project.ProjectInfo.ProjectIdentifier,
-                Name = project.Metadata?.Name ?? $"Project {project.ProjectInfo.ProjectIdentifier.Substring(0, 8)}",
-                Description = "Chat with project founder",
-                Picture = project.Metadata?.Picture,
-                UserNpub = investorNpub,
-                PartnerNpub = founderNpub,
-                UserPrivateKeyHex = nostrPrivateKeyHex,
-                PartnerPubKeyHex = partnerPubKeyHex // Store the raw hex format
-            };
+                {
+                    ProjectId = project.ProjectInfo.ProjectIdentifier,
+                    Name = project.Metadata?.Name ?? $"Project {project.ProjectInfo.ProjectIdentifier.Substring(0, 8)}",
+                    Description = "Chat with project founder",
+                    Picture = project.Metadata?.Picture,
+                    UserNpub = investorNpub,
+                    PartnerNpub = founderNpub,
+                    UserPrivateKeyHex = nostrPrivateKeyHex,
+                    PartnerPubKeyHex = partnerPubKeyHex // Store the raw hex format
+                };
 
             // Reset unread counter
             string chatKey = $"investor-{project.ProjectInfo.ProjectIdentifier}";
@@ -774,10 +784,10 @@
             {
                 unreadMessages[chatKey] = 0;
             }
-            
+
             // Load messages
             await LoadChatMessages();
-            
+
             // Subscribe to new messages
             SubscribeToMessages();
         }
@@ -798,24 +808,25 @@
         currentFounderProject = project;
         showingInvestorsInSidebar = true;
         loadingInvestors = true;
-        
+
         // Update URL with project ID and mode - using route format
         UpdateBrowserUrl(project.ProjectInfo.ProjectIdentifier, "founder", null);
-        
+
         StateHasChanged();
 
         try
         {
             var investments = await _IndexerService.GetInvestmentsAsync(project.ProjectInfo.ProjectIdentifier);
-            
+
             // Convert the investments to our local InvestmentInfo model
-            projectInvestors = investments.Select(inv => new InvestmentInfo {
-                InvestorPublicKey = inv.InvestorPublicKey,
-                InvestorNPub = inv.InvestorPublicKey,
-                TotalAmount = inv.TotalAmount,
-                TransactionId = inv.TransactionId
-            }).ToList();
-            
+            projectInvestors = investments.Select(inv => new InvestmentInfo
+                {
+                    InvestorPublicKey = inv.InvestorPublicKey,
+                    InvestorNPub = inv.InvestorPublicKey,
+                    TotalAmount = inv.TotalAmount,
+                    TransactionId = inv.TransactionId
+                }).ToList();
+
             if (projectInvestors.Count == 0)
             {
                 notificationComponent.ShowNotificationMessage("This project has no investors yet.");
@@ -851,14 +862,15 @@
         try
         {
             var investments = await _IndexerService.GetInvestmentsAsync(project.ProjectInfo.ProjectIdentifier);
-            
-            projectInvestors = investments.Select(inv => new InvestmentInfo {
-                InvestorPublicKey = inv.InvestorPublicKey,
-                InvestorNPub = inv.InvestorPublicKey,
-                TotalAmount = inv.TotalAmount,
-                TransactionId = inv.TransactionId
-            }).ToList();
-            
+
+            projectInvestors = investments.Select(inv => new InvestmentInfo
+                {
+                    InvestorPublicKey = inv.InvestorPublicKey,
+                    InvestorNPub = inv.InvestorPublicKey,
+                    TotalAmount = inv.TotalAmount,
+                    TransactionId = inv.TransactionId
+                }).ToList();
+
             if (!forChat && projectInvestors.Count == 0)
             {
                 notificationComponent.ShowNotificationMessage("This project has no investors yet.");
@@ -880,7 +892,8 @@
     {
         if (!passwordComponent.HasPassword())
         {
-            passwordComponent.ShowPassword(async () => {
+            passwordComponent.ShowPassword(async () =>
+            {
                 await InitializeFounderChat(investor);
                 // Update URL with project ID, mode, and investor pubkey - using route format
                 UpdateBrowserUrl(currentFounderProject.ProjectInfo.ProjectIdentifier, "founder", investor.InvestorPublicKey);
@@ -904,50 +917,50 @@
             showInvestorsModal = false;
             // Keep showingInvestorsInSidebar as true so the state persists
             StateHasChanged();
-            
+
             if (currentFounderProject == null) return;
-            
+
             var words = await passwordComponent.GetWalletAsync();
             var founderNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, currentFounderProject.ProjectInfo.FounderKey);
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(founderNostrPrivateKey.ToBytes());
             currentUserPrivateKeyHex = nostrPrivateKeyHex;
-            
-            string founderNpub = NostrHelper.ConvertHexToNpub(currentFounderProject.ProjectInfo.NostrPubKey) ?? 
+
+            string founderNpub = NostrHelper.ConvertHexToNpub(currentFounderProject.ProjectInfo.NostrPubKey) ??
                                currentFounderProject.ProjectInfo.NostrPubKey;
             string investorNpub = NostrHelper.ConvertHexToNpub(investor.InvestorPublicKey) ?? investor.InvestorPublicKey;
-            
+
             // Get the raw hex format of the partner's public key
             string partnerPubKeyHex = investor.InvestorPublicKey;
             if (investorNpub.StartsWith("npub") && partnerPubKeyHex.StartsWith("npub"))
             {
                 partnerPubKeyHex = SafeConvertBech32ToHex(investorNpub);
             }
-            
+
             currentUserNpub = founderNpub;
             partnerNpub = investorNpub;
-            
+
             currentChat = new ChatSession
-            {
-                ProjectId = currentFounderProject.ProjectInfo.ProjectIdentifier,
-                Name = $"Investor {GetTruncatedNpub(investor.InvestorPublicKey)}",
-                Description = $"Investment: {investor.TotalAmount.ToUnitBtc()} {network.CoinTicker}",
-                Picture = null,
-                UserNpub = founderNpub,
-                PartnerNpub = investorNpub,
-                UserPrivateKeyHex = nostrPrivateKeyHex,
-                PartnerPubKeyHex = partnerPubKeyHex // Store the raw hex format
-            };
-            
+                {
+                    ProjectId = currentFounderProject.ProjectInfo.ProjectIdentifier,
+                    Name = $"Investor {GetTruncatedNpub(investor.InvestorPublicKey)}",
+                    Description = $"Investment: {investor.TotalAmount.ToUnitBtc()} {network.CoinTicker}",
+                    Picture = null,
+                    UserNpub = founderNpub,
+                    PartnerNpub = investorNpub,
+                    UserPrivateKeyHex = nostrPrivateKeyHex,
+                    PartnerPubKeyHex = partnerPubKeyHex // Store the raw hex format
+                };
+
             // Reset unread counter
             string chatKey = $"founder-{currentFounderProject.ProjectInfo.ProjectIdentifier}";
             if (unreadMessages.ContainsKey(chatKey))
             {
                 unreadMessages[chatKey] = 0;
             }
-            
+
             // Load messages
             await LoadChatMessages();
-            
+
             // Subscribe to new messages
             SubscribeToMessages();
         }
@@ -965,19 +978,19 @@
     private async Task LoadChatMessages()
     {
         if (currentChat == null) return;
-        
+
         chatMessages.Clear();
-        
+
         try
         {
             var nostrClient = _nostrCommunicationFactory.GetOrCreateClient(_NetworkService);
-            
+
             // If we have an existing subscription, dispose of it
             messageSubscription?.Dispose();
-            
+
             // Create a new subscription for direct messages
             var subscriptionId = $"chat-{DateTime.UtcNow.Ticks}";
-            
+
             // Load chat history - we need both sent messages (where we're the author)
             // and received messages (where we're tagged as P)
             await _RelayService.LookupDirectMessagesForPubKeyAsync(
@@ -987,9 +1000,9 @@
                 async eventMessage => await ProcessChatMessage(eventMessage),
                 SafeConvertBech32ToHex(currentChat.UserNpub) // Messages from current user to partner
             );
-            
+
             await _RelayService.LookupDirectMessagesForPubKeyAsync(
-                currentChat.UserNpub, 
+                currentChat.UserNpub,
                 DateTime.UtcNow.AddDays(-7),
                 100,
                 async eventMessage => await ProcessChatMessage(eventMessage),
@@ -1006,18 +1019,18 @@
     {
         // If we already have a subscription, dispose it
         messageSubscription?.Dispose();
-        
+
         // Get the client
         var nostrClient = _nostrCommunicationFactory.GetOrCreateClient(_NetworkService);
-        
+
         // Subscribe to incoming messages with safer hex conversion
         messageSubscription = nostrClient.Streams.EventStream
             .Where(_ => _.Event?.Kind == NostrKind.EncryptedDm)
-            .Where(_ => (_.Event?.Pubkey == SafeConvertBech32ToHex(currentChat.PartnerNpub) && 
+            .Where(_ => (_.Event?.Pubkey == SafeConvertBech32ToHex(currentChat.PartnerNpub) &&
                           _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == SafeConvertBech32ToHex(currentChat.UserNpub)) ||
                         (_.Event?.Pubkey == SafeConvertBech32ToHex(currentChat.UserNpub) &&
                           _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == SafeConvertBech32ToHex(currentChat.PartnerNpub)))
-            .Subscribe(async messageEvent => 
+            .Subscribe(async messageEvent =>
             {
                 await ProcessChatMessage(messageEvent.Event);
                 StateHasChanged();
@@ -1029,94 +1042,97 @@
         try
         {
             if (eventMessage == null || string.IsNullOrEmpty(eventMessage.Content)) return;
-            
+
             // Check if we already have this message
             if (chatMessages.Any(m => m.Id == eventMessage.Id)) return;
-            
+
             // Determine if this message is from the current user using safer conversion
             bool isFromCurrentUser = eventMessage.Pubkey == SafeConvertBech32ToHex(currentChat.UserNpub);
-            
+
             // Try to decrypt the message
             string decryptedContent;
             try
             {
                 // For decryption, use the direct pubkey from the event
-                string partnerPubKeyHex = isFromCurrentUser 
+                string partnerPubKeyHex = isFromCurrentUser
                     ? eventMessage.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier)
                     : eventMessage.Pubkey;
-                    
+
                 // Make sure partner key is properly formatted for decryption
                 string formattedPartnerKey = FormatNostrPubkeyForEncryption(partnerPubKeyHex);
-                
+
                 // Debug info
                 Console.WriteLine($"Decrypting message - Using formatted key: {formattedPartnerKey?.Substring(0, 10)}...");
-                
+
                 decryptedContent = await _encryptionService.DecryptNostrContentAsync(
                     currentChat.UserPrivateKeyHex,
                     formattedPartnerKey,
                     eventMessage.Content
                 );
-                
+
                 // If decryption was successful, update the partner's pubkey in the chat session
-                if (!isFromCurrentUser && !string.IsNullOrEmpty(formattedPartnerKey)) {
+                if (!isFromCurrentUser && !string.IsNullOrEmpty(formattedPartnerKey))
+                {
                     currentChat.PartnerPubKeyHex = formattedPartnerKey;
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Decryption error: {ex.Message}");
-                
-                try {
+
+                try
+                {
                     // Try alternative formatting if initial decryption fails
-                    string alternativeKey = isFromCurrentUser 
+                    string alternativeKey = isFromCurrentUser
                         ? FormatNostrPubkeyForEncryption(SafeConvertBech32ToHex(currentChat.PartnerNpub))
                         : FormatNostrPubkeyForEncryption(SafeConvertBech32ToHex(currentChat.UserNpub));
-                        
+
                     Console.WriteLine($"Retrying with alternative key format: {alternativeKey.Substring(0, 10)}...");
-                    
+
                     decryptedContent = await _encryptionService.DecryptNostrContentAsync(
                         currentChat.UserPrivateKeyHex,
                         alternativeKey,
                         eventMessage.Content
                     );
                 }
-                catch (Exception fallbackEx) {
+                catch (Exception fallbackEx)
+                {
                     Console.WriteLine($"Fallback decryption also failed: {fallbackEx.Message}");
                     decryptedContent = "[Could not decrypt message]";
                 }
             }
-            
+
             // Create the chat message
             var chatMessage = new ChatMessage
-            {
-                Id = eventMessage.Id,
-                Content = decryptedContent,
-                SenderPubkey = eventMessage.Pubkey,
-                Timestamp = eventMessage.CreatedAt.GetValueOrDefault(DateTime.UtcNow),
-                IsFromCurrentUser = isFromCurrentUser
-            };
-            
+                {
+                    Id = eventMessage.Id,
+                    Content = decryptedContent,
+                    SenderPubkey = eventMessage.Pubkey,
+                    Timestamp = eventMessage.CreatedAt.GetValueOrDefault(DateTime.UtcNow),
+                    IsFromCurrentUser = isFromCurrentUser
+                };
+
             // Add to our list and sort by timestamp
             chatMessages.Add(chatMessage);
             chatMessages = chatMessages
                 .OrderBy(m => m.Timestamp)
                 .ToList();
-            
+
             // If the message is not from current user, mark as unread
             if (!isFromCurrentUser)
             {
-                string chatKey = isFounderChat ? 
-                    $"founder-{currentChat.ProjectId}" : 
+                string chatKey = isFounderChat ?
+                    $"founder-{currentChat.ProjectId}" :
                     $"investor-{currentChat.ProjectId}";
-                
+
                 if (!unreadMessages.ContainsKey(chatKey))
                 {
                     unreadMessages[chatKey] = 0;
                 }
-                
+
                 unreadMessages[chatKey]++;
             }
-            
+
             StateHasChanged();
         }
         catch (Exception ex)
@@ -1130,7 +1146,7 @@
     {
         if (currentChat != null)
         {
-            await InvokeAsync(async () => 
+            await InvokeAsync(async () =>
             {
                 await LoadChatMessages();
                 StateHasChanged();
@@ -1138,20 +1154,10 @@
         }
     }
 
-    private async Task HandleKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter" && !e.ShiftKey)
-        {
-            // Prevent default behavior of Enter key in textarea
-            await JS.InvokeVoidAsync("preventDefault", e);
-            await SendMessageAndCheckPassword();
-        }
-    }
-
     private async Task SendMessageAndCheckPassword()
     {
         if (string.IsNullOrWhiteSpace(newMessage)) return;
-        
+
         if (!passwordComponent.HasPassword())
         {
             passwordComponent.ShowPassword(SendMessage);
@@ -1165,16 +1171,16 @@
     private async Task SendMessage()
     {
         if (currentChat == null || string.IsNullOrWhiteSpace(newMessage)) return;
-        
+
         isSendingMessage = true;
         StateHasChanged();
-        
+
         try
         {
             // Get keys for encryption
             string userPrivKey = currentChat.UserPrivateKeyHex;
             string partnerPubKey;
-            
+
             try
             {
                 // Get properly formatted partner key
@@ -1187,50 +1193,51 @@
                 {
                     partnerPubKey = currentChat.PartnerPubKeyHex;
                 }
-                
+
                 // Format the key properly for encryption
                 partnerPubKey = FormatNostrPubkeyForEncryption(partnerPubKey);
-                
+
                 Console.WriteLine($"Sending message with partner key: {partnerPubKey}");
-                
+
                 // Encrypt the content using the service
                 string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
                     userPrivKey,
                     partnerPubKey,
                     newMessage
                 );
-                
+
                 // Send encrypted message using the existing method
                 var sentMessageId = _RelayService.SendDirectMessagesForPubKeyAsync(
                     userPrivKey,
                     partnerPubKey,
                     encryptedContent,
-                    response => {
+                    response =>
+                    {
                         Console.WriteLine($"Message send response: {(response != null ? "Success" : "No response")}");
                     }
                 );
-                
+
                 Console.WriteLine($"Successfully sent message with ID: {sentMessageId}");
-                
+
                 // Add to chat UI
                 var sentChatMessage = new ChatMessage
-                {
-                    Id = sentMessageId,
-                    Content = newMessage,
-                    SenderPubkey = SafeConvertBech32ToHex(currentChat.UserNpub),
-                    Timestamp = DateTime.UtcNow,
-                    IsFromCurrentUser = true
-                };
-                
+                    {
+                        Id = sentMessageId,
+                        Content = newMessage,
+                        SenderPubkey = SafeConvertBech32ToHex(currentChat.UserNpub),
+                        Timestamp = DateTime.UtcNow,
+                        IsFromCurrentUser = true
+                    };
+
                 // Clear the input field
                 newMessage = "";
-                
+
                 // Add message to UI
                 chatMessages.Add(sentChatMessage);
                 chatMessages = chatMessages
                     .OrderBy(m => m.Timestamp)
                     .ToList();
-                    
+
                 // Save the working partner key for future use
                 currentChat.PartnerPubKeyHex = partnerPubKey;
             }
@@ -1239,47 +1246,47 @@
                 // Log the error
                 Console.WriteLine($"First encryption attempt failed: {ex.Message}");
                 Console.WriteLine("Attempting with alternative key format...");
-                
+
                 // Try a different key format as fallback
                 try
                 {
                     // Try alternative formatting of the key
                     partnerPubKey = SafeConvertBech32ToHex(currentChat.PartnerNpub);
-                    
+
                     // Ensure it's exactly 64 chars with no prefix
                     if (partnerPubKey.StartsWith("0x")) partnerPubKey = partnerPubKey.Substring(2);
                     partnerPubKey = partnerPubKey.PadLeft(64, '0').Substring(0, 64);
-                    
+
                     string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
                         userPrivKey,
                         partnerPubKey,
                         newMessage
                     );
-                    
+
                     var fallbackMessageId = _RelayService.SendDirectMessagesForPubKeyAsync(
                         userPrivKey,
                         partnerPubKey,
                         encryptedContent,
                         null // No callback
                     );
-                    
+
                     // Add to chat UI
                     var fallbackChatMessage = new ChatMessage
-                    {
-                        Id = fallbackMessageId,
-                        Content = newMessage,
-                        SenderPubkey = SafeConvertBech32ToHex(currentChat.UserNpub),
-                        Timestamp = DateTime.UtcNow,
-                        IsFromCurrentUser = true
-                    };
-                    
+                        {
+                            Id = fallbackMessageId,
+                            Content = newMessage,
+                            SenderPubkey = SafeConvertBech32ToHex(currentChat.UserNpub),
+                            Timestamp = DateTime.UtcNow,
+                            IsFromCurrentUser = true
+                        };
+
                     // Clear input field
                     newMessage = "";
-                    
+
                     // Add message to UI
                     chatMessages.Add(fallbackChatMessage);
                     chatMessages = chatMessages.OrderBy(m => m.Timestamp).ToList();
-                    
+
                     // Save the working key format
                     currentChat.PartnerPubKeyHex = partnerPubKey;
                 }
@@ -1396,14 +1403,14 @@
         {
             if (string.IsNullOrEmpty(pubkeyInput))
                 return null;
-            
+
             string pubkeyHex = pubkeyInput;
-            
+
             // Convert from npub to hex if necessary
             if (pubkeyInput.StartsWith("npub"))
             {
                 pubkeyHex = SafeConvertBech32ToHex(pubkeyInput);
-                
+
                 // If conversion failed, try a basic regex cleanup as fallback
                 if (string.IsNullOrEmpty(pubkeyHex) || pubkeyHex.StartsWith("npub"))
                 {
@@ -1416,52 +1423,54 @@
                     Console.WriteLine($"Converted npub to hex: {pubkeyHex}");
                 }
             }
-            
+
             // Strip any prefix
             if (pubkeyHex.StartsWith("0x"))
                 pubkeyHex = pubkeyHex.Substring(2);
-            
+
             // Additional cleanup to ensure only valid hex characters
-            pubkeyHex = new string(pubkeyHex.Where(c => 
-                (c >= '0' && c <= '9') || 
-                (c >= 'a' && c <= 'f') || 
+            pubkeyHex = new string(pubkeyHex.Where(c =>
+                (c >= '0' && c <= '9') ||
+                (c >= 'a' && c <= 'f') ||
                 (c >= 'A' && c <= 'F')).ToArray());
-                
+
             // Ensure correct length (Nostr uses 32-byte keys = 64 hex chars)
             if (pubkeyHex.Length > 64)
                 pubkeyHex = pubkeyHex.Substring(pubkeyHex.Length - 64); // Get the last 64 chars
             else if (pubkeyHex.Length < 64)
                 pubkeyHex = pubkeyHex.PadLeft(64, '0'); // Pad with zeros if too short
-                
+
             // Final validation
             if (!System.Text.RegularExpressions.Regex.IsMatch(pubkeyHex, "^[0-9a-fA-F]{64}$"))
             {
                 Console.WriteLine($"Warning: Generated key may not be valid: {pubkeyHex}"); // Fixed missing semicolon here
                 // Instead of throwing exception, return best effort result
             }
-                
+
             return pubkeyHex;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error formatting public key: {ex.Message}");
             // Instead of throwing an exception, try to return a usable string
-            
+
             // Last resort cleanup - strip non-hex chars and pad/truncate
-            try {
-                var cleanedKey = new string((pubkeyInput ?? "").Where(c => 
-                    (c >= '0' && c <= '9') || 
-                    (c >= 'a' && c <= 'f') || 
+            try
+            {
+                var cleanedKey = new string((pubkeyInput ?? "").Where(c =>
+                    (c >= '0' && c <= '9') ||
+                    (c >= 'a' && c <= 'f') ||
                     (c >= 'A' && c <= 'F')).ToArray());
-                    
+
                 if (cleanedKey.Length > 64)
                     cleanedKey = cleanedKey.Substring(cleanedKey.Length - 64);
                 else if (cleanedKey.Length < 64)
                     cleanedKey = cleanedKey.PadLeft(64, '0');
-                    
+
                 return cleanedKey;
             }
-            catch {
+            catch
+            {
                 // If all else fails, return a string of zeros (valid hex, but likely wrong key)
                 return "0000000000000000000000000000000000000000000000000000000000000000";
             }
@@ -1473,7 +1482,7 @@
         showingInvestorsInSidebar = false;
         loadingInvestors = false;
         projectInvestors = new List<InvestmentInfo>();
-        
+
         // Reset URL to base messages path
         NavigationManager.NavigateTo("/messages", false);
     }
@@ -1488,10 +1497,34 @@
                 return;
             }
 
+            // Check if password is available, if not show password dialog first
+            if (!passwordComponent.HasPassword())
+            {
+                passwordComponent.ShowPassword(async () =>
+                {
+                    await InitializeChatWithPassword();
+                });
+                return;
+            }
+
+            await InitializeChatWithPassword();
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage("Failed to initialize chat from parameters", ex);
+        }
+    }
+
+    private async Task InitializeChatWithPassword()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(ChatMode)) return;
+
             if (ChatMode.ToLower() == "founder")
             {
                 // Find the founder project
-                var founderProject = founderProjects.FirstOrDefault(p => 
+                var founderProject = founderProjects?.FirstOrDefault(p =>
                     p.ProjectInfo.ProjectIdentifier == ProjectId);
 
                 if (founderProject != null)
@@ -1501,12 +1534,12 @@
                     {
                         // First load the investors
                         await SelectFounderChat(founderProject);
-                        
+
                         // Find the matching investor
-                        var investor = projectInvestors.FirstOrDefault(i => 
+                        var investor = projectInvestors?.FirstOrDefault(i =>
                             i.InvestorPublicKey == PartnerPubKey ||
                             i.InvestorNPub == PartnerPubKey);
-                        
+
                         if (investor != null)
                         {
                             await StartChatWithInvestor(investor);
@@ -1522,9 +1555,9 @@
             else if (ChatMode.ToLower() == "investor")
             {
                 // Find the investor project
-                var investorProject = investorProjects.FirstOrDefault(p => 
+                var investorProject = investorProjects?.FirstOrDefault(p =>
                     p.ProjectInfo.ProjectIdentifier == ProjectId);
-                
+
                 if (investorProject != null)
                 {
                     await SelectInvestorChat(investorProject);
@@ -1533,7 +1566,7 @@
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage("Failed to initialize chat from  parameters", ex);
+            notificationComponent?.ShowErrorMessage("Failed to initialize chat with parameters", ex);
         }
     }
 
@@ -1567,7 +1600,7 @@
         {
             url = $"/messages/{Uri.EscapeDataString(projectId)}/{Uri.EscapeDataString(mode)}/{Uri.EscapeDataString(partnerPubKey)}";
         }
-        
+
         // Replace current URL without adding to browser history
         NavigationManager.NavigateTo(url, false, true);
     }
@@ -1579,21 +1612,21 @@
         {
             if (string.IsNullOrEmpty(input))
                 return null;
-                
+
             // Check if already in hex format
             if (System.Text.RegularExpressions.Regex.IsMatch(input, "^[0-9a-fA-F]{64}$"))
                 return input;
-                
+
             // Only try to convert if it starts with npub
             if (input.StartsWith("npub"))
             {
                 try
                 {
                     var hex = NostrHelper.ConvertBech32ToHex(input);
-                    
+
                     // Validate the conversion result
-                    if (!string.IsNullOrEmpty(hex) && 
-                        !hex.StartsWith("npub") && 
+                    if (!string.IsNullOrEmpty(hex) &&
+                        !hex.StartsWith("npub") &&
                         System.Text.RegularExpressions.Regex.IsMatch(hex, "^[0-9a-fA-F]+$"))
                     {
                         // Ensure hex output is valid length (64 characters)
@@ -1601,7 +1634,7 @@
                             hex = hex.Substring(hex.Length - 64);
                         else if (hex.Length < 64)
                             hex = hex.PadLeft(64, '0');
-                        
+
                         Console.WriteLine($"Successfully converted npub to hex: {hex}");
                         return hex;
                     }
@@ -1615,25 +1648,25 @@
                     Console.WriteLine($"Error in npub to hex conversion: {convEx.Message}");
                 }
             }
-            
+
             // Fallback: Strip non-hex characters and ensure even length
-            var hexChars = new string(input.Where(c => 
-                ((c >= '0' && c <= '9') || 
-                 (c >= 'a' && c <= 'f') || 
+            var hexChars = new string(input.Where(c =>
+                ((c >= '0' && c <= '9') ||
+                 (c >= 'a' && c <= 'f') ||
                  (c >= 'A' && c <= 'F'))).ToArray());
-            
+
             // Ensure even length (required by from_hex)
             if (hexChars.Length % 2 != 0)
             {
                 hexChars = "0" + hexChars;
             }
-            
+
             // Normalize length to 64 characters
             if (hexChars.Length > 64)
                 hexChars = hexChars.Substring(hexChars.Length - 64);
             else if (hexChars.Length < 64)
                 hexChars = hexChars.PadLeft(64, '0');
-                
+
             Console.WriteLine($"Fallback hex conversion: {hexChars}");
             return hexChars;
         }
