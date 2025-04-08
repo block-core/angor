@@ -1,6 +1,7 @@
 ﻿using Angor.Contexts.Funding;
 using Angor.Contexts.Funding.Projects.Infrastructure;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Tests.TestDoubles;
 using Angor.Shared;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +25,7 @@ public class ProjectAppServiceTests(ITestOutputHelper output)
         var serviceCollection = new ServiceCollection();
 
         var logger = new LoggerConfiguration().WriteTo.TestOutput(output).CreateLogger();
-        FundingContext.Register(serviceCollection, logger);
+        FundingContextServices.Register(serviceCollection, logger);
         serviceCollection.AddSingleton<ISeedwordsProvider>(sp => new TestingSeedwordsProvider("print foil moment average quarter keep amateur shell tray roof acoustic where", "", sp.GetRequiredService<IDerivationOperations>()));
 
         var serviceProvider = serviceCollection.BuildServiceProvider();

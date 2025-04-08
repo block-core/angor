@@ -1,4 +1,5 @@
 using Angor.Contexts.Funding;
+using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;

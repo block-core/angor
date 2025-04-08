@@ -1,6 +1,8 @@
 using Angor.Contexts.Funding;
 using Angor.Contexts.Funding.Projects.Infrastructure;
+using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Integration.WalletFunding;
+using Angor.Contexts.Wallet;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
@@ -28,7 +30,7 @@ public static class CompositionRoot
         UIServices.Register(services, topLevelView);
         SecurityContext.Register(services);
         RegisterWalletServices(services, logger);
-        FundingContext.Register(services, logger);
+        FundingContextServices.Register(services, logger);
 
         // Integration services
         services.AddSingleton<ISeedwordsProvider, SeedwordsProvider>();
@@ -41,7 +43,7 @@ public static class CompositionRoot
     private static void RegisterWalletServices(ServiceCollection services, Logger logger)
     {
         // TODO: Set network from configuration
-        WalletServices.Register(services, logger, BitcoinNetwork.Testnet)
+        WalletContextServices.Register(services, logger, BitcoinNetwork.Testnet)
             .AddSingleton<IStore>(new FileStore("Angor"));
     }
 

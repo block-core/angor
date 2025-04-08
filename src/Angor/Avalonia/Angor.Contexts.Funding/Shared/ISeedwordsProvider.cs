@@ -1,6 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Funding;
+namespace Angor.Contexts.Funding.Shared;
 
 public interface ISeedwordsProvider
 {

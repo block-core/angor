@@ -2,8 +2,8 @@ using Angor.Client.Models;
 using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Investor.Dtos;
-using Angor.Contexts.Funding.Investor.Requests.CreateInvestment;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
@@ -74,15 +74,15 @@ public class InvestmentRepository(
         }));
     }
 
-    public Task<Result<PendingInvestment>> GetPendingInvestment(Guid walletId, ProjectId projectId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<Result<SignedInvestment>> GetSignedInvestment(Guid walletId, ProjectId projectId)
-    {
-        throw new NotImplementedException();
-    }
+    // public Task<Result<PendingInvestment>> GetPendingInvestment(Guid walletId, ProjectId projectId)
+    // {
+    //     throw new NotImplementedException();
+    // }
+    //
+    // public Task<Result<SignedInvestment>> GetSignedInvestment(Guid walletId, ProjectId projectId)
+    // {
+    //     throw new NotImplementedException();
+    // }
 
     private async Task<List<Domain.Investment>> GetAllConfirmedInvestments()
     {

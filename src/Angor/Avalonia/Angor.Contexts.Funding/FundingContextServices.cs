@@ -1,11 +1,10 @@
 ﻿using Angor.Client;
 using Angor.Client.Services;
 using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Investor.CreateInvestment;
-using Angor.Contexts.Funding.Investor.Requests.CreateInvestment;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Shared;
 using Angor.Shared.Networks;
@@ -20,7 +19,7 @@ using EncryptionService = Angor.Contexts.Funding.Projects.Infrastructure.Impl.En
 
 namespace Angor.Contexts.Funding;
 
-public class FundingContext
+public static class FundingContextServices
 {
     public static ServiceCollection Register(ServiceCollection services, ILogger logger)
     {
@@ -31,8 +30,7 @@ public class FundingContext
         services.AddSingleton<IInvestmentAppService, InvestmentAppService>();
         services.AddSingleton<IInvestmentRepository, InvestmentRepository>();
         services.AddSingleton<IProjectRepository, ProjectRepository>();
-        services.AddSingleton<ISignatureRequestService, NostrSignatureRequestService>();
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateInvestmentTransactionHandler).Assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateInvestment.CreateInvestmentTransactionHandler).Assembly));
         
         services.TryAddSingleton<ISerializer, Serializer>();
         services.TryAddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();

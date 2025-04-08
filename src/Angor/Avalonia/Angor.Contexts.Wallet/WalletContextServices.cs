@@ -12,9 +12,9 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using ILogger = Serilog.ILogger;
 
-namespace Angor.Contexts.Wallet.Infrastructure;
+namespace Angor.Contexts.Wallet;
 
-public static class WalletServices
+public static class WalletContextServices
 {
     public static ServiceCollection Register(ServiceCollection services, ILogger logger, BitcoinNetwork bitcoinNetwork)
     {

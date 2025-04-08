@@ -16,13 +16,13 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel
     {
         Feerate = 100;
         SatsToInvest = sats;
-        ReactiveCommand.CreateFromTask(() => investmentAppService.CreateInvestmentTransaction(walletId.Id, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(sats)));
+        ReactiveCommand.CreateFromTask(() => investmentAppService.CreateDraft(walletId.Id, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(sats)));
 
         var drafts = this.WhenAnyValue(x => x.Feerate)
             .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Do(_ => isBusy.OnNext(true))
-            .Select(fr => Observable.FromAsync(() => investmentAppService.CreateInvestmentTransaction(walletId.Id, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(sats))))
+            .Select(fr => Observable.FromAsync(() => investmentAppService.CreateDraft(walletId.Id, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(sats))))
             .Switch()
             .ObserveOn(RxApp.MainThreadScheduler)
             .Do(_ => isBusy.OnNext(false), _ => isBusy.OnNext(false))
