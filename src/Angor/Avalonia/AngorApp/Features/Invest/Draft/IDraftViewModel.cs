@@ -1,3 +1,4 @@
+using AngorApp.Features.Invest.Draft;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 
 namespace AngorApp.Sections.Browse.Details.Invest.Draft;

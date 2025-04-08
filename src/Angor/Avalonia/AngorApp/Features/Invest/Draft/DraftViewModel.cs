@@ -2,6 +2,7 @@ using System.Reactive.Subjects;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Wallet.Domain;
+using AngorApp.Features.Invest.Draft;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;

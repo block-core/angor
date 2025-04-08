@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
+using AngorApp.Features.Invest;
 using AngorApp.UI.Controls.Common.TransactionDraft;
 using AngorApp.UI.Services;
 using Avalonia.Threading;

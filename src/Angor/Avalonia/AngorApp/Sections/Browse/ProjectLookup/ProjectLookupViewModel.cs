@@ -4,6 +4,7 @@ using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Wallet.Application;
 using AngorApp.Core;
+using AngorApp.Features.Invest;
 using AngorApp.Sections.Browse.Details;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;

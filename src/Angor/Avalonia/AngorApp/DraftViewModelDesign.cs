@@ -1,5 +1,6 @@
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
+using AngorApp.Features.Invest.Draft;
 using AngorApp.Sections.Browse.Details.Invest.Draft;
 
 namespace AngorApp;
@@ -7,7 +8,7 @@ namespace AngorApp;
 public class DraftViewModelDesign : IDraftViewModel
 {
     public long SatsToInvest { get; } = 1000;
-    public Sections.Browse.Details.Invest.Draft.InvestmentDraft Draft { get; } = new Sections.Browse.Details.Invest.Draft.InvestmentDraft(new CreateInvestment.Draft("key", TransactionJson(), "id", new Amount(1234)));
+    public InvestmentDraft Draft { get; } = new InvestmentDraft(new CreateInvestment.Draft("key", TransactionJson(), "id", new Amount(1234)));
     public long Feerate { get; set; } = 321;
 
     private static string TransactionJson()

@@ -8,5 +8,5 @@ public interface IInvestmentAppService
 {
     Task<Result<IEnumerable<InvestmentDto>>> GetInvestments(ProjectId projectId);
     Task<Result<CreateInvestment.Draft>> CreateDraft(Guid sourceWalletId, ProjectId projectId, Amount amount);
-    Task<Result<Guid>> RequestInvestment(ProjectId projectId, CreateInvestment.Draft draft);
+    Task<Result<Guid>> RequestInvestment(Guid sourceWalletId, ProjectId projectId, CreateInvestment.Draft draft);
 }
