@@ -17,7 +17,7 @@
 
     <Panel>
         <Panel>
-            <StackPanel IsVisible="{Binding ShowCreateAndRecover^}">
+            <StackPanel IsVisible="{Binding ShowCreate}">
                 <controls:Pane Title="Setup your wallet" IsTitleVisible="True">
                     <WrapPanel HorizontalAlignment="Center" Margin="-10">
                         <Button Content="Create wallet" Command="{Binding CreateWallet}" />

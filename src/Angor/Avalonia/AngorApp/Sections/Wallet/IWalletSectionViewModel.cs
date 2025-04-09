@@ -11,4 +11,5 @@ public interface IWalletSectionViewModel
     public IWalletViewModel? Wallet { get; }
     public IObservable<bool> HasWallet { get; }
     public IObservable<bool> ShowCreateAndRecover { get; }
+    public bool ShowCreate { get; }
 }
