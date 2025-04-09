@@ -18,6 +18,11 @@ public class WalletStorage : IWalletStorage
     {
         return _storage.ContainKey(WalletKey);
     }
+    public bool HasExtPubKey()
+    {
+        var wallet = _storage.GetItem<Wallet>(WalletKey);
+        return wallet != null && wallet.EncryptedData == "flag";
+    }
 
     public void SaveWalletWords(Wallet wallet)
     {
