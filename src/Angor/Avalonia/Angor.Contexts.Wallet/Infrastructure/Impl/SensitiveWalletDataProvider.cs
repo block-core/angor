@@ -7,18 +7,23 @@ namespace Angor.Contexts.Wallet.Infrastructure.Impl;
 
 public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecurityContext walletSecurityContext) : ISensitiveWalletDataProvider
 {
-    private readonly Dictionary<WalletId, (string, Maybe<string>)> sensitiveData = new();
+    private readonly Dictionary<WalletId, (string, Maybe<string>)> cachedSensitiveData = new();
 
     public async Task<Result<(string seed, Maybe<string> passphrase)>> RequestSensitiveData(WalletId id)
     {
-        var findResult = sensitiveData.TryFind(id);
+        var findResult = cachedSensitiveData.TryFind(id);
         if (findResult.HasValue)
         {
             return findResult.Value;
         }
 
-        var result = await RequestSensitiveDataCore(id).Tap(data => sensitiveData[id] = data);
+        var result = await RequestSensitiveDataCore(id).Tap(data => cachedSensitiveData[id] = data);
         return result;
+    }
+
+    public void SetSensitiveData(WalletId id, (string seed, Maybe<string> passphrase) data)
+    {
+        cachedSensitiveData[id] = data;
     }
 
     private async Task<Result<EncryptedWallet>> GetEncryptedWallet(WalletId id)

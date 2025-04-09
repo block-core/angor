@@ -25,4 +25,9 @@ public class TestSensitiveWalletDataProvider : ISensitiveWalletDataProvider
 
         return Result.Failure<(string seed, Maybe<string> passphrase)>("Invalid id");
     }
+
+    public void SetSensitiveData(WalletId id, (string seed, Maybe<string> passphrase) data)
+    {
+        throw new NotImplementedException();
+    }
 }
