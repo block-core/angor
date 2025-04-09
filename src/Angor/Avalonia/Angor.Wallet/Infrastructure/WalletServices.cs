@@ -20,8 +20,6 @@ public static class WalletServices
         var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         
         services.TryAddSingleton<IStore>(new InMemoryStore());
-        logger.Warning("Registering default Store: {Store}", services.First(x => x.ServiceType.IsAssignableTo(typeof(IStore))).ServiceType);
-        
         services.AddSingleton<IWalletAppService, WalletAppService>();
         services.AddSingleton<IHdOperations, HdOperations>();
         var networkConfiguration = new NetworkConfiguration();
@@ -30,7 +28,7 @@ public static class WalletServices
         services.AddSingleton<INetworkConfiguration>(networkConfiguration);
         services.AddSingleton<INetworkService, NetworkService>();
         services.AddSingleton<INetworkStorage, NetworkStorage>();
-        services.AddSingleton<IIndexerService>(provider => new IndexerService(provider.GetRequiredService<INetworkConfiguration>(), provider.GetRequiredService<IHttpClientFactory>().CreateClient(), provider.GetRequiredService<INetworkService>()));
+        services.TryAddSingleton<IIndexerService>(provider => new IndexerService(provider.GetRequiredService<INetworkConfiguration>(), provider.GetRequiredService<IHttpClientFactory>().CreateClient(), provider.GetRequiredService<INetworkService>()));
         services.AddSingleton<IWalletFactory, WalletFactory>();
         services.AddSingleton<IWalletOperations, WalletOperations>();
         services.AddSingleton<ISensitiveWalletDataProvider, SensitiveWalletDataProvider>();

@@ -13,7 +13,6 @@ public static class ModelServices
         return services
             .AddSingleton<IWalletProvider, WalletProviderDesign>()
             .AddSingleton<IWalletBuilder, WalletBuilder>()
-            .AddSingleton<IWalletWizard, WalletWizard>()
-            .AddSingleton<IProjectService, ProjectService>();
+            .AddSingleton<IWalletWizard, WalletWizard>();
     }
 }
