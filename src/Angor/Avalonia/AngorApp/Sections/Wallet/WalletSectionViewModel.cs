@@ -32,19 +32,12 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
         HasWallet = this.WhenAnyValue(x => x.Wallet).NotNull();
         IsBusy = TryLoadExistingWallet.IsExecuting;
         TryLoadExistingWallet.HandleErrorsWith(uiServices.NotificationService, "Failed to load wallet");
-        ShowCreateAndRecover = TryLoadExistingWallet.Successes().Empties().Any().StartWith(false);
-
-        showCreateHelper = ShowCreateAndRecover.ToProperty(this, x => x.ShowCreate);
-        
-        ShowCreateAndRecover.Subscribe(b => { });
-        
+        ShowCreateAndRecover = TryLoadExistingWallet.Successes().Empties().Any().StartWith(false).ReplayLastActive();
         
         TryLoadExistingWallet.Execute().Subscribe();
     }
 
-    [ObservableAsProperty] private bool showCreate;
-    
-    public IObservable<bool> HasWallet { get; set; }
+    public IObservable<bool> HasWallet { get; }
     public IObservable<bool> ShowCreateAndRecover { get; }
     public ReactiveCommand<Unit,Result<Maybe<IWallet>>> TryLoadExistingWallet { get; set; }
     public IObservable<bool> IsBusy { get; }
