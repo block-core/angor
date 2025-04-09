@@ -6,7 +6,7 @@ using Zafiro.UI;
 
 namespace AngorApp.UI.Services;
 
-public class WalletProvider(IWalletAppService walletAppService, ITransactionWatcher transactionWatcher, UIServices uiServices) : IWalletBuilder
+public class WalletProvider(IWalletAppService walletAppService, ITransactionWatcher transactionWatcher, INotificationService notificationService) : IWalletBuilder
 {
     private readonly Dictionary<WalletId, DynamicWallet> runningWallets = new ();
     
@@ -38,7 +38,7 @@ public class WalletProvider(IWalletAppService walletAppService, ITransactionWatc
                 }
             });
 
-        dynamicWallet.SyncCommand.StartReactive.HandleErrorsWith(uiServices.NotificationService, "Wallet Sync Error");
+        dynamicWallet.SyncCommand.StartReactive.HandleErrorsWith(notificationService, "Wallet Sync Error");
         syncSubscription = dynamicWallet.SyncCommand.StartReactive.Execute().Subscribe();
         
         return await tcs.Task;

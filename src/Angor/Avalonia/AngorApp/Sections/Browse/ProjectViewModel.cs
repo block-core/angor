@@ -17,5 +17,5 @@ public class ProjectViewModel(
     public IProject Project { get; } = project;
 
     public ICommand GoToDetails { get; set; } = ReactiveCommand.Create(() =>
-        navigator.Go(() => new ProjectDetailsViewModel(walletAppService, project, investWizard, uiServices)));
+        navigator.Go(() => new ProjectDetailsViewModel(project, investWizard, uiServices)));
 }
