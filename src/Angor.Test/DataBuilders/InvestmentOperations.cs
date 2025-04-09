@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Angor.Shared;
 using Angor.Shared.Models;
+using Angor.Shared.Services;
 using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;
 using NBitcoin.Policy;
@@ -15,7 +16,6 @@ using OutPoint = NBitcoin.OutPoint;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
 using ScriptType = NBitcoin.ScriptType;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
-using TransactionBuilder = Blockcore.Consensus.TransactionInfo.TransactionBuilder;
 using TxOut = Blockcore.Consensus.TransactionInfo.TxOut;
 using Utils = NBitcoin.Utils;
 using WitScript = NBitcoin.WitScript;
@@ -25,10 +25,12 @@ namespace Angor.Test.DataBuilders;
 public class InvestmentOperations
 {
     private readonly IWalletOperations _walletOperations;
+    private readonly IBitcoinTransactionBuilder _transactionBuilder;
 
-    public InvestmentOperations(IWalletOperations walletOperations, IDerivationOperations derivationOperations)
+    public InvestmentOperations(IWalletOperations walletOperations, IBitcoinTransactionBuilder transactionBuilder)
     {
         _walletOperations = walletOperations;
+        _transactionBuilder = transactionBuilder;
     }
 
     /// <summary>
@@ -97,7 +99,7 @@ public class InvestmentOperations
         //var incoins = coins.coins.Select(c => new NBitcoin.Coin(OutPoint.Parse(c.Outpoint.ToString()), new NBitcoin.TxOut(NBitcoin.Money.Satoshis(c.Amount.Satoshi), new NBitcoin.Script(c.ScriptPubKey.ToBytes()))));
         //var inKeys = coins.keys.Select(k => new Key(k.ToBytes())).ToArray();
 
-        var builder = new TransactionBuilder(network) // nbitcoinNetwork.CreateTransactionBuilder()
+        var builder = _transactionBuilder.CreateTransactionBuilder(network)
             .AddCoins(coins.coins)
             .AddKeys(coins.keys.ToArray())
             .SetChange(BitcoinAddress.Create(changeAddress, network))

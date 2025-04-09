@@ -16,15 +16,17 @@ public class WalletOperations : IWalletOperations
     private readonly ILogger<WalletOperations> _logger;
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly IIndexerService _indexerService;
+    private readonly IBitcoinTransactionBuilder _bitcoinTransactionBuilder;
 
     private const int AccountIndex = 0; // for now only account 0
     private const int Purpose = 84; // for now only legacy
 
-    public WalletOperations(IIndexerService indexerService, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration)
+    public WalletOperations(IIndexerService indexerService, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration, IBitcoinTransactionBuilder bitcoinTransactionBuilder)
     {
         _hdOperations = hdOperations;
         _logger = logger;
         _networkConfiguration = networkConfiguration;
+        _bitcoinTransactionBuilder = bitcoinTransactionBuilder;
         _indexerService = indexerService;
     }
 
@@ -47,7 +49,7 @@ public class WalletOperations : IWalletOperations
         if (coins.coins == null)
             throw new ApplicationException("No coins found");
 
-        var builder = new TransactionBuilder(network)
+        var builder = _bitcoinTransactionBuilder.CreateTransactionBuilder(network)
             .AddCoins(coins.coins)
             .AddKeys(coins.keys.ToArray())
             .SetChange(BitcoinAddress.Create(changeAddress, network))
@@ -166,7 +168,7 @@ public class WalletOperations : IWalletOperations
             return new OperationResult<Transaction> { Success = false, Message = "not enough funds" };
         }
 
-        var builder = new TransactionBuilder(network)
+        var builder = _bitcoinTransactionBuilder.CreateTransactionBuilder(network)
             .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), Money.Satoshis(sendInfo.SendAmount))
             .AddCoins(coins)
             .AddKeys(keys.ToArray())
@@ -600,11 +602,13 @@ public class WalletOperations : IWalletOperations
             .Select(_ => new Coin(uint256.Parse(_.outpoint.transactionId), (uint)_.outpoint.outputIndex,
                 Money.Satoshis(_.value), Script.FromHex(_.scriptHex)));
 
-        var builder = new TransactionBuilder(network)
+        var builder = _bitcoinTransactionBuilder.CreateTransactionBuilder(network)
             .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), sendInfo.SendAmount)
             .AddCoins(coins)
             .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network));
 
-        return builder.EstimateFees(new FeeRate(Money.Satoshis(feeRate))).ToUnit(MoneyUnit.BTC);
+        var fee = builder.EstimateFees(new FeeRate(Money.Satoshis(feeRate)));
+        
+        return fee.ToUnit(MoneyUnit.BTC);
     }
 }
