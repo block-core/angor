@@ -16,8 +16,8 @@
     </UserControl.Styles>
 
     <Panel>
-        <Panel IsVisible="{Binding !IsBusy^}">
-            <StackPanel IsVisible="{Binding Path=Wallet, Converter={x:Static ObjectConverters.IsNull}}">
+        <Panel>
+            <StackPanel IsVisible="{Binding ShowCreateAndRecover^}">
                 <controls:Pane Title="Setup your wallet" IsTitleVisible="True">
                     <WrapPanel HorizontalAlignment="Center" Margin="-10">
                         <Button Content="Create wallet" Command="{Binding CreateWallet}" />
@@ -25,8 +25,11 @@
                     </WrapPanel>
                 </controls:Pane>
             </StackPanel>
-            <operate:WalletView IsVisible="{Binding Path=., Converter={x:Static ObjectConverters.IsNotNull}}" DataContext="{Binding Wallet}" />
+            <operate:WalletView IsVisible="{Binding HasWallet^}" />
         </Panel>
-        <c:ProgressRing IsVisible="{Binding IsBusy^}" IsIndeterminate="True" Height="100" Width="100" />
+        <StackPanel IsVisible="{Binding IsBusy^}" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock>Loading existing wallet. Please wait.</TextBlock>
+            <c:ProgressRing  IsIndeterminate="True" Height="100" Width="100" />
+        </StackPanel>
     </Panel>
 </UserControl>

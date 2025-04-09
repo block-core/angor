@@ -38,7 +38,7 @@ public class WalletProvider(IWalletAppService walletAppService, ITransactionWatc
                 }
             });
 
-        dynamicWallet.SyncCommand.StartReactive.HandleErrorsWith(notificationService, "Wallet Sync Error");
+        //dynamicWallet.SyncCommand.StartReactive.HandleErrorsWith(notificationService, "Wallet Sync Error");
         syncSubscription = dynamicWallet.SyncCommand.StartReactive.Execute().Subscribe();
         
         return await tcs.Task;

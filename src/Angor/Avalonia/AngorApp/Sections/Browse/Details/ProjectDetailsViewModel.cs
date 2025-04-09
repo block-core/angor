@@ -18,27 +18,9 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
         this.project = project;
         this.investWizard = investWizard;
         this.uiServices = uiServices;
-        Invest = ReactiveCommand.CreateFromTask(() =>
-        {
-            return DoInvest();
-            // return walletAppService.GetMetadatas()
-            //     .Map(x => x.TryFirst())
-            //     .Bind(maybeMetadata =>
-            //     {
-            //         if (maybeMetadata.HasValue)
-            //         {
-            //             return Result.Success(Observable.FromAsync(() => DoInvest(project, uiServices))
-            //                 .SubscribeOn(RxApp.MainThreadScheduler)
-            //                 .ToTask());
-            //         }
-            //         else
-            //         {
-            //             return Result.Success(Maybe<Unit>.None);
-            //         }
-            //     });
-        });
+        Invest = ReactiveCommand.CreateFromTask(DoInvest);
 
-        Invest.HandleErrorsWith(uiServices.NotificationService);
+        Invest.HandleErrorsWith(uiServices.NotificationService, "Investment failed");
     }
 
     public object Icon => project.Banner;

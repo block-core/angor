@@ -2,13 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              xmlns:main="clr-namespace:SuppaWallet.Gui.Wallet.Main"
              xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
              xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Wallet.Operate.WalletView"
-             x:DataType="operate:IWalletViewModel">
+             x:DataType="wallet:IWalletSectionViewModel">
 
     <Design.DataContext>
         <operate:WalletViewModelDesign>
@@ -25,26 +24,26 @@
     </UserControl.Styles>
 
     <Panel>
-        <wallet:WalletLockedView>
-            <Interaction.Behaviors>
-                <behaviors:VisibleWhenBehavior BindingValue="{Binding WalletDisplayStatus}"
-                                               CompareValue="{x:Static main:WalletDisplayStatus.Locked}" />
-            </Interaction.Behaviors>
-        </wallet:WalletLockedView>
-        <operate:WalletUnlockedView>
-            <Interaction.Behaviors>
-                <behaviors:VisibleWhenBehavior
-                    BindingValue="{Binding WalletDisplayStatus}"
-                    CompareValue="{x:Static main:WalletDisplayStatus.Ready}" />
-            </Interaction.Behaviors>
+        <!-- <wallet:WalletLockedView> -->
+        <!--     <Interaction.Behaviors> -->
+        <!--         <behaviors:VisibleWhenBehavior BindingValue="{Binding WalletDisplayStatus}" -->
+        <!--                                        CompareValue="{x:Static main:WalletDisplayStatus.Locked}" /> -->
+        <!--     </Interaction.Behaviors> -->
+        <!-- </wallet:WalletLockedView> -->
+        <operate:WalletUnlockedView DataContext="{Binding Wallet}">
+            <!-- <Interaction.Behaviors> -->
+            <!--     <behaviors:VisibleWhenBehavior -->
+            <!--         BindingValue="{Binding WalletDisplayStatus}" -->
+            <!--         CompareValue="{x:Static main:WalletDisplayStatus.Ready}" /> -->
+            <!-- </Interaction.Behaviors> -->
         </operate:WalletUnlockedView>
-        <operate:WalletLoadingView>
-            <Interaction.Behaviors>
-                <behaviors:VisibleWhenBehavior
-                    BindingValue="{Binding WalletDisplayStatus}"
-                    CompareValue="{x:Static main:WalletDisplayStatus.Loading}" />
-            </Interaction.Behaviors>
-        </operate:WalletLoadingView>
+        <!-- <operate:WalletLoadingView> -->
+        <!--     <Interaction.Behaviors> -->
+        <!--         <behaviors:VisibleWhenBehavior -->
+        <!--             BindingValue="{Binding WalletDisplayStatus}" -->
+        <!--             CompareValue="{x:Static main:WalletDisplayStatus.Loading}" /> -->
+        <!--     </Interaction.Behaviors> -->
+        <!-- </operate:WalletLoadingView> -->
     </Panel>
 
 </UserControl>
