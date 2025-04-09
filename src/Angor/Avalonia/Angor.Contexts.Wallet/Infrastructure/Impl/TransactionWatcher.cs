@@ -7,7 +7,7 @@ namespace Angor.Contexts.Wallet.Infrastructure.Impl
 {
     public class TransactionWatcher(IWalletAppService walletAppService) : ITransactionWatcher
     {
-        public IObservable<Result<BroadcastedTransaction>> Watch(WalletId id)
+        public IObservable<Result<Event>> Watch(WalletId id)
         {
             var initial = Observable.Defer(() => GetTransactions(id));
             
@@ -20,16 +20,28 @@ namespace Angor.Contexts.Wallet.Infrastructure.Impl
             return source.SelectMany(result => 
                     result.Match(
                         success => success.Select(Result.Success),
-                        error => [Result.Failure<BroadcastedTransaction>(error)]
+                        error => [Result.Failure<Event>(error)]
                     )
                 )
                 .Publish()
                 .RefCount();
         }
 
-        private IObservable<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletId id)
+        private IObservable<Result<IEnumerable<Event>>> GetTransactions(WalletId id)
         {
-            return Observable.FromAsync(() => walletAppService.GetTransactions(id));
+            return Observable.FromAsync(() =>
+            {
+                var task = walletAppService.GetTransactions(id)
+                    .Map(enumerable =>
+                    {
+                        if (!enumerable.Any())
+                        {
+                            return [new WalletEmptyEvent()];
+                        }
+                        return enumerable.Select(Event (transaction) => new TransactionEvent(transaction));
+                    });
+                return task;
+            });
         }
     }
 }

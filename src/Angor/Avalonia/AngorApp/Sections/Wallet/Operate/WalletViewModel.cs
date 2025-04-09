@@ -30,26 +30,7 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
 
         GetReceiveAddress = ReactiveCommand.CreateFromTask(async () => new ResultViewModel<string>(await Wallet.GenerateReceiveAddress()));
         receiveAddressResultHelper = GetReceiveAddress.ToProperty(this, x => x.ReceiveAddressResult);
-        SyncCommand = wallet.SyncCommand;
-        //SyncCommand.StartReactive.HandleErrorsWith(uiServices.NotificationService);
-
-        var isInitialized = wallet.SyncCommand.StartReactive.Any(result => result.IsSuccess).StartWith(false);
-        var isSyncing = wallet.SyncCommand.IsExecuting;
-
-        // Auto stop the sync command if it fails with "Invalid" error
-        SyncCommand.StartReactive
-            .Failures()
-            .Do(s =>
-            {
-                if (s.Contains("Invalid"))
-                {
-                    SyncCommand.StopReactive.Execute().Subscribe();
-                }
-            })
-            .Subscribe();
-
-        walletDisplayStatusHelper = isInitialized.CombineLatest(isSyncing, (initialized, syncing) => GetStatus(syncing, initialized)).ToProperty(this, x => x.WalletDisplayStatus);
-
+        
         wallet.History.ToObservableChangeSet(x => x.Id)
             .Transform(transaction => new TransactionViewModel(transaction, uiServices))
             .TransformWithInlineUpdate<IdentityContainer<TransactionViewModel>, TransactionViewModel, string>(x => new IdentityContainer<TransactionViewModel>() { Content = x }, (x, e) => x.Content = e)

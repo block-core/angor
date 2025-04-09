@@ -30,7 +30,7 @@ public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
 
         SyncCommand = StoppableCommand.Create(() => transactionWatcher.Watch(Id), Maybe<IObservable<bool>>.None);
         
-        transactionsSource.PopulateFrom(SyncCommand.StartReactive.Successes());
+        transactionsSource.PopulateFrom(SyncCommand.StartReactive.Successes().OfType<TransactionEvent>().Select(ev => ev.Transaction));
 
         changes
             .Transform(transaction => (IBroadcastedTransaction)new BroadcastedTransactionImpl(transaction))
@@ -51,7 +51,7 @@ public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
 
     public IObservable<long> Balance { get; }
 
-    public StoppableCommand<Unit, Result<BroadcastedTransaction>> SyncCommand { get; }
+    public StoppableCommand<Unit, Result<Event>> SyncCommand { get; }
 
     [ObservableAsProperty] private ResultViewModel loadResult;
 
@@ -89,3 +89,4 @@ public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
         loadResultHelper.Dispose();
     }
 }
+
