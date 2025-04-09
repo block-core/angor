@@ -6,11 +6,11 @@ using Zafiro.UI;
 
 namespace AngorApp.UI.Services;
 
-public class WalletBuilder(IWalletAppService walletAppService, ITransactionWatcher transactionWatcher, UIServices uiServices) : IWalletBuilder
+public class WalletProvider(IWalletAppService walletAppService, ITransactionWatcher transactionWatcher, UIServices uiServices) : IWalletBuilder
 {
     private readonly Dictionary<WalletId, DynamicWallet> runningWallets = new ();
     
-    public async Task<Result<IWallet>> Create(WalletId walletId)
+    public async Task<Result<IWallet>> Get(WalletId walletId)
     {
         if (runningWallets.ContainsKey(walletId))
         {

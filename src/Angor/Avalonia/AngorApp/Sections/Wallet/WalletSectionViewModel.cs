@@ -46,7 +46,7 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
         }
 
         var walletInfo = walletInfos.First();
-        await walletBuilder.Create(walletInfo.Id)
+        await walletBuilder.Get(walletInfo.Id)
             .Tap(w => uiServices.ActiveWallet.Current = w.AsMaybe());
     }
 

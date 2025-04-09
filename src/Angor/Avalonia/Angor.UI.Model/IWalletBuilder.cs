@@ -5,5 +5,5 @@ namespace Angor.UI.Model;
 
 public interface IWalletBuilder
 {
-    Task<Result<IWallet>> Create(WalletId walletId);
+    Task<Result<IWallet>> Get(WalletId walletId);
 }
