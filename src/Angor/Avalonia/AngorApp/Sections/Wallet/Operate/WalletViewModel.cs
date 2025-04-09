@@ -40,22 +40,7 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
         History = holders;
     }
 
-    private static WalletDisplayStatus GetStatus(bool syncing, bool initialized)
-    {
-        if (!syncing)
-        {
-            return WalletDisplayStatus.Locked;
-        }
-
-        if (initialized)
-        {
-            return WalletDisplayStatus.Ready;
-        }
-
-        return WalletDisplayStatus.Loading;
-    }
-
-    public StoppableCommand<Unit, Result<BroadcastedTransaction>> SyncCommand { get; set; }
+    public StoppableCommand<Unit, Result<BroadcastedTransaction>> Sync { get; set; }
     public IEnumerable<IdentityContainer<TransactionViewModel>> History { get; }
     [ObservableAsProperty] private WalletDisplayStatus walletDisplayStatus;
 

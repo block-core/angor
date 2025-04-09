@@ -12,7 +12,7 @@
         <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
             <i:Icon Value="fa-lock" FontSize="40" />
             <TextBlock Text="WALLET LOCKED" TextAlignment="Center" />
-            <Button HorizontalAlignment="Center" Content="UNLOCK" Command="{Binding SyncCommand.Start}" />
+            <Button HorizontalAlignment="Center" Content="UNLOCK" Command="{Binding Sync.Start}" />
         </StackPanel>
     </controls:Pane>
 </UserControl>

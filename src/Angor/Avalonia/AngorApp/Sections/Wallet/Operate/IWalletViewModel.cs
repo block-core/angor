@@ -12,7 +12,7 @@ public interface IWalletViewModel
     public string Name { get; init; }
     public ReactiveCommand<Unit, ResultViewModel<string>> GetReceiveAddress { get; }
     public ResultViewModel<string> ReceiveAddressResult { get; }
-    StoppableCommand<Unit, Result<BroadcastedTransaction>> SyncCommand { get; set; }
+    StoppableCommand<Unit, Result<BroadcastedTransaction>> Sync { get; set; }
     public WalletDisplayStatus WalletDisplayStatus { get; }
     public IEnumerable<IdentityContainer<TransactionViewModel>> History { get; }
 }
