@@ -37,6 +37,16 @@
                 </nav>
                 <div class="navbar-collapse">
                     <ul class="navbar-nav user-select-none">
+                        <li class="nav-item" id="chat">
+                            <span role="button" @onclick="OpenChat" data-tooltip="Messages">
+                                <Icon IconName="chat" Height="24" Width="24" />
+                            </span>
+                        </li>
+                        <li class="nav-item" id="notification">
+                            <span role="button" @onclick="OpenNotifications" data-tooltip="Notifications">
+                                <Icon IconName="notifications" Height="24" Width="24" />
+                            </span>
+                        </li>
                         <li class="nav-item d-none" id="updateButton">
                             <span role="button" @onclick="UpdateApp" data-tooltip="Update application">
                                 <Icon IconName="update" />
@@ -44,7 +54,7 @@
                         </li>
                         <li class="nav-item" id="dark" @onclick="ToggleTheme">
                             <span role="button" id="theme-icon" data-tooltip="Switch theme">
-                                <Icon IconName=@themeIcon />
+                                <Icon IconName=@themeIcon  Height="24" Width="24" />
                             </span>
                         </li>
                         <li class="nav-item d-none" id="installButton">
@@ -232,5 +242,17 @@
         {
             sidenavClass = "";
         }
+    }
+
+    private async Task OpenChat()
+    {
+        // Navigate to messages page
+        _navManager.NavigateTo("/messages");
+    }
+
+    private async Task OpenNotifications()
+    {
+        // Navigate to notifications page
+        _navManager.NavigateTo("/notifications");
     }
 }

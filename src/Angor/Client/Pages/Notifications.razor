@@ -1,0 +1,512 @@
+@page "/notifications"
+@inject NavMenuState NavMenuState
+@inject NavigationManager NavigationManager
+
+<div class="header-container slide-in">
+    <div class="card card-body">
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="notifications" Width="32" Height="32" />
+                </span>
+                <h5 class="header-text">Notifications</h5>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-border-success"
+                        @onclick="RefreshNotifications"
+                        disabled="@refreshSpinner"
+                        title="Refresh">
+                    @if (refreshSpinner)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <Icon IconName="refresh" Height="24" Width="24" />
+                        <span class="button-text ms-2">Refresh</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4 g-4">
+    <!-- Categories sidebar -->
+    <div class="col-md-4">
+        <div class="card card-body">
+            <!-- Category list -->
+            <div class="mb-3">
+                @foreach (var category in categories)
+                {
+                    <div class="d-flex align-items-center p-2 rounded mb-2 @(currentCategory == category.Key ? "active-category" : "")" 
+                         style="cursor: pointer"
+                         @onclick="() => FilterNotifications(category.Key)">
+                        <div class="rounded-circle @category.Value.Color p-2 d-flex align-items-center justify-content-center" 
+                             style="width: 36px; height: 36px;">
+                            <Icon IconName="@category.Value.Icon" Width="18" Height="18" Class="text-white" />
+                        </div>
+                        <div class="ms-3 flex-grow-1">@category.Value.Name</div>
+                        <span class="badge @category.Value.Badge rounded-pill">
+                            @GetNotificationCount(category.Key)
+                        </span>
+                    </div>
+                }
+            </div>
+            
+            <!-- Settings -->
+            <hr />
+            <div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="showReadNotifications" @bind="showReadNotifications" />
+                    <label class="form-check-label" for="showReadNotifications">Show read notifications</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notifications list -->
+    <div class="col-md-8">
+        <div class="card card-body">
+            <!-- Header with actions -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">@GetCategoryTitle()</h6>
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-sm btn-border" @onclick="MarkAllAsRead" disabled="@(!displayedNotifications.Any(n => !n.IsRead))">
+                        <Icon IconName="check-all" Width="16" Height="16" Class="me-1" />
+                        <span>Mark all read</span>
+                    </button>
+                    <button class="btn btn-sm btn-border-warning ms-2" @onclick="ClearNotifications" disabled="@(!displayedNotifications.Any())">
+                        <Icon IconName="trash" Width="16" Height="16" Class="me-1" />
+                        <span>Clear</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            @if (isLoading)
+            {
+                <div class="d-flex justify-content-center my-4">
+                    <div class="loader"></div>
+                </div>
+            }
+            else if (!displayedNotifications.Any())
+            {
+                <div class="text-center my-4">
+                    <Icon IconName="notifications-off" Width="42" Height="42" Class="text-muted mb-2" />
+                    <p>No @(currentCategory != "all" ? currentCategory : "") notifications</p>
+                </div>
+            }
+            else
+            {
+                <div class="list-group list-group-flush p-0">
+                    @foreach (var notification in displayedNotifications)
+                    {
+                        <div class="list-group-item p-3 @(!notification.IsRead ? "unread-notification" : "")" 
+                             style="cursor: pointer"
+                             @onclick="() => HandleNotificationClick(notification)">
+                            <div class="row g-0">
+                                <!-- Icon -->
+                                <div class="col-auto">
+                                    <div class="rounded-circle @GetNotificationIconClass(notification.Type) p-2 d-flex align-items-center justify-content-center" 
+                                         style="width: 42px; height: 42px;">
+                                        <Icon IconName="@GetNotificationIcon(notification.Type)" Width="20" Height="20" Class="text-white" />
+                                    </div>
+                                </div>
+                                
+                                <!-- Content -->
+                                <div class="col ps-3">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="mb-1">@notification.Title</h6>
+                                        <small class="text-muted">@FormatTime(notification.Timestamp)</small>
+                                    </div>
+                                    <p class="mb-1 small">@notification.Message</p>
+                                    @if (!string.IsNullOrEmpty(notification.ProjectId))
+                                    {
+                                        <span class="badge project-badge small">@notification.ProjectId</span>
+                                    }
+                                </div>
+                                
+                                <!-- Actions -->
+                                <div class="col-auto align-self-center">
+                                    <button class="btn btn-sm" 
+                                            title="@(notification.IsRead ? "Mark as unread" : "Mark as read")"
+                                            @onclick:stopPropagation="true"
+                                            @onclick="() => ToggleReadStatus(notification)">
+                                        <Icon IconName="@(notification.IsRead ? "mark-unread" : "check")" Width="16" Height="16" />
+                                    </button>
+                                    <button class="btn btn-sm" 
+                                            title="Delete"
+                                            @onclick:stopPropagation="true"
+                                            @onclick="() => DeleteNotification(notification)">
+                                        <Icon IconName="trash" Width="16" Height="16" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                <!-- Simple pagination -->
+                @if (totalPages > 1)
+                {
+                    <div class="d-flex justify-content-center mt-3">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-border" @onclick="() => ChangePage(currentPage - 1)" 
+                                    disabled="@(currentPage == 1)">
+                                <Icon IconName="chevron-left" Width="14" Height="14" />
+                            </button>
+                            <span class="btn btn-sm disabled">
+                                Page @currentPage of @totalPages
+                            </span>
+                            <button class="btn btn-sm btn-border" @onclick="() => ChangePage(currentPage + 1)" 
+                                    disabled="@(currentPage == totalPages)">
+                                <Icon IconName="chevron-right" Width="14" Height="14" />
+                            </button>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    // Notification model
+    public class NotificationItem
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Title { get; set; }
+        public string Message { get; set; }
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public bool IsRead { get; set; } = false;
+        public string Type { get; set; } // investments, projects, messages, system
+        public string ProjectId { get; set; }
+        public string RelatedId { get; set; }
+        public Dictionary<string, string> AdditionalData { get; set; } = new Dictionary<string, string>();
+    }
+
+    // Category definition
+    private class CategoryInfo
+    {
+        public string Name { get; set; }
+        public string Icon { get; set; }
+        public string Color { get; set; }
+        public string Badge { get; set; }
+    }
+
+    // Category definitions
+    private Dictionary<string, CategoryInfo> categories = new Dictionary<string, CategoryInfo>
+    {
+        { "all", new CategoryInfo { Name = "All Notifications", Icon = "notifications", Color = "bg-primary", Badge = "bg-primary" } },
+        { "investments", new CategoryInfo { Name = "Investments", Icon = "portfolio", Color = "bg-success", Badge = "bg-success" } },
+        { "projects", new CategoryInfo { Name = "Projects", Icon = "founder", Color = "bg-primary", Badge = "bg-info" } },
+        { "messages", new CategoryInfo { Name = "Messages", Icon = "message", Color = "bg-info", Badge = "bg-warning" } },
+        { "system", new CategoryInfo { Name = "System", Icon = "info", Color = "bg-warning", Badge = "bg-secondary" } }
+    };
+
+    // UI state
+    private bool refreshSpinner = false;
+    private bool isLoading = true;
+    private string currentCategory = "all";
+    private bool showReadNotifications = false;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages = 1;
+
+    // Notification collections
+    private List<NotificationItem> allNotifications = new List<NotificationItem>();
+    private List<NotificationItem> displayedNotifications = new List<NotificationItem>();
+    private List<NotificationItem> investmentNotifications = new List<NotificationItem>();
+    private List<NotificationItem> projectNotifications = new List<NotificationItem>();
+    private List<NotificationItem> messageNotifications = new List<NotificationItem>();
+    private List<NotificationItem> systemNotifications = new List<NotificationItem>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Set active menu
+        NavMenuState.SetActivePage("notifications");
+
+        // Load notifications
+        await LoadNotifications();
+    }
+
+    private async Task LoadNotifications()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        // Simulate API call
+        await Task.Delay(500);
+
+        // Generate demo notifications
+        allNotifications = GenerateDemoNotifications();
+        
+        // Categorize notifications
+        CategorizeNotifications();
+        
+        // Apply initial filter
+        FilterNotifications(currentCategory);
+        
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    // Generate sample notifications for demo - SIMPLIFIED
+    private List<NotificationItem> GenerateDemoNotifications()
+    {
+        var notifications = new List<NotificationItem>();
+        
+        // Add one notification for each category - keeping it minimal
+        notifications.Add(new NotificationItem
+        {
+            Title = "New Investment",
+            Message = "You received a new investment of 0.05 BTC for Project Alpha",
+            Timestamp = DateTime.UtcNow.AddHours(-2),
+            Type = "investments",
+            ProjectId = "Project Alpha"
+        });
+        
+        notifications.Add(new NotificationItem
+        {
+            Title = "Project Status Update",
+            Message = "Your Project Beta has reached 80% of funding goal",
+            Timestamp = DateTime.UtcNow.AddDays(-1),
+            Type = "projects",
+            ProjectId = "Project Beta",
+            IsRead = true
+        });
+        
+        notifications.Add(new NotificationItem
+        {
+            Title = "New Message",
+            Message = "You have received a new message from a project stakeholder",
+            Timestamp = DateTime.UtcNow.AddHours(-6),
+            Type = "messages",
+            ProjectId = "Project Charlie"
+        });
+        
+        notifications.Add(new NotificationItem
+        {
+            Title = "System Notice",
+            Message = "The platform has been updated with new features",
+            Timestamp = DateTime.UtcNow.AddDays(-3),
+            Type = "system",
+            IsRead = true
+        });
+        
+        return notifications.OrderByDescending(n => n.Timestamp).ToList();
+    }
+
+    // Helper to get notification count by category
+    private int GetNotificationCount(string category)
+    {
+        return category switch
+        {
+            "investments" => investmentNotifications.Count,
+            "projects" => projectNotifications.Count,
+            "messages" => messageNotifications.Count,
+            "system" => systemNotifications.Count,
+            _ => allNotifications.Count
+        };
+    }
+    
+    // Utility and event handler methods
+    private void CategorizeNotifications()
+    {
+        investmentNotifications = allNotifications.Where(n => n.Type == "investments").ToList();
+        projectNotifications = allNotifications.Where(n => n.Type == "projects").ToList();
+        messageNotifications = allNotifications.Where(n => n.Type == "messages").ToList();
+        systemNotifications = allNotifications.Where(n => n.Type == "system").ToList();
+    }
+
+    private void FilterNotifications(string category)
+    {
+        currentCategory = category;
+        currentPage = 1;
+        
+        var filteredList = category switch
+        {
+            "investments" => investmentNotifications,
+            "projects" => projectNotifications,
+            "messages" => messageNotifications,
+            "system" => systemNotifications,
+            _ => allNotifications
+        };
+        
+        // Apply read/unread filter
+        if (!showReadNotifications)
+        {
+            filteredList = filteredList.Where(n => !n.IsRead).ToList();
+        }
+        
+        // Apply pagination
+        totalPages = (int)Math.Ceiling(filteredList.Count / (double)pageSize);
+        if (totalPages < 1) totalPages = 1;
+        
+        displayedNotifications = filteredList
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+            
+        StateHasChanged();
+    }
+
+    private void ChangePage(int page)
+    {
+        if (page < 1 || page > totalPages)
+            return;
+            
+        currentPage = page;
+        
+        var filteredList = currentCategory switch
+        {
+            "investments" => investmentNotifications,
+            "projects" => projectNotifications,
+            "messages" => messageNotifications,
+            "system" => systemNotifications,
+            _ => allNotifications
+        };
+        
+        if (!showReadNotifications)
+        {
+            filteredList = filteredList.Where(n => !n.IsRead).ToList();
+        }
+        
+        displayedNotifications = filteredList
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+            
+        StateHasChanged();
+    }
+
+    private async Task RefreshNotifications()
+    {
+        refreshSpinner = true;
+        StateHasChanged();
+        
+        await LoadNotifications();
+        
+        refreshSpinner = false;
+        StateHasChanged();
+    }
+
+    private void ToggleReadStatus(NotificationItem notification)
+    {
+        notification.IsRead = !notification.IsRead;
+        CategorizeNotifications();
+        FilterNotifications(currentCategory);
+    }
+
+    private void DeleteNotification(NotificationItem notification)
+    {
+        allNotifications.Remove(notification);
+        CategorizeNotifications();
+        FilterNotifications(currentCategory);
+    }
+
+    private void MarkAllAsRead()
+    {
+        foreach (var notification in displayedNotifications.Where(n => !n.IsRead))
+        {
+            notification.IsRead = true;
+        }
+        
+        CategorizeNotifications();
+        FilterNotifications(currentCategory);
+    }
+
+    private void ClearNotifications()
+    {
+        var notificationsToRemove = displayedNotifications.ToList();
+        foreach (var notification in notificationsToRemove)
+        {
+            allNotifications.Remove(notification);
+        }
+        
+        CategorizeNotifications();
+        FilterNotifications(currentCategory);
+    }
+
+    private void HandleNotificationClick(NotificationItem notification)
+    {
+        // Mark as read when clicked
+        if (!notification.IsRead)
+        {
+            notification.IsRead = true;
+            CategorizeNotifications();
+            FilterNotifications(currentCategory);
+        }
+        
+        // Handle navigation based on notification type
+        switch (notification.Type)
+        {
+            case "investments":
+                // NavigationManager.NavigateTo($"/invest/{notification.ProjectId}");
+                break;
+            case "projects":
+                // NavigationManager.NavigateTo($"/projects/{notification.ProjectId}");
+                break;
+            case "messages":
+                // NavigationManager.NavigateTo($"/messages/{notification.ProjectId}");
+                break;
+            case "system":
+                // Handle system notification clicks
+                break;
+        }
+    }
+
+    private string GetNotificationIcon(string type)
+    {
+        return type switch
+        {
+            "investments" => "portfolio",
+            "projects" => "founder",
+            "messages" => "message",
+            "system" => "info",
+            _ => "notifications"
+        };
+    }
+    
+    private string GetNotificationIconClass(string type)
+    {
+        return type switch
+        {
+            "investments" => "bg-success",
+            "projects" => "bg-primary",
+            "messages" => "bg-info",
+            "system" => "bg-warning",
+            _ => "bg-secondary"
+        };
+    }
+    
+    private string GetCategoryTitle()
+    {
+        return currentCategory switch
+        {
+            "investments" => "Investment Notifications",
+            "projects" => "Project Notifications",
+            "messages" => "Message Notifications",
+            "system" => "System Notifications",
+            _ => "All Notifications"
+        };
+    }
+
+    private string FormatTime(DateTime timestamp)
+    {
+        var now = DateTime.UtcNow;
+        var diff = now - timestamp;
+        
+        if (diff.TotalMinutes < 1)
+            return "Just now";
+        if (diff.TotalMinutes < 60)
+            return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24)
+            return $"{(int)diff.TotalHours}h ago";
+        if (diff.TotalDays < 7)
+            return $"{(int)diff.TotalDays}d ago";
+            
+        return timestamp.ToString("MMM dd, yyyy");
+    }
+}

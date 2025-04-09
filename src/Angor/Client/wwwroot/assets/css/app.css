@@ -4370,11 +4370,9 @@ select.form-control {
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: calc(80vh - 180px);
+    height: calc(80vh - 165px);
     min-height: 500px;
-    border-radius: var(--angor-border-radius);
     overflow: hidden;
-    background-color: var(--card-bg);
 }
 
 .chat-header {
@@ -4578,11 +4576,32 @@ select.form-control {
     margin-top: 1rem;
 }
 
-/* Dark mode adjustments */
 body.dark .message-item.incoming .message-bubble {
     background-color: #2d333b;
 }
 
 body.dark .message-item.outgoing .message-bubble {
     background-color: #1a4971;
+}
+
+.active-category {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.unread-notification {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+.project-badge {
+    background-color: rgba(var(--bs-secondary-rgb), 0.1);
+    color: var(--bs-body-color);
+}
+
+@media (max-width: 576px) {
+    .list-group-item .row .col-auto:last-child {
+        margin-top: 10px;
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+    }
 }
