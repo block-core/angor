@@ -32,7 +32,9 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
         HasWallet = this.WhenAnyValue(x => x.Wallet).NotNull();
         IsBusy = TryLoadExistingWallet.IsExecuting;
         TryLoadExistingWallet.HandleErrorsWith(uiServices.NotificationService, "Failed to load wallet");
-        showCreateAndRecoverHelper = TryLoadExistingWallet.Successes().Empties().Any().StartWith(false).ToProperty(this, x => x.ShowCreateAndRecover);
+        showCreateAndRecoverHelper = TryLoadExistingWallet.Successes().Empties().Any().StartWith(false)
+            .CombineLatest(HasWallet, (hasWallet, walletActivated) => hasWallet && !walletActivated)
+            .ToProperty(this, x => x.ShowCreateAndRecover);
         TryLoadExistingWallet.Execute().Subscribe();
     }
 
