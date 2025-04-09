@@ -14,7 +14,7 @@ public class WalletProvider(IWalletAppService walletAppService, ITransactionWatc
     {
         if (runningWallets.ContainsKey(walletId))
         {
-            throw new InvalidOperationException($"A DynamicWallet was created for the same WalletId: {walletId}. We should not create more than one instance.");
+            throw new InvalidOperationException($"A DynamicWallet with WalletId: {walletId} is already running. We should run more than one wallet for the same WalletId.");
         }
         
         var dynamicWallet = new DynamicWallet(walletId, walletAppService, transactionWatcher);
