@@ -16,6 +16,8 @@
 @inject INotificationService NotificationService;
 @implements IDisposable
 
+<NotificationComponent @ref="notificationComponent" />
+
 <div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show @(isSidebarCollapsed ? "sidenav-hidden" : "")">
     <NavMenu @bind-IsCollapsed="isSidebarCollapsed" IsDarkTheme="isDarkTheme"/>
     <main class="main-content">
@@ -103,6 +105,8 @@
     private string sidenavClass = "sidenav-hidden";
     private bool isSidebarCollapsed;
     private int unreadNotificationsCount = 0;
+    private NotificationComponent notificationComponent;
+    private int previousNotificationCount = 0;
 
     private string networkText = string.Empty;
 
@@ -121,6 +125,9 @@
         // Subscribe to notification changes
         NotificationService.OnNotificationsChanged += UpdateNotificationCount;
         UpdateNotificationCount();
+
+        // Initialize previous count
+        previousNotificationCount = NotificationService.GetUnreadNotificationsCount();
     }
 
     private void InitializeAppVersion()
@@ -269,7 +276,16 @@
 
     private void UpdateNotificationCount()
     {
-        unreadNotificationsCount = NotificationService.GetUnreadNotificationsCount();
+        int newCount = NotificationService.GetUnreadNotificationsCount();
+        
+        // Check if there are new notifications since last update
+        if (newCount > previousNotificationCount && previousNotificationCount >= 0)
+        {
+            notificationComponent?.ShowNotificationMessage("You have new notifications");
+        }
+        
+        unreadNotificationsCount = newCount;
+        previousNotificationCount = newCount;
         StateHasChanged();
     }
 

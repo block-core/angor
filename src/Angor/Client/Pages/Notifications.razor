@@ -35,9 +35,9 @@
     </div>
 </div>
 
-<div class="row mt-4 g-4">
+<div class="row mt-0 g-4">
     <!-- Categories sidebar -->
-    <div class="col-md-4">
+    <div class="col-lg-4 col-12 mb-3 mb-lg-0">
         <div class="card card-body">
             <!-- Category list -->
             <div class="mb-3">
@@ -61,7 +61,7 @@
             <!-- Settings -->
             <hr />
             <div>
-                <div class="form-check form-switch mb-2">
+                <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="showReadNotifications" @bind="showReadNotifications" />
                     <label class="form-check-label" for="showReadNotifications">Show read notifications</label>
                 </div>
@@ -70,7 +70,7 @@
     </div>
     
     <!-- Notifications list -->
-    <div class="col-md-8">
+    <div class="col-lg-8 col-12">
         <div class="card card-body">
             <!-- Header with actions -->
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -458,3 +458,4 @@
         return timestamp.ToString("MMM dd, yyyy");
     }
 }
+
