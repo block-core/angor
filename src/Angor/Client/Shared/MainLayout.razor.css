@@ -34,6 +34,17 @@
     display: none;
 }
 
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    border: 1px solid var(--bs-body-bg);
+}
+
 @media (min-width: 768px) and (max-width: 1280px) {
     .main-content {
         margin-left: 210px;

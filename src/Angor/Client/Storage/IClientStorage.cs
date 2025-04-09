@@ -29,5 +29,8 @@ namespace Angor.Client.Storage
 
         string GetCurrencyDisplaySetting();
         void SetCurrencyDisplaySetting(string setting);
+        
+        List<NotificationItem> GetNotifications();
+        void SetNotifications(List<NotificationItem> notifications);
     }
 }

@@ -13,6 +13,8 @@
 @inject NavMenuState NavMenuState;
 @inject INetworkStorage _networkStorage
 @inject IClientStorage storage;
+@inject INotificationService NotificationService;
+@implements IDisposable
 
 <div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show @(isSidebarCollapsed ? "sidenav-hidden" : "")">
     <NavMenu @bind-IsCollapsed="isSidebarCollapsed" IsDarkTheme="isDarkTheme"/>
@@ -43,8 +45,12 @@
                             </span>
                         </li>
                         <li class="nav-item" id="notification">
-                            <span role="button" @onclick="OpenNotifications" data-tooltip="Notifications">
+                            <span role="button" @onclick="OpenNotifications" data-tooltip="Notifications" class="position-relative">
                                 <Icon IconName="notifications" Height="24" Width="24" />
+                                @if (unreadNotificationsCount > 0)
+                                {
+                                    <span class="notification-badge"></span>
+                                }
                             </span>
                         </li>
                         <li class="nav-item d-none" id="updateButton">
@@ -96,6 +102,7 @@
     private string themeIcon = "light_mode";
     private string sidenavClass = "sidenav-hidden";
     private bool isSidebarCollapsed;
+    private int unreadNotificationsCount = 0;
 
     private string networkText = string.Empty;
 
@@ -110,6 +117,10 @@
 
         _networkService.AddSettingsIfNotExist();
         await _networkService.CheckServices(true);
+        
+        // Subscribe to notification changes
+        NotificationService.OnNotificationsChanged += UpdateNotificationCount;
+        UpdateNotificationCount();
     }
 
     private void InitializeAppVersion()
@@ -254,5 +265,18 @@
     {
         // Navigate to notifications page
         _navManager.NavigateTo("/notifications");
+    }
+
+    private void UpdateNotificationCount()
+    {
+        unreadNotificationsCount = NotificationService.GetUnreadNotificationsCount();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from notification changes
+        NotificationService.OnNotificationsChanged -= UpdateNotificationCount;
+        NavMenuState.OnChange -= NavMenuStateOnOnChange;
     }
 }

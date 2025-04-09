@@ -222,6 +222,15 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         _storage.RemoveItem("recovery-signatures");
     }
-
     
+    public List<NotificationItem> GetNotifications()
+    {
+        var notifications = _storage.GetItem<List<NotificationItem>>("notifications");
+        return notifications ?? new List<NotificationItem>();
+    }
+    
+    public void SetNotifications(List<NotificationItem> notifications)
+    {
+        _storage.SetItem("notifications", notifications);
+    }
 }

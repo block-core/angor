@@ -1,6 +1,10 @@
 @page "/notifications"
+@using Angor.Client.Models
+@using Angor.Client.Services
 @inject NavMenuState NavMenuState
 @inject NavigationManager NavigationManager
+@inject INotificationService NotificationService
+@implements IDisposable
 
 <div class="header-container slide-in">
     <div class="card card-body">
@@ -72,11 +76,11 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="mb-0">@GetCategoryTitle()</h6>
                 <div class="d-flex align-items-center">
-                    <button class="btn btn-sm btn-border" @onclick="MarkAllAsRead" disabled="@(!displayedNotifications.Any(n => !n.IsRead))">
+                    <button class="btn btn-sm btn-border" @onclick="MarkAllAsReadAsync" disabled="@(!displayedNotifications.Any(n => !n.IsRead))">
                         <Icon IconName="check-all" Width="16" Height="16" Class="me-1" />
                         <span>Mark all read</span>
                     </button>
-                    <button class="btn btn-sm btn-border-warning ms-2" @onclick="ClearNotifications" disabled="@(!displayedNotifications.Any())">
+                    <button class="btn btn-sm btn-border-warning ms-2" @onclick="ClearNotificationsAsync" disabled="@(!displayedNotifications.Any())">
                         <Icon IconName="trash" Width="16" Height="16" Class="me-1" />
                         <span>Clear</span>
                     </button>
@@ -104,7 +108,7 @@
                     {
                         <div class="list-group-item p-3 @(!notification.IsRead ? "unread-notification" : "")" 
                              style="cursor: pointer"
-                             @onclick="() => HandleNotificationClick(notification)">
+                             @onclick="() => HandleNotificationClickAsync(notification)">
                             <div class="row g-0">
                                 <!-- Icon -->
                                 <div class="col-auto">
@@ -132,13 +136,13 @@
                                     <button class="btn btn-sm" 
                                             title="@(notification.IsRead ? "Mark as unread" : "Mark as read")"
                                             @onclick:stopPropagation="true"
-                                            @onclick="() => ToggleReadStatus(notification)">
+                                            @onclick="() => ToggleReadStatusAsync(notification)">
                                         <Icon IconName="@(notification.IsRead ? "mark-unread" : "check")" Width="16" Height="16" />
                                     </button>
                                     <button class="btn btn-sm" 
                                             title="Delete"
                                             @onclick:stopPropagation="true"
-                                            @onclick="() => DeleteNotification(notification)">
+                                            @onclick="() => RemoveNotificationAsync(notification)">
                                         <Icon IconName="trash" Width="16" Height="16" />
                                     </button>
                                 </div>
@@ -172,20 +176,6 @@
 </div>
 
 @code {
-    // Notification model
-    public class NotificationItem
-    {
-        public string Id { get; set; } = Guid.NewGuid().ToString();
-        public string Title { get; set; }
-        public string Message { get; set; }
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-        public bool IsRead { get; set; } = false;
-        public string Type { get; set; } // investments, projects, messages, system
-        public string ProjectId { get; set; }
-        public string RelatedId { get; set; }
-        public Dictionary<string, string> AdditionalData { get; set; } = new Dictionary<string, string>();
-    }
-
     // Category definition
     private class CategoryInfo
     {
@@ -201,7 +191,7 @@
         { "all", new CategoryInfo { Name = "All Notifications", Icon = "notifications", Color = "bg-primary", Badge = "bg-primary" } },
         { "investments", new CategoryInfo { Name = "Investments", Icon = "portfolio", Color = "bg-success", Badge = "bg-success" } },
         { "projects", new CategoryInfo { Name = "Projects", Icon = "founder", Color = "bg-primary", Badge = "bg-info" } },
-        { "messages", new CategoryInfo { Name = "Messages", Icon = "message", Color = "bg-info", Badge = "bg-warning" } },
+        { "messages", new CategoryInfo { Name = "Messages", Icon = "chat", Color = "bg-info", Badge = "bg-warning" } },
         { "system", new CategoryInfo { Name = "System", Icon = "info", Color = "bg-warning", Badge = "bg-secondary" } }
     };
 
@@ -227,8 +217,21 @@
         // Set active menu
         NavMenuState.SetActivePage("notifications");
 
+        // Subscribe to notification changes
+        NotificationService.OnNotificationsChanged += HandleNotificationsChanged;
+
         // Load notifications
         await LoadNotifications();
+    }
+
+    public void Dispose()
+    {
+        NotificationService.OnNotificationsChanged -= HandleNotificationsChanged;
+    }
+
+    private void HandleNotificationsChanged()
+    {
+        InvokeAsync(LoadNotifications);
     }
 
     private async Task LoadNotifications()
@@ -236,11 +239,8 @@
         isLoading = true;
         StateHasChanged();
 
-        // Simulate API call
-        await Task.Delay(500);
-
-        // Generate demo notifications
-        allNotifications = GenerateDemoNotifications();
+        // Get notifications from service
+        allNotifications = NotificationService.GetAllNotifications().ToList();
         
         // Categorize notifications
         CategorizeNotifications();
@@ -250,52 +250,6 @@
         
         isLoading = false;
         StateHasChanged();
-    }
-
-    // Generate sample notifications for demo - SIMPLIFIED
-    private List<NotificationItem> GenerateDemoNotifications()
-    {
-        var notifications = new List<NotificationItem>();
-        
-        // Add one notification for each category - keeping it minimal
-        notifications.Add(new NotificationItem
-        {
-            Title = "New Investment",
-            Message = "You received a new investment of 0.05 BTC for Project Alpha",
-            Timestamp = DateTime.UtcNow.AddHours(-2),
-            Type = "investments",
-            ProjectId = "Project Alpha"
-        });
-        
-        notifications.Add(new NotificationItem
-        {
-            Title = "Project Status Update",
-            Message = "Your Project Beta has reached 80% of funding goal",
-            Timestamp = DateTime.UtcNow.AddDays(-1),
-            Type = "projects",
-            ProjectId = "Project Beta",
-            IsRead = true
-        });
-        
-        notifications.Add(new NotificationItem
-        {
-            Title = "New Message",
-            Message = "You have received a new message from a project stakeholder",
-            Timestamp = DateTime.UtcNow.AddHours(-6),
-            Type = "messages",
-            ProjectId = "Project Charlie"
-        });
-        
-        notifications.Add(new NotificationItem
-        {
-            Title = "System Notice",
-            Message = "The platform has been updated with new features",
-            Timestamp = DateTime.UtcNow.AddDays(-3),
-            Type = "system",
-            IsRead = true
-        });
-        
-        return notifications.OrderByDescending(n => n.Timestamp).ToList();
     }
 
     // Helper to get notification count by category
@@ -392,64 +346,58 @@
         StateHasChanged();
     }
 
-    private void ToggleReadStatus(NotificationItem notification)
+    private async Task ToggleReadStatusAsync(NotificationItem notification)
     {
-        notification.IsRead = !notification.IsRead;
-        CategorizeNotifications();
-        FilterNotifications(currentCategory);
-    }
-
-    private void DeleteNotification(NotificationItem notification)
-    {
-        allNotifications.Remove(notification);
-        CategorizeNotifications();
-        FilterNotifications(currentCategory);
-    }
-
-    private void MarkAllAsRead()
-    {
-        foreach (var notification in displayedNotifications.Where(n => !n.IsRead))
+        if (notification.IsRead)
         {
-            notification.IsRead = true;
+            notification.IsRead = false;
+            // Note: The service doesn't have a method to mark as unread, so we'll handle it locally
+            CategorizeNotifications();
+            FilterNotifications(currentCategory);
         }
-        
-        CategorizeNotifications();
-        FilterNotifications(currentCategory);
-    }
-
-    private void ClearNotifications()
-    {
-        var notificationsToRemove = displayedNotifications.ToList();
-        foreach (var notification in notificationsToRemove)
+        else
         {
-            allNotifications.Remove(notification);
+            await NotificationService.MarkNotificationAsReadAsync(notification.Id);
         }
-        
-        CategorizeNotifications();
-        FilterNotifications(currentCategory);
     }
 
-    private void HandleNotificationClick(NotificationItem notification)
+    private async Task RemoveNotificationAsync(NotificationItem notification)
+    {
+        await NotificationService.RemoveNotificationAsync(notification.Id);
+    }
+
+    private async Task MarkAllAsReadAsync()
+    {
+        await NotificationService.MarkAllNotificationsAsReadAsync();
+    }
+
+    private async Task ClearNotificationsAsync()
+    {
+        await NotificationService.ClearNotificationsAsync();
+    }
+
+    private async Task HandleNotificationClickAsync(NotificationItem notification)
     {
         // Mark as read when clicked
         if (!notification.IsRead)
         {
-            notification.IsRead = true;
-            CategorizeNotifications();
-            FilterNotifications(currentCategory);
+            await NotificationService.MarkNotificationAsReadAsync(notification.Id);
         }
         
         // Handle navigation based on notification type
         switch (notification.Type)
         {
             case "investments":
-                // NavigationManager.NavigateTo($"/invest/{notification.ProjectId}");
+                if (!string.IsNullOrEmpty(notification.ProjectId))
+                    NavigationManager.NavigateTo($"/invest/{notification.ProjectId}");
                 break;
             case "projects":
-                // NavigationManager.NavigateTo($"/projects/{notification.ProjectId}");
+                if (!string.IsNullOrEmpty(notification.ProjectId))
+                    NavigationManager.NavigateTo($"/founder/{notification.ProjectId}");
                 break;
             case "messages":
-                // NavigationManager.NavigateTo($"/messages/{notification.ProjectId}");
+                if (!string.IsNullOrEmpty(notification.ProjectId))
+                    NavigationManager.NavigateTo($"/messages/{notification.ProjectId}");
                 break;
             case "system":
                 // Handle system notification clicks
