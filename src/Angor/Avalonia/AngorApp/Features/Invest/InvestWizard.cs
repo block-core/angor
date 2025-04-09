@@ -1,24 +1,22 @@
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Wallet.Application;
-using Angor.Contexts.Wallet.Domain;
 using AngorApp.Features.Invest.Commit;
-using AngorApp.Sections.Browse.Details.Invest.Amount;
-using AngorApp.Sections.Browse.Details.Invest.Draft;
 using AngorApp.UI.Controls.Common.Success;
 using AngorApp.UI.Services;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
+using AmountViewModel = AngorApp.Features.Invest.Amount.AmountViewModel;
+using DraftViewModel = AngorApp.Features.Invest.Draft.DraftViewModel;
 
 namespace AngorApp.Features.Invest;
 
-public class InvestWizard(IInvestmentAppService investmentAppService, IWalletAppService walletAppService, UIServices uiServices)
+public class InvestWizard(IInvestmentAppService investmentAppService, UIServices uiServices)
 {
-    public Task<Maybe<Unit>> Invest(WalletId walletId, IProject project)
+    public Task<Maybe<Unit>> Invest(IWallet wallet, IProject project)
     {
-        var wizard = WizardBuilder.StartWith(() => new AmountViewModel(walletId, walletAppService, project))
-            .Then(amountViewModel => new DraftViewModel(investmentAppService, walletId, amountViewModel.Amount!.Value, project))
-            .Then(draftViewModel => new CommitViewModel(investmentAppService, uiServices, walletId, project, draftViewModel.Draft!.DraftModel))
+        var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project))
+            .Then(amountViewModel => new DraftViewModel(investmentAppService, wallet, amountViewModel.Amount!.Value, project))
+            .Then(draftViewModel => new CommitViewModel(investmentAppService, uiServices, wallet, project, draftViewModel.Draft!.DraftModel))
             .Then(_ => new SuccessViewModel($"Invested in {project.Name}", "Success"))
             .FinishWith(_ => Unit.Default);
 

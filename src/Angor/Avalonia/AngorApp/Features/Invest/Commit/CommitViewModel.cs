@@ -9,9 +9,9 @@ namespace AngorApp.Features.Invest.Commit;
 
 public class CommitViewModel : ReactiveObject, IStep, ICommitViewModel
 {
-    public CommitViewModel(IInvestmentAppService investmentAppService, UI.Services.UIServices uiServices, WalletId walletId, IProject project, CreateInvestment.Draft draft)
+    public CommitViewModel(IInvestmentAppService investmentAppService, UI.Services.UIServices uiServices, IWallet walletId, IProject project, CreateInvestment.Draft draft)
     {
-        RequestInvestment = ReactiveCommand.CreateFromTask(() => investmentAppService.RequestInvestment(walletId.Id, new ProjectId(project.Id), draft));
+        RequestInvestment = ReactiveCommand.CreateFromTask(() => investmentAppService.RequestInvestment(walletId.Id.Value, new ProjectId(project.Id), draft));
         RequestInvestment.HandleErrorsWith(uiServices.NotificationService, "Investment request failed");
     }
 

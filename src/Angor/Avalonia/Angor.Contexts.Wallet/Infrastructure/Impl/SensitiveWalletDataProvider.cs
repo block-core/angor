@@ -24,7 +24,7 @@ public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecuri
     private async Task<Result<EncryptedWallet>> GetEncryptedWallet(WalletId id)
     {
         return await walletStore.GetAll()
-            .Map(list => list.FirstOrDefault(x => x.Id == id.Id))
+            .Map(list => list.FirstOrDefault(x => x.Id == id.Value))
             .EnsureNotNull("Wallet not found");
     }
 

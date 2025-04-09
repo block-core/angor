@@ -2,17 +2,17 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:amount="clr-namespace:AngorApp.Sections.Browse.Details.Invest.Amount"
              xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:amount1="clr-namespace:AngorApp.Features.Invest.Amount"
              mc:Ignorable="d"
              d:DesignWidth="500"
-             x:Class="AngorApp.Sections.Browse.Details.Invest.Amount.AmountView" x:DataType="amount:IAmountViewModel">
+             x:Class="AngorApp.Features.Invest.Amount.AmountView" x:DataType="amount1:IAmountViewModel">
 
     <Design.DataContext>
-        <amount:AmountViewModelDesign />
+        <amount1:AmountViewModelDesign />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -37,7 +37,7 @@
                     </controls:IconButton.Icon>
                     <controls:IconButton.Flyout>
                         <Flyout Placement="BottomEdgeAlignedLeft">
-                            <amount:StagesBreakdown />
+                            <amount1:StagesBreakdown />
                         </Flyout>
                     </controls:IconButton.Flyout>
                 </controls:IconButton>

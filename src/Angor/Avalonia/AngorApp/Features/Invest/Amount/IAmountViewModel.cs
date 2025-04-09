@@ -1,7 +1,6 @@
-using Angor.UI.Model;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 
-namespace AngorApp.Sections.Browse.Details.Invest.Amount;
+namespace AngorApp.Features.Invest.Amount;
 
 public interface IAmountViewModel : IStep
 {

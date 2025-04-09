@@ -1,6 +1,6 @@
 namespace Angor.Contexts.Wallet.Domain;
 
-public record WalletId(Guid Id)
+public record WalletId(Guid Value)
 {
     public static WalletId New()
     {

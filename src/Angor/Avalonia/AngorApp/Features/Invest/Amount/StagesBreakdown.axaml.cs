@@ -1,8 +1,4 @@
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-
-namespace AngorApp.Sections.Browse.Details.Invest.Amount;
+namespace AngorApp.Features.Invest.Amount;
 
 public partial class StagesBreakdown : UserControl
 {

@@ -1,8 +1,7 @@
-using System.Reactive.Linq;
 using System.Windows.Input;
-using Angor.UI.Model;
+using AngorApp.Sections.Browse;
 
-namespace AngorApp.Sections.Browse.Details.Invest.Amount;
+namespace AngorApp.Features.Invest.Amount;
 
 public class AmountViewModelDesign : IAmountViewModel
 {

@@ -1,7 +1,6 @@
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using AngorApp.Features.Invest.Draft;
-using AngorApp.Sections.Browse.Details.Invest.Draft;
 
 namespace AngorApp;
 

@@ -1,13 +1,9 @@
-using System.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using Angor.Contexts.Wallet.Application;
-using Angor.Contexts.Wallet.Domain;
 using AngorApp.Features.Invest;
-using AngorApp.UI.Controls.Common.TransactionDraft;
 using AngorApp.UI.Services;
-using Avalonia.Threading;
+using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI;
 
 namespace AngorApp.Sections.Browse.Details;
@@ -16,11 +12,13 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 {
     private readonly IProject project;
     private readonly InvestWizard investWizard;
+    private readonly UIServices uiServices;
 
     public ProjectDetailsViewModel(IWalletAppService walletAppService, IProject project, InvestWizard investWizard, UIServices uiServices)
     {
         this.project = project;
         this.investWizard = investWizard;
+        this.uiServices = uiServices;
         Invest = ReactiveCommand.CreateFromTask(() =>
         {
             return walletAppService.GetMetadatas()
@@ -29,7 +27,7 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
                 {
                     if (maybeMetadata.HasValue)
                     {
-                        return Result.Success(Observable.FromAsync(() => DoInvest(maybeMetadata.Value.Id, project, uiServices))
+                        return Result.Success(Observable.FromAsync(() => DoInvest(project, uiServices))
                             .SubscribeOn(RxApp.MainThreadScheduler)
                             .ToTask());
                     }
@@ -66,8 +64,17 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
     public double CurrentInvestment { get; } = 0.79d;
     public IProject Project => project;
 
-    private Task<Maybe<Unit>> DoInvest(WalletId walletId, IProject project, UIServices uiServices)
+    private Task<Maybe<Unit>> DoInvest(IProject project, UIServices uiServices)
     {
-        return investWizard.Invest(walletId, project);
+        uiServices.ActiveWallet.Current.Execute(w => investWizard.Invest(w, project));
+
+        return uiServices.ActiveWallet.Current
+            .Match(wallet => investWizard.Invest(wallet, project), () => ShowNoWalletMessage());
+    }
+
+    private async Task<Maybe<Unit>> ShowNoWalletMessage()
+    {
+        await uiServices.Dialog.ShowMessage("No wallet found", "Please create or recover a wallet to invest in this project.");
+        return Maybe<Unit>.None;
     }
 }

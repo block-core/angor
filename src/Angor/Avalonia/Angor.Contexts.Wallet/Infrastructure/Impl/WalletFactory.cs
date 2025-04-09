@@ -22,7 +22,7 @@ public class WalletFactory(IWalletStore walletStore, IWalletSecurityContext secu
         };
 
         var encryptedWallet = await securityContext.WalletEncryption
-            .Encrypt(walletData, encryptionKey, name, walletId.Id);
+            .Encrypt(walletData, encryptionKey, name, walletId.Value);
 
         return await walletStore.GetAll()
             .Map(existing => existing.Append(encryptedWallet))
