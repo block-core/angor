@@ -2,23 +2,22 @@ using System.Threading.Tasks;
 using Angor.UI.Model.Implementation.Wallet;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
+using Zafiro.UI;
 
 namespace AngorApp.UI.Services;
 
-public class WalletBuilder(IWalletAppService walletAppService, ITransactionWatcher transactionWatcher) : IWalletBuilder
+public class WalletBuilder(IWalletAppService walletAppService, ITransactionWatcher transactionWatcher, UIServices uiServices) : IWalletBuilder
 {
-    private readonly Dictionary<WalletId, DynamicWallet> createdWallets = new ();
+    private readonly Dictionary<WalletId, DynamicWallet> runningWallets = new ();
     
     public async Task<Result<IWallet>> Create(WalletId walletId)
     {
-        if (createdWallets.ContainsKey(walletId))
+        if (runningWallets.ContainsKey(walletId))
         {
             throw new InvalidOperationException($"A DynamicWallet was created for the same WalletId: {walletId}. We should not create more than one instance.");
         }
         
         var dynamicWallet = new DynamicWallet(walletId, walletAppService, transactionWatcher);
-        
-        createdWallets.Add(walletId, dynamicWallet);
         
         var tcs = new TaskCompletionSource<Result<IWallet>>();
 
@@ -29,6 +28,7 @@ public class WalletBuilder(IWalletAppService walletAppService, ITransactionWatch
             {
                 if (result.IsSuccess)
                 {
+                    runningWallets.Add(walletId, dynamicWallet);
                     tcs.SetResult(Result.Success<IWallet>(dynamicWallet));
                 }
                 else
@@ -37,8 +37,9 @@ public class WalletBuilder(IWalletAppService walletAppService, ITransactionWatch
                     syncSubscription.Dispose();
                 }
             });
-        
-        dynamicWallet.SyncCommand.StartReactive.Execute().Subscribe();
+
+        dynamicWallet.SyncCommand.StartReactive.HandleErrorsWith(uiServices.NotificationService, "Wallet Sync Error");
+        syncSubscription = dynamicWallet.SyncCommand.StartReactive.Execute().Subscribe();
         
         return await tcs.Task;
     }
