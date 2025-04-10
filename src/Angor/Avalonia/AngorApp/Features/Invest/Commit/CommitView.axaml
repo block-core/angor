@@ -5,6 +5,7 @@
              xmlns:commit="clr-namespace:AngorApp.Features.Invest.Commit"
              xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:c="clr-namespace:AngorApp.UI.Controls"
+             xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" 
              x:Class="AngorApp.Features.Invest.Commit.CommitView"
              x:DataType="commit:ICommitViewModel">
@@ -22,12 +23,10 @@
         </StackPanel>
         <Button Margin="20" Command="{Binding RequestInvestment}" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Button.Content>
-                <Grid ColumnDefinitions="20,*,20">
-                    <!-- <controls:ProgressRing IsActive="{Binding RequestInvestment.IsExecuting^}" IsIndeterminate="True" /> -->
-                    <TextBlock Grid.Column="1" VerticalAlignment="Center" TextAlignment="Center" Margin="10 0">
-                        Confirm
-                    </TextBlock>
-                </Grid>
+                <Panel>
+                    <controls:ProgressRing IsActive="{Binding RequestInvestment.IsExecuting^}" IsIndeterminate="True" />
+                    <TextBlock Text="Confirm" Opacity="{Binding Converter={x:Static converters:OpacityConverters.BoolToOpacity}}" IsVisible="{Binding !RequestInvestment.IsExecuting^}"  VerticalAlignment="Center" TextAlignment="Center" Margin="10 0" />
+                </Panel>
             </Button.Content>
         </Button>
     </DockPanel>
