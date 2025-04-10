@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:commit="clr-namespace:AngorApp.Features.Invest.Commit"
              xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-             xmlns:controls1="clr-namespace:AngorApp.UI.Controls"
+             xmlns:c="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" 
              x:Class="AngorApp.Features.Invest.Commit.CommitView"
              x:DataType="commit:ICommitViewModel">
@@ -12,18 +12,18 @@
 
     <DockPanel>
         <StackPanel Spacing="10" DockPanel.Dock="Top">
-            <TextBlock Text="This is a summary of the invesment" />
+            <c:IconLabel Margin="0 20" Icon="fa-triangle-exclamation">Please, check the investment information below.</c:IconLabel>
             <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Amount to invest">
-                <TextBlock Text="{Binding SatsToInvest, StringFormat={x:Static controls1:MiscConverters.Sats}}" />
+                <TextBlock Text="{Binding SatsToInvest, StringFormat={x:Static c:MiscConverters.Sats}}" />
             </HeaderedContentControl>
             <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Total fee">
-                <TextBlock Text="{Binding Totalfee, StringFormat={x:Static controls1:MiscConverters.Sats}}" />
+                <TextBlock Text="{Binding Totalfee, StringFormat={x:Static c:MiscConverters.Sats}}" />
             </HeaderedContentControl>
         </StackPanel>
         <Button Margin="20" Command="{Binding RequestInvestment}" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Button.Content>
-                <Grid ColumnDefinitions="30,*,30">
-                    <controls:ProgressRing IsActive="{Binding RequestInvestment.IsExecuting^}" IsIndeterminate="True" />
+                <Grid ColumnDefinitions="20,*,20">
+                    <!-- <controls:ProgressRing IsActive="{Binding RequestInvestment.IsExecuting^}" IsIndeterminate="True" /> -->
                     <TextBlock Grid.Column="1" VerticalAlignment="Center" TextAlignment="Center" Margin="10 0">
                         Confirm
                     </TextBlock>

@@ -10,14 +10,14 @@
              x:Class="AngorApp.Sections.Wallet.Operate.Send.AddressAndAmountView" x:DataType="s:IAddressAndAmountViewModel">
 
     <StackPanel VerticalAlignment="Center" Spacing="10" MaxWidth="500">
-        <StackPanel Spacing="20">
+        <StackPanel Spacing="20" MaxWidth="350">
             <HeaderedContentControl Header="Destination">
                 <TextBox Text="{Binding Address}" Classes="clearButton" Watermark="Enter address" AcceptsReturn="False">
                     <Interaction.Behaviors>
                         <b:UntouchedClassBehavior />
                     </Interaction.Behaviors>
                     <TextBox.InnerLeftContent>
-                        <i:Icon Value="fa-solid fa-pen-to-square" Margin="4" />
+                        <i:Icon Value="fa-solid fa-pen-to-square" Margin="10 0 0 0" />
                     </TextBox.InnerLeftContent>
                 </TextBox>
             </HeaderedContentControl>
