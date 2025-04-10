@@ -18,4 +18,5 @@ public class BrowseSectionViewModelDesign : IBrowseSectionViewModel
     public string? ProjectId { get; set; }
     public IObservable<bool> IsBusy { get; set; }
     public IProjectLookupViewModel ProjectLookupViewModel { get; }
+    public IObservable<bool> IsLoading { get; }
 }
