@@ -421,7 +421,7 @@
         <div class="card card-body mt-4">
             @if (founder)
             {
-                <div class="action-card founder-card animate-fade-in">
+                <div class="text-center animate-fade-in">
                     <i class="me-2">
                         <Icon IconName="verified-check" Height="100" Width="100" Class="action-icon" />
                     </i>
@@ -643,7 +643,7 @@
                                 <input type="@(showPrivateKeys ? "text" : "password")" id="NostrNsecSecKey" value="@NostrNsecSecKey" 
                                     class="form-control nsec-box" readonly />
                                 <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
-                                    <Icon IconName="@(showPrivateKeys ? "eye-off" : "eye")" />
+                                    <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" />
                                 </button>
                                 <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border">
                                     <Icon IconName="copy" />
@@ -655,7 +655,7 @@
                                 <input type="@(showPrivateKeys ? "text" : "password")" id="NostrHexSecKey" value="@NostrHexSecKey"
                                     class="form-control nsec-box" readonly />
                                 <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
-                                    <Icon IconName="@(showPrivateKeys ? "eye-off" : "eye")" />
+                                    <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" />
                                 </button>
                                 <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border">
                                     <Icon IconName="copy" />
