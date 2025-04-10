@@ -8,7 +8,7 @@ public interface IWalletSectionViewModel
     ReactiveCommand<Unit, Maybe<Unit>> CreateWallet { get; }
     ReactiveCommand<Unit, Maybe<Unit>> RecoverWallet { get; }
     IObservable<bool> IsBusy { get; }
-    public IWalletViewModel? Wallet { get; }
+    public IWalletViewModel? ActiveWallet { get; }
     public IObservable<bool> HasWallet { get; }
-    public bool ShowCreateAndRecover { get; }
+    public bool CanCreateWallet { get; }
 }

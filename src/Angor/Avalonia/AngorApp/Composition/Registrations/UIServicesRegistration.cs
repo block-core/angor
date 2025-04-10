@@ -7,7 +7,7 @@ using Zafiro.UI;
 
 namespace AngorApp.Composition.Registrations;
 
-public static class UIServices
+public static class UIServicesRegistration
 {
     public static IServiceCollection Register(this IServiceCollection services, Control parent)
     {
@@ -22,7 +22,8 @@ public static class UIServices
             .AddSingleton<ILauncherService>(_ => new LauncherService(topLevel!.Launcher))
             .AddSingleton(DialogService.Create())
             .AddSingleton<IActiveWallet, ActiveWallet>()
+            .AddSingleton<IWalletRoot, WalletRoot>()
             .AddSingleton<INotificationService>(_ => notificationService)
-            .AddSingleton<UI.Services.UIServices>();
+            .AddSingleton<UIServices>();
     }
 }

@@ -22,12 +22,7 @@ public static class ViewModels
             .AddScoped<INavigator, Navigator>()
             .AddTransient<ISectionsFactory, SectionsFactory>()
             .AddTransient<Lazy<IMainViewModel>>(sp => new Lazy<IMainViewModel>(sp.GetRequiredService<IMainViewModel>))
-            .AddTransient<IHomeSectionViewModel>(sp =>
-                new HomeSectionViewModel(
-                    sp.GetRequiredService<IActiveWallet>(),
-                    sp.GetRequiredService<UI.Services.UIServices>(),
-                    () => sp.GetRequiredService<Lazy<IMainViewModel>>().Value
-                ))
+            .AddTransient<IHomeSectionViewModel, HomeSectionViewModel>()
             .AddTransient<IWalletSectionViewModel, WalletSectionViewModel>()
 
             // // This registration could be maintained for alternative uses, but for navigation we will use the delegate

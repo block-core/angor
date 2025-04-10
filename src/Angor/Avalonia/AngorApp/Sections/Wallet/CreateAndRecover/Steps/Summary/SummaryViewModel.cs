@@ -35,7 +35,7 @@ public partial class SummaryViewModel : ReactiveValidationObject, IStep, ISummar
     {
         return walletAppService.CreateWallet("<default>", options.Seedwords.ToString(), options.Passphrase, options.EncryptionKey, getNetwork())
             .Bind(id => walletBuilder.Get(id))
-            .Tap(w => uiServices.ActiveWallet.Current = w.AsMaybe());
+            .Tap(w => uiServices.ActiveWallet.SetCurrent(w));
     }
 
     public string CreateWalletText => IsRecovery ? "Recover Wallet" : "Create Wallet";

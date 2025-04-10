@@ -13,23 +13,24 @@
         <Style Selector="WrapPanel > :is(Control)">
             <Setter Property="Margin" Value="10"></Setter>
         </Style>
+        <Style Selector="StackPanel">
+            <Setter Property="Spacing" Value="10" />
+        </Style>
     </UserControl.Styles>
 
     <Panel>
         <Panel>
-            <StackPanel IsVisible="{Binding ShowCreateAndRecover}">
-                <controls:Pane Title="Setup your wallet" IsTitleVisible="True">
-                    <WrapPanel HorizontalAlignment="Center" Margin="-10">
-                        <Button Content="Create wallet" Command="{Binding CreateWallet}" />
-                        <Button Content="Recover wallet" Command="{Binding RecoverWallet}" />
-                    </WrapPanel>
-                </controls:Pane>
-            </StackPanel>
+            <controls:Pane VerticalAlignment="Top" Title="Setup your wallet" IsTitleVisible="True" IsVisible="{Binding CanCreateWallet}">
+                <WrapPanel HorizontalAlignment="Center" Margin="-10">
+                    <Button Content="Create wallet" Command="{Binding CreateWallet}" />
+                    <Button Content="Recover wallet" Command="{Binding RecoverWallet}" />
+                </WrapPanel>
+            </controls:Pane>
             <operate:WalletView IsVisible="{Binding HasWallet^}" />
         </Panel>
         <StackPanel IsVisible="{Binding IsBusy^}" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock>Loading existing wallet. Please wait.</TextBlock>
-            <c:ProgressRing  IsIndeterminate="True" Height="100" Width="100" />
+            <c:ProgressRing IsIndeterminate="True" Height="100" Width="100" />
         </StackPanel>
     </Panel>
 </UserControl>

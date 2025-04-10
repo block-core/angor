@@ -30,7 +30,7 @@
         <!--                                        CompareValue="{x:Static main:WalletDisplayStatus.Locked}" /> -->
         <!--     </Interaction.Behaviors> -->
         <!-- </wallet:WalletLockedView> -->
-        <operate:WalletUnlockedView DataContext="{Binding Wallet}">
+        <operate:WalletUnlockedView DataContext="{Binding ActiveWallet}">
             <!-- <Interaction.Behaviors> -->
             <!--     <behaviors:VisibleWhenBehavior -->
             <!--         BindingValue="{Binding WalletDisplayStatus}" -->

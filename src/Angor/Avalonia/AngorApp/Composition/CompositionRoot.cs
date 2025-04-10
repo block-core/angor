@@ -27,7 +27,7 @@ public static class CompositionRoot
 
         ModelServices.Register(services);
         ViewModels.Register(services);
-        UIServices.Register(services, topLevelView);
+        UIServicesRegistration.Register(services, topLevelView);
         SecurityContext.Register(services);
         RegisterWalletServices(services, logger);
         FundingContextServices.Register(services, logger);

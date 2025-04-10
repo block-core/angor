@@ -48,7 +48,7 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 
     private async Task<Result> DoInvest()
     {
-        var getCurrentResult = await uiServices.ActiveWallet.TryGetCurrent().Tap(r => r.ExecuteNoValue(ShowNoWalletMessage));
+        var getCurrentResult = await uiServices.WalletRoot.GetDefaultWalletAndActivate().Tap(r => r.ExecuteNoValue(ShowNoWalletMessage));
         return await getCurrentResult
             .Map(maybeWallet => maybeWallet
                 .Bind(wallet => investWizard.Invest(wallet, project)));

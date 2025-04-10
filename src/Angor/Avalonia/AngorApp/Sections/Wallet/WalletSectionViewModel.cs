@@ -12,37 +12,33 @@ namespace AngorApp.Sections.Wallet;
 
 public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionViewModel
 {
-    [ObservableAsProperty] private IWalletViewModel? wallet;
-
-    public WalletSectionViewModel(UIServices uiServices, IWalletWizard walletWizard, IWalletAppService walletAppService, IWalletBuilder walletBuilder)
+    // Propiedades ObservableAsProperty
+    [ObservableAsProperty] private IWalletViewModel? activeWallet;
+    [ObservableAsProperty] private bool canCreateWallet;
+    
+    public WalletSectionViewModel(UIServices uiServices, IWalletWizard walletWizard, 
+        IWalletAppService walletAppService)
     {
         CreateWallet = ReactiveCommand.CreateFromTask(() => walletWizard.CreateNew());
         RecoverWallet = ReactiveCommand.CreateFromTask(() => walletWizard.Recover());
-
-        walletHelper = uiServices.ActiveWallet.CurrentChanged
-            .Merge(Observable.Return(uiServices.ActiveWallet.Current).Values())
+        
+        LoadWallet = ReactiveCommand.CreateFromTask(() => uiServices.WalletRoot.GetDefaultWalletAndActivate());
+        LoadWallet.HandleErrorsWith(uiServices.NotificationService, "Failed to load wallet");
+        
+        activeWalletHelper = uiServices.ActiveWallet.CurrentChanged
             .Select(w => new WalletViewModel(w, walletAppService, uiServices))
-            .ToProperty(this, x => x.Wallet);
-
-        TryLoadExistingWallet = ReactiveCommand.CreateFromTask(() => uiServices.ActiveWallet.TryGetCurrent());
-        walletHelper = TryLoadExistingWallet.Successes().Values()
-            .Merge(uiServices.ActiveWallet.CurrentChanged)
-            .Select(w => new WalletViewModel(w, walletAppService, uiServices)).ToProperty(this, x => x.Wallet);
-
-        HasWallet = this.WhenAnyValue(x => x.Wallet).NotNull();
-        IsBusy = TryLoadExistingWallet.IsExecuting;
-        TryLoadExistingWallet.HandleErrorsWith(uiServices.NotificationService, "Failed to load wallet");
-        showCreateAndRecoverHelper = TryLoadExistingWallet.Successes().Empties().Any().StartWith(false)
-            .CombineLatest(HasWallet, (hasWallet, walletActivated) => hasWallet && !walletActivated)
-            .ToProperty(this, x => x.ShowCreateAndRecover);
-        TryLoadExistingWallet.Execute().Subscribe();
+            .ToProperty(this, x => x.ActiveWallet);
+            
+        HasWallet = this.WhenAnyValue(x => x.ActiveWallet).NotNull();
+        canCreateWalletHelper = uiServices.WalletRoot.HasDefault().Not().ToProperty(this, x => x.CanCreateWallet);
+        IsBusy = LoadWallet.IsExecuting;
+        LoadWallet.Execute().Subscribe();
     }
-
+    
     public IObservable<bool> HasWallet { get; }
-
-    [ObservableAsProperty] private bool showCreateAndRecover;
-    public ReactiveCommand<Unit,Result<Maybe<IWallet>>> TryLoadExistingWallet { get; set; }
     public IObservable<bool> IsBusy { get; }
+
+    public ReactiveCommand<Unit, Result<Maybe<IWallet>>> LoadWallet { get; }
     public ReactiveCommand<Unit, Maybe<Unit>> CreateWallet { get; }
     public ReactiveCommand<Unit, Maybe<Unit>> RecoverWallet { get; }
 }

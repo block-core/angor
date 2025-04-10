@@ -51,7 +51,7 @@ public class WalletAppServiceFixture : IAsyncLifetime
         var store = new WalletStore(new InMemoryStore());
         var walletSecurityContext = new TestSecurityContext();
 
-        IWalletFactory walletFactory = new WalletFactory(store, walletSecurityContext);
+        IWalletFactory walletFactory = new WalletFactory(store, sensitiveWalletDataProvider, walletSecurityContext);
         WalletAppService = new WalletAppService(sensitiveWalletDataProvider, indexerService, walletFactory, walletOperations, store);
     }
 
