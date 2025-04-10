@@ -11,6 +11,7 @@ using ReactiveUI.SourceGenerators;
 using Serilog;
 using Zafiro.Avalonia.Controls.Navigation;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse.ProjectLookup;
 

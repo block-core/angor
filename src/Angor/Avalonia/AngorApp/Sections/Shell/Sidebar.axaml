@@ -5,7 +5,7 @@
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:sections="clr-namespace:AngorApp.Sections.Shell.Sections"
+             xmlns:sections="clr-namespace:Zafiro.UI.Navigation.Sections;assembly=Zafiro.UI"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Shell.Sidebar" x:DataType="shell:IMainViewModel">
 
@@ -61,7 +61,7 @@
 
     <controls:Pane>
 
-        <ListBox Background="Transparent" ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}">
+        <ListBox Background="Transparent" ItemsSource="{Binding Shell.Sections}" SelectedItem="{Binding Shell.SelectedSection}">
 
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -77,7 +77,7 @@
                         <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
                     </DockPanel>
                 </DataTemplate>
-                <DataTemplate DataType="sections:CommandSection">
+                <DataTemplate DataType="sections:ICommandSection">
                     <controls:IconButton Command="{Binding Command}" Background="Transparent"
                                          HorizontalAlignment="Stretch"
                                          Icon="{Binding Icon, Converter={x:Static controls:MiscConverters.StringToIcon}}">
@@ -86,13 +86,13 @@
                         </controls:IconButton.Content>
                     </controls:IconButton>
                 </DataTemplate>
-                <DataTemplate DataType="sections:Separator">
+                <DataTemplate DataType="sections:ISectionSeparator">
                     <Separator />
                 </DataTemplate>
             </ListBox.DataTemplates>
 
             <ListBox.ItemContainerTheme>
-                <ControlTheme x:DataType="sections:SectionBase" TargetType="ListBoxItem"
+                <ControlTheme x:DataType="sections:IContentSection" TargetType="ListBoxItem"
                               BasedOn="{StaticResource {x:Type ListBoxItem}}">
                     <Setter Property="CornerRadius" Value="10" />
                     <Setter Property="Margin" Value="2" />

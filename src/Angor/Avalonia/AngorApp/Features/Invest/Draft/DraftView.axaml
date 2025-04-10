@@ -22,10 +22,10 @@
 
     <DockPanel Grid.IsSharedSizeScope="True">
         <StackPanel DockPanel.Dock="Top">
-            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Amount to invest">
+            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Amount to invest">
                 <TextBlock Text="{Binding SatsToInvest, StringFormat={x:Static controls:MiscConverters.Sats}}" />
             </HeaderedContentControl>
-            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Feerate">
+            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Feerate">
                 <NumericUpDown ShowButtonSpinner="False" MaxWidth="250" HorizontalAlignment="Left" Value="{Binding Feerate, Mode=TwoWay}">
                     <NumericUpDown.InnerRightContent>
                         <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">sats/vByte</TextBlock>
@@ -35,7 +35,7 @@
         </StackPanel>
         <Panel Margin="0 20 0 0">
             <StackPanel IsVisible="{Binding !IsBusy^}">
-                <HeaderedContentControl Header="Fee" Theme="{StaticResource Inline}">
+                <HeaderedContentControl Header="Fee" Theme="{StaticResource InlineHeaderedContentControl}">
                     <TextBlock Text="{Binding Draft.TotalFee, StringFormat={x:Static controls:MiscConverters.Sats}}" />
                 </HeaderedContentControl>
             </StackPanel>

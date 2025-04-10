@@ -46,16 +46,5 @@
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj" />
         <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Features\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <AdditionalFiles Include="Features\Invest\Amount\AmountView.axaml" />
-      <AdditionalFiles Include="Features\Invest\Amount\StagesBreakdown.axaml" />
-      <AdditionalFiles Include="Features\Invest\Commit\CommitView.axaml" />
-      <AdditionalFiles Include="Features\Invest\Draft\DraftView.axaml" />
-    </ItemGroup>
-
+    
 </Project>

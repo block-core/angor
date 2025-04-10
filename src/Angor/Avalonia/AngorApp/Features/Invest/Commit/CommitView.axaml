@@ -13,10 +13,10 @@
     <DockPanel>
         <StackPanel Spacing="10" DockPanel.Dock="Top">
             <TextBlock Text="This is a summary of the invesment" />
-            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Amount to invest">
+            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Amount to invest">
                 <TextBlock Text="{Binding SatsToInvest, StringFormat={x:Static controls1:MiscConverters.Sats}}" />
             </HeaderedContentControl>
-            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Total fee">
+            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Total fee">
                 <TextBlock Text="{Binding Totalfee, StringFormat={x:Static controls1:MiscConverters.Sats}}" />
             </HeaderedContentControl>
         </StackPanel>

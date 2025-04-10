@@ -4,6 +4,7 @@ using AngorApp.Features.Invest;
 using AngorApp.Sections.Browse.Details;
 using AngorApp.UI.Services;
 using Zafiro.Avalonia.Controls.Navigation;
+using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse;
 

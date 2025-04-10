@@ -7,7 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="DynamicData" />
         <PackageReference Include="ReactiveUI"/>
         <PackageReference Include="CSharpFunctionalExtensions"/>
         <PackageReference Include="ReactiveUI.SourceGenerators"/>

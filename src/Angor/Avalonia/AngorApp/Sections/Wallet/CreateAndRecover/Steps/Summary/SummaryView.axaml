@@ -17,16 +17,16 @@
         <StackPanel Grid.IsSharedSizeScope="True" Spacing="20" Opacity="{Binding !CreateWallet.IsExecuting^, Converter={x:Static cv:OpacityConverters.BoolToOpacity}}">
             <TextBlock Classes="SizeBig" TextAlignment="Center" Text="{Binding TitleText}" />
             <TextBlock>Here's a short summary of the information you provided:</TextBlock>
-            <HeaderedContentControl Theme="{StaticResource Inline}" IsVisible="{Binding !IsRecovery}" Header="Seed words:">
+            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" IsVisible="{Binding !IsRecovery}" Header="Seed words:">
                 <TextBlock TextWrapping="Wrap">12 English words (already confirmed)</TextBlock>
             </HeaderedContentControl>
-            <HeaderedContentControl Theme="{StaticResource Inline}" Header="BIP39 Passphrase:">
+            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="BIP39 Passphrase:">
                 <Panel>
                     <TextBlock Text="[Provided]" IsVisible="{Binding Passphrase.HasValue}" />
                     <TextBlock Text="[None]" IsVisible="{Binding Passphrase.HasNoValue}" />
                 </Panel>
             </HeaderedContentControl>
-            <HeaderedContentControl Theme="{StaticResource Inline}" Header="Encryption Password:">
+            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Encryption Password:">
                 <TextBlock Text="[Set]" />
             </HeaderedContentControl>
             <Button Command="{Binding CreateWallet}" Content="{Binding CreateWalletText}" HorizontalAlignment="Center" />

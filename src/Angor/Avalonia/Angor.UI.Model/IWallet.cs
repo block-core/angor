@@ -1,8 +1,6 @@
 using System.Collections.ObjectModel;
-using System.Reactive;
 using Angor.Contexts.Wallet.Domain;
 using CSharpFunctionalExtensions;
-using Zafiro.UI;
 
 namespace Angor.UI.Model;
 

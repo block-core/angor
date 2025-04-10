@@ -7,6 +7,7 @@ using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Controls.Navigation;
 using Zafiro.Reactive;
+using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse;
 

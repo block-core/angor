@@ -19,9 +19,9 @@
             <TextBlock>If everything is correct, you can confirm it with the button below.</TextBlock>
         </StackPanel>
         <Separator />
-        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Destination" Content="{Binding Destination.Name}" />
-        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Amount" Content="{Binding Destination.Amount}" />
-        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Total Fee">
+        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Destination" Content="{Binding Destination.Name}" />
+        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Amount" Content="{Binding Destination.Amount}" />
+        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Total Fee">
             <HeaderedContentControl.Content>
                 <Panel HorizontalAlignment="Left">
                     <TextBlock VerticalAlignment="Center" IsVisible="{Binding !CreateDraft.IsExecuting^}">
@@ -33,7 +33,7 @@
                 </Panel>
             </HeaderedContentControl.Content>
         </HeaderedContentControl>
-        <HeaderedContentControl Theme="{StaticResource Inline}" Header="Feerate">
+        <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Feerate">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <TextBlock Text="{Binding Feerate, StringFormat='{}{0} sat/B'}" VerticalAlignment="Center" />
                 <controls:IconButton Padding="6">
