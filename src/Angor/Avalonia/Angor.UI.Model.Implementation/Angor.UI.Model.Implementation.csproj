@@ -7,7 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="DynamicData" />
         <PackageReference Include="ReactiveUI"/>
         <PackageReference Include="CSharpFunctionalExtensions"/>
         <PackageReference Include="ReactiveUI.SourceGenerators"/>
@@ -17,6 +16,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\Shared\Angor.Shared.csproj" />
+      <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj" />
       <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj" />
     </ItemGroup>
 

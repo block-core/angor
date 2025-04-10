@@ -19,7 +19,7 @@
             <i:Icon Value="fa-solid fa-cube" />
         </controls:Pane.TitleIcon>
 
-        <z:SlimDataGrid Margin="10" ItemsSource="{Binding History}">
+        <z:SlimDataGrid Margin="0 25" ItemsSource="{Binding History}">
             <z:SlimDataGrid.Styles>
                 <Style Selector="TextBlock">
                     <Setter Property="VerticalAlignment" Value="Center" />

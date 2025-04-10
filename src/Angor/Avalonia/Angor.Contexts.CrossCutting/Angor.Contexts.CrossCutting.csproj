@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>Angor.Contests.CrossCutting</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AspectInjector" />
+        <PackageReference Include="CSharpFunctionalExtensions" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\Shared\Angor.Shared.csproj" />
+    </ItemGroup>
+    
+</Project>

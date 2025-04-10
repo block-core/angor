@@ -5,7 +5,7 @@ namespace AngorApp.Sections.Founder;
 
 public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel
 {
-    public FounderSectionViewModel(IProjectService projectService)
+    public FounderSectionViewModel()
     {
         // projectService.Connect()
         //     .Bind(out var projects)

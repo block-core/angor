@@ -6,10 +6,9 @@
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
-
         <misc:NamingConventionViewLocator />
+        <misc:DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
         <misc:DataTemplateInclude Source="avares://Zafiro.Avalonia/Controls/Wizards/WizardTemplate.axaml" />
-
     </Application.DataTemplates>
 
     <Application.Styles>
@@ -29,7 +28,6 @@
         <StyleInclude Source="UI/Controls/Button.axaml" />
         <StyleInclude Source="Sections/Wallet/CreateAndRecover/Steps/SeedWordsGeneration/SeedWordList.axaml" />
         <StyleInclude Source="UI/Controls/IconButton.axaml" />
-        <StyleInclude Source="avares://AvaloniaProgressRing/Styles/ProgressRing.xaml" />
     </Application.Styles>
 
     <Application.Resources>
@@ -37,7 +35,6 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/ProgressRingStyles.axaml"/>
                 <MergeResourceInclude Source="UI/Controls/Header.axaml" />
-                <MergeResourceInclude Source="UI/Controls/Frame.axaml" />
                 <MergeResourceInclude Source="UI/Controls/SectionItem.axaml" />
                 <MergeResourceInclude Source="UI/Resources/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
