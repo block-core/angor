@@ -443,7 +443,7 @@
                         </a>
 
                         <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}")
-                           class="btn btn-border animate-scale warning-button @(CanReleaseUnfundedProject() ? "" : "disabled")">
+                           class="btn btn-border-danger animate-scale @(CanReleaseUnfundedProject() ? "" : "disabled")">
                             <i class="me-2">
                                 @if (CanReleaseUnfundedProject())
                                 {
