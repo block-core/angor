@@ -16,6 +16,10 @@ namespace Angor.UI.Model.Implementation.Wallet;
 
 public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
 {
+    [ObservableAsProperty]
+    private long balance;
+    [ObservableAsProperty] private ResultViewModel loadResult;
+    
     private readonly IWalletAppService walletAppService;
     private readonly CompositeDisposable disposables = new();
     
@@ -28,9 +32,9 @@ public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
 
         var changes = transactionsSource.Connect();
 
-        SyncCommand = StoppableCommand.Create(() => transactionWatcher.Watch(Id), Maybe<IObservable<bool>>.None);
+        Sync = StoppableCommand.Create(() => transactionWatcher.Watch(Id), Maybe<IObservable<bool>>.None);
         
-        transactionsSource.PopulateFrom(SyncCommand.StartReactive.Successes().OfType<TransactionEvent>().Select(ev => ev.Transaction));
+        transactionsSource.PopulateFrom(Sync.StartReactive.Successes().OfType<TransactionEvent>().Select(ev => ev.Transaction));
 
         changes
             .Transform(transaction => (IBroadcastedTransaction)new BroadcastedTransactionImpl(transaction))
@@ -40,21 +44,9 @@ public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
 
         History = transactions;
 
-        Balance = changes.Sum(x => x.Balance.Value);
-        HasBalance = Balance.Any().StartWith(false);
-        HasTransactions = SyncCommand.StartReactive.Any().StartWith(false);
+        balanceHelper = changes.Sum(x => x.Balance.Value).ToProperty(this, x => x.Balance);
     }
-
-    public IObservable<bool> HasTransactions { get;  }
-
-    public IObservable<bool> HasBalance { get; }
-
-    public IObservable<long> Balance { get; }
-
-    public StoppableCommand<Unit, Result<Event>> SyncCommand { get; }
-
-    [ObservableAsProperty] private ResultViewModel loadResult;
-
+    public StoppableCommand<Unit, Result<Event>> Sync { get; }
 
     public Task<Result<string>> GenerateReceiveAddress()
     {
@@ -64,12 +56,6 @@ public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
     public ReadOnlyObservableCollection<IBroadcastedTransaction> History { get; }
 
     public BitcoinNetwork Network { get; } = BitcoinNetwork.Testnet;
-
-    public Task<Result<ITransactionDraft>> CreateDraft(long amount, string address, long feerate)
-    {
-        return walletAppService.EstimateFee(Id, new Amount(amount), new Address(address), new DomainFeeRate(feerate))
-            .Map(ITransactionDraft (fee) => new TransactionDraft(Id, amount, address, feerate, fee, walletAppService));
-    }
 
     public Result IsAddressValid(string address)
     {

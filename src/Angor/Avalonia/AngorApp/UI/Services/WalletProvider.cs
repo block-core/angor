@@ -12,9 +12,9 @@ public class WalletProvider(IWalletAppService walletAppService, ITransactionWatc
     
     public async Task<Result<IWallet>> Get(WalletId walletId)
     {
-        if (runningWallets.ContainsKey(walletId))
+        if (runningWallets.TryGetValue(walletId, out var wallet))
         {
-            throw new InvalidOperationException($"A DynamicWallet with WalletId: {walletId} is already running. We should run more than one wallet for the same WalletId.");
+            return wallet;
         }
         
         var dynamicWallet = new DynamicWallet(walletId, walletAppService, transactionWatcher);
@@ -23,7 +23,7 @@ public class WalletProvider(IWalletAppService walletAppService, ITransactionWatc
 
         IDisposable syncSubscription = null!;
         
-        dynamicWallet.SyncCommand.StartReactive.Take(1)
+        dynamicWallet.Sync.StartReactive.Take(1)
             .Subscribe(result =>
             {
                 if (result.IsSuccess)
@@ -38,8 +38,7 @@ public class WalletProvider(IWalletAppService walletAppService, ITransactionWatc
                 }
             });
 
-        //dynamicWallet.SyncCommand.StartReactive.HandleErrorsWith(notificationService, "Wallet Sync Error");
-        syncSubscription = dynamicWallet.SyncCommand.StartReactive.Execute().Subscribe();
+        syncSubscription = dynamicWallet.Sync.StartReactive.Execute().Subscribe();
         
         return await tcs.Task;
     }

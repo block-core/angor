@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:avaloniaProgressRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:transactionPreview="clr-namespace:AngorApp.UI.Controls.Common.TransactionDraft"
@@ -29,7 +29,7 @@
                             <Binding Path="TransactionDraft.TotalFee" StringFormat="{}{0:N0} sats" />
                         </TextBlock.Text>
                     </TextBlock>
-                    <avaloniaProgressRing:ProgressRing Height="20" Width="20" IsVisible="{Binding CreateDraft.IsExecuting^}" />
+                    <fa:ProgressRing Height="20" Width="20" IsVisible="{Binding CreateDraft.IsExecuting^}" />
                 </Panel>
             </HeaderedContentControl.Content>
         </HeaderedContentControl>

@@ -4,5 +4,5 @@ public interface IWalletSecurityContext
 {
     IWalletEncryption WalletEncryption { get; }
     IPassphraseProvider PassphraseProvider { get; }
-    IEncryptionKeyProvider EncryptionKeyProvider { get; }
+    IPasswordProvider PasswordProvider { get; }
 }

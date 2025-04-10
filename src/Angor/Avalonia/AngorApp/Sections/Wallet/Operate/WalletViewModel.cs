@@ -9,7 +9,6 @@ using AngorApp.UI.Services;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI.SourceGenerators;
-using SuppaWallet.Gui.Wallet.Main;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
@@ -42,7 +41,6 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
 
     public StoppableCommand<Unit, Result<BroadcastedTransaction>> Sync { get; set; }
     public IEnumerable<IdentityContainer<TransactionViewModel>> History { get; }
-    [ObservableAsProperty] private WalletDisplayStatus walletDisplayStatus;
 
     public IWallet Wallet { get; }
 

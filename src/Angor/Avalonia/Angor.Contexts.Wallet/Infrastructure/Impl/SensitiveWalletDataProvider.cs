@@ -41,7 +41,7 @@ public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecuri
             return Result.Failure<(string, Maybe<string>)>(encryptedWalletResult.Error);
 
         // Get the encryption key
-        var encryptionKey = await walletSecurityContext.EncryptionKeyProvider.Get(id);
+        var encryptionKey = await walletSecurityContext.PasswordProvider.Get(id);
         if (encryptionKey.HasNoValue)
             return Result.Failure<(string, Maybe<string>)>("Encryption key not provided");
         

@@ -11,9 +11,7 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <Panel>
-                    <ScrollViewer>
-                        <ContentControl Content="{Binding $parent[navigation:Frame].Navigator.Content}" />
-                    </ScrollViewer>
+                    <ContentControl Content="{Binding $parent[navigation:Frame].Navigator.Content}" />
                     <Button Background="Transparent" VerticalAlignment="Top" HorizontalAlignment="Left"
                             Command="{Binding $parent[navigation:Frame].Navigator.Back}"
                             IsVisible="{Binding $self.IsEffectivelyEnabled}">

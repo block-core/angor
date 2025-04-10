@@ -8,7 +8,7 @@ using PasswordViewModel = Angor.UI.Model.Implementation.Wallet.Password.Password
 
 namespace Angor.UI.Model.Implementation.Wallet;
 
-public class DialogEncryptionKeyProvider(IDialog dialog, string text) : IEncryptionKeyProvider
+public class DialogPasswordProvider(IDialog dialog, string text) : IPasswordProvider
 {
     public Task<Maybe<string>> Get(WalletId walletId)
     {

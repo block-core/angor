@@ -13,7 +13,7 @@ public static class SecurityContext
         container.AddSingleton<IWalletSecurityContext, WalletSecurityContext>();
         container.AddSingleton<IWalletEncryption, AesWalletEncryption>();
         container.AddSingleton<IPassphraseProvider, PassphraseProviderAdapter>();
-        container.AddSingleton<IEncryptionKeyProvider, EncryptionKeyProviderAdapter>();
+        container.AddSingleton<IPasswordProvider, PasswordProviderAdapter>();
         return container;
     }
 }

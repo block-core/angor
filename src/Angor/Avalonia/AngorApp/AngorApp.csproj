@@ -24,7 +24,6 @@
         </PackageReference>
         <PackageReference Include="Avalonia.Xaml.Behaviors"/>
         <PackageReference Include="CSharpFunctionalExtensions"/>
-        <PackageReference Include="Deadpikle.AvaloniaProgressRing"/>
         <PackageReference Include="Humanizer.Core"/>
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome"/>
         <PackageReference Include="QRCoder"/>

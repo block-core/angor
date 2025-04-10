@@ -17,7 +17,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
         
         var isValidAmount = this
             .WhenAnyValue(x => x.Amount)
-            .WithLatestFrom(wallet.Balance, (a, b) => a is null || a <= b);
+            .WithLatestFrom(wallet.WhenAnyValue(x => x.Balance), (a, b) => a is null || a <= b);
         
         this.ValidationRule(x => x.Amount, isValidAmount, "Amount exceeds balance");
     }
