@@ -71,6 +71,7 @@
     transition: all 0.4s ease;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    z-index: 9999;
 }
 
 .sidebar.collapsed {
