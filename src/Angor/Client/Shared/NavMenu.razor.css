@@ -291,7 +291,7 @@
         z-index: 1000;
         padding-left: 8px;
         padding-right: 8px;
-        max-height: 80px;
+        max-height: 70px;
     }
     
     .sidebar.collapsed {
@@ -313,21 +313,21 @@
     }
     
     .sidebar .sidebar-nav .primary-nav {
-        padding: 8px 0;
+        padding: 6px 0;
         margin: 0;
         overflow-x: hidden;
         overflow-y: hidden;
         display: flex;
         flex-direction: row;
-        max-height: 80px;
+        max-height: 70px;
     }
     
     .sidebar-nav .nav-item {
         flex: 1;
         text-align: center;
         padding: 0;
-        margin: 0 3px;
-        max-width: 80px;
+        margin: 0 2px;
+        max-width: 70px;
     }
     
     .sidebar-nav .nav-item:first-of-type,
@@ -337,15 +337,16 @@
     
     .sidebar-nav ::deep .nav-link {
         flex-direction: column;
-        gap: 5px;
+        gap: 3px;
         justify-content: center;
         align-items: center;
         height: auto;
         line-height: normal;
+        padding: 8px 6px;
     }
     
     .sidebar-nav ::deep .nav-link .nav-label {
-        font-size: 0.7rem;
+        font-size: 0.6rem;
         display: block;
         white-space: nowrap;
     }
@@ -359,8 +360,8 @@
     }
     
     .sidebar-nav ::deep .nav-icon {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
     }
     
     .sidebar-nav .secondary-nav {
