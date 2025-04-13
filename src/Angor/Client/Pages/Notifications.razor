@@ -389,11 +389,11 @@
         {
             case "investments":
                 if (!string.IsNullOrEmpty(notification.ProjectId))
-                    NavigationManager.NavigateTo($"/invest/{notification.ProjectId}");
+                    NavigationManager.NavigateTo($"/signatures/{notification.ProjectId}");
                 break;
             case "projects":
                 if (!string.IsNullOrEmpty(notification.ProjectId))
-                    NavigationManager.NavigateTo($"/founder/{notification.ProjectId}");
+                    NavigationManager.NavigateTo($"/view/{notification.ProjectId}");
                 break;
             case "messages":
                 if (!string.IsNullOrEmpty(notification.ProjectId))
