@@ -1,6 +1,28 @@
 ﻿@page "/"
-@inject NavMenuState NavMenuState
 @implements IDisposable
+@using System.Text.Json
+@using Angor.Client.Models
+@using Angor.Client.Shared
+@using Angor.Client.Storage
+@using Angor.Shared
+@using Angor.Shared.Models
+@using Angor.Shared.Utilities
+@using Blockcore.NBitcoin
+@using Blockcore.Networks
+@inherits BaseComponent
+@inject HttpClient _httpClient;
+@inject IClientStorage storage;
+@inject ICacheStorage _cacheStorage;
+@inject IWalletStorage _walletStorage;
+@inject ILogger<Wallet> Logger;
+@inject IWalletOperations _walletOperations
+@inject IClipboardService _clipboardService
+@inject ICurrencyService _currencyService
+@inject IDerivationOperations _derivationOperations
+@inject NavMenuState NavMenuState
+@inject IEncryptionService _encryptionService
+@inject IClipboardService ClipboardService
+@inject IWalletUIService _walletUIService
 
 <PageTitle>Angor</PageTitle>
 
@@ -23,17 +45,49 @@
 <div class="mt-4">
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4">
         <div class="col">
-            <a href="/wallet" class="text-decoration-none h-100 d-block">
-                <div class="card b-shadow hover-effect h-100">
-                    <div class="card-body text-center p-4">
-                        <i class="mb-3 text-primary d-flex justify-content-center">
-                            <Icon IconName="wallet" Width="48" Height="48" />
-                        </i>
-                        <h4 class="card-title h5 mb-3 mt-4">Create Your Wallet</h4>
-                        <p class="card-text text-muted">Create a new wallet or recover your existing one to get started with Angor</p>
+            @if (hasWallet)
+            {
+                <a href="/wallet" class="text-decoration-none h-100 d-block">
+                    <div class="card b-shadow hover-effect h-100">
+                        <div class="card-body text-center p-4">
+                            <i class="mb-3 text-primary d-flex justify-content-center">
+                                <Icon IconName="wallet" Width="48" Height="48" />
+                            </i>
+                            <h4 class="card-title h5 mb-3">My Wallet</h4>
+                            
+                            <div class="d-flex justify-content-center mb-3">
+                                <button class="btn btn-border" @onclick="ToggleBalance">
+                                    @(showBalance ? "Hide Balance" : "View Balance")
+                                </button>
+                            </div>
+                            
+                            @if (showBalance)
+                            {
+                                <p class="card-text text-muted">Balance: @totalBalance BTC</p>
+                            }
+                        </div>
                     </div>
-                </div>
-            </a>
+                </a>
+            }
+            else
+            {
+                <a href="/wallet" class="text-decoration-none h-100 d-block">
+                    <div class="card b-shadow hover-effect h-100">
+                        <div class="card-body text-center p-4">
+                            <i class="mb-3 text-primary d-flex justify-content-center">
+                                <Icon IconName="wallet" Width="48" Height="48" />
+                            </i>
+                            <h4 class="card-title h5 mb-3">Create Your Wallet</h4>
+                            
+                            <div class="d-flex justify-content-center mb-3">
+                                <a href="/wallet" class="btn btn-border">Create Wallet</a>
+                            </div>
+                            
+                            <p class="card-text text-muted">Create a new wallet or recover your existing one to get started with Angor</p>
+                        </div>
+                    </div>
+                </a>
+            }
         </div>
 
         <div class="col">
@@ -81,9 +135,38 @@
 </div>
 
 @code {
+    private bool hasWallet;
+    private bool showBalance;
+    private decimal totalBalance;
+    private AccountBalanceInfo accountBalanceInfo = new();
+
     protected override async Task OnInitializedAsync()
     {
         NavMenuState.SetActivePage("");
+        hasWallet = _walletStorage.HasWallet();
+        if (hasWallet)
+        {
+            await RefreshBalance();
+        }
+    }
+
+    private async Task RefreshBalance()
+    {
+        try
+        {
+            await _walletUIService.RefreshWalletBalance(accountBalanceInfo);
+            totalBalance = Money.Satoshis(accountBalanceInfo.TotalBalance)
+                              .ToUnit(MoneyUnit.BTC);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to refresh balance");
+        }
+    }
+
+    private void ToggleBalance()
+    {
+        showBalance = !showBalance;
     }
 
     public void Dispose()
