@@ -45,6 +45,7 @@ builder.Services.AddScoped<INetworkService, NetworkService>();
 builder.Services.AddTransient<IRelayService, RelayService>();
 builder.Services.AddTransient<ISignService, SignService>();
 
+builder.Services.AddTransient<IBitcoinTransactionBuilder, AngorBtcTransactionBuilder>();
 builder.Services.AddTransient<IFounderTransactionActions, FounderTransactionActions>();
 builder.Services.AddTransient<ISeederTransactionActions, SeederTransactionActions>();
 builder.Services.AddTransient<IInvestorTransactionActions, InvestorTransactionActions>();
