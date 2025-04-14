@@ -41,6 +41,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Angor.Projects\Angor.Projects.csproj" />
       <ProjectReference Include="..\Angor.UI.Model.Implementation\Angor.UI.Model.Implementation.csproj" />
       <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj" />
       <ProjectReference Include="..\Angor.Wallet\Angor.Wallet.csproj" />

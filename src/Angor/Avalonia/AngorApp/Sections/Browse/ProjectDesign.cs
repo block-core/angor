@@ -8,7 +8,7 @@ public class ProjectDesign : IProject
     public string Id { get; set; } = "angor1qmd8kazm8uzk7s0gddf4amjx4mzj3n5wzgn3mde";
     public string Name { get; set; } = "Test Project";
     public Uri Picture { get; set; } = new Uri("https://images.pexels.com/photos/998641/pexels-photo-998641.jpeg?auto=compress&cs=tinysrgb&w=600");
-    public Uri Icon { get; set; } = new Uri("https://images.pexels.com/photos/998641/pexels-photo-998641.jpeg?auto=compress&cs=tinysrgb&w=600");
+    public Uri Banner { get; set; } = new Uri("https://images.pexels.com/photos/998641/pexels-photo-998641.jpeg?auto=compress&cs=tinysrgb&w=600");
     public string ShortDescription { get; set; } = "Short description of the project";
     public string BitcoinAddress { get; } = "some address";
     public decimal TargetAmount { get; } = 50m;
