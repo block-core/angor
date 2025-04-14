@@ -24,7 +24,7 @@
             <div class="modal-content modern-modal animate-fade-in">
                 <div class="modal-header border-0 pb-0">
                     <div class="d-flex align-items-center">
-                        <Icon IconName="message" Height="32" Width="32" class="me-2" />
+                        <Icon IconName="chat" Height="32" Width="32" class="me-2" />
                         <h5 class="modal-title">Chat with @ChatTitle</h5>
                     </div>
                     <button class="btn-close-custom" @onclick="CloseModal">
@@ -34,32 +34,52 @@
 
                 <div class="modal-body py-4">
                     <div class="d-flex flex-column">
-                        <div class="info-card p-3 mb-3 animate-fade-in">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="info-label mb-2">Contact NPUB:</div>
-                                <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(ContactNpub)">
-                                    <Icon IconName="copy" Width="16" Height="16" />
-                                </button>
-                            </div>
-                            <div class="info-value text-break word-wrap">
-                                @ContactNpub
-                            </div>
-                        </div>
-                        
-                        <div class="info-card p-3 mb-3 animate-fade-in">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="info-label mb-2">Your NPUB:</div>
-                                <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(CurrentUserNpub)">
-                                    <Icon IconName="copy" Width="16" Height="16" />
-                                </button>
-                            </div>
-                            <div class="info-value text-break word-wrap">
-                                @CurrentUserNpub
-                            </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <button class="btn btn-sm btn-border d-flex align-items-center" @onclick="() => showContactNpub = !showContactNpub">
+                                <Icon IconName="user" Width="16" Height="16" class="me-1" />
+                                <span>Contact NPUB</span>
+                                <Icon IconName="@(showContactNpub ? "chevron-up" : "chevron-down")" Width="16" Height="16" class="ms-1" />
+                            </button>
+                            
+                            <button class="btn btn-sm btn-border d-flex align-items-center" @onclick="() => showUserNpub = !showUserNpub">
+                                <Icon IconName="user" Width="16" Height="16" class="me-1" />
+                                <span>Your NPUB</span>
+                                <Icon IconName="@(showUserNpub ? "chevron-up" : "chevron-down")" Width="16" Height="16" class="ms-1" />
+                            </button>
                         </div>
 
+                        @if (showContactNpub)
+                        {
+                            <div class="info-card p-2 mb-3 animate-fade-in">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="info-label small mb-1">Contact NPUB:</div>
+                                    <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(nsecValue)">
+                                        <Icon IconName="copy" Width="16" Height="16" />
+                                    </button>
+                                </div>
+                                <div class="text-break word-wrap small font-weight-normal text-monospace">
+                                    @ContactNpub
+                                </div>
+                            </div>
+                        }
+
+                        @if (showUserNpub)
+                        {
+                            <div class="info-card p-2 mb-3 animate-fade-in">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="info-label small mb-1">Your NPUB:</div>
+                                    <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(nsecValue)">
+                                        <Icon IconName="copy" Width="16" Height="16" />
+                                    </button>
+                                </div>
+                                <div class="text-break word-wrap small font-weight-normal text-monospace">
+                                    @CurrentUserNpub
+                                </div>
+                            </div>
+                        }
+
                         <!-- Chat Messages Section -->
-                        <div class="card card-body chat-container mt-3 mb-3">
+                        <div class="info-card chat-container-modal mt-3 mb-3">
                             <div class="chat-messages" @ref="messagesContainerRef" style="height: 300px; overflow-y: auto;">
                                 @if (isLoadingMessages)
                                 {
@@ -75,7 +95,7 @@
                                 else if (!chatMessages.Any())
                                 {
                                     <div class="empty-messages d-flex flex-column justify-content-center align-items-center h-100">
-                                        <Icon IconName="message" Width="32" Height="32" />
+                                        <Icon IconName="chat" Width="32" Height="32" />
                                         <p class="mt-2">No messages yet. Start a conversation!</p>
                                     </div>
                                 }
@@ -101,7 +121,7 @@
                                     <textarea class="form-control"
                                             placeholder="Type a message..."
                                             @bind="newMessage"
-                                            @onkeydown="@(async e => { if((e.Key is "Enter" or "NumpadEnter") && !e.ShiftKey) { await SendMessageAsync(); } })"
+                                              @onkeypress="@(async e => { if(e.Key is "Enter" or "NumpadEnter") await SendMessageAsync(); })"
                                             disabled="@isSendingMessage" />
                                     <button class="btn btn-border-success"
                                             @onclick="SendMessageAsync"
@@ -122,13 +142,13 @@
                         <div class="d-flex justify-content-between">
                             @if (!string.IsNullOrEmpty(ChatAppUrl))
                             {
-                                <button type="button" class="btn btn-border-success" @onclick="OpenChatApp">
-                                    <Icon IconName="message" Width="20" Height="20" class="me-2" />
+                                <button type="button" class="btn btn-sm btn-border-success" @onclick="OpenChatApp">
+                                    <Icon IconName="chat" Width="20" Height="20" class="me-2" />
                                     <span>Open in Full Chat App</span>
                                 </button>
                             }
                             
-                            <button type="button" class="btn btn-border-warning" @onclick="ShowNsecAsync">
+                            <button type="button" class="btn btn-sm btn-border-warning" @onclick="ShowNsecAsync">
                                 <Icon IconName="key" Width="20" Height="20" class="me-2" />
                                 <span>@(showNsec ? "Hide" : "Show") NSEC</span>
                             </button>
@@ -136,14 +156,14 @@
                         
                         @if (showNsec)
                         {
-                            <div class="info-card p-3 mt-3 animate-fade-in border border-danger">
+                            <div class="info-card p-3 mt-3 animate-fade-in">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="info-label mb-2">NSEC (Private Key):</div>
                                     <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(nsecValue)">
                                         <Icon IconName="copy" Width="16" Height="16" />
                                     </button>
                                 </div>
-                                <div class="info-value text-break word-wrap">
+                                <div class="text-break word-wrap">
                                     @nsecValue
                                 </div>
                                 <div class="mt-2 alert alert-warning">
@@ -177,6 +197,8 @@
     private bool showNsec = false;
     private string nsecValue = "";
     private IDisposable messageSubscription;
+    private bool showContactNpub = false;
+    private bool showUserNpub = false;
 
     public class ChatMessage
     {
@@ -454,14 +476,52 @@
         
         if (showNsec && string.IsNullOrEmpty(nsecValue))
         {
-            await OnNsecRequest.InvokeAsync(true);
+            try {
+                // Convert the private key hex to NSEC format directly if available
+                if (!string.IsNullOrEmpty(CurrentUserPrivateKeyHex)) 
+                {
+                    nsecValue = NostrHelper.ConvertHexToNsec(CurrentUserPrivateKeyHex);
+                    StateHasChanged();
+                }
+                else 
+                {
+                    // If not available directly, request it
+                    await OnNsecRequest.InvokeAsync(true);
+                }
+            }
+            catch (Exception ex) 
+            {
+                Logger.LogError($"Error converting private key: {ex.Message}");
+                // Request from parent as fallback
+                await OnNsecRequest.InvokeAsync(true);
+            }
         }
     }
     
     public void SetNsec(string nsec)
     {
-        nsecValue = nsec;
-        StateHasChanged();
+        if (!string.IsNullOrEmpty(nsec)) 
+        {
+            // If we received a hex format, convert it to NSEC
+            if (System.Text.RegularExpressions.Regex.IsMatch(nsec, "^[0-9a-fA-F]{64}$"))
+            {
+                try {
+                    nsecValue = NostrHelper.ConvertHexToNsec(nsec);
+                }
+                catch (Exception ex) 
+                {
+                    Logger.LogError($"Error converting hex to nsec: {ex.Message}");
+                    nsecValue = nsec; // Fallback to original value
+                }
+            }
+            else 
+            {
+                // Already in NSEC format or another format
+                nsecValue = nsec;
+            }
+            
+            StateHasChanged();
+        }
     }
     
     private async Task CopyToClipboard(string text)

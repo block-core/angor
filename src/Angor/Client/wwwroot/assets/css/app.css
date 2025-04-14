@@ -4376,6 +4376,13 @@ select.form-control {
     overflow: hidden;
 }
 
+.chat-container-modal {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-height: 300px;
+}
+
 .chat-header {
     display: flex;
     align-items: center;
