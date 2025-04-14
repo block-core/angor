@@ -215,7 +215,7 @@
         
         if (string.IsNullOrEmpty(ContactHexPub) && !string.IsNullOrEmpty(ContactNpub))
         {
-            ContactHexPub = SafeConvertBech32ToHex(ContactNpub);
+            ContactHexPub = NostrHelper.ConvertBech32ToHex(ContactNpub);
         }
         else if (string.IsNullOrEmpty(ContactNpub) && !string.IsNullOrEmpty(ContactHexPub))
         {
@@ -250,7 +250,7 @@
             // Ensure we have both hex and npub formats
             if (string.IsNullOrEmpty(ContactHexPub))
             {
-                ContactHexPub = SafeConvertBech32ToHex(ContactNpub);
+                ContactHexPub = NostrHelper.ConvertBech32ToHex(ContactNpub);
             }
             
             // Load messages
@@ -285,7 +285,7 @@
                 DateTime.UtcNow.AddDays(-7), // Get last 7 days of messages
                 100, // Limit to 100 messages
                 async eventMessage => await ProcessChatMessage(eventMessage),
-                SafeConvertBech32ToHex(CurrentUserNpub) // Messages from current user to contact
+                NostrHelper.ConvertBech32ToHex(CurrentUserNpub) // Messages from current user to contact
             );
             
             await _RelayService.LookupDirectMessagesForPubKeyAsync(
@@ -293,7 +293,7 @@
                 DateTime.UtcNow.AddDays(-7),
                 100,
                 async eventMessage => await ProcessChatMessage(eventMessage),
-                SafeConvertBech32ToHex(ContactNpub) // Messages from contact to current user
+                NostrHelper.ConvertBech32ToHex(ContactNpub) // Messages from contact to current user
             );
             
             // Sort messages by timestamp
@@ -317,8 +317,8 @@
         var nostrClient = _nostrCommunicationFactory.GetOrCreateClient(_networkService);
         
         // Format the pubkeys for proper comparison
-        string formattedCurrentUserPubKey = SafeConvertBech32ToHex(CurrentUserNpub);
-        string formattedContactPubKey = SafeConvertBech32ToHex(ContactNpub);
+        string formattedCurrentUserPubKey = NostrHelper.ConvertBech32ToHex(CurrentUserNpub);
+        string formattedContactPubKey = NostrHelper.ConvertBech32ToHex(ContactNpub);
         
         // Subscribe to incoming messages
         messageSubscription = nostrClient.Streams.EventStream
@@ -344,7 +344,7 @@
             if (chatMessages.Any(m => m.Id == eventMessage.Id)) return;
             
             // Format the pubkeys for proper comparison
-            string formattedCurrentUserPubKey = SafeConvertBech32ToHex(CurrentUserNpub);
+            string formattedCurrentUserPubKey = NostrHelper.ConvertBech32ToHex(CurrentUserNpub);
             
             // Determine if this message is from the current user
             bool isFromCurrentUser = eventMessage.Pubkey == formattedCurrentUserPubKey;
@@ -358,12 +358,9 @@
                     ? eventMessage.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier)
                     : eventMessage.Pubkey;
                 
-                // Format for encryption
-                string formattedPartnerKey = FormatNostrPubkeyForEncryption(partnerPubKeyHex);
-                
                 decryptedContent = await _encryptionService.DecryptNostrContentAsync(
                     CurrentUserPrivateKeyHex,
-                    formattedPartnerKey,
+                    partnerPubKeyHex,
                     eventMessage.Content
                 );
             }
@@ -373,10 +370,10 @@
                 
                 try
                 {
-                    // Try alternative formatting
+                    // Try alternative format
                     string alternativeKey = isFromCurrentUser
-                        ? FormatNostrPubkeyForEncryption(SafeConvertBech32ToHex(ContactNpub))
-                        : FormatNostrPubkeyForEncryption(SafeConvertBech32ToHex(CurrentUserNpub));
+                        ? NostrHelper.ConvertBech32ToHex(ContactNpub)
+                        : NostrHelper.ConvertBech32ToHex(CurrentUserNpub);
                     
                     decryptedContent = await _encryptionService.DecryptNostrContentAsync(
                         CurrentUserPrivateKeyHex,
@@ -424,7 +421,7 @@
         try
         {
             // Format the contact's pubkey for encryption
-            string partnerPubKey = FormatNostrPubkeyForEncryption(ContactHexPub);
+            string partnerPubKey = ContactHexPub;
             
             // Encrypt the message
             string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
@@ -446,7 +443,7 @@
                 {
                     Id = sentMessageId,
                     Content = newMessage,
-                    SenderPubkey = SafeConvertBech32ToHex(CurrentUserNpub),
+                    SenderPubkey = NostrHelper.ConvertBech32ToHex(CurrentUserNpub),
                     Timestamp = DateTime.UtcNow,
                     IsFromCurrentUser = true
                 };
@@ -541,137 +538,6 @@
     private void CloseModal()
     {
         OnClose.InvokeAsync();
-    }
-
-    // Helper method for proper key formatting
-    private string FormatNostrPubkeyForEncryption(string pubkeyInput)
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(pubkeyInput))
-                return null;
-
-            string pubkeyHex = pubkeyInput;
-
-            // Convert from npub to hex if necessary
-            if (pubkeyInput.StartsWith("npub"))
-            {
-                pubkeyHex = SafeConvertBech32ToHex(pubkeyInput);
-
-                if (string.IsNullOrEmpty(pubkeyHex) || pubkeyHex.StartsWith("npub"))
-                {
-                    Logger.LogWarning("Failed to convert npub to hex, using original value");
-                    pubkeyHex = pubkeyInput;
-                }
-            }
-
-            // Strip any prefix
-            if (pubkeyHex.StartsWith("0x"))
-                pubkeyHex = pubkeyHex.Substring(2);
-
-            // Clean up hex characters
-            pubkeyHex = new string(pubkeyHex.Where(c =>
-                (c >= '0' && c <= '9') ||
-                (c >= 'a' && c <= 'f') ||
-                (c >= 'A' && c <= 'F')).ToArray());
-
-            // Ensure correct length
-            if (pubkeyHex.Length > 64)
-                pubkeyHex = pubkeyHex.Substring(pubkeyHex.Length - 64);
-            else if (pubkeyHex.Length < 64)
-                pubkeyHex = pubkeyHex.PadLeft(64, '0');
-
-            return pubkeyHex;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError($"Error formatting public key: {ex.Message}");
-            
-            // Return fallback clean key
-            try
-            {
-                var cleanedKey = new string((pubkeyInput ?? "").Where(c =>
-                    (c >= '0' && c <= '9') ||
-                    (c >= 'a' && c <= 'f') ||
-                    (c >= 'A' && c <= 'F')).ToArray());
-
-                if (cleanedKey.Length > 64)
-                    cleanedKey = cleanedKey.Substring(cleanedKey.Length - 64);
-                else if (cleanedKey.Length < 64)
-                    cleanedKey = cleanedKey.PadLeft(64, '0');
-
-                return cleanedKey;
-            }
-            catch
-            {
-                // Last resort
-                return "0000000000000000000000000000000000000000000000000000000000000000";
-            }
-        }
-    }
-    
-    private string SafeConvertBech32ToHex(string input)
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(input))
-                return null;
-
-            // Check if already in hex format
-            if (System.Text.RegularExpressions.Regex.IsMatch(input, "^[0-9a-fA-F]{64}$"))
-                return input;
-
-            // Convert npub to hex
-            if (input.StartsWith("npub"))
-            {
-                try
-                {
-                    var hex = NostrHelper.ConvertBech32ToHex(input);
-
-                    if (!string.IsNullOrEmpty(hex) &&
-                        !hex.StartsWith("npub") &&
-                        System.Text.RegularExpressions.Regex.IsMatch(hex, "^[0-9a-fA-F]+$"))
-                    {
-                        // Ensure correct length
-                        if (hex.Length > 64)
-                            hex = hex.Substring(hex.Length - 64);
-                        else if (hex.Length < 64)
-                            hex = hex.PadLeft(64, '0');
-
-                        return hex;
-                    }
-                }
-                catch (Exception convEx)
-                {
-                    Logger.LogError($"Error in npub to hex conversion: {convEx.Message}");
-                }
-            }
-
-            // Fallback: clean and normalize
-            var hexChars = new string(input.Where(c =>
-                ((c >= '0' && c <= '9') ||
-                 (c >= 'a' && c <= 'f') ||
-                 (c >= 'A' && c <= 'F'))).ToArray());
-
-            // Ensure even length
-            if (hexChars.Length % 2 != 0)
-            {
-                hexChars = "0" + hexChars;
-            }
-
-            // Normalize length
-            if (hexChars.Length > 64)
-                hexChars = hexChars.Substring(hexChars.Length - 64);
-            else if (hexChars.Length < 64)
-                hexChars = hexChars.PadLeft(64, '0');
-
-            return hexChars;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError($"Error converting to hex: {ex.Message}");
-            return "0000000000000000000000000000000000000000000000000000000000000000";
-        }
     }
 
     public void Dispose()
