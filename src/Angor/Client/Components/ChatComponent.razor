@@ -164,7 +164,7 @@
                                     </button>
                                 </div>
                                 <div class="text-break word-wrap">
-                                    @nsecValue
+                                    @GetMaskedNsec(nsecValue)
                                 </div>
                                 <div class="mt-2 alert alert-warning">
                                     <strong>Warning:</strong> Never share your private key with anyone.
@@ -538,6 +538,18 @@
     private void CloseModal()
     {
         OnClose.InvokeAsync();
+    }
+
+    private string GetMaskedNsec(string nsec)
+    {
+        if (string.IsNullOrEmpty(nsec) || nsec.Length <= 20)
+        {
+            return nsec;
+        }
+        
+        string first10 = nsec.Substring(0, 10);
+        string last10 = nsec.Substring(nsec.Length - 10);
+        return $"{first10}...{last10}";
     }
 
     public void Dispose()

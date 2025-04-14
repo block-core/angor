@@ -799,6 +799,10 @@ tr[style*="cursor: pointer;"]:hover {
     overflow: hidden; 
 }
 
+.modal-wrapper-top {
+    z-index: 1000001;
+}
+
  body.modal-open {
     overflow: hidden;  
     padding-right: var(--scrollbar-width, 0px); 
