@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Domain;
 
 namespace AngorApp.Sections.Wallet.Operate;
 

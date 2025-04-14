@@ -1,4 +1,4 @@
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Domain;
 using AngorApp.Sections.Wallet.Operate;
 
 namespace AngorApp.UI.Controls.Common.TransactionDraft;

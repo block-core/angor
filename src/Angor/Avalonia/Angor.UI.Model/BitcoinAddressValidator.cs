@@ -1,6 +1,6 @@
 using System.Numerics;
 using System.Security.Cryptography;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Domain;
 
 namespace Angor.UI.Model;
 

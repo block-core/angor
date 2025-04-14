@@ -11,12 +11,16 @@ public class UIServices
     public INotificationService NotificationService { get; }
     public IActiveWallet ActiveWallet { get; }
 
+    public IWalletRoot WalletRoot { get; }
+
     public UIServices(ILauncherService launcherService, IDialog dialog, INotificationService notificationService,
-        IActiveWallet activeWallet)
+        IActiveWallet activeWallet,
+        IWalletRoot walletRoot)
     {
         LauncherService = launcherService;
         Dialog = dialog;
         NotificationService = notificationService;
         ActiveWallet = activeWallet;
+        WalletRoot = walletRoot;
     }
 }

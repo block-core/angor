@@ -28,17 +28,6 @@
                         </Border.Styles>
                         <DataValidationErrors>
                             <StackPanel>
-                                <UniformGrid Rows="1" HorizontalAlignment="Center">
-                                    <UniformGrid.Styles>
-                                        <Style Selector="TextBlock.Active">
-                                            <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}" />
-                                            <Setter Property="FontWeight" Value="Bold" />
-                                        </Style>
-                                    </UniformGrid.Styles>
-                                    <TextBlock Classes.Active="{Binding Path=!$parent[controls:AmountControl].IsBitcoin}" Text="Sats" VerticalAlignment="Center" />
-                                    <ToggleSwitch x:Name="ToggleSwitch" VerticalAlignment="Center" HorizontalAlignment="Right" OnContent="" OffContent="" IsChecked="{Binding $parent[controls:AmountControl].IsBitcoin}" />
-                                    <TextBlock Classes.Active="{Binding Path=$parent[controls:AmountControl].IsBitcoin}" Text="Bitcoin" VerticalAlignment="Center" />
-                                </UniformGrid>
                                 <NumericUpDown ClipValueToMinMax="True" x:Name="PART_NumericUpDown"
                                                Classes.Bitcoin="{Binding $parent[controls:AmountControl].IsBitcoin}" Watermark="{Binding $parent[controls:AmountControl].Unit, StringFormat='Amount in {0}'}"
                                                ShowButtonSpinner="False"
@@ -59,6 +48,17 @@
                                     <TextBlock Classes="Dimmed SizeSmall" IsVisible="{Binding !$parent[controls:AmountControl].IsBitcoin}" Text="{Binding $parent[controls:AmountControl].Bitcoin, StringFormat='{}&#61; {0} BTC'}" />
                                     <TextBlock Classes="Dimmed SizeSmall" IsVisible="{Binding $parent[controls:AmountControl].IsBitcoin}" Text="{Binding $parent[controls:AmountControl].Satoshis, StringFormat='{}&#61; {0} sats'}" />
                                 </Panel>
+                                <UniformGrid Rows="1" HorizontalAlignment="Center">
+                                    <UniformGrid.Styles>
+                                        <Style Selector="TextBlock.Active">
+                                            <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}" />
+                                            <Setter Property="FontWeight" Value="Bold" />
+                                        </Style>
+                                    </UniformGrid.Styles>
+                                    <TextBlock Classes.Active="{Binding Path=!$parent[controls:AmountControl].IsBitcoin}" Text="Sats" VerticalAlignment="Center" />
+                                    <ToggleSwitch x:Name="ToggleSwitch" VerticalAlignment="Center" HorizontalAlignment="Right" OnContent="" OffContent="" IsChecked="{Binding $parent[controls:AmountControl].IsBitcoin}" />
+                                    <TextBlock Classes.Active="{Binding Path=$parent[controls:AmountControl].IsBitcoin}" Text="Bitcoin" VerticalAlignment="Center" />
+                                </UniformGrid>
                             </StackPanel>
                         </DataValidationErrors>
                     </Border>

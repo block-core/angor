@@ -7,6 +7,7 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:c="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Browse.Details.ProjectSummary" x:DataType="dt:IProjectDetailsViewModel">
 

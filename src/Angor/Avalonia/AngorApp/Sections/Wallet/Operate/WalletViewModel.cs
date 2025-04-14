@@ -1,6 +1,7 @@
+using System.Linq;
 using System.Windows.Input;
-using Angor.Wallet.Application;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Application;
+using Angor.Contexts.Wallet.Domain;
 using AngorApp.Sections.Wallet.Operate.Send;
 using AngorApp.UI.Controls.Common.Success;
 using AngorApp.UI.Controls.Common.TransactionDraft;
@@ -8,9 +9,9 @@ using AngorApp.UI.Services;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI.SourceGenerators;
-using SuppaWallet.Gui.Wallet.Main;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
+using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
 
 namespace AngorApp.Sections.Wallet.Operate;
@@ -28,13 +29,7 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
 
         GetReceiveAddress = ReactiveCommand.CreateFromTask(async () => new ResultViewModel<string>(await Wallet.GenerateReceiveAddress()));
         receiveAddressResultHelper = GetReceiveAddress.ToProperty(this, x => x.ReceiveAddressResult);
-        SyncCommand = wallet.SyncCommand;
-
-        var isInitialized = wallet.SyncCommand.StartReactive.Any().StartWith(false);
-        var isSyncing = wallet.SyncCommand.IsExecuting;
-
-        walletDisplayStatusHelper = isInitialized.CombineLatest(isSyncing, (initialized, syncing) => GetStatus(syncing, initialized)).ToProperty(this, x => x.WalletDisplayStatus);
-
+        
         wallet.History.ToObservableChangeSet(x => x.Id)
             .Transform(transaction => new TransactionViewModel(transaction, uiServices))
             .TransformWithInlineUpdate<IdentityContainer<TransactionViewModel>, TransactionViewModel, string>(x => new IdentityContainer<TransactionViewModel>() { Content = x }, (x, e) => x.Content = e)
@@ -44,24 +39,8 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
         History = holders;
     }
 
-    private static WalletDisplayStatus GetStatus(bool syncing, bool initialized)
-    {
-        if (!syncing)
-        {
-            return WalletDisplayStatus.Locked;
-        }
-
-        if (initialized)
-        {
-            return WalletDisplayStatus.Ready;
-        }
-
-        return WalletDisplayStatus.Loading;
-    }
-
-    public StoppableCommand<Unit, Result<BroadcastedTransaction>> SyncCommand { get; set; }
+    public StoppableCommand<Unit, Result<BroadcastedTransaction>> Sync { get; set; }
     public IEnumerable<IdentityContainer<TransactionViewModel>> History { get; }
-    [ObservableAsProperty] private WalletDisplayStatus walletDisplayStatus;
 
     public IWallet Wallet { get; }
 

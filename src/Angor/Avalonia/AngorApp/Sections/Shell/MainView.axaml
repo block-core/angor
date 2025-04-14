@@ -9,17 +9,12 @@
              x:DataType="shell:MainViewModel">
 
     <Design.DataContext>
-        <shell:MainViewModelDesign  />
+        <shell:MainViewModelDesign />
     </Design.DataContext>
 
     <DockPanel Margin="10">
         <shell:Sidebar Margin="10 20 10 20" />
         <shell:Network DockPanel.Dock="Top" Margin="10 20 10 10" />
-        <ScrollViewer Margin="0 0 0 10">
-            <Interaction.Behaviors>
-                <behaviors:NestedScrollViewerBehavior />
-            </Interaction.Behaviors>
-            <ContentControl MinWidth="300" MinHeight="300" Margin="10 10 10 10" Content="{Binding CurrentContent^}" ClipToBounds="False" />
-        </ScrollViewer>
+        <ContentControl MinWidth="300" MinHeight="300" Margin="10 10 10 10" Content="{Binding Shell.SelectedSection.Content}" ClipToBounds="False" />
     </DockPanel>
 </UserControl>
