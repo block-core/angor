@@ -605,10 +605,10 @@
                                 Edit project profile
                             </button>
 
-                            <button @onclick="OpenInvestorMessages" class="btn btn-border-success m-2">
+                            <a href=@($"/messages/{project.ProjectInfo.ProjectIdentifier}/founder") class="btn btn-border-success m-2">
                                 <Icon IconName="chat" Class="me-2" />
                                 Investor Messages
-                            </button>
+                            </a>
                         }
 
                         @if (invested || founder)
@@ -691,6 +691,20 @@
     }
 </div>
 
+@if (showChatModal && invested)
+{
+    <ChatComponent 
+        ContactNpub="@founderNpub"
+        ContactHexPub="@project.ProjectInfo.NostrPubKey"
+        CurrentUserNpub="@npubValue"
+        CurrentUserPrivateKeyHex="@NostrHexSecKey"
+        ChatTitle="Founder"
+        ChatAppUrl="@($"/messages/{project.ProjectInfo.ProjectIdentifier}/investor")"
+        OnClose="@(() => showChatModal = false)"
+        OnNsecRequest="@ShowNsecAsync"
+        OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
+}
+
 @code {
     [Parameter] public string ProjectId { get; set; }
 
@@ -746,6 +760,11 @@
     private List<string> NostrClients = new();
 
     private bool showPrivateKeys = false;
+    private bool showChatModal = false;
+    private string currentInvestorHexPub = "";
+    private string currentInvestorNpub = "";
+    private string founderNpub = ""; // Add this variable
+    private string npubValue = ""; // Add this variable
 
     protected override async Task OnInitializedAsync()
     {
@@ -1039,17 +1058,14 @@
     {
         if (project?.ProjectInfo != null && project is InvestorProject invProject)
         {
-            // Navigate to messages with the project ID and proper mode
-            NavigationManager.NavigateTo($"/messages/{project.ProjectInfo.ProjectIdentifier}/investor", true);
-        }
-    }
-
-    private void OpenInvestorMessages()
-    {
-        if (project?.ProjectInfo != null)
-        {
-            // Navigate to messages page with founder mode
-            NavigationManager.NavigateTo($"/messages/{project.ProjectInfo.ProjectIdentifier}/founder", true);
+            // Set chat parameters
+            founderNpub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey) ?? 
+                          project.ProjectInfo.NostrPubKey;
+            npubValue = NostrHelper.ConvertHexToNpub(invProject.InvestorNPub) ?? invProject.InvestorNPub;
+            
+            // Show chat component
+            showChatModal = true;
+            StateHasChanged();
         }
     }
 
