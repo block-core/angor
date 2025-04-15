@@ -4300,7 +4300,7 @@ fieldset:disabled .btn {
     padding: var(--angor-dropdown-item-padding-y) var(--angor-dropdown-item-padding-x);
     clear: both;
     font-weight: 400;
-    color: var(--angor-secondary);
+    color: var(--angor-primary);
     text-align: inherit;
     white-space: nowrap;
     background-color: transparent;
@@ -10587,7 +10587,7 @@ fieldset:disabled .btn {
 }
 
 .bg-dark {
-    background-color: #344767 !important;
+    background-color: #15454f !important;
 }
 
 .bg-white {

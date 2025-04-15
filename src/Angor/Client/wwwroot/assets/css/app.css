@@ -2009,29 +2009,58 @@ button:hover:not(:disabled) {
     position: relative;
 }
 
-.btn-close-custom {
+.btn-close-custom,
+.btn-menu-custom {
+    --btn-hover-bg-light: rgba(0, 0, 0, 0.1);
+    --btn-hover-bg-dark: rgba(255, 255, 255, 0.1);
+    
     background: transparent;
     border: none;
     color: var(--angor-primary);
     padding: 8px;
     border-radius: 50%;
-    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    overflow: hidden;
 }
 
-.dark .btn-close-custom {
+.dark .btn-close-custom,
+.dark .btn-menu-custom {
     color: var(--angor-light);
 }
 
-.btn-close-custom:hover {
-    background: rgba(0, 0, 0, 0.1);
+.btn-close-custom:hover,
+.btn-menu-custom:hover {
+    background: var(--btn-hover-bg-light);
     transform: rotate(90deg);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.dark .btn-close-custom:hover {
-    background: rgba(255, 255, 255, 0.1);
+.dark .btn-close-custom:hover,
+.dark .btn-menu-custom:hover {
+    background: var(--btn-hover-bg-dark);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.btn-close-custom:focus,
+.btn-menu-custom:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--angor-primary-rgb), 0.25);
+}
+
+.dark .btn-close-custom:focus,
+.dark .btn-menu-custom:focus {
+    box-shadow: 0 0 0 2px rgba(var(--angor-light-rgb), 0.25);
+}
+
+.btn-close-custom:active,
+.btn-menu-custom:active {
+    transform: rotate(90deg) scale(0.95);
 }
 
 .transaction-info-section {
