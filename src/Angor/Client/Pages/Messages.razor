@@ -579,7 +579,7 @@
         public string UserNpub { get; set; }
         public string PartnerNpub { get; set; }
         public string UserPrivateKeyHex { get; set; }
-        public string PartnerPubKeyHex { get; set; } // Added to store the raw hex format
+        public string PartnerPubKeyHex { get; set; } 
     }
 
     public class ChatMessage
@@ -772,7 +772,7 @@
             string partnerPubKeyHex = project.ProjectInfo.NostrPubKey;
             if (partnerPubKeyHex.StartsWith("npub"))
             {
-                partnerPubKeyHex = SafeConvertBech32ToHex(partnerPubKeyHex);
+                partnerPubKeyHex = NostrHelper.ConvertBech32ToHex(partnerPubKeyHex);
                 Console.WriteLine($"Founder pubkey (converted): {partnerPubKeyHex}");
             }
             else
@@ -950,7 +950,7 @@
             string partnerPubKeyHex = investor.InvestorPublicKey;
             if (investorNpub.StartsWith("npub") && partnerPubKeyHex.StartsWith("npub"))
             {
-                partnerPubKeyHex = SafeConvertBech32ToHex(investorNpub);
+                partnerPubKeyHex = NostrHelper.ConvertBech32ToHex(investorNpub);
             }
 
             currentUserNpub = founderNpub;
@@ -1015,7 +1015,7 @@
                 DateTime.UtcNow.AddDays(-7), // Get last 7 days of messages
                 100, // Limit to 100 messages
                 async eventMessage => await ProcessChatMessage(eventMessage),
-                SafeConvertBech32ToHex(currentChat.UserNpub) // Messages from current user to partner
+                NostrHelper.ConvertBech32ToHex(currentChat.UserNpub) // Messages from current user to partner
             );
 
             await _RelayService.LookupDirectMessagesForPubKeyAsync(
@@ -1023,7 +1023,7 @@
                 DateTime.UtcNow.AddDays(-7),
                 100,
                 async eventMessage => await ProcessChatMessage(eventMessage),
-                SafeConvertBech32ToHex(currentChat.PartnerNpub) // Messages from partner to current user
+                NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub) // Messages from partner to current user
             );
         }
         catch (Exception ex)
@@ -1040,13 +1040,17 @@
         // Get the client
         var nostrClient = _nostrCommunicationFactory.GetOrCreateClient(_NetworkService);
 
-        // Subscribe to incoming messages with safer hex conversion
+        // Format keys for proper comparison
+        string formattedCurrentUserPubKey = NostrHelper.ConvertBech32ToHex(currentChat.UserNpub);
+        string formattedPartnerPubKey = NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub);
+
+        // Subscribe to incoming messages with proper key filtering
         messageSubscription = nostrClient.Streams.EventStream
             .Where(_ => _.Event?.Kind == NostrKind.EncryptedDm)
-            .Where(_ => (_.Event?.Pubkey == SafeConvertBech32ToHex(currentChat.PartnerNpub) &&
-                          _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == SafeConvertBech32ToHex(currentChat.UserNpub)) ||
-                        (_.Event?.Pubkey == SafeConvertBech32ToHex(currentChat.UserNpub) &&
-                          _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == SafeConvertBech32ToHex(currentChat.PartnerNpub)))
+            .Where(_ => (_.Event?.Pubkey == formattedPartnerPubKey &&
+                        _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == formattedCurrentUserPubKey) ||
+                       (_.Event?.Pubkey == formattedCurrentUserPubKey &&
+                        _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == formattedPartnerPubKey))
             .Subscribe(async messageEvent =>
             {
                 await ProcessChatMessage(messageEvent.Event);
@@ -1060,37 +1064,34 @@
         {
             if (eventMessage == null || string.IsNullOrEmpty(eventMessage.Content)) return;
 
-            // Check if we already have this message
+            // Skip already processed messages
             if (chatMessages.Any(m => m.Id == eventMessage.Id)) return;
 
-            // Determine if this message is from the current user using safer conversion
-            bool isFromCurrentUser = eventMessage.Pubkey == SafeConvertBech32ToHex(currentChat.UserNpub);
+            // Format the pubkeys for proper comparison
+            string formattedCurrentUserPubKey = NostrHelper.ConvertBech32ToHex(currentChat.UserNpub);
 
-            // Try to decrypt the message
+            // Determine if this message is from the current user
+            bool isFromCurrentUser = eventMessage.Pubkey == formattedCurrentUserPubKey;
+
+            // Decrypt the message
             string decryptedContent;
             try
             {
-                // For decryption, use the direct pubkey from the event
+                // Get the partner's pubkey
                 string partnerPubKeyHex = isFromCurrentUser
                     ? eventMessage.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier)
                     : eventMessage.Pubkey;
 
-                // Make sure partner key is properly formatted for decryption
-                string formattedPartnerKey = FormatNostrPubkeyForEncryption(partnerPubKeyHex);
-
-                // Debug info
-                Console.WriteLine($"Decrypting message - Using formatted key: {formattedPartnerKey?.Substring(0, 10)}...");
-
                 decryptedContent = await _encryptionService.DecryptNostrContentAsync(
                     currentChat.UserPrivateKeyHex,
-                    formattedPartnerKey,
+                    partnerPubKeyHex,
                     eventMessage.Content
                 );
 
-                // If decryption was successful, update the partner's pubkey in the chat session
-                if (!isFromCurrentUser && !string.IsNullOrEmpty(formattedPartnerKey))
+                // If decryption was successful and not from current user, update partner's pubkey
+                if (!isFromCurrentUser && !string.IsNullOrEmpty(partnerPubKeyHex))
                 {
-                    currentChat.PartnerPubKeyHex = formattedPartnerKey;
+                    currentChat.PartnerPubKeyHex = partnerPubKeyHex;
                 }
             }
             catch (Exception ex)
@@ -1099,12 +1100,10 @@
 
                 try
                 {
-                    // Try alternative formatting if initial decryption fails
+                    // Try alternative format
                     string alternativeKey = isFromCurrentUser
-                        ? FormatNostrPubkeyForEncryption(SafeConvertBech32ToHex(currentChat.PartnerNpub))
-                        : FormatNostrPubkeyForEncryption(SafeConvertBech32ToHex(currentChat.UserNpub));
-
-                    Console.WriteLine($"Retrying with alternative key format: {alternativeKey.Substring(0, 10)}...");
+                        ? NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub)
+                        : NostrHelper.ConvertBech32ToHex(currentChat.UserNpub);
 
                     decryptedContent = await _encryptionService.DecryptNostrContentAsync(
                         currentChat.UserPrivateKeyHex,
@@ -1112,22 +1111,21 @@
                         eventMessage.Content
                     );
                 }
-                catch (Exception fallbackEx)
+                catch
                 {
-                    Console.WriteLine($"Fallback decryption also failed: {fallbackEx.Message}");
                     decryptedContent = "[Could not decrypt message]";
                 }
             }
 
             // Create the chat message
             var chatMessage = new ChatMessage
-                {
-                    Id = eventMessage.Id,
-                    Content = decryptedContent,
-                    SenderPubkey = eventMessage.Pubkey,
-                    Timestamp = eventMessage.CreatedAt.GetValueOrDefault(DateTime.UtcNow),
-                    IsFromCurrentUser = isFromCurrentUser
-                };
+            {
+                Id = eventMessage.Id,
+                Content = decryptedContent,
+                SenderPubkey = eventMessage.Pubkey,
+                Timestamp = eventMessage.CreatedAt.GetValueOrDefault(DateTime.UtcNow),
+                IsFromCurrentUser = isFromCurrentUser
+            };
 
             // Add to our list and sort by timestamp
             chatMessages.Add(chatMessage);
@@ -1194,128 +1192,76 @@
 
         try
         {
-            // Get keys for encryption
-            string userPrivKey = currentChat.UserPrivateKeyHex;
-            string partnerPubKey;
-
-            try
+            // Get partner's public key in proper format
+            string partnerPubKey = currentChat.PartnerPubKeyHex;
+            
+            // If partner key is missing or in npub format, convert it
+            if (string.IsNullOrEmpty(partnerPubKey) || partnerPubKey.StartsWith("npub"))
             {
-                // Get properly formatted partner key
-                if (string.IsNullOrEmpty(currentChat.PartnerPubKeyHex))
-                {
-                    partnerPubKey = SafeConvertBech32ToHex(currentChat.PartnerNpub);
-                    currentChat.PartnerPubKeyHex = partnerPubKey;
-                }
-                else
-                {
-                    partnerPubKey = currentChat.PartnerPubKeyHex;
-                }
-
-                // Format the key properly for encryption
-                partnerPubKey = FormatNostrPubkeyForEncryption(partnerPubKey);
-
-                Console.WriteLine($"Sending message with partner key: {partnerPubKey}");
-
-                // Encrypt the content using the service
-                string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
-                    userPrivKey,
-                    partnerPubKey,
-                    newMessage
-                );
-
-                // Send encrypted message using the existing method
-                var sentMessageId = _RelayService.SendDirectMessagesForPubKeyAsync(
-                    userPrivKey,
-                    partnerPubKey,
-                    encryptedContent,
-                    response =>
-                    {
-                        Console.WriteLine($"Message send response: {(response != null ? "Success" : "No response")}");
-                    }
-                );
-
-                Console.WriteLine($"Successfully sent message with ID: {sentMessageId}");
-
-                // Add to chat UI
-                var sentChatMessage = new ChatMessage
-                    {
-                        Id = sentMessageId,
-                        Content = newMessage,
-                        SenderPubkey = SafeConvertBech32ToHex(currentChat.UserNpub),
-                        Timestamp = DateTime.UtcNow,
-                        IsFromCurrentUser = true
-                    };
-
-                // Clear the input field
-                newMessage = "";
-
-                // Add message to UI
-                chatMessages.Add(sentChatMessage);
-                chatMessages = chatMessages
-                    .OrderBy(m => m.Timestamp)
-                    .ToList();
-
-                // Save the working partner key for future use
+                partnerPubKey = NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub);
                 currentChat.PartnerPubKeyHex = partnerPubKey;
             }
-            catch (Exception ex)
+            
+            // Validate the key is in proper hex format
+            if (!System.Text.RegularExpressions.Regex.IsMatch(partnerPubKey, "^[0-9a-fA-F]{64}$"))
             {
-                // Log the error
-                Console.WriteLine($"First encryption attempt failed: {ex.Message}");
-                Console.WriteLine("Attempting with alternative key format...");
-
-                // Try a different key format as fallback
-                try
-                {
-                    // Try alternative formatting of the key
-                    partnerPubKey = SafeConvertBech32ToHex(currentChat.PartnerNpub);
-
-                    // Ensure it's exactly 64 chars with no prefix
-                    if (partnerPubKey.StartsWith("0x")) partnerPubKey = partnerPubKey.Substring(2);
-                    partnerPubKey = partnerPubKey.PadLeft(64, '0').Substring(0, 64);
-
-                    string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
-                        userPrivKey,
-                        partnerPubKey,
-                        newMessage
-                    );
-
-                    var fallbackMessageId = _RelayService.SendDirectMessagesForPubKeyAsync(
-                        userPrivKey,
-                        partnerPubKey,
-                        encryptedContent,
-                        null // No callback
-                    );
-
-                    // Add to chat UI
-                    var fallbackChatMessage = new ChatMessage
-                        {
-                            Id = fallbackMessageId,
-                            Content = newMessage,
-                            SenderPubkey = SafeConvertBech32ToHex(currentChat.UserNpub),
-                            Timestamp = DateTime.UtcNow,
-                            IsFromCurrentUser = true
-                        };
-
-                    // Clear input field
-                    newMessage = "";
-
-                    // Add message to UI
-                    chatMessages.Add(fallbackChatMessage);
-                    chatMessages = chatMessages.OrderBy(m => m.Timestamp).ToList();
-
-                    // Save the working key format
-                    currentChat.PartnerPubKeyHex = partnerPubKey;
-                }
-                catch (Exception fallbackEx)
-                {
-                    throw new Exception($"Failed to send message: Original error: {ex.Message}, Fallback error: {fallbackEx.Message}");
-                }
+                // Clean up the key if needed
+                partnerPubKey = new string(partnerPubKey.Where(c => 
+                    (c >= '0' && c <= '9') || 
+                    (c >= 'a' && c <= 'f') || 
+                    (c >= 'A' && c <= 'F')).ToArray());
+                
+                // Ensure correct length
+                if (partnerPubKey.Length > 64)
+                    partnerPubKey = partnerPubKey.Substring(partnerPubKey.Length - 64);
+                else if (partnerPubKey.Length < 64)
+                    partnerPubKey = partnerPubKey.PadLeft(64, '0');
             }
+            
+            // Final validation check
+            if (!System.Text.RegularExpressions.Regex.IsMatch(partnerPubKey, "^[0-9a-fA-F]{64}$"))
+            {
+                throw new Exception($"Invalid partner public key format: {partnerPubKey}");
+            }
+
+            // Encrypt the message 
+            string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
+                currentChat.UserPrivateKeyHex,
+                partnerPubKey,
+                newMessage
+            );
+
+            // Send the encrypted message
+            var sentMessageId = _RelayService.SendDirectMessagesForPubKeyAsync(
+                currentChat.UserPrivateKeyHex,
+                partnerPubKey,
+                encryptedContent,
+                response => Console.WriteLine($"Message send response: {(response != null ? "Success" : "No response")}")
+            );
+
+            // Add message to UI
+            var sentChatMessage = new ChatMessage
+            {
+                Id = sentMessageId,
+                Content = newMessage,
+                SenderPubkey = NostrHelper.ConvertBech32ToHex(currentChat.UserNpub),
+                Timestamp = DateTime.UtcNow,
+                IsFromCurrentUser = true
+            };
+
+            // Clear input
+            newMessage = "";
+
+            // Add to chat messages
+            chatMessages.Add(sentChatMessage);
+            chatMessages = chatMessages.OrderBy(m => m.Timestamp).ToList();
+
+            // Save the working key for future use
+            currentChat.PartnerPubKeyHex = partnerPubKey;
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage($"Failed to send message: {ex.Message}", ex);
+            notificationComponent?.ShowErrorMessage($"Failed to send message: {ex.Message}", ex);
             Console.WriteLine($"Error details: {ex}");
         }
         finally
@@ -1411,87 +1357,6 @@
         // Dispose of subscriptions and timer
         messageSubscription?.Dispose();
         refreshTimer?.Dispose();
-    }
-
-    // Helper method to properly format public keys for Nostr encryption
-    private string FormatNostrPubkeyForEncryption(string pubkeyInput)
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(pubkeyInput))
-                return null;
-
-            string pubkeyHex = pubkeyInput;
-
-            // Convert from npub to hex if necessary
-            if (pubkeyInput.StartsWith("npub"))
-            {
-                pubkeyHex = SafeConvertBech32ToHex(pubkeyInput);
-
-                // If conversion failed, try a basic regex cleanup as fallback
-                if (string.IsNullOrEmpty(pubkeyHex) || pubkeyHex.StartsWith("npub"))
-                {
-                    // Failed to convert - log the error
-                    Console.WriteLine("Failed to convert npub to hex, using original value");
-                    pubkeyHex = pubkeyInput;
-                }
-                else
-                {
-                    Console.WriteLine($"Converted npub to hex: {pubkeyHex}");
-                }
-            }
-
-            // Strip any prefix
-            if (pubkeyHex.StartsWith("0x"))
-                pubkeyHex = pubkeyHex.Substring(2);
-
-            // Additional cleanup to ensure only valid hex characters
-            pubkeyHex = new string(pubkeyHex.Where(c =>
-                (c >= '0' && c <= '9') ||
-                (c >= 'a' && c <= 'f') ||
-                (c >= 'A' && c <= 'F')).ToArray());
-
-            // Ensure correct length (Nostr uses 32-byte keys = 64 hex chars)
-            if (pubkeyHex.Length > 64)
-                pubkeyHex = pubkeyHex.Substring(pubkeyHex.Length - 64); // Get the last 64 chars
-            else if (pubkeyHex.Length < 64)
-                pubkeyHex = pubkeyHex.PadLeft(64, '0'); // Pad with zeros if too short
-
-            // Final validation
-            if (!System.Text.RegularExpressions.Regex.IsMatch(pubkeyHex, "^[0-9a-fA-F]{64}$"))
-            {
-                Console.WriteLine($"Warning: Generated key may not be valid: {pubkeyHex}"); // Fixed missing semicolon here
-                // Instead of throwing exception, return best effort result
-            }
-
-            return pubkeyHex;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error formatting public key: {ex.Message}");
-            // Instead of throwing an exception, try to return a usable string
-
-            // Last resort cleanup - strip non-hex chars and pad/truncate
-            try
-            {
-                var cleanedKey = new string((pubkeyInput ?? "").Where(c =>
-                    (c >= '0' && c <= '9') ||
-                    (c >= 'a' && c <= 'f') ||
-                    (c >= 'A' && c <= 'F')).ToArray());
-
-                if (cleanedKey.Length > 64)
-                    cleanedKey = cleanedKey.Substring(cleanedKey.Length - 64);
-                else if (cleanedKey.Length < 64)
-                    cleanedKey = cleanedKey.PadLeft(64, '0');
-
-                return cleanedKey;
-            }
-            catch
-            {
-                // If all else fails, return a string of zeros (valid hex, but likely wrong key)
-                return "0000000000000000000000000000000000000000000000000000000000000000";
-            }
-        }
     }
 
     private void BackToProjects()
@@ -1621,94 +1486,4 @@
         // Replace current URL without adding to browser history
         NavigationManager.NavigateTo(url, false, true);
     }
-
-    // Fix for hex encoding/decoding issues with improved error handling
-    private string SafeConvertBech32ToHex(string input)
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(input))
-                return null;
-
-            // Check if already in hex format
-            if (System.Text.RegularExpressions.Regex.IsMatch(input, "^[0-9a-fA-F]{64}$"))
-                return input;
-
-            // Only try to convert if it starts with npub
-            if (input.StartsWith("npub"))
-            {
-                try
-                {
-                    var hex = NostrHelper.ConvertBech32ToHex(input);
-
-                    // Validate the conversion result
-                    if (!string.IsNullOrEmpty(hex) &&
-                        !hex.StartsWith("npub") &&
-                        System.Text.RegularExpressions.Regex.IsMatch(hex, "^[0-9a-fA-F]+$"))
-                    {
-                        // Ensure hex output is valid length (64 characters)
-                        if (hex.Length > 64)
-                            hex = hex.Substring(hex.Length - 64);
-                        else if (hex.Length < 64)
-                            hex = hex.PadLeft(64, '0');
-
-                        Console.WriteLine($"Successfully converted npub to hex: {hex}");
-                        return hex;
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Invalid conversion result: {hex ?? "(null)"}");
-                    }
-                }
-                catch (Exception convEx)
-                {
-                    Console.WriteLine($"Error in npub to hex conversion: {convEx.Message}");
-                }
-            }
-
-            // Fallback: Strip non-hex characters and ensure even length
-            var hexChars = new string(input.Where(c =>
-                ((c >= '0' && c <= '9') ||
-                 (c >= 'a' && c <= 'f') ||
-                 (c >= 'A' && c <= 'F'))).ToArray());
-
-            // Ensure even length (required by from_hex)
-            if (hexChars.Length % 2 != 0)
-            {
-                hexChars = "0" + hexChars;
-            }
-
-            // Normalize length to 64 characters
-            if (hexChars.Length > 64)
-                hexChars = hexChars.Substring(hexChars.Length - 64);
-            else if (hexChars.Length < 64)
-                hexChars = hexChars.PadLeft(64, '0');
-
-            Console.WriteLine($"Fallback hex conversion: {hexChars}");
-            return hexChars;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error converting to hex: {ex.Message}");
-            // Return a valid placeholder hex string
-            return "0000000000000000000000000000000000000000000000000000000000000000";
-        }
-    }
-
-    @* private bool showEmojiPicker = false;
-    private string[] commonEmojis = new[] { 
-        "😊", "👍", "🎉", "❤️", "👋", "🙏", "👀", "🔥", 
-        "⭐", "🚀", "✅", "😂", "🤔", "😍", "👏", "💯" 
-    };
-
-    private void ToggleEmojiPicker()
-    {
-        showEmojiPicker = !showEmojiPicker;
-    }
-
-    private void InsertEmoji(string emoji)
-    {
-        newMessage += emoji;
-        showEmojiPicker = false;
-    } *@
 }
