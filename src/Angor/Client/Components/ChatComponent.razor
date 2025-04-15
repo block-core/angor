@@ -41,6 +41,20 @@
                                 <Icon IconName="@(showContactNpub ? "chevron-up" : "chevron-down")" Width="16" Height="16" class="ms-1" />
                             </button>
                             
+                            <button class="btn btn-border-success"
+                                    @onclick="RefreshMessagesAsync"
+                                    disabled="@isRefreshing">
+                                @if (isRefreshing)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                }
+                                else
+                                {
+                                    <Icon IconName="refresh" Height="24" Width="24" />
+                                    <span class="button-text ms-2">Refresh</span>
+                                }
+                            </button>
+                            
                             <button class="btn btn-sm btn-border d-flex align-items-center" @onclick="() => showUserNpub = !showUserNpub">
                                 <Icon IconName="user" Width="16" Height="16" class="me-1" />
                                 <span>Your NPUB</span>
@@ -81,14 +95,14 @@
                         <!-- Chat Messages Section -->
                         <div class="info-card chat-container-modal mb-3">
                             <div class="chat-messages" @ref="messagesContainerRef" style="height: 300px; overflow-y: auto;">
-                                @if (isLoadingMessages)
+                                @if (isLoadingMessages || isRefreshing)
                                 {
                                     <div class="loading-messages d-flex justify-content-center align-items-center h-100">
                                         <div>
                                             <div class="spinner-border" role="status">
                                                 <span class="visually-hidden">Loading...</span>
                                             </div>
-                                            <p class="mt-2">Loading messages...</p>
+                                            <p class="mt-2">@(isRefreshing ? "Refreshing messages..." : "Loading messages...")</p>
                                         </div>
                                     </div>
                                 }
@@ -144,7 +158,6 @@
                             {
                                 <button type="button" class="btn btn-sm btn-border-success" @onclick="OpenChatApp">
                                     <Icon IconName="chat" Width="20" Height="20" class="me-2" />
-                                    <span>Open in Full Chat App</span>
                                 </button>
                             }
                             
@@ -199,6 +212,7 @@
     private IDisposable messageSubscription;
     private bool showContactNpub = false;
     private bool showUserNpub = false;
+    private bool isRefreshing = false;
 
     public class ChatMessage
     {
@@ -467,6 +481,37 @@
         }
     }
     
+    private async Task RefreshMessagesAsync()
+    {
+        if (isRefreshing) return;
+        
+        try
+        {
+            isRefreshing = true;
+            StateHasChanged();
+            
+            // Unsubscribe current subscription
+            messageSubscription?.Dispose();
+            
+            // Clear and reload messages
+            await LoadChatMessages();
+            
+            // Resubscribe to messages
+            SubscribeToMessages();
+            
+            await OnNotification.InvokeAsync("Messages refreshed");
+        }
+        catch (Exception ex)
+        {
+            await OnNotification.InvokeAsync($"Failed to refresh messages: {ex.Message}");
+        }
+        finally
+        {
+            isRefreshing = false;
+            StateHasChanged();
+        }
+    }
+    
     private async Task ShowNsecAsync()
     {
         showNsec = !showNsec;
@@ -557,3 +602,4 @@
         messageSubscription?.Dispose();
     }
 }
+
