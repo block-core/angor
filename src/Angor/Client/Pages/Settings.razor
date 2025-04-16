@@ -28,7 +28,7 @@
                 <span class="header-icon-wrapper">
                     <Icon IconName="settings" Width="32" Height="32" />
                 </span>
-                <h5 class="header-text">settings</h5>
+                <h5 class="header-text">Settings</h5>
             </div>
             <div class="header-actions">
             </div>
@@ -788,13 +788,13 @@
             }
 
             var newChatApp = new SettingsUrl
-            {
-                Url = newChatAppLink,
-                Name = uri.Host,
-                LastCheck = DateTime.UtcNow,
-                Status = UrlStatus.Online,
-                IsPrimary = !settingsInfo.ChatApps.Any(c => c.IsPrimary)
-            };
+                {
+                    Url = newChatAppLink,
+                    Name = uri.Host,
+                    LastCheck = DateTime.UtcNow,
+                    Status = UrlStatus.Online,
+                    IsPrimary = !settingsInfo.ChatApps.Any(c => c.IsPrimary)
+                };
 
             settingsInfo.ChatApps.Add(newChatApp);
 
