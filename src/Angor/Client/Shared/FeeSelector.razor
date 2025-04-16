@@ -25,29 +25,20 @@
             </div>
         </div>
 
-        <div class="btn-group w-100 mb-3 gap-2" role="group">
+        <div class="btn-group w-100 mb-3" role="group">
             <input type="radio" class="btn-check" name="feeBtn" id="feeLow" autocomplete="off" checked="@(FeePosition == 1)" @onchange="() => SetFeePosition(1)">
-            <label class="btn btn-border-warning flex-grow-1 py-2 m-0" for="feeLow">
-                <div class="d-flex flex-column align-items-center">
-                    <span class="fw-semibold">Economy</span>
-                    <small class="opacity-75">Slower & Cheaper</small>
-                </div>
+            <label class="btn @(FeePosition == 1 ? "btn-border-success" : "btn-border") py-2 px-3 m-0" for="feeLow">
+                <small>Economy</small>
             </label>
 
             <input type="radio" class="btn-check" name="feeBtn" id="feeMed" autocomplete="off" checked="@(FeePosition == 2)" @onchange="() => SetFeePosition(2)">
-            <label class="btn btn-border-success flex-grow-1 py-2 m-0" for="feeMed">
-                <div class="d-flex flex-column align-items-center">
-                    <span class="fw-semibold">Standard</span>
-                    <small class="opacity-75">Recommended</small>
-                </div>
+            <label class="btn @(FeePosition == 2 ? "btn-border-success" : "btn-border") py-2 px-3 m-0" for="feeMed">
+                <small>Standard</small>
             </label>
 
             <input type="radio" class="btn-check" name="feeBtn" id="feeHigh" autocomplete="off" checked="@(FeePosition == 3)" @onchange="() => SetFeePosition(3)">
-            <label class="btn btn-border-danger flex-grow-1 py-2 m-0" for="feeHigh">
-                <div class="d-flex flex-column align-items-center">
-                    <span class="fw-semibold">Priority</span>
-                    <small class="opacity-75">Faster & Premium</small>
-                </div>
+            <label class="btn @(FeePosition == 3 ? "btn-border-success" : "btn-border") py-2 px-3 m-0" for="feeHigh">
+                <small>Priority</small>
             </label>
         </div>
 

@@ -735,8 +735,7 @@
                 notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
                 return;
             }
-
-            newExplorerLink = $"{uri.Scheme}://{uri.Authority}";
+             newExplorerLink = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
 
             if (settingsInfo.Explorers.Any(a => a.Url == newExplorerLink))
             {
@@ -779,8 +778,8 @@
                 return;
             }
 
-            newChatAppLink = $"{uri.Scheme}://{uri.Authority}";
-
+            newChatAppLink = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
+           
             if (settingsInfo.ChatApps.Any(a => a.Url == newChatAppLink))
             {
                 notificationComponent.ShowErrorMessage($"URL already exists: {newChatAppLink}");
