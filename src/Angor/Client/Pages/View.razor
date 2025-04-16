@@ -592,9 +592,9 @@
 
                         @if (invested)
                         {
-                            <button @onclick="OpenChatWithFounder" class="btn btn-border-success m-2">
+                            <button @onclick="OpenMessagingWithFounder" class="btn btn-border-success m-2">
                                 <Icon IconName="chat" Class="me-2" />
-                                Chat with Project Founder
+                                Message Project Founder
                             </button>
                         }
 
@@ -691,16 +691,16 @@
     }
 </div>
 
-@if (showChatModal && invested)
+@if (showMessageModal && invested)
 {
-    <ChatComponent 
+    <MessageComponent 
         ContactNpub="@founderNpub"
         ContactHexPub="@project.ProjectInfo.NostrPubKey"
         CurrentUserNpub="@npubValue"
         CurrentUserPrivateKeyHex="@NostrHexSecKey"
-        ChatTitle="Founder"
-        ChatAppUrl="@($"/messages/{project.ProjectInfo.ProjectIdentifier}/investor")"
-        OnClose="@(() => showChatModal = false)"
+        MessageTitle="Founder"
+        MessageAppUrl="@($"/messages/{project.ProjectInfo.ProjectIdentifier}/investor")"
+        OnClose="@(() => showMessageModal = false)"
         OnNsecRequest="@ShowNsecAsync"
         OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
 }
@@ -760,7 +760,7 @@
     private List<string> NostrClients = new();
 
     private bool showPrivateKeys = false;
-    private bool showChatModal = false;
+    private bool showMessageModal = false;
     private string currentInvestorHexPub = "";
     private string currentInvestorNpub = "";
     private string founderNpub = ""; // Add this variable
@@ -1057,31 +1057,31 @@
         await Js.InvokeVoidAsync("window.open", url, "_blank");
     }
     
-    private void OpenChatWithFounder()
+    private void OpenMessagingWithFounder()
     {
         if (project?.ProjectInfo != null && project is InvestorProject invProject)
         {
-            Action showChatAction = () => {
-                // Set chat parameters
+            Action showMessageAction = () => {
+                // Set message parameters
                 founderNpub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey) ?? 
                               project.ProjectInfo.NostrPubKey;
                 npubValue = NostrHelper.ConvertHexToNpub(invProject.InvestorNPub) ?? invProject.InvestorNPub;
                 
-                // Show chat component
-                showChatModal = true;
+                // Show message component
+                showMessageModal = true;
                 InvokeAsync(StateHasChanged); // Use InvokeAsync for UI updates from callbacks
             };
 
             if (string.IsNullOrEmpty(NostrHexSecKey))
             {
                 // Private key not available, show password prompt first
-                // Pass the showChatAction as a callback to GenerateNsec
-                passwordComponent.ShowPassword(async () => { await GenerateNsec(showChatAction); });
+                // Pass the showMessageAction as a callback to GenerateNsec
+                passwordComponent.ShowPassword(async () => { await GenerateNsec(showMessageAction); });
             }
             else
             {
-                // Private key is already available, show chat directly
-                showChatAction();
+                // Private key is already available, show message directly
+                showMessageAction();
             }
         }
     }

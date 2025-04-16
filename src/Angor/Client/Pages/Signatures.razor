@@ -142,7 +142,7 @@
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Npub</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Chat</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Message</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -206,9 +206,9 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-border-success" @onclick="() => ShowChatModal(signature.investorNostrPubKey)">
+                                        <button class="btn btn-sm btn-border-success" @onclick="() => ShowMessageModal(signature.investorNostrPubKey)">
                                             <Icon IconName="chat" Width="16" Height="16" class="me-1" />
-                                            Chat
+                                            Message
                                         </button>
                                     </td>
                                 </tr>
@@ -221,16 +221,16 @@
     }
 </div>
 
-@if (showChatModal)
+@if (showMessageModal)
 {
-    <ChatComponent 
+    <MessageComponent 
         ContactNpub="@currentInvestorNpub"
         ContactHexPub="@currentInvestorHexPub"
         CurrentUserNpub="@founderNpub"
         CurrentUserPrivateKeyHex="@currentUserPrivateKeyHex"
-        ChatTitle="Investor"
-        ChatAppUrl="@($"/messages/{FounderProject.ProjectInfo.ProjectIdentifier}/founder/{currentInvestorHexPub}")"
-        OnClose="@(() => showChatModal = false)"
+        MessageTitle="Investor"
+        MessageAppUrl="@($"/messages/{FounderProject.ProjectInfo.ProjectIdentifier}/founder/{currentInvestorHexPub}")"
+        OnClose="@(() => showMessageModal = false)"
         OnNsecRequest="@ShowNsecAndCheckPassword"
         OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
 }
@@ -259,20 +259,20 @@
     private int numOfSignatureToSign = 0;
     private int numOfSignaturesSigned = 0;
 
-    private bool showChatModal = false;
+    private bool showMessageModal = false;
     private string currentInvestorNpub = "";
     private string currentInvestorHexPub = "";
     private string founderNpub = "";
     private string currentUserPrivateKeyHex = "";
 
     private ElementReference messagesContainerRef;
-    private List<ChatMessage> chatMessages = new();
+    private List<DirectMessage> chatMessages = new();
     private string newMessage = "";
     private bool isLoadingMessages = false;
     private bool isSendingMessage = false;
     private IDisposable messageSubscription;
 
-    public class ChatMessage
+    public class DirectMessage
     {
         public string Id { get; set; }
         public string Content { get; set; }
@@ -687,7 +687,7 @@
         notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
     }
     
-    private void ShowChatModal(string investorNostrPubKey)
+    private void ShowMessageModal(string investorNostrPubKey)
     {
         currentInvestorHexPub = investorNostrPubKey;
         currentInvestorNpub = NostrHelper.ConvertHexToNpub(investorNostrPubKey) ?? investorNostrPubKey;
@@ -696,30 +696,30 @@
         founderNpub = NostrHelper.ConvertHexToNpub(FounderProject.ProjectInfo.NostrPubKey) ?? 
                       FounderProject.ProjectInfo.NostrPubKey;
         
-        showChatModal = true;
+        showMessageModal = true;
         
-        // Initialize chat
-        InitializeChatAndCheckPassword();
+        // Initialize messaging
+        InitializeMessagingAndCheckPassword();
         
         StateHasChanged();
     }
     
-    private void InitializeChatAndCheckPassword()
+    private void InitializeMessagingAndCheckPassword()
     {
         if (!passwordComponent.HasPassword())
         {
             passwordComponent.ShowPassword(async () =>
             {
-                await InitializeChat();
+                await InitializeMessaging();
             });
         }
         else
         {
-            _ = InitializeChat();
+            _ = InitializeMessaging();
         }
     }
     
-    private async Task InitializeChat()
+    private async Task InitializeMessaging()
     {
         try
         {
@@ -727,12 +727,12 @@
             var founderNostrPrivateKey = DerivationOperations.DeriveProjectNostrPrivateKey(words, FounderProject.ProjectInfo.FounderKey);
             currentUserPrivateKeyHex = Encoders.Hex.EncodeData(founderNostrPrivateKey.ToBytes());
             
-            // Now that we have the private key, the chat component will automatically initialize
+            // Now that we have the private key, the message component will automatically initialize
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage("Failed to initialize chat", ex);
+            notificationComponent.ShowErrorMessage("Failed to initialize messaging", ex);
         }
     }
     
@@ -763,8 +763,8 @@
                 var nostrHexSecKey = Encoders.Hex.EncodeData(founderNostrPrivateKey.ToBytes());
                 var nsecValue = NostrHelper.ConvertHexToNsec(nostrHexSecKey)!;
                 
-                // Find the ChatComponent instance using JS interop and set the nsec value
-                await JS.InvokeVoidAsync("document.querySelector('chat-component').nsecValue", nsecValue);
+                // Find the MessageComponent instance using JS interop and set the nsec value
+                await JS.InvokeVoidAsync("document.querySelector('message-component').nsecValue", nsecValue);
                 StateHasChanged();
             }
             else

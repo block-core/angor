@@ -62,9 +62,9 @@
                         <span class="button-text ms-2">Refresh</span>
                     }
                 </button>
-                <button class="btn btn-border-success ms-2" @onclick="ShowChatModal" title="Chat">
+                <button class="btn btn-border-success ms-2" @onclick="ShowMessageModal" title="Message">
                     <Icon IconName="chat" Width="24" Height="24" />
-                    <span class="button-text ms-2">Chat</span>
+                    <span class="button-text ms-2">Message</span>
                 </button>
             </div>
         </div>
@@ -532,16 +532,16 @@
             </div>
         }
 
-        @if (showChatModal)
+        @if (showMessageModal)
         {
-            <ChatComponent 
+            <MessageComponent 
                 ContactNpub="@founderNpub"
                 ContactHexPub="@project.ProjectInfo.NostrPubKey"
                 CurrentUserNpub="@npubValue"
                 CurrentUserPrivateKeyHex="@currentUserPrivateKeyHex"
-                ChatTitle="Founder"
-                ChatAppUrl="@($"/messages/{project.ProjectInfo.ProjectIdentifier}/investor")"
-                OnClose="@(() => showChatModal = false)"
+                MessageTitle="Founder"
+                MessageAppUrl="@($"/messages/{project.ProjectInfo.ProjectIdentifier}/investor")"
+                OnClose="@(() => showMessageModal = false)"
                 OnNsecRequest="@ShowNsecAndCheckPassword"
                 OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
         }
@@ -555,7 +555,7 @@
     private bool showRecoveryModal = false;
     private bool showRecoveryReleaseModal = false;
     private bool showEndOfProjectModal = false;
-    private bool showChatModal = false;
+    private bool showMessageModal = false;
     private bool showNsec = false;
     private string nsecValue = "";
     private string npubValue = "";
@@ -1291,9 +1291,9 @@
         NavigationManager.NavigateTo($"/release/{ProjectIdentifier}");
     }
 
-    private void ShowChatModal()
+    private void ShowMessageModal()
     {
-        showChatModal = true;
+        showMessageModal = true;
 
         // Set npub based on the project or recovery information
         if (project != null)
@@ -1307,12 +1307,12 @@
             // If password is available, get the private key
             if (passwordComponent.HasPassword())
             {
-                _ = InitializeChat();
+                _ = InitializeMessaging();
             }
             else
             {
                 passwordComponent.ShowPassword(async () => {
-                    await InitializeChat();
+                    await InitializeMessaging();
                 });
             }
         }
@@ -1320,7 +1320,7 @@
         StateHasChanged();
     }
 
-    private async Task InitializeChat()
+    private async Task InitializeMessaging()
     {
         try
         {
@@ -1331,7 +1331,7 @@
         }
         catch (Exception ex)
         {
-            notificationComponent.ShowErrorMessage("Failed to initialize chat", ex);
+            notificationComponent.ShowErrorMessage("Failed to initialize messaging", ex);
         }
     }
     
