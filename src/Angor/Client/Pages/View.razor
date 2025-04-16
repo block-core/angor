@@ -958,7 +958,7 @@
         }
     }
 
-    private async Task GenerateNsec()
+    private async Task GenerateNsec(Action? onSuccessCallback = null)
     {
         isGeneratingNsec = true;
         errorMessage = string.Empty;
@@ -972,12 +972,16 @@
                 var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
                 NostrHexSecKey = Encoders.Hex.EncodeData(nostrKey.ToBytes());
                 NostrNsecSecKey = NostrHelper.ConvertHexToNsec(NostrHexSecKey)!;
+                
+                // Execute the callback if provided and keys were generated successfully
+                onSuccessCallback?.Invoke();
+                
                 StateHasChanged();
             }
         }
         catch (InvalidOperationException ex)
         {
-            HandlePasswordError();
+            HandlePasswordError(); // Keep HandlePasswordError as is, it will call GenerateNsec again without callback
             Logger.LogWarning(ex, "InvalidOperationException occurred during NSEC generation.");
         }
         catch (Exception ex)
@@ -991,7 +995,6 @@
             StateHasChanged();
         }
     }
-
 
     private async Task CopyNsecSecKeyToClipboardAsync()
     {
@@ -1022,12 +1025,12 @@
         errorMessage = string.Empty;
         StateHasChanged();
 
-        // Reopen password prompt
+        // Reopen password prompt - no specific callback needed here after generation
         passwordComponent.ShowPassword(async () =>
         {
             isGeneratingNsec = true;
             StateHasChanged();
-            await GenerateNsec();
+            await GenerateNsec(); // Call GenerateNsec without a callback
         });
     }
 
@@ -1058,14 +1061,28 @@
     {
         if (project?.ProjectInfo != null && project is InvestorProject invProject)
         {
-            // Set chat parameters
-            founderNpub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey) ?? 
-                          project.ProjectInfo.NostrPubKey;
-            npubValue = NostrHelper.ConvertHexToNpub(invProject.InvestorNPub) ?? invProject.InvestorNPub;
-            
-            // Show chat component
-            showChatModal = true;
-            StateHasChanged();
+            Action showChatAction = () => {
+                // Set chat parameters
+                founderNpub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey) ?? 
+                              project.ProjectInfo.NostrPubKey;
+                npubValue = NostrHelper.ConvertHexToNpub(invProject.InvestorNPub) ?? invProject.InvestorNPub;
+                
+                // Show chat component
+                showChatModal = true;
+                InvokeAsync(StateHasChanged); // Use InvokeAsync for UI updates from callbacks
+            };
+
+            if (string.IsNullOrEmpty(NostrHexSecKey))
+            {
+                // Private key not available, show password prompt first
+                // Pass the showChatAction as a callback to GenerateNsec
+                passwordComponent.ShowPassword(async () => { await GenerateNsec(showChatAction); });
+            }
+            else
+            {
+                // Private key is already available, show chat directly
+                showChatAction();
+            }
         }
     }
 

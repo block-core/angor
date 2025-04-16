@@ -173,13 +173,24 @@
     {
         await base.OnInitializedAsync();
 
+        // Always ensure we have ContactHexPub, converting from NPUB if needed
         if (string.IsNullOrEmpty(ContactHexPub) && !string.IsNullOrEmpty(ContactNpub))
         {
             ContactHexPub = NostrHelper.ConvertBech32ToHex(ContactNpub);
         }
-        else if (string.IsNullOrEmpty(ContactNpub) && !string.IsNullOrEmpty(ContactHexPub))
+        
+        // If we have ContactHexPub but no ContactNpub, set it for display purposes
+        if (!string.IsNullOrEmpty(ContactHexPub) && string.IsNullOrEmpty(ContactNpub))
         {
-            ContactNpub = NostrHelper.ConvertHexToNpub(ContactHexPub) ?? ContactHexPub;
+            try
+            {
+                ContactNpub = NostrHelper.ConvertHexToNpub(ContactHexPub) ?? ContactHexPub;
+            }
+            catch
+            {
+                // If conversion fails, just use hex for display
+                ContactNpub = ContactHexPub;
+            }
         }
     }
 
@@ -201,16 +212,10 @@
             StateHasChanged();
 
             if (string.IsNullOrEmpty(CurrentUserPrivateKeyHex) ||
-                (string.IsNullOrEmpty(ContactHexPub) && string.IsNullOrEmpty(ContactNpub)))
+                string.IsNullOrEmpty(ContactHexPub))
             {
                 await OnNotification.InvokeAsync("Missing required chat information");
                 return;
-            }
-
-            // Ensure we have both hex and npub formats
-            if (string.IsNullOrEmpty(ContactHexPub))
-            {
-                ContactHexPub = NostrHelper.ConvertBech32ToHex(ContactNpub);
             }
 
             // Load messages
@@ -233,27 +238,35 @@
     private async Task LoadChatMessages()
     {
         if (string.IsNullOrEmpty(CurrentUserPrivateKeyHex) ||
-            (string.IsNullOrEmpty(ContactHexPub) && string.IsNullOrEmpty(ContactNpub))) return;
+            string.IsNullOrEmpty(ContactHexPub)) {
+            Logger.LogWarning("LoadChatMessages - Missing required keys");
+            return;
+        }
 
         chatMessages.Clear();
 
         try
         {
-            // Load chat history
+            // Use pubkeys directly without additional formatting
+            string userHexPubkey = string.IsNullOrEmpty(CurrentUserNpub) ? 
+                "" : NostrHelper.ConvertBech32ToHex(CurrentUserNpub);
+                
+            // Load chat history - messages sent FROM current user TO contact
             await _RelayService.LookupDirectMessagesForPubKeyAsync(
-                ContactNpub,
-                DateTime.UtcNow.AddDays(-7), // Get last 7 days of messages
-                100, // Limit to 100 messages
-                async eventMessage => await ProcessChatMessage(eventMessage),
-                NostrHelper.ConvertBech32ToHex(CurrentUserNpub) // Messages from current user to contact
-            );
-
-            await _RelayService.LookupDirectMessagesForPubKeyAsync(
-                CurrentUserNpub,
+                ContactHexPub,
                 DateTime.UtcNow.AddDays(-7),
                 100,
                 async eventMessage => await ProcessChatMessage(eventMessage),
-                NostrHelper.ConvertBech32ToHex(ContactNpub) // Messages from contact to current user
+                userHexPubkey
+            );
+            
+            // Load chat history - messages sent FROM contact TO current user
+            await _RelayService.LookupDirectMessagesForPubKeyAsync(
+                userHexPubkey,
+                DateTime.UtcNow.AddDays(-7),
+                100,
+                async eventMessage => await ProcessChatMessage(eventMessage),
+                ContactHexPub
             );
 
             // Sort messages by timestamp
@@ -264,51 +277,70 @@
         }
         catch (Exception ex)
         {
+            Logger.LogError($"Failed to load chat messages: {ex.Message}");
             await OnNotification.InvokeAsync($"Failed to load chat messages: {ex.Message}");
         }
     }
 
     private void SubscribeToMessages()
     {
-        // Dispose existing subscription if any
-        messageSubscription?.Dispose();
+        try
+        {
+            // Dispose existing subscription if any
+            messageSubscription?.Dispose();
 
-        // Get the client
-        var nostrClient = _nostrCommunicationFactory.GetOrCreateClient(_networkService);
+            // Get the client
+            var nostrClient = _nostrCommunicationFactory.GetOrCreateClient(_networkService);
 
-        // Format the pubkeys for proper comparison
-        string formattedCurrentUserPubKey = NostrHelper.ConvertBech32ToHex(CurrentUserNpub);
-        string formattedContactPubKey = NostrHelper.ConvertBech32ToHex(ContactNpub);
-
-        // Subscribe to incoming messages
-        messageSubscription = nostrClient.Streams.EventStream
-            .Where(_ => _.Event?.Kind == NostrKind.EncryptedDm)
-            .Where(_ => (_.Event?.Pubkey == formattedCurrentUserPubKey &&
-                        _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == formattedContactPubKey) ||
-                       (_.Event?.Pubkey == formattedContactPubKey &&
-                        _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == formattedCurrentUserPubKey))
-            .Subscribe(async messageEvent =>
-            {
-                await ProcessChatMessage(messageEvent.Event);
-                StateHasChanged();
-            });
+            // Get pubkeys for comparison
+            string currentUserPubKey = NostrHelper.ConvertBech32ToHex(CurrentUserNpub);
+            
+            // Subscribe to incoming messages
+            messageSubscription = nostrClient.Streams.EventStream
+                .Where(_ => _.Event?.Kind == NostrKind.EncryptedDm)
+                .Where(_ => {
+                    if(_.Event == null) return false;
+                    
+                    // Get tag value
+                    string tagValue = _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier);
+                    
+                    // Check both directions of communication
+                    bool isFromUserToContact = _.Event.Pubkey == currentUserPubKey && 
+                                              tagValue == ContactHexPub;
+                                              
+                    bool isFromContactToUser = _.Event.Pubkey == ContactHexPub && 
+                                              tagValue == currentUserPubKey;
+                    
+                    return isFromUserToContact || isFromContactToUser;
+                })
+                .Subscribe(async messageEvent => {
+                    await ProcessChatMessage(messageEvent.Event);
+                    StateHasChanged();
+                });
+        }
+        catch (Exception ex) {
+            Logger.LogError($"Error in SubscribeToMessages: {ex.Message}");
+        }
     }
 
+    // Process and deduplicate messages
     private async Task ProcessChatMessage(NostrEvent eventMessage)
     {
         try
         {
-            if (eventMessage == null || string.IsNullOrEmpty(eventMessage.Content)) return;
+            if (eventMessage == null || string.IsNullOrEmpty(eventMessage.Content)) {
+                return;
+            }
 
-            // Skip already processed messages
-            if (chatMessages.Any(m => m.Id == eventMessage.Id)) return;
+            // Skip already processed messages with the same ID
+            if (chatMessages.Any(m => m.Id == eventMessage.Id)) {
+                return;
+            }
 
-            // Format the pubkeys for proper comparison
-            string formattedCurrentUserPubKey = NostrHelper.ConvertBech32ToHex(CurrentUserNpub);
-
-            // Determine if this message is from the current user
-            bool isFromCurrentUser = eventMessage.Pubkey == formattedCurrentUserPubKey;
-
+            // Check if message with same content already exists
+            string currentUserPubKey = NostrHelper.ConvertBech32ToHex(CurrentUserNpub);
+            bool isFromCurrentUser = eventMessage.Pubkey == currentUserPubKey;
+            
             // Decrypt the message
             string decryptedContent;
             try
@@ -317,24 +349,22 @@
                 string partnerPubKeyHex = isFromCurrentUser
                     ? eventMessage.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier)
                     : eventMessage.Pubkey;
-
+                    
                 decryptedContent = await _encryptionService.DecryptNostrContentAsync(
                     CurrentUserPrivateKeyHex,
                     partnerPubKeyHex,
                     eventMessage.Content
                 );
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Logger.LogError($"Decryption error: {ex.Message}");
-
                 try
                 {
                     // Try alternative format
                     string alternativeKey = isFromCurrentUser
-                        ? NostrHelper.ConvertBech32ToHex(ContactNpub)
-                        : NostrHelper.ConvertBech32ToHex(CurrentUserNpub);
-
+                        ? ContactHexPub
+                        : currentUserPubKey;
+                        
                     decryptedContent = await _encryptionService.DecryptNostrContentAsync(
                         CurrentUserPrivateKeyHex,
                         alternativeKey,
@@ -347,7 +377,16 @@
                 }
             }
 
-            // Create and add the message
+            // Check for duplicate message content with same sender
+            if (chatMessages.Any(m => 
+                m.Content == decryptedContent && 
+                m.IsFromCurrentUser == isFromCurrentUser && 
+                Math.Abs((m.Timestamp - eventMessage.CreatedAt.GetValueOrDefault()).TotalMinutes) < 1))
+            {
+                // Skip if we have a very similar message (same content, sender, and timestamp within 1 minute)
+                return;
+            }
+
             var chatMessage = new ChatMessage
                 {
                     Id = eventMessage.Id,
@@ -357,12 +396,13 @@
                     IsFromCurrentUser = isFromCurrentUser
                 };
 
+            // Add message and keep list sorted
             chatMessages.Add(chatMessage);
             chatMessages = chatMessages.OrderBy(m => m.Timestamp).ToList();
 
             // Scroll to bottom after adding messages
             await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
-
+            
             StateHasChanged();
         }
         catch (Exception ex)
@@ -380,20 +420,17 @@
 
         try
         {
-            // Format the contact's pubkey for encryption
-            string partnerPubKey = ContactHexPub;
-
             // Encrypt the message
             string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
                 CurrentUserPrivateKeyHex,
-                partnerPubKey,
+                ContactHexPub,
                 newMessage
             );
 
             // Send the message
             var sentMessageId = _RelayService.SendDirectMessagesForPubKeyAsync(
                 CurrentUserPrivateKeyHex,
-                partnerPubKey,
+                ContactHexPub,
                 encryptedContent,
                 null
             );
@@ -418,6 +455,7 @@
         }
         catch (Exception ex)
         {
+            Logger.LogError($"Failed to send message: {ex.Message}");
             await OnNotification.InvokeAsync($"Failed to send message: {ex.Message}");
         }
         finally
