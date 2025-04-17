@@ -28,6 +28,9 @@
                         <h5 class="modal-title">Message @MessageTitle</h5>
                     </div>
                     <div class="d-flex align-items-center">
+                        <button class="btn-menu-custom" @onclick="RefreshMessagesAsync">
+                            <Icon IconName="refresh" Height="24" Width="24" />
+                        </button>
                         <div class="dropdown me-2 position-relative">
                             <button class="btn-menu-custom" @onclick="ToggleActionsMenu">
                                 <Icon IconName="menu" Height="24" Width="24" />
