@@ -111,17 +111,41 @@
 
                         <div class="mb-3">
                             <label for="NostrMetadataWebsite" class="form-label">Project website</label>
-                            <InputText id="NostrMetadataWebsite" autocomplete="off" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the URL of the project website" disabled="@nostrMetadataCreated" />
+                            <div class="input-group">
+                                <button class="btn btn-border-success" @onclick="() => PasteToField(value => project.Metadata.Website = value)">
+                                    <Icon IconName="paste" />
+                                </button>
+                                <InputText id="NostrMetadataWebsite" autocomplete="off" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the URL of the project website" disabled="@nostrMetadataCreated" />
+                                <button class="btn btn-border-danger" @onclick="() => RemoveFromField(() => project.Metadata.Website = string.Empty)">
+                                    <Icon IconName="remove" />
+                                </button>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="NostrMetadataBanner" class="form-label">Banner</label>
-                            <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated" />
+                            <div class="input-group">
+                                <button class="btn btn-border-success" @onclick="() => PasteToField(value => project.Metadata.Banner = value)">
+                                    <Icon IconName="paste" />
+                                </button>
+                                <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated" />
+                                <button class="btn btn-border-danger" @onclick="() => RemoveFromField(() => project.Metadata.Banner = string.Empty)">
+                                    <Icon IconName="remove" />
+                                </button>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="NostrMetadataPicture" class="form-label">Image</label>
-                            <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated" />
+                            <div class="input-group">
+                                <button class="btn btn-border-success" @onclick="() => PasteToField(value => project.Metadata.Picture = value)">
+                                    <Icon IconName="paste" />
+                                </button>
+                                <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated" />
+                                <button class="btn btn-border-danger" @onclick="() => RemoveFromField(() => project.Metadata.Picture = string.Empty)">
+                                    <Icon IconName="remove" />
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -1597,4 +1621,21 @@
         };
     }
 
+    private async Task PasteToField(Action<string> setField)
+    {
+        try
+        {
+            var text = await JS.InvokeAsync<string>("navigator.clipboard.readText");
+            setField(text);
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogError(ex, "Failed to paste from clipboard");
+        }
+    }
+
+    private void RemoveFromField(Action setField)
+    {
+        setField();
+    }
 }
