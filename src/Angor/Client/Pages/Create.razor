@@ -173,7 +173,7 @@
                                     <h5 class="mb-0 font-weight-bolder">
                                         @if (string.IsNullOrEmpty(project.Metadata?.Name))
                                         {
-                                            <span>Name</span>
+                                            <span>Your project’s title will show here</span>
                                         }
                                         else
                                         {
@@ -185,7 +185,7 @@
 
                             @if (string.IsNullOrEmpty(project.Metadata?.About))
                             {
-                                <p class="mb-0 line-clamp-3">About</p>
+                                <p class="mb-0 line-clamp-3">A short description about your project</p>
                             }
                             else
                             {
@@ -1473,15 +1473,22 @@
         project.ProjectInfo.Stages.Clear(); // Reset existing stages
 
         var stageDuration = totalDuration / numberOfStages;
-        var stagePercentage = 100m / numberOfStages;
+        var stagePercentage = Math.Round(100m / numberOfStages, 4); // Round to 4 decimal places
+        decimal totalPercentage = 0;
 
         for (int i = 0; i < numberOfStages; i++)
         {
+            var percentage = (i == numberOfStages - 1) 
+                ? Math.Round(100m - totalPercentage, 4) 
+                : stagePercentage;
+
             project.ProjectInfo.Stages.Add(new Stage
-                {
-                    AmountToRelease = stagePercentage,
-                    ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
-                });
+            {
+                AmountToRelease = percentage,
+                ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
+            });
+
+            totalPercentage += percentage;
         }
 
         StateHasChanged();
@@ -1492,6 +1499,7 @@
         isPresetMode = !isPresetMode; // Toggle between Presets and Automatic
         StateHasChanged(); // Update the UI
     }
+    
 
     private readonly string[] spacePhotos = new[]
     {
