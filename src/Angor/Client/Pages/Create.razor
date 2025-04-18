@@ -112,39 +112,45 @@
                         <div class="mb-3">
                             <label for="NostrMetadataWebsite" class="form-label">Project website</label>
                             <div class="input-group">
-                                <button class="btn btn-border-success" @onclick="() => PasteToField(value => project.Metadata.Website = value)">
-                                    <Icon IconName="paste" />
-                                </button>
                                 <InputText id="NostrMetadataWebsite" autocomplete="off" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the URL of the project website" disabled="@nostrMetadataCreated" />
-                                <button class="btn btn-border-danger" @onclick="() => RemoveFromField(() => project.Metadata.Website = string.Empty)">
-                                    <Icon IconName="remove" />
-                                </button>
+                                <div class="input-group-append d-flex flex-column ms-2">
+                                    <button class="btn btn-outline-secondary btn-sm mb-1" @onclick="() => PasteToField(value => project.Metadata.Website = value)">
+                                        <Icon IconName="paste" Width="16" Height="16" />
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="() => RemoveFromField(() => project.Metadata.Website = string.Empty)">
+                                        <Icon IconName="remove" Width="16" Height="16" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="NostrMetadataBanner" class="form-label">Banner</label>
                             <div class="input-group">
-                                <button class="btn btn-border-success" @onclick="() => PasteToField(value => project.Metadata.Banner = value)">
-                                    <Icon IconName="paste" />
-                                </button>
                                 <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated" />
-                                <button class="btn btn-border-danger" @onclick="() => RemoveFromField(() => project.Metadata.Banner = string.Empty)">
-                                    <Icon IconName="remove" />
-                                </button>
+                                <div class="input-group-append d-flex flex-column ms-2">
+                                    <button class="btn btn-outline-secondary btn-sm mb-1" @onclick="() => PasteToField(value => project.Metadata.Banner = value)">
+                                        <Icon IconName="paste" Width="16" Height="16" />
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="() => RemoveFromField(() => project.Metadata.Banner = string.Empty)">
+                                        <Icon IconName="remove" Width="16" Height="16" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="NostrMetadataPicture" class="form-label">Image</label>
                             <div class="input-group">
-                                <button class="btn btn-border-success" @onclick="() => PasteToField(value => project.Metadata.Picture = value)">
-                                    <Icon IconName="paste" />
-                                </button>
                                 <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated" />
-                                <button class="btn btn-border-danger" @onclick="() => RemoveFromField(() => project.Metadata.Picture = string.Empty)">
-                                    <Icon IconName="remove" />
-                                </button>
+                                <div class="input-group-append d-flex flex-column ms-2">
+                                    <button class="btn btn-outline-secondary btn-sm mb-1" @onclick="() => PasteToField(value => project.Metadata.Picture = value)">
+                                        <Icon IconName="paste" Width="16" Height="16" />
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="() => RemoveFromField(() => project.Metadata.Picture = string.Empty)">
+                                        <Icon IconName="remove" Width="16" Height="16" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
