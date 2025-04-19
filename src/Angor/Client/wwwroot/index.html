@@ -57,8 +57,13 @@
             </div>
         </div>
     </div>
+    <script type="module">
+        import * as nostrTools from 'https://cdn.jsdelivr.net/npm/@dolu/nostr-tools@1.5.5/lib/nostr.cjs.min.js';
+        window.nostrTools = nostrTools;
+      </script>
     <script type="module" src="service-crypto.js?v=1"></script>
     <script src="nostr-tools-methods.js?v=1" type="module"></script>
+    <script type="module" src="nostrInterop.js?v=1"></script>
     <script src="/assets/js/appUpdate.js?v=1"></script>
     <script src="/assets/js/app.js?v=1"></script>
     <script src="_framework/blazor.webassembly.js?v=1"></script>
