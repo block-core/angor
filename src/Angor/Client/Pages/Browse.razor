@@ -86,7 +86,7 @@ else
             {
                 <div class="col d-flex align-items-stretch">
                     <div class="card  w-100 project-card hover-effect">
-                        <a class="d-block card-zoom" rel="noopener noreferrer">
+                        <a class="d-block card-zoom">
                             @if (!nostrSearchInProgress && SessionStorage.IsProjectInStorageById(indexerData.ProjectIdentifier))
                             {
                                 var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
@@ -119,7 +119,7 @@ else
                                             </span>
                                             <div class="h-100 ms-3">
                                                 <h5 class="mb-0 font-weight-bolder" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                                    <a href="/view/@project.ProjectInfo.ProjectIdentifier" rel="noopener noreferrer"> @project.Metadata.Name</a>
+                                                    <a href="/view/@project.ProjectInfo.ProjectIdentifier"> @project.Metadata.Name</a>
                                                 </h5>
                                             </div>
                                         </div>
@@ -197,7 +197,7 @@ else
                                                         </span>
                                                         <div class="h-100 ms-3">
                                                             <h5 class="mb-0 font-weight-bolder" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                                                <a href="/view/@project.ProjectInfo.ProjectIdentifier" rel="noopener noreferrer"> @project.Metadata.Name</a>
+                                                                <a href="/view/@project.ProjectInfo.ProjectIdentifier"> @project.Metadata.Name</a>
                                                             </h5>
                                                         </div>
                                                     </div>
