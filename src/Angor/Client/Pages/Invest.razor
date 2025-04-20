@@ -937,13 +937,18 @@ else
 
     private async Task Send()
     {
-        if (!passwordComponent.HasPassword())
+    if (!passwordComponent.HasPassword())
+    {
+        investSpinner = false;
+        showCreateModal = false;
+
+        passwordComponent.ShowPassword(async () =>
         {
-            investSpinner = false;
-            showCreateModal = false;
-            notificationComponent.ShowErrorMessage("Wallet password expired");
-            return;
-        }
+            await Send();
+        });
+
+        return;
+    }
 
         investSpinner = true;
         StateHasChanged();
@@ -965,59 +970,68 @@ else
 
             var investorProject = (InvestorProject)project;
 
-            // remove signatures when requesting founder to sign
-            investorProject.SignaturesInfo = new()
-                {
-                    ProjectIdentifier = investorProject!.ProjectInfo.ProjectIdentifier,
-                };
+        investorProject.SignaturesInfo = new()
+        {
+            ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier
+        };
 
-            var strippedInvestmentTransaction = network.CreateTransaction(investorProject.SignedTransactionHex);
-            strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
+        var strippedTx = network
+            .CreateTransaction(investorProject.SignedTransactionHex);
+        strippedTx.Inputs
+            .ForEach(i => i.WitScript = 
+                Blockcore.Consensus.TransactionInfo.WitScript.Empty);
 
-            var accountInfo = storage.GetAccountInfo(network.Name);
+        var accountInfo = storage.GetAccountInfo(network.Name);
+        var words       = await passwordComponent.GetWalletAsync();
+        var privKey     = _derivationOperations
+                            .DeriveProjectNostrPrivateKey(
+                                words, 
+                                project.ProjectInfo.FounderKey);
+        var privKeyHex  = Encoders.Hex.EncodeData(privKey.ToBytes());
+        var releaseAddr = accountInfo.GetNextReceiveAddress();
 
-            var words = await passwordComponent.GetWalletAsync();
+        var signReq = new SignRecoveryRequest
+        {
+            ProjectIdentifier           = investorProject.ProjectInfo.ProjectIdentifier,
+            InvestmentTransactionHex    = strippedTx
+                                              .ToHex(network.Consensus.ConsensusFactory),
+            UnfundedReleaseAddress      = releaseAddr,
+            AdditionalNpub              = Investment.AdditionalNpub
+        };
 
-            var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
-            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
-
-            var releaseAddress = accountInfo.GetNextReceiveAddress();
-
-            SignRecoveryRequest signRecoveryRequest = new()
-                {
-                    ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
-                    InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
-                    UnfundedReleaseAddress = releaseAddress,
-                    AdditionalNpub = Investment.AdditionalNpub
-                };
-
-            var sigJson = serializer.Serialize(signRecoveryRequest);
-
-            var encryptedContent = await encryption.EncryptNostrContentAsync(
-                nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey,
-                sigJson);
-
-            var investmentSigsRequest = _SignService.RequestInvestmentSigs(encryptedContent, nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey);
-
-            investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
-            investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
-            investorProject.InvestorNPub = NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex;
-            investorProject.UnfundedReleaseAddress = releaseAddress;
-            investorProject.AdditionalNpub = Investment.AdditionalNpub;
-
-            storage.AddInvestmentProject(investorProject);
-
-            foreach (var input in strippedInvestmentTransaction.Inputs)
-                accountInfo.UtxoReservedForInvestment.Add(input.PrevOut.ToString());
-
-            storage.SetAccountInfo(network.Name, accountInfo);
-
-            _SignService.LookupSignatureForInvestmentRequest(
-                investorProject.InvestorNPub,
+        var signJson = serializer.Serialize(signReq);
+        var encryptedContent = await encryption
+            .EncryptNostrContentAsync(
+                privKeyHex, 
                 investorProject.ProjectInfo.NostrPubKey,
-                investorProject.SignaturesInfo.TimeOfSignatureRequest.Value,
-                investorProject.SignaturesInfo.SignatureRequestEventId,
-                signatures => HandleSignatureReceivedAsync(nostrPrivateKeyHex, signatures));
+                signJson);
+
+        var sigRequest = _SignService
+            .RequestInvestmentSigs(
+                encryptedContent,
+                privKeyHex,
+                investorProject.ProjectInfo.NostrPubKey);
+
+        investorProject.SignaturesInfo!.TimeOfSignatureRequest = sigRequest.eventTime;
+        investorProject.SignaturesInfo!.SignatureRequestEventId = sigRequest.eventId;
+        investorProject.InvestorNPub      = NostrPrivateKey
+                                                .FromHex(privKeyHex)
+                                                .DerivePublicKey()
+                                                .Hex;
+        investorProject.UnfundedReleaseAddress = releaseAddr;
+        investorProject.AdditionalNpub          = Investment.AdditionalNpub;
+
+        storage.AddInvestmentProject(investorProject);
+        foreach (var inp in strippedTx.Inputs)
+            accountInfo.UtxoReservedForInvestment.Add(inp.PrevOut.ToString());
+        storage.SetAccountInfo(network.Name, accountInfo);
+
+        _SignService.LookupSignatureForInvestmentRequest(
+            investorProject.InvestorNPub,
+            investorProject.ProjectInfo.NostrPubKey,
+            investorProject.SignaturesInfo.TimeOfSignatureRequest.Value,
+            investorProject.SignaturesInfo.SignatureRequestEventId,
+            signatures => HandleSignatureReceivedAsync(privKeyHex, signatures));
 
             notificationComponent.ShowNotificationMessage("Signature request sent", 5);
         }
@@ -1088,13 +1102,13 @@ else
         StateHasChanged();
         await Task.Delay(10);
 
-        try
-        {
-            Debug.Assert(project != null, nameof(project) + " != null");
-            var investorProject = project as InvestorProject;
-            Debug.Assert(investorProject is not null, "The project must be an investor project", nameof(project) + " != null");
-            Debug.Assert(investorProject.SignaturesInfo != null, nameof(investorProject.SignaturesInfo) + " != null");
-            Debug.Assert(investorProject.SignedTransactionHex != null, nameof(investorProject.SignedTransactionHex) + " != null");
+    try
+    {
+        Debug.Assert(project != null, nameof(project) + " != null");
+        var investorProject = project as InvestorProject 
+                              ?? throw new InvalidOperationException("Not an investor project");
+        Debug.Assert(investorProject.SignaturesInfo != null, nameof(investorProject.SignaturesInfo) + " != null");
+        Debug.Assert(investorProject.SignedTransactionHex != null, nameof(investorProject.SignedTransactionHex) + " != null");
 
             signedTransaction ??= new TransactionInfo();
 
@@ -1116,12 +1130,36 @@ else
                 return;
             }
 
-            // link the trx to the signatures
-            investorProject.CompleteProjectInvestment(signedTransaction.Transaction);
+        investorProject.CompleteProjectInvestment(signedTransaction.Transaction);
+        storage.UpdateInvestmentProject(investorProject);
+    }
+    catch (Exception e)
+    {
+        notificationComponent.ShowErrorMessage(e.Message, e);
+        return;
+    }
+    finally
+    {
+        publishSpinner = false;
+    }
 
-            storage.UpdateInvestmentProject(investorProject);
 
-            await SaveInvestmentsListToNostrAsync();
+    if (!passwordComponent.HasPassword())
+    {
+        passwordComponent.ShowPassword(async () =>
+        {
+            await PerformPostPublishTasksAsync();
+        });
+    }
+    else
+    {
+        await PerformPostPublishTasksAsync();
+    }
+}
+
+private async Task PerformPostPublishTasksAsync()
+{
+    await SaveInvestmentsListToNostrAsync();
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
@@ -1136,19 +1174,10 @@ else
             unspentInfo.AddRange(spendUtxos);
             SessionStorage.SetUnconfirmedInboundFunds(unspentInfo);
 
-            notificationComponent.ShowNotificationMessage("Invested in project", 5);
-
-            NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
-        }
-        catch (Exception e)
-        {
-            notificationComponent.ShowErrorMessage(e.Message, e);
-        }
-        finally
-        {
-            publishSpinner = false;
-        }
-    }
+   
+    notificationComponent.ShowNotificationMessage("Invested in project", 5);
+    NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
+}
 
     private async Task SaveInvestmentsListToNostrAsync()
     {
