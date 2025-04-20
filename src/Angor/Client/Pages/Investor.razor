@@ -213,7 +213,7 @@
                                 <div class="stat-value-group">
                                     @if (!project.SignaturesInfo?.Signatures.Any() ?? false)
                                     {
-                                        <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") title="Pending">
+                                        <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") title="Pending" rel="noopener noreferrer">
                                             <span class="stat-value text-warning">@Money.Satoshis(project.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
                                         </a>
                                     }
@@ -267,22 +267,22 @@
                         <div class="project-actions d-flex flex-column flex-lg-row gap-2">
                             @if (hasInvestmentReleaseRequests && project.UnfundedReleaseTransactionId == null)
                             {
-                                <a href=@($"/release/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-warning flex-fill">
+                                <a href=@($"/release/{project.ProjectInfo.ProjectIdentifier}") rel="noopener noreferrer" class="btn btn-border-warning flex-fill">
                                     Release Funds
                                 </a>
                             }
-                            <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border flex-fill">
+                            <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") rel="noopener noreferrer" class="btn btn-border flex-fill">
                                 View Project
                             </a>
                             @if (string.IsNullOrWhiteSpace(project.TransactionId))
                             {
-                                <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success flex-fill">
+                                <a href=@($"/invest/{project.ProjectInfo.ProjectIdentifier}") rel="noopener noreferrer" class="btn btn-border-success flex-fill">
                                     Completed Investment
                                 </a>
                             }
                             else
                             {
-                                <a href=@($"/recover/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success flex-fill">
+                                <a href=@($"/recover/{project.ProjectInfo.ProjectIdentifier}") rel="noopener noreferrer" class="btn btn-border-success flex-fill">
                                     Manage Investment
                                 </a>
                             }

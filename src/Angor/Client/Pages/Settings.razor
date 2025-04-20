@@ -183,7 +183,7 @@
                     @foreach (var explorer in settingsInfo.Explorers)
                     {
                         <tr>
-                            <td><a href="@explorer.Url" target="_blank">@explorer.Url</a></td>
+                            <td><a href="@explorer.Url" target="_blank" rel="noopener noreferrer">@explorer.Url</a></td>
                             @* <td style="color: @(explorer.Status == UrlStatus.Online ? "green" : explorer.Status == UrlStatus.NotReady ? "yellow" : "red");"> *@
                             @*     @explorer.Status.ToString() *@
                             @* </td> *@
@@ -268,7 +268,7 @@
                     @foreach (var indexer in settingsInfo.Indexers)
                     {
                         <tr>
-                            <td><a href="@indexer.Url" target="_blank">@indexer.Url</a></td>
+                            <td><a href="@indexer.Url" target="_blank" rel="noopener noreferrer">@indexer.Url</a></td>
                             <td style="color: @(indexer.Status == UrlStatus.Online ? "green" : indexer.Status == UrlStatus.NotReady ? "yellow" : "red");">
                                 @indexer.Status.ToString()
                             </td>
@@ -352,7 +352,7 @@
                     @foreach (var relay in settingsInfo.Relays)
                     {
                         <tr>
-                            <td><a href="@relay.Url" target="_blank">@relay.Url</a></td>
+                            <td><a href="@relay.Url" target="_blank" rel="noopener noreferrer">@relay.Url</a></td>
                             <td>@relay.Name</td>
                             <td class="@((relay.Status == UrlStatus.Online) ? "text-success" : (relay.Status == UrlStatus.NotReady) ? "text-warning" : "text-danger")">
                                 @relay.Status.ToString()
@@ -423,7 +423,7 @@
                     @foreach (var chatApp in settingsInfo.ChatApps)
                     {
                         <tr>
-                            <td><a href="@chatApp.Url" target="_blank">@chatApp.Url</a></td>
+                            <td><a href="@chatApp.Url" target="_blank" rel="noopener noreferrer">@chatApp.Url</a></td>
                             <td>@chatApp.Name</td>
                             <td>
                                 @if (chatApp.IsPrimary)

@@ -82,7 +82,7 @@
                             </span>
                             <div class="h-100 ms-3">
                                 <h5 class="mb-0 font-weight-bolder project-title">
-                                    <a href="/view/@project.ProjectInfo.ProjectIdentifier">@metadata?.Name</a>
+                                    <a href="/view/@project.ProjectInfo.ProjectIdentifier" rel="noopener noreferrer">@metadata?.Name</a>
                                 </h5>
                             </div>
                         </div>
@@ -164,7 +164,7 @@
                             </div>
                             <div class="d-flex align-items-center">
                                 <p class="text-break mb-0 mt-2">
-                                    <a href="@projectExplorerLink" target="_blank" class="d-flex align-items-center">
+                                    <a href="@projectExplorerLink" target="_blank" class="d-flex align-items-center" rel="noopener noreferrer">
                                         <span>View the transaction</span>
                                         <Icon IconName="external-link" Height="16" Width="16" Class="ms-2" />
                                     </a>
@@ -429,20 +429,20 @@
                     <p class="action-text">Manage your project funds and approve transactions</p>
                     <div class="action-buttons d-flex justify-content-center item-center mt-4">
 
-                        <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success text-white animate-scale">
+                        <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") rel="noopener noreferrer" class="btn btn-border-success text-white animate-scale">
                             <i class="me-2">
                                 <Icon IconName="wallet" />
                             </i>
                             Manage funds
                         </a>
-                        <a href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-warning animate-scale">
+                        <a href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") rel="noopener noreferrer" class="btn btn-border-warning animate-scale">
                             <i class="me-2">
                                 <Icon IconName="signature" />
                             </i>
                             Approve investments
                         </a>
 
-                        <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}")
+                        <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}") rel="noopener noreferrer"
                            class="btn btn-border animate-scale warning-button @(CanReleaseUnfundedProject() ? "" : "disabled")">
                             <i class="me-2">
                                 @if (CanReleaseUnfundedProject())
@@ -471,7 +471,7 @@
                     <h3 class="mt-4">Investment Active</h3>
                     <p class="action-text">
                         You are part of this project's success!
-                        <a href="@myProjectExplorerLink" target="_blank" class="d-block mt-2">View Transaction Details</a>
+                        <a href="@myProjectExplorerLink" target="_blank" class="d-block mt-2" rel="noopener noreferrer">View Transaction Details</a>
                     </p>
                     <div class="d-flex justify-content-center item-center mt-4">
 
@@ -655,7 +655,7 @@
             <h6>Relays</h6>
             @foreach (var relay in NostrClients)
             {
-                <a href="@relay" target="_blank">
+                <a href="@relay" target="_blank" rel="noopener noreferrer">
                     <div class="form-control mt-2 d-flex align-items-center">
                         <i class="me-2">
                             <Icon IconName="menu_open" />
