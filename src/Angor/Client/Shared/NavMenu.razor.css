@@ -71,6 +71,7 @@
     transition: all 0.4s ease;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    z-index: 999999;
 }
 
     .sidebar.collapsed {
@@ -214,28 +215,30 @@
 }
 
 .sidebar-nav .nav-tooltip {
-    position: absolute;
+    position: fixed;
     opacity: 0;
     display: none;
     pointer-events: none;
-    top: -20px;
-    justify-content: center;
-    transform: none;
     background: rgba(2, 34, 41, 0.9);
     color: #fff;
     padding: 4px 10px;
     border-radius: 4px;
-    font-size: 0.75rem;
+    font-size: 1rem;
     font-weight: 500;
     white-space: nowrap;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-    z-index: 1060;
     transition: opacity 0.25s ease;
+    left: 75px;
+    transform: translateY(-50%);
+    margin-left: 5px;
 }
+
+
 
 .sidebar.collapsed .sidebar-nav .nav-tooltip {
     display: block;
 }
+
 
 .sidebar-nav .nav-item {
     position: relative;
@@ -245,6 +248,26 @@
         opacity: 1;
         pointer-events: auto;
     }
+
+
+/* Add a small arrow pointing to the nav item */
+.sidebar-nav .nav-tooltip::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 6px 6px 6px 0;
+    border-style: solid;
+    border-color: transparent rgba(2, 34, 41, 0.9) transparent transparent;
+}
+
+/* Keep the mobile view behavior */
+@media (max-width: 768px) {
+    .sidebar-nav .nav-tooltip {
+        display: none !important;
+    }
+}
 
 
 
