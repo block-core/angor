@@ -344,7 +344,6 @@
                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
                     </tr>
                 </thead>
@@ -356,20 +355,6 @@
                             <td>@relay.Name</td>
                             <td class="@((relay.Status == UrlStatus.Online) ? "text-success" : (relay.Status == UrlStatus.NotReady) ? "text-warning" : "text-danger")">
                                 @relay.Status.ToString()
-                            </td>
-                            <td>
-                                @if (relay.IsPrimary)
-                                {
-                                    <span role="button">
-                                        <Icon IconName="primary" Height="24" Width="24"></Icon>
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span @onclick="() => SetPrimaryRelay(relay)" role="button">
-                                        <Icon IconName="set" Height="24" Width="24"></Icon>
-                                    </span>
-                                }
                             </td>
                             <td class="text-end">
                                 <button class="btn btn-border-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">
