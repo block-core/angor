@@ -1063,6 +1063,12 @@
 
     private async Task CreatProjectInfoOnNostrAnCheckPassword()
     {
+        if (!project.NostrProfileCreated)
+        {
+            notificationComponent.ShowErrorMessage("You must create the Nostr profile first.");
+            return;
+        }
+
         if (!passwordComponent.HasPassword())
         {
             passwordComponent.ShowPassword(CreatProjectInfoOnNostr);
@@ -1125,6 +1131,12 @@
 
     private async Task CreatProjectTransactionAnCheckPassword()
     {
+        if (string.IsNullOrEmpty(project.ProjectInfoEventId))
+        {
+            notificationComponent.ShowErrorMessage("You must publish the project information to Nostr first.");
+            return;
+        }
+
         if (!passwordComponent.HasPassword())
         {
             passwordComponent.ShowPassword(CreatProjectTransaction);
