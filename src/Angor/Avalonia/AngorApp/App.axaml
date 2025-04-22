@@ -11,7 +11,6 @@
         <misc:NamingConventionViewLocator />
         <misc:DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
         <misc:DataTemplateInclude Source="avares://Zafiro.Avalonia/Controls/Wizards/WizardTemplate.axaml" />
-        
         <DataTemplate DataType="password:IIcon">
             <avalonia:Icon FontSize="50" VerticalAlignment="Center" Margin="10" Value="{Binding Key}" />
         </DataTemplate>
@@ -35,12 +34,14 @@
         <StyleInclude Source="UI/Controls/Button.axaml" />
         <StyleInclude Source="Sections/Wallet/CreateAndRecover/Steps/SeedWordsGeneration/SeedWordList.axaml" />
         <StyleInclude Source="UI/Controls/IconButton.axaml" />
+        <StyleInclude Source="UI/Controls/FeerateSelector.axaml" />
     </Application.Styles>
 
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/ProgressRingStyles.axaml"/>
+                <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/NumberBoxStyles.axaml"/>
                 <MergeResourceInclude Source="UI/Controls/Header.axaml" />
                 <MergeResourceInclude Source="UI/Controls/SectionItem.axaml" />
                 <MergeResourceInclude Source="UI/Resources/Icons.axaml" />

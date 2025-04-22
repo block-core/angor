@@ -1,0 +1,44 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:AngorApp.UI.Controls"
+        xmlns:objectModel="clr-namespace:System.Collections.ObjectModel;assembly=System.Runtime">
+    <Design.PreviewWith>
+        <controls:FeerateSelector Margin="50">
+            <controls:FeerateSelector.Presets>
+                <objectModel:Collection x:TypeArguments="controls:Preset">
+                    <controls:Preset Name="Economy" />
+                    <controls:Preset Name="Standard" />
+                    <controls:Preset Name="Priority" />
+                </objectModel:Collection>
+            </controls:FeerateSelector.Presets>
+        </controls:FeerateSelector>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|FeerateSelector">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <StackPanel Spacing="10">
+                    <ListBox BorderThickness="2" BorderBrush="Gray" CornerRadius="2" ItemsSource="{Binding $parent[controls:FeerateSelector].Controller.Presets}">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Rows="1" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="controls:Preset">
+                                <TextBlock TextAlignment="Center" Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ListBox>
+                    <CheckBox x:Name="CheckBox" IsChecked="{Binding $parent[controls:FeerateSelector].Controller.UseCustomFeerate, Mode=TwoWay}" Content="Use custom feerate" />
+                    <NumericUpDown IsVisible="{Binding #CheckBox.IsChecked}" ShowButtonSpinner="False" MaxWidth="250" HorizontalAlignment="Left" Value="{Binding $parent[controls:FeerateSelector].Controller.CustomFeerate, Mode=TwoWay}">
+                        <NumericUpDown.InnerRightContent>
+                            <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">sats/vByte</TextBlock>
+                        </NumericUpDown.InnerRightContent>
+                    </NumericUpDown>
+                </StackPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>
