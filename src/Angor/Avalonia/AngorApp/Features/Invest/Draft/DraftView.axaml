@@ -5,8 +5,9 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:c="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:draft1="clr-namespace:AngorApp.Features.Invest.Draft"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="850"
-             x:Class="AngorApp.Features.Invest.Draft.DraftView"
+             mc:Ignorable="d" x:Class="AngorApp.Features.Invest.Draft.DraftView"
+             Width="400"
+             Height="300"
              x:DataType="draft1:IDraftViewModel">
 
     <Design.DataContext>
@@ -25,11 +26,7 @@
                 <TextBlock Text="{Binding SatsToInvest, StringFormat={x:Static controls:MiscConverters.Sats}}" />
             </HeaderedContentControl>
             <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Feerate">
-                <NumericUpDown ShowButtonSpinner="False" MaxWidth="250" HorizontalAlignment="Left" Value="{Binding Feerate, Mode=TwoWay}">
-                    <NumericUpDown.InnerRightContent>
-                        <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">sats/vByte</TextBlock>
-                    </NumericUpDown.InnerRightContent>
-                </NumericUpDown>
+                
             </HeaderedContentControl>
         </StackPanel>
         <Panel Margin="0 20 0 0">

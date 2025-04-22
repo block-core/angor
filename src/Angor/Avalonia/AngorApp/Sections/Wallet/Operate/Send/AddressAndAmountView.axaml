@@ -6,11 +6,11 @@
              xmlns:b="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              xmlns:s="clr-namespace:AngorApp.Sections.Wallet.Operate.Send"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" 
              x:Class="AngorApp.Sections.Wallet.Operate.Send.AddressAndAmountView" x:DataType="s:IAddressAndAmountViewModel">
 
-    <StackPanel VerticalAlignment="Center" Spacing="10" MaxWidth="500">
-        <StackPanel Spacing="20" MaxWidth="350">
+    <StackPanel VerticalAlignment="Center" Spacing="10" Width="300">
+        <StackPanel Spacing="20">
             <HeaderedContentControl Header="Destination">
                 <TextBox Text="{Binding Address}" Classes="clearButton" Watermark="Enter address" AcceptsReturn="False">
                     <Interaction.Behaviors>

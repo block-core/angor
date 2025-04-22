@@ -1,13 +1,14 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:AngorApp.UI.Controls">
+        xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+        xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia">
     <Design.PreviewWith>
         <Border>
             <controls:AmountControl Width="400" />
         </Border>
     </Design.PreviewWith>
 
-    <Style Selector="controls|AmountControl.untouched /template/ DataValidationErrors">
+    <Style Selector="controls|AmountControl.Untouched /template/ DataValidationErrors">
         <Setter Property="ErrorTemplate">
             <Setter.Value>
                 <DataTemplate />
@@ -44,7 +45,7 @@
                                         <TextBlock Classes="Dimmed" Text="{Binding $parent[controls:AmountControl].Unit}" VerticalAlignment="Center" Margin="0 0 10 0" />
                                     </NumericUpDown.InnerRightContent>
                                 </NumericUpDown>
-                                <Panel Margin="0 2" IsVisible="{Binding !!$parent[controls:AmountControl].Value}">
+                                <Panel Margin="0 2" Opacity="{Binding !!$parent[controls:AmountControl].Value, Converter={x:Static converters:OpacityConverters.BoolToOpacity}}">
                                     <TextBlock Classes="Dimmed SizeSmall" IsVisible="{Binding !$parent[controls:AmountControl].IsBitcoin}" Text="{Binding $parent[controls:AmountControl].Bitcoin, StringFormat='{}&#61; {0} BTC'}" />
                                     <TextBlock Classes="Dimmed SizeSmall" IsVisible="{Binding $parent[controls:AmountControl].IsBitcoin}" Text="{Binding $parent[controls:AmountControl].Satoshis, StringFormat='{}&#61; {0} sats'}" />
                                 </Panel>
