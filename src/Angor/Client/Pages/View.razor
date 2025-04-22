@@ -664,6 +664,21 @@
                     </div>
                 </a>
             }
+
+            <div class="action-buttons d-flex justify-content-center item-center mt-4">
+                <button @onclick="RepublishToNostr" class="btn btn-border mt-4" disabled="@isRepublishing">
+                    @if (isRepublishing)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        <span>Republishing...</span>
+                    }
+                    else
+                    {
+                        <Icon IconName="refresh" Class="me-2" />
+                        <span>Republish to Nostr Relays</span>
+                    }
+                </button>
+            </div>
         </div>
     }
 </div>
@@ -685,7 +700,7 @@
     private bool profileBannerModal = false;
     private bool isGeneratingNsec;
     private string errorMessage = string.Empty;
-
+    private bool isRepublishing = false;
 
     private string error;
 
@@ -732,7 +747,7 @@
 
         try
         {
-            NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
+            NostrClients = _NetworkService.GetRelays().Select(_ => _.Url.ToString()).ToList();
 
             project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
             if (project != null)
@@ -1028,5 +1043,72 @@
         // Project has started and total invested amount is less than target
         return project.ProjectInfo.StartDate <= DateTime.UtcNow
                && projectStats?.TotalRaised < project.ProjectInfo.TargetAmount;
+    }
+
+    private async Task RepublishToNostr()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(async () => { await RepublishNostrData(); });
+        }
+        else
+        {
+            await RepublishNostrData();
+        }
+    }
+
+    private async Task RepublishNostrData()
+    {
+        isRepublishing = true;
+        errorMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
+            var nostrKeyHex = Encoders.Hex.EncodeData(nostrKey.ToBytes());
+
+            var metadataResult = await _RelayService.CreateNostrProfileAsync(
+                project.Metadata.ToNostrMetadata(),
+                nostrKeyHex,
+                _ =>
+                {
+                    if (!_.Accepted)
+                    {
+                        Logger.LogWarning("Failed to republish Nostr profile metadata");
+                    }
+                });
+
+            var projectInfoResult = await _RelayService.AddProjectAsync(
+                project.ProjectInfo, 
+                nostrKeyHex,
+                _ =>
+                {
+                    if (!_.Accepted)
+                    {
+                        Logger.LogWarning("Failed to republish project information to relay");
+                    }
+                });
+
+            if (!string.IsNullOrEmpty(metadataResult) && !string.IsNullOrEmpty(projectInfoResult))
+            {
+                notificationComponent.ShowNotificationMessage("Successfully republished to Nostr relays", 3);
+            }
+            else
+            {
+                notificationComponent.ShowNotificationMessage("Partially republished to Nostr relays. Check logs for details.", 3);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error republishing to Nostr");
+            notificationComponent.ShowErrorMessage("Failed to republish: " + ex.Message, ex);
+        }
+        finally
+        {
+            isRepublishing = false;
+            StateHasChanged();
+        }
     }
 }
