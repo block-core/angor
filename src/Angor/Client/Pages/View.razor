@@ -664,21 +664,24 @@
                     </div>
                 </a>
             }
-
-            <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                <button @onclick="RepublishToNostr" class="btn btn-border mt-4" disabled="@isRepublishing">
-                    @if (isRepublishing)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                        <span>Republishing...</span>
-                    }
-                    else
-                    {
-                        <Icon IconName="refresh" Class="me-2" />
-                        <span>Republish to Nostr Relays</span>
-                    }
-                </button>
-            </div>
+            
+            @if (founder)
+            {
+                <div class="action-buttons d-flex justify-content-center item-center mt-4">
+                    <button @onclick="RepublishToNostr" class="btn btn-border mt-4" disabled="@isRepublishing">
+                        @if (isRepublishing)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Republishing...</span>
+                        }
+                        else
+                        {
+                            <Icon IconName="refresh" Class="me-2"/>
+                            <span>Republish to Nostr Relays</span>
+                        }
+                    </button>
+                </div>
+            }
         </div>
     }
 </div>
@@ -1047,6 +1050,12 @@
 
     private async Task RepublishToNostr()
     {
+        if (!founder)
+        {
+            notificationComponent.ShowErrorMessage("Only the founder can republish.");
+            return;
+        }
+
         if (!passwordComponent.HasPassword())
         {
             passwordComponent.ShowPassword(async () => { await RepublishNostrData(); });
