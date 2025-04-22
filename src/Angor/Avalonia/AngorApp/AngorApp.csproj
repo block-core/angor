@@ -26,6 +26,7 @@
         <PackageReference Include="CSharpFunctionalExtensions"/>
         <PackageReference Include="Humanizer.Core"/>
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome"/>
+        <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign" />
         <PackageReference Include="QRCoder"/>
         <PackageReference Include="ReactiveUI"/>
         <PackageReference Include="ReactiveUI.SourceGenerators">
@@ -36,7 +37,6 @@
         <PackageReference Include="Serilog.Sinks.Console"/>
         <PackageReference Include="Zafiro.Avalonia"/>
         <PackageReference Include="Zafiro.Avalonia.Dialogs"/>
-        <PackageReference Include="FluentAvaloniaUI"/>
     </ItemGroup>
 
     <ItemGroup>

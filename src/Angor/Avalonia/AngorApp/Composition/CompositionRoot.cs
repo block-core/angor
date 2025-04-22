@@ -58,7 +58,6 @@ public static class CompositionRoot
             .Add<IBrowseSectionViewModel>("Browse", "fa-magnifying-glass")
             .Add<IPortfolioSectionViewModel>("Portfolio", "fa-hand-holding-dollar")
             .Add<IFounderSectionViewModel>("Founder", "fa-money-bills")
-            .Separator()
             .Command("Angor Hub", ReactiveCommand.Create(() => { }), "fa-gear", false)
         );
     }
