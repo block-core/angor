@@ -1,4 +1,4 @@
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Domain;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 
 namespace AngorApp.UI.Controls.Common.TransactionDraft;

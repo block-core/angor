@@ -4,35 +4,43 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             mc:Ignorable="d" d:DesignWidth="1200"
+             xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
         <dt:ProjectDetailsViewModelDesign />
     </Design.DataContext>
 
-    <Grid ColumnDefinitions="1* 5* 1*">
-        <StackPanel Grid.Column="1" Spacing="20">
-            <Panel>
-                <dt:ProjectSummary />
-                <Border CornerRadius="20" Background="White" Padding="10" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="20 20">
-                    <Button Command="{Binding Invest}">INVEST NOW</Button>
-                </Border>
-            </Panel>
-            
-            <dt:Stages />
-            
-            <controls:Pane>
-                <StackPanel HorizontalAlignment="Center" Spacing="20">
-                    <PathIcon Height="100" Width="200" Data="{StaticResource ShieldStar}" />
-                    <TextBlock Text="Seize the opportunity to invest in this project" TextAlignment="Center" />
-                    <Button HorizontalAlignment="Center" Command="{Binding Invest}">INVEST NOW</Button>
+    <Panel>
+        <ScrollViewer>
+            <Grid ColumnDefinitions="1* 5* 1*">
+                <StackPanel Grid.Column="1" Spacing="20">
+                    <Panel>
+                        <dt:ProjectSummary />
+                        <Border CornerRadius="20" Background="White" Padding="10" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="20 20">
+                            <Button Command="{Binding Invest}">INVEST NOW</Button>
+                        </Border>
+                    </Panel>
+
+                    <dt:Stages />
+
+                    <controls:Pane>
+                        <StackPanel HorizontalAlignment="Center" Spacing="20">
+                            <PathIcon Height="100" Width="200" Data="{StaticResource ShieldStar}" />
+                            <TextBlock Text="Seize the opportunity to invest in this project" TextAlignment="Center" />
+                            <Button HorizontalAlignment="Center" Command="{Binding Invest}">INVEST NOW</Button>
+                        </StackPanel>
+                    </controls:Pane>
+
+                    <dt:NostProperties />
+
                 </StackPanel>
-            </controls:Pane>
 
-            <dt:NostProperties />
-
-        </StackPanel>
-
-    </Grid>
+            </Grid>
+        </ScrollViewer>
+        <Border Background="White" Opacity="0.6" IsVisible="{Binding Invest.IsExecuting^}">
+            <fa:ProgressRing IsIndeterminate="True" Width="100" Height="100" />
+        </Border>
+    </Panel>
 </UserControl>

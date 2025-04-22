@@ -1,13 +1,13 @@
-using System.Reactive.Linq;
-using Angor.UI.Model;
-using Angor.Wallet.Application;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Wallet.Application;
+using AngorApp.Features.Invest;
+using AngorApp.Sections.Browse.Details;
 using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.UI.Services;
-using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Controls.Navigation;
-using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
+using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse;
 
@@ -17,14 +17,17 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
 
     [ObservableAsProperty] private IList<IProjectViewModel>? projects;
 
-    public BrowseSectionViewModel(IWalletAppService walletAppService, IProjectService projectService, INavigator navigator,
+    public BrowseSectionViewModel(IWalletAppService walletAppService, 
+        IProjectAppService projectService, INavigator navigator,
+        InvestWizard investWizard,
         UIServices uiServices)
     {
-        ProjectLookupViewModel = new ProjectLookupViewModel(projectService, walletAppService, navigator, uiServices);
+        ProjectLookupViewModel = new ProjectLookupViewModel(projectService, walletAppService, navigator, investWizard, uiServices);
 
         LoadLatestProjects = ReactiveCommand.CreateFromObservable(() => Observable.FromAsync(projectService.Latest)
             .Flatten()
-            .Select(IProjectViewModel (project) => new ProjectViewModel(walletAppService, project, navigator, uiServices))
+            .Select(dto => dto.ToProject())
+            .Select(IProjectViewModel (project) => new ProjectViewModel(walletAppService, project, navigator, uiServices, investWizard))
             .ToList());
 
         OpenHub = ReactiveCommand.CreateFromTask(() =>

@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
-using Angor.Wallet.Application;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Application;
+using Angor.Contexts.Wallet.Domain;
 using AngorApp.Sections.Browse;
 
 namespace AngorApp.Design;

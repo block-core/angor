@@ -1,16 +1,17 @@
-using System.Diagnostics;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Windows.Input;
-using Angor.UI.Model;
-using Angor.Wallet.Application;
+using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Wallet.Application;
 using AngorApp.Core;
+using AngorApp.Features.Invest;
+using AngorApp.Sections.Browse.Details;
 using AngorApp.UI.Services;
-using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using Serilog;
 using Zafiro.Avalonia.Controls.Navigation;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse.ProjectLookup;
 
@@ -24,9 +25,10 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
     [Reactive] private IProjectViewModel? selectedProject;
 
     public ProjectLookupViewModel(
-        IProjectService projectService,
+        IProjectAppService projectService,
         IWalletAppService walletAppService,
         INavigator navigator,
+        InvestWizard investWizard,
         UIServices uiServices)
     {
         lookupResults = new SafeMaybe<IList<IProjectViewModel>>(Maybe<IList<IProjectViewModel>>.None);
@@ -34,12 +36,12 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
         Lookup = ReactiveCommand.CreateFromTask<string, SafeMaybe<IList<IProjectViewModel>>>(
             async pid =>
             {
-                var maybeProject = await projectService.FindById(pid);
+                var maybeProject = await projectService.FindById(new ProjectId(pid)).Map(dto => dto.ToProject());
                 Log.Debug("Got project {ProjectId}", pid);
 
                 return maybeProject.Map<IProject, IList<IProjectViewModel>>(project =>
                 {
-                    var vm = new ProjectViewModel(walletAppService, project, navigator, uiServices);
+                    var vm = new ProjectViewModel(walletAppService, project, navigator, uiServices, investWizard);
                     return new List<IProjectViewModel> { vm };
                 }).AsSafeMaybe();
             }

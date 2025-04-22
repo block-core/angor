@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Domain;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Wallet.Operate;
 using Zafiro.UI;
@@ -18,7 +18,7 @@ public class WalletDesign : IWallet
         new BroadcastedTransactionDesign { Address = "someaddress4", Amount = 30000, UtxoCount = 15, Path = "path", ViewRawJson = "json" }
     ]);
 
-    public IObservable<long> Balance { get; } = Observable.Return<long>(5_0000_0000);
+    public long Balance { get; } = 5_0000_0000;
     
     public async Task<Result<ITransactionDraft>> CreateDraft(long amount, string address, long feerate)
     {
@@ -40,7 +40,6 @@ public class WalletDesign : IWallet
     }
 
     public WalletId Id { get; }
-    public StoppableCommand<Unit, Result<BroadcastedTransaction>> SyncCommand { get; }
     public IObservable<bool> HasTransactions { get; } = Observable.Return(false);
     public IObservable<bool> HasBalance { get; }= Observable.Return(false);
     public async Task<Result<string>> GenerateReceiveAddress()

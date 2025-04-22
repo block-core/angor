@@ -14,7 +14,7 @@
     
     <controls:Pane IsTitleVisible="True">
         <controls:Pane.Title>
-            <Binding Path="Wallet.Balance^" Converter="{x:Static controls:MiscConverters.SatsToBtcString}" />
+            <Binding Path="Wallet.Balance" Converter="{x:Static controls:MiscConverters.SatsToBtcString}" />
         </controls:Pane.Title>
         <controls:Pane.TitleIcon>
             <i:Icon Value="fa-database" />

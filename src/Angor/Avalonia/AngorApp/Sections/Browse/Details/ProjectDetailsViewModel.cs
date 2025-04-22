@@ -1,14 +1,7 @@
-using System.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
-using System.Windows.Input;
-using Angor.Wallet.Application;
-using Angor.Wallet.Domain;
-using AngorApp.Sections.Browse.Details.Invest.Amount;
-using AngorApp.UI.Controls.Common.Success;
-using AngorApp.UI.Controls.Common.TransactionDraft;
+using AngorApp.Features.Invest;
 using AngorApp.UI.Services;
-using Avalonia.Threading;
-using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI;
 
@@ -17,31 +10,20 @@ namespace AngorApp.Sections.Browse.Details;
 public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 {
     private readonly IProject project;
+    private readonly InvestWizard investWizard;
+    private readonly UIServices uiServices;
 
-    public ProjectDetailsViewModel(IWalletAppService walletAppService, IProject project, UIServices uiServices)
+    public ProjectDetailsViewModel(IProject project, InvestWizard investWizard, UIServices uiServices)
     {
         this.project = project;
-        Invest = ReactiveCommand.CreateFromTask(() =>
-        {
-            return walletAppService.GetMetadatas()
-                .Map(x => x.TryFirst())
-                .Bind(maybeMetadata =>
-                {
-                    if (maybeMetadata.HasValue)
-                    {
-                        return Result.Success(DoInvest(maybeMetadata.Value.Id, walletAppService, project, uiServices));
-                    }
-                    else
-                    {
-                        return Result.Success(Maybe<Unit>.None);
-                    }
-                });
-        });
+        this.investWizard = investWizard;
+        this.uiServices = uiServices;
+        Invest = ReactiveCommand.CreateFromTask(DoInvest);
 
-        Invest.HandleErrorsWith(uiServices.NotificationService);
+        Invest.HandleErrorsWith(uiServices.NotificationService, "Investment failed");
     }
 
-    public object Icon => project.Icon;
+    public object Icon => project.Banner;
     public object Picture => project.Picture;
 
     public ReactiveCommand<Unit, Result> Invest { get; }
@@ -64,23 +46,17 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
     public double CurrentInvestment { get; } = 0.79d;
     public IProject Project => project;
 
-    private static async Task<Maybe<Unit>> DoInvest(WalletId walletId, IWalletAppService walletAppService, IProject project, UIServices uiServices)
+    private async Task<Result> DoInvest()
     {
-        return await Observable
-            .Defer(() => Observable.FromAsync(() =>
-            {
-                var wizard = WizardBuilder.StartWith(() => new AmountViewModel(walletId, walletAppService, project))
-                    .Then(viewModel =>
-                    {
-                        var destination = new Destination(project.Name, viewModel.Amount!.Value, project.BitcoinAddress);
-                        return new TransactionDraftViewModel(walletId, walletAppService, destination, uiServices);
-                    })
-                    .Then(_ => new SuccessViewModel("Transaction confirmed!", "Success"))
-                    .FinishWith(model => Unit.Default);
-                
-                return uiServices.Dialog.ShowWizard(wizard, @$"Invest in ""{project}""");
-            }))
-            .SubscribeOn(RxApp.MainThreadScheduler)
-            .FirstAsync();
+        var getCurrentResult = await uiServices.WalletRoot.GetDefaultWalletAndActivate().Tap(r => r.ExecuteNoValue(ShowNoWalletMessage));
+        return await getCurrentResult
+            .Map(maybeWallet => maybeWallet
+                .Bind(wallet => investWizard.Invest(wallet, project)));
+    }
+
+    private async Task<Maybe<Unit>> ShowNoWalletMessage()
+    {
+        await uiServices.Dialog.ShowMessage("No wallet found", "Please create or recover a wallet to invest in this project.");
+        return Maybe<Unit>.None;
     }
 }
