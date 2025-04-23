@@ -6,5 +6,5 @@ public interface IDraftViewModel : IStep
 {
     public long SatsToInvest { get; }
     InvestmentDraft Draft { get; }
-    public long Feerate { get; set; }
+    public long? Feerate { get; set; }
 }

@@ -4,7 +4,6 @@
         xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
         xmlns:wizards="clr-namespace:Zafiro.Avalonia.Controls.Wizards;assembly=Zafiro.Avalonia"
         xmlns:controls="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
-        xmlns:dialogs="clr-namespace:Zafiro.Avalonia.Dialogs;assembly=Zafiro.Avalonia.Dialogs"
         xmlns:views="clr-namespace:Zafiro.Avalonia.Dialogs.Views;assembly=Zafiro.Avalonia.Dialogs">
 
     <Styles.Resources>

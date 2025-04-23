@@ -3,11 +3,11 @@
         xmlns:z="clr-namespace:Zafiro.Avalonia.Dialogs;assembly=Zafiro.Avalonia.Dialogs"
         xmlns:zd="clr-namespace:Zafiro.Avalonia.Dialogs.Views;assembly=Zafiro.Avalonia.Dialogs"
         xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
-        xmlns:amount1="clr-namespace:AngorApp.Features.Invest.Amount">
+        xmlns:a="clr-namespace:AngorApp.Features.Invest.Amount">
     <Design.PreviewWith>
         <zd:DialogControl Width="600" Height="500">
             <z:DialogView.Content>
-                <amount1:AmountView VerticalAlignment="Center" />
+                <a:AmountView VerticalAlignment="Center" />
             </z:DialogView.Content>
             <z:DialogView.Options>
                 <generic:List x:TypeArguments="z:IOption">

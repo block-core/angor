@@ -19,7 +19,7 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <StackPanel Spacing="10">
-                    <ListBox BorderThickness="2" BorderBrush="Gray" CornerRadius="2" ItemsSource="{Binding $parent[controls:FeerateSelector].Controller.Presets}">
+                    <ListBox SelectedItem="{Binding $parent[controls:FeerateSelector].Controller.SelectedPreset}" BorderThickness="2" BorderBrush="Gray" CornerRadius="2" ItemsSource="{Binding $parent[controls:FeerateSelector].Controller.Presets}">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <UniformGrid Rows="1" />

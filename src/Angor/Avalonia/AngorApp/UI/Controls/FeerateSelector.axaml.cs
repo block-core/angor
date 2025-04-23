@@ -1,6 +1,6 @@
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Data;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
@@ -18,15 +18,6 @@ public class FeerateSelector : TemplatedControl
         set => SetValue(PresetsProperty, value);
     }
 
-    public static readonly StyledProperty<double> CustomFeerateProperty = AvaloniaProperty.Register<FeerateSelector, double>(
-        nameof(CustomFeerateProperty));
-
-    public double CustomFeerate
-    {
-        get => GetValue(CustomFeerateProperty);
-        set => SetValue(CustomFeerateProperty, value);
-    }
-    
     public static readonly StyledProperty<Controller> ControllerProperty = AvaloniaProperty.Register<FeerateSelector, Controller>(
         nameof(Controller));
 
@@ -40,18 +31,35 @@ public class FeerateSelector : TemplatedControl
     {
         Controller = new Controller();
         this.WhenAnyValue(x => x.Presets).BindTo(this, x => x.Controller.Presets);
+        this.WhenAnyValue(x => x.Controller.Feerate).Select(l => l).Subscribe(l => Feerate = l);
+    }
+
+    private long? feerate;
+
+    public static readonly DirectProperty<FeerateSelector, long?> FeerateProperty = AvaloniaProperty.RegisterDirect<FeerateSelector, long?>(
+        nameof(Feerate), o => o.Feerate, (o, v) => o.Feerate = v, defaultBindingMode: BindingMode.OneWayToSource);
+
+    public long? Feerate
+    {
+        get => feerate;
+        set => SetAndRaise(FeerateProperty, ref feerate, value);
     }
 }
 
 public partial class Controller : ReactiveValidationObject
 {
-    [Reactive] private double customFeerate;
+    [Reactive] private long? customFeerate;
     [Reactive] private bool useCustomFeerate;
     [Reactive] private IEnumerable<Preset>? presets;
+    [Reactive] private Preset? selectedPreset;
+    [ObservableAsProperty] private long? feerate;
 
     public Controller()
     {
-        this.ValidationRule(x => x.CustomFeerate, d => d > 0 && d < 1000, "Invalid feerate");
+        this.ValidationRule(x => x.CustomFeerate, d => d > 0 && d < 1000, "Invalid custom feerate");
+        this.ValidationRule(x => x.Feerate, d => d > 0 && d < 1000, "Invalid feerate");
+        var feerates = this.WhenAnyValue(x => x.CustomFeerate, x => x.SelectedPreset, x => x.UseCustomFeerate, (custom, preset, useCustom) => useCustom ? custom : preset?.SatsPerVByte);
+        feerateHelper = feerates.ToProperty(this, x => x.Feerate);
     }
 }
 
