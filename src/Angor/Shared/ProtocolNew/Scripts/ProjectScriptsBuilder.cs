@@ -24,12 +24,12 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
             Op.GetPushOp(new PubKey(investorKey).ToBytes()));
     }
 
-    public Script BuildFounderInfoScript(string founderKey, short keyType , string nostrPuKey)
+    public Script BuildFounderInfoScript(string founderKey, short keyType , string nostrEventId)
     {
         return new Script(OpcodeType.OP_RETURN,
             Op.GetPushOp(new PubKey(founderKey).ToBytes()),
             Op.GetPushOp(BitConverter.GetBytes(keyType)),
-            Op.GetPushOp(Encoders.Hex.DecodeData(nostrPuKey)));
+            Op.GetPushOp(Encoders.Hex.DecodeData(nostrEventId)));
     }
 
     public Script BuildSeederInfoScript(string investorKey, uint256 secretHash)

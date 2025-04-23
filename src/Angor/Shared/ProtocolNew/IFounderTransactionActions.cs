@@ -14,5 +14,5 @@ public interface IFounderTransactionActions
         FeeEstimation fee);
 
     Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, short keyType,
-        string nostrPubKey);
+        string nostrEventId);
 }
