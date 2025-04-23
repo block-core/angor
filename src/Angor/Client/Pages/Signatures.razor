@@ -11,6 +11,9 @@
 @using Angor.Shared.Services
 @using System.Security.Cryptography
 @using Angor.Shared.Utilities
+@using Nostr.Client.Messages
+@using System.Collections.ObjectModel
+@using System.Reactive.Linq
 
 @inject IJSRuntime JS
 
@@ -25,6 +28,10 @@
 @inject NavMenuState NavMenuState
 @inject NostrConversionHelper NostrHelper
 @inject INetworkService _networkService
+@inject INostrCommunicationFactory _nostrCommunicationFactory
+@inject IEncryptionService _encryptionService
+@inject IRelayService _RelayService
+@inject NavigationManager NavigationManager
 
 @inherits BaseComponent
 
@@ -73,7 +80,6 @@
     </div>
 </div>
 
- 
 <div class="slide-in mt-4">
     @if (!signaturesRequests.Any())
     {
@@ -110,7 +116,7 @@
         }
         else
         {
-            <div class="card card-body hover-effect">
+            <div class="card card-body">
                 <div class="header-container">
                     <div class="header-content">
                         <div class="header-title animate-fade-in">
@@ -136,7 +142,7 @@
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Npub</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Chat</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Message</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -175,13 +181,34 @@
                                         }
                                     </td>
                                     <td>
-                                        Investment npub: @NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey) <br />
-                                        Additional npub: @signature.SignRecoveryRequest?.AdditionalNpub
+                                        <div class="d-flex flex-column">
+                                            <div class="mb-1">
+                                                <div class="d-flex align-items-center">
+                                                    <small class="text-muted">Investment npub:</small>
+                                                    <button class="btn btn-sm btn-icon ms-1" @onclick="() => CopyToClipboard(NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey))" title="Copy npub">
+                                                        <Icon IconName="copy" Width="12" Height="12" />
+                                                    </button>
+                                                </div>
+                                                <span class="d-block text-truncate" style="max-width: 200px;">@NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey)</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(signature.SignRecoveryRequest?.AdditionalNpub))
+                                            {
+                                                <div>
+                                                    <div class="d-flex align-items-center">
+                                                        <small class="text-muted">Additional npub:</small>
+                                                        <button class="btn btn-sm btn-icon ms-1" @onclick="() => CopyToClipboard(signature.SignRecoveryRequest.AdditionalNpub)" title="Copy npub">
+                                                            <Icon IconName="copy" Width="12" Height="12" />
+                                                        </button>
+                                                    </div>
+                                                    <span class="d-block text-truncate" style="max-width: 200px;">@signature.SignRecoveryRequest?.AdditionalNpub</span>
+                                                </div>
+                                            }
+                                        </div>
                                     </td>
-                                    <td class="d-flex justify-content-end align-items-center">
-                                        <button class="btn btn-sm btn-border-success" @onclick="() => ShowChatModal(signature.investorNostrPubKey)">
+                                    <td>
+                                        <button class="btn btn-sm btn-border-success" @onclick="() => ShowMessageModal(signature.investorNostrPubKey)">
                                             <Icon IconName="chat" Width="16" Height="16" class="me-1" />
-                                            Chat
+                                            Message
                                         </button>
                                     </td>
                                 </tr>
@@ -194,84 +221,18 @@
     }
 </div>
 
-@if (showChatModal)
+@if (showMessageModal)
 {
-    <div class="modal-wrapper" style="z-index: 1050;">
-        <div class="modal fade show d-block" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content modern-modal animate-fade-in">
-                    <div class="modal-header border-0 pb-0">
-                        <div class="d-flex align-items-center">
-                            <Icon IconName="message" Height="32" Width="32" class="me-2" />
-                            <h5 class="modal-title">Chat Options</h5>
-                        </div>
-                        <button class="btn-close-custom" @onclick="() => showChatModal = false">
-                            <Icon IconName="close-circle" Height="24" Width="24" />
-                        </button>
-                    </div>
-
-                    <div class="modal-body py-4">
-                        <div class="d-flex flex-column gap-3">
-                            <div class="info-card p-3 mt-2 animate-fade-in">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="info-label mb-2">Investor NPUB:</div>
-                                    <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(currentInvestorNpub)">
-                                        <Icon IconName="copy" Width="16" Height="16" />
-                                    </button>
-                                </div>
-                                <div class="info-value text-break word-wrap">
-                                    @currentInvestorNpub
-                                </div>
-                            </div>
-                            
-                            <div class="info-card p-3 mt-2 animate-fade-in">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="info-label mb-2">Founder NPUB:</div>
-                                    <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(founderNpub)">
-                                        <Icon IconName="copy" Width="16" Height="16" />
-                                    </button>
-                                </div>
-                                <div class="info-value text-break word-wrap">
-                                    @founderNpub
-                                </div>
-                            </div>
-                            
-                            <button type="button" class="btn btn-border-success w-100" @onclick="OpenChatApp">
-                                <Icon IconName="message" Width="20" Height="20" class="me-2" />
-                                <span>Open Chat App</span>
-                            </button>
-                            
-                            <button type="button" class="btn btn-border-warning w-100" @onclick="ShowNsecAndCheckPassword">
-                                <Icon IconName="key" Width="20" Height="20" class="me-2" />
-                                <span>Show NSEC</span>
-                            </button>
-                            
-                            @if (showNsec)
-                            {
-                                <div class="info-card p-3 mt-2 animate-fade-in">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="info-label mb-2">NSEC:</div>
-                                        <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(nsecValue)">
-                                            <Icon IconName="copy" Width="16" Height="16" />
-                                        </button>
-                                    </div>
-                                    <div class="info-value text-break word-wrap">
-                                        @nsecValue
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-border-warning" @onclick="() => showChatModal = false">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <MessageComponent 
+        ContactNpub="@currentInvestorNpub"
+        ContactHexPub="@currentInvestorHexPub"
+        CurrentUserNpub="@founderNpub"
+        CurrentUserPrivateKeyHex="@currentUserPrivateKeyHex"
+        MessageTitle="Investor"
+        MessageAppUrl="@($"/messages/{FounderProject.ProjectInfo.ProjectIdentifier}/founder/{currentInvestorHexPub}")"
+        OnClose="@(() => showMessageModal = false)"
+        OnNsecRequest="@ShowNsecAndCheckPassword"
+        OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
 }
 
 @code {
@@ -298,12 +259,27 @@
     private int numOfSignatureToSign = 0;
     private int numOfSignaturesSigned = 0;
 
-    private bool showChatModal = false;
-    private bool showNsec = false;
-    private string nsecValue = "";
+    private bool showMessageModal = false;
     private string currentInvestorNpub = "";
     private string currentInvestorHexPub = "";
     private string founderNpub = "";
+    private string currentUserPrivateKeyHex = "";
+
+    private ElementReference messagesContainerRef;
+    private List<DirectMessage> chatMessages = new();
+    private string newMessage = "";
+    private bool isLoadingMessages = false;
+    private bool isSendingMessage = false;
+    private IDisposable messageSubscription;
+
+    public class DirectMessage
+    {
+        public string Id { get; set; }
+        public string Content { get; set; }
+        public string SenderPubkey { get; set; }
+        public DateTime Timestamp { get; set; }
+        public bool IsFromCurrentUser { get; set; }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -711,7 +687,7 @@
         notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
     }
     
-    private void ShowChatModal(string investorNostrPubKey)
+    private void ShowMessageModal(string investorNostrPubKey)
     {
         currentInvestorHexPub = investorNostrPubKey;
         currentInvestorNpub = NostrHelper.ConvertHexToNpub(investorNostrPubKey) ?? investorNostrPubKey;
@@ -720,17 +696,54 @@
         founderNpub = NostrHelper.ConvertHexToNpub(FounderProject.ProjectInfo.NostrPubKey) ?? 
                       FounderProject.ProjectInfo.NostrPubKey;
         
-        showChatModal = true;
-        showNsec = false;
+        showMessageModal = true;
+        
+        // Initialize messaging
+        InitializeMessagingAndCheckPassword();
+        
         StateHasChanged();
     }
     
-    private void ShowNsecAndCheckPassword()
+    private void InitializeMessagingAndCheckPassword()
     {
         if (!passwordComponent.HasPassword())
         {
-            showChatModal = false;
-            passwordComponent.ShowPassword(RetrieveAndShowNsec);
+            passwordComponent.ShowPassword(async () =>
+            {
+                await InitializeMessaging();
+            });
+        }
+        else
+        {
+            _ = InitializeMessaging();
+        }
+    }
+    
+    private async Task InitializeMessaging()
+    {
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+            var founderNostrPrivateKey = DerivationOperations.DeriveProjectNostrPrivateKey(words, FounderProject.ProjectInfo.FounderKey);
+            currentUserPrivateKeyHex = Encoders.Hex.EncodeData(founderNostrPrivateKey.ToBytes());
+            
+            // Now that we have the private key, the message component will automatically initialize
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage("Failed to initialize messaging", ex);
+        }
+    }
+    
+    private void ShowNsecAndCheckPassword(bool requested)
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(async () =>
+            {
+                await RetrieveAndShowNsec();
+            });
         }
         else
         {
@@ -748,9 +761,10 @@
             {
                 var founderNostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
                 var nostrHexSecKey = Encoders.Hex.EncodeData(founderNostrPrivateKey.ToBytes());
-                nsecValue = NostrHelper.ConvertHexToNsec(nostrHexSecKey)!;
-                showChatModal = true;
-                showNsec = true;
+                var nsecValue = NostrHelper.ConvertHexToNsec(nostrHexSecKey)!;
+                
+                // Find the MessageComponent instance using JS interop and set the nsec value
+                await JS.InvokeVoidAsync("document.querySelector('message-component').nsecValue", nsecValue);
                 StateHasChanged();
             }
             else
@@ -764,10 +778,8 @@
         }
     }
     
-    private async void OpenChatApp()
+    public void Dispose()
     {
-        var primaryChatApp = _networkService.GetPrimaryChatApp();
-        var url = $"{primaryChatApp.Url}/{currentInvestorNpub}";
-        await JS.InvokeVoidAsync("window.open", url, "_blank");
+        messageSubscription?.Dispose();
     }
 }
