@@ -47,6 +47,7 @@ public static class FundingContextServices
         services.TryAddSingleton<IProjectScriptsBuilder, ProjectScriptsBuilder>();
         services.TryAddSingleton<IDerivationOperations, DerivationOperations>();
         services.TryAddSingleton<IHdOperations, HdOperations>();
+        services.TryAddSingleton<ISignService, SignService>();
         services.TryAddSingleton<ISpendingTransactionBuilder, SpendingTransactionBuilder>();
         services.TryAddSingleton<IInvestmentTransactionBuilder, InvestmentTransactionBuilder>();
         services.TryAddSingleton<ITaprootScriptBuilder, TaprootScriptBuilder>();
