@@ -78,6 +78,11 @@
         <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
     </Style>
     
+    <Style Selector="controls|Pane ContentPresenter#PART_HeaderTitle">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
     <Style Selector="TextBlock.Wrap">
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>

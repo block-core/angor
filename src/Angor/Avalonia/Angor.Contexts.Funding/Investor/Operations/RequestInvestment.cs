@@ -74,8 +74,8 @@ public static class RequestInvestment
             {
                 string nostrPubKey = project.NostrPubKey;
 
-                var senderPrivateKey = derivationOperations.DeriveNostrStorageKey(walletWords);
-                var senderPrivateKeyHex = Encoders.Hex.EncodeData(senderPrivateKey.ToBytes());
+                var investorNostrPrivateKey = await derivationOperations.DeriveProjectNostrPrivateKeyAsync(walletWords, project.FounderKey);
+                var investorNostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
 
                 var signRequest = new SignRecoveryRequest
                 {
@@ -86,7 +86,7 @@ public static class RequestInvestment
                 var serialized = serializer.Serialize(signRequest);
 
                 var encryptedContent = await encryptionService.EncryptNostrContentAsync(
-                    senderPrivateKeyHex,
+                    investorNostrPrivateKeyHex,
                     nostrPubKey,
                     serialized);
 
@@ -98,7 +98,7 @@ public static class RequestInvestment
                     useSynchronizationContext: false);
 
                 var eventId = relayService.SendDirectMessagesForPubKeyAsync(
-                    senderPrivateKeyHex,
+                    investorNostrPrivateKeyHex,
                     nostrPubKey,
                     encryptedContent,
                     response => { tcs.TrySetResult((response.Accepted, response.Message ?? "No message")); });

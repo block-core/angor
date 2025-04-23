@@ -12,7 +12,7 @@
              x:DataType="commit:ICommitViewModel">
     
     <Design.DataContext>
-        <commit:CommitViewModelDesign IsInvesting="{designTime:Return True}" />
+        <commit:CommitViewModelDesign IsInvesting="{designTime:Return False}" />
     </Design.DataContext>
 
     <DockPanel>
