@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
              xmlns:amount1="clr-namespace:AngorApp.Features.Invest.Amount"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Features.Invest.Amount.StagesBreakdown" x:DataType="amount1:IAmountViewModel">
@@ -13,22 +12,11 @@
         <amount1:AmountViewModelDesign />
     </Design.DataContext>
 
-    <ItemsControl ItemsSource="{Binding Project.Stages}">
+    <ItemsControl ItemsSource="{Binding StageBreakdowns}">
         <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="model:IStage">
+            <DataTemplate>
                 <controls:SectionItem Margin="6" Padding="10">
-                    <TextBlock DockPanel.Dock="Top">
-                        <TextBlock.Text>
-                            <MultiBinding StringFormat="Stage {0}: invest {1} sats that will be released on {2:d}">
-                                <Binding Path="Index" />
-                                <MultiBinding Converter="{x:Static controls:MathConverters.Evaluate}" ConverterParameter="{}{0}*{1}">
-                                    <ReflectionBinding Path="$parent[amount1:StagesBreakdown].DataContext.AmountInSats" />
-                                    <Binding Path="Weight" />
-                                </MultiBinding>
-                                <Binding Path="ReleaseDate" />
-                            </MultiBinding>
-                        </TextBlock.Text>
-                    </TextBlock>
+                    <TextBlock DockPanel.Dock="Top" Text="{Binding Description}" />
                 </controls:SectionItem>
             </DataTemplate>
         </ItemsControl.ItemTemplate>
