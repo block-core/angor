@@ -10,11 +10,11 @@ public class AmountViewModelDesign : IAmountViewModel
     public decimal? AmountInBtc { get; set; }
     public IProject Project { get; } = new ProjectDesign();
 
-    public IEnumerable<StageBreakdown> StageBreakdowns { get; } = new List<StageBreakdown>
+    public IEnumerable<Breakdown> StageBreakdowns { get; } = new List<Breakdown>
     {
-        new StageBreakdown(1, 120, 0.2, DateTime.Now),
-        new StageBreakdown(1, 120, 0.2, DateTime.Now),
-        new StageBreakdown(1, 120, 0.2, DateTime.Now),
+        new Breakdown(1, 120, 0.2, DateTime.Now),
+        new Breakdown(1, 120, 0.2, DateTime.Now),
+        new Breakdown(1, 120, 0.2, DateTime.Now),
     };
     
     public IObservable<bool> IsValid => Observable.Return(true);

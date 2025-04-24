@@ -8,7 +8,7 @@ namespace AngorApp.Features.Invest.Amount;
 public partial class AmountViewModel : ReactiveValidationObject, IAmountViewModel
 {
     [Reactive] private long? amount;
-    [ObservableAsProperty] private IEnumerable<StageBreakdown> stageBreakdowns;
+    [ObservableAsProperty] private IEnumerable<Breakdown> stageBreakdowns;
 
     public AmountViewModel(IWallet wallet, IProject project)
     {
@@ -25,7 +25,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
 
         stageBreakdownsHelper = this.WhenAnyValue(model => model.Amount)
             .WhereNotNull()
-            .Select(l => project.Stages.Select(stage => new StageBreakdown(stage.Index, l!.Value, stage.Weight, stage.ReleaseDate)))
+            .Select(l => project.Stages.Select(stage => new Breakdown(stage.Index, l!.Value, stage.Weight, stage.ReleaseDate)))
             .ToProperty(this, x => x.StageBreakdowns);
     }
 
