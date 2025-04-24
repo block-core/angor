@@ -2,7 +2,7 @@ using System.Linq;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.UI.Model.Implementation.Projects;
 
-namespace AngorApp.Sections.Browse.ProjectLookup;
+namespace AngorApp.Sections.Browse;
 
 public static class ProjectExtensions
 {

@@ -8,7 +8,7 @@ using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
 using Zafiro.UI;
 
-namespace AngorApp.UI.Controls.Common.TransactionDraft;
+namespace AngorApp.Sections.Wallet.Operate.Send.TransactionDraft;
 
 public partial class TransactionDraftViewModel : ReactiveValidationObject, ITransactionDraftViewModel
 {
@@ -22,9 +22,9 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
         this.walletId = walletId;
         this.walletAppService = walletAppService;
         Destination = destination;
-        CreateDraft = ReactiveCommand.CreateFromTask(() => CreateDraftTo(destination.Amount, destination.BitcoinAddress, Feerate));
+        CreateDraft = ReactiveCommand.CreateFromTask<Result<ITransactionDraft>>(() => CreateDraftTo(destination.Amount, destination.BitcoinAddress, Feerate));
         transactionDraftHelper = CreateDraft.Successes().ToProperty(this, x => x.TransactionDraft);
-        Confirm = ReactiveCommand.CreateFromTask(() => TransactionDraft!.Submit(),
+        Confirm = ReactiveCommand.CreateFromTask<Result<TxId>>(() => TransactionDraft!.Submit(),
             this.WhenAnyValue<TransactionDraftViewModel, ITransactionDraft>(x => x.TransactionDraft!).Null().CombineLatest(CreateDraft.IsExecuting, (a, b) => !a && !b));
         TransactionConfirmed = Confirm.Successes().Select(_ => true).StartWith(false);
         IsBusy = CreateDraft.IsExecuting.CombineLatest(Confirm.IsExecuting, (a, b) => a | b);
@@ -32,7 +32,7 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
         Confirm.HandleErrorsWith(services.NotificationService, "Could not confirm transaction");
         CreateDraft.HandleErrorsWith(services.NotificationService, "Could not create transaction preview");
 
-        this.WhenAnyValue(x => x.Feerate).ToSignal().InvokeCommand(CreateDraft);
+        this.WhenAnyValue<TransactionDraftViewModel, long>(x => x.Feerate).ToSignal().InvokeCommand(CreateDraft);
     }
 
     private Task<Result<ITransactionDraft>> CreateDraftTo(long destinationAmount, string destinationBitcoinAddress, long feeRate)

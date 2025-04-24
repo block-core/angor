@@ -1,6 +1,6 @@
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 
-namespace AngorApp.Sections.Wallet.Operate.Send;
+namespace AngorApp.Sections.Wallet.Operate.Send.AddressAndAmount;
 
 public interface IAddressAndAmountViewModel : IStep
 {

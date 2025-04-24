@@ -1,4 +1,4 @@
-namespace AngorApp.UI.Controls.Common.TransactionDraft;
+namespace AngorApp.Sections.Wallet.Operate.Send.TransactionDraft;
 
 public partial class Summary : UserControl
 {

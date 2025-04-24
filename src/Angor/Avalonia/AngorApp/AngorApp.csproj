@@ -46,5 +46,22 @@
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj" />
         <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <UpToDateCheckInput Remove="UI\Controls\Common\TransactionDraft\Summary.axaml" />
+      <UpToDateCheckInput Remove="UI\Controls\Common\TransactionDraft\TransactionDraftView.axaml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Sections\Wallet\Operate\Send\TransactionDraft\Summary.axaml" />
+      <AdditionalFiles Include="Sections\Wallet\Operate\Send\TransactionDraft\TransactionDraftView.axaml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Sections\Wallet\Operate\Send\AddressAndAmount\AddressAndAmountView.axaml.cs">
+        <DependentUpon>AddressAndAmountView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
     
 </Project>

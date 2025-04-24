@@ -6,8 +6,9 @@
              xmlns:b="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              xmlns:s="clr-namespace:AngorApp.Sections.Wallet.Operate.Send"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:addressAndAmount="clr-namespace:AngorApp.Sections.Wallet.Operate.Send.AddressAndAmount"
              mc:Ignorable="d" 
-             x:Class="AngorApp.Sections.Wallet.Operate.Send.AddressAndAmountView" x:DataType="s:IAddressAndAmountViewModel">
+             x:Class="AngorApp.Sections.Wallet.Operate.Send.AddressAndAmount.AddressAndAmountView" x:DataType="addressAndAmount:IAddressAndAmountViewModel">
 
     <StackPanel VerticalAlignment="Center" Spacing="10" Width="300">
         <StackPanel Spacing="20">

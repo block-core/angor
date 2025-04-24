@@ -5,12 +5,12 @@
              xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:transactionPreview="clr-namespace:AngorApp.UI.Controls.Common.TransactionDraft"
+             xmlns:transactionDraft="clr-namespace:AngorApp.Sections.Wallet.Operate.Send.TransactionDraft"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.UI.Controls.Common.TransactionDraft.Summary" x:DataType="transactionPreview:ITransactionDraftViewModel">
+             x:Class="AngorApp.Sections.Wallet.Operate.Send.TransactionDraft.Summary" x:DataType="transactionDraft:ITransactionDraftViewModel">
 
     <Design.DataContext>
-        <transactionPreview:TransactionDraftViewModelDesign />
+        <transactionDraft:TransactionDraftViewModelDesign />
     </Design.DataContext>
 
     <StackPanel Grid.IsSharedSizeScope="True" Spacing="10">

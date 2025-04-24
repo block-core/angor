@@ -1,18 +1,16 @@
-using System.Linq;
 using System.Windows.Input;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
-using AngorApp.Sections.Wallet.Operate.Send;
 using AngorApp.UI.Controls.Common.Success;
-using AngorApp.UI.Controls.Common.TransactionDraft;
 using AngorApp.UI.Services;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.Avalonia.Dialogs;
-using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
+using AddressAndAmountViewModel = AngorApp.Sections.Wallet.Operate.Send.AddressAndAmount.AddressAndAmountViewModel;
+using TransactionDraftViewModel = AngorApp.Sections.Wallet.Operate.Send.TransactionDraft.TransactionDraftViewModel;
 
 namespace AngorApp.Sections.Wallet.Operate;
 
