@@ -16,13 +16,14 @@
 @using System.Collections.ObjectModel
 @using System.Timers
 @using System.Reactive.Linq
+@using Angor.Client.Services
 
 @inject IClientStorage storage
 @inject IWalletStorage _walletStorage
 @inject IDerivationOperations _derivationOperations
 @inject NavigationManager NavigationManager
 @inject IIndexerService _IndexerService
-@inject IRelayService _RelayService
+@inject IMessageService _messageService
 @inject INostrCommunicationFactory _nostrCommunicationFactory
 @inject ISignService _SignService
 @inject ISerializer serializer
@@ -523,7 +524,6 @@
     private PasswordComponent passwordComponent;
     private ElementReference messagesContainerRef;
     private Timer refreshTimer;
-    private IDisposable messageSubscription;
 
     // UI state
     private int activeTab = 1;
@@ -532,7 +532,7 @@
     private bool isSendingMessage = false;
     private string searchQuery = "";
     private string newMessage = "";
-    private bool showingInvestorsInSidebar = false;  // New state variable to track investor display mode
+    private bool showingInvestorsInSidebar = false;
 
     // Projects
     private List<InvestorProject> investorProjects = new();
@@ -559,7 +559,7 @@
     private List<InvestmentInfo> projectInvestors = new();
     private FounderProject currentFounderProject;
 
-    //  navigation parameters - now from route instead of query
+    // Navigation parameters
     [Parameter]
     public string ProjectId { get; set; }
 
@@ -633,10 +633,11 @@
     {
         if (firstRender)
         {
-            // No need for additional initialization
+            // Subscribe to message service events
+            _messageService.OnChange += HandleMessageServiceChange;
         }
 
-        // Scroll to bottom of the messages container when new messages arrive
+        // Scroll to bottom of messages when new messages arrive
         if (messagesContainerRef.Context != null && chatMessages.Any())
         {
             await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
@@ -738,14 +739,14 @@
             passwordComponent.ShowPassword(async () =>
             {
                 await InitializeInvestorChat(project);
-                // Update URL without adding to browser history - using route format
+                // Update URL without adding to browser history
                 UpdateBrowserUrl(project.ProjectInfo.ProjectIdentifier, "investor", null);
             });
         }
         else
         {
             await InitializeInvestorChat(project);
-            // Update URL without adding to browser history - using route format
+            // Update URL without adding to browser history
             UpdateBrowserUrl(project.ProjectInfo.ProjectIdentifier, "investor", null);
         }
     }
@@ -759,41 +760,41 @@
             chatMessages.Clear();
             StateHasChanged();
 
+            // Get necessary keys
             var words = await passwordComponent.GetWalletAsync();
             var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
+            
+            // Set current user private key
             currentUserPrivateKeyHex = nostrPrivateKeyHex;
 
+            // Get Nostr identities
             string investorNpub = NostrHelper.ConvertHexToNpub(project.InvestorNPub) ?? project.InvestorNPub;
             string founderNpub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey) ?? project.ProjectInfo.NostrPubKey;
 
-            // Get the raw format of the partner's public key (not npub format)
-            // Store both hex and npub formats to ensure proper communication
+            // Get partner's public key in hex format
             string partnerPubKeyHex = project.ProjectInfo.NostrPubKey;
             if (partnerPubKeyHex.StartsWith("npub"))
             {
                 partnerPubKeyHex = NostrHelper.ConvertBech32ToHex(partnerPubKeyHex);
-                Console.WriteLine($"Founder pubkey (converted): {partnerPubKeyHex}");
-            }
-            else
-            {
-                Console.WriteLine($"Founder pubkey (hex): {partnerPubKeyHex}");
             }
 
+            // Set current identities
             currentUserNpub = investorNpub;
             partnerNpub = founderNpub;
 
+            // Create chat session
             currentChat = new ChatSession
-                {
-                    ProjectId = project.ProjectInfo.ProjectIdentifier,
-                    Name = project.Metadata?.Name ?? $"Project {project.ProjectInfo.ProjectIdentifier.Substring(0, 8)}",
-                    Description = "Chat with project founder",
-                    Picture = project.Metadata?.Picture,
-                    UserNpub = investorNpub,
-                    PartnerNpub = founderNpub,
-                    UserPrivateKeyHex = nostrPrivateKeyHex,
-                    PartnerPubKeyHex = partnerPubKeyHex // Store the raw hex format
-                };
+            {
+                ProjectId = project.ProjectInfo.ProjectIdentifier,
+                Name = project.Metadata?.Name ?? $"Project {project.ProjectInfo.ProjectIdentifier.Substring(0, 8)}",
+                Description = "Chat with project founder",
+                Picture = project.Metadata?.Picture,
+                UserNpub = investorNpub,
+                PartnerNpub = founderNpub,
+                UserPrivateKeyHex = nostrPrivateKeyHex,
+                PartnerPubKeyHex = partnerPubKeyHex
+            };
 
             // Reset unread counter
             string chatKey = $"investor-{project.ProjectInfo.ProjectIdentifier}";
@@ -802,11 +803,15 @@
                 unreadMessages[chatKey] = 0;
             }
 
+            // Initialize the message service with our keys
+            await _messageService.InitializeAsync(
+                currentUserPrivateKeyHex,
+                currentUserNpub,
+                partnerPubKeyHex
+            );
+
             // Load messages
             await LoadChatMessages();
-
-            // Subscribe to new messages
-            SubscribeToMessages();
         }
         catch (Exception ex)
         {
@@ -821,28 +826,26 @@
 
     private async Task SelectFounderChat(FounderProject project)
     {
-        // Instead of showing modal, we'll load investors in sidebar
         currentFounderProject = project;
         showingInvestorsInSidebar = true;
         loadingInvestors = true;
 
-        // Update URL with project ID and mode - using route format
+        // Update URL
         UpdateBrowserUrl(project.ProjectInfo.ProjectIdentifier, "founder", null);
-
         StateHasChanged();
 
         try
         {
             var investments = await _IndexerService.GetInvestmentsAsync(project.ProjectInfo.ProjectIdentifier);
 
-            // Convert the investments to our local InvestmentInfo model
+            // Convert to our local model
             projectInvestors = investments.Select(inv => new InvestmentInfo
-                {
-                    InvestorPublicKey = inv.InvestorPublicKey,
-                    InvestorNPub = inv.InvestorPublicKey,
-                    TotalAmount = inv.TotalAmount,
-                    TransactionId = inv.TransactionId
-                }).ToList();
+            {
+                InvestorPublicKey = inv.InvestorPublicKey,
+                InvestorNPub = inv.InvestorPublicKey,
+                TotalAmount = inv.TotalAmount,
+                TransactionId = inv.TransactionId
+            }).ToList();
 
             if (projectInvestors.Count == 0)
             {
@@ -863,14 +866,13 @@
 
     private async Task ViewInvestors(FounderProject project, bool forChat = false)
     {
-        // If forChat is true, we use the sidebar approach instead of modal
         if (forChat)
         {
             await SelectFounderChat(project);
             return;
         }
 
-        // Original implementation for modal display (kept for compatibility with other features)
+        // Original implementation for modal display
         currentFounderProject = project;
         showInvestorsModal = true;
         loadingInvestors = true;
@@ -881,12 +883,12 @@
             var investments = await _IndexerService.GetInvestmentsAsync(project.ProjectInfo.ProjectIdentifier);
 
             projectInvestors = investments.Select(inv => new InvestmentInfo
-                {
-                    InvestorPublicKey = inv.InvestorPublicKey,
-                    InvestorNPub = inv.InvestorPublicKey,
-                    TotalAmount = inv.TotalAmount,
-                    TransactionId = inv.TransactionId
-                }).ToList();
+            {
+                InvestorPublicKey = inv.InvestorPublicKey,
+                InvestorNPub = inv.InvestorPublicKey,
+                TotalAmount = inv.TotalAmount,
+                TransactionId = inv.TransactionId
+            }).ToList();
 
             if (!forChat && projectInvestors.Count == 0)
             {
@@ -912,14 +914,12 @@
             passwordComponent.ShowPassword(async () =>
             {
                 await InitializeFounderChat(investor);
-                // Update URL with project ID, mode, and investor pubkey - using route format
                 UpdateBrowserUrl(currentFounderProject.ProjectInfo.ProjectIdentifier, "founder", investor.InvestorPublicKey);
             });
         }
         else
         {
             await InitializeFounderChat(investor);
-            // Update URL with project ID, mode, and investor pubkey - using route format
             UpdateBrowserUrl(currentFounderProject.ProjectInfo.ProjectIdentifier, "founder", investor.InvestorPublicKey);
         }
     }
@@ -932,41 +932,46 @@
             isFounderChat = true;
             chatMessages.Clear();
             showInvestorsModal = false;
-            // Keep showingInvestorsInSidebar as true so the state persists
             StateHasChanged();
 
             if (currentFounderProject == null) return;
 
+            // Get necessary keys
             var words = await passwordComponent.GetWalletAsync();
             var founderNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, currentFounderProject.ProjectInfo.FounderKey);
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(founderNostrPrivateKey.ToBytes());
+            
+            // Set current user private key
             currentUserPrivateKeyHex = nostrPrivateKeyHex;
 
-            string founderNpub = NostrHelper.ConvertHexToNpub(currentFounderProject.ProjectInfo.NostrPubKey) ??
-                               currentFounderProject.ProjectInfo.NostrPubKey;
+            // Get Nostr identities
+            string founderNpub = NostrHelper.ConvertHexToNpub(currentFounderProject.ProjectInfo.NostrPubKey) ?? 
+                currentFounderProject.ProjectInfo.NostrPubKey;
             string investorNpub = NostrHelper.ConvertHexToNpub(investor.InvestorPublicKey) ?? investor.InvestorPublicKey;
 
-            // Get the raw hex format of the partner's public key
+            // Get partner's public key in hex format
             string partnerPubKeyHex = investor.InvestorPublicKey;
             if (investorNpub.StartsWith("npub") && partnerPubKeyHex.StartsWith("npub"))
             {
                 partnerPubKeyHex = NostrHelper.ConvertBech32ToHex(investorNpub);
             }
 
+            // Set current identities
             currentUserNpub = founderNpub;
             partnerNpub = investorNpub;
 
+            // Create chat session
             currentChat = new ChatSession
-                {
-                    ProjectId = currentFounderProject.ProjectInfo.ProjectIdentifier,
-                    Name = $"Investor {GetTruncatedNpub(investor.InvestorPublicKey)}",
-                    Description = $"Investment: {investor.TotalAmount.ToUnitBtc()} {network.CoinTicker}",
-                    Picture = null,
-                    UserNpub = founderNpub,
-                    PartnerNpub = investorNpub,
-                    UserPrivateKeyHex = nostrPrivateKeyHex,
-                    PartnerPubKeyHex = partnerPubKeyHex // Store the raw hex format
-                };
+            {
+                ProjectId = currentFounderProject.ProjectInfo.ProjectIdentifier,
+                Name = $"Investor {GetTruncatedNpub(investor.InvestorPublicKey)}",
+                Description = $"Investment: {investor.TotalAmount.ToUnitBtc()} {network.CoinTicker}",
+                Picture = null,
+                UserNpub = founderNpub,
+                PartnerNpub = investorNpub,
+                UserPrivateKeyHex = nostrPrivateKeyHex,
+                PartnerPubKeyHex = partnerPubKeyHex
+            };
 
             // Reset unread counter
             string chatKey = $"founder-{currentFounderProject.ProjectInfo.ProjectIdentifier}";
@@ -975,11 +980,15 @@
                 unreadMessages[chatKey] = 0;
             }
 
+            // Initialize the message service with our keys
+            await _messageService.InitializeAsync(
+                currentUserPrivateKeyHex,
+                currentUserNpub,
+                partnerPubKeyHex
+            );
+
             // Load messages
             await LoadChatMessages();
-
-            // Subscribe to new messages
-            SubscribeToMessages();
         }
         catch (Exception ex)
         {
@@ -997,175 +1006,80 @@
         if (currentChat == null) return;
 
         chatMessages.Clear();
+        isLoadingMessages = true;
+        StateHasChanged();
 
         try
         {
-            var nostrClient = _nostrCommunicationFactory.GetOrCreateClient(_NetworkService);
-
-            // If we have an existing subscription, dispose of it
-            messageSubscription?.Dispose();
-
-            // Create a new subscription for direct messages
-            var subscriptionId = $"chat-{DateTime.UtcNow.Ticks}";
-
-            // Load chat history - we need both sent messages (where we're the author)
-            // and received messages (where we're tagged as P)
-            await _RelayService.LookupDirectMessagesForPubKeyAsync(
-                currentChat.PartnerNpub,
-                DateTime.UtcNow.AddDays(-7), // Get last 7 days of messages
-                100, // Limit to 100 messages
-                async eventMessage => await ProcessChatMessage(eventMessage),
-                NostrHelper.ConvertBech32ToHex(currentChat.UserNpub) // Messages from current user to partner
-            );
-
-            await _RelayService.LookupDirectMessagesForPubKeyAsync(
-                currentChat.UserNpub,
-                DateTime.UtcNow.AddDays(-7),
-                100,
-                async eventMessage => await ProcessChatMessage(eventMessage),
-                NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub) // Messages from partner to current user
-            );
+            // Load messages using the service
+            await _messageService.LoadMessagesAsync();
+            
+            // Update UI with messages from service
+            UpdateChatMessagesFromService();
         }
         catch (Exception ex)
         {
             notificationComponent.ShowErrorMessage("Failed to load chat messages", ex);
         }
-    }
-
-    private void SubscribeToMessages()
-    {
-        // If we already have a subscription, dispose it
-        messageSubscription?.Dispose();
-
-        // Get the client
-        var nostrClient = _nostrCommunicationFactory.GetOrCreateClient(_NetworkService);
-
-        // Format keys for proper comparison
-        string formattedCurrentUserPubKey = NostrHelper.ConvertBech32ToHex(currentChat.UserNpub);
-        string formattedPartnerPubKey = NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub);
-
-        // Subscribe to incoming messages with proper key filtering
-        messageSubscription = nostrClient.Streams.EventStream
-            .Where(_ => _.Event?.Kind == NostrKind.EncryptedDm)
-            .Where(_ => (_.Event?.Pubkey == formattedPartnerPubKey &&
-                        _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == formattedCurrentUserPubKey) ||
-                       (_.Event?.Pubkey == formattedCurrentUserPubKey &&
-                        _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier) == formattedPartnerPubKey))
-            .Subscribe(async messageEvent =>
-            {
-                await ProcessChatMessage(messageEvent.Event);
-                StateHasChanged();
-            });
-    }
-
-    private async Task ProcessChatMessage(NostrEvent eventMessage)
-    {
-        try
+        finally
         {
-            if (eventMessage == null || string.IsNullOrEmpty(eventMessage.Content)) return;
-
-            // Skip already processed messages
-            if (chatMessages.Any(m => m.Id == eventMessage.Id)) return;
-
-            // Format the pubkeys for proper comparison
-            string formattedCurrentUserPubKey = NostrHelper.ConvertBech32ToHex(currentChat.UserNpub);
-
-            // Determine if this message is from the current user
-            bool isFromCurrentUser = eventMessage.Pubkey == formattedCurrentUserPubKey;
-
-            // Decrypt the message
-            string decryptedContent;
-            try
-            {
-                // Get the partner's pubkey
-                string partnerPubKeyHex = isFromCurrentUser
-                    ? eventMessage.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier)
-                    : eventMessage.Pubkey;
-
-                decryptedContent = await _encryptionService.DecryptNostrContentAsync(
-                    currentChat.UserPrivateKeyHex,
-                    partnerPubKeyHex,
-                    eventMessage.Content
-                );
-
-                // If decryption was successful and not from current user, update partner's pubkey
-                if (!isFromCurrentUser && !string.IsNullOrEmpty(partnerPubKeyHex))
-                {
-                    currentChat.PartnerPubKeyHex = partnerPubKeyHex;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Decryption error: {ex.Message}");
-
-                try
-                {
-                    // Try alternative format
-                    string alternativeKey = isFromCurrentUser
-                        ? NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub)
-                        : NostrHelper.ConvertBech32ToHex(currentChat.UserNpub);
-
-                    decryptedContent = await _encryptionService.DecryptNostrContentAsync(
-                        currentChat.UserPrivateKeyHex,
-                        alternativeKey,
-                        eventMessage.Content
-                    );
-                }
-                catch
-                {
-                    decryptedContent = "[Could not decrypt message]";
-                }
-            }
-
-            // Create the chat message
-            var chatMessage = new ChatMessage
-            {
-                Id = eventMessage.Id,
-                Content = decryptedContent,
-                SenderPubkey = eventMessage.Pubkey,
-                Timestamp = eventMessage.CreatedAt.GetValueOrDefault(DateTime.UtcNow),
-                IsFromCurrentUser = isFromCurrentUser
-            };
-
-            // Add to our list and sort by timestamp
-            chatMessages.Add(chatMessage);
-            chatMessages = chatMessages
-                .OrderBy(m => m.Timestamp)
-                .ToList();
-
-            // If the message is not from current user, mark as unread
-            if (!isFromCurrentUser)
-            {
-                string chatKey = isFounderChat ?
-                    $"founder-{currentChat.ProjectId}" :
-                    $"investor-{currentChat.ProjectId}";
-
-                if (!unreadMessages.ContainsKey(chatKey))
-                {
-                    unreadMessages[chatKey] = 0;
-                }
-
-                unreadMessages[chatKey]++;
-            }
-
+            isLoadingMessages = false;
             StateHasChanged();
         }
-        catch (Exception ex)
+    }
+    
+    private void UpdateChatMessagesFromService()
+    {
+        // Get messages from the service and convert to our UI model
+        chatMessages = _messageService.DirectMessages
+            .Select(dm => new ChatMessage
+            {
+                Id = dm.Id,
+                Content = dm.Content,
+                SenderPubkey = dm.SenderPubkey,
+                Timestamp = dm.Timestamp,
+                IsFromCurrentUser = dm.IsFromCurrentUser
+            })
+            .OrderBy(m => m.Timestamp)
+            .ToList();
+    }
+
+    private void HandleMessageServiceChange()
+    {
+        if (currentChat == null) return;
+
+        // Update UI with latest messages
+        UpdateChatMessagesFromService();
+
+        // Update unread message counter
+        string chatKey = isFounderChat ? 
+            $"founder-{currentChat.ProjectId}" : 
+            $"investor-{currentChat.ProjectId}";
+
+        // Count unread messages (messages not from current user)
+        int unreadCount = chatMessages.Count(m => !m.IsFromCurrentUser);
+        
+        if (unreadCount > 0)
         {
-            // Just log the error but don't show notification to avoid spamming the user
-            Console.WriteLine($"Error processing message: {ex.Message}");
+            unreadMessages[chatKey] = unreadCount;
         }
+
+        StateHasChanged();
     }
 
     private async Task RefreshCurrentChat()
     {
         if (currentChat != null)
         {
-            await InvokeAsync(async () =>
+            // Only refresh if we aren't already refreshing
+            if (!_messageService.IsRefreshing)
             {
-                await LoadChatMessages();
-                StateHasChanged();
-            });
+                await InvokeAsync(async () =>
+                {
+                    await _messageService.RefreshMessagesAsync();
+                    StateHasChanged();
+                });
+            }
         }
     }
 
@@ -1192,72 +1106,14 @@
 
         try
         {
-            // Get partner's public key in proper format
-            string partnerPubKey = currentChat.PartnerPubKeyHex;
+            // Send message using the service
+            await _messageService.SendMessageAsync(newMessage);
             
-            // If partner key is missing or in npub format, convert it
-            if (string.IsNullOrEmpty(partnerPubKey) || partnerPubKey.StartsWith("npub"))
-            {
-                partnerPubKey = NostrHelper.ConvertBech32ToHex(currentChat.PartnerNpub);
-                currentChat.PartnerPubKeyHex = partnerPubKey;
-            }
-            
-            // Validate the key is in proper hex format
-            if (!System.Text.RegularExpressions.Regex.IsMatch(partnerPubKey, "^[0-9a-fA-F]{64}$"))
-            {
-                // Clean up the key if needed
-                partnerPubKey = new string(partnerPubKey.Where(c => 
-                    (c >= '0' && c <= '9') || 
-                    (c >= 'a' && c <= 'f') || 
-                    (c >= 'A' && c <= 'F')).ToArray());
-                
-                // Ensure correct length
-                if (partnerPubKey.Length > 64)
-                    partnerPubKey = partnerPubKey.Substring(partnerPubKey.Length - 64);
-                else if (partnerPubKey.Length < 64)
-                    partnerPubKey = partnerPubKey.PadLeft(64, '0');
-            }
-            
-            // Final validation check
-            if (!System.Text.RegularExpressions.Regex.IsMatch(partnerPubKey, "^[0-9a-fA-F]{64}$"))
-            {
-                throw new Exception($"Invalid partner public key format: {partnerPubKey}");
-            }
-
-            // Encrypt the message 
-            string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
-                currentChat.UserPrivateKeyHex,
-                partnerPubKey,
-                newMessage
-            );
-
-            // Send the encrypted message
-            var sentMessageId = _RelayService.SendDirectMessagesForPubKeyAsync(
-                currentChat.UserPrivateKeyHex,
-                partnerPubKey,
-                encryptedContent,
-                response => Console.WriteLine($"Message send response: {(response != null ? "Success" : "No response")}")
-            );
-
-            // Add message to UI
-            var sentChatMessage = new ChatMessage
-            {
-                Id = sentMessageId,
-                Content = newMessage,
-                SenderPubkey = NostrHelper.ConvertBech32ToHex(currentChat.UserNpub),
-                Timestamp = DateTime.UtcNow,
-                IsFromCurrentUser = true
-            };
-
-            // Clear input
+            // Clear input after sending
             newMessage = "";
-
-            // Add to chat messages
-            chatMessages.Add(sentChatMessage);
-            chatMessages = chatMessages.OrderBy(m => m.Timestamp).ToList();
-
-            // Save the working key for future use
-            currentChat.PartnerPubKeyHex = partnerPubKey;
+            
+            // Update UI with most recent messages
+            UpdateChatMessagesFromService();
         }
         catch (Exception ex)
         {
@@ -1354,8 +1210,13 @@
 
     public void Dispose()
     {
-        // Dispose of subscriptions and timer
-        messageSubscription?.Dispose();
+        // Remove the message service event handler
+        _messageService.OnChange -= HandleMessageServiceChange;
+        
+        // Dispose of the message service
+        _messageService.Dispose();
+        
+        // Dispose of the refresh timer
         refreshTimer?.Dispose();
     }
 
@@ -1452,7 +1313,7 @@
         }
     }
 
-    // Helper method to generate URL for  chat navigation
+    // Helper method to generate URL for chat navigation
     public string GetChatUrl(string projectId, string mode, string partnerPubKey)
     {
         if (string.IsNullOrEmpty(partnerPubKey))
@@ -1461,7 +1322,7 @@
             return $"/messages/{Uri.EscapeDataString(projectId)}/{Uri.EscapeDataString(mode)}/{Uri.EscapeDataString(partnerPubKey)}";
     }
 
-    // Update browser URL without triggering navigation - now using route parameters
+    // Update browser URL without triggering navigation
     private void UpdateBrowserUrl(string projectId, string mode, string partnerPubKey)
     {
         string url;
