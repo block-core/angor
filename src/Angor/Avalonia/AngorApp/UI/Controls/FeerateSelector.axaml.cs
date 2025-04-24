@@ -75,9 +75,9 @@ public partial class Controller : ReactiveValidationObject
     [Reactive] private IEnumerable<UserProvidedPreset>? userProvided;
     [Reactive] private IFeerateViewModel? selectedFeeRate;
     [Reactive] private long? amount;
+    [Reactive] IFeeCalculator? feeCalculator;
     [ObservableAsProperty] private IEnumerable<IFeerateViewModel> feeRates;
-    [ObservableAsProperty] private long feerate;
-    [Reactive] private IFeeCalculator? feeCalculator;
+    [ObservableAsProperty] private long? feerate;
 
     public Controller()
     {
@@ -90,7 +90,7 @@ public partial class Controller : ReactiveValidationObject
             .Select(a =>
             {
                 var argCalculator = a.calculator;
-
+                
                 IEnumerable<Preset> presets;
                 if (a.presets != null)
                 {
@@ -103,11 +103,11 @@ public partial class Controller : ReactiveValidationObject
 
                 var argAmount = a.amount;
                 var custom = new CustomFeeRate(argAmount, argCalculator);
-
+                
                 return presets.Append<IFeerateViewModel>(custom);
             }).ToProperty(this, controller => controller.FeeRates);
 
-        var selectedFeeRates = this.WhenAnyValue(x => x.SelectedFeeRate!.Feerate.Sats);
+        var selectedFeeRates = this.WhenAnyValue<Controller, long?>(x => x.SelectedFeeRate!.Feerate.Sats).Where(l => l != 0);
 
         feerateHelper = selectedFeeRates.ToProperty(this, x => x.Feerate);
     }
@@ -143,7 +143,7 @@ public partial class CustomFeeRate : ReactiveObject, IFeerateViewModel
             .WhereNotNull()
             .Select(l => new AmountUI(l))
             .BindTo(this, rate => rate.Feerate);
-
+        
         if (feeCalculator != null && amount.HasValue)
         {
             FeeCalculator = feeCalculator;
@@ -161,7 +161,8 @@ public partial class CustomFeeRate : ReactiveObject, IFeerateViewModel
 
 public partial class Preset : ReactiveObject, IFeerateViewModel
 {
-    [ObservableAsProperty] private AmountUI fee;
+    [ObservableAsProperty]
+    private AmountUI fee;
 
     public Preset(string name, long feeRate, long? amount, IFeeCalculator? feeCalculator)
     {
@@ -171,11 +172,11 @@ public partial class Preset : ReactiveObject, IFeerateViewModel
         if (feeCalculator != null && amount.HasValue)
         {
             CalculateCommand = ReactiveCommand.CreateFromTask(() => feeCalculator.GetFee(feeRate, amount.Value));
-
+            
             feeHelper = CalculateCommand.Successes()
                 .Select(sats => new AmountUI(sats))
                 .ToProperty(this, x => x.Fee);
-
+            
             CalculateCommand.Execute().Subscribe();
         }
     }
