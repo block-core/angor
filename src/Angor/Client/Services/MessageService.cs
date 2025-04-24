@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using Nostr.Client.Messages.Contacts; // Added for NostrEventTag
+using Nostr.Client.Messages.Contacts;
 
 namespace Angor.Client.Services
 {
@@ -67,7 +67,7 @@ namespace Angor.Client.Services
             }
             else
             {
-                _currentUserHexPub = null; // Or handle error appropriately
+                _currentUserHexPub = null;
             }
         }
 
@@ -79,7 +79,7 @@ namespace Angor.Client.Services
             {
                 _logger.LogWarning("InitializeAsync - Missing required keys.");
                 NotifyStateChanged();
-                return; // Don't proceed if keys are missing
+                return; 
             }
 
             IsLoadingMessages = true;
@@ -93,7 +93,6 @@ namespace Angor.Client.Services
             catch (Exception ex)
             {
                 _logger.LogError($"Failed to initialize messaging: {ex.Message}");
-                // Optionally re-throw or handle error state
             }
             finally
             {
@@ -111,11 +110,10 @@ namespace Angor.Client.Services
             }
 
             _directMessages.Clear();
-            NotifyStateChanged(); // Clear UI immediately
+            NotifyStateChanged(); 
 
             try
             {
-                // Load messages sent FROM current user TO contact
                 await _relayService.LookupDirectMessagesForPubKeyAsync(
                     _contactHexPub,
                     DateTime.UtcNow.AddDays(-7),
@@ -124,7 +122,6 @@ namespace Angor.Client.Services
                     _currentUserHexPub
                 );
 
-                // Load messages sent FROM contact TO current user
                 await _relayService.LookupDirectMessagesForPubKeyAsync(
                     _currentUserHexPub,
                     DateTime.UtcNow.AddDays(-7),
@@ -141,7 +138,7 @@ namespace Angor.Client.Services
             }
             finally
             {
-                NotifyStateChanged(); // Update UI with loaded messages or empty state
+                NotifyStateChanged(); 
             }
         }
 
@@ -189,7 +186,7 @@ namespace Angor.Client.Services
 
             if (_directMessages.Any(m => m.Id == eventMessage.Id))
             {
-                return; // Skip duplicates by ID
+                return;
             }
 
             bool isFromCurrentUser = eventMessage.Pubkey == _currentUserHexPub;
@@ -221,13 +218,12 @@ namespace Angor.Client.Services
                 decryptedContent = "[Could not decrypt message]";
             }
 
-            // More robust duplicate check (content, sender, time proximity)
             if (_directMessages.Any(m =>
                 m.Content == decryptedContent &&
                 m.IsFromCurrentUser == isFromCurrentUser &&
                 Math.Abs((m.Timestamp - eventMessage.CreatedAt.GetValueOrDefault()).TotalMinutes) < 1))
             {
-                return; // Skip likely duplicates
+                return; 
             }
 
             var directMessage = new DirectMessage
@@ -241,7 +237,6 @@ namespace Angor.Client.Services
 
             _directMessages.Add(directMessage);
             _directMessages = _directMessages.OrderBy(m => m.Timestamp).ToList();
-            // NotifyStateChanged is called by the subscriber or LoadMessages
         }
 
         public async Task SendMessageAsync(string messageContent)
@@ -267,14 +262,13 @@ namespace Angor.Client.Services
                     _currentUserPrivateKeyHex,
                     _contactHexPub,
                     encryptedContent,
-                    null // Assuming tags are handled by SendDirectMessagesForPubKeyAsync or not needed here
+                    null 
                 );
 
-                // Optimistically add to UI - consider waiting for confirmation or handling potential failures
                 var sentDirectMessage = new DirectMessage
                 {
-                    Id = sentMessageId, // Note: This might not be the final confirmed ID from relays
-                    Content = messageContent, // Show the original content
+                    Id = sentMessageId,
+                    Content = messageContent,
                     SenderPubkey = _currentUserHexPub,
                     Timestamp = DateTime.UtcNow,
                     IsFromCurrentUser = true
@@ -286,7 +280,6 @@ namespace Angor.Client.Services
             catch (Exception ex)
             {
                 _logger.LogError($"Failed to send message: {ex.Message}");
-                // Optionally notify UI of failure
             }
             finally
             {
@@ -304,12 +297,12 @@ namespace Angor.Client.Services
 
             try
             {
-                _messageSubscription?.Dispose(); // Unsubscribe before reloading
+                _messageSubscription?.Dispose(); 
                 _messageSubscription = null;
 
-                await LoadMessagesAsync(); // Reloads messages
+                await LoadMessagesAsync();
 
-                SubscribeToMessages(); // Resubscribe after loading
+                SubscribeToMessages();
             }
             catch (Exception ex)
             {
