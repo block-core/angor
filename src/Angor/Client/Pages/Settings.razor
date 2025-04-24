@@ -707,44 +707,47 @@
 
     private async Task AddExplorer()
     {
-        if (!string.IsNullOrWhiteSpace(newExplorerLink))
+        if (string.IsNullOrWhiteSpace(newExplorerLink))
         {
-            if (!Uri.TryCreate(newExplorerLink, UriKind.Absolute, out Uri? uri))
-            {
-                notificationComponent.ShowErrorMessage($"Invalid URL: {newExplorerLink}");
-                return;
-            }
-
-            if (uri.Scheme is not ("http" or "https"))
-            {
-                notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
-                return;
-            }
-             newExplorerLink = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
-
-            if (settingsInfo.Explorers.Any(a => a.Url == newExplorerLink))
-            {
-                notificationComponent.ShowErrorMessage($"URL already exists: {newExplorerLink}");
-                return;
-            }
-
-            // Add explorer to settings
-            var newExplorer = new SettingsUrl
-                {
-                    Url = newExplorerLink,
-                    LastCheck = DateTime.UtcNow,
-                    Status = UrlStatus.Online,
-                    IsPrimary = !settingsInfo.Explorers.Any(e => e.IsPrimary) // Set as primary if no primary exists
-                };
-
-            settingsInfo.Explorers.Add(newExplorer);
-
-            _clientStorage.SetSettingsInfo(settingsInfo);
-            notificationComponent.ShowNotificationMessage("Explorer added successfully.");
-            newExplorerLink = string.Empty;
-
-            await Refresh(false);
+            notificationComponent.ShowErrorMessage("Explorer URL cannot be empty.");
+            return;
         }
+
+        if (!Uri.TryCreate(newExplorerLink, UriKind.Absolute, out Uri? uri))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL: {newExplorerLink}");
+            return;
+        }
+
+        if (uri.Scheme is not ("http" or "https"))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
+            return;
+        }
+        newExplorerLink = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
+
+        if (settingsInfo.Explorers.Any(a => a.Url == newExplorerLink))
+        {
+            notificationComponent.ShowErrorMessage($"URL already exists: {newExplorerLink}");
+            return;
+        }
+
+        // Add explorer to settings
+        var newExplorer = new SettingsUrl
+            {
+                Url = newExplorerLink,
+                LastCheck = DateTime.UtcNow,
+                Status = UrlStatus.Online,
+                IsPrimary = !settingsInfo.Explorers.Any(e => e.IsPrimary) // Set as primary if no primary exists
+            };   
+
+        settingsInfo.Explorers.Add(newExplorer);
+
+        _clientStorage.SetSettingsInfo(settingsInfo);
+        notificationComponent.ShowNotificationMessage("Explorer added successfully.");
+        newExplorerLink = string.Empty;
+
+        await Refresh(false);
     }
 
     private async Task AddChatApp()
