@@ -44,7 +44,7 @@
                                             <TextBlock VerticalAlignment="Center" Margin="0 0 6 0">sats/VByte</TextBlock>
                                         </TextBox.InnerRightContent>
                                     </TextBox>
-                                    <TextBlock TextAlignment="Right" FontWeight="Bold" Margin="0 10" Text="{Binding Fee.SatsString, StringFormat='Fee: {0}', FallbackValue='Undefined'}" />
+                                    <TextBlock TextAlignment="Right" FontWeight="Bold" Margin="0 10" Text="{Binding Fee.SatsString, StringFormat='Fee: {0}'}" />
                                 </StackPanel>
                             </StackPanel>
                         </DataTemplate>
@@ -57,12 +57,6 @@
                     </StackPanel.DataTemplates>
                     <ListBox SelectedItem="{Binding $parent[controls:FeerateSelector].Controller.SelectedFeeRate}" BorderThickness="2" BorderBrush="Gray" CornerRadius="2"
                              ItemsSource="{Binding $parent[controls:FeerateSelector].Controller.FeeRates}" />
-                    <!-- <CheckBox x:Name="CheckBox" IsChecked="{Binding $parent[controls:FeerateSelector].Controller.UseCustomFeerate, Mode=TwoWay}" Content="Use custom feerate" /> -->
-                    <!-- <NumericUpDown IsVisible="{Binding #CheckBox.IsChecked}" ShowButtonSpinner="False" MaxWidth="250" HorizontalAlignment="Left" Value="{Binding $parent[controls:FeerateSelector].Controller.CustomFeerate, Mode=TwoWay}"> -->
-                    <!--     <NumericUpDown.InnerRightContent> -->
-                    <!--         <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">sats/vByte</TextBlock> -->
-                    <!--     </NumericUpDown.InnerRightContent> -->
-                    <!-- </NumericUpDown> -->
                 </StackPanel>
             </ControlTemplate>
         </Setter>

@@ -11,7 +11,7 @@ namespace AngorApp.Features.Invest.Draft;
 public partial class DraftViewModel : ReactiveObject, IDraftViewModel
 {
     private readonly BehaviorSubject<bool> isBusy = new(false);
-    
+
     public DraftViewModel(IInvestmentAppService investmentAppService, IWallet walletId, long sats, IProject project)
     {
         SatsToInvest = sats;
@@ -28,9 +28,9 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel
             .Do(_ => isBusy.OnNext(false), _ => isBusy.OnNext(false))
             .Successes()
             .Select(transaction => new InvestmentDraft(transaction));
-        
+
         draftHelper = drafts.ToProperty(this, x => x.Draft);
-        IsValid = this.WhenAnyValue(x => x.Draft!).NotNull();
+        IsValid = this.WhenAnyValue(x => x.Draft).CombineLatest(IsBusy, (investmentDraft, busy) => investmentDraft != null && !busy);
 
         FeeCalculator = new FeeCalculatorDesignTime();
     }
@@ -41,7 +41,7 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel
     public IObservable<bool> IsBusy => isBusy.AsObservable();
     public bool AutoAdvance => false;
     public long SatsToInvest { get; }
-    
+
     public IFeeCalculator FeeCalculator { get; }
 
     [Reactive] private long? feerate;
