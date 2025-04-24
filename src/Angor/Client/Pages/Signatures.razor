@@ -272,15 +272,6 @@
     private bool isSendingMessage = false;
     private IDisposable messageSubscription;
 
-    public class DirectMessage
-    {
-        public string Id { get; set; }
-        public string Content { get; set; }
-        public string SenderPubkey { get; set; }
-        public DateTime Timestamp { get; set; }
-        public bool IsFromCurrentUser { get; set; }
-    }
-
     protected override async Task OnInitializedAsync()
     {
         NavMenuState.SetActivePage("founder");

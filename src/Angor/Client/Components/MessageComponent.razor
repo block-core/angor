@@ -1,3 +1,4 @@
+@using Angor.Client.Models
 @using Angor.Shared
 @using Angor.Shared.Services
 @using Angor.Client.Services
@@ -7,15 +8,11 @@
 @using System.Security.Cryptography
 @using Blockcore.NBitcoin.DataEncoders
 @implements IDisposable
+@implements IAsyncDisposable
 
 @inject IJSRuntime JS
 @inject ILogger<MessageComponent> Logger
-@inject IDerivationOperations DerivationOperations
-@inject INostrCommunicationFactory _nostrCommunicationFactory
-@inject IEncryptionService _encryptionService
-@inject INetworkService _networkService
-@inject IRelayService _RelayService
-@inject NavMenuState NavMenuState
+@inject IMessageService MessageService
 @inject NostrConversionHelper NostrHelper
 
 <div class="modal-wrapper">
@@ -28,7 +25,7 @@
                         <h5 class="modal-title">Message @MessageTitle</h5>
                     </div>
                     <div class="d-flex align-items-center">
-                        <button class="btn-menu-custom" @onclick="RefreshMessagesAsync">
+                        <button class="btn-menu-custom" @onclick="RefreshMessagesAsync" disabled="@MessageService.IsRefreshing">
                             <Icon IconName="refresh" Height="24" Width="24" />
                         </button>
                         <div class="dropdown me-2 position-relative">
@@ -38,7 +35,7 @@
                             @if (showActionsMenu)
                             {
                                 <div class="card card-body position-absolute end-0 mt-1 p-1 border rounded shadow-sm" style="z-index: 1000; min-width: 200px;">
-                                    <button class="dropdown-item d-flex align-items-center px-3 py-2" @onclick="RefreshMessagesAsync">
+                                    <button class="dropdown-item d-flex align-items-center px-3 py-2" @onclick="RefreshMessagesAsync" disabled="@MessageService.IsRefreshing">
                                         <Icon IconName="refresh" Height="16" Width="16" class="me-2" />
                                         <span>Refresh Messages</span>
                                     </button>
@@ -75,18 +72,18 @@
                         <!-- Messages Section -->
                         <div class="info-card chat-container-modal">
                             <div class="chat-messages" @ref="messagesContainerRef" style="height: 300px; overflow-y: auto;">
-                                @if (isLoadingMessages || isRefreshing)
+                                @if (MessageService.IsLoadingMessages || MessageService.IsRefreshing)
                                 {
                                     <div class="loading-messages d-flex justify-content-center align-items-center h-100">
                                         <div>
                                             <div class="spinner-border" role="status">
                                                 <span class="visually-hidden">Loading...</span>
                                             </div>
-                                            <p class="mt-2">@(isRefreshing ? "Refreshing messages..." : "Loading messages...")</p>
+                                            <p class="mt-2">@(MessageService.IsRefreshing ? "Refreshing messages..." : "Loading messages...")</p>
                                         </div>
                                     </div>
                                 }
-                                else if (!directMessages.Any())
+                                else if (!MessageService.DirectMessages.Any())
                                 {
                                     <div class="empty-messages d-flex flex-column justify-content-center align-items-center h-100">
                                         <Icon IconName="chat" Width="32" Height="32" />
@@ -96,7 +93,7 @@
                                 else
                                 {
                                     <div class="messages-list p-2">
-                                        @foreach (var message in directMessages)
+                                        @foreach (var message in MessageService.DirectMessages)
                                         {
                                             <div class="message-item @(message.IsFromCurrentUser ? "outgoing" : "incoming")">
                                                 <div class="message-bubble">
@@ -116,11 +113,11 @@
                                            placeholder="Type a message..."
                                            @bind="newMessage"
                                            @onkeypress="@(async e => { if(e.Key is "Enter" or "NumpadEnter") await SendMessageAsync(); })"
-                                           disabled="@isSendingMessage" />
+                                           disabled="@MessageService.IsSendingMessage" />
                                     <button class="btn btn-border-success"
                                             @onclick="SendMessageAsync"
-                                            disabled="@isSendingMessage">
-                                        @if (isSendingMessage)
+                                            disabled="@MessageService.IsSendingMessage">
+                                        @if (MessageService.IsSendingMessage)
                                         {
                                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                         }
@@ -151,353 +148,114 @@
     [Parameter] public EventCallback<string> OnNotification { get; set; }
 
     private ElementReference messagesContainerRef;
-    private List<DirectMessage> directMessages = new();
     private string newMessage = "";
-    private bool isLoadingMessages = false;
-    private bool isSendingMessage = false;
     private bool showNsec = false;
     private string nsecValue = "";
-    private IDisposable messageSubscription;
-    private bool showContactNpub = false;
-    private bool showUserNpub = false;
-    private bool isRefreshing = false;
     private bool showActionsMenu = false;
-
-    public class DirectMessage
-    {
-        public string Id { get; set; }
-        public string Content { get; set; }
-        public string SenderPubkey { get; set; }
-        public DateTime Timestamp { get; set; }
-        public bool IsFromCurrentUser { get; set; }
-    }
+    private bool _needsScroll = false;
+    private int _messageCount = 0;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
-        // Always ensure we have ContactHexPub, converting from NPUB if needed
         if (string.IsNullOrEmpty(ContactHexPub) && !string.IsNullOrEmpty(ContactNpub))
         {
             ContactHexPub = NostrHelper.ConvertBech32ToHex(ContactNpub);
         }
-        
-        // If we have ContactHexPub but no ContactNpub, set it for display purposes
+
         if (!string.IsNullOrEmpty(ContactHexPub) && string.IsNullOrEmpty(ContactNpub))
         {
-            try
-            {
-                ContactNpub = NostrHelper.ConvertHexToNpub(ContactHexPub) ?? ContactHexPub;
-            }
-            catch
-            {
-                // If conversion fails, just use hex for display
-                ContactNpub = ContactHexPub;
-            }
+            try { ContactNpub = NostrHelper.ConvertHexToNpub(ContactHexPub) ?? ContactHexPub; }
+            catch { ContactNpub = ContactHexPub; }
         }
+
+        MessageService.OnChange += HandleMessageServiceChange;
     }
 
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
 
-        if (!string.IsNullOrEmpty(CurrentUserPrivateKeyHex))
+        if (!string.IsNullOrEmpty(CurrentUserPrivateKeyHex) && !string.IsNullOrEmpty(CurrentUserNpub) && !string.IsNullOrEmpty(ContactHexPub))
         {
             await InitializeMessaging();
         }
     }
 
-    public async Task InitializeMessaging()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        try
+        if (_needsScroll)
         {
-            isLoadingMessages = true;
-            StateHasChanged();
-
-            if (string.IsNullOrEmpty(CurrentUserPrivateKeyHex) ||
-                string.IsNullOrEmpty(ContactHexPub))
-            {
-                await OnNotification.InvokeAsync("Missing required message information");
-                return;
-            }
-
-            // Load messages
-            await LoadMessages();
-
-            // Subscribe to new messages
-            SubscribeToMessages();
-        }
-        catch (Exception ex)
-        {
-            await OnNotification.InvokeAsync($"Failed to initialize messaging: {ex.Message}");
-        }
-        finally
-        {
-            isLoadingMessages = false;
-            StateHasChanged();
+            await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
+            _needsScroll = false;
         }
     }
 
-    private async Task LoadMessages()
+    private async Task InitializeMessaging()
     {
         if (string.IsNullOrEmpty(CurrentUserPrivateKeyHex) ||
-            string.IsNullOrEmpty(ContactHexPub)) {
-            Logger.LogWarning("LoadMessages - Missing required keys");
+            string.IsNullOrEmpty(CurrentUserNpub) ||
+            string.IsNullOrEmpty(ContactHexPub))
+        {
+            await OnNotification.InvokeAsync("Missing required message information (keys/contact).");
             return;
         }
 
-        directMessages.Clear();
-
         try
         {
-            // Use pubkeys directly without additional formatting
-            string userHexPubkey = string.IsNullOrEmpty(CurrentUserNpub) ? 
-                "" : NostrHelper.ConvertBech32ToHex(CurrentUserNpub);
-                
-            // Load message history - messages sent FROM current user TO contact
-            await _RelayService.LookupDirectMessagesForPubKeyAsync(
-                ContactHexPub,
-                DateTime.UtcNow.AddDays(-7),
-                100,
-                async eventMessage => await ProcessDirectMessage(eventMessage),
-                userHexPubkey
-            );
-            
-            // Load message history - messages sent FROM contact TO current user
-            await _RelayService.LookupDirectMessagesForPubKeyAsync(
-                userHexPubkey,
-                DateTime.UtcNow.AddDays(-7),
-                100,
-                async eventMessage => await ProcessDirectMessage(eventMessage),
-                ContactHexPub
-            );
 
-            // Sort messages by timestamp
-            directMessages = directMessages.OrderBy(m => m.Timestamp).ToList();
-
-            // Scroll to bottom after loading messages
-            await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
+            await MessageService.InitializeAsync(CurrentUserPrivateKeyHex, CurrentUserNpub, ContactHexPub);
+            _needsScroll = true;
         }
         catch (Exception ex)
         {
-            Logger.LogError($"Failed to load messages: {ex.Message}");
-            await OnNotification.InvokeAsync($"Failed to load messages: {ex.Message}");
+            Logger.LogError(ex, "Failed to initialize messaging service.");
+            await OnNotification.InvokeAsync($"Error initializing messages: {ex.Message}");
         }
-    }
 
-    private void SubscribeToMessages()
-    {
-        try
-        {
-            // Dispose existing subscription if any
-            messageSubscription?.Dispose();
-
-            // Get the client
-            var nostrClient = _nostrCommunicationFactory.GetOrCreateClient(_networkService);
-
-            // Get pubkeys for comparison
-            string currentUserPubKey = NostrHelper.ConvertBech32ToHex(CurrentUserNpub);
-            
-            // Subscribe to incoming messages
-            messageSubscription = nostrClient.Streams.EventStream
-                .Where(_ => _.Event?.Kind == NostrKind.EncryptedDm)
-                .Where(_ => {
-                    if(_.Event == null) return false;
-                    
-                    // Get tag value
-                    string tagValue = _.Event?.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier);
-                    
-                    // Check both directions of communication
-                    bool isFromUserToContact = _.Event.Pubkey == currentUserPubKey && 
-                                              tagValue == ContactHexPub;
-                                              
-                    bool isFromContactToUser = _.Event.Pubkey == ContactHexPub && 
-                                              tagValue == currentUserPubKey;
-                    
-                    return isFromUserToContact || isFromContactToUser;
-                })
-                .Subscribe(async messageEvent => {
-                    await ProcessDirectMessage(messageEvent.Event);
-                    StateHasChanged();
-                });
-        }
-        catch (Exception ex) {
-            Logger.LogError($"Error in SubscribeToMessages: {ex.Message}");
-        }
-    }
-
-    // Process and deduplicate messages
-    private async Task ProcessDirectMessage(NostrEvent eventMessage)
-    {
-        try
-        {
-            if (eventMessage == null || string.IsNullOrEmpty(eventMessage.Content)) {
-                return;
-            }
-
-            // Skip already processed messages with the same ID
-            if (directMessages.Any(m => m.Id == eventMessage.Id)) {
-                return;
-            }
-
-            // Check if message with same content already exists
-            string currentUserPubKey = NostrHelper.ConvertBech32ToHex(CurrentUserNpub);
-            bool isFromCurrentUser = eventMessage.Pubkey == currentUserPubKey;
-            
-            // Decrypt the message
-            string decryptedContent;
-            try
-            {
-                // Get the partner's pubkey
-                string partnerPubKeyHex = isFromCurrentUser
-                    ? eventMessage.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier)
-                    : eventMessage.Pubkey;
-                    
-                decryptedContent = await _encryptionService.DecryptNostrContentAsync(
-                    CurrentUserPrivateKeyHex,
-                    partnerPubKeyHex,
-                    eventMessage.Content
-                );
-            }
-            catch (Exception)
-            {
-                try
-                {
-                    // Try alternative format
-                    string alternativeKey = isFromCurrentUser
-                        ? ContactHexPub
-                        : currentUserPubKey;
-                        
-                    decryptedContent = await _encryptionService.DecryptNostrContentAsync(
-                        CurrentUserPrivateKeyHex,
-                        alternativeKey,
-                        eventMessage.Content
-                    );
-                }
-                catch
-                {
-                    decryptedContent = "[Could not decrypt message]";
-                }
-            }
-
-            // Check for duplicate message content with same sender
-            if (directMessages.Any(m => 
-                m.Content == decryptedContent && 
-                m.IsFromCurrentUser == isFromCurrentUser && 
-                Math.Abs((m.Timestamp - eventMessage.CreatedAt.GetValueOrDefault()).TotalMinutes) < 1))
-            {
-                // Skip if we have a very similar message (same content, sender, and timestamp within 1 minute)
-                return;
-            }
-
-            var directMessage = new DirectMessage
-                {
-                    Id = eventMessage.Id,
-                    Content = decryptedContent,
-                    SenderPubkey = eventMessage.Pubkey,
-                    Timestamp = eventMessage.CreatedAt.GetValueOrDefault(DateTime.UtcNow),
-                    IsFromCurrentUser = isFromCurrentUser
-                };
-
-            // Add message and keep list sorted
-            directMessages.Add(directMessage);
-            directMessages = directMessages.OrderBy(m => m.Timestamp).ToList();
-
-            // Scroll to bottom after adding messages
-            await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
-            
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError($"Error processing message: {ex.Message}");
-        }
     }
 
     private async Task SendMessageAsync()
     {
-        if (string.IsNullOrWhiteSpace(newMessage) || string.IsNullOrEmpty(CurrentUserPrivateKeyHex)) return;
+        if (string.IsNullOrWhiteSpace(newMessage) || MessageService.IsSendingMessage) return;
 
-        isSendingMessage = true;
-        StateHasChanged();
+        string messageToSend = newMessage;
+        newMessage = "";
 
         try
         {
-            // Encrypt the message
-            string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
-                CurrentUserPrivateKeyHex,
-                ContactHexPub,
-                newMessage
-            );
-
-            // Send the message
-            var sentMessageId = _RelayService.SendDirectMessagesForPubKeyAsync(
-                CurrentUserPrivateKeyHex,
-                ContactHexPub,
-                encryptedContent,
-                null
-            );
-
-            // Add to UI
-            var sentDirectMessage = new DirectMessage
-                {
-                    Id = sentMessageId,
-                    Content = newMessage,
-                    SenderPubkey = NostrHelper.ConvertBech32ToHex(CurrentUserNpub),
-                    Timestamp = DateTime.UtcNow,
-                    IsFromCurrentUser = true
-                };
-
-            // Clear input and add message
-            directMessages.Add(sentDirectMessage);
-            directMessages = directMessages.OrderBy(m => m.Timestamp).ToList();
-            newMessage = "";
-
-            // Scroll to bottom after sending
-            await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
+            await MessageService.SendMessageAsync(messageToSend);
+            _needsScroll = true;
         }
         catch (Exception ex)
         {
-            Logger.LogError($"Failed to send message: {ex.Message}");
+            Logger.LogError(ex, "Failed to send message.");
             await OnNotification.InvokeAsync($"Failed to send message: {ex.Message}");
-        }
-        finally
-        {
-            isSendingMessage = false;
-            StateHasChanged();
+            newMessage = messageToSend;
         }
     }
 
     private async Task RefreshMessagesAsync()
     {
-        if (isRefreshing) return;
+        if (MessageService.IsRefreshing) return;
+
+        showActionsMenu = false;
 
         try
         {
-            isRefreshing = true;
-            StateHasChanged();
-
-            // Unsubscribe current subscription
-            messageSubscription?.Dispose();
-
-            // Clear and reload messages
-            await LoadMessages();
-
-            // Resubscribe to messages
-            SubscribeToMessages();
-
-            await OnNotification.InvokeAsync("Messages refreshed");
+            await MessageService.RefreshMessagesAsync();
+            _needsScroll = true;
+            await OnNotification.InvokeAsync("Messages refreshed.");
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Failed to refresh messages.");
             await OnNotification.InvokeAsync($"Failed to refresh messages: {ex.Message}");
         }
-        finally
-        {
-            isRefreshing = false;
-            StateHasChanged();
-        }
+
     }
+
 
     private async Task ShowNsecAsync()
     {
@@ -505,111 +263,106 @@
 
         if (showNsec && string.IsNullOrEmpty(nsecValue))
         {
-            try
-            {
-                // Convert the private key hex to NSEC format directly if available
-                if (!string.IsNullOrEmpty(CurrentUserPrivateKeyHex))
-                {
-                    nsecValue = NostrHelper.ConvertHexToNsec(CurrentUserPrivateKeyHex);
-                    StateHasChanged();
-                }
-                else
-                {
-                    // If not available directly, request it
-                    await OnNsecRequest.InvokeAsync(true);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError($"Error converting private key: {ex.Message}");
-                // Request from parent as fallback
-                await OnNsecRequest.InvokeAsync(true);
-            }
+            await RequestAndSetNsecValue();
         }
+        StateHasChanged();
     }
 
     public void SetNsec(string nsec)
     {
         if (!string.IsNullOrEmpty(nsec))
         {
-            // If we received a hex format, convert it to NSEC
+
             if (System.Text.RegularExpressions.Regex.IsMatch(nsec, "^[0-9a-fA-F]{64}$"))
             {
-                try
-                {
-                    nsecValue = NostrHelper.ConvertHexToNsec(nsec);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError($"Error converting hex to nsec: {ex.Message}");
-                    nsecValue = nsec; // Fallback to original value
-                }
+                try { nsecValue = NostrHelper.ConvertHexToNsec(nsec); }
+                catch (Exception ex) { Logger.LogError(ex, "Error converting provided hex key to nsec."); nsecValue = nsec; }
             }
-            else
-            {
-                // Already in NSEC format or another format
-                nsecValue = nsec;
-            }
-
+            else { nsecValue = nsec; }
             StateHasChanged();
         }
     }
 
     private async Task CopyToClipboard(string text)
     {
-        await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
-        await OnNotification.InvokeAsync("Copied to clipboard");
+        if (string.IsNullOrEmpty(text)) return;
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            await OnNotification.InvokeAsync("Copied to clipboard.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to copy text to clipboard.");
+            await OnNotification.InvokeAsync("Failed to copy to clipboard.");
+        }
+        showActionsMenu = false;
+        StateHasChanged();
     }
 
     private async Task CopyNsec()
     {
-        // Make sure the NSEC is available first
         if (string.IsNullOrEmpty(nsecValue))
         {
-            try
+            await RequestAndSetNsecValue();
+
+            if (string.IsNullOrEmpty(nsecValue))
             {
-                // Convert the private key hex to NSEC format directly if available
-                if (!string.IsNullOrEmpty(CurrentUserPrivateKeyHex))
-                {
-                    nsecValue = NostrHelper.ConvertHexToNsec(CurrentUserPrivateKeyHex);
-                }
-                else
-                {
-                    // If not available directly, request it
-                    await OnNsecRequest.InvokeAsync(true);
-                    // Return early, copying will happen after NSEC is set
-                    await OnNotification.InvokeAsync("Requesting private key...");
-                    return;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError($"Error converting private key: {ex.Message}");
-                // Request from parent as fallback
-                await OnNsecRequest.InvokeAsync(true);
-                await OnNotification.InvokeAsync("Requesting private key...");
+                await OnNotification.InvokeAsync("Private key not available.");
                 return;
             }
         }
-
-        // Copy to clipboard if we have the NSEC
         await CopyToClipboard(nsecValue);
 
-        // Close the menu after action
-        showActionsMenu = false;
+    }
+
+    private async Task RequestAndSetNsecValue()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(CurrentUserPrivateKeyHex))
+            {
+                nsecValue = NostrHelper.ConvertHexToNsec(CurrentUserPrivateKeyHex);
+            }
+            else
+            {
+
+                await OnNsecRequest.InvokeAsync(true);
+                await OnNotification.InvokeAsync("Requesting private key...");
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error getting or converting private key.");
+            nsecValue = "";
+            await OnNsecRequest.InvokeAsync(true);
+            await OnNotification.InvokeAsync("Error accessing private key. Requesting again...");
+        }
     }
 
     private void ToggleActionsMenu()
     {
         showActionsMenu = !showActionsMenu;
+        StateHasChanged();
     }
 
     private void OpenMessageApp()
     {
         if (!string.IsNullOrEmpty(MessageAppUrl))
         {
-            JS.InvokeVoidAsync("open", MessageAppUrl, "_blank");
+            try
+            {
+                JS.InvokeVoidAsync("open", MessageAppUrl, "_blank");
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to open message app URL.");
+                OnNotification.InvokeAsync("Could not open message app link.");
+            }
         }
+        showActionsMenu = false;
+        StateHasChanged();
     }
 
     private void CloseModal()
@@ -619,19 +372,31 @@
 
     private string GetMaskedNsec(string nsec)
     {
-        if (string.IsNullOrEmpty(nsec) || nsec.Length <= 20)
+        if (string.IsNullOrEmpty(nsec) || nsec.Length <= 20) return nsec;
+        return $"{nsec.Substring(0, 10)}...{nsec.Substring(nsec.Length - 10)}";
+    }
+
+    private void HandleMessageServiceChange()
+    {
+        int previousCount = _messageCount;
+        _messageCount = MessageService.DirectMessages.Count;
+        if (_messageCount > previousCount)
         {
-            return nsec;
+            _needsScroll = true;
         }
 
-        string first10 = nsec.Substring(0, 10);
-        string last10 = nsec.Substring(nsec.Length - 10);
-        return $"{first10}...{last10}";
+        InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
     {
-        messageSubscription?.Dispose();
+        MessageService.OnChange -= HandleMessageServiceChange;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        MessageService.OnChange -= HandleMessageServiceChange;
+        await ValueTask.CompletedTask;
     }
 }
 

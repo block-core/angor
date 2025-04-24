@@ -342,41 +342,46 @@ tr[style*="cursor: pointer;"]:hover {
     align-items: center;
     z-index: 9999;
     flex-direction: column;
-    background-color: #e5eef0;
+    background-color: #e5eef0; 
 }
 
 .loader {
-    border: 12px solid #eaeaea;
-    border-top: 12px solid #f7931a;
-    border-radius: 50%;
+    box-sizing: border-box;
     width: 100px;
     height: 100px;
+    border: 12px solid #eaeaea; 
+    border-top-color: #f7931a;
+    border-radius: 50%;
     animation: spin 2s linear infinite;
-    background: url("/assets/img/bitcoin.svg") no-repeat center;
-    background-size: 90%;
+    background: url("/assets/img/bitcoin.svg") no-repeat center center;
+    background-origin: content-box; /* Background relative to content area (inside border) */
+    background-size: 100%; /* Fill the content area completely */
 }
 
 .loader-small {
-    border: 6px solid #eaeaea;
-    border-top: 6px solid #f7931a;
-    border-radius: 50%;
+    box-sizing: border-box;
     width: 50px;
     height: 50px;
+    border: 6px solid #eaeaea;
+    border-top-color: #f7931a;
+    border-radius: 50%;
     animation: spin 2s linear infinite;
-    background: url("/assets/img/bitcoin.svg") no-repeat center;
-    background-size: 80%;
+    background: url("/assets/img/bitcoin.svg") no-repeat center center;
+    background-origin: content-box;
+    background-size: 100%;
 }
 
 .loader-slow {
-    border: 12px solid #eaeaea;
-    border-top: 12px solid #f7931a;
-    border-radius: 50%;
+    box-sizing: border-box;
     width: 100px;
     height: 100px;
+    border: 12px solid #eaeaea;
+    border-top-color: #f7931a;
+    border-radius: 50%;
     animation: spin 20s linear infinite;
-    background: url("/assets/img/bitcoin.svg") no-repeat center;
-    background-size: 90%;
-    margin: 0 auto;
+    background: url("/assets/img/bitcoin.svg") no-repeat center center;
+    background-origin: content-box;
+    background-size: 100%;
 }
 
 .loader-slow-container {
@@ -384,27 +389,17 @@ tr[style*="cursor: pointer;"]:hover {
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 100px;
+    height: 150px;
 }
 
 @-webkit-keyframes spin {
-    0% {
-        -webkit-transform: rotate(0deg);
-    }
-
-    100% {
-        -webkit-transform: rotate(360deg);
-    }
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
 }
 
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .loading-text {
