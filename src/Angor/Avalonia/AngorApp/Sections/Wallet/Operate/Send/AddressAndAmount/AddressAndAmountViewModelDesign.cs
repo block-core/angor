@@ -7,5 +7,5 @@ public class AddressAndAmountViewModelDesign : IAddressAndAmountViewModel
     public bool AutoAdvance { get; } = false;
     public long? Amount { get; set; } = 100;
     public string? Address { get; set; } = "testaddress";
-    public AmountUI WalletBalance { get; } = new AmountUI(113000);
+    public IAmountUI WalletBalance { get; } = new AmountUI(113000);
 }

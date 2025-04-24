@@ -5,7 +5,7 @@
              xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:transactionDraft="clr-namespace:AngorApp.Sections.Wallet.Operate.Send.TransactionDraft"
-             xmlns:c="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
+             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              mc:Ignorable="d"
              d:DesignWidth="600"
              d:DesignHeight="400"
@@ -27,15 +27,11 @@
     </UserControl.Styles>
 
     <StackPanel Spacing="8">
-        <c:Pane Header="Enter the add">
-            <TextBlock Text="{Binding Path=Amount}" />
-        </c:Pane>
-        <c:Pane Header="Recipient">
-            <TextBlock Text="{Binding Path=Amount}" />
-        </c:Pane>
-        <!-- <transactionDraft:Summary /> -->
-        <!-- <Separator /> -->
-        <Button HorizontalAlignment="Center" Margin="0 10" Command="{Binding Confirm}">
+        <z:Pane Header="Select transaction speed:">
+            <controls:FeerateSelector Feerate="{Binding Sats}"
+                                      Presets="{Binding Presets}" />
+        </z:Pane>
+        <Button Theme="{StaticResource DarkerButton}" HorizontalAlignment="Center" Margin="0 10" Command="{Binding Confirm}">
             <Button.Content>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="CONFIRM" IsVisible="{Binding !Confirm.IsExecuting^}" VerticalAlignment="Center" />

@@ -27,15 +27,7 @@
                 <TextBlock Text="{Binding SatsToInvest, StringFormat={x:Static controls:MiscConverters.Sats}}" />
             </HeaderedContentControl>
             <p:Pane Header="Feerate">
-                <controls:FeerateSelector FeeCalculator="{Binding FeeCalculator}" Feerate="{Binding Feerate}">
-                    <controls:FeerateSelector.Presets>
-                        <generic:List x:TypeArguments="controls:UserProvidedPreset">
-                            <controls:UserProvidedPreset Name="Economy" SatsPerVByte="100" />
-                            <controls:UserProvidedPreset Name="Standard" SatsPerVByte="200" />
-                            <controls:UserProvidedPreset Name="Priority" SatsPerVByte="350" />
-                        </generic:List>
-                    </controls:FeerateSelector.Presets>
-                </controls:FeerateSelector>
+                <controls:FeerateSelector FeeCalculator="{Binding FeeCalculator}" Feerate="{Binding Feerate}" />
             </p:Pane>
         </StackPanel>
         <p:Loading IsLoading="{Binding Path=IsBusy^}" LoadingText="Calculating transaction...">

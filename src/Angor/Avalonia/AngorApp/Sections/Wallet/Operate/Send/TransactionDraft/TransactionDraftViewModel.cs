@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
+using AngorApp.UI.Controls;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;
@@ -14,47 +15,54 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
 {
     private readonly WalletId walletId;
     private readonly IWalletAppService walletAppService;
-    [Reactive] private long feerate = 1;
+    private readonly UIServices uiServices;
+    [Reactive] private long? sats;
     [ObservableAsProperty] private ITransactionDraft? transactionDraft;
 
-    public TransactionDraftViewModel(WalletId walletId, IWalletAppService walletAppService, SendAmount sendAmount, UIServices services)
+    public TransactionDraftViewModel(WalletId walletId, 
+        IWalletAppService walletAppService, 
+        SendAmount sendAmount, 
+        UIServices uiServices)
     {
         this.walletId = walletId;
         this.walletAppService = walletAppService;
+        this.uiServices = uiServices;
         SendAmount = sendAmount;
-        CreateDraft = ReactiveCommand.CreateFromTask<Result<ITransactionDraft>>(() => CreateDraftTo(sendAmount.Amount, sendAmount.BitcoinAddress, Feerate));
-        transactionDraftHelper = CreateDraft.Successes().ToProperty(this, x => x.TransactionDraft);
-        Confirm = ReactiveCommand.CreateFromTask<Result<TxId>>(() => TransactionDraft!.Submit(),
-            this.WhenAnyValue<TransactionDraftViewModel, ITransactionDraft>(x => x.TransactionDraft!).Null().CombineLatest(CreateDraft.IsExecuting, (a, b) => !a && !b));
-        TransactionConfirmed = Confirm.Successes().Select(_ => true).StartWith(false);
-        IsBusy = CreateDraft.IsExecuting.CombineLatest(Confirm.IsExecuting, (a, b) => a | b);
+        //CreateDraft = ReactiveCommand.CreateFromTask(() => CreateDraftTo(sendAmount.Amount, sendAmount.BitcoinAddress, Sats.Value));
+        //transactionDraftHelper = CreateDraft.Successes().ToProperty(this, x => x.TransactionDraft);
+        // Confirm = ReactiveCommand.CreateFromTask(() => TransactionDraft!.Submit(),
+        //     this.WhenAnyValue<TransactionDraftViewModel, ITransactionDraft>(x => x.TransactionDraft!).Null().CombineLatest(CreateDraft.IsExecuting, (a, b) => !a && !b));
+        //TransactionConfirmed = Confirm.Successes().Select(_ => true).StartWith(false);
+        //IsBusy = CreateDraft.IsExecuting.CombineLatest(Confirm.IsExecuting, (a, b) => a | b);
 
-        Confirm.HandleErrorsWith(services.NotificationService, "Could not confirm transaction");
-        CreateDraft.HandleErrorsWith(services.NotificationService, "Could not create transaction preview");
+        //Confirm.HandleErrorsWith(uiServices.NotificationService, "Could not confirm transaction");
+        //CreateDraft.HandleErrorsWith(uiServices.NotificationService, "Could not create transaction preview");
 
-        this.WhenAnyValue(x => x.Feerate).ToSignal().InvokeCommand(CreateDraft);
+        //this.WhenAnyValue(x => x.Sats).ToSignal().InvokeCommand(CreateDraft);
         Amount = sendAmount.Amount;
+
+        this.WhenAnyValue(model => model.Sats).Subscribe(l => {});
     }
 
     private Task<Result<ITransactionDraft>> CreateDraftTo(long destinationAmount, string destinationBitcoinAddress, long feeRate)
     {
         var feeResult = walletAppService.EstimateFee(walletId, new Amount(destinationAmount), new Address(destinationBitcoinAddress), new DomainFeeRate(feeRate));
-        
+
         return feeResult.Map(fee => (ITransactionDraft)new Angor.UI.Model.Implementation.Wallet.TransactionDraft(
             walletId: walletId,
             amount: destinationAmount,
             address: destinationBitcoinAddress,
             fee: fee,
-            feeRate: feerate,
+            feeRate: new DomainFeeRate(Sats.Value),
             walletAppService: walletAppService));
     }
 
     public ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
-    public IObservable<bool> IsBusy { get; }
-    public ReactiveCommand<Unit, Result<ITransactionDraft>> CreateDraft { get; }
-    public IObservable<bool> TransactionConfirmed { get; }
+
+    public IObservable<bool> IsBusy { get; } = Observable.Return(false);
     public SendAmount SendAmount { get; }
     public long Amount { get; }
-    public IObservable<bool> IsValid => TransactionConfirmed;
+    public IEnumerable<IFeeratePreset> Presets => uiServices.FeeratePresets;
     public bool AutoAdvance => true;
+    public IObservable<bool> IsValid { get; } = Observable.Return(true);
 }

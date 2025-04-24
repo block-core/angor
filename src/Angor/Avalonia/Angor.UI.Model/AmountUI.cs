@@ -1,9 +1,8 @@
 namespace Angor.UI.Model;
 
-public class AmountUI(long sats)
+public interface IAmountUI
 {
-    public long Sats { get; } = sats;
-
+    long Sats { get; }
     public string BtcString
     {
         get
@@ -13,6 +12,11 @@ public class AmountUI(long sats)
         }
     }
 
-    public object SatsString => $"{Sats} sats";
-    public object FeeRateString => $"{Sats} sats/VByte";
+    public string SatsString => $"{Sats} sats";
+    public string FeeRateString => $"{Sats} sats/VByte";
+}
+
+public class AmountUI(long sats) : IAmountUI
+{
+    public long Sats { get; } = sats;
 }

@@ -1,3 +1,4 @@
+using AngorApp.UI.Controls;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Services;
 using Zafiro.UI;
@@ -22,5 +23,18 @@ public class UIServices
         NotificationService = notificationService;
         ActiveWallet = activeWallet;
         WalletRoot = walletRoot;
+    }
+
+    public IEnumerable<IFeeratePreset> FeeratePresets
+    {
+        get
+        {
+            return new[]
+            {
+                new Preset("Economy", new AmountUI(2), null, null),
+                new Preset("Standard", new AmountUI(12), null, null),
+                new Preset("Priority", new AmountUI(20), null, null),
+            };
+        }
     }
 }

@@ -13,10 +13,10 @@ namespace AngorApp.UI.Controls;
 
 public class FeerateSelector : TemplatedControl
 {
-    public static readonly StyledProperty<IEnumerable<UserProvidedPreset>?> PresetsProperty = AvaloniaProperty.Register<FeerateSelector, IEnumerable<UserProvidedPreset>?>(
+    public static readonly StyledProperty<IEnumerable<IFeeratePreset>?> PresetsProperty = AvaloniaProperty.Register<FeerateSelector, IEnumerable<IFeeratePreset>?>(
         nameof(Presets));
 
-    public IEnumerable<UserProvidedPreset>? Presets
+    public IEnumerable<IFeeratePreset>? Presets
     {
         get => GetValue(PresetsProperty);
         set => SetValue(PresetsProperty, value);
@@ -34,7 +34,7 @@ public class FeerateSelector : TemplatedControl
     public FeerateSelector()
     {
         Controller = new Controller();
-        this.WhenAnyValue(x => x.Sats).BindTo(this, x => x.Controller.Amount);
+        this.WhenAnyValue(x => x.Amount).BindTo(this, x => x.Controller.Amount);
         this.WhenAnyValue(x => x.Presets).BindTo(this, x => x.Controller.UserProvided);
         this.WhenAnyValue(x => x.FeeCalculator).BindTo(this, x => x.Controller.FeeCalculator);
         this.WhenAnyValue(x => x.Controller.Feerate).Select(l => l).Subscribe(l => Feerate = l);
@@ -60,10 +60,9 @@ public class FeerateSelector : TemplatedControl
         set => SetValue(FeeCalculatorProperty, value);
     }
 
-    public static readonly StyledProperty<long> SatsProperty = AvaloniaProperty.Register<FeerateSelector, long>(
-        nameof(Sats));
+    public static readonly StyledProperty<long?> SatsProperty = AvaloniaProperty.Register<FeerateSelector, long?>(nameof(Amount), defaultBindingMode: BindingMode.OneWayToSource);
 
-    public long Sats
+    public long? Amount
     {
         get => GetValue(SatsProperty);
         set => SetValue(SatsProperty, value);
@@ -72,7 +71,7 @@ public class FeerateSelector : TemplatedControl
 
 public partial class Controller : ReactiveValidationObject
 {
-    [Reactive] private IEnumerable<UserProvidedPreset>? userProvided;
+    [Reactive] private IEnumerable<IFeeratePreset>? userProvided;
     [Reactive] private IFeerateViewModel? selectedFeeRate;
     [Reactive] private long? amount;
     [Reactive] IFeeCalculator? feeCalculator;
@@ -91,10 +90,10 @@ public partial class Controller : ReactiveValidationObject
             {
                 var argCalculator = a.calculator;
                 
-                IEnumerable<Preset> presets;
+                IEnumerable<IFeeratePreset> presets;
                 if (a.presets != null)
                 {
-                    presets = a.presets.Select(preset => new Preset(preset.Name, preset.SatsPerVByte, amount, argCalculator));
+                    presets = a.presets.Select(preset => (IFeeratePreset)new Preset(preset.Name, preset.Feerate, amount.HasValue ? new AmountUI(amount.Value) : null, null));
                 }
                 else
                 {
@@ -113,12 +112,6 @@ public partial class Controller : ReactiveValidationObject
     }
 }
 
-public class UserProvidedPreset
-{
-    public string Name { get; set; }
-    public long SatsPerVByte { get; set; }
-}
-
 public interface IFeeCalculator
 {
     Task<Result<long>> GetFee(long feerate, long amount);
@@ -126,16 +119,15 @@ public interface IFeeCalculator
 
 public interface IFeerateViewModel
 {
-    AmountUI Feerate { get; }
-    public AmountUI Fee { get; }
+    IAmountUI Feerate { get; }
 }
 
 public partial class CustomFeeRate : ReactiveObject, IFeerateViewModel
 {
-    [Reactive] private long sats = 123;
-    [Reactive] private AmountUI feerate;
+    [Reactive] private long sats = 10;
+    [Reactive] private IAmountUI feerate;
     public IFeeCalculator? FeeCalculator { get; }
-    [ObservableAsProperty] private AmountUI fee;
+    [ObservableAsProperty] private IAmountUI fee;
 
     public CustomFeeRate(long? amount, IFeeCalculator? feeCalculator)
     {
@@ -159,19 +151,19 @@ public partial class CustomFeeRate : ReactiveObject, IFeerateViewModel
     }
 }
 
-public partial class Preset : ReactiveObject, IFeerateViewModel
+public partial class Preset : ReactiveObject, IFeeratePreset
 {
     [ObservableAsProperty]
-    private AmountUI fee;
+    private IAmountUI fee;
 
-    public Preset(string name, long feeRate, long? amount, IFeeCalculator? feeCalculator)
+    public Preset(string name, IAmountUI feeRate, IAmountUI? amount, IFeeCalculator? feeCalculator)
     {
         Name = name;
         Amount = amount;
-        Feerate = new AmountUI(feeRate);
-        if (feeCalculator != null && amount.HasValue)
+        Feerate = feeRate;
+        if (feeCalculator != null && amount != null)
         {
-            CalculateCommand = ReactiveCommand.CreateFromTask(() => feeCalculator.GetFee(feeRate, amount.Value));
+            CalculateCommand = ReactiveCommand.CreateFromTask(() => feeCalculator.GetFee(feeRate.Sats, amount.Sats));
             
             feeHelper = CalculateCommand.Successes()
                 .Select(sats => new AmountUI(sats))
@@ -185,7 +177,12 @@ public partial class Preset : ReactiveObject, IFeerateViewModel
 
     public string Name { get; set; }
 
-    public long? Amount { get; }
+    public IAmountUI? Amount { get; }
 
-    public AmountUI? Feerate { get; }
+    public IAmountUI Feerate { get; }
+}
+
+public interface IFeeratePreset : IFeerateViewModel
+{
+    public string Name { get; }
 }

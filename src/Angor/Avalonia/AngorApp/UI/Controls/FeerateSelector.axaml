@@ -2,19 +2,32 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:AngorApp.UI.Controls"
         xmlns:angorApp="clr-namespace:AngorApp"
-        xmlns:om="clr-namespace:System.Collections.ObjectModel;assembly=System.Runtime">
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections">
+    
     <Design.PreviewWith>
-        <controls:FeerateSelector Width="300" Height="500" Sats="1000">
+        <controls:FeerateSelector Width="300" Height="500" Amount="1000">
+            <controls:FeerateSelector.Presets>
+                <generic:List x:TypeArguments="controls:IFeeratePreset">
+                    <angorApp:DesignTimePreset Name="Economy">
+                        <angorApp:DesignTimePreset.Feerate>
+                            <angorApp:DesignTimeAmount Sats="1234" />
+                        </angorApp:DesignTimePreset.Feerate>
+                    </angorApp:DesignTimePreset>
+                    <angorApp:DesignTimePreset Name="Standard">
+                        <angorApp:DesignTimePreset.Feerate>
+                            <angorApp:DesignTimeAmount Sats="1234" />
+                        </angorApp:DesignTimePreset.Feerate>
+                    </angorApp:DesignTimePreset>
+                    <angorApp:DesignTimePreset Name="Priority">
+                        <angorApp:DesignTimePreset.Feerate>
+                            <angorApp:DesignTimeAmount Sats="1234" />
+                        </angorApp:DesignTimePreset.Feerate>
+                    </angorApp:DesignTimePreset>
+                </generic:List>
+            </controls:FeerateSelector.Presets>
             <controls:FeerateSelector.FeeCalculator>
                 <angorApp:FeeCalculatorDesignTime />
             </controls:FeerateSelector.FeeCalculator>
-            <controls:FeerateSelector.Presets>
-                <om:Collection x:TypeArguments="controls:UserProvidedPreset">
-                    <controls:UserProvidedPreset Name="Economy" SatsPerVByte="100" />
-                    <controls:UserProvidedPreset Name="Standard" SatsPerVByte="200" />
-                    <controls:UserProvidedPreset Name="Priority" SatsPerVByte="300" />
-                </om:Collection>
-            </controls:FeerateSelector.Presets>
         </controls:FeerateSelector>
     </Design.PreviewWith>
 
@@ -27,7 +40,7 @@
                     <StackPanel.DataTemplates>
                         <DataTemplate DataType="controls:CustomFeeRate">
                             <StackPanel>
-                                <RadioButton Name="UseCustom" IsChecked="{Binding $parent[ListBoxItem].IsSelected}" Content="Custom fee rate:" />
+                                <RadioButton Name="UseCustom" IsChecked="{Binding $parent[ListBoxItem].IsSelected}" Content="Custom fee rate" />
                                 <StackPanel IsVisible="{Binding #UseCustom.IsChecked}">
                                     <DockPanel>
                                         <StackPanel DockPanel.Dock="Bottom">
@@ -55,7 +68,7 @@
                             </Grid>
                         </DataTemplate>
                     </StackPanel.DataTemplates>
-                    <ListBox SelectedItem="{Binding $parent[controls:FeerateSelector].Controller.SelectedFeeRate}" BorderThickness="2" BorderBrush="Gray" CornerRadius="2"
+                    <ListBox SelectedItem="{Binding $parent[controls:FeerateSelector].Controller.SelectedFeeRate}"
                              ItemsSource="{Binding $parent[controls:FeerateSelector].Controller.FeeRates}" />
                 </StackPanel>
             </ControlTemplate>

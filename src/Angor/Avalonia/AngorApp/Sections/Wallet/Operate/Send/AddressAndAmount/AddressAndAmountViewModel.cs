@@ -29,5 +29,5 @@ public partial class AddressAndAmountViewModel : ReactiveValidationObject, IAddr
     public IObservable<bool> IsBusy => Observable.Return(false);
     public bool AutoAdvance => false;
 
-    [ObservableAsProperty] private AmountUI walletBalance;
+    [ObservableAsProperty] private IAmountUI walletBalance;
 }

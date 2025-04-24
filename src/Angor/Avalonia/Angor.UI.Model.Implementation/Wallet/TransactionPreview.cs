@@ -4,7 +4,7 @@ using CSharpFunctionalExtensions;
 
 namespace Angor.UI.Model.Implementation.Wallet;
 
-public class TransactionDraft(WalletId walletId, long amount, string address, long feeRate, Fee fee, IWalletAppService walletAppService) : ITransactionDraft
+public class TransactionDraft(WalletId walletId, long amount, string address, DomainFeeRate feeRate, Fee fee, IWalletAppService walletAppService) : ITransactionDraft
 {
     public WalletId WalletId { get; } = walletId;
     public long Amount { get; } = amount;
@@ -14,6 +14,6 @@ public class TransactionDraft(WalletId walletId, long amount, string address, lo
 
     public Task<Result<TxId>> Submit()
     {
-        return WalletAppService.SendAmount(WalletId, new Amount(Amount), new Address(Address), new DomainFeeRate(feeRate)).Map(id => id);
+        return WalletAppService.SendAmount(WalletId, new Amount(Amount), new Address(Address), feeRate).Map(id => id);
     }
 }
