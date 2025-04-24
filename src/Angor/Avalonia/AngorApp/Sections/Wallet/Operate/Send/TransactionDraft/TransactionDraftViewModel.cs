@@ -1,3 +1,4 @@
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
@@ -8,6 +9,7 @@ using ReactiveUI.Validation.Helpers;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
 using Zafiro.UI;
+using Zafiro.UI.Reactive;
 
 namespace AngorApp.Sections.Wallet.Operate.Send.TransactionDraft;
 
@@ -16,8 +18,9 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
     private readonly WalletId walletId;
     private readonly IWalletAppService walletAppService;
     private readonly UIServices uiServices;
-    [Reactive] private long? sats;
+    [Reactive] private long? feerate;
     [ObservableAsProperty] private ITransactionDraft? transactionDraft;
+    private readonly Subject<bool> isBusy = new();
 
     public TransactionDraftViewModel(WalletId walletId, 
         IWalletAppService walletAppService, 
@@ -27,21 +30,18 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
         this.walletId = walletId;
         this.walletAppService = walletAppService;
         this.uiServices = uiServices;
-        SendAmount = sendAmount;
-        //CreateDraft = ReactiveCommand.CreateFromTask(() => CreateDraftTo(sendAmount.Amount, sendAmount.BitcoinAddress, Sats.Value));
-        //transactionDraftHelper = CreateDraft.Successes().ToProperty(this, x => x.TransactionDraft);
-        // Confirm = ReactiveCommand.CreateFromTask(() => TransactionDraft!.Submit(),
-        //     this.WhenAnyValue<TransactionDraftViewModel, ITransactionDraft>(x => x.TransactionDraft!).Null().CombineLatest(CreateDraft.IsExecuting, (a, b) => !a && !b));
-        //TransactionConfirmed = Confirm.Successes().Select(_ => true).StartWith(false);
-        //IsBusy = CreateDraft.IsExecuting.CombineLatest(Confirm.IsExecuting, (a, b) => a | b);
 
-        //Confirm.HandleErrorsWith(uiServices.NotificationService, "Could not confirm transaction");
-        //CreateDraft.HandleErrorsWith(uiServices.NotificationService, "Could not create transaction preview");
+        transactionDraftHelper = this.WhenAnyValue(x => x.Feerate)
+            .WhereNotNull()
+            .SelectLatest(f => CreateDraftTo(sendAmount.Amount, sendAmount.BitcoinAddress, f.Value), isBusy, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Successes()
+            .ToProperty(this, model => model.TransactionDraft);
 
-        //this.WhenAnyValue(x => x.Sats).ToSignal().InvokeCommand(CreateDraft);
-        Amount = sendAmount.Amount;
-
-        this.WhenAnyValue(model => model.Sats).Subscribe(l => {});
+        var canExecute = this.WhenAnyValue(model => model.TransactionDraft).NotNull();
+        canExecute.Subscribe(b => { });
+        Confirm = ReactiveCommand.CreateFromTask(() => TransactionDraft!.Submit(), canExecute);
+        IsValid = Confirm.Any().StartWith(false);
     }
 
     private Task<Result<ITransactionDraft>> CreateDraftTo(long destinationAmount, string destinationBitcoinAddress, long feeRate)
@@ -53,16 +53,14 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
             amount: destinationAmount,
             address: destinationBitcoinAddress,
             fee: fee,
-            feeRate: new DomainFeeRate(Sats.Value),
+            feeRate: new DomainFeeRate(feeRate),
             walletAppService: walletAppService));
     }
 
     public ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
 
     public IObservable<bool> IsBusy { get; } = Observable.Return(false);
-    public SendAmount SendAmount { get; }
-    public long Amount { get; }
     public IEnumerable<IFeeratePreset> Presets => uiServices.FeeratePresets;
     public bool AutoAdvance => true;
-    public IObservable<bool> IsValid { get; } = Observable.Return(true);
+    public IObservable<bool> IsValid { get; }
 }

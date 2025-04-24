@@ -49,7 +49,7 @@
                                                 <TextBlock FontSize="{StaticResource FontSizeSmall}" HorizontalAlignment="Right">High fee</TextBlock>
                                             </Panel>
                                         </StackPanel>
-                                        <Slider Value="{Binding Sats, Mode=TwoWay}" />
+                                        <Slider Minimum="1" Maximum="300" Value="{Binding Sats, Mode=TwoWay}" />
                                     </DockPanel>
                                     <TextBlock Text="{Binding Feerate.FeeRateString}" />
                                     <TextBox Watermark="Custom" Text="{Binding Sats, Mode=TwoWay}">

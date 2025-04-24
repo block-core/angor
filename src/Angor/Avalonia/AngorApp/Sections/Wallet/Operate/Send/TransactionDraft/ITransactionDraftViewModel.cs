@@ -7,6 +7,6 @@ namespace AngorApp.Sections.Wallet.Operate.Send.TransactionDraft;
 public interface ITransactionDraftViewModel : IStep
 {
     ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
-    public long? Sats { get; set; }
+    public long? Feerate { get; set; }
     public IEnumerable<IFeeratePreset> Presets { get; }
 }

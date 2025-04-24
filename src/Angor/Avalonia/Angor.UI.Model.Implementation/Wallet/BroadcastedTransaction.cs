@@ -11,8 +11,7 @@ public class BroadcastedTransactionImpl(BroadcastedTransaction transaction) : IB
     public IEnumerable<TransactionInputInfo> WalletOutputs { get; } = transaction.WalletInputs;
 
     public IEnumerable<TransactionInputInfo> WalletInputs { get; } = transaction.WalletInputs;
-
-
+    
     public string Id { get; } = transaction.Id;
 
     public string Address { get; } = transaction.AllOutputs.FirstOrDefault()?.Address ?? string.Empty;

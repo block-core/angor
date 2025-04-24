@@ -28,7 +28,7 @@
 
     <StackPanel Spacing="8">
         <z:Pane Header="Select transaction speed:">
-            <controls:FeerateSelector Feerate="{Binding Sats}"
+            <controls:FeerateSelector Feerate="{Binding Feerate}"
                                       Presets="{Binding Presets}" />
         </z:Pane>
         <Button Theme="{StaticResource DarkerButton}" HorizontalAlignment="Center" Margin="0 10" Command="{Binding Confirm}">
