@@ -1,4 +1,5 @@
 using Angor.Contexts.Funding.Investor;
+using AngorApp.UI.Controls;
 
 namespace AngorApp.Features.Invest.Draft;
 
@@ -7,6 +8,7 @@ public class DraftViewModelDesign : IDraftViewModel
     public long SatsToInvest { get; } = 1000;
     public InvestmentDraft Draft { get; } = new InvestmentDraft(new CreateInvestment.Draft("key", TransactionJson(), "id", new Angor.Contexts.Funding.Projects.Domain.Amount(1234)));
     public long? Feerate { get; set; } = 321;
+    public IFeeCalculator FeeCalculator { get; } = new FeeCalculatorDesignTime();
 
     private static string TransactionJson()
     {

@@ -107,9 +107,9 @@ public partial class Controller : ReactiveValidationObject
                 return presets.Append<IFeerateViewModel>(custom);
             }).ToProperty(this, controller => controller.FeeRates);
 
-        var feerates = this.WhenAnyValue(x => x.SelectedFeeRate!.Feerate.Sats);
+        var selectedFeeRates = this.WhenAnyValue(x => x.SelectedFeeRate!.Feerate.Sats);
 
-        feerateHelper = feerates.ToProperty(this, x => x.Feerate);
+        feerateHelper = selectedFeeRates.ToProperty(this, x => x.Feerate);
     }
 }
 

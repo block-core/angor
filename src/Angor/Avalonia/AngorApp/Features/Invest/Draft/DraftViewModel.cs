@@ -1,6 +1,7 @@
 using System.Reactive.Subjects;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
+using AngorApp.UI.Controls;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
@@ -30,6 +31,8 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel
         
         draftHelper = drafts.ToProperty(this, x => x.Draft);
         IsValid = this.WhenAnyValue(x => x.Draft!).NotNull();
+
+        FeeCalculator = new FeeCalculatorDesignTime();
     }
 
     [ObservableAsProperty] private InvestmentDraft? draft;
@@ -38,6 +41,8 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel
     public IObservable<bool> IsBusy => isBusy.AsObservable();
     public bool AutoAdvance => false;
     public long SatsToInvest { get; }
+    
+    public IFeeCalculator FeeCalculator { get; }
 
     [Reactive] private long? feerate;
 }

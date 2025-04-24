@@ -8,7 +8,7 @@
              xmlns:p="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" x:Class="AngorApp.Features.Invest.Draft.DraftView"
              Width="400"
-             Height="300"
+             Height="600"
              x:DataType="draft1:IDraftViewModel">
 
     <Design.DataContext>
@@ -27,7 +27,7 @@
                 <TextBlock Text="{Binding SatsToInvest, StringFormat={x:Static controls:MiscConverters.Sats}}" />
             </HeaderedContentControl>
             <p:Pane Header="Feerate">
-                <controls:FeerateSelector Feerate="{Binding Feerate}">
+                <controls:FeerateSelector FeeCalculator="{Binding FeeCalculator}" Feerate="{Binding Feerate}">
                     <controls:FeerateSelector.Presets>
                         <generic:List x:TypeArguments="controls:UserProvidedPreset">
                             <controls:UserProvidedPreset Name="Economy" SatsPerVByte="100" />
