@@ -19,8 +19,9 @@ public class TransactionDraftViewModelDesign : ITransactionDraftViewModel
     public ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
     public ReactiveCommand<Unit, Result<ITransactionDraft>> CreateDraft { get; }
     public IObservable<bool> TransactionConfirmed { get; }
-    public Destination Destination { get; } = new("Sample Destination", 1000, "mzHrLAR3WWLE4eCpq82BDCKmLeYRyYXPtm");
+    public SendAmount SendAmount { get; } = new("Sample Destination", 1000, "mzHrLAR3WWLE4eCpq82BDCKmLeYRyYXPtm");
     public long Feerate { get; set; } = 1;
+    public long Amount { get; }
     public IObservable<bool> IsValid { get; }
     public bool AutoAdvance => false;
 }

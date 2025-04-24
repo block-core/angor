@@ -29,10 +29,10 @@
             <p:Pane Header="Feerate">
                 <controls:FeerateSelector Feerate="{Binding Feerate}">
                     <controls:FeerateSelector.Presets>
-                        <generic:List x:TypeArguments="controls:Preset">
-                            <controls:Preset Name="Economy" SatsPerVByte="100" />
-                            <controls:Preset Name="Standard" SatsPerVByte="200" />
-                            <controls:Preset Name="Priority" SatsPerVByte="350" />
+                        <generic:List x:TypeArguments="controls:UserProvidedPreset">
+                            <controls:UserProvidedPreset Name="Economy" SatsPerVByte="100" />
+                            <controls:UserProvidedPreset Name="Standard" SatsPerVByte="200" />
+                            <controls:UserProvidedPreset Name="Priority" SatsPerVByte="350" />
                         </generic:List>
                     </controls:FeerateSelector.Presets>
                 </controls:FeerateSelector>

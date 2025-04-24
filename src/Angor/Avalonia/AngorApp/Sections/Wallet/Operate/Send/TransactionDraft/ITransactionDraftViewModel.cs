@@ -9,6 +9,7 @@ public interface ITransactionDraftViewModel : IStep
     ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
     ReactiveCommand<Unit, Result<ITransactionDraft>> CreateDraft { get; }
     public IObservable<bool> TransactionConfirmed { get; }
-    public Destination Destination { get; }
+    public SendAmount SendAmount { get; }
     public long Feerate { get; set; }
+    public long Amount { get; }
 }

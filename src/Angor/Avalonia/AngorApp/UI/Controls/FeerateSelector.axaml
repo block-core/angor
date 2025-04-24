@@ -1,42 +1,68 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:AngorApp.UI.Controls"
-        xmlns:objectModel="clr-namespace:System.Collections.ObjectModel;assembly=System.Runtime">
+        xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+        xmlns:angorApp="clr-namespace:AngorApp"
+        xmlns:om="clr-namespace:System.Collections.ObjectModel;assembly=System.Runtime">
     <Design.PreviewWith>
-        <controls:FeerateSelector Margin="50">
+        <controls:FeerateSelector Width="300" Height="500" Sats="1000">
+            <controls:FeerateSelector.FeeCalculator>
+                <angorApp:FeeCalculatorDesignTime />
+            </controls:FeerateSelector.FeeCalculator>
             <controls:FeerateSelector.Presets>
-                <objectModel:Collection x:TypeArguments="controls:Preset">
-                    <controls:Preset Name="Economy" />
-                    <controls:Preset Name="Standard" />
-                    <controls:Preset Name="Priority" />
-                </objectModel:Collection>
+                <om:Collection x:TypeArguments="controls:UserProvidedPreset">
+                    <controls:UserProvidedPreset Name="Economy" SatsPerVByte="100" />
+                    <controls:UserProvidedPreset Name="Standard" SatsPerVByte="200" />
+                    <controls:UserProvidedPreset Name="Priority" SatsPerVByte="300" />
+                </om:Collection>
             </controls:FeerateSelector.Presets>
         </controls:FeerateSelector>
     </Design.PreviewWith>
+
 
     <Style Selector="controls|FeerateSelector">
         <!-- Set Defaults -->
         <Setter Property="Template">
             <ControlTemplate>
                 <StackPanel Spacing="10">
-                    <ListBox SelectedItem="{Binding $parent[controls:FeerateSelector].Controller.SelectedPreset}" BorderThickness="2" BorderBrush="Gray" CornerRadius="2" ItemsSource="{Binding $parent[controls:FeerateSelector].Controller.Presets}">
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Rows="1" />
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="controls:Preset">
-                                <TextBlock TextAlignment="Center" Text="{Binding Name}" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ListBox>
-                    <CheckBox x:Name="CheckBox" IsChecked="{Binding $parent[controls:FeerateSelector].Controller.UseCustomFeerate, Mode=TwoWay}" Content="Use custom feerate" />
-                    <NumericUpDown IsVisible="{Binding #CheckBox.IsChecked}" ShowButtonSpinner="False" MaxWidth="250" HorizontalAlignment="Left" Value="{Binding $parent[controls:FeerateSelector].Controller.CustomFeerate, Mode=TwoWay}">
-                        <NumericUpDown.InnerRightContent>
-                            <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">sats/vByte</TextBlock>
-                        </NumericUpDown.InnerRightContent>
-                    </NumericUpDown>
+                    <StackPanel.DataTemplates>
+                        <DataTemplate DataType="controls:CustomFeeRate">
+                            <StackPanel>
+                                <RadioButton Name="UseCustom" IsChecked="{Binding $parent[ListBoxItem].IsSelected}" Content="Custom fee rate:" />
+                                <StackPanel IsVisible="{Binding #UseCustom.IsChecked}">
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Bottom">
+                                            <Panel>
+                                                <TextBlock FontSize="{StaticResource FontSizeSmall}" HorizontalAlignment="Left">Low fee</TextBlock>
+                                                <TextBlock FontSize="{StaticResource FontSizeSmall}" HorizontalAlignment="Right">High fee</TextBlock>
+                                            </Panel>
+                                        </StackPanel>
+                                        <Slider Value="{Binding Sats, Mode=TwoWay}" />
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding Feerate.FeeRateString}" />
+                                    <TextBox Watermark="Custom" Text="{Binding Sats, Mode=TwoWay}">
+                                        <TextBox.InnerRightContent>
+                                            <TextBlock VerticalAlignment="Center" Margin="0 0 6 0">sats/VByte</TextBlock>
+                                        </TextBox.InnerRightContent>
+                                    </TextBox>
+                                    <TextBlock TextAlignment="Right" FontWeight="Bold" Margin="0 10" Text="{Binding Fee.SatsString, StringFormat='Fee: {0}', FallbackValue='Undefined'}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                        <DataTemplate DataType="controls:Preset">
+                            <Grid ColumnDefinitions="* Auto Auto">
+                                <RadioButton IsChecked="{Binding $parent[ListBoxItem].IsSelected}" Content="{Binding Name}" />
+                                <TextBlock FontWeight="Bold" VerticalAlignment="Center" Grid.Column="1" Text="{Binding Fee.SatsString, StringFormat='Fee: {0}'}" />
+                            </Grid>
+                        </DataTemplate>
+                    </StackPanel.DataTemplates>
+                    <ListBox SelectedItem="{Binding $parent[controls:FeerateSelector].Controller.SelectedFeeRate}" BorderThickness="2" BorderBrush="Gray" CornerRadius="2"
+                             ItemsSource="{Binding $parent[controls:FeerateSelector].Controller.FeeRates}" />
+                    <!-- <CheckBox x:Name="CheckBox" IsChecked="{Binding $parent[controls:FeerateSelector].Controller.UseCustomFeerate, Mode=TwoWay}" Content="Use custom feerate" /> -->
+                    <!-- <NumericUpDown IsVisible="{Binding #CheckBox.IsChecked}" ShowButtonSpinner="False" MaxWidth="250" HorizontalAlignment="Left" Value="{Binding $parent[controls:FeerateSelector].Controller.CustomFeerate, Mode=TwoWay}"> -->
+                    <!--     <NumericUpDown.InnerRightContent> -->
+                    <!--         <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">sats/vByte</TextBlock> -->
+                    <!--     </NumericUpDown.InnerRightContent> -->
+                    <!-- </NumericUpDown> -->
                 </StackPanel>
             </ControlTemplate>
         </Setter>

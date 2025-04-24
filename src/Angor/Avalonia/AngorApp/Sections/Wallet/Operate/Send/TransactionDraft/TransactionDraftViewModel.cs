@@ -17,12 +17,12 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
     [Reactive] private long feerate = 1;
     [ObservableAsProperty] private ITransactionDraft? transactionDraft;
 
-    public TransactionDraftViewModel(WalletId walletId, IWalletAppService walletAppService, Destination destination, UIServices services)
+    public TransactionDraftViewModel(WalletId walletId, IWalletAppService walletAppService, SendAmount sendAmount, UIServices services)
     {
         this.walletId = walletId;
         this.walletAppService = walletAppService;
-        Destination = destination;
-        CreateDraft = ReactiveCommand.CreateFromTask<Result<ITransactionDraft>>(() => CreateDraftTo(destination.Amount, destination.BitcoinAddress, Feerate));
+        SendAmount = sendAmount;
+        CreateDraft = ReactiveCommand.CreateFromTask<Result<ITransactionDraft>>(() => CreateDraftTo(sendAmount.Amount, sendAmount.BitcoinAddress, Feerate));
         transactionDraftHelper = CreateDraft.Successes().ToProperty(this, x => x.TransactionDraft);
         Confirm = ReactiveCommand.CreateFromTask<Result<TxId>>(() => TransactionDraft!.Submit(),
             this.WhenAnyValue<TransactionDraftViewModel, ITransactionDraft>(x => x.TransactionDraft!).Null().CombineLatest(CreateDraft.IsExecuting, (a, b) => !a && !b));
@@ -32,7 +32,8 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
         Confirm.HandleErrorsWith(services.NotificationService, "Could not confirm transaction");
         CreateDraft.HandleErrorsWith(services.NotificationService, "Could not create transaction preview");
 
-        this.WhenAnyValue<TransactionDraftViewModel, long>(x => x.Feerate).ToSignal().InvokeCommand(CreateDraft);
+        this.WhenAnyValue(x => x.Feerate).ToSignal().InvokeCommand(CreateDraft);
+        Amount = sendAmount.Amount;
     }
 
     private Task<Result<ITransactionDraft>> CreateDraftTo(long destinationAmount, string destinationBitcoinAddress, long feeRate)
@@ -52,7 +53,8 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
     public IObservable<bool> IsBusy { get; }
     public ReactiveCommand<Unit, Result<ITransactionDraft>> CreateDraft { get; }
     public IObservable<bool> TransactionConfirmed { get; }
-    public Destination Destination { get; }
+    public SendAmount SendAmount { get; }
+    public long Amount { get; }
     public IObservable<bool> IsValid => TransactionConfirmed;
     public bool AutoAdvance => true;
 }
