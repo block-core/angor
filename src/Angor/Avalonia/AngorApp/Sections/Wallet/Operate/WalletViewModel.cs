@@ -30,15 +30,14 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
         
         wallet.History.ToObservableChangeSet(x => x.Id)
             .Transform(transaction => new TransactionViewModel(transaction, uiServices))
-            .TransformWithInlineUpdate<IdentityContainer<TransactionViewModel>, TransactionViewModel, string>(x => new IdentityContainer<TransactionViewModel>() { Content = x }, (x, e) => x.Content = e)
-            .Bind(out var holders)
+            .TransformWithInlineUpdate<IdentityContainer<ITransactionViewModel>, TransactionViewModel, string>(x => new IdentityContainer<ITransactionViewModel> { Content = x }, (x, e) => x.Content = e)
+            .SortAndBind(out var idContainers, SortExpressionComparer<IdentityContainer<ITransactionViewModel>>.Descending(x => x.Content.Transaction.BlockTime ?? DateTimeOffset.MinValue))
             .Subscribe();
 
-        History = holders;
+        History = idContainers;
     }
 
-    public StoppableCommand<Unit, Result<BroadcastedTransaction>> Sync { get; set; }
-    public IEnumerable<IdentityContainer<TransactionViewModel>> History { get; }
+    public IEnumerable<IdentityContainer<ITransactionViewModel>> History { get; }
 
     public IWallet Wallet { get; }
 
@@ -52,7 +51,6 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
         return await uiServices.Dialog.ShowWizard(wizard, "Send");
     });
 
-    public string Name { get; init; }
     public ReactiveCommand<Unit, ResultViewModel<string>> GetReceiveAddress { get; }
 
     [ObservableAsProperty] private ResultViewModel<string> receiveAddressResult;

@@ -1,3 +1,5 @@
+using Angor.Contexts.Wallet.Domain;
+
 namespace Angor.UI.Model;
 
 public interface IAmountUI
@@ -14,6 +16,9 @@ public interface IAmountUI
 
     public string SatsString => $"{Sats} sats";
     public string FeeRateString => $"{Sats} sats/VByte";
+    public bool IsNegative => Sats < 0;
+    public bool IsPositive => Sats > 0;
+    public bool IsZero => Sats == 0;
 }
 
 public class AmountUI(long sats) : IAmountUI

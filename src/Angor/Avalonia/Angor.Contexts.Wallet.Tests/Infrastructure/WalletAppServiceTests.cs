@@ -18,8 +18,8 @@ public class WalletAppServiceTests(ITestOutputHelper output)
 
         // Assert
         Assert.True(result.IsSuccess);
-        output.WriteLine($"Balance: {result.Value.Value} sats");
-        Assert.True(result.Value.Value >= 0);
+        output.WriteLine($"Balance: {result.Value.Sats} sats");
+        Assert.True(result.Value.Sats >= 0);
     }
 
     private IWalletAppService CreateSut()
@@ -94,7 +94,7 @@ public class WalletAppServiceTests(ITestOutputHelper output)
         foreach (var tx in transactions)
         {
             output.WriteLine($"\nTransaction {tx.Id}:");
-            output.WriteLine($"Balance: {tx.Balance.Value} sats");
+            output.WriteLine($"Balance: {tx.GetBalance().Sats} sats");
             output.WriteLine($"Fee: {tx.Fee} sats");
             output.WriteLine($"Confirmed: {tx.IsConfirmed}");
             output.WriteLine($"Block Height: {tx.BlockHeight}");
@@ -134,26 +134,26 @@ public class WalletAppServiceTests(ITestOutputHelper output)
     private void ValidateTransactionAddresses(BroadcastedTransaction tx)
     {
         // Validate that wallet inputs are a subset of all inputs
-        var walletInputAddresses = tx.WalletInputs.Select(wi => wi.Address.Address).ToHashSet();
+        var walletInputAddresses = tx.WalletInputs.Select(wi => wi.Address).ToHashSet();
         var allInputAddresses = tx.AllInputs.Select(ai => ai.Address).ToHashSet();
         Assert.True(walletInputAddresses.IsSubsetOf(allInputAddresses));
 
         // Validate that wallet outputs are a subset of all outputs
-        var walletOutputAddresses = tx.WalletOutputs.Select(wo => wo.Address.Address).ToHashSet();
+        var walletOutputAddresses = tx.WalletOutputs.Select(wo => wo.Address).ToHashSet();
         var allOutputAddresses = tx.AllOutputs.Select(ao => ao.Address).ToHashSet();
         Assert.True(walletOutputAddresses.IsSubsetOf(allOutputAddresses));
 
         // Validate that amounts are consistent
         foreach (var input in tx.AllInputs)
         {
-            Assert.True(input.TotalAmount >= 0);
-            output.WriteLine($"Input: {input.Address} - {input.TotalAmount} sats");
+            Assert.True(input.Amount.Sats >= 0);
+            output.WriteLine($"Input: {input.Address} - {input.Amount} sats");
         }
 
         foreach (var txOutput in tx.AllOutputs)
         {
-            Assert.True(txOutput.TotalAmount >= 0);
-            output.WriteLine($"Output: {txOutput.Address} - {txOutput.TotalAmount} sats");
+            Assert.True(txOutput.Amount.Sats >= 0);
+            output.WriteLine($"Output: {txOutput.Address} - {txOutput.Amount} sats");
         }
     }
 }

@@ -10,6 +10,5 @@ public interface IWalletViewModel
     public ICommand Send { get; }
     public ReactiveCommand<Unit, ResultViewModel<string>> GetReceiveAddress { get; }
     public ResultViewModel<string> ReceiveAddressResult { get; }
-    StoppableCommand<Unit, Result<BroadcastedTransaction>> Sync { get; set; }
-    public IEnumerable<IdentityContainer<TransactionViewModel>> History { get; }
+    public IEnumerable<IdentityContainer<ITransactionViewModel>> History { get; }
 }

@@ -68,17 +68,14 @@ public class TransactionHistory(
         var (inputs, outputs) = MapInputsAndOutputs(tx);
 
         // Determinar si hay alguna dirección de la cartera involucrada
-        return GetWalletAddresses(walletWords).Map(walletAddresses =>
+        return GetWalletAddresses(walletWords)
+            .Map(enumerable => enumerable.Select(a => new Address(a)))
+            .Map(walletAddresses =>
         {
-            var txBalance = CalculateTransactionBalance(tx, walletAddresses);
-
             return new BroadcastedTransaction(
-                Balance: new Balance(txBalance),
                 Id: tx.TransactionId,
-                WalletInputs: inputs.Where(i => walletAddresses.Contains(i.Address))
-                    .Select(i => new TransactionInputInfo(i)),
-                WalletOutputs: outputs.Where(o => walletAddresses.Contains(o.Address))
-                    .Select(o => new TransactionOutputInfo(o)),
+                WalletInputs: inputs.Where(i => walletAddresses.Contains(i.Address)),
+                WalletOutputs: outputs.Where(o => walletAddresses.Contains(o.Address)),
                 AllInputs: inputs,
                 AllOutputs: outputs,
                 Fee: tx.Fee,
@@ -90,32 +87,18 @@ public class TransactionHistory(
         });
     }
 
-    private (List<TransactionAddressInfo> inputs, List<TransactionAddressInfo> outputs) MapInputsAndOutputs(QueryTransaction tx)
+    private static (List<TransactionInput> inputs, List<TransactionOutput> outputs) MapInputsAndOutputs(QueryTransaction tx)
     {
-        var inputs = tx.Inputs.Select(input => new TransactionAddressInfo(
-            input.InputAddress,
-            input.InputAmount
+        var inputs = tx.Inputs.Select(input => new TransactionInput(
+            new Amount(input.InputAmount),
+            new Address(input.InputAddress)
         )).ToList();
 
-        var outputs = tx.Outputs.Select(output => new TransactionAddressInfo(
-            output.Address,
-            output.Balance
+        var outputs = tx.Outputs.Select(output => new TransactionOutput(
+            new Amount(output.Balance),
+            new Address(output.Address)
         )).ToList();
 
         return (inputs, outputs);
     }
-
-    private long CalculateTransactionBalance(QueryTransaction tx, IEnumerable<string> walletAddresses)
-    {
-        var outputAmount = tx.Outputs
-            .Where(o => walletAddresses.Contains(o.Address))
-            .Sum(o => o.Balance);
-
-        var inputAmount = tx.Inputs
-            .Where(i => walletAddresses.Contains(i.InputAddress))
-            .Sum(i => i.InputAmount);
-
-        return outputAmount - inputAmount;
-    }
-
 }

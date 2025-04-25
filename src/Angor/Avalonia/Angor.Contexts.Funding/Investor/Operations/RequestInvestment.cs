@@ -60,7 +60,7 @@ public static class RequestInvestment
             var requestId = sendSignatureResult.Value;
             // TODO: Don't forget to uncomment. We really need to save info
             //var saveResult = await Save(requestId, txnHex, requestFounderSignaturesRequest.InvestmentTransaction.InvestorKey, requestFounderSignaturesRequest.ProjectId);
-            //return saveResult.Value;
+            //return saveResult.Sats;
             return Result.Success(Guid.Empty);
         }
 

@@ -52,7 +52,7 @@ public class WalletAppService(
     
     public Task<Result<Balance>> GetBalance(WalletId walletId)
     {
-        return GetTransactions(walletId).Map(txns => txns.Sum(x => x.Balance.Value)).Map(l => new Balance(l));
+        return GetTransactions(walletId).Map(txns => txns.Sum(x => x.GetBalance().Sats)).Map(l => new Balance(l));
     }
 
     public async Task<Result<Fee>> EstimateFee(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate)
@@ -83,10 +83,10 @@ public class WalletAppService(
             var sendInfo = new SendInfo
             {
                 FeeRate = satsPerVirtualKB,
-                SendAmount = amount.Value,
+                SendAmount = amount.Sats,
                 SendToAddress = address.Value,
                 ChangeAddress = changeAddress,
-                SendUtxos = walletOperations.FindOutputsForTransaction(amount.Value, accountInfo)
+                SendUtxos = walletOperations.FindOutputsForTransaction(amount.Sats, accountInfo)
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
 
@@ -152,11 +152,11 @@ public class WalletAppService(
             
             var sendInfo = new SendInfo
             {
-                SendAmount = amount.Value,
+                SendAmount = amount.Sats,
                 SendToAddress = address.Value,
                 FeeRate = satsPerVirtualKB,
                 ChangeAddress = accountInfo.GetNextChangeReceiveAddress(),
-                SendUtxos = walletOperations.FindOutputsForTransaction(amount.Value, accountInfo)
+                SendUtxos = walletOperations.FindOutputsForTransaction(amount.Sats, accountInfo)
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
             
