@@ -1035,6 +1035,8 @@
                         return;
                     }
 
+                    _Logger.LogInformation($"Communicator {_.CommunicatorName} accepted event {_.EventId}");
+
                     if (nostrMetadataCreated == false)
                     {
                         nostrMetadataCreated = true;
@@ -1103,6 +1105,8 @@
                         notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!", $"{_.CommunicatorName} - {_.Message}"); //TODO add export project info
                         return;
                     }
+                    
+                    _Logger.LogInformation($"Communicator {_.CommunicatorName} accepted event {_.EventId}");
 
                     if (nostrApplicationSpecificDataCreated == false)
                     {
