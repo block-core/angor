@@ -1,41 +1,42 @@
-﻿using Angor.Contexts.Wallet.Domain;
+﻿using Angor.Contexts.Wallet.Application;
+using Angor.Contexts.Wallet.Domain;
 using Xunit.Abstractions;
 
 namespace Angor.Contexts.Wallet.Tests.Infrastructure;
 
-[Collection("IntegrationTests")]
-public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>
+public class WalletAppServiceTests(ITestOutputHelper output)
 {
-    private readonly WalletAppServiceFixture _fixture;
-    private readonly ITestOutputHelper _output;
-
-    public WalletAppServiceTests(WalletAppServiceFixture fixture, ITestOutputHelper output)
-    {
-        _fixture = fixture;
-        _output = output;
-    }
-
+    private readonly WalletId walletId = Contexts.Wallet.Infrastructure.Impl.WalletAppService.SingleWalletId;
+    
     [Fact]
     public async Task GetBalance_ShouldReturnNonZeroBalance()
     {
+        var sut = CreateSut();
+        
         // Act
-        var result = await _fixture.WalletAppService.GetBalance(_fixture.WalletId);
+        var result = await sut.GetBalance(walletId);
 
         // Assert
         Assert.True(result.IsSuccess);
-        _output.WriteLine($"Balance: {result.Value.Value} sats");
+        output.WriteLine($"Balance: {result.Value.Value} sats");
         Assert.True(result.Value.Value >= 0);
+    }
+
+    private IWalletAppService CreateSut()
+    {
+        throw new NotImplementedException();
     }
 
     [Fact]
     public async Task GetNextAddress_ShouldReturnValidAddress()
     {
         // Act
-        var result = await _fixture.WalletAppService.GetNextReceiveAddress(_fixture.WalletId);
+        var sut = CreateSut();
+        var result = await sut.GetNextReceiveAddress(walletId);
 
         // Assert
         Assert.True(result.IsSuccess);
-        _output.WriteLine($"Next address: {result.Value.Value}");
+        output.WriteLine($"Next address: {result.Value.Value}");
         Assert.StartsWith("tb1", result.Value.Value); // TestNet4 native segwit prefix
     }
 
@@ -43,16 +44,17 @@ public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>
     public async Task EstimateFee_ShouldReturnReasonableEstimate()
     {
         // Arrange
+        var sut = CreateSut();
         var amount = new Amount(50000); 
         var address = new Address("tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"); // Sample address
         var feeRate = new DomainFeeRate(1); 
 
         // Act
-        var result = await _fixture.WalletAppService.EstimateFee(_fixture.WalletId, amount, address, feeRate);
+        var result = await sut.EstimateFee(walletId, amount, address, feeRate);
 
         // Assert
         Assert.True(result.IsSuccess);
-        _output.WriteLine($"Estimated fee: {result.Value.Value} sats");
+        output.WriteLine($"Estimated fee: {result.Value.Value} sats");
         Assert.True(result.Value.Value > 0);
         Assert.True(result.Value.Value < 50000); // Fee should be less than amount
     }
@@ -61,16 +63,17 @@ public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>
     public async Task SendAmount_ShouldSuccessfullyBroadcastTransaction()
     {
         // Arrange
+        var sut = CreateSut();
         var amount = new Amount(100000); 
         var address = new Address("tb1qrcjv7fvyq85eenk3636ldpq40nvp82mgm6u0w2");
         var feeRate = new DomainFeeRate(1);
 
         // Act
-        var result = await _fixture.WalletAppService.SendAmount(_fixture.WalletId, amount, address, feeRate);
+        var result = await sut.SendAmount(walletId, amount, address, feeRate);
 
         // Assert
         Assert.True(result.IsSuccess);
-        _output.WriteLine($"Transaction ID: {result.Value.Value}");
+        output.WriteLine($"Transaction ID: {result.Value.Value}");
         Assert.NotEmpty(result.Value.Value);
     }
 
@@ -78,23 +81,24 @@ public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>
     public async Task GetTransactions_ShouldReturnTransactionHistory()
     {
         // Act
-        var result = await _fixture.WalletAppService.GetTransactions(_fixture.WalletId);
+        var sut = CreateSut();
+        var result = await sut.GetTransactions(walletId);
 
         // Assert
         var errorMsg = result.TryGetError(out var error) ? error : "";
         Assert.True(result.IsSuccess, $"Failed to get transactions: {errorMsg}");
 
         var transactions = result.Value.ToList();
-        _output.WriteLine($"Found {transactions.Count} transactions");
+        output.WriteLine($"Found {transactions.Count} transactions");
 
         foreach (var tx in transactions)
         {
-            _output.WriteLine($"\nTransaction {tx.Id}:");
-            _output.WriteLine($"Balance: {tx.Balance.Value} sats");
-            _output.WriteLine($"Fee: {tx.Fee} sats");
-            _output.WriteLine($"Confirmed: {tx.IsConfirmed}");
-            _output.WriteLine($"Block Height: {tx.BlockHeight}");
-            _output.WriteLine($"Block Time: {tx.BlockTime}");
+            output.WriteLine($"\nTransaction {tx.Id}:");
+            output.WriteLine($"Balance: {tx.Balance.Value} sats");
+            output.WriteLine($"Fee: {tx.Fee} sats");
+            output.WriteLine($"Confirmed: {tx.IsConfirmed}");
+            output.WriteLine($"Block Height: {tx.BlockHeight}");
+            output.WriteLine($"Block Time: {tx.BlockTime}");
 
             // Validate basic structure of the transaction
             Assert.NotNull(tx.Id);
@@ -117,10 +121,11 @@ public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>
     public async Task GetTransactions_WithInvalidWalletId_ShouldFail()
     {
         // Arrange
+        var sut = CreateSut();
         var invalidWalletId = new WalletId(Guid.NewGuid());
 
         // Act
-        var result = await _fixture.WalletAppService.GetTransactions(invalidWalletId);
+        var result = await sut.GetTransactions(invalidWalletId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -142,13 +147,13 @@ public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>
         foreach (var input in tx.AllInputs)
         {
             Assert.True(input.TotalAmount >= 0);
-            _output.WriteLine($"Input: {input.Address} - {input.TotalAmount} sats");
+            output.WriteLine($"Input: {input.Address} - {input.TotalAmount} sats");
         }
 
-        foreach (var output in tx.AllOutputs)
+        foreach (var txOutput in tx.AllOutputs)
         {
-            Assert.True(output.TotalAmount >= 0);
-            _output.WriteLine($"Output: {output.Address} - {output.TotalAmount} sats");
+            Assert.True(txOutput.TotalAmount >= 0);
+            output.WriteLine($"Output: {txOutput.Address} - {txOutput.TotalAmount} sats");
         }
     }
 }

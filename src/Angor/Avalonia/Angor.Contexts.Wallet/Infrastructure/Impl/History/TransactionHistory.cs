@@ -12,7 +12,7 @@ public class TransactionHistory(
     IHttpClientFactory httpClientFactory,
     INetworkService networkService,
     IWalletOperations walletOperations, 
-    ILogger logger)
+    ILogger logger) : ITransactionHistory
 {
     public Task<Result<IEnumerable<string>>> GetWalletAddresses(WalletWords walletWords)
     {

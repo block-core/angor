@@ -1,6 +1,7 @@
 using Angor.Client;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.Wallet.Infrastructure.History;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
@@ -33,6 +34,7 @@ public static class WalletContextServices
         services.AddSingleton<IWalletOperations, WalletOperations>();
         services.AddSingleton<ISensitiveWalletDataProvider, SensitiveWalletDataProvider>();
         services.AddSingleton<IWalletStore, WalletStore>();
+        services.AddSingleton<ITransactionHistory, TransactionHistory>();
         services.AddHttpClient();
         services.AddSingleton<ITransactionWatcher, TransactionWatcher>();
         
