@@ -1032,6 +1032,7 @@
                     if (!_.Accepted)
                     {
                         notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+                        return;
                     }
 
                     if (nostrMetadataCreated == false)
@@ -1098,7 +1099,10 @@
                     createApplicationDataSpinner = false;
 
                     if (!_.Accepted)
+                    {
                         notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!"); //TODO add export project info
+                        return;
+                    }
 
                     if (nostrApplicationSpecificDataCreated == false)
                     {
