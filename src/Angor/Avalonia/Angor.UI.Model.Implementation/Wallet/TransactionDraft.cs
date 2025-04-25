@@ -10,7 +10,7 @@ public class TransactionDraft(WalletId walletId, long amount, string address, Do
     public long Amount { get; } = amount;
     public string Address { get; } = address;
     public IWalletAppService WalletAppService { get; } = walletAppService;
-    public long TotalFee { get; set; } = fee.Value;
+    public IAmountUI TotalFee { get; set; } = new AmountUI(fee.Value);
 
     public Task<Result<TxId>> Submit()
     {

@@ -9,4 +9,5 @@ public interface ITransactionDraftViewModel : IStep
     ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
     public long? Feerate { get; set; }
     public IEnumerable<IFeeratePreset> Presets { get; }
+    public IAmountUI? Fee { get; }
 }

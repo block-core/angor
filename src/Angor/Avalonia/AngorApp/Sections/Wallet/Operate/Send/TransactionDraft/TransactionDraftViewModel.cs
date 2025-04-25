@@ -20,7 +20,8 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
     private readonly UIServices uiServices;
     [Reactive] private long? feerate;
     [ObservableAsProperty] private ITransactionDraft? transactionDraft;
-    private readonly Subject<bool> isBusy = new();
+    [ObservableAsProperty] private IAmountUI? fee;
+    private readonly Subject<bool> isCalculatingDraft = new();
 
     public TransactionDraftViewModel(WalletId walletId, 
         IWalletAppService walletAppService, 
@@ -33,15 +34,15 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
 
         transactionDraftHelper = this.WhenAnyValue(x => x.Feerate)
             .WhereNotNull()
-            .SelectLatest(f => CreateDraftTo(sendAmount.Amount, sendAmount.BitcoinAddress, f.Value), isBusy, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+            .SelectLatest(f => CreateDraftTo(sendAmount.Amount, sendAmount.BitcoinAddress, f.Value), isCalculatingDraft, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Successes()
             .ToProperty(this, model => model.TransactionDraft);
 
-        var canExecute = this.WhenAnyValue(model => model.TransactionDraft).NotNull();
-        canExecute.Subscribe(b => { });
-        Confirm = ReactiveCommand.CreateFromTask(() => TransactionDraft!.Submit(), canExecute);
+        Confirm = ReactiveCommand.CreateFromTask(() => TransactionDraft!.Submit(), this.WhenAnyValue(model => model.TransactionDraft).NotNull());
         IsValid = Confirm.Any().StartWith(false);
+        IsBusy = isCalculatingDraft.CombineLatest(Confirm.IsExecuting, (a, b) => a || b).StartWith(false);
+        feeHelper = this.WhenAnyValue(model => model.TransactionDraft.TotalFee).ToProperty(this, model => model.Fee);
     }
 
     private Task<Result<ITransactionDraft>> CreateDraftTo(long destinationAmount, string destinationBitcoinAddress, long feeRate)
@@ -59,7 +60,7 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
 
     public ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
 
-    public IObservable<bool> IsBusy { get; } = Observable.Return(false);
+    public IObservable<bool> IsBusy { get; }
     public IEnumerable<IFeeratePreset> Presets => uiServices.FeeratePresets;
     public bool AutoAdvance => true;
     public IObservable<bool> IsValid { get; }

@@ -29,7 +29,7 @@ public class WalletDesign : IWallet
         {
             Address = address,
             Amount = amount,
-            TotalFee = feerate * 100,
+            TotalFee = new AmountUI(feerate * 100),
             FeeRate = feerate
         };
     }

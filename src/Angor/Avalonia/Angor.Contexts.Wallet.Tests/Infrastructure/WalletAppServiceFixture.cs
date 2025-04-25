@@ -8,6 +8,7 @@ using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Angor.Contexts.Wallet.Tests.Infrastructure.TestDoubles;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace Angor.Contexts.Wallet.Tests.Infrastructure;
 

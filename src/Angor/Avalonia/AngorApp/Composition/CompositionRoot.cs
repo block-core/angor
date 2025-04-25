@@ -28,7 +28,10 @@ public static class CompositionRoot
     {
         var services = new ServiceCollection();
 
-        var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
+        var logger = new LoggerConfiguration()
+            .WriteTo.Console()
+            .MinimumLevel.Debug().CreateLogger();
+        
         RegisterLogger(services, logger);
         services.AddSingleton<Func<BitcoinNetwork>>(() => BitcoinNetwork.Testnet);
 
