@@ -72,8 +72,9 @@ namespace Angor.Test
                 var derivationOperations = new DerivationOperations(new HdOperations(), _logger, _networkConfiguration.Object);
                 var rootKey = CreateAngorRootKey("area frost rapid guitar salon tower bless fly where inmate trouble daughter");
 
+                Assert.Equal("tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL", rootKey);
 
-                var words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor";
+            var words = "gospel awkward uphold orchard spike elite inform danger sheriff lens power monitor";
                 var founderKey = derivationOperations.DeriveFounderKey(new WalletWords { Words = words }, 1);
                 var founderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(new WalletWords { Words = words }, founderKey);
                 var projectId = derivationOperations.DeriveUniqueProjectIdentifier(founderKey);
@@ -256,6 +257,22 @@ namespace Angor.Test
 
                 return angorRootKey;
             }
-        
+
+            //[Fact]
+            public void ValidateAngorMainnetRootKey()
+            {
+                ExtKey.UseBCForHMACSHA512 = true;
+                Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
+                var words = ""; // angro mainnet words
+                var passphrase = ""; // the passphrase
+                var mnemonic = new Mnemonic(words);
+                var extkey = new HdOperations().GetExtendedKey(mnemonic.ToString(), passphrase);
+                var path = $"m";
+                var pubkey = extkey.Derive(new KeyPath(path)).Neuter();
+                var angorRootKey = pubkey.ToString(Networks.Bitcoin.Mainnet());
+
+                Assert.Equal("xpub661MyMwAqRbcGNxKe9aFkPisf3h32gHLJm8f9XAqx8FB1Nk6KngCY8hkhGqxFr2Gyb6yfUaQVbodxLoC1f3K5HU9LM1CXE59gkEXSGCCZ1B", angorRootKey);
+            }
+        }
     }
-}
