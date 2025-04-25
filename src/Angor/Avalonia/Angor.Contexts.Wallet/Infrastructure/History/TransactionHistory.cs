@@ -52,43 +52,42 @@ public class TransactionHistory(
         return transactionIds;
     }
 
-    public async Task<Result<BroadcastedTransaction>> GetTransactions(WalletWords walletWords)
+    public async Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletWords walletWords)
     {
-        var result = await GetWalletAddresses(walletWords)
+        return await GetWalletAddresses(walletWords)
             .Bind(addresses => addresses.Select(s => GetTransactions(s)).Combine())
-            .Map(txIds => txIds.SelectMany(x => x))
-            .Bind(uniqueTxIds => uniqueTxIds.Select(txn => GetTransactionInfo(txn.TransactionHash)).Combine())
-            .Map(transactions => transactions.Select(tx => CreateBroadcastedTransaction(tx)));
-        
-        return new Result<BroadcastedTransaction>();
+            .Map(txns => txns.SelectMany(x => x))
+            .Map(queryAddressItems => queryAddressItems.Select(queryAddressItem => queryAddressItem.TransactionHash).Distinct())
+            .Bind(uniqueTxIds => uniqueTxIds.Select(txn => GetTransactionInfo(txn)).Combine())
+            .Bind(transactions => transactions.Select(tx => CreateBroadcastedTransaction(tx, walletWords)).Combine());
     }
 
-    private BroadcastedTransaction CreateBroadcastedTransaction(QueryTransaction tx)
+    private Task<Result<BroadcastedTransaction>> CreateBroadcastedTransaction(QueryTransaction tx, WalletWords walletWords)
     {
         // Extraer información de direcciones e inputs/outputs
         var (inputs, outputs) = MapInputsAndOutputs(tx);
 
         // Determinar si hay alguna dirección de la cartera involucrada
-        var walletAddresses = GetWalletAddressesFromTransaction(tx);
-    
-        // Calcular el balance de la transacción
-        var txBalance = CalculateTransactionBalance(tx, walletAddresses);
-    
-        return new BroadcastedTransaction(
-            Balance: new Balance(txBalance),
-            Id: tx.TransactionId,
-            WalletInputs: inputs.Where(i => walletAddresses.Contains(i.Address))
-                .Select(i => new TransactionInputInfo(i)),
-            WalletOutputs: outputs.Where(o => walletAddresses.Contains(o.Address))
-                .Select(o => new TransactionOutputInfo(o)),
-            AllInputs: inputs,
-            AllOutputs: outputs,
-            Fee: tx.Fee,
-            IsConfirmed: tx.Confirmations > 0,
-            BlockHeight: tx.BlockIndex,
-            BlockTime: tx.Timestamp > 0 ? DateTimeOffset.FromUnixTimeSeconds(tx.Timestamp) : null,
-            RawJson: JsonSerializer.Serialize(tx)
-        );
+        return GetWalletAddresses(walletWords).Map(walletAddresses =>
+        {
+            var txBalance = CalculateTransactionBalance(tx, walletAddresses);
+
+            return new BroadcastedTransaction(
+                Balance: new Balance(txBalance),
+                Id: tx.TransactionId,
+                WalletInputs: inputs.Where(i => walletAddresses.Contains(i.Address))
+                    .Select(i => new TransactionInputInfo(i)),
+                WalletOutputs: outputs.Where(o => walletAddresses.Contains(o.Address))
+                    .Select(o => new TransactionOutputInfo(o)),
+                AllInputs: inputs,
+                AllOutputs: outputs,
+                Fee: tx.Fee,
+                IsConfirmed: tx.Confirmations > 0,
+                BlockHeight: tx.BlockIndex,
+                BlockTime: tx.Timestamp > 0 ? DateTimeOffset.FromUnixTimeSeconds(tx.Timestamp) : null,
+                RawJson: JsonSerializer.Serialize(tx)
+            );
+        });
     }
 
     private (List<TransactionAddressInfo> inputs, List<TransactionAddressInfo> outputs) MapInputsAndOutputs(QueryTransaction tx)
@@ -106,14 +105,7 @@ public class TransactionHistory(
         return (inputs, outputs);
     }
 
-    private HashSet<string> GetWalletAddressesFromTransaction(QueryTransaction tx)
-    {
-        // Normalmente esto involucraría verificar qué direcciones pertenecen a la cartera
-        // Para este ejemplo, usamos una aproximación simplificada basada en la información disponible
-        return new HashSet<string>();
-    }
-
-    private long CalculateTransactionBalance(QueryTransaction tx, HashSet<string> walletAddresses)
+    private long CalculateTransactionBalance(QueryTransaction tx, IEnumerable<string> walletAddresses)
     {
         var outputAmount = tx.Outputs
             .Where(o => walletAddresses.Contains(o.Address))

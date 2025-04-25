@@ -35,7 +35,7 @@ public class TransactionHistoryServiceTests(ITestOutputHelper outputHelper)
     public async Task Get_transactions()
     {
         var sut = CreateSut();
-        var walletWords = new WalletWords()
+        var walletWords = new WalletWords
         {
             Words = "print foil moment average quarter keep amateur shell tray roof acoustic where",
             Passphrase = "",
