@@ -32,7 +32,7 @@
                             <Svg Path="/Assets/bitcoin.svg" Margin="10 0" Height="30" Width="30" />
                         </c:FlexEdgePanel.StartContent>
                         <c:FlexEdgePanel.MainContent>
-                            <TextBox IsReadOnly="True" Text="{Binding ReceiveAddressResult.Value}" TextAlignment="Center" />
+                            <TextBox VerticalAlignment="Center" IsReadOnly="True" Text="{Binding ReceiveAddressResult.Value}" TextAlignment="Center" />
                         </c:FlexEdgePanel.MainContent>
                         <c:FlexEdgePanel.EndContent>
                             <Button Margin="10 0" CommandParameter="{Binding ReceiveAddressResult.Value}"
