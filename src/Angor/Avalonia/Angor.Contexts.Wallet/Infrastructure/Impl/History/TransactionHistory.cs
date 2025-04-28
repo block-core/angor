@@ -1,12 +1,14 @@
 using System.Text.Json;
+using Angor.Contests.CrossCutting;
 using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.Wallet.Infrastructure.History;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Serilog;
 
-namespace Angor.Contexts.Wallet.Infrastructure.History;
+namespace Angor.Contexts.Wallet.Infrastructure.Impl.History;
 
 public class TransactionHistory(
     IHttpClientFactory httpClientFactory,
@@ -14,6 +16,7 @@ public class TransactionHistory(
     IWalletOperations walletOperations, 
     ILogger logger) : ITransactionHistory
 {
+    [MemoizeTimed]
     public Task<Result<IEnumerable<string>>> GetWalletAddresses(WalletWords walletWords)
     {
         return Result.Try(async () =>
@@ -37,6 +40,7 @@ public class TransactionHistory(
         return QueryIndexer<QueryTransaction>($"api/query/transaction/{txId}");
     }
     
+    [MemoizeTimed]
     private Task<Result<TModel>> QueryIndexer<TModel>(string address) where TModel : class
     {
         var transactionIds = Result.Try(() => networkService.GetPrimaryIndexer())
@@ -64,10 +68,8 @@ public class TransactionHistory(
 
     private Task<Result<BroadcastedTransaction>> CreateBroadcastedTransaction(QueryTransaction tx, WalletWords walletWords)
     {
-        // Extraer información de direcciones e inputs/outputs
         var (inputs, outputs) = MapInputsAndOutputs(tx);
 
-        // Determinar si hay alguna dirección de la cartera involucrada
         return GetWalletAddresses(walletWords)
             .Map(enumerable => enumerable.Select(a => new Address(a)))
             .Map(walletAddresses =>

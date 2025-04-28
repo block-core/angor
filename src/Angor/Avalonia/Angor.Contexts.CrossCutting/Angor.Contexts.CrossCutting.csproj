@@ -11,6 +11,7 @@
     <ItemGroup>
         <PackageReference Include="AspectInjector" />
         <PackageReference Include="CSharpFunctionalExtensions" />
+        <PackageReference Include="JetBrains.Annotations" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     </ItemGroup>
     

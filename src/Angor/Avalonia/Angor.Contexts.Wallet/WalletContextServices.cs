@@ -3,6 +3,7 @@ using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.History;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Contexts.Wallet.Infrastructure.Impl.History;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Networks;

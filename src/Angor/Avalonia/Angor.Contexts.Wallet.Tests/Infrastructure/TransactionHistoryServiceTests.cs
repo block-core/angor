@@ -1,5 +1,6 @@
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.History;
+using Angor.Contexts.Wallet.Infrastructure.Impl.History;
 using Angor.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;

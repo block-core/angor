@@ -13,10 +13,7 @@ public static class BroadcastedTransactionExtensions
         => new Amount(tx.AllOutputs
             .Where(o => tx.WalletOutputs.All(w => w.Address != o.Address))
             .Sum(o => o.Amount.Sats));
-
-    /// <summary>
-    /// Total recibido (cambios) de vuelta a tu cartera.
-    /// </summary>
+    
     public static Amount GetTotalReceived(this BroadcastedTransaction tx)
         => new Amount(tx.WalletOutputs.Sum(o => o.Amount.Sats));
     
