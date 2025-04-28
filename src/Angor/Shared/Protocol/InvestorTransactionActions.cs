@@ -1,26 +1,17 @@
 using Angor.Shared.Models;
-//using Angor.Shared.Protocol;
-using Angor.Shared.ProtocolNew.Scripts;
-using Angor.Shared.ProtocolNew.TransactionBuilders;
+using Angor.Shared.Protocol.Scripts;
+using Angor.Shared.Protocol.TransactionBuilders;
 using Blockcore.NBitcoin.DataEncoders;
-using NBitcoin;
-using System;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
+//using Angor.Shared.Protocol;
 using Key = Blockcore.NBitcoin.Key;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
-using System.Reflection;
-using Blockcore.Consensus.TransactionInfo;
 using WitScript = NBitcoin.WitScript;
-using Blockcore.Networks;
-using NBitcoin.RPC;
-using Blockcore.NBitcoin;
-using DBreeze.Utils;
 using Money = Blockcore.NBitcoin.Money;
 using SigHash = Blockcore.Consensus.ScriptInfo.SigHash;
-using Utils = Blockcore.NBitcoin.Utils;
-using NBitcoin.OpenAsset;
 
-namespace Angor.Shared.ProtocolNew;
+namespace Angor.Shared.Protocol;
 
 public class InvestorTransactionActions : IInvestorTransactionActions
 {

@@ -1,11 +1,11 @@
 using Angor.Shared.Models;
-using Angor.Shared.ProtocolNew.Scripts;
+using Angor.Shared.Protocol.Scripts;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using TxIn = Blockcore.Consensus.TransactionInfo.TxIn;
 
-namespace Angor.Shared.ProtocolNew.TransactionBuilders;
+namespace Angor.Shared.Protocol.TransactionBuilders;
 
 public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
 {

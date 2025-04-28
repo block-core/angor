@@ -1,14 +1,14 @@
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Angor.Shared.ProtocolNew.Scripts;
-using Angor.Shared.ProtocolNew.TransactionBuilders;
+using Angor.Shared.Protocol.Scripts;
+using Angor.Shared.Protocol.TransactionBuilders;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP39;
 using Blockcore.NBitcoin.DataEncoders;
 using Moq;
 
-namespace Angor.Test.ProtocolNew.TransactionBuilders;
+namespace Angor.Test.Protocol.TransactionBuilders;
 
 public class InvestmentTransactionBuilderTest : AngorTestData
 {

@@ -1,7 +1,6 @@
 using Angor.Shared.Models;
-using Nostr.Client.Messages;
 
-namespace Angor.Client.Services;
+namespace Angor.Shared.Services;
 
 public interface ISignService
 {

@@ -1,31 +1,23 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Angor.Shared.ProtocolNew;
-using Angor.Shared.ProtocolNew.Scripts;
-using Angor.Shared.ProtocolNew.TransactionBuilders;
+using Angor.Shared.Protocol;
+using Angor.Shared.Protocol.Scripts;
+using Angor.Shared.Protocol.TransactionBuilders;
 using Angor.Test.DataBuilders;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
-using Blockcore.Networks;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NBitcoin;
-using NBitcoin.Policy;
 using Coin = Blockcore.NBitcoin.Coin;
 using Key = Blockcore.NBitcoin.Key;
 using Money = Blockcore.NBitcoin.Money;
-using MoneyUnit = NBitcoin.MoneyUnit;
-using OutPoint = NBitcoin.OutPoint;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
-using Transaction = NBitcoin.Transaction;
 using uint256 = Blockcore.NBitcoin.uint256;
 
-namespace Angor.Test
+namespace Angor.Test.Protocol
 {
     public class InvestmentIntegrationsTests
     {

@@ -1,6 +1,6 @@
 using Blockcore.Consensus.ScriptInfo;
 
-namespace Angor.Shared.ProtocolNew.Scripts;
+namespace Angor.Shared.Protocol.Scripts;
 
 public interface ISeederScriptTreeBuilder
 {

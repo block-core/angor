@@ -1,12 +1,11 @@
 using Angor.Shared.Models;
-using Angor.Shared.ProtocolNew.Scripts;
+using Angor.Shared.Protocol.Scripts;
 using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 using uint256 = Blockcore.NBitcoin.uint256;
 
-namespace Angor.Shared.ProtocolNew.TransactionBuilders;
+namespace Angor.Shared.Protocol.TransactionBuilders;
 
 public class SpendingTransactionBuilder : ISpendingTransactionBuilder
 {

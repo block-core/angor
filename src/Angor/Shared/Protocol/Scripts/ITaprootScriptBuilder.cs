@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using Angor.Shared.Models;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
 
-namespace Angor.Shared.ProtocolNew.Scripts;
+namespace Angor.Shared.Protocol.Scripts;
 
 public interface ITaprootScriptBuilder
 {

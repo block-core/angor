@@ -6,7 +6,7 @@ using NBitcoin;
 using NBitcoin.Crypto;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
 
-namespace Angor.Shared.ProtocolNew.Scripts;
+namespace Angor.Shared.Protocol.Scripts;
 
 public class TaprootScriptBuilder : ITaprootScriptBuilder
 {
