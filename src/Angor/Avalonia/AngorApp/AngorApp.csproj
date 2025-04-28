@@ -63,5 +63,11 @@
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Zafiro.Avalonia">
+        <HintPath>..\..\..\..\..\..\..\..\..\home\jmn\.nuget\packages\zafiro.avalonia\24.0.14\lib\net8.0\Zafiro.Avalonia.dll</HintPath>
+      </Reference>
+    </ItemGroup>
     
 </Project>

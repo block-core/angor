@@ -24,16 +24,11 @@
             <z:SlimDataGrid.Styles>
                 <Style Selector="TextBlock">
                     <Setter Property="VerticalAlignment" Value="Center" />
-                    <!-- <Setter Property="TextAlignment" Value="Center" /> -->
                     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
                     <Setter Property="ToolTip.Tip" Value="{Binding $self.Text}" />
                 </Style>
             </z:SlimDataGrid.Styles>
             <z:SlimDataGrid.Columns>
-                <!-- <z:Column Header="ADDRESS" Width="3*" Binding="{Binding Content.Address}" /> -->
-                <!-- <z:Column Header="AMOUNT" Width="3*" -->
-                <!--           Binding="{Binding Content.Amount, Converter={x:Static controls:MiscConverters.SatsToBtc}, StringFormat={x:Static controls:MiscConverters.AmountBtcFormat}}" /> -->
-                <!-- <z:Column Header="UTXO COUNT" Width="2*" Binding="{Binding Content.UtxoCount}" /> -->
                 <z:Column Width="Auto" Binding="{Binding Content.Transaction.Balance}">
                     <z:Column.CellTemplate>
                         <DataTemplate DataType="model:IAmountUI">
