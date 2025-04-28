@@ -228,14 +228,17 @@
                                                 <div class="@(IsPasswordValid() ? "text-success" : "text-danger") mt-2 small">
                                                     @GetPasswordStrengthFeedback()
                                                 </div>
-                                                <div class="text-muted mt-2 small">
-                                                    <p>For a strong password:</p>
-                                                    <ul>
-                                                        <li>Use at least 8 characters</li>
-                                                        <li>Include uppercase and lowercase letters</li>
-                                                        <li>Include at least one number or special character</li>
-                                                    </ul>
-                                                </div>
+                                                @if (network.NetworkType == NetworkType.Mainnet)
+                                                {
+                                                    <div class="text-muted mt-2 small">
+                                                        <p>For a strong password:</p>
+                                                        <ul>
+                                                            <li>Use at least 8 characters</li>
+                                                            <li>Include uppercase and lowercase letters</li>
+                                                            <li>Include at least one number or special character</li>
+                                                        </ul>
+                                                    </div>
+                                                }
                                             </div>
                                             break;
                                     }
@@ -299,14 +302,17 @@
                                                 <div class="@(IsPasswordValid() ? "text-success" : "text-danger") mt-2 small">
                                                     @GetPasswordStrengthFeedback()
                                                 </div>
-                                                <div class="text-muted mt-2 small">
-                                                    <p>For a strong password:</p>
-                                                    <ul>
-                                                        <li>Use at least 8 characters</li>
-                                                        <li>Include uppercase and lowercase letters</li>
-                                                        <li>Include at least one number or special character</li>
-                                                    </ul>
-                                                </div>
+                                                @if (network.NetworkType == NetworkType.Mainnet)
+                                                {
+                                                    <div class="text-muted mt-2 small">
+                                                        <p>For a strong password:</p>
+                                                        <ul>
+                                                            <li>Use at least 8 characters</li>
+                                                            <li>Include uppercase and lowercase letters</li>
+                                                            <li>Include at least one number or special character</li>
+                                                        </ul>
+                                                    </div>
+                                                }
                                             </div>
                                             break;
                                     }
@@ -1188,17 +1194,23 @@ else
         if (string.IsNullOrWhiteSpace(newWalletPassword))
             return false;
 
-        if (newWalletPassword.Length < 8)
-            return false;
+        // Different validation based on network type
+        if (network.NetworkType == NetworkType.Mainnet)
+        {
+            // Strict validation for MainNet
+            if (newWalletPassword.Length < 8)
+                return false;
+                
+            // Password strength requirements
+            bool hasUppercase = newWalletPassword.Any(char.IsUpper);
+            bool hasLowercase = newWalletPassword.Any(char.IsLower);
+            bool hasDigit = newWalletPassword.Any(char.IsDigit);
+            bool hasSpecialChar = newWalletPassword.Any(c => !char.IsLetterOrDigit(c));
             
-        // Password strength requirements
-        bool hasUppercase = newWalletPassword.Any(char.IsUpper);
-        bool hasLowercase = newWalletPassword.Any(char.IsLower);
-        bool hasDigit = newWalletPassword.Any(char.IsDigit);
-        bool hasSpecialChar = newWalletPassword.Any(c => !char.IsLetterOrDigit(c));
-        
-        if (!(hasUppercase && hasLowercase && (hasDigit || hasSpecialChar)))
-            return false;
+            if (!(hasUppercase && hasLowercase && (hasDigit || hasSpecialChar)))
+                return false;
+        }
+        // For TestNet, any non-empty password is acceptable
 
         if (isNewWallet && !backupConfirmation)
             return false;
@@ -1211,24 +1223,34 @@ else
         if (string.IsNullOrWhiteSpace(newWalletPassword))
             return "Password is required";
             
-        if (newWalletPassword.Length < 8)
-            return "Password must be at least 8 characters long";
+        // Different feedback based on network type
+        if (network.NetworkType == NetworkType.Mainnet)
+        {
+            // Detailed feedback for MainNet
+            if (newWalletPassword.Length < 8)
+                return "Password must be at least 8 characters long";
+                
+            bool hasUppercase = newWalletPassword.Any(char.IsUpper);
+            bool hasLowercase = newWalletPassword.Any(char.IsLower);
+            bool hasDigit = newWalletPassword.Any(char.IsDigit);
+            bool hasSpecialChar = newWalletPassword.Any(c => !char.IsLetterOrDigit(c));
             
-        bool hasUppercase = newWalletPassword.Any(char.IsUpper);
-        bool hasLowercase = newWalletPassword.Any(char.IsLower);
-        bool hasDigit = newWalletPassword.Any(char.IsDigit);
-        bool hasSpecialChar = newWalletPassword.Any(c => !char.IsLetterOrDigit(c));
-        
-        List<string> missing = new List<string>();
-        
-        if (!hasUppercase) missing.Add("uppercase letter");
-        if (!hasLowercase) missing.Add("lowercase letter");
-        if (!hasDigit && !hasSpecialChar) missing.Add("number or special character");
-        
-        if (missing.Count > 0)
-            return $"Password must include: {string.Join(", ", missing)}";
+            List<string> missing = new List<string>();
             
-        return "Password strength: Good";
+            if (!hasUppercase) missing.Add("uppercase letter");
+            if (!hasLowercase) missing.Add("lowercase letter");
+            if (!hasDigit && !hasSpecialChar) missing.Add("number or special character");
+            
+            if (missing.Count > 0)
+                return $"Password must include: {string.Join(", ", missing)}";
+                
+            return "Password strength: Good";
+        }
+        else
+        {
+            // Simple feedback for TestNet
+            return "Password accepted (TestNet mode)";
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -1987,15 +2009,25 @@ else
         if (string.IsNullOrWhiteSpace(newWalletPassword))
             return false;
             
-        if (newWalletPassword.Length < 8)
-            return false;
+        // Different validation based on network type
+        if (network.NetworkType == NetworkType.Mainnet)
+        {
+            // Strict validation for MainNet
+            if (newWalletPassword.Length < 8)
+                return false;
+                
+            bool hasUppercase = newWalletPassword.Any(char.IsUpper);
+            bool hasLowercase = newWalletPassword.Any(char.IsLower);
+            bool hasDigit = newWalletPassword.Any(char.IsDigit);
+            bool hasSpecialChar = newWalletPassword.Any(c => !char.IsLetterOrDigit(c));
             
-        bool hasUppercase = newWalletPassword.Any(char.IsUpper);
-        bool hasLowercase = newWalletPassword.Any(char.IsLower);
-        bool hasDigit = newWalletPassword.Any(char.IsDigit);
-        bool hasSpecialChar = newWalletPassword.Any(c => !char.IsLetterOrDigit(c));
-        
-        return hasUppercase && hasLowercase && (hasDigit || hasSpecialChar);
+            return hasUppercase && hasLowercase && (hasDigit || hasSpecialChar);
+        }
+        else
+        {
+            // Simple validation for TestNet - just require any non-empty password
+            return !string.IsNullOrWhiteSpace(newWalletPassword);
+        }
     }
 
     protected override void OnInitialized()
