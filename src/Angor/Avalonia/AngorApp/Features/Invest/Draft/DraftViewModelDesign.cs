@@ -9,6 +9,7 @@ public class DraftViewModelDesign : IDraftViewModel
     public InvestmentDraft Draft { get; } = new InvestmentDraft(new CreateInvestment.Draft("key", TransactionJson(), "id", new Angor.Contexts.Funding.Projects.Domain.Amount(1234)));
     public long? Feerate { get; set; } = 321;
     public IFeeCalculator FeeCalculator { get; } = new FeeCalculatorDesignTime();
+    public IEnumerable<IFeeratePreset> Presets { get; }
 
     private static string TransactionJson()
     {

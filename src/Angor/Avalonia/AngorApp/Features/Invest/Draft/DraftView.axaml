@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:draft1="clr-namespace:AngorApp.Features.Invest.Draft"
-             xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              xmlns:p="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" x:Class="AngorApp.Features.Invest.Draft.DraftView"
              Width="400"
@@ -27,7 +26,7 @@
                 <TextBlock Text="{Binding SatsToInvest, StringFormat={x:Static controls:MiscConverters.Sats}}" />
             </HeaderedContentControl>
             <p:Pane Header="Feerate">
-                <controls:FeerateSelector FeeCalculator="{Binding FeeCalculator}" Feerate="{Binding Feerate}" />
+                <controls:FeerateSelector Presets="{Binding Presets}" FeeCalculator="{Binding FeeCalculator}" Feerate="{Binding Feerate}" />
             </p:Pane>
         </StackPanel>
         <p:Loading IsLoading="{Binding Path=IsBusy^}" LoadingText="Calculating transaction...">

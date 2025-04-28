@@ -9,4 +9,5 @@ public interface IDraftViewModel : IStep
     InvestmentDraft Draft { get; }
     public long? Feerate { get; set; }
     public IFeeCalculator FeeCalculator { get; }
+    public IEnumerable<IFeeratePreset> Presets { get; }
 }
