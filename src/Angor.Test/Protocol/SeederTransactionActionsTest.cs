@@ -1,8 +1,8 @@
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Angor.Shared.ProtocolNew;
-using Angor.Shared.ProtocolNew.Scripts;
-using Angor.Shared.ProtocolNew.TransactionBuilders;
+using Angor.Shared.Protocol;
+using Angor.Shared.Protocol.Scripts;
+using Angor.Shared.Protocol.TransactionBuilders;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
@@ -11,7 +11,7 @@ using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
-namespace Angor.Test.ProtocolNew;
+namespace Angor.Test.Protocol;
 
 public class SeederTransactionActionsTest : AngorTestData
 {

@@ -2,7 +2,7 @@ using Angor.Shared.Models;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 
-namespace Angor.Shared.ProtocolNew;
+namespace Angor.Shared.Protocol;
 
 public interface ISeederTransactionActions
 {

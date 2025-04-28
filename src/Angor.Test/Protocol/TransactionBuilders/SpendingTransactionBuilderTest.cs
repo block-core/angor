@@ -1,7 +1,7 @@
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Angor.Shared.ProtocolNew.Scripts;
-using Angor.Shared.ProtocolNew.TransactionBuilders;
+using Angor.Shared.Protocol.Scripts;
+using Angor.Shared.Protocol.TransactionBuilders;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using Moq;
@@ -9,7 +9,7 @@ using NBitcoin;
 using Key = Blockcore.NBitcoin.Key;
 using uint256 = Blockcore.NBitcoin.uint256;
 
-namespace Angor.Test.ProtocolNew.TransactionBuilders;
+namespace Angor.Test.Protocol.TransactionBuilders;
 
 public class SpendingTransactionBuilderTest : AngorTestData
 {

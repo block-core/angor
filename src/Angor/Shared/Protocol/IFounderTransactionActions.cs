@@ -2,7 +2,7 @@ using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 
-namespace Angor.Shared.ProtocolNew;
+namespace Angor.Shared.Protocol;
 
 public interface IFounderTransactionActions
 {

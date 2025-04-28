@@ -1,8 +1,8 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Angor.Shared.ProtocolNew;
-using Angor.Shared.ProtocolNew.Scripts;
+using Angor.Shared.Protocol;
+using Angor.Shared.Protocol.Scripts;
 using Angor.Test.DataBuilders;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
@@ -17,7 +17,7 @@ using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 using WordCount = Blockcore.NBitcoin.BIP39.WordCount;
 using Wordlist = Blockcore.NBitcoin.BIP39.Wordlist;
 
-namespace Angor.Test.ProtocolNew;
+namespace Angor.Test.Protocol;
 
 public class FounderTransactionActionTest : AngorTestData
 {

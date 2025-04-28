@@ -2,7 +2,7 @@ using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 
-namespace Angor.Shared.ProtocolNew.Scripts;
+namespace Angor.Shared.Protocol.Scripts;
 
 public class ProjectScriptsBuilder : IProjectScriptsBuilder
 {

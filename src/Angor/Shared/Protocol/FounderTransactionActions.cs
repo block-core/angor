@@ -1,12 +1,10 @@
-using System;
 using System.Diagnostics;
-using System.Reflection;
 using Angor.Shared.Models;
-//using Angor.Shared.Protocol;
-using Angor.Shared.ProtocolNew.Scripts;
+using Angor.Shared.Protocol.Scripts;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+//using Angor.Shared.Protocol;
 using IndexedTxOut = NBitcoin.IndexedTxOut;
 using Key = NBitcoin.Key;
 using Op = NBitcoin.Op;
@@ -17,7 +15,7 @@ using uint256 = Blockcore.NBitcoin.uint256;
 using Utils = NBitcoin.Utils;
 using WitScript = NBitcoin.WitScript;
 
-namespace Angor.Shared.ProtocolNew;
+namespace Angor.Shared.Protocol;
 
 public class FounderTransactionActions : IFounderTransactionActions
 {

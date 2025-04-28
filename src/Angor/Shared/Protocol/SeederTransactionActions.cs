@@ -1,15 +1,15 @@
 using Angor.Shared.Models;
-using Angor.Shared.ProtocolNew.Scripts;
-using Angor.Shared.ProtocolNew.TransactionBuilders;
+using Angor.Shared.Protocol.Scripts;
+using Angor.Shared.Protocol.TransactionBuilders;
 using Blockcore.NBitcoin.DataEncoders;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 using Op = Blockcore.Consensus.ScriptInfo.Op;
 using uint256 = Blockcore.NBitcoin.uint256;
 using WitScript = Blockcore.Consensus.TransactionInfo.WitScript;
-using Microsoft.Extensions.Logging;
 
-namespace Angor.Shared.ProtocolNew;
+namespace Angor.Shared.Protocol;
 
 public class SeederTransactionActions : ISeederTransactionActions
 {

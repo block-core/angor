@@ -1,8 +1,7 @@
 using Angor.Shared.Models;
 using NBitcoin;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 
-namespace Angor.Shared.ProtocolNew.TransactionBuilders;
+namespace Angor.Shared.Protocol.TransactionBuilders;
 
 public interface ISpendingTransactionBuilder
 {

@@ -6,7 +6,7 @@ using Blockcore.NBitcoin.BIP39;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
-namespace Angor.Test.ProtocolNew;
+namespace Angor.Test.Protocol;
 
 public class AngorTestData
 {

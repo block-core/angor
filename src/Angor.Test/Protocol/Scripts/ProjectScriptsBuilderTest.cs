@@ -1,9 +1,9 @@
 using Angor.Shared;
-using Angor.Shared.ProtocolNew.Scripts;
+using Angor.Shared.Protocol.Scripts;
 using Blockcore.NBitcoin;
 using Moq;
 
-namespace Angor.Test.ProtocolNew.Scripts;
+namespace Angor.Test.Protocol.Scripts;
 
 public class ProjectScriptsBuilderTest
 {
