@@ -4,6 +4,7 @@ using Angor.Shared.Networks;
 using Angor.Shared.ProtocolNew;
 using Angor.Shared.ProtocolNew.Scripts;
 using Angor.Shared.ProtocolNew.TransactionBuilders;
+using Angor.Shared.Services;
 using Angor.Test.DataBuilders;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
@@ -41,6 +42,8 @@ namespace Angor.Test
 
         private FeeEstimation _expectedFeeEstimation = new FeeEstimation()
             { Confirmations = 1, FeeRate = 10000 };
+
+        private IBitcoinTransactionBuilder _transactionBuilder;
 
         public InvestmentIntegrationsTests()
         {
@@ -97,6 +100,8 @@ namespace Angor.Test
             _founderTransactionActions = new FounderTransactionActions(new NullLogger<FounderTransactionActions>(), _networkConfiguration.Object,
                 new ProjectScriptsBuilder(_derivationOperations),
                 new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder());
+
+            _transactionBuilder = new AngorBtcTransactionBuilder();
         }
 
         [Fact]
@@ -294,7 +299,7 @@ namespace Angor.Test
         {
             DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
                 new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _transactionBuilder);
 
             var network = Networks.Bitcoin.Testnet();
 
@@ -347,7 +352,7 @@ namespace Angor.Test
         {
             DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
                 new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
-            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, _transactionBuilder);
 
             var network = Networks.Bitcoin.Testnet();
 

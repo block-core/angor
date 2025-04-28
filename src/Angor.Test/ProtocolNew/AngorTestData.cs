@@ -1,6 +1,7 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
+using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP39;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -15,6 +16,7 @@ public class AngorTestData
     
     protected Mock<INetworkConfiguration> _networkConfiguration;
     protected DerivationOperations _derivationOperations;
+    protected Mock<IBitcoinTransactionBuilder> _transactionBuilder;
 
     protected AngorTestData()
     {
@@ -27,6 +29,8 @@ public class AngorTestData
 
         _derivationOperations = new DerivationOperations(new HdOperations(),
             new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+        
+        _transactionBuilder = new Mock<IBitcoinTransactionBuilder>();
     }
     
     protected ProjectInfo GivenValidProjectInvestmentInfo( WalletWords? words = null, DateTime? startDate = null)
