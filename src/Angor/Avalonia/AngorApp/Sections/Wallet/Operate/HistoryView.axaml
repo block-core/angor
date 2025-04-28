@@ -48,7 +48,7 @@
                 <z:Column Header="Amount" Width="Auto" Binding="{Binding Content.Transaction.Balance.BtcString}">
                     <z:Column.HeaderTemplate>
                         <DataTemplate>
-                            <TextBlock TextAlignment="Left" Text="{Binding}" />
+                            <TextBlock x:DataType="x:Object" TextAlignment="Left" Text="{Binding}" />
                         </DataTemplate>
                     </z:Column.HeaderTemplate>
                     <z:Column.CellTemplate>
@@ -60,7 +60,7 @@
                 <z:Column Header="Date" Width="*" Binding="{Binding Content.Transaction.BlockTime, Converter={x:Static controls:MiscConverters.HumanizeDate}}">
                     <z:Column.HeaderTemplate>
                         <DataTemplate>
-                            <TextBlock TextAlignment="Center" Text="{Binding}" />
+                            <TextBlock x:DataType="x:Object" TextAlignment="Center" Text="{Binding}" />
                         </DataTemplate>
                     </z:Column.HeaderTemplate>
                     <z:Column.CellTemplate>
@@ -71,8 +71,8 @@
                 </z:Column>
                 <z:Column Header="TXN" Width="Auto" Binding="{Binding Content.ShowJson}">
                     <z:Column.HeaderTemplate>
-                        <DataTemplate>
-                            <TextBlock TextAlignment="Center" Text="{Binding}" />
+                        <DataTemplate >
+                            <TextBlock x:DataType="x:Object" TextAlignment="Center" Text="{Binding}" />
                         </DataTemplate>
                     </z:Column.HeaderTemplate>
                     <z:Column.CellTemplate>
