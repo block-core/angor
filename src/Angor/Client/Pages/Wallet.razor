@@ -225,6 +225,17 @@
                                                         }
                                                     </button>
                                                 </div>
+                                                <div class="@(IsPasswordValid() ? "text-success" : "text-danger") mt-2 small">
+                                                    @GetPasswordStrengthFeedback()
+                                                </div>
+                                                <div class="text-muted mt-2 small">
+                                                    <p>For a strong password:</p>
+                                                    <ul>
+                                                        <li>Use at least 8 characters</li>
+                                                        <li>Include uppercase and lowercase letters</li>
+                                                        <li>Include at least one number or special character</li>
+                                                    </ul>
+                                                </div>
                                             </div>
                                             break;
                                     }
@@ -284,6 +295,17 @@
                                                         }
 
                                                     </button>
+                                                </div>
+                                                <div class="@(IsPasswordValid() ? "text-success" : "text-danger") mt-2 small">
+                                                    @GetPasswordStrengthFeedback()
+                                                </div>
+                                                <div class="text-muted mt-2 small">
+                                                    <p>For a strong password:</p>
+                                                    <ul>
+                                                        <li>Use at least 8 characters</li>
+                                                        <li>Include uppercase and lowercase letters</li>
+                                                        <li>Include at least one number or special character</li>
+                                                    </ul>
                                                 </div>
                                             </div>
                                             break;
@@ -1155,7 +1177,8 @@ else
         {
             1 => !string.IsNullOrWhiteSpace(newWalletWords) && (isNewWallet ? backupConfirmation : true),
             2 => isNewWallet ? verificationPassed : true,
-            3 => true,
+            3 => isNewWallet ? true : IsPasswordValid(),
+            4 => IsPasswordValid(),
             _ => false
         };
     }
@@ -1165,10 +1188,47 @@ else
         if (string.IsNullOrWhiteSpace(newWalletPassword))
             return false;
 
+        if (newWalletPassword.Length < 8)
+            return false;
+            
+        // Password strength requirements
+        bool hasUppercase = newWalletPassword.Any(char.IsUpper);
+        bool hasLowercase = newWalletPassword.Any(char.IsLower);
+        bool hasDigit = newWalletPassword.Any(char.IsDigit);
+        bool hasSpecialChar = newWalletPassword.Any(c => !char.IsLetterOrDigit(c));
+        
+        if (!(hasUppercase && hasLowercase && (hasDigit || hasSpecialChar)))
+            return false;
+
         if (isNewWallet && !backupConfirmation)
             return false;
 
         return true;
+    }
+    
+    private string GetPasswordStrengthFeedback()
+    {
+        if (string.IsNullOrWhiteSpace(newWalletPassword))
+            return "Password is required";
+            
+        if (newWalletPassword.Length < 8)
+            return "Password must be at least 8 characters long";
+            
+        bool hasUppercase = newWalletPassword.Any(char.IsUpper);
+        bool hasLowercase = newWalletPassword.Any(char.IsLower);
+        bool hasDigit = newWalletPassword.Any(char.IsDigit);
+        bool hasSpecialChar = newWalletPassword.Any(c => !char.IsLetterOrDigit(c));
+        
+        List<string> missing = new List<string>();
+        
+        if (!hasUppercase) missing.Add("uppercase letter");
+        if (!hasLowercase) missing.Add("lowercase letter");
+        if (!hasDigit && !hasSpecialChar) missing.Add("number or special character");
+        
+        if (missing.Count > 0)
+            return $"Password must include: {string.Join(", ", missing)}";
+            
+        return "Password strength: Good";
     }
 
     protected override async Task OnInitializedAsync()
@@ -1920,6 +1980,22 @@ else
         verificationPassed = true;
         showVerificationError = false;
         NextStep();
+    }
+
+    private bool IsPasswordValid()
+    {
+        if (string.IsNullOrWhiteSpace(newWalletPassword))
+            return false;
+            
+        if (newWalletPassword.Length < 8)
+            return false;
+            
+        bool hasUppercase = newWalletPassword.Any(char.IsUpper);
+        bool hasLowercase = newWalletPassword.Any(char.IsLower);
+        bool hasDigit = newWalletPassword.Any(char.IsDigit);
+        bool hasSpecialChar = newWalletPassword.Any(c => !char.IsLetterOrDigit(c));
+        
+        return hasUppercase && hasLowercase && (hasDigit || hasSpecialChar);
     }
 
     protected override void OnInitialized()
