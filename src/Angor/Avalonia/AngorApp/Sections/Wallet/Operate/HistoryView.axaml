@@ -15,7 +15,7 @@
         <operate:WalletViewModelDesign />
     </Design.DataContext>
 
-    <controls:Pane IsTitleVisible="True" Title="Addresses and amounts">
+    <controls:Pane IsTitleVisible="True" Title="History">
         <controls:Pane.TitleIcon>
             <i:Icon Value="fa-solid fa-cube" />
         </controls:Pane.TitleIcon>
