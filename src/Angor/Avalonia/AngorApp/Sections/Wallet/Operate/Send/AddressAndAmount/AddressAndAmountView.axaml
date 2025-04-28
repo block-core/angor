@@ -34,7 +34,7 @@
                 </Interaction.Behaviors>
             </controls:AmountControl>
         </c:Pane>
-        <TextBlock Text="{Binding WalletBalance.BtcString, StringFormat='Available balance {0}'}" />
+        <TextBlock Text="{Binding WalletBalance.BtcString, StringFormat='Available balance: {0}'}" />
     </StackPanel>
 
 </UserControl>

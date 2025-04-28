@@ -47,27 +47,6 @@
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj" />
         <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <UpToDateCheckInput Remove="UI\Controls\Common\TransactionDraft\Summary.axaml" />
-      <UpToDateCheckInput Remove="UI\Controls\Common\TransactionDraft\TransactionDraftView.axaml" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <AdditionalFiles Include="Sections\Wallet\Operate\Send\TransactionDraft\TransactionDraftView.axaml" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Update="Sections\Wallet\Operate\Send\AddressAndAmount\AddressAndAmountView.axaml.cs">
-        <DependentUpon>AddressAndAmountView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Zafiro.Avalonia">
-        <HintPath>..\..\..\..\..\..\..\..\..\home\jmn\.nuget\packages\zafiro.avalonia\24.0.14\lib\net8.0\Zafiro.Avalonia.dll</HintPath>
-      </Reference>
-    </ItemGroup>
+    
     
 </Project>
