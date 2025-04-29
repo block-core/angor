@@ -57,11 +57,6 @@ public class WalletAppService(
 
     public async Task<Result<Fee>> EstimateFee(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate)
     {
-        if (walletId != SingleWalletId)
-            return Result.Failure<Fee>("Invalid wallet ID");
-
-        var satsPerVirtualKB = feeRate.SatsPerVByte * 1000;
-        
         try
         {
             var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
@@ -80,6 +75,7 @@ public class WalletAppService(
             if (string.IsNullOrEmpty(changeAddress))
                 return Result.Failure<Fee>("No change address available");
 
+            var satsPerVirtualKB = feeRate.SatsPerVByte * 1000;
             var sendInfo = new SendInfo
             {
                 FeeRate = satsPerVirtualKB,
@@ -134,8 +130,6 @@ public class WalletAppService(
         if (walletId != SingleWalletId)
             return Result.Failure<TxId>("Invalid wallet ID");
         
-        var satsPerVirtualKB = feeRate.SatsPerVByte * 1000; 
-
         try
         {
             var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
@@ -149,6 +143,8 @@ public class WalletAppService(
             var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
             var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
             await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            
+            var satsPerVirtualKB = feeRate.SatsPerVByte * 1000;
             
             var sendInfo = new SendInfo
             {

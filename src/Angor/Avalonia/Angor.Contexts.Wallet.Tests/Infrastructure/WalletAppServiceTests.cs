@@ -1,12 +1,16 @@
 ﻿using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using Angor.Contexts.Wallet.Tests.Infrastructure.TestDoubles;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 
 namespace Angor.Contexts.Wallet.Tests.Infrastructure;
 
 public class WalletAppServiceTests(ITestOutputHelper output)
 {
-    private readonly WalletId walletId = Contexts.Wallet.Infrastructure.Impl.WalletAppService.SingleWalletId;
+    private readonly WalletId walletId = WalletAppService.SingleWalletId;
     
     [Fact]
     public async Task GetBalance_ShouldReturnNonZeroBalance()
@@ -20,11 +24,6 @@ public class WalletAppServiceTests(ITestOutputHelper output)
         Assert.True(result.IsSuccess);
         output.WriteLine($"Balance: {result.Value.Sats} sats");
         Assert.True(result.Value.Sats >= 0);
-    }
-
-    private IWalletAppService CreateSut()
-    {
-        throw new NotImplementedException();
     }
 
     [Fact]
@@ -155,5 +154,24 @@ public class WalletAppServiceTests(ITestOutputHelper output)
             Assert.True(txOutput.Amount.Sats >= 0);
             output.WriteLine($"Output: {txOutput.Address} - {txOutput.Amount} sats");
         }
+    }
+
+    private IWalletAppService CreateSut()
+    {
+        var serviceCollection = new ServiceCollection();
+        
+        var walletSecurityContext = new TestSecurityContext();
+        var sensitiveWalletDataProvider = new TestSensitiveWalletDataProvider(
+            "print foil moment average quarter keep amateur shell tray roof acoustic where",
+            ""
+        );
+
+        serviceCollection.AddSingleton<IWalletStore>(new WalletStore(new InMemoryStore()));
+        serviceCollection.AddSingleton<IWalletSecurityContext>(walletSecurityContext);
+        serviceCollection.AddSingleton<ISensitiveWalletDataProvider>(sensitiveWalletDataProvider);
+        
+        WalletContextServices.Register(serviceCollection, TestFactory.CreateLogger(output), BitcoinNetwork.Testnet);
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        return serviceProvider.GetService<IWalletAppService>()!;
     }
 }
