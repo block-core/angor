@@ -3,14 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:draft1="clr-namespace:AngorApp.Features.Invest.Draft"
+             xmlns:df="clr-namespace:AngorApp.Features.Invest.Draft"
              xmlns:p="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" x:Class="AngorApp.Features.Invest.Draft.DraftView"
-             Height="350"
-             x:DataType="draft1:IDraftViewModel">
+             Height="390"
+             x:DataType="df:IDraftViewModel">
 
     <Design.DataContext>
-        <draft1:DraftViewModelDesign />
+        <df:DraftViewModelDesign />
     </Design.DataContext>
 
     <UserControl.Styles>
