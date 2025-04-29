@@ -15,7 +15,7 @@
         <commit:CommitViewModelDesign IsInvesting="{designTime:Return False}" />
     </Design.DataContext>
 
-    <DockPanel>
+    <DockPanel Grid.IsSharedSizeScope="True">
         <StackPanel Spacing="10" DockPanel.Dock="Top">
             <c:IconLabel Margin="0 20" Icon="fa-triangle-exclamation">Please, check the investment information below.</c:IconLabel>
             <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Amount to invest">

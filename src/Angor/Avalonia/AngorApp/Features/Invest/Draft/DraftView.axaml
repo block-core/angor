@@ -6,8 +6,7 @@
              xmlns:draft1="clr-namespace:AngorApp.Features.Invest.Draft"
              xmlns:p="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" x:Class="AngorApp.Features.Invest.Draft.DraftView"
-             Width="400"
-             Height="600"
+             Height="350"
              x:DataType="draft1:IDraftViewModel">
 
     <Design.DataContext>
@@ -21,14 +20,9 @@
     </UserControl.Styles>
 
     <DockPanel Grid.IsSharedSizeScope="True">
-        <StackPanel DockPanel.Dock="Top">
-            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Amount">
-                <TextBlock Text="{Binding SatsToInvest, StringFormat={x:Static controls:MiscConverters.Sats}}" />
-            </HeaderedContentControl>
-            <p:Pane Header="Feerate">
-                <controls:FeerateSelector Presets="{Binding Presets}" FeeCalculator="{Binding FeeCalculator}" Feerate="{Binding Feerate}" />
-            </p:Pane>
-        </StackPanel>
+        <p:Pane Header="Choose your speed:" DockPanel.Dock="Top">
+            <controls:FeerateSelector Presets="{Binding Presets}" FeeCalculator="{Binding FeeCalculator}" Feerate="{Binding Feerate}" />
+        </p:Pane>
         <p:Loading IsLoading="{Binding Path=IsBusy^}" LoadingText="Calculating transaction...">
             <HeaderedContentControl Margin="0 20 0 0" VerticalAlignment="Top" IsVisible="{Binding Draft, Converter={x:Static ObjectConverters.IsNotNull}}" Header="Fee" Theme="{StaticResource InlineHeaderedContentControl}">
                 <TextBlock Text="{Binding Draft.TotalFee, StringFormat={x:Static controls:MiscConverters.Sats}}" />
