@@ -25,7 +25,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
 
         stageBreakdownsHelper = this.WhenAnyValue(model => model.Amount)
             .WhereNotNull()
-            .Select(l => project.Stages.Select(stage => new Breakdown(stage.Index, l!.Value, stage.Weight, stage.ReleaseDate)))
+            .Select(l => project.Stages.Select(stage => new Breakdown(stage.Index, l!.Value, stage.RatioOfTotal, stage.ReleaseDate)))
             .ToProperty(this, x => x.StageBreakdowns);
     }
 

@@ -24,7 +24,7 @@ public static class ProjectExtensions
                     Amount = stage.Amount,
                     Index = stage.Index,
                     ReleaseDate = stage.ReleaseDate,
-                    Weight = stage.Weight
+                    RatioOfTotal = stage.RatioOfTotal
                 })
                 .Cast<IStage>()
                 .ToList(),

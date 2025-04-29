@@ -16,7 +16,6 @@ public class MemoizeTimedAttribute : Attribute
     private readonly IMemoryCache cache = new MemoryCache(new MemoryCacheOptions());
 
     [Advice(Kind.Around, Targets = Target.Method)]
-    [UsedImplicitly]
     public object Handle(
         [Argument(Source.Arguments)] object[] args,
         [Argument(Source.Target)] Func<object[], object> method,
