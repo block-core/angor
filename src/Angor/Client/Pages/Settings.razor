@@ -707,6 +707,8 @@
         settingsInfo.Relays.Add(new SettingsUrl { Url = newRelayLink, IsPrimary = !settingsInfo.Relays.Any() });
         _clientStorage.SetSettingsInfo(settingsInfo);
         newRelayLink = string.Empty;
+
+        await Refresh(false);
     }
 
     private async Task AddExplorer()
