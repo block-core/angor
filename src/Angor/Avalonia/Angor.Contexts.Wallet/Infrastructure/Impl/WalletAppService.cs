@@ -21,7 +21,6 @@ public class WalletAppService(
     public static readonly WalletId SingleWalletId = new(new Guid("8E3C5250-4E26-4A13-8075-0A189AEAF793"));
     private const string SingleWalletName = "<default>";
 
-    [MemoizeTimed(ExpirationInSeconds = 300)]
     public Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
     {
         List<WalletMetadata> singleWalletList = [new(SingleWalletName, SingleWalletId)];
