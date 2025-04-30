@@ -1284,7 +1284,7 @@ a p {
 }
 
 .bg-danger {
-    background-color: rgba(255, 71, 87, 0.8) !important;
+    background-color: rgba(255, 71, 87, 0.98) !important;
     color: white;
 }
 
