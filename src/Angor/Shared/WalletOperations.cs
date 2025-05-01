@@ -5,6 +5,7 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.BIP39;
+using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 
@@ -331,6 +332,33 @@ public class WalletOperations : IWalletOperations
 
         accountInfo.ExtPubKey = accountExtPubKeyTostore.ToString(network);
         accountInfo.Path = accountHdPath;
+
+        return accountInfo;
+    }
+
+    public AccountInfo BuildAccountInfoForExtPubKey(string extPubKey)
+    {
+        ExtKey.UseBCForHMACSHA512 = true;
+        Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
+        Network network = _networkConfiguration.GetNetwork();
+
+        var accountInfo = new AccountInfo();
+        ExtPubKey accountExtPubKeyTostore;
+        try
+        {
+            var encoder = new Base58CheckEncoder(); 
+            byte[] bytes = encoder.DecodeData(extPubKey);
+            accountExtPubKeyTostore = new ExtPubKey(bytes[4..bytes.Length]);      
+            accountInfo.ExtPubKey = accountExtPubKeyTostore.ToString(network);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception occurred: {0}", ex.ToString());
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid exPubKey.");
+            throw;
+        }
         
         return accountInfo;
     }
