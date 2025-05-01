@@ -9,15 +9,20 @@ public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecuri
 {
     private readonly Dictionary<WalletId, (string, Maybe<string>)> cachedSensitiveData = new();
 
-    public async Task<Result<(string seed, Maybe<string> passphrase)>> RequestSensitiveData(WalletId id)
+    public async Task<Result<(string seed, Maybe<string> passphrase)>> RequestSensitiveData(WalletId walletId)
     {
-        var findResult = cachedSensitiveData.TryFind(id);
+        if (walletId != WalletAppService.SingleWalletId)
+        {
+            return Result.Failure<(string seed, Maybe<string> passphrase)>("Invalid wallet ID");
+        }
+        
+        var findResult = cachedSensitiveData.TryFind(walletId);
         if (findResult.HasValue)
         {
             return findResult.Value;
         }
 
-        var result = await RequestSensitiveDataCore(id).Tap(data => cachedSensitiveData[id] = data);
+        var result = await RequestSensitiveDataCore(walletId).Tap(data => cachedSensitiveData[walletId] = data);
         return result;
     }
 

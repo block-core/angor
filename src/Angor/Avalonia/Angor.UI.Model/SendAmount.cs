@@ -1,8 +1,8 @@
 namespace Angor.UI.Model;
 
-public class Destination
+public class SendAmount
 {
-    public Destination(string name, long amount, string bitcoinAddress)
+    public SendAmount(string name, long amount, string bitcoinAddress)
     {
         Name = name;
         Amount = amount;

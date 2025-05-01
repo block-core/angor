@@ -1,6 +1,4 @@
-﻿using Angor.Contexts.Funding;
-using Angor.Contexts.Funding.Projects.Infrastructure;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+﻿using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Tests.TestDoubles;
 using Angor.Shared;

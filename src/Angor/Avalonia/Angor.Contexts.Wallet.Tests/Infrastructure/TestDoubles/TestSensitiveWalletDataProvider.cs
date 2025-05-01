@@ -7,20 +7,20 @@ namespace Angor.Contexts.Wallet.Tests.Infrastructure.TestDoubles;
 
 public class TestSensitiveWalletDataProvider : ISensitiveWalletDataProvider
 {
-    private readonly string _seed;
-    private readonly string _passphrase;
+    private readonly string seed;
+    private readonly string passphrase;
 
     public TestSensitiveWalletDataProvider(string seed, string passphrase)
     {
-        _seed = seed;
-        _passphrase = passphrase;
+        this.seed = seed;
+        this.passphrase = passphrase;
     }
 
     public async Task<Result<(string seed, Maybe<string> passphrase)>> RequestSensitiveData(WalletId walletId)
     {
         if (walletId == WalletAppService.SingleWalletId)
         {
-            return (_seed, _passphrase);
+            return (seed, passphrase);
         }
 
         return Result.Failure<(string seed, Maybe<string> passphrase)>("Invalid id");

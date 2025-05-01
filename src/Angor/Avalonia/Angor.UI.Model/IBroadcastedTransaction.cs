@@ -3,11 +3,7 @@ namespace Angor.UI.Model;
 public interface IBroadcastedTransaction
 {
     string Id { get; }
-    public string Address { get; }
-    public long FeeRate { get; }
-    public long TotalFee { get; }
-    public long Amount { get; }
-    public string Path { get; }
-    public int UtxoCount { get; }
-    public string ViewRawJson { get; }
+    public string RawJson { get; }
+    public IAmountUI Balance { get; }
+    public DateTimeOffset? BlockTime { get; }
 }

@@ -1,20 +1,20 @@
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using Angor.UI.Model.Implementation.Wallet.Password;
 using Avalonia.Threading;
 using CSharpFunctionalExtensions;
 using ReactiveUI.Validation.Extensions;
 using Zafiro.Avalonia.Dialogs;
-using PasswordViewModel = Angor.UI.Model.Implementation.Wallet.Password.PasswordViewModel;
 
 namespace Angor.UI.Model.Implementation.Wallet;
 
-public class DialogPasswordProvider(IDialog dialog, string text) : IPasswordProvider
+public class DialogPasswordProvider(IDialog dialog, string text, string title, object? icon = null) : IPasswordProvider
 {
     public Task<Maybe<string>> Get(WalletId walletId)
     {
         return Dispatcher.UIThread.InvokeAsync(() =>
         {
-            return dialog.ShowAndGetResult<PasswordViewModel, string>(new PasswordViewModel(text), "Wallet Unlock", x => x.IsValid<PasswordViewModel>(), x => x.Password!);
+            return dialog.ShowAndGetResult<PasswordViewModel, string>(new PasswordViewModel(text, icon), title, x => x.IsValid(), x => x.Password!);
         });
     }
 }

@@ -16,12 +16,15 @@ public class CommitViewModel : ReactiveObject, IStep, ICommitViewModel
         RequestInvestment.HandleErrorsWith(uiServices.NotificationService, "Investment request failed");
         Totalfee = draft.TotalFee.Sats;
         SatsToInvest = satsToInvest;
+        IsInvesting = RequestInvestment.IsExecuting;
+        IsValid = RequestInvestment.Successes().Any().StartWith(false);
     }
 
     public ReactiveCommand<Unit,Result<Guid>> RequestInvestment { get;  }
     public long SatsToInvest { get; }
     public long Totalfee { get; }
-    public IObservable<bool> IsValid => RequestInvestment.Successes().Any(); 
+    public IObservable<bool> IsInvesting { get; }
+    public IObservable<bool> IsValid { get; } 
     public IObservable<bool> IsBusy => RequestInvestment.IsExecuting;
     public bool AutoAdvance { get; } = true;
     public Maybe<string> Title => "Confirm your investment";

@@ -33,8 +33,11 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
         OpenHub = ReactiveCommand.CreateFromTask(() =>
             uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io")));
         projectsHelper = LoadLatestProjects.ToProperty(this, x => x.Projects);
+        IsLoading = LoadLatestProjects.IsExecuting;
         LoadLatestProjects.Execute().Subscribe();
     }
+
+    public IObservable<bool> IsLoading { get; }
 
     public IProjectLookupViewModel ProjectLookupViewModel { get; }
 

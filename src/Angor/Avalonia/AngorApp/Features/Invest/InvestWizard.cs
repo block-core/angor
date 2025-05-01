@@ -15,7 +15,7 @@ public class InvestWizard(IInvestmentAppService investmentAppService, UIServices
     public Task<Maybe<Unit>> Invest(IWallet wallet, IProject project)
     {
         var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project))
-            .Then(amountViewModel => new DraftViewModel(investmentAppService, wallet, amountViewModel.Amount!.Value, project))
+            .Then(amountViewModel => new DraftViewModel(investmentAppService, wallet, amountViewModel.Amount!.Value, project, uiServices))
             .Then(draftViewModel => new CommitViewModel(investmentAppService, uiServices, wallet, draftViewModel.SatsToInvest, project, draftViewModel.Draft!.DraftModel))
             .Then(_ => new SuccessViewModel($"Invested in {project.Name}", "Success"))
             .FinishWith(_ => Unit.Default);

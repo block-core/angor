@@ -1,41 +1,41 @@
-﻿using Angor.Contexts.Wallet.Domain;
+﻿using Angor.Contexts.Wallet.Application;
+using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using Angor.Contexts.Wallet.Tests.Infrastructure.TestDoubles;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 
 namespace Angor.Contexts.Wallet.Tests.Infrastructure;
 
-[Collection("IntegrationTests")]
-public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>
+public class WalletAppServiceTests(ITestOutputHelper output)
 {
-    private readonly WalletAppServiceFixture _fixture;
-    private readonly ITestOutputHelper _output;
-
-    public WalletAppServiceTests(WalletAppServiceFixture fixture, ITestOutputHelper output)
-    {
-        _fixture = fixture;
-        _output = output;
-    }
-
+    private readonly WalletId walletId = WalletAppService.SingleWalletId;
+    
     [Fact]
     public async Task GetBalance_ShouldReturnNonZeroBalance()
     {
+        var sut = CreateSut();
+        
         // Act
-        var result = await _fixture.WalletAppService.GetBalance(_fixture.WalletId);
+        var result = await sut.GetBalance(walletId);
 
         // Assert
         Assert.True(result.IsSuccess);
-        _output.WriteLine($"Balance: {result.Value.Value} sats");
-        Assert.True(result.Value.Value >= 0);
+        output.WriteLine($"Balance: {result.Value.Sats} sats");
+        Assert.True(result.Value.Sats >= 0);
     }
 
     [Fact]
     public async Task GetNextAddress_ShouldReturnValidAddress()
     {
         // Act
-        var result = await _fixture.WalletAppService.GetNextReceiveAddress(_fixture.WalletId);
+        var sut = CreateSut();
+        var result = await sut.GetNextReceiveAddress(walletId);
 
         // Assert
         Assert.True(result.IsSuccess);
-        _output.WriteLine($"Next address: {result.Value.Value}");
+        output.WriteLine($"Next address: {result.Value.Value}");
         Assert.StartsWith("tb1", result.Value.Value); // TestNet4 native segwit prefix
     }
 
@@ -43,16 +43,17 @@ public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>
     public async Task EstimateFee_ShouldReturnReasonableEstimate()
     {
         // Arrange
+        var sut = CreateSut();
         var amount = new Amount(50000); 
         var address = new Address("tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"); // Sample address
         var feeRate = new DomainFeeRate(1); 
 
         // Act
-        var result = await _fixture.WalletAppService.EstimateFee(_fixture.WalletId, amount, address, feeRate);
+        var result = await sut.EstimateFee(walletId, amount, address, feeRate);
 
         // Assert
         Assert.True(result.IsSuccess);
-        _output.WriteLine($"Estimated fee: {result.Value.Value} sats");
+        output.WriteLine($"Estimated fee: {result.Value.Value} sats");
         Assert.True(result.Value.Value > 0);
         Assert.True(result.Value.Value < 50000); // Fee should be less than amount
     }
@@ -61,16 +62,17 @@ public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>
     public async Task SendAmount_ShouldSuccessfullyBroadcastTransaction()
     {
         // Arrange
+        var sut = CreateSut();
         var amount = new Amount(100000); 
         var address = new Address("tb1qrcjv7fvyq85eenk3636ldpq40nvp82mgm6u0w2");
         var feeRate = new DomainFeeRate(1);
 
         // Act
-        var result = await _fixture.WalletAppService.SendAmount(_fixture.WalletId, amount, address, feeRate);
+        var result = await sut.SendAmount(walletId, amount, address, feeRate);
 
         // Assert
         Assert.True(result.IsSuccess);
-        _output.WriteLine($"Transaction ID: {result.Value.Value}");
+        output.WriteLine($"Transaction ID: {result.Value.Value}");
         Assert.NotEmpty(result.Value.Value);
     }
 
@@ -78,23 +80,24 @@ public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>
     public async Task GetTransactions_ShouldReturnTransactionHistory()
     {
         // Act
-        var result = await _fixture.WalletAppService.GetTransactions(_fixture.WalletId);
+        var sut = CreateSut();
+        var result = await sut.GetTransactions(walletId);
 
         // Assert
         var errorMsg = result.TryGetError(out var error) ? error : "";
         Assert.True(result.IsSuccess, $"Failed to get transactions: {errorMsg}");
 
         var transactions = result.Value.ToList();
-        _output.WriteLine($"Found {transactions.Count} transactions");
+        output.WriteLine($"Found {transactions.Count} transactions");
 
         foreach (var tx in transactions)
         {
-            _output.WriteLine($"\nTransaction {tx.Id}:");
-            _output.WriteLine($"Balance: {tx.Balance.Value} sats");
-            _output.WriteLine($"Fee: {tx.Fee} sats");
-            _output.WriteLine($"Confirmed: {tx.IsConfirmed}");
-            _output.WriteLine($"Block Height: {tx.BlockHeight}");
-            _output.WriteLine($"Block Time: {tx.BlockTime}");
+            output.WriteLine($"\nTransaction {tx.Id}:");
+            output.WriteLine($"Balance: {tx.GetBalance().Sats} sats");
+            output.WriteLine($"Fee: {tx.Fee} sats");
+            output.WriteLine($"Confirmed: {tx.IsConfirmed}");
+            output.WriteLine($"Block Height: {tx.BlockHeight}");
+            output.WriteLine($"Block Time: {tx.BlockTime}");
 
             // Validate basic structure of the transaction
             Assert.NotNull(tx.Id);
@@ -117,10 +120,11 @@ public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>
     public async Task GetTransactions_WithInvalidWalletId_ShouldFail()
     {
         // Arrange
+        var sut = CreateSut();
         var invalidWalletId = new WalletId(Guid.NewGuid());
 
         // Act
-        var result = await _fixture.WalletAppService.GetTransactions(invalidWalletId);
+        var result = await sut.GetTransactions(invalidWalletId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -129,26 +133,45 @@ public class WalletAppServiceTests : IClassFixture<WalletAppServiceFixture>
     private void ValidateTransactionAddresses(BroadcastedTransaction tx)
     {
         // Validate that wallet inputs are a subset of all inputs
-        var walletInputAddresses = tx.WalletInputs.Select(wi => wi.Address.Address).ToHashSet();
+        var walletInputAddresses = tx.WalletInputs.Select(wi => wi.Address).ToHashSet();
         var allInputAddresses = tx.AllInputs.Select(ai => ai.Address).ToHashSet();
         Assert.True(walletInputAddresses.IsSubsetOf(allInputAddresses));
 
         // Validate that wallet outputs are a subset of all outputs
-        var walletOutputAddresses = tx.WalletOutputs.Select(wo => wo.Address.Address).ToHashSet();
+        var walletOutputAddresses = tx.WalletOutputs.Select(wo => wo.Address).ToHashSet();
         var allOutputAddresses = tx.AllOutputs.Select(ao => ao.Address).ToHashSet();
         Assert.True(walletOutputAddresses.IsSubsetOf(allOutputAddresses));
 
         // Validate that amounts are consistent
         foreach (var input in tx.AllInputs)
         {
-            Assert.True(input.TotalAmount >= 0);
-            _output.WriteLine($"Input: {input.Address} - {input.TotalAmount} sats");
+            Assert.True(input.Amount.Sats >= 0);
+            output.WriteLine($"Input: {input.Address} - {input.Amount} sats");
         }
 
-        foreach (var output in tx.AllOutputs)
+        foreach (var txOutput in tx.AllOutputs)
         {
-            Assert.True(output.TotalAmount >= 0);
-            _output.WriteLine($"Output: {output.Address} - {output.TotalAmount} sats");
+            Assert.True(txOutput.Amount.Sats >= 0);
+            output.WriteLine($"Output: {txOutput.Address} - {txOutput.Amount} sats");
         }
+    }
+
+    private IWalletAppService CreateSut()
+    {
+        var serviceCollection = new ServiceCollection();
+        
+        var walletSecurityContext = new TestSecurityContext();
+        var sensitiveWalletDataProvider = new TestSensitiveWalletDataProvider(
+            "print foil moment average quarter keep amateur shell tray roof acoustic where",
+            ""
+        );
+
+        serviceCollection.AddSingleton<IWalletStore>(new WalletStore(new InMemoryStore()));
+        serviceCollection.AddSingleton<IWalletSecurityContext>(walletSecurityContext);
+        serviceCollection.AddSingleton<ISensitiveWalletDataProvider>(sensitiveWalletDataProvider);
+        
+        WalletContextServices.Register(serviceCollection, TestFactory.CreateLogger(output), BitcoinNetwork.Testnet);
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        return serviceProvider.GetService<IWalletAppService>()!;
     }
 }
