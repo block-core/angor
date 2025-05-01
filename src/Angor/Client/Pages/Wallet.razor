@@ -157,15 +157,16 @@
                                             <div class="info-card slide-in">
                                                 <p class="text-muted mb-5">@stepDescription</p>
                                                 <div class="row g-4">
-                                                    @foreach (var (originalIndex, shuffledIndex) in shuffledWordIndices)
+                                                    @for (int i = 0; i < selectedWordsToVerify.Count; i++)
                                                     {
+                                                        var wordIndex = selectedWordsToVerify[i].index;
                                                         <div class="col-md-4 col-sm-6 mt-0">
                                                             <div class="mb-3">
-                                                                <label class="form-label">Word #@(originalIndex + 1)</label>
+                                                                <label class="form-label">Word #@wordIndex</label>
                                                                 <input type="text" class="form-control"
-                                                                       @bind="userVerificationInputs[originalIndex + 1]"
+                                                                       @bind="userVerificationInputs[wordIndex]"
                                                                        @bind:after="ValidateWordInput"
-                                                                       placeholder="Enter word #@(originalIndex + 1)" />
+                                                                       placeholder="Enter word #@wordIndex" />
                                                             </div>
                                                         </div>
                                                     }
