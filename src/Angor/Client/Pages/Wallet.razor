@@ -167,12 +167,11 @@
                                                                 <input type="text" class="form-control"
                                                                        value="@userVerificationInputs[wordIndex]"
                                                                        @oninput="(e) => HandleWordInput(wordIndex, e)"
-                                                                       @onfocusout="() => CloseDropdown(wordIndex)"
                                                                        @onfocus="() => ShowSuggestionsIfNeeded(wordIndex)"
                                                                        placeholder="Enter word #@wordIndex" />
-                                                                @if (showSuggestions.TryGetValue(wordIndex, out bool showForWord) && 
-                                                                     showForWord && 
-                                                                     !string.IsNullOrWhiteSpace(userVerificationInputs[wordIndex]))
+                                                                @if (showSuggestions.TryGetValue(wordIndex, out bool showForWord) &&
+                                                               showForWord &&
+                                                               !string.IsNullOrWhiteSpace(userVerificationInputs[wordIndex]))
                                                                 {
                                                                     var suggestions = GetFilteredWordSuggestions(userVerificationInputs[wordIndex]);
                                                                     @if (suggestions.Any())
@@ -803,15 +802,15 @@ else
                                             </div>
                                         </div>
 
-           <FeeSelector SendFee="@_sendInfo.SendFee"
-             CoinTicker="@network.CoinTicker"
-             FeeRate="@_sendInfo.FeeRate"
-             FeeBlockCount="@_sendInfo.FeeBlockCount"
-             FeePosition="@FeePosition"
-             FeeMin="@FeeMin"
-             FeeMax="@_feeMax"
-             RecommendedMinFee="@GetRecommendedMinFee()"
-             OnFeeChanged="@HandleFeeChanged"></FeeSelector>
+                                        <FeeSelector SendFee="@_sendInfo.SendFee"
+                                                     CoinTicker="@network.CoinTicker"
+                                                     FeeRate="@_sendInfo.FeeRate"
+                                                     FeeBlockCount="@_sendInfo.FeeBlockCount"
+                                                     FeePosition="@FeePosition"
+                                                     FeeMin="@FeeMin"
+                                                     FeeMax="@_feeMax"
+                                                     RecommendedMinFee="@GetRecommendedMinFee()"
+                                                     OnFeeChanged="@HandleFeeChanged"></FeeSelector>
                                         @if (_sendInfo.SendUtxos.Any())
                                         {
                                             <div class="info-card utxo-details p-3 rounded mt-4">
