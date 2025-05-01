@@ -779,7 +779,10 @@ tr[style*="cursor: pointer;"]:hover {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
+    line-height: 1.5;
+    height: 3em;
+    margin-bottom: 0.5rem;
 }
 
 .modal-wrapper {
@@ -3638,6 +3641,13 @@ input[type=number] {
     font-weight: 600;
     color: var(--form-text);
     margin: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    line-height: 1.5;
+    min-height: 3em;
+    margin-bottom: 0.5rem;
 }
 
 .project-stats {
