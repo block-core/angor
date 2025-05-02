@@ -11,11 +11,6 @@ using PSBTError = NBitcoin.PSBTError;
 
 namespace Angor.Shared;
 
-public class PsbtWrapper
-{
-    public string PsbtHex { get; set; }
-}
-
 public class WalletOperations : IWalletOperations 
 {
     private readonly IHdOperations _hdOperations;
