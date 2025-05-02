@@ -275,7 +275,8 @@ namespace Angor.Shared.Services
         {
             var ev = new NostrEvent
             {
-                Kind = NostrKind.ApplicationSpecificData,
+                //Kind = NostrKind.ApplicationSpecificData,
+                Kind = (NostrKind)3030,
                 CreatedAt = DateTime.UtcNow,
                 Content = content
             };
