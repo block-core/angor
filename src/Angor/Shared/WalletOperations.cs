@@ -7,8 +7,14 @@ using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.BIP39;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
+using PSBTError = NBitcoin.PSBTError;
 
 namespace Angor.Shared;
+
+public class PsbtWrapper
+{
+    public string PsbtHex { get; set; }
+}
 
 public class WalletOperations : IWalletOperations 
 {
@@ -35,7 +41,113 @@ public class WalletOperations : IWalletOperations
         string walletWords = mnemonic.ToString();
         return walletWords;
     }
-    
+
+
+    public PsbtWrapper CreatePsbtForTransaction(string changeAddress, Transaction transaction, AccountInfo accountInfo, long feeRate)
+    {
+        Network network = _networkConfiguration.GetNetwork();
+        var nbitcoinNetwork = NetworkMapper.Map(network);
+
+        // Find UTXOs required for the transaction outputs
+        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
+        var coins = utxoDataWithPaths.Select(u => new Coin(uint256.Parse(u.UtxoData.outpoint.transactionId), (uint)u.UtxoData.outpoint.outputIndex, Money.Satoshis(u.UtxoData.value), Script.FromHex(u.UtxoData.scriptHex))).ToList();
+
+        if (!coins.Any())
+            throw new ApplicationException("No coins found to fund the transaction.");
+
+        // Use TransactionBuilder to estimate fees and construct the unsigned transaction structure
+        var builder = new TransactionBuilder(network)
+            .AddCoins(coins)
+            .SetChange(BitcoinAddress.Create(changeAddress, network))
+            .ContinueToBuild(transaction) // Add the predefined outputs
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
+            .CoverTheRest(); // Ensure enough input value covers outputs + fee, adjusting change if needed
+
+        // Build the unsigned transaction
+        var unsignedTx = builder.BuildTransaction(false);
+
+        // Create PSBT from the unsigned transaction
+        var psbt = NBitcoin.PSBT.FromTransaction(NBitcoin.Transaction.Parse(unsignedTx.ToHex(), nbitcoinNetwork), nbitcoinNetwork);
+
+        // Get master fingerprint (needed for HDKeyPaths) - Assuming GetExtendedKey provides the root key
+        // Note: WalletWords are not available here, this might require restructuring how the master key/fingerprint is accessed
+        // For now, let's assume we can get the ExtPubKey from AccountInfo and derive the fingerprint conceptually
+        // A proper implementation might need the master key fingerprint stored or passed differently.
+        // Let's use a placeholder or derive from the account ExtPubKey if possible.
+        // This part needs careful handling of key management.
+        NBitcoin.ExtPubKey accountExtPubKey = NBitcoin.ExtPubKey.Parse(accountInfo.RootExtPubKey, nbitcoinNetwork);
+        // Ideally, we need the fingerprint of the key used to derive accountExtPubKey.
+        // Using the accountExtPubKey's fingerprint might work if derived directly from master, but it's not standard.
+        // Placeholder: Using first 4 bytes of Hash160 of the account pubkey's key identifier.
+        //var masterFingerprint = NBitcoin.HDFingerprint.Parse(accountExtPubKey);
+
+        var coins1 = utxoDataWithPaths.Select(u => new NBitcoin.Coin(NBitcoin.uint256.Parse(u.UtxoData.outpoint.transactionId), (uint)u.UtxoData.outpoint.outputIndex, NBitcoin.Money.Satoshis(u.UtxoData.value), NBitcoin.Script.FromHex(u.UtxoData.scriptHex))).ToList();
+
+        psbt.AddCoins(coins1.ToArray());
+
+        // Populate PSBT inputs with WitnessUtxo and HDKeyPaths
+        for (int i = 0; i < unsignedTx.Inputs.Count; i++)
+        {
+            var input = unsignedTx.Inputs[i];
+            var utxoInfo = utxoDataWithPaths.FirstOrDefault(u => u.UtxoData.outpoint.ToString() == input.PrevOut.ToString());
+
+            if (utxoInfo == null)
+                throw new InvalidOperationException($"Could not find UTXO information for input {input.PrevOut}");
+
+            // Add Witness UTXO
+            psbt.Inputs[i].WitnessUtxo = new NBitcoin.TxOut(NBitcoin.Money.Satoshis(utxoInfo.UtxoData.value), NBitcoin.Script.FromHex(utxoInfo.UtxoData.scriptHex));
+
+            // Add HD Key Path information
+            var keyPath = new NBitcoin.KeyPath(utxoInfo.HdPath);
+            var rootedKeyPath = new NBitcoin.RootedKeyPath(accountExtPubKey, keyPath);
+
+            // Derive the public key for this path to add to HDKeyPaths
+            // This requires the account ExtPubKey
+            var pubKey = _hdOperations.GeneratePublicKey(ExtPubKey.Parse(accountInfo.ExtPubKey, network), (int)keyPath.Indexes[4], keyPath.Indexes[3] == 1);
+            var path = _hdOperations.CreateHdPath(Purpose, network.Consensus.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
+
+
+            //var derivedPubKey = accountExtPubKey.Derive(keyPath).PubKey;
+
+            psbt.Inputs[i].HDKeyPaths.Add(new NBitcoin.PubKey(pubKey.ToBytes()), rootedKeyPath);
+        }
+
+        // Convert PSBT to hex and return in wrapper
+        return new PsbtWrapper { PsbtHex = psbt.ToHex() };
+    }
+
+    public TransactionInfo SignPsbt(PsbtWrapper psbtWrapper, WalletWords walletWords)
+    {
+        Network network = _networkConfiguration.GetNetwork();
+        var nbitcoinNetwork = NetworkMapper.Map(network);
+
+        // Parse the PSBT from hex
+        var psbt = NBitcoin.PSBT.Parse(psbtWrapper.PsbtHex, nbitcoinNetwork);
+
+        // Get the extended private key from mnemonic
+        ExtKey extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+
+        var nbitcoinExtendedKey = NBitcoin.ExtKey.CreateFromBytes(extendedKey.ToBytes(network.Consensus.ConsensusFactory));
+
+        // Sign the PSBT using the extended private key
+        // The PSBT object uses the HDKeyPaths information internally to derive the correct keys
+        psbt.SignAll(NBitcoin.ScriptPubKeyType.Segwit, nbitcoinExtendedKey); // Use SignAll for simplicity if extendedKey is the root used for paths
+
+        // Finalize the PSBT to include signatures in the transaction
+        if (!psbt.TryFinalize(out IList<PSBTError>? errors))
+        {
+            throw new NBitcoin.PSBTException(errors);
+        }
+
+        // Extract the fully signed transaction
+        NBitcoin.Transaction signedTransaction = psbt.ExtractTransaction();
+
+        // Calculate the fee
+        NBitcoin.Money fee = psbt.GetFee();
+
+        return new TransactionInfo { Transaction = network.CreateTransaction(signedTransaction.ToHex()), TransactionFee = fee.Satoshi };
+    }
+
     public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
@@ -329,6 +441,7 @@ public class WalletOperations : IWalletOperations
         ExtPubKey accountExtPubKeyTostore =
             _hdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
 
+        accountInfo.RootExtPubKey = extendedKey.Neuter().ToString(network);
         accountInfo.ExtPubKey = accountExtPubKeyTostore.ToString(network);
         accountInfo.Path = accountHdPath;
         
