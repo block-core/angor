@@ -23,10 +23,130 @@
 @inject IEncryptionService _encryptionService
 @inject IClipboardService ClipboardService
 @inject IWalletUIService _walletUIService
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Wallet and balances</PageTitle>
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("eval", @"
+                window.focusNextWordInput = function(nextWordIndex) {
+                    setTimeout(function() {
+                        const inputs = document.querySelectorAll('.word-input');
+                        const nextInput = document.querySelector(`input[placeholder=""Enter word #${nextWordIndex}""]`);
+                        if (nextInput) {
+                            nextInput.focus();
+                        }
+                    }, 0);
+                }
+
+                window.setupWordInputPasteHandlers = function() {
+                    const wordInputs = document.querySelectorAll('.word-input');
+                    
+                    wordInputs.forEach(input => {
+                        input.addEventListener('paste', function(e) {
+                            // Prevent the default paste behavior
+                            e.preventDefault();
+                            
+                            // Get the clipboard text
+                            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                            
+                            // Only process if it looks like a recovery phrase (multiple words)
+                            if (pastedText.trim().includes(' ')) {
+                                const words = pastedText.trim().split(/\s+/);
+                                
+                                // Only proceed if we have enough words
+                                if (words.length >= 12) {
+                                    const wordInputs = document.querySelectorAll('.word-input');
+                                    
+                                    // Fill in each input with the corresponding word
+                                    wordInputs.forEach((input, index) => {
+                                        if (index < words.length && index < 12) {
+                                            input.value = words[index];
+                                            
+                                            // Trigger change event to update Blazor binding
+                                            const event = new Event('change', { bubbles: true });
+                                            input.dispatchEvent(event);
+                                        }
+                                    });
+                                    
+                                    // Trigger validation by dispatching a change event on the last input
+                                    setTimeout(function() {
+                                        const lastInput = wordInputs[wordInputs.length - 1];
+                                        if (lastInput) {
+                                            const event = new Event('change', { bubbles: true });
+                                            lastInput.dispatchEvent(event);
+                                        }
+                                    }, 100);
+                                    return;
+                                }
+                            }
+                            
+                            // Default single-word paste behavior for this input only
+                            input.value = pastedText;
+                            const event = new Event('change', { bubbles: true });
+                            input.dispatchEvent(event);
+                        });
+                    });
+                }
+            ");
+
+            // Setup the paste handlers after each render
+            await JSRuntime.InvokeVoidAsync("setupWordInputPasteHandlers");
+        }
+        else
+        {
+            // Apply the paste handlers after each render, as the inputs might be recreated
+            await JSRuntime.InvokeVoidAsync("setupWordInputPasteHandlers");
+        }
+        
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task HandleWordInputKeyDown(KeyboardEventArgs e, int currentWordIndex)
+    {
+        if (e.Key == " " || e.Code == "Space")
+        {
+            // Remove any spaces from the current input
+            if (userVerificationInputs.ContainsKey(currentWordIndex))
+            {
+                userVerificationInputs[currentWordIndex] = userVerificationInputs[currentWordIndex].Trim();
+            }
+            
+            // Find the next input field (if any)
+            if (currentWordIndex < 12)
+            {
+                // Focus next element using JavaScript interop
+                await JSRuntime.InvokeVoidAsync("focusNextWordInput", currentWordIndex + 1);
+            }
+            
+            ValidateWordInput();
+            StateHasChanged();
+        }
+    }
+
+    // Used to update the userVerificationInputs dictionary from JavaScript
+    public void UpdateVerificationInputs(Dictionary<int, string> inputs)
+    {
+        foreach (var kvp in inputs)
+        {
+            userVerificationInputs[kvp.Key] = kvp.Value;
+        }
+        ValidateWordInput();
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        NavMenuState.SetActivePage("wallet");
+        base.OnInitialized();
+    }
+}
 
 <div class="header-container slide-in">
     <div class="card card-body">
@@ -157,42 +277,27 @@
                                             <div class="info-card slide-in">
                                                 <p class="text-muted mb-5">@stepDescription</p>
                                                 <div class="row g-4">
-                                                    @for (int i = 0; i < selectedWordsToVerify.Count; i++)
+                                                    @for (int i = 0; i < 12; i++)
                                                     {
-                                                        var wordIndex = selectedWordsToVerify[i].index;
+                                                        var wordNumber = i + 1;
                                                         <div class="col-md-4 col-sm-6 mt-0">
-                                                            <div class="mb-3 position-relative">
-                                                                <label class="form-label">Word #@wordIndex</label>
-                                                                <input type="text" class="form-control"
-                                                                       value="@userVerificationInputs[wordIndex]"
-                                                                       @oninput="(e) => HandleWordInput(wordIndex, e)"
-                                                                       @onfocus="() => ShowSuggestionsIfNeeded(wordIndex)"
-                                                                       placeholder="Enter word #@wordIndex" />
-                                                                @if (showSuggestions.TryGetValue(wordIndex, out bool showForWord) &&
-                                                               showForWord &&
-                                                               !string.IsNullOrWhiteSpace(userVerificationInputs[wordIndex]))
-                                                                {
-                                                                    var suggestions = GetFilteredWordSuggestions(userVerificationInputs[wordIndex]);
-                                                                    @if (suggestions.Any())
-                                                                    {
-                                                                        <div class="word-suggestions-dropdown">
-                                                                            <div class="suggestions-container">
-                                                                                @foreach (var suggestion in suggestions.Take(5))
-                                                                                {
-                                                                                    <div class="suggestion-item"
-                                                                                         @onclick="() => SelectSuggestion(wordIndex, suggestion)"
-                                                                                         @key="suggestion">
-                                                                                        @suggestion
-                                                                                    </div>
-                                                                                }
-                                                                            </div>
-                                                                        </div>
-                                                                    }
-                                                                }
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Word #@wordNumber</label>
+                                                                <input type="text" class="form-control word-input"
+                                                                       @bind="userVerificationInputs[wordNumber]"
+                                                                       @bind:after="ValidateWordInput"
+                                                                       @onkeydown="@(e => HandleWordInputKeyDown(e, wordNumber))"
+                                                                       placeholder="Enter word #@wordNumber" />
                                                             </div>
                                                         </div>
                                                     }
                                                 </div>
+                                                @if (showVerificationError)
+                                                {
+                                                    <div class="alert alert-danger mt-3">
+                                                        One or more words don't match. Please check your backup.
+                                                    </div>
+                                                }
                                             </div>
                                             break;
 
@@ -801,15 +906,15 @@ else
                                             </div>
                                         </div>
 
-                                        <FeeSelector SendFee="@_sendInfo.SendFee"
-                                                     CoinTicker="@network.CoinTicker"
-                                                     FeeRate="@_sendInfo.FeeRate"
-                                                     FeeBlockCount="@_sendInfo.FeeBlockCount"
-                                                     FeePosition="@FeePosition"
-                                                     FeeMin="@FeeMin"
-                                                     FeeMax="@_feeMax"
-                                                     RecommendedMinFee="@GetRecommendedMinFee()"
-                                                     OnFeeChanged="@HandleFeeChanged"></FeeSelector>
+           <FeeSelector SendFee="@_sendInfo.SendFee"
+             CoinTicker="@network.CoinTicker"
+             FeeRate="@_sendInfo.FeeRate"
+             FeeBlockCount="@_sendInfo.FeeBlockCount"
+             FeePosition="@FeePosition"
+             FeeMin="@FeeMin"
+             FeeMax="@_feeMax"
+             RecommendedMinFee="@GetRecommendedMinFee()"
+             OnFeeChanged="@HandleFeeChanged"></FeeSelector>
                                         @if (_sendInfo.SendUtxos.Any())
                                         {
                                             <div class="info-card utxo-details p-3 rounded mt-4">
@@ -1077,8 +1182,6 @@ else
     private bool verificationPassed;
     private bool showVerificationError;
     private List<(int originalIndex, int shuffledIndex)> shuffledWordIndices = new();
-
-    private Dictionary<int, bool> showSuggestions = new();
 
     private decimal sendAmount
     {
@@ -1851,21 +1954,13 @@ else
         shuffledWordIndices.Clear();
         verificationPassed = false;
 
-        var random = new Random();
-        var originalIndices = Enumerable.Range(0, words.Count).ToList();
-        var shuffled = originalIndices.OrderBy(x => random.Next()).ToList();
-
+        // Use sequential order for display
         for (int i = 0; i < words.Count; i++)
         {
-            int originalIndex = i;
-            int shuffledDisplayOrder = shuffled.IndexOf(originalIndex);
-
-            selectedWordsToVerify.Add((originalIndex + 1, words[originalIndex]));
-            userVerificationInputs[originalIndex + 1] = string.Empty;
-            shuffledWordIndices.Add((originalIndex, shuffledDisplayOrder));
+            selectedWordsToVerify.Add((i + 1, words[i]));
+            userVerificationInputs[i + 1] = string.Empty;
+            shuffledWordIndices.Add((i, i)); // Sequential order
         }
-
-        shuffledWordIndices = shuffledWordIndices.OrderBy(item => item.shuffledIndex).ToList();
     }
 
     private bool VerifyWords()
@@ -1939,53 +2034,5 @@ else
         verificationPassed = true;
         showVerificationError = false;
         NextStep();
-    }
-
-    protected override void OnInitialized()
-    {
-        NavMenuState.SetActivePage("wallet");
-        base.OnInitialized();
-    }
-
-    private void HandleWordInput(int wordIndex, ChangeEventArgs e)
-    {
-        string input = e.Value?.ToString() ?? string.Empty;
-        userVerificationInputs[wordIndex] = input;
-        showSuggestions[wordIndex] = !string.IsNullOrWhiteSpace(input);
-        ValidateWordInput();
-    }
-
-    private void ShowDropdown(int wordIndex)
-    {
-        showSuggestions[wordIndex] = true;
-    }
-
-    private void CloseDropdown(int wordIndex)
-    {
-        showSuggestions[wordIndex] = false;
-    }
-
-    private void ShowSuggestionsIfNeeded(int wordIndex)
-    {
-        if (!string.IsNullOrWhiteSpace(userVerificationInputs[wordIndex]))
-        {
-            showSuggestions[wordIndex] = true;
-            StateHasChanged();
-        }
-    }
-
-    private void SelectSuggestion(int wordIndex, string suggestion)
-    {
-        userVerificationInputs[wordIndex] = suggestion;
-        showSuggestions[wordIndex] = false;
-        ValidateWordInput();
-        StateHasChanged();
-    }
-
-    private IEnumerable<string> GetFilteredWordSuggestions(string input)
-    {
-        var wordlist = NBitcoin.Wordlist.English;
-        var words = wordlist.GetWords();
-        return words.Where(word => word.StartsWith(input, StringComparison.OrdinalIgnoreCase));
     }
 }
