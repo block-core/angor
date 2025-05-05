@@ -91,136 +91,142 @@
 </div>
 
 <div class="card card-body mt-4 slide-in">
+  
     @if (activeTab == 1)
     {
-        <div class="row g-4 animate-fade-in">
-            <div class="col-lg-7 col-12">
+        <div class="animate-fade-in">
+            <h5 class="mb-4 d-flex align-items-center">
+                <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
+                Project Profile
+            </h5>
+            <div class="row g-4">
 
-                <EditForm Model="project.Metadata">
+                <div class="col-lg-7 col-12">
+                    <EditForm Model="project.Metadata">
 
-                    <div class="info-card">
-                        <div class="mb-3">
-                            <label for="NostrMetadataName" class="form-label">Project name</label>
-                            <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" />
+                        <div class="info-card">
+                            <div class="mb-3">
+                                <label for="NostrMetadataName" class="form-label">Project name</label>
+                                <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="NostrMetadataAbout" class="form-label">About</label>
+                                <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="NostrMetadataWebsite" class="form-label">Project website</label>
+                                <InputText id="NostrMetadataWebsite" autocomplete="off" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the URL of the project website" disabled="@nostrMetadataCreated" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="NostrMetadataBanner" class="form-label">Banner</label>
+                                <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="NostrMetadataPicture" class="form-label">Image</label>
+                                <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated" />
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="NostrMetadataAbout" class="form-label">About</label>
-                            <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated" />
+
+                        <div class="info-card mt-4">
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-border-success d-flex align-items-center" @onclick="() => SetActiveTab(2)">
+                                    Next
+                                    <Icon IconName="arrow-right" Width="18" Height="18" Class="ms-2" />
+
+                                </button>
+                            </div>
                         </div>
+                    </EditForm>
+                </div>
 
-                        <div class="mb-3">
-                            <label for="NostrMetadataWebsite" class="form-label">Project website</label>
-                            <InputText id="NostrMetadataWebsite" autocomplete="off" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the URL of the project website" disabled="@nostrMetadataCreated" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="NostrMetadataBanner" class="form-label">Banner</label>
-                            <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="NostrMetadataPicture" class="form-label">Image</label>
-                            <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated" />
-                        </div>
-                    </div>
-
-
-                    <div class="info-card mt-4">
-                        <div class="d-flex justify-content-end">
-                            <button class="btn btn-border-success d-flex align-items-center" @onclick="() => SetActiveTab(2)">
-                                Next
-                                <Icon IconName="arrow-right" Width="18" Height="18" Class="ms-2" />
-
-                            </button>
-                        </div>
-                    </div>
-                </EditForm>
-            </div>
-
-            <div class="col-lg-5 col-12">
-                <div class="d-flex align-items-stretch">
-                    <div class="border card w-100 project-card me-0 ms-0">
-                        <a class="d-block">
-                            <div class="banner-container">
-                                @if (string.IsNullOrEmpty(project.Metadata?.Banner))
-                                {
-                                    <img class="banner-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                }
-                                else
-                                {
-                                    <img class="banner-image" src="@project.Metadata.Banner" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                }
-                                <div class="profile-container">
-                                    @if (string.IsNullOrEmpty(project.Metadata?.Picture))
+                <div class="col-lg-5 col-12">
+                    <div class="d-flex align-items-stretch">
+                        <div class="border card w-100 project-card me-0 ms-0">
+                            <a class="d-block">
+                                <div class="banner-container">
+                                    @if (string.IsNullOrEmpty(project.Metadata?.Banner))
                                     {
-                                        <img class="profile-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                        <img class="banner-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                     }
                                     else
                                     {
-                                        <img class="profile-image" src="@project.Metadata.Picture" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                        <img class="banner-image" src="@project.Metadata.Banner" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                     }
-                                </div>
-                            </div>
-                        </a>
-
-                        <div class="card-body pb-0">
-                            <div class="d-flex align-items-center mb-4">
-                                <span class="user-select-none animate-rotate">
-                                    <Icon IconName="view" Height="24" Width="24"></Icon>
-                                </span>
-                                <div class="h-100 ms-3">
-                                    <h5 class="mb-0 font-weight-bolder">
-                                        @if (string.IsNullOrEmpty(project.Metadata?.Name))
+                                    <div class="profile-container">
+                                        @if (string.IsNullOrEmpty(project.Metadata?.Picture))
                                         {
-                                            <span>Name</span>
+                                            <img class="profile-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                         }
                                         else
                                         {
-                                            <span>@project.Metadata.Name</span>
+                                            <img class="profile-image" src="@project.Metadata.Picture" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                                         }
-                                    </h5>
+                                    </div>
                                 </div>
-                            </div>
+                            </a>
 
-                            @if (string.IsNullOrEmpty(project.Metadata?.About))
-                            {
-                                <p class="mb-0 line-clamp-3">About</p>
-                            }
-                            else
-                            {
-                                <p class="mb-0 line-clamp-3">@ConvertToMarkupString(project.Metadata.About)</p>
-                            }
-                        </div>
-                        <div class="card-footer pt-0">
-                            <hr class="horizontal light mt-3">
-                            <span role="button" class="d-flex align-items-center btn btn-border w-100-m">
-                                <span class="user-select-none animate-rotate">
-                                    <Icon IconName="view-project" Height="24" Width="24"></Icon>
-                                </span>
-                                <div class="h-100 ms-3">
-                                    <span class="mb-0 font-weight-bolder text-primary">
-                                        View Project
+                            <div class="card-body pb-0">
+                                <div class="d-flex align-items-center mb-4">
+                                    <span class="user-select-none animate-rotate">
+                                        <Icon IconName="view" Height="24" Width="24"></Icon>
                                     </span>
+                                    <div class="h-100 ms-3">
+                                        <h5 class="mb-0 font-weight-bolder">
+                                            @if (string.IsNullOrEmpty(project.Metadata?.Name))
+                                            {
+                                                <span>Name</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@project.Metadata.Name</span>
+                                            }
+                                        </h5>
+                                    </div>
                                 </div>
-                            </span>
+
+                                @if (string.IsNullOrEmpty(project.Metadata?.About))
+                                {
+                                    <p class="mb-0 line-clamp-3">About</p>
+                                }
+                                else
+                                {
+                                    <p class="mb-0 line-clamp-3">@ConvertToMarkupString(project.Metadata.About)</p>
+                                }
+                            </div>
+                            <div class="card-footer pt-0">
+                                <hr class="horizontal light mt-3">
+                                <span role="button" class="d-flex align-items-center btn btn-border w-100-m">
+                                    <span class="user-select-none animate-rotate">
+                                        <Icon IconName="view-project" Height="24" Width="24"></Icon>
+                                    </span>
+                                    <div class="h-100 ms-3">
+                                        <span class="mb-0 font-weight-bolder text-primary">
+                                            View Project
+                                        </span>
+                                    </div>
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
     }
 
     @if (activeTab == 2)
     {
-
-
         <div class="animate-fade-in">
             <EditForm Model="project">
-                     <h5 class="mb-4 d-flex align-items-center">
-                        <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
-                        Project Details
-                    </h5>
+                <h5 class="mb-4 d-flex align-items-center">
+                    <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
+                    Target Fundraising Goal
+                </h5>
 
                 <!-- Target Amount -->
                 <div class="info-card mb-4 slide-in">
@@ -229,11 +235,15 @@
                             <Icon IconName="balance" Width="20" Height="20" Class="me-2 text-primary" />
                             <label for="targetAmount" class="form-label mb-0 fw-semibold">Target Amount</label>
                         </div>
-                        <p class="form-text text-muted mt-0 mb-2 small">The minimum amount of @network.CoinTicker this project is trying to raise.</p>  
+                        <p class="form-text text-muted mt-0 mb-2 small">The minimum amount of @network.CoinTicker this project is trying to raise.</p>
                         <InputNumber id="targetAmount" @bind-Value="targetAmountInBTC" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
                 </div>
 
+                <h5 class="mb-4 d-flex align-items-center">
+                    <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
+                    Fund Raising Window
+                </h5>
                 <div class="info-card mb-4 slide-in">
                     <!-- Start Date -->
                     <div class="mb-3">
@@ -247,7 +257,7 @@
                     </div>
 
                     <!-- End Date -->
-                    <div class="mb-3">
+                    <div class="mb-0">
                         <div class="d-flex align-items-center mb-2">
                             <Icon IconName="calendar" Width="20" Height="20" Class="me-2 text-primary" />
                             <label for="endDate" class="form-label mb-0 fw-semibold">End Date</label>
@@ -260,9 +270,12 @@
                         }
                     </div>
                 </div>
-
+                <h5 class="mb-4 d-flex align-items-center">
+                    <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
+                    Advanced Parameters
+                </h5>
                 <div class="info-card mb-4 slide-in">
- 
+
                     <!-- Penalty Days -->
                     <div class="mb-3">
                         <div class="d-flex align-items-center mb-2">
@@ -274,7 +287,7 @@
                     </div>
 
                     <!-- Expiry Date -->
-                    <div class="mb-4">
+                    <div class="mb-0">
                         <div class="d-flex align-items-center mb-2">
                             <Icon IconName="calendar" Width="20" Height="20" Class="me-2 text-warning" />
                             <label for="expiryDate" class="form-label mb-0 fw-semibold">Expiry Date</label>
@@ -285,6 +298,11 @@
                     </div>
                 </div>
 
+
+                <h5 class="mb-4 d-flex align-items-center">
+                    <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
+                    Stages
+                </h5>
                 <div class="info-card mb-4 slide-in">
                     <!-- Presets for Stages -->
                     <!-- Toggle Button -->
@@ -384,8 +402,13 @@
 
     @if (activeTab == 3)
     {
-        <div class="slide-in mt-4 mb-4">
-            <h5 class="mb-4">Project Information</h5>
+        <div class="animate-fade-in mb-4">
+
+            <h5 class="mb-4 d-flex align-items-center">
+                <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
+                Project Information
+            </h5>
+
             <div class="row g-4">
                 @foreach (var info in GetProjectInfoData())
                 {
@@ -934,8 +957,27 @@
 
         // Set start date to today automatically
         project.ProjectInfo.StartDate = DateTime.Today;
-        
-        // Always update expiry date based on stages
+
+        // Select a preset if no stages exist
+        if (!project.ProjectInfo.Stages.Any())
+        {
+            isPresetMode = true;
+            OnStagePresetChange(new ChangeEventArgs { Value = "preset1" }); // This might add stages
+        }
+
+        // Set initial EndDate based on stages or today
+        if (project.ProjectInfo.Stages.Any())
+        {
+            // Set EndDate to the date of the first stage (ordered by date)
+            project.ProjectInfo.EndDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
+        }
+        else
+        {
+            // If no stages exist, set EndDate to today
+            project.ProjectInfo.EndDate = DateTime.Today;
+        }
+
+        // Always update expiry date based on stages (or start date if no stages)
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
 
         if (network.NetworkType == NetworkType.Testnet)
@@ -952,13 +994,6 @@
         // check if the project was already published to nostr
         nostrMetadataCreated = project.NostrProfileCreated;
         nostrApplicationSpecificDataCreated = !string.IsNullOrEmpty(project.ProjectInfoEventId);
-
-        // Select a preset
-        if (!project.ProjectInfo.Stages.Any())
-        {
-            isPresetMode = true;
-            OnStagePresetChange(new ChangeEventArgs { Value = "preset1" });
-        }
     }
 
     private string GetActiveClass(int tabNumber)
@@ -1143,7 +1178,7 @@
                         notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!", $"{_.CommunicatorName} - {_.Message}"); //TODO add export project info
                         return;
                     }
-                    
+
                     _Logger.LogInformation($"Communicator {_.CommunicatorName} accepted event {_.EventId}");
 
                     if (nostrApplicationSpecificDataCreated == false)
@@ -1242,7 +1277,7 @@
 
             var words = await passwordComponent.GetWalletAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
-            
+
             signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
                 accountInfo.GetNextChangeReceiveAddress(),
                 unsignedTransaction,
@@ -1310,7 +1345,7 @@
         }
 
         project.ProjectInfo.Stages.Add(new Stage { ReleaseDate = DateTime.UtcNow });
-        
+
         // Update expiry date
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
         StateHasChanged();
@@ -1325,7 +1360,7 @@
         }
 
         project.ProjectInfo.Stages.Remove(stage);
-        
+
         // Update expiry date
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
         StateHasChanged();
@@ -1673,7 +1708,7 @@
                 endDateError = false;
             }
         }
-        
+
         // Update hidden expiry date field
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
         StateHasChanged();
@@ -1687,7 +1722,7 @@
             var lastStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).Last().ReleaseDate;
             return lastStageDate.AddDays(60);
         }
-        
+
         // Default to 60 days after start date if no stages
         return project.ProjectInfo.StartDate.AddDays(60);
     }
