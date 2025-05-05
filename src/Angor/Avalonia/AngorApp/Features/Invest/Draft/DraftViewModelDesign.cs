@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Investor;
+using Angor.Contexts.Funding.Investor.Operations;
 using AngorApp.UI.Controls;
 
 namespace AngorApp.Features.Invest.Draft;
