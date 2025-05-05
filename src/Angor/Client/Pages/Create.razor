@@ -213,47 +213,74 @@
 
     @if (activeTab == 2)
     {
+
+
         <div class="animate-fade-in">
             <EditForm Model="project">
-                <div class="info-card mb-4 slide-in">
-                    <!-- Angor Fee Key -->
-                    <div class="mb-3">
-                        <label for="angorFeeKey" class="form-label">Project identifier</label>
-                        <InputText id="angorFeeKey" @bind-Value="project.ProjectInfo.ProjectIdentifier" class="form-control" placeholder="Enter angor fee key" readonly disabled="@nostrApplicationSpecificDataCreated" />
-                    </div>
+                     <h5 class="mb-4 d-flex align-items-center">
+                        <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
+                        Project Details
+                    </h5>
 
-                    <!-- Founder Key -->
+                <!-- Target Amount -->
+                <div class="info-card mb-4 slide-in">
                     <div class="mb-3">
-                        <label for="founderKey" class="form-label">Founder Key</label>
-                        <InputText id="founderKey" @bind-Value="project.ProjectInfo.FounderKey" class="form-control" placeholder="Enter founder key" readonly disabled="@nostrApplicationSpecificDataCreated" />
+                        <div class="d-flex align-items-center mb-2">
+                            <Icon IconName="balance" Width="20" Height="20" Class="me-2 text-primary" />
+                            <label for="targetAmount" class="form-label mb-0 fw-semibold">Target Amount</label>
+                        </div>
+                        <p class="form-text text-muted mt-0 mb-2 small">The minimum amount of @network.CoinTicker this project is trying to raise.</p>  
+                        <InputNumber id="targetAmount" @bind-Value="targetAmountInBTC" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
                 </div>
 
                 <div class="info-card mb-4 slide-in">
                     <!-- Start Date -->
                     <div class="mb-3">
-                        <label for="startDate" class="form-label">Start Date - If your project did not reach the funding goal by this date, you will not receive anything. You will only be able to return the funds to investors.</label>
+                        <div class="d-flex align-items-center mb-2">
+                            <Icon IconName="calendar" Width="20" Height="20" Class="me-2 text-primary" />
+                            <label for="startDate" class="form-label mb-0 fw-semibold">Start Date</label>
+                        </div>
+                        <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period begins (today).</p>
                         <InputDate id="startDate" @bind-Value="project.ProjectInfo.StartDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
 
-                    <!-- Expiry Date -->
+                    <!-- End Date -->
                     <div class="mb-3">
-                        <label for="expiryDate" class="form-label">Expiry Date - After this date any unspent coins can be claimed back by the investors</label>
-                        <InputDate id="expiryDate" @bind-Value="project.ProjectInfo.ExpiryDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
+                        <div class="d-flex align-items-center mb-2">
+                            <Icon IconName="calendar" Width="20" Height="20" Class="me-2 text-primary" />
+                            <label for="endDate" class="form-label mb-0 fw-semibold">Start Date</label>
+                        </div>
+                        <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period ends.</p>
+                        <InputDate id="endDate" @bind-Value="project.ProjectInfo.EndDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
+                </div>
 
-                    <!-- Penalty Date -->
+                <div class="info-card mb-4 slide-in">
+ 
+                    <!-- Penalty Days -->
                     <div class="mb-3">
-                        <label for="penaltyDays" class="form-label">Penalty Days - Choose the number of days you wish to lock a departing investors funds for</label>
+                        <div class="d-flex align-items-center mb-2">
+                            <Icon IconName="sad-circle" Width="20" Height="20" Class="me-2 text-danger" />
+                            <label for="penaltyDays" class="form-label mb-0 fw-semibold">Penalty Days</label>
+                        </div>
+                        <p class="form-text text-muted mt-0 mb-2 small">Number of days to lock finds for departing investors who wish to withdraw early.</p>
                         <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
 
-                    <!-- Target Amount -->
-                    <div class="mb-3">
-                        <label for="targetAmount" class="form-label">Target Amount - The minimum amount of @network.CoinTicker this project is trying to raise</label>
-                        <InputNumber id="targetAmount" @bind-Value="targetAmountInBTC" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated" />
+                    <!-- Expiry Date -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <Icon IconName="calendar" Width="20" Height="20" Class="me-2 text-warning" />
+                            <label for="expiryDate" class="form-label mb-0 fw-semibold">End Date</label>
+                        </div>
+                        <p class="form-text text-muted mt-0 mb-2 small">Emergency date when all remaining funds can be released, in case something happens to the founder or the project is abandoned.</p>
+                        <InputDate id="expiryDate" @bind-Value="project.ProjectInfo.ExpiryDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
+                        <p class="form-text text-muted mt-0 mb-2 small">Automatically set to 60 days after the last stage.</p>
                     </div>
+                </div>
 
+                <div class="info-card mb-4 slide-in">
                     <!-- Presets for Stages -->
                     <!-- Toggle Button -->
                     <div class="d-flex justify-content-between align-items-center mb-3">
