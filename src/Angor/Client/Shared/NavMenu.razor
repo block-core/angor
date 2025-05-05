@@ -1,143 +1,81 @@
 ﻿@using Angor.Client.Components
 @using Angor.Client.Storage
-@using System.Reflection
 @using Angor.Client.Services
 @using Angor.Shared.Services
 @inject IWalletStorage _walletStorage;
 @inject NavMenuState NavMenuState;
 @inject INetworkService _networkService;
 
-<div class="sidenav-header">
-    <div class="menu-text">
-        <i class="cursor-pointer opacity-5 position-absolute end-2 top-1  d-xl-none" aria-hidden="true" id="iconSidenav" @onclick="ToggleSidenav">
-            <Icon IconName="close-circle" />
-        </i>
-    </div>
+<aside class="sidebar @(IsCollapsed ? "collapsed" : "") @(IsDarkTheme ? "" : "white")">
+    <header class="sidebar-header">
+        <a href="" class="header-logo">
+            <Icon IconName="angor-logo" />
+            <span class="angor-label">Angor</span>
+        </a>
+        <button class="toggler @(IsCollapsed ? "rotate" : "")" @onclick="ToggleCollapse">
+            <span class="material-symbols-rounded">
+                <Icon IconName="menu_close" Height="24" Width="24" />
+            </span>
+        </button>
+    </header>
 
-    <a class="navbar-brand m-0" href="" @onclick="ToggleSidenav">
-        <Icon IconName="angor-logo" />
-        <span class="ms-1 font-weight-bold menu-text">Angor App</span>
-    </a>
-</div>
-
-<hr class="horizontal mt-0 mb-2" />
-
-<div class="collapse navbar-collapse w-auto overflow-x-hidden" id="sidenav-collapse-main">
-    <ul class="navbar-nav" @onclick="ToggleSidenav">
-        <li class="nav-item">
-            <NavLink class="nav-link menu-text" href="wallet">
-                <i class="me-1">
-                    <Icon IconName="wallet" />
-                </i>
-                <span class="nav-link-text ms-1">Wallet</span>
-            </NavLink>
-        </li>
-        <li class="nav-item">
-            <NavLink class="nav-link menu-text" href="browse">
-                <i class="me-1">
-                    <Icon IconName="browse" />
-                </i>
-                <span class="nav-link-text ms-1">Browse</span>
-            </NavLink>
-        </li>
-
-
-
-        @if (hasWallet)
-        {
+    <nav class="sidebar-nav">
+        <ul class="nav-list primary-nav">
             <li class="nav-item">
-                <NavLink class="nav-link menu-text" href="investor">
-                    <i class="me-1">
-                        <Icon IconName="portfolio" />
-                    </i>
-                    <span class="nav-link-text ms-1">Portfolio</span>
+                <NavLink class="@GetNavLinkClass("wallet")" href="wallet">
+                    <span class="nav-icon"><Icon IconName="wallet" /></span>
+                    <span class="nav-label">Wallet</span>
                 </NavLink>
+                <span class="nav-tooltip">Wallet</span>
+            </li>
+            <li class="nav-item">
+                <NavLink class="@GetNavLinkClass("browse")" href="browse">
+                    <span class="nav-icon"><Icon IconName="browse" /></span>
+                    <span class="nav-label">Browse</span>
+                </NavLink>
+                <span class="nav-tooltip">Browse</span>
             </li>
 
+            @if (hasWallet)
+            {
+                <li class="nav-item">
+                    <NavLink class="@GetNavLinkClassForInvestor()" href="investor">
+                        <span class="nav-icon"><Icon IconName="portfolio" /></span>
+                        <span class="nav-label">Portfolio</span>
+                    </NavLink>
+                    <span class="nav-tooltip">Portfolio</span>
+                </li>
+
+                <li class="nav-item">
+                    <NavLink class="@GetNavLinkClass("founder")" href="founder">
+                        <span class="nav-icon"><Icon IconName="founder" /></span>
+                        <span class="nav-label">Founder</span>
+                    </NavLink>
+                    <span class="nav-tooltip">Founder</span>
+                </li>
+            }
+
             <li class="nav-item">
-                <NavLink class="nav-link menu-text" href="founder">
-                    <i class="me-1">
-                        <Icon IconName="founder" />
-                    </i>
-                    <span class="nav-link-text ms-1">
-                        Founder
-                    </span>
+                <NavLink class="@GetNavLinkClass("settings")" href="settings">
+                    <span class="nav-icon"><Icon IconName="settings" /></span>
+                    <span class="nav-label">Settings</span>
                 </NavLink>
+                <span class="nav-tooltip">Settings</span>
             </li>
+        </ul>
 
-        }
-        <hr class="horizontal mt-0">
-
-        <li class="nav-item">
-            <NavLink class="nav-link menu-text" href="settings">
-                <i class="me-1">
-                    <Icon IconName="settings" />
-                </i>
-                <span class="nav-link-text ms-1">Settings</span>
-            </NavLink>
-        </li>
-
-
-
-    </ul>
-</div>
-
-<div class="sidenav-footer position-absolute w-100 bottom-0">
-    <ul class="navbar-nav">
-
-        <li class="nav-item d-flex align-items-center justify-content-@betweenOrEnd">
-            @if (!islockMenu)
-            {
-                <span class="nav-link menu-text" @onclick="ToggleSidenavText">
-                    <i class="me-1">
-                        @if (isSidenavHide)
-                        {
-                            <Icon IconName="menu_open" />
-                        }
-                        else
-                        {
-                            <Icon IconName="menu_close" />
-                        }
-                    </i>
-                </span>
-            }
-            @if (!isSidenavHide)
-            {
-                <span class="nav-link menu-text" @onclick="ToggleLockMenu">
-                    <i class="me-1">
-                        @if (islockMenu)
-                        {
-                            <Icon IconName="lock" />
-
-                        }
-                        else
-                        {
-                            <Icon IconName="unlock" />
-
-                        }
-                    </i>
-                </span>
-            }
-
-        </li>
-
-
-
-
-        <hr class="horizontal light mt-0">
-
-        <li class="nav-item">
-            <a class="nav-link menu-text" href="https://hub.angor.io">
-                <i class="me-1">
-                    <Icon IconName="project_explorer" />
-                </i>
-                <span class="nav-link-text ms-1">Angor Hub</span>
-            </a>
-        </li>
-    </ul>
-</div>
-
-
+        <ul class="nav-list secondary-nav">
+            <li class="nav-item">
+                <hr class="horizontal mt-0 mb-2" />
+                <a class="nav-link" href="https://hub.angor.io">
+                    <span class="nav-icon"><Icon IconName="project_explorer" /></span>
+                    <span class="nav-label">Angor Hub</span>
+                </a>
+                <span class="nav-tooltip">Angor Hub</span>
+            </li>
+        </ul>
+    </nav>
+</aside>
 
 @code {
 
@@ -150,17 +88,21 @@
     [Parameter]
     public EventCallback ToggleleLockMenuCallback { get; set; }
 
+    [Parameter]
+    public bool IsCollapsed { get; set; }
+
+    [Parameter]
+    public bool IsDarkTheme { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsCollapsedChanged { get; set; }
+
     private bool hasWallet;
     private string betweenOrEnd = "between";
-
-
     private bool islockMenu = false;
-
-
     private bool isSidenavHide = true;
     private Timer? _timer;
     private int _elapsedCount = 0;
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -169,41 +111,55 @@
         await base.OnInitializedAsync();
     }
 
-
     private async Task ToggleSidenav()
     {
         await ToggleSidenavCallback.InvokeAsync();
     }
 
-
     private async Task ToggleSidenavText()
     {
         await ToggleSidenavTextCallback.InvokeAsync();
-
         isSidenavHide = !isSidenavHide;
-
     }
 
     private async Task ToggleLockMenu()
     {
         await ToggleleLockMenuCallback.InvokeAsync();
-
         islockMenu = !islockMenu;
         UpdateLockMenuIcon(islockMenu);
-
     }
+
     private void UpdateLockMenuIcon(bool islockMenu)
     {
         betweenOrEnd = islockMenu ? "end" : "between";
+    }
+
+    private bool IsInvestorPage(string page)
+    {
+        return page == "investor" || page == "invest" || page == "release" || page == "penalties";
+    }
+
+    private string GetNavLinkClass(string page)
+    {
+        return $"nav-link menu-text {(NavMenuState.ActivePage == page ? "active" : "")}";
+    }
+
+    private string GetNavLinkClassForInvestor()
+    {
+        return $"nav-link menu-text {(IsInvestorPage(NavMenuState.ActivePage) ? "active" : "")}";
+    }
+
+    private async Task ToggleCollapse()
+    {
+        IsCollapsed = !IsCollapsed;
+        await IsCollapsedChanged.InvokeAsync(IsCollapsed);
     }
 
     /// <inheritdoc />
     protected override void OnInitialized()
     {
         hasWallet = _walletStorage.HasWallet();
-
         NavMenuState.OnChange += NavMenuStateOnOnChange;
-
     }
 
     private void NavMenuStateOnOnChange()

@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:f="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
+             xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
+             xmlns:seedWordsGeneration="clr-namespace:AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsGeneration"
+             xmlns:av="https://github.com/projektanker/icons.avalonia"
+             xmlns:avalonia="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             mc:Ignorable="d" d:DesignWidth="500"
+             x:Class="AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsGeneration.GeneratedWords"
+             x:DataType="seedWordsGeneration:ISeedWordsViewModel">
+
+    <Design.DataContext>
+        <seedWordsGeneration:SeedWordsViewModelDesign HasWords="True" />
+    </Design.DataContext>
+
+    <Border>
+        <StackPanel Spacing="">
+
+            <Border Classes="Alert">
+                <controls:List>
+                    <controls:List.Header>
+                        <controls:IconLabel Classes="Warning" Icon="fa-triangle-exclamation">Important Security Tips:</controls:IconLabel>
+                    </controls:List.Header>
+                    <avalonia:Strings>
+                        <x:String>Never share these words with anyone</x:String>
+                        <x:String>Never enter these words on any website</x:String>
+                        <x:String>Store them in a secure, offline location</x:String>
+                        <x:String>Losing these words means losing access to your funds</x:String>
+                    </avalonia:Strings>
+                </controls:List>
+            </Border>
+
+            <StackPanel Spacing="15">
+                <seedWordsGeneration:SeedWordsList SeedWords="{Binding Words.Value}" />
+                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                    <controls:IconButton HorizontalAlignment="Stretch" Content="Copy All" Command="{Binding Source={x:Static f:Commands.Instance}, Path=CopyText}" CommandParameter="{Binding Words.Value, Converter={x:Static converters:StringConverters.AsString}}">
+                        <controls:IconButton.Icon>
+                            <av:Icon Value="fa-copy" />
+                        </controls:IconButton.Icon>
+                    </controls:IconButton>
+                    <Button Command="{Binding GenerateWords}" Content="Generate New" HorizontalAlignment="Stretch"  />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Margin="0 20 0 0">
+                <CheckBox HorizontalAlignment="Right" Content="I've Written Them Down" IsChecked="{Binding AreWordsWrittenDown}" />
+            </StackPanel>
+
+        </StackPanel>
+
+    </Border>
+
+
+</UserControl>

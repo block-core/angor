@@ -1,0 +1,161 @@
+@using Angor.Client.Models
+@using Angor.Shared.Models
+@using Microsoft.Extensions.Logging
+@inject ILogger<FeeSelector> Logger
+
+<div class="info-card fee-details p-3 rounded">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted">Transaction Fee:</span>
+        <span class="fee-amount fw-bold">
+            @SendFee @CoinTicker
+        </span>
+    </div>
+
+    <div class="fee-adjustment">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label mb-0">Processing Speed</label>
+            <div class="d-flex align-items-center gap-2">
+                @if (!UseCustomFee)
+                {
+                    <small class="text-muted">~@FeeBlockCount blocks</small>
+                }
+                <span class="badge bg-primary">
+                    @FeeRate sats
+                </span>
+            </div>
+        </div>
+
+        <div class="btn-group w-100 mb-3" role="group">
+            <input type="radio" class="btn-check" name="feeBtn" id="feeHigh" autocomplete="off" checked="@(FeePosition == 1)" @onchange="() => SetFeePosition(1)">
+            <label class="btn @(FeePosition == 1 ? "btn-border-success" : "btn-border") py-2 px-3 m-0" for="feeHigh">
+                <small>Priority</small>
+            </label>
+
+            <input type="radio" class="btn-check" name="feeBtn" id="feeMed" autocomplete="off" checked="@(FeePosition == 2)" @onchange="() => SetFeePosition(2)">
+            <label class="btn @(FeePosition == 2 ? "btn-border-success" : "btn-border") py-2 px-3 m-0" for="feeMed">
+                <small>Standard</small>
+            </label>
+
+            <input type="radio" class="btn-check" name="feeBtn" id="feeLow" autocomplete="off" checked="@(FeePosition == 3)" @onchange="() => SetFeePosition(3)">
+            <label class="btn @(FeePosition == 3 ? "btn-border-success" : "btn-border") py-2 px-3 m-0" for="feeLow">
+                <small>Economy</small>
+            </label>
+        </div>
+
+        <div class="custom-fee-input">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="useCustomFee" 
+                       checked="@UseCustomFee" 
+                       @onchange="HandleCustomFeeToggle" />
+                <label class="form-check-label" for="useCustomFee">
+                    Use custom fee rate
+                </label>
+            </div>
+            
+            @if (UseCustomFee)
+            {
+                <div class="d-flex align-items-center">
+                    <input type="number" 
+                           class="form-control" 
+                           placeholder="Enter fee rate in sats/byte" 
+                           @bind="CustomFeeRate"
+                           @bind:event="oninput" 
+                           @onblur="CustomFeeRateChanged"
+                           min="1" />
+                    <span class="px-1">sats</span>
+                </div>
+                @if (CustomFeeRate < RecommendedMinFee)
+                {
+                    <small class="text-warning mt-1">
+                        <i>Warning: Low fees may cause delayed confirmation</i>
+                    </small>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public decimal SendFee { get; set; }
+
+    [Parameter]
+    public string CoinTicker { get; set; } = string.Empty;
+
+    [Parameter]
+    public long FeeRate { get; set; }
+
+    [Parameter]
+    public int FeeBlockCount { get; set; }
+
+    [Parameter]
+    public int FeePosition { get; set; } = 2;
+
+    [Parameter]
+    public int FeeMin { get; set; } = 1;
+
+    [Parameter]
+    public int FeeMax { get; set; } = 3;
+
+    [Parameter]
+    public long RecommendedMinFee { get; set; } = 5;
+
+    [Parameter]
+    public EventCallback<FeeCalculation> OnFeeChanged { get; set; }
+
+    private bool UseCustomFee { get; set; }
+    private long CustomFeeRate { get; set; } = 10;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        
+        if (FeePosition < FeeMin || FeePosition > FeeMax)
+        {
+            FeePosition = 2;
+        }
+    }
+
+    private async Task RecalculateFee(FeeCalculation calc)
+    {
+        try
+        {
+            if (calc.UseCustomFee && calc.CustomFee.HasValue && calc.CustomFee.Value > 0)
+            {
+                UseCustomFee = true;
+                CustomFeeRate = calc.CustomFee.Value;
+            }
+            else if (calc.Position.HasValue && calc.Position.Value >= FeeMin && calc.Position.Value <= FeeMax)
+            {
+                UseCustomFee = false;
+                FeePosition = calc.Position.Value;
+            }
+
+            await OnFeeChanged.InvokeAsync(calc);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error recalculating fee");
+        }
+    }
+
+    private Task SetFeePosition(int position) => 
+        RecalculateFee(new FeeCalculation { Position = position });
+
+    private Task CustomFeeRateChanged() => 
+        RecalculateFee(new FeeCalculation { CustomFee = CustomFeeRate, UseCustomFee = true });
+
+    private async Task HandleCustomFeeToggle(ChangeEventArgs e)
+    {
+        if (e.Value is bool isChecked)
+        {
+            UseCustomFee = isChecked;
+            await RecalculateFee(new FeeCalculation 
+            { 
+                UseCustomFee = isChecked,
+                CustomFee = isChecked ? FeeRate : null,
+                Position = isChecked ? null : FeePosition
+            });
+        }
+    }
+}

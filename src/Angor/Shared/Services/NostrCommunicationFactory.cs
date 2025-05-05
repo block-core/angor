@@ -45,7 +45,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
 
             _serviceSubscriptions.Add(_nostrMultiWebsocketClient.Streams.EventStream
                 .Where(_ => _.Event?.AdditionalData?.Any() ?? false).Subscribe(_ =>
-                    _logger.LogInformation(
+                    _logger.LogDebug(
                         $"EventStream {_.Subscription} {_.Event?.Id} {_.Event?.AdditionalData}")));
 
             _serviceSubscriptions.Add(_nostrMultiWebsocketClient.Streams.NoticeStream.Subscribe(_ =>
@@ -68,21 +68,21 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             
             _serviceSubscriptions.Add(client.Streams.EoseStream.Subscribe(x =>
             {
-                _logger.LogInformation($"{x.CommunicatorName} EOSE {x.Subscription}");
+                _logger.LogDebug($"{x.CommunicatorName} EOSE {x.Subscription}");
                 if (_eoseCalledOnSubscriptionClients.TryGetValue(x.Subscription ?? string.Empty,
                         out var clientsReceivedList))
                 {
-                    _logger.LogInformation($"EOSE {x.Subscription} adding {x.CommunicatorName}");
+                    _logger.LogDebug($"EOSE {x.Subscription} adding {x.CommunicatorName}");
                     clientsReceivedList.Add(x.CommunicatorName);
                 }
             }));
             
             _serviceSubscriptions.Add(client.Streams.OkStream.Subscribe(x =>
             {
-                _logger.LogInformation($"{x.CommunicatorName} OK {x.EventId} {x.Accepted}");
+                _logger.LogDebug($"{x.CommunicatorName} OK {x.EventId} {x.Accepted}");
                 if (_okCalledOnSubscriptionClients.TryGetValue(x.EventId ?? string.Empty, out var clientsReceivedList))
                 {
-                    _logger.LogInformation($"OK {x.EventId} adding {x.CommunicatorName}");
+                    _logger.LogDebug($"OK {x.EventId} adding {x.CommunicatorName}");
                     clientsReceivedList.Add(x.CommunicatorName);
                 } 
             }));
@@ -103,26 +103,26 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         if (!_eoseCalledOnSubscriptionClients.ContainsKey(subscription))
             return true; //If not monitoring than no need to block
 
-        _logger.LogInformation($"Checking for all Eose on monitored subscription {subscription}");
+        _logger.LogDebug($"Checking for all Eose on monitored subscription {subscription}");
         
         bool response = _nostrMultiWebsocketClient?.Clients
             .All(x =>
                 _eoseCalledOnSubscriptionClients[subscription].Contains(x.Communicator.Name)) ?? false; 
         
-        _logger.LogInformation($"Eose on monitored subscription {subscription} received from all clients - {response}");
+        _logger.LogDebug($"Eose on monitored subscription {subscription} received from all clients - {response}");
 
         return response;
     }
     
-    public void MonitoringEoseReceivedOnSubscription(string subscription)
+    public bool MonitoringEoseReceivedOnSubscription(string subscription)
     {
-        _logger.LogInformation($"Started monitoring subscription {subscription}");
-        _eoseCalledOnSubscriptionClients.Add(subscription, new List<string>());
+        _logger.LogDebug($"Started monitoring subscription {subscription}");
+        return _eoseCalledOnSubscriptionClients.TryAdd(subscription, new List<string>());
     }
     
     public void ClearEoseReceivedOnSubscriptionMonitoring(string subscription)
     {
-        _logger.LogInformation($"Stopped monitoring subscription {subscription}");
+        _logger.LogDebug($"Stopped monitoring subscription {subscription}");
         _eoseCalledOnSubscriptionClients.Remove(subscription);
     }
     
@@ -131,26 +131,26 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         if (!_okCalledOnSubscriptionClients.ContainsKey(eventId))
             return true; //If not monitoring than no need to block
 
-        _logger.LogInformation($"Checking for all Ok on monitored subscription {eventId}");
+        _logger.LogDebug($"Checking for all Ok on monitored subscription {eventId}");
         
         bool response = _nostrMultiWebsocketClient?.Clients
             .All(x =>
                 _okCalledOnSubscriptionClients[eventId].Contains(x.Communicator.Name)) ?? false; 
         
-        _logger.LogInformation($"Eose on monitored subscription {eventId} received from all clients - {response}");
+        _logger.LogDebug($"Eose on monitored subscription {eventId} received from all clients - {response}");
 
         return response;
     }
     
     public void MonitoringOkReceivedOnSubscription(string eventId)
     {
-        _logger.LogInformation($"Started monitoring event id {eventId}");
+        _logger.LogDebug($"Started monitoring event id {eventId}");
         _okCalledOnSubscriptionClients.Add(eventId, new List<string>());
     }
     
     public void ClearOkReceivedOnSubscriptionMonitoring(string eventId)
     {
-        _logger.LogInformation($"Started monitoring event id {eventId}");
+        _logger.LogDebug($"Started monitoring event id {eventId}");
         _okCalledOnSubscriptionClients.Remove(eventId);
     }
     
@@ -174,7 +174,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                     "Relay {relayName} disconnected, type: {Type}, reason: {CloseStatusDescription}", 
                     relayName, e.Type, e.CloseStatusDescription);
             else
-                _logger.LogInformation(
+                _logger.LogDebug(
                     "Relay {relayName} disconnected, type: {Type}, reason: {CloseStatusDescription}", 
                     relayName, e.Type, e.CloseStatusDescription);
         }));
@@ -183,7 +183,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         {
             _serviceSubscriptions.Add(nostrCommunicator.MessageReceived.Subscribe(e =>
             {
-                _logger.LogInformation(
+                _logger.LogDebug(
                     "message received on communicator {relayName} - {Text} Relay message received, type: {MessageType}",
                     relayName, e.Text, e.MessageType);
             }));

@@ -1,18 +1,17 @@
+using System.Windows.Input;
+using Angor.UI.Model;
+
 namespace AngorApp.Sections.Browse.Details;
 
-public interface IProjectDetailsViewModel : IProject
+public interface IProjectDetailsViewModel
 {
-    string Name { get; }
-    string ShortDescription { get; }
     object Icon { get; }
     object Picture { get; }
-    public IEnumerable<Stage> Stages { get; }
-}
-
-public class Stage
-{
-    public int Index { get; set; }
-    public double Weight { get; set; }
-    public DateTimeOffset ReleaseDate { get; set; }
-    public decimal Amount { get; set; }
+    public ReactiveCommand<Unit, Result> Invest { get; }
+    public IEnumerable<INostrRelay> Relays { get; }
+    public double TotalDays { get; }
+    public double TotalInvestment { get; }
+    public double CurrentDays { get; }
+    public double CurrentInvestment { get; }
+    public IProject Project { get; }
 }

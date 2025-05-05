@@ -10,11 +10,10 @@ public interface INetworkConfiguration
     String GetGenesisBlockHash();
     string GetNetworkNameFromGenesisBlockHash(string genesisBlockHash);
 
-    SettingsUrl GetIndexerUrl();
-    SettingsUrl GetExplorerUrl();
     List<SettingsUrl> GetDefaultIndexerUrls();
     List<SettingsUrl> GetDefaultRelayUrls();
-    List<SettingsUrl> GetDefaultExplorerUrl();
+    List<SettingsUrl> GetDefaultExplorerUrls();
+    List<SettingsUrl> GetDefaultChatAppUrls();
 
     int GetAngorInvestFeePercentage { get; }
     string GetAngorKey();

@@ -1,0 +1,42 @@
+version: "2.4"
+
+services:
+
+  strfry-relay:
+    container_name: strfry-relay
+    image: dockurr/strfry:latest
+    environment:
+      VIRTUAL_HOST: relay.angor.io
+      VIRTUAL_PORT: 7777
+      VIRTUAL_PROTO: http
+      VIRTUAL_NETWORK: proxy
+      LETSENCRYPT_HOST: relay.angor.io
+      LETSENCRYPT_EMAIL: admin@blockcore.net
+    #ports:
+    #  - 7777:7777
+    volumes:
+      - ./strfry/:/app/strfry-db
+      - ./strfry/strfry.conf:/etc/strfry.conf
+    networks:
+      - proxy
+
+  web:
+    image: getumbrel/umbrel-nostr-relay
+    user: "1000:1000"
+    container_name: public-relay-web
+    restart: on-failure
+    environment:
+      RELAY_HOST: "strfry-relay"
+      RELAY_PORT: "7777"
+    ports:
+      - 3000:3000 # to access the web view use relay.angor.io:3000
+    networks:
+      - proxy
+
+networks:
+  btcnetwork:
+    external: false
+    name: btcnetwork
+  proxy:
+    external: true
+    name: proxy

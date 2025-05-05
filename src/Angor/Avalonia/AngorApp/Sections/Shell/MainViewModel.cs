@@ -1,21 +1,18 @@
-﻿using System.Linq;
-using AngorApp.Services;
-using ReactiveUI.SourceGenerators;
+﻿using AngorApp.Core;
+using AngorApp.UI.Services;
+using Zafiro.UI.Shell;
 
 namespace AngorApp.Sections.Shell;
 
 public partial class MainViewModel : ReactiveObject, IMainViewModel
 {
-    [Reactive] private Section selectedSection;
-
-    public MainViewModel(IEnumerable<SectionBase> sections, UIServices uiServices)
+    public MainViewModel(IShell shell, UIServices uiServices)
     {
-        Sections = sections;
-        SelectedSection = Sections.OfType<Section>().Skip(0).First();
-        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.Launch(new Uri("https://www.angor.io")));
+        Shell = shell;
+        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(Constants.AngorHubUri));
     }
 
-    public ReactiveCommand<Unit,Unit> OpenHub { get; set; }
+    public IShell Shell { get; }
 
-    public IEnumerable<SectionBase> Sections { get; }
+    public ReactiveCommand<Unit, Unit> OpenHub { get; }
 }

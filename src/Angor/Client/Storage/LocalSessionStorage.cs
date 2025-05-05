@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Angor.Client.Models;
+using Angor.Client.Services;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Blazored.SessionStorage;
@@ -10,6 +11,7 @@ public class LocalSessionStorage : ICacheStorage
 {
     private const string BrowseIndexerData = "subscriptions";
     private const string NostrPubKeyMapping = "NostrPubKeyMapping";
+    private const string ActiveMenuPageKey = "activeMenuPage";
     private readonly ISyncSessionStorageService _sessionStorageService;
 
     public LocalSessionStorage(ISyncSessionStorageService sessionStorageService)
@@ -133,4 +135,5 @@ public class LocalSessionStorage : ICacheStorage
     {
         return _sessionStorageService.GetItem<List<string>>("Eose" + subscriptionName);
     }
+
 }

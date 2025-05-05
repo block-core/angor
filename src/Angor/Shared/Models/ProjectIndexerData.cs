@@ -1,4 +1,4 @@
-namespace Angor.Shared.Services;
+namespace Angor.Shared.Models;
 
 public class ProjectIndexerData
 {

@@ -1,0 +1,48 @@
+version: "2.4"
+
+services:
+  proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: proxy
+    # mem_limit: 1024m
+    # cpus: 0.500
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - conf:/etc/nginx/conf.d
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - dhparam:/etc/nginx/dhparam
+      - certs:/etc/nginx/certs:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx.conf:/etc/nginx/conf.d/blockcore.conf:ro
+    restart: unless-stopped
+    networks: 
+      - proxy
+
+  letsencrypt:
+    image: nginxproxy/acme-companion:2.2.1
+    container_name: letsencrypt
+    # mem_limit: 1024m
+    # cpus: 0.200
+    volumes_from:
+      - proxy
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    networks: 
+      - proxy
+      
+networks:
+  proxy:
+    external: false
+    name: proxy
+    
+volumes:
+  conf:
+  vhost:
+  html:
+  dhparam:
+  certs:

@@ -1,0 +1,169 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+        xmlns:c="clr-namespace:AngorApp.UI.Controls">
+
+    <Styles.Resources>
+        
+        <SolidColorBrush x:Key="PaneBackground" Color="{StaticResource Level2}" />
+        <SolidColorBrush x:Key="ItemPaneBackground" Color="{StaticResource Level2}" />
+
+        <ControlTheme x:Key="{x:Type c:Pane}" TargetType="c:Pane">
+            <Setter Property="HeaderHeight" Value="200" />
+            <Setter Property="Padding" Value="25" />
+            <Setter Property="Background" Value="{StaticResource ItemPaneBackground}" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="TitlePadding" Value="0 0 0 10" />
+            <Setter Property="Margin" Value="5, 5, 15, 15" />
+            <Setter Property="Effect">
+                <DropShadowEffect BlurRadius="20" Opacity="0.4" />
+            </Setter>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border x:Name="PART_RootBorder"
+                            
+                            ClipToBounds="True"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                        <DockPanel>
+
+                            <c:Header IsVisible="{TemplateBinding IsHeaderVisible}"
+                                      Height="{TemplateBinding HeaderHeight}"
+                                      DockPanel.Dock="Top"
+                                      IconUri="{TemplateBinding HeaderIcon}"
+                                      BackgroundImageUri="{TemplateBinding HeaderBackground}" />
+
+                            <DockPanel Margin="{TemplateBinding Padding}" x:Name="TitleAndContent">
+
+                                <DockPanel IsVisible="{TemplateBinding IsTitleVisible}" DockPanel.Dock="Top">
+                                    <ContentControl VerticalAlignment="Center" Content="{TemplateBinding TitleIcon}" IsVisible="{Binding $parent[c:Pane].TitleIcon, Converter={x:Static ObjectConverters.IsNotNull}}" DockPanel.Dock="Left" Margin="0 0 15 0">
+                                        <ContentControl.Styles>
+                                            <Style Selector="avalonia|Icon">
+                                                <Setter Property="FontSize" Value="36" />
+                                            </Style>
+                                        </ContentControl.Styles>
+                                    </ContentControl>
+                                    <ContentControl VerticalAlignment="Center" Content="{TemplateBinding TitleRightContent}" DockPanel.Dock="Right" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock ToolTip.Tip="{Binding $self.Text}" TextTrimming="CharacterEllipsis" x:Name="PART_Title" Text="{TemplateBinding Title}" />
+                                        <TextBlock ToolTip.Tip="{Binding $self.Text}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" x:Name="PART_Subtitle" Text="{TemplateBinding Subtitle}" IsVisible="{Binding !!$self.Text}" />
+                                    </StackPanel>
+                                </DockPanel>
+                                <ContentPresenter x:Name="PART_ContentPresenter" Content="{TemplateBinding Content}" />
+                            </DockPanel>
+                        </DockPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            
+            <Style Selector="^ /template/ TextBlock#PART_Title">
+                <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
+            </Style>
+            <Style Selector="^ /template/ TextBlock#PART_Subtitle">
+                <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+            </Style>
+        </ControlTheme>
+
+        <ControlTheme x:Key="Borderless" TargetType="c:Pane" BasedOn="{StaticResource {x:Type c:Pane}}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Effect" Value="{x:Null}" />
+            <Setter Property="Margin" Value="0" />
+        </ControlTheme>
+        
+        <ControlTheme x:Key="Card" TargetType="c:Pane" BasedOn="{StaticResource {x:Type c:Pane}}">
+            <Setter Property="Padding" Value="30" />
+            <Style Selector="^ /template/ TextBlock#PART_Title">
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="TextAlignment" Value="Left" />
+                <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Margin" Value="0 10 0 0" />
+            </Style>
+        </ControlTheme>
+        
+    </Styles.Resources>
+
+    <Design.PreviewWith>
+        <StackPanel Orientation="Horizontal">
+
+            <c:Pane Margin="20" Title="Title" VerticalAlignment="Top">
+                <c:Pane.Content>
+                    <DockPanel>
+                        <c:IconButton DockPanel.Dock="Bottom" HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
+                            <c:IconButton.Icon>
+                                <avalonia:Icon Value="fa-folder" />
+                            </c:IconButton.Icon>
+                        </c:IconButton>
+                        <Separator Margin="0 10" DockPanel.Dock="Bottom" />
+
+                        <StackPanel DockPanel.Dock="Top">
+                            <TextBlock Foreground="Orange" FontSize="20" Text="Some project" />
+                            <TextBlock Text="Some description" />
+                        </StackPanel>
+                    </DockPanel>
+                </c:Pane.Content>
+                <c:Pane.TitleIcon>
+                    <avalonia:Icon Value="fa-wallet" />
+                </c:Pane.TitleIcon>
+                <c:Pane.HeaderBackground>/Assets/community.png</c:Pane.HeaderBackground>
+                <c:Pane.HeaderIcon>/Assets/community.png</c:Pane.HeaderIcon>
+                <c:Pane.Icon>
+                    <avalonia:Icon Value="fa-wallet" />
+                </c:Pane.Icon>
+            </c:Pane>
+
+            <c:Pane Margin="20" Height="500" Width="300" Title="Title"
+                    IsHeaderVisible="True"
+                    VerticalAlignment="Top"
+                    TitleRightContent="Right"
+                    IsTitleVisible="True">
+                <c:Pane.Content>
+                    <DockPanel>
+                        <c:IconButton DockPanel.Dock="Bottom" HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
+                            <c:IconButton.Icon>
+                                <avalonia:Icon Value="fa-folder" />
+                            </c:IconButton.Icon>
+                        </c:IconButton>
+                        <Separator Margin="0 10" DockPanel.Dock="Bottom" />
+
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Foreground="Orange" FontSize="20" Text="Some project" />
+                            <TextBlock Text="Some description" />
+                        </StackPanel>
+                    </DockPanel>
+                </c:Pane.Content>
+                <c:Pane.TitleIcon>
+                    <avalonia:Icon Value="fa-wallet" />
+                </c:Pane.TitleIcon>
+                <c:Pane.HeaderBackground>
+                    /Assets/community.png
+                </c:Pane.HeaderBackground>
+                <c:Pane.HeaderIcon>
+                    /Assets/community.png
+                </c:Pane.HeaderIcon>
+                <c:Pane.Icon>
+                    <avalonia:Icon Value="fa-wallet" />
+                </c:Pane.Icon>
+            </c:Pane>
+
+            <c:Pane VerticalAlignment="Top" Title="Title" Subtitle="Subtitle" IsTitleVisible="True">
+                Content
+            </c:Pane>
+
+            <c:Pane Theme="{StaticResource Borderless}" VerticalAlignment="Top" Title="Title" Subtitle="Subtitle" IsTitleVisible="True">
+                Content
+            </c:Pane>
+
+            <c:Pane Theme="{StaticResource Card}" VerticalAlignment="Top" Title="Setup Wallet" IsTitleVisible="True" Width="300" Height="200">
+                <TextBlock TextWrapping="Wrap">
+                    Create a new <InlineUIContainer><HyperlinkButton Padding="0" Content="wallet"></HyperlinkButton></InlineUIContainer> or recover your existing one to get started with Angor
+                </TextBlock>
+            </c:Pane>
+
+        </StackPanel>
+    </Design.PreviewWith>
+
+</Styles>

@@ -50,9 +50,9 @@ public class DerivationOperations : IDerivationOperations
         for (int i = 1; i <= 15; i++)
         {
             var founderKey = DeriveFounderKey(walletWords, i);
-            var founderRecoveryKey = DeriveFounderRecoveryKey(walletWords, i);
+            var founderRecoveryKey = DeriveFounderRecoveryKey(walletWords, founderKey);
             var projectIdentifier = DeriveAngorKey(founderKey, angorTestKey);
-            var nostrPubKey = DeriveNostrPubKey(walletWords, i);
+            var nostrPubKey = DeriveNostrPubKey(walletWords, founderKey);
             
             founderKeyCollection.Keys.Add(new FounderKeys
             {
@@ -81,13 +81,13 @@ public class DerivationOperations : IDerivationOperations
 
     }
 
-    public string DeriveSeederSecretHash(WalletWords walletWords, string founderKey)
+    public string DeriveLeadInvestorSecretHash(WalletWords walletWords, string founderKey)
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
-        var projectid = this.DeriveProjectId(founderKey);
+        var upi = this.DeriveUniqueProjectIdentifier(founderKey);
 
-        var path = $"m/5'/{projectid}'/4'";
+        var path = $"m/5'/0'/{upi}'/2'";
 
         ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
 
@@ -102,9 +102,9 @@ public class DerivationOperations : IDerivationOperations
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
-        var projectid = this.DeriveProjectId(founderKey);
+        var upi = this.DeriveUniqueProjectIdentifier(founderKey);
 
-        var path = $"m/5'/{projectid}'/1'";
+        var path = $"m/5'/0'/{upi}'/3'";
 
         ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
 
@@ -115,9 +115,9 @@ public class DerivationOperations : IDerivationOperations
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
-        var projectid = this.DeriveProjectId(founderKey);
+        var upi = this.DeriveUniqueProjectIdentifier(founderKey);
 
-        var path = $"m/5'/{projectid}'/1'";
+        var path = $"m/5'/0'/{upi}'/3'";
 
         ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
 
@@ -128,7 +128,6 @@ public class DerivationOperations : IDerivationOperations
 
     public string DeriveFounderKey(WalletWords walletWords, int index)
     {
-        // founder key is derived from the path m/5'
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var path = $"m/5'/{index}'";
@@ -138,26 +137,26 @@ public class DerivationOperations : IDerivationOperations
         return extPubKey.PubKey.ToHex();
     }
     
-    public string DeriveNostrPubKey(WalletWords walletWords, int index)
+    public string DeriveNostrPubKey(WalletWords walletWords, string founderKey)
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
-        var path = $"m/44'/1237'/{index}/0/0";
+        var upi = this.DeriveUniqueProjectIdentifier(founderKey);
+
+        var path = $"m/44'/1237'/{upi}'/0/0";
 
         ExtKey extKey = extendedKey.Derive(new KeyPath(path));
 
         return extKey.PrivateKey.PubKey.ToHex()[2..]; //Need the pub key without prefix TODO find a better way to get the Schnorr pub key
     }
 
-    public string DeriveFounderRecoveryKey(WalletWords walletWords, int index)
+    public string DeriveFounderRecoveryKey(WalletWords walletWords, string founderKey)
     {
-        // founder recovery key is derived from the path m/6'
-
-        Network network = _networkConfiguration.GetNetwork();
-
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
-        var path = $"m/6'/{index}'";
+        var upi = this.DeriveUniqueProjectIdentifier(founderKey);
+
+        var path = $"m/5'/0'/{upi}'/1'";
 
         ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
 
@@ -166,7 +165,6 @@ public class DerivationOperations : IDerivationOperations
 
     public Key DeriveFounderPrivateKey(WalletWords walletWords, int index)
     {
-        // founder key is derived from the path m/5'
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var path = $"m/5'/{index}'";
@@ -176,15 +174,10 @@ public class DerivationOperations : IDerivationOperations
         return extKey.PrivateKey;
     }
 
-    public Key DeriveFounderRecoveryPrivateKey(WalletWords walletWords, int index)
+    public Key DeriveFounderRecoveryPrivateKey(WalletWords walletWords, string founderKey)
     {
-        // founder key is derived from the path m/5'
-
-
-        Network network = _networkConfiguration.GetNetwork();
-
-
         ExtKey extendedKey;
+
         try
         {
             extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
@@ -199,39 +192,35 @@ public class DerivationOperations : IDerivationOperations
             throw;
         }
 
-        var path = $"m/6'/{index}'";
+        var upi = this.DeriveUniqueProjectIdentifier(founderKey);
+
+        var path = $"m/5'/0'/{upi}'/1'";
+
+        ExtKey extKey = extendedKey.Derive(new KeyPath(path));
+
+        return extKey.PrivateKey;
+    }
+
+    public Key DeriveProjectNostrPrivateKey(WalletWords walletWords, string founderKey)
+    {
+        ExtKey extendedKey = GetExtendedKey(walletWords);
+
+        var upi = this.DeriveUniqueProjectIdentifier(founderKey);
+
+        var path = $"m/44'/1237'/{upi}'/0/0";
 
         ExtKey extKey = extendedKey.Derive(new KeyPath(path));
 
         return extKey.PrivateKey;
     }
     
-    public Key DeriveProjectNostrInvestorPrivateKey(WalletWords walletWords, string projectId)
+    public async Task<Key> DeriveProjectNostrPrivateKeyAsync(WalletWords walletWords, string founderKey)
     {
-        var hash = Hashes.Hash256(Encoding.UTF8.GetBytes(projectId)); //TODO check if this is too predictable
-        var index = (int)hash.GetLow32() & int.MaxValue;
-
-        return DeriveProjectNostrPrivateKey(walletWords, index);
-    }
-
-    public Key DeriveProjectNostrPrivateKey(WalletWords walletWords, int index)
-    {
-        // founder key is derived from the path m/5'
         ExtKey extendedKey = GetExtendedKey(walletWords);
+       
+        var upi = this.DeriveUniqueProjectIdentifier(founderKey);
 
-        var path = $"m/44'/1237'/{index}/0/0";
-
-        ExtKey extKey = extendedKey.Derive(new KeyPath(path));
-
-        return extKey.PrivateKey;
-    }
-    
-    public async Task<Key> DeriveProjectNostrPrivateKeyAsync(WalletWords walletWords, int index)
-    {
-        // founder key is derived from the path m/5'
-        ExtKey extendedKey = GetExtendedKey(walletWords);
-
-        var path = $"m/44'/1237'/{index}/0/0";
+        var path = $"m/44'/1237'/{upi}'/0/0";
 
         var task = Task.Run(() => extendedKey.Derive(new KeyPath(path)));
 
@@ -242,7 +231,7 @@ public class DerivationOperations : IDerivationOperations
         return extKey.PrivateKey;
     }
 
-    public uint DeriveProjectId(string founderKey)
+    public uint DeriveUniqueProjectIdentifier(string founderKey)
     {
         ExtKey.UseBCForHMACSHA512 = true;
         Hashes.UseBCForHMACSHA512 = true;
@@ -251,14 +240,46 @@ public class DerivationOperations : IDerivationOperations
 
         var hashOfid = Hashes.Hash256(key.ToBytes());
 
-        var projectId = (uint)(hashOfid.GetLow64() & int.MaxValue);
+        var upi = (uint)(hashOfid.GetLow64() & int.MaxValue);
         
-        _logger.LogInformation($"DeriveProjectId - founderKey = {founderKey}, hashOfFounderKey = {hashOfid}, hashOfFounderKeyCastToInt = {projectId}");
+        _logger.LogInformation($"Unique Project Identifier - founderKey = {founderKey}, hashOfFounderKey = {hashOfid}, hashOfFounderKeyCastToInt = {upi}");
         
-        if (projectId >= 2_147_483_648)
+        if (upi >= 2_147_483_648)
             throw new Exception();
         
-        return projectId;
+        return upi;
+    }
+
+    public string DeriveNostrStoragePubKeyHex(WalletWords walletWords)
+    {
+        var key = DeriveNostrStorageKey(walletWords);
+
+        return key.PubKey.ToHex()[2..]; //Need the pub key without prefix
+    }
+
+    public Key DeriveNostrStorageKey(WalletWords walletWords)
+    {
+        ExtKey extendedKey = GetExtendedKey(walletWords);
+
+        var path = $"m/44'/1237'/1'/0/0";
+
+        ExtKey extKey = extendedKey.Derive(new KeyPath(path));
+
+        return extKey.PrivateKey;
+    }
+
+    public string DeriveNostrStoragePassword(WalletWords walletWords)
+    {
+        var key = DeriveNostrStorageKey(walletWords);
+
+         var privateKeyBytes = key.ToBytes();
+
+        var hashedKey = Hashes.Hash256(new Span<byte>(privateKeyBytes));
+
+        // the hex of the hash of the private key is the password
+        var hex = Encoders.Hex.EncodeData(hashedKey.ToArray()).Replace("-", "").ToLower();
+
+        return hex;
     }
 
     public string DeriveAngorKey(string founderKey, string angorRootKey)
@@ -267,18 +288,15 @@ public class DerivationOperations : IDerivationOperations
 
         var extKey = new BitcoinExtPubKey(angorRootKey, network).ExtPubKey;
 
-        var projectid = this.DeriveProjectId(founderKey);
+        var upi = this.DeriveUniqueProjectIdentifier(founderKey);
 
-        var path = $"{projectid}";
-
-        var angorKey = extKey.Derive(projectid).PubKey;
+        var angorKey = extKey.Derive(upi).PubKey;
         
         var encoder = new Bech32Encoder("angor");
 
         var address = encoder.Encode(0, angorKey.WitHash.ToBytes());
 
-        _logger.LogInformation($"DeriveAngorKey - angorRootKey = {angorRootKey}, founderKey = {founderKey}, projectid = {projectid}, angorKey = {angorKey}, angorKeyWitHash = {angorKey.WitHash}, address = {address}");
-
+        _logger.LogInformation($"DeriveAngorKey - angorRootKey = {angorRootKey}, founderKey = {founderKey}, upi = {upi}, angorKey = {angorKey}, angorKeyWitHash = {angorKey.WitHash}, address = {address}");
 
         return address;
     }

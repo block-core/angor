@@ -4,15 +4,17 @@
 @using Angor.Shared.Models
 @using Angor.Shared.Services
 @using Nostr.Client.Messages
+@using Angor.Client.Shared
 
 @inject NavigationManager NavigationManager
+@inject NavMenuState NavMenuState
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
 @inject IRelayService RelayService;
 @inject IIndexerService _IndexerService
 @inject ISerializer serializer
 
-<NotificationComponent @ref="notificationComponent"/>
+<NotificationComponent @ref="notificationComponent" />
 
 @if (!hasWallet)
 {
@@ -20,53 +22,62 @@
     return;
 }
 
-<div class="row">
+<div class="header-container slide-in">
     <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="founder" Height="42" Width="42"/>
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="founder" Width="32" Height="32" />
                 </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Founder
-                    </h5>
-
-                </div>
+                <h5 class="header-text">Founder</h5>
             </div>
-            <button class="btn btn-border" @onclick="NavigateToCreateProject" disabled="@scanningForProjects">
-                <i>
-                    <Icon IconName="add"></Icon>
-                </i>
-                <span class="nav-link-text ms-1">
-                    @(scanningForProjects ? "Scanning..." : "Create Project")
-                </span>
-            </button>
+            <div class="header-actions">
+                <div class="tooltip-container" data-bs-toggle="tooltip" title="@GetCreateButtonTooltip()">
+                    <button class="btn btn-border-success"
+                            @onclick="NavigateToCreateProject"
+                            disabled="@(scanningForProjects || (founderProjects.Count >= 14) ? true : null)">
+                        @if (scanningForProjects)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span class="button-text ms-2">Scanning...</span>
+                        }
+                        else
+                        {
+                            <Icon IconName="add" Width="24" Height="24" />
+                            <span class="button-text ms-2">Create Project</span>
+                        }
+                    </button>
+                </div>
 
+            </div>
         </div>
-        <p class="mb-0 font-weight-normal text-sm mt-4">
-            To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required.
+    </div>
+</div>
+
+
+<div class="row slide-in mt-4">
+    <div class="card card-body">
+        <p class="mb-0 font-weight-normal text-sm animate-fade-in-delayed">
+            To create a new project, an on-chain transaction and a Nostr DID are created.
         </p>
     </div>
 </div>
 
 @if (founderProjects.Count == 0)
 {
-    <div class="row mt-4">
-        <div class="card card-body angor-alert-info pt-2 pb-2">
-            <div class="d-flex align-items-center align-items-center">
-                <span class="me-3 user-select-none">
-                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)"/>
-                </span>
-                <span class="text-white">No projects found.</span>
-            </div>
+    <div class="row">
+        <div class="info-alert my-4 ">
+            <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
+            <p class="text-warning">
+                No projects found.
+            </p>
         </div>
     </div>
 }
 
 @if (founderProjects.Count > 0)
 {
-    <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper" data-cy="project-grid">
+    <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper g-4" data-cy="project-grid">
         @foreach (var project in founderProjects)
         {
             <FounderProjectItem FounderProject="@project"></FounderProjectItem>
@@ -77,7 +88,7 @@
 <div class="row">
     <div class="col">
         <div class="d-flex justify-content-center mt-4">
-            <button class="btn btn-border my-3" @onclick="LookupProjectKeysOnIndexerAsync">
+            <button class="btn btn-border my-3 w-100-m" @onclick="LookupProjectKeysOnIndexerAsync">
                 <i class="@(scanningForProjects ? "rotate-icon" : "")">
                     <Icon IconName="refresh"></Icon>
                 </i>
@@ -99,6 +110,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Set active menu
+        NavMenuState.SetActivePage("founder");
+        
         hasWallet = _walletStorage.HasWallet();
 
         if (hasWallet)
@@ -154,10 +168,10 @@
                         break;
 
                     case { Kind: NostrKind.ApplicationSpecificData }:
-                        
+
                         if (e.Id != founderProjectsToLookup[e.Pubkey].NostrEventId)
                             return;
-                        
+
                         var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
                         var project = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
 
@@ -172,7 +186,7 @@
                         {
                             project ??= CreateFounderProject(founderProjectsToLookup, e, projectInfo);
                             founderProjects.Add(project);
-                        }   
+                        }
 
                         break;
                 }
@@ -200,7 +214,7 @@
             founderProjectsToLookup.Keys.ToArray());
     }
 
-    private FounderProject CreateFounderProject(Dictionary<string, ProjectIndexerData> founderProjectsToLookup, 
+    private FounderProject CreateFounderProject(Dictionary<string, ProjectIndexerData> founderProjectsToLookup,
         NostrEvent e, ProjectInfo? projectInfo = null)
     {
         var keys = _walletStorage.GetFounderKeys();
@@ -208,13 +222,13 @@
         var trxId = founderProjectsToLookup[e.Pubkey].TrxId;
 
         return new FounderProject
-        {
-            ProjectInfo = projectInfo ?? new ProjectInfo { NostrPubKey = e.Pubkey },
-            ProjectIndex = projectIndex,
-            CreationTransactionId = trxId,
-            NostrProfileCreated = true,
-            ProjectInfoEventId = founderProjectsToLookup[e.Pubkey].NostrEventId
-        };
+            {
+                ProjectInfo = projectInfo ?? new ProjectInfo { NostrPubKey = e.Pubkey },
+                ProjectIndex = projectIndex,
+                CreationTransactionId = trxId,
+                NostrProfileCreated = true,
+                ProjectInfoEventId = founderProjectsToLookup[e.Pubkey].NostrEventId
+            };
     }
 
     private async Task NavigateToCreateProject()
@@ -224,5 +238,14 @@
 
         NavigationManager.NavigateTo("/create");
     }
+    private string GetCreateButtonTooltip()
+    {
+        if (founderProjects.Count >= 15)
+            return "You have reached the maximum number of projects. Please manage your existing projects.";
+        if (scanningForProjects)
+            return "Scanning in progress...";
+        return "Create a new project.";
+    }
+
 
 }

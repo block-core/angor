@@ -4,10 +4,11 @@ public class SignRecoveryRequest
 {
     public string ProjectIdentifier { get; set; }
 
-    public string InvestorNostrPrivateKey { get; set; }
-    public string NostrPubKey { get; set; }
-    
-    public string InvestmentTransaction { get; set; }
+    public string UnfundedReleaseAddress{ get; set; }
 
-    public string EncryptedContent { get; set; }
+    public string UnfundedReleaseKey { get; set; }
+
+    public string InvestmentTransactionHex { get; set; }
+
+    public string AdditionalNpub { get; set; }
 }

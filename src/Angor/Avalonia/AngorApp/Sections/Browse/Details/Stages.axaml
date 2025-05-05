@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
+             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Browse.Details.Stages" x:DataType="dt:IProjectDetailsViewModel">
+    
+    <Design.DataContext>
+        <dt:ProjectDetailsViewModelDesign />
+    </Design.DataContext>
+    
+    <controls:Pane IsTitleVisible="True" Title="Stages">
+        <controls:Pane.TitleIcon>
+            <avalonia:Icon Value="fa-solid fa-timeline" />
+        </controls:Pane.TitleIcon>
+
+        <z:SlimDataGrid ItemsSource="{Binding Project.Stages}">
+            <z:SlimDataGrid.Columns>
+                <z:Column Header="STAGE" Binding="{Binding Index}" />
+                <z:Column Header="STAGE %" Binding="{Binding RatioOfTotal, StringFormat={}{0:P0}}" />
+                <z:Column Header="RELEASE DATE" Binding="{Binding ReleaseDate, StringFormat=d}" />
+                <z:Column Header="DAYS UNTIL STAGE" Binding="{Binding ReleaseDate, Converter={x:Static controls:MiscConverters.TimeLeft}}" />
+                <z:Column Header="AMOUNT PER STAGE" Binding="{Binding Amount, Converter={x:Static controls:MiscConverters.SatsToBtc}, StringFormat={}{0} TBTC}" />
+            </z:SlimDataGrid.Columns>
+        </z:SlimDataGrid>
+    </controls:Pane>
+
+</UserControl>

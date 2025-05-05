@@ -14,43 +14,41 @@
 @inject INetworkStorage _networkStorage
 @inject IClientStorage storage;
 
-<div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show @sidenavClass ">
-    <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 b-shadow overflow-x-hidden" id="sidenav-main">
-        <NavMenu ToggleSidenavCallback="ToggleSidenavMobile" ToggleSidenavTextCallback="ToggleSidenav" ToggleleLockMenuCallback="ToggleLockMenu" />
-    </aside>
-
-    <main class="main-content d-flex flex-column min-vh-100">
+<div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show @(isSidebarCollapsed ? "sidenav-hidden" : "")">
+    <NavMenu @bind-IsCollapsed="isSidebarCollapsed" IsDarkTheme="isDarkTheme"/>
+    <main class="main-content">
         <!-- Navbar -->
-        <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 border-radius-xl position-sticky mt-3 z-index-sticky left-auto" id="navbarBlur" data-scroll="true">
-            <div class="container-fluid py-1 px-3">
-                <nav>
-                    <div class="mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-                        <div class="text-sm">
-                            <h6 class="font-weight-bolder" title="Alpha app - only use test wallets.">Network - @networkText</h6>
-                        </div>
+        <nav class="navbar navbar-main navbar-expand-lg px-0 border-radius-xl position-sticky mt-3 z-index-sticky left-auto ms-2 me-2" id="navbarBlur">
+            <div class="container-fluid">
+                <nav class="d-flex align-items-center">
+                    <!-- Logo for mobile view -->
+                    <div class="mobile-logo d-lg-none me-2">
+                        <a href="/" class="d-flex align-items-center text-decoration-none">
+                            <Icon IconName="angor-logo" />
+                            <span class="angor-label ms-2">Angor</span>
+                        </a>
+                    </div>
+                    <div class="text-sm">
+                        <h6 class="font-weight-bolder m-0" title="@networkText">
+                            <Icon IconName="network" class="me-2 d-none d-lg-inline" />
+                            <span>@networkText</span>
+                        </h6>
                     </div>
                 </nav>
-                <div class="collapse navbar-collapse" id="navbar">
-                    <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-                    </div>
-                    <ul class="navbar-nav justify-content-end user-select-none">
-                        <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
-                            <span role="button" class="material-icons opacity-10 btn-angor fs-3" id="iconNavbarSidenav" @onclick="ToggleSidenav" data-tooltip="Open menu">
-                                <Icon IconName="hamburger-menu" />
-                            </span>
-                        </li>
-                        <li class="nav-item ps-3 d-flex align-items-center d-none" id="updateButton">
-                            <span @onclick="UpdateApp" role="button" data-tooltip="Get latest version">
+                <div class="navbar-collapse">
+                    <ul class="navbar-nav user-select-none">
+                        <li class="nav-item d-none" id="updateButton">
+                            <span role="button" @onclick="UpdateApp" data-tooltip="Update application">
                                 <Icon IconName="update" />
                             </span>
                         </li>
-                        <li class="nav-item ps-3 d-flex align-items-center" id="dark" @onclick="ToggleTheme">
-                            <span role="button" id="theme-icon" data-tooltip="Toggle theme">
+                        <li class="nav-item" id="dark" @onclick="ToggleTheme">
+                            <span role="button" id="theme-icon" data-tooltip="Switch theme">
                                 <Icon IconName=@themeIcon />
                             </span>
                         </li>
-                        <li class="nav-item ps-3 d-flex align-items-center d-none" id="installButton">
-                            <span @onclick="InstallApp" role="button" data-tooltip="Install app">
+                        <li class="nav-item d-none" id="installButton">
+                            <span role="button" @onclick="InstallApp" data-tooltip="Install application">
                                 <Icon IconName="install" />
                             </span>
                         </li>
@@ -60,22 +58,24 @@
         </nav>
         <!-- End Navbar -->
 
-        <div class="container my-4">
-            @Body
-        </div>
+        <div class="content-wrapper">
+            <div class="container-fluid py-4 page-content @(isSidebarCollapsed ? "sidebar-collapsed" : "")">
+                @Body
+            </div>
 
-        <footer class="footer mt-auto py-3 px-0 mx-3 left-auto">
-            <div class="row">
-                <div class="nav nav-footer justify-content-center">
-                    <div class="card card-body border-radius-lg d-flex align-items-center flex-row p-3 ms-0 me-0">
-                        <h6 class="mb-0">Version: @_softwareVersion</h6>
-                        <a href="https://github.com/block-core/angor" class="ms-auto text-dark cursor-pointer" target="_blank">
-                            <Icon IconName="github" />
-                        </a>
+            <footer class="footer py-3 px-0 mx-2">
+                <div class="row">
+                    <div class="nav nav-footer justify-content-center">
+                        <div class="card card-body border-radius-lg d-flex align-items-center flex-row p-3 ms-0 me-0">
+                            <h6 class="mb-0">Version: @_softwareVersion</h6>
+                            <a href="https://github.com/block-core/angor" class="ms-auto text-dark cursor-pointer" target="_blank" rel="noopener noreferrer">
+                                <Icon IconName="github" />
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </footer>
+            </footer>
+        </div>
     </main>
 </div>
 
@@ -85,6 +85,7 @@
     private bool isLockMenu = false;
     private string themeIcon = "light_mode";
     private string sidenavClass = "sidenav-hidden";
+    private bool isSidebarCollapsed;
 
     private string networkText = string.Empty;
 
@@ -164,6 +165,14 @@
         {
             isDarkTheme = storedTheme == "dark";
             await UpdateThemeIcon(isDarkTheme);
+            if (isDarkTheme)
+            {
+                await Js.InvokeVoidAsync("angor.addDarkBackground");
+            }
+            else
+            {
+                await Js.InvokeVoidAsync("angor.addLightBackground");
+            }
         }
     }
 
@@ -207,26 +216,12 @@
 
     private void ToggleSidenavMobile()
     {
-        if (isLockMenu)
-        {
-            sidenavClass = "";
-        }
-        else
-        {
-            sidenavClass = "sidenav-hidden";
-        }
+        isSidebarCollapsed = !isSidebarCollapsed;
     }
 
     private void ToggleSidenav()
     {
-        if (isLockMenu)
-        {
-            sidenavClass = (sidenavClass == "sidenav-pinned") ? "" : "sidenav-pinned";
-        }
-        else
-        {
-            sidenavClass = (sidenavClass == "sidenav-hidden") ? "sidenav-pinned" : "sidenav-hidden";
-        }
+        isSidebarCollapsed = !isSidebarCollapsed;
     }
 
     private void ToggleLockMenu()

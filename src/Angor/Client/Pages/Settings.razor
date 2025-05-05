@@ -4,6 +4,7 @@
 @using Angor.Shared.Models;
 @using Angor.Client.Services
 @using Angor.Shared.Services
+@using Angor.Client.Shared
 
 @inject INetworkConfiguration _networkConfiguration
 @inject INetworkService _networkService
@@ -19,33 +20,29 @@
 <NotificationComponent @ref="notificationComponent" />
 
 @* Settings *@
-<div class="row">
+
+<div class="header-container slide-in">
     <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex col-auto my-auto align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="settings" Height="42" Width="42" />
+        <div class="header-content">
+            <div class="header-title animate-fade-in">
+                <span class="header-icon-wrapper">
+                    <Icon IconName="settings" Width="32" Height="32" />
                 </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Settings
-                    </h5>
-
-                </div>
+                <h5 class="header-text">Settings</h5>
             </div>
-
-
+            <div class="header-actions">
+            </div>
         </div>
     </div>
 </div>
 
 @* Change Network *@
-<div class="row mt-4">
+<div class="row mt-4 slide-in">
     <div class="card card-body">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="network" Height="42" Width="42"></Icon>
+                <span class="user-select-none animate-rotate">
+                    <Icon IconName="network" Height="32" Width="32"></Icon>
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
@@ -58,71 +55,73 @@
             </div>
             <div>
 
-                <button class="btn btn-warning" @onclick="() => showChangeNetworkModal = true">
-                    <Icon IconName="change" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
+                <button class="btn btn-border-danger" @onclick="() => showChangeNetworkModal = true">
+                    <Icon IconName="change" Height="24" Width="24" />
+                    <span class="ms-2 d-none d-md-inline">Change Network</span>
                 </button>
 
                 @if (showChangeNetworkModal)
                 {
                     <div class="modal-wrapper">
-                        <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="coinControlModalLabel">Change Network</h5>
-                                        <span type="button" data-bs-dismiss="modal" @onclick="() => showChangeNetworkModal = false" aria-label="Close">
-                                            <Icon IconName="close-circle" />
-                                        </span>
-                                    </div>
-                                    <div class="modal-body modal-body-scroll">
-                                        <div class="alert alert-danger" role="alert">
-                                            <h5>This will wipe your wallet!</h5>
+                        <div class="modal fade show d-block" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content modern-modal">
+                                    <div class="modal-header border-0 pb-0">
+                                        <div class="d-flex align-items-center">
+                                            <Icon IconName="network" Height="32" Width="32" class="me-2" />
+                                            <h5 class="modal-title">Change Network</h5>
                                         </div>
+                                        <button class="btn-close-custom" @onclick="() => showChangeNetworkModal = false">
+                                            <Icon IconName="close-circle" Height="24" Width="24" />
+                                        </button>
+                                    </div>
 
-                                        <div class="card">
-                                            <div class="card-header p-2">
-                                                <div class="d-flex align-items-center text-warning">
-                                                    <span>Warning</span>
-                                                </div>
+                                    <div class="modal-body modal-body-scroll py-4">
+                                        <div class="transaction-info-section">
+                                            <div class="alert alert-danger" role="alert">
+                                                <p>This will wipe your wallet!</p>
                                             </div>
-                                            <div class="card-body pb-0 pt-0 ps-3 pe-3">
-                                                <p class="mb-0">By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
-                                            </div>
-                                            <div class="card-footer pb-2 pt-2 ps-3 pe-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
+
+                                            <div class="" role="alert">
+                                                <p class="mb-0 text-bl">
+                                                    Warning: By confirming, you agree to wiping all data
+                                                    from this device since you have a backup of your wallet words.
+                                                </p>
+                                                <div class="form-check mt-4 mb-4">
+                                                    <input class="form-check-input border mt-0" type="checkbox"
+                                                           id="confirmWipeCheckbox" @bind="confirmWipe">
                                                     <label class="form-check-label mb-0" for="confirmWipeCheckbox">
                                                         Confirm?
                                                     </label>
                                                 </div>
                                                 @if (showConfirmWipeMessage)
                                                 {
-                                                    <div class="alert alert-danger text-white mt-2" role="alert">
+                                                    <div class="alert alert-danger mb-4" role="alert">
                                                         Please tick the box to wipe all storage!
                                                     </div>
                                                 }
+                                            </div>
 
+                                            <div class="info-card mb-3">
+                                                <label for="networkSelection" class="info-label m-0">Select Network:</label>
+                                                <select class="form-control mt-2" id="networkSelection"
+                                                        @bind="selectedNetwork">
+                                                    <option value="Angornet" selected>Angornet</option>
+                                                    <option value="TestNet4" disabled selected>Testnet4</option>
+                                                    <option value="Signet" disabled selected>Signet</option>
+                                                    <option value="TestNet" disabled selected>Testnet</option>
+                                                    <option value="Main">Mainnet</option>
+                                                    <option value="Liquid" disabled>Liquid</option>
+                                                </select>
                                             </div>
                                         </div>
-
-
-                                        <!-- Dropdown for network selection -->
-                                        <div class="card card-body mb-3 mt-4">
-                                            <label for="networkSelection">Select Network:</label>
-                                            <select class="form-control mt-2" id="networkSelection" @bind="selectedNetwork">
-                                                <option value="Angornet" selected>Angornet</option>
-                                                <option value="TestNet4" disabled selected>Testnet4</option>
-                                                <option value="Signet" disabled selected>Signet</option>
-                                                <option value="TestNet" disabled selected>Testnet</option>
-                                                <option value="Main">Mainnet</option>
-                                                <option value="Liquid" disabled>Liquid</option>
-                                            </select>
-                                        </div>
-
                                     </div>
-                                    <div class="modal-footer">
-                                        <button class="btn btn-danger" @onclick="ChangeNetwork">Change Network</button>
-                                     </div>
+
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button class="btn btn-border-success w-100 w-md-auto" @onclick="ChangeNetwork">
+                                            Change Network
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -134,40 +133,95 @@
 </div>
 
 @* Explorer *@
-<div class="row mt-4">
+<div class="row mt-4 slide-in">
     <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="explorer" Height="42" Width="42"></Icon>
+                <span class="user-select-none animate-rotate">
+                    <Icon IconName="explorer" Height="32" Width="32"></Icon>
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
                         Explorer
                     </h5>
-                    <p class="mb-0 mt-2 font-weight-normal text-sm">
-                        Explorer url: <a href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url">@_networkConfiguration.GetDefaultExplorerUrl().First().Url</a>
-                    </p>
                 </div>
             </div>
-            <div>
-                <a class="btn btn-success" href="@_networkConfiguration.GetDefaultExplorerUrl().First().Url" target="_blank">
-                    <Icon IconName="link" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
-                </a>
+            @* <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh" *@
+            @*         disabled="@refreshSpinner"> *@
+            @*     @if (refreshSpinner) *@
+            @*     { *@
+            @*         <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status" *@
+            @*               aria-hidden="true"> *@
+            @*         </span> *@
+            @*     } *@
+            @*     else *@
+            @*     { *@
+            @*         <Icon IconName="refresh" Height="24" Width="24" /> *@
+            @*     } *@
+            @* </button> *@
+        </div>
+        <form @onsubmit="AddExplorer">
+            <div class="input-group mb-3">
+                <input type="text" @bind-value="newExplorerLink" class="form-control"
+                       placeholder="Enter new explorer link" aria-label="Enter new explorer link"
+                       aria-describedby="button-addon3">
+                <button class="btn btn-border" type="submit" id="button-addon3">
+                    <Icon IconName="plus" Height="24" Width="24"></Icon>
+                </button>
             </div>
+        </form>
+        <div class="table-responsive form-control">
+            <table class="table align-items-center mb-0">
+                <thead>
+                    <tr>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var explorer in settingsInfo.Explorers)
+                    {
+                        <tr>
+                            <td><a href="@explorer.Url" target="_blank" rel="noopener noreferrer">@explorer.Url</a></td>
+                            @* <td style="color: @(explorer.Status == UrlStatus.Online ? "green" : explorer.Status == UrlStatus.NotReady ? "yellow" : "red");"> *@
+                            @*     @explorer.Status.ToString() *@
+                            @* </td> *@
+                            <td>
+                                @if (explorer.IsPrimary)
+                                {
+                                    <span role="button">
+                                        <Icon IconName="primary" Height="24" Width="24"></Icon>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span @onclick="() => SetPrimaryExplorer(explorer)" role="button">
+                                        <Icon IconName="set" Height="24" Width="24"></Icon>
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-border-danger btn-sm" @onclick="() => RemoveExplorer(explorer.Url)">
+                                    <Icon IconName="delete" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-
 @* Indexer *@
-<div class="row mt-4">
+<div class="row mt-4 slide-in">
 
     <div class="card card-body">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="indexer" Height="42" Width="42"></Icon>
+                <span class="user-select-none animate-rotate">
+                    <Icon IconName="indexer" Height="32" Width="32"></Icon>
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
@@ -176,15 +230,25 @@
 
                 </div>
             </div>
-            <button class="btn btn-success" @onclick="Refresh" disabled="@refreshSpinner">
-                <span role="status" aria-hidden="true" class="@(refreshSpinner ? "rotate-icon" : "")">
-                    <Icon IconName="refresh" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
-                </span>
+            <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh"
+                    disabled="@refreshSpinner">
+                @if (refreshSpinner)
+                {
+                    <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status"
+                          aria-hidden="true">
+                    </span>
+                }
+                else
+                {
+                    <Icon IconName="refresh" Height="24" Width="24" />
+                }
             </button>
         </div>
         <form @onsubmit="AddIndexer">
             <div class="input-group mb-3">
-                <input type="text" @bind-value="newIndexerLink" class="form-control" placeholder="Enter new indexer link" aria-label="Enter new indexer link" aria-describedby="button-addon">
+                <input type="text" @bind-value="newIndexerLink" class="form-control"
+                       placeholder="Enter new indexer link" aria-label="Enter new indexer link"
+                       aria-describedby="button-addon">
                 <button class="btn btn-border" type="submit" id="button-addon">
                     <Icon IconName="plus" Height="24" Width="24"></Icon>
                 </button>
@@ -204,8 +268,10 @@
                     @foreach (var indexer in settingsInfo.Indexers)
                     {
                         <tr>
-                            <td><a href="@indexer.Url" target="_blank">@indexer.Url</a></td>
-                            <td style="color: @(indexer.Status == UrlStatus.Online ? "green" : indexer.Status == UrlStatus.NotReady ? "yellow" :  "red");">@indexer.Status.ToString()</td>
+                            <td><a href="@indexer.Url" target="_blank" rel="noopener noreferrer">@indexer.Url</a></td>
+                            <td style="color: @(indexer.Status == UrlStatus.Online ? "green" : indexer.Status == UrlStatus.NotReady ? "yellow" : "red");">
+                                @indexer.Status.ToString()
+                            </td>
                             <td>
                                 @if (indexer.IsPrimary)
                                 {
@@ -221,8 +287,8 @@
                                 }
                             </td>
                             <td class="text-end">
-                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">
-                                    <Icon IconName="remove" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
+                                <button class="btn btn-border-danger btn-sm" @onclick="() => RemoveIndexer(indexer.Url)">
+                                    <Icon IconName="delete" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
                                 </button>
                             </td>
                         </tr>
@@ -235,12 +301,12 @@
 
 
 @* Nostr Relays *@
-<div class="row mt-4">
+<div class="row mt-4 slide-in">
     <div class="card card-body">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="relay" Height="42" Width="42"></Icon>
+                <span class="user-select-none animate-rotate">
+                    <Icon IconName="relay" Height="32" Width="32"></Icon>
                 </span>
                 <div class="h-100 ms-3">
                     <h5 class="mb-0 font-weight-bolder">
@@ -248,15 +314,24 @@
                     </h5>
                 </div>
             </div>
-            <button class="btn btn-success" @onclick="Refresh" disabled="@refreshSpinner">
-                <span role="status" aria-hidden="true" class="@(refreshSpinner ? "rotate-icon" : "")">
-                    <Icon IconName="refresh" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
-                </span>
+            <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh"
+                    disabled="@refreshSpinner">
+                @if (refreshSpinner)
+                {
+                    <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content" role="status"
+                          aria-hidden="true">
+                    </span>
+                }
+                else
+                {
+                    <Icon IconName="refresh" Height="24" Width="24" />
+                }
             </button>
         </div>
         <form @onsubmit="AddRelay">
             <div class="input-group mb-3">
-                <input type="text" @bind-value="newRelayLink" class="form-control" placeholder="Enter new relay link" aria-label="Enter new relay link" aria-describedby="button-addon2">
+                <input type="text" @bind-value="newRelayLink" class="form-control" placeholder="Enter new relay link"
+                       aria-label="Enter new relay link" aria-describedby="button-addon2">
                 <button class="btn btn-border" type="submit" id="button-addon2">
                     <Icon IconName="plus" Height="24" Width="24"></Icon>
                 </button>
@@ -269,7 +344,6 @@
                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
                     </tr>
                 </thead>
@@ -277,28 +351,14 @@
                     @foreach (var relay in settingsInfo.Relays)
                     {
                         <tr>
-                            <td><a href="@relay.Url" target="_blank">@relay.Url</a></td>
+                            <td><a href="@relay.Url" target="_blank" rel="noopener noreferrer">@relay.Url</a></td>
                             <td>@relay.Name</td>
                             <td class="@((relay.Status == UrlStatus.Online) ? "text-success" : (relay.Status == UrlStatus.NotReady) ? "text-warning" : "text-danger")">
                                 @relay.Status.ToString()
                             </td>
-                            <td>
-                                @if (relay.IsPrimary)
-                                {
-                                    <span role="button">
-                                        <Icon IconName="primary" Height="24" Width="24"></Icon>
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span @onclick="() => SetPrimaryRelay(relay)" role="button">
-                                        <Icon IconName="set" Height="24" Width="24"></Icon>
-                                    </span>
-                                }
-                            </td>
                             <td class="text-end">
-                                <button class="btn btn-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">
-                                    <Icon IconName="remove" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
+                                <button class="btn btn-border-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">
+                                    <Icon IconName="delete" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
                                 </button>
                             </td>
                         </tr>
@@ -310,35 +370,105 @@
 
 </div>
 
-@* Currency Display Settings *@
-<div class="row mt-4">
+@* Chat Apps *@
+<div class="row mt-4 slide-in">
     <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="currency" Height="42" Width="42"></Icon>
+                <span class="user-select-none animate-rotate">
+                    <Icon IconName="chat" Height="32" Width="32"></Icon>
                 </span>
                 <div class="h-100 ms-3">
+                    <h5 class="mb-0 font-weight-bolder">
+                        Chat Applications
+                    </h5>
+                </div>
+            </div>
+        </div>
+        <form @onsubmit="AddChatApp">
+            <div class="input-group mb-3">
+                <input type="text" @bind-value="newChatAppLink" class="form-control" placeholder="Enter new chat app link"
+                       aria-label="Enter new chat app link" aria-describedby="button-addon4">
+                <button class="btn btn-border" type="submit" id="button-addon4">
+                    <Icon IconName="plus" Height="24" Width="24"></Icon>
+                </button>
+            </div>
+        </form>
+        <div class="table-responsive form-control">
+            <table class="table align-items-center mb-0">
+                <thead>
+                    <tr>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var chatApp in settingsInfo.ChatApps)
+                    {
+                        <tr>
+                            <td><a href="@chatApp.Url" target="_blank" rel="noopener noreferrer">@chatApp.Url</a></td>
+                            <td>@chatApp.Name</td>
+                            <td>
+                                @if (chatApp.IsPrimary)
+                                {
+                                    <span role="button">
+                                        <Icon IconName="primary" Height="24" Width="24"></Icon>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span @onclick="() => SetPrimaryChatApp(chatApp)" role="button">
+                                        <Icon IconName="set" Height="24" Width="24"></Icon>
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-border-danger btn-sm" @onclick="() => RemoveChatApp(chatApp.Url)">
+                                    <Icon IconName="delete" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@* Currency Display Settings *@
+<div class="row mt-4 slide-in">
+    <div class="card card-body">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-4">
+            <div class="d-flex align-items-center">
+                <span class="user-select-none animate-rotate">
+                    <Icon IconName="currency" Height="32" Width="32"></Icon>
+                </span>
+                <div class="ms-3">
                     <h5 class="mb-0 font-weight-bolder">
                         Currency Display
                     </h5>
                     <p class="mb-0 mt-2 font-weight-normal text-sm">
-                        <span>Current: <strong>@selectedCurrency</strong></span>
+                        Current: <strong>@selectedCurrency</strong>
                     </p>
                 </div>
             </div>
-            <div>
-                <label for="networkSelection">Select Currency:</label>
-                <select class="form-control mt-2" value="@selectedCurrency" @onchange="OnCurrencyChanged">
-                    <option value="BTC">BTC</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
-                    <option value="CAD">CAD</option>
-                    <option value="CHF">CHF</option>
-                    <option value="AUD">AUD</option>
-                    <option value="JPY">JPY</option>
-                </select>
+            <div class="currency-select-container w-100 w-md-auto">
+                <div class="d-flex flex-column">
+                    <label for="currencySelection" class="mb-2">Select Currency:</label>
+                    <select id="currencySelection" class="form-control" value="@selectedCurrency"
+                            @onchange="OnCurrencyChanged">
+                        <option value="BTC">Bitcoin (BTC)</option>
+                        <option value="USD">US Dollar (USD)</option>
+                        <option value="EUR">Euro (EUR)</option>
+                        <option value="GBP">British Pound (GBP)</option>
+                        <option value="CAD">Canadian Dollar (CAD)</option>
+                        <option value="CHF">Swiss Franc (CHF)</option>
+                        <option value="AUD">Australian Dollar (AUD)</option>
+                        <option value="JPY">Japanese Yen (JPY)</option>
+                    </select>
+                </div>
             </div>
         </div>
     </div>
@@ -346,81 +476,88 @@
 
 
 @* Wipe Storage *@
-<div class="row mt-4">
+<div class="row mt-4 slide-in">
     <div class="card card-body border-danger border-3">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <span class="user-select-none">
-                    <Icon IconName="remove" Height="42" Width="42"></Icon>
-                </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Wipe Storage
-                    </h5>
-                    <p class="mb-0 mt-2 font-weight-normal text-sm">
-                        This will wipe your wallet!
-                    </p>
+                <div class="settings-icon-wrapper">
+                    <Icon IconName="delete" Height="32" Width="32" />
+                </div>
+                <div class="ms-3">
+                    <h5 class="mb-0 text-danger">Danger Zone</h5>
+                    <p class="text-muted mb-0">Irreversible actions</p>
                 </div>
             </div>
-            <div>
-                <button class="btn btn-danger" @onclick="() => showWipeallModal = true">
-                    <Icon IconName="remove" Height="24" Width="24" Color="var(--angor-primary)"></Icon>
-                </button>
-                @if (showWipeallModal)
-                {
-                    <div class="modal-wrapper">
-                        <div class="modal fade show d-block" id="coinControlModal" tabindex="-1" aria-labelledby="coinControlModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="coinControlModalLabel">Wipe Storage</h5>
-                                        <span type="button" data-bs-dismiss="modal" @onclick="() => showWipeallModal = false" aria-label="Close">
-                                            <Icon IconName="close-circle" />
-                                        </span>
+            <button class="btn btn-border-danger" @onclick="() => showWipeallModal = true">
+                <Icon IconName="delete" Height="24" Width="24" />
+                <span class="ms-2 d-none d-md-inline">Wipe Data</span>
+            </button>
+        </div>
+    </div>
+
+    @if (showWipeallModal)
+    {
+        <div class="modal-wrapper">
+            <div class="modal fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content modern-modal">
+                        <div class="modal-header border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <Icon IconName="remove" Height="32" Width="32" class="me-2" />
+                                <h5 class="modal-title">Wipe Storage</h5>
+                            </div>
+                            <button class="btn-close-custom" @onclick="() => showWipeallModal = false">
+                                <Icon IconName="close-circle" Height="24" Width="24" />
+                            </button>
+                        </div>
+
+                        <div class="modal-body modal-body-scroll py-4">
+                            <div class="transaction-info-section">
+                                <div class="mb-0" role="alert">
+                                    <div class="alert alert-danger" role="alert">
+                                        <p>This will wipe your wallet!</p>
                                     </div>
-                                    <div class="modal-body modal-body-scroll">
-                                        <div class="card">
-                                            <div class="card-header p-2">
-                                                <div class="d-flex align-items-center text-warning">
-                                                    <span>Warning</span>
-                                                </div>
-                                            </div>
-                                            <div class="card-body pb-0 pt-0 ps-3 pe-3">
-                                                <p class="mb-0">By confirming, you agree to wiping all data from this device since you have a backup of your wallet words.</p>
-                                            </div>
-                                            <div class="card-footer pb-2 pt-2 ps-3 pe-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input border mt-0" type="checkbox" id="confirmWipeCheckbox" @bind="confirmWipe">
-                                                    <label class="form-check-label mb-0" for="confirmWipeCheckbox">
-                                                        Confirm?
-                                                    </label>
-                                                </div>
-                                                @if (showConfirmWipeMessage)
-                                                {
-                                                    <div class="alert alert-danger text-white mt-2" role="alert">
-                                                        Please tick the box to wipe all storage!
-                                                    </div>
-                                                }
-                                            </div>
+                                    <p class="mb-0 text-bl">
+                                        Warning: By confirming, you agree to wiping all data from this
+                                        device since you have a backup of your wallet words.
+                                    </p>
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input border" type="checkbox" id="confirmWipeCheckbox"
+                                               @bind="confirmWipe">
+                                        <label class="form-check-label" for="confirmWipeCheckbox">
+                                            Confirm?
+                                        </label>
+                                    </div>
+                                    @if (showConfirmWipeMessage)
+                                    {
+                                        <div class="alert alert-danger mt-4 mb-0" role="alert">
+                                            Please tick the box to wipe all storage!
                                         </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button class="btn btn-danger" @onclick="WipeAllData">Wipe Storage</button>
-                                    </div>
+                                    }
                                 </div>
                             </div>
                         </div>
-                    </div>
-                }
 
+                        <div class="modal-footer border-0 pt-0">
+                            <button class="btn btn-border-success w-100 w-md-auto" @onclick="WipeAllData">
+                                Wipe Storage
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    }
+
 </div>
+
+
 
 @code {
     private string newIndexerLink;
     private string newRelayLink;
+    private string newExplorerLink;
+    private string newChatAppLink;
 
     private string networkType;
     private bool refreshSpinner = false;
@@ -432,13 +569,16 @@
     private bool confirmWipe = false;
     private bool showConfirmWipeMessage = false;
     private string selectedNetwork = "Main"; // Default to "testnet"
-    
+
     private string selectedCurrency = "BTC"; // Default to BTC
 
     private SettingsInfo settingsInfo;
 
     protected override Task OnInitializedAsync()
     {
+        // Set active menu
+        NavMenuState.SetActivePage("settings");
+
         _networkService.AddSettingsIfNotExist();
 
         settingsInfo = _clientStorage.GetSettingsInfo();
@@ -446,11 +586,11 @@
         networkType = _networkConfiguration.GetNetwork().Name;
 
         _networkService.OnStatusChanged += UpdateUI;
-        
+
         selectedCurrency = _clientStorage.GetCurrencyDisplaySetting();
 
         selectedNetwork = networkType;
-        
+
         return base.OnInitializedAsync();
     }
 
@@ -472,41 +612,45 @@
             await Refresh(false);
         }
     }
-    
+
     private async Task AddIndexer()
     {
-        if (!string.IsNullOrWhiteSpace(newIndexerLink))
-            {
-                if (!Uri.TryCreate(newIndexerLink, UriKind.Absolute, out Uri? uri))
-                    {
-                        notificationComponent.ShowErrorMessage($"Invalid URL: {newIndexerLink}");
-                        return;
-                    }
-    
+        if (string.IsNullOrWhiteSpace(newIndexerLink))
+        {
+            notificationComponent.ShowErrorMessage("Indexer URL cannot be empty.");
+            return;
+        }
+
+        if (!Uri.TryCreate(newIndexerLink, UriKind.Absolute, out Uri? uri))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL: {newIndexerLink}");
+            return;
+        }
+
         if (uri.Scheme is not ("http" or "https"))
-            {
-                notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
-                return;
-            }
-    
-        newIndexerLink = $"{uri.Scheme}://{uri.Host}".TrimEnd('/');
-        
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
+            return;
+        }
+
+        newIndexerLink = $"{uri.Scheme}://{uri.Authority}".TrimEnd('/');
+
         Logger.LogInformation($"Normalized URL: {newIndexerLink}");
-    
+
         if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
         {
             notificationComponent.ShowErrorMessage($"URL already exists: {newIndexerLink}");
             return;
         }
-            
+
         // Check indexer status and fetch genesis block hash
         var (isOnline, genesisHash) = await _indexerService.CheckIndexerNetwork(newIndexerLink);
         if (!isOnline)
-            {
-                notificationComponent.ShowErrorMessage("The indexer is offline or unreachable.");
-                return;
-            }
-            
+        {
+            notificationComponent.ShowErrorMessage("The indexer is offline or unreachable.");
+            return;
+        }
+
         var expectedHash = _networkConfiguration.GetGenesisBlockHash();
         if (!_indexerService.ValidateGenesisBlockHash(genesisHash, expectedHash))
         {
@@ -516,51 +660,144 @@
             $"Expected: {expectedNetworkName}, Provided: {fetchedNetworkName ?? "Unknown"}");
             return;
         }
-        
+
         // Add indexer to settings
         settingsInfo.Indexers.Add(new SettingsUrl
-        {
-            Url = newIndexerLink,
-            LastCheck = DateTime.UtcNow,
-            Status = UrlStatus.Online
-        });
-        
+            {
+                Url = newIndexerLink,
+                LastCheck = DateTime.UtcNow,
+                Status = UrlStatus.Online
+            });
+
         _clientStorage.SetSettingsInfo(settingsInfo);
         notificationComponent.ShowNotificationMessage("Indexer added successfully.");
         newIndexerLink = string.Empty;
-    
+
         await Refresh(false);
-       }
-    }    
+    }
 
     private async Task AddRelay()
     {
-        if (!string.IsNullOrWhiteSpace(newRelayLink))
+        if (string.IsNullOrWhiteSpace(newRelayLink))
         {
-            if (!Uri.TryCreate(newRelayLink, UriKind.Absolute, out Uri? uri))
-            {
-                notificationComponent.ShowErrorMessage($"invalid url {newRelayLink}");
-                return;
-            }
-
-            if (uri.Scheme is not ("ws" or "wss"))
-            {
-                notificationComponent.ShowErrorMessage($"invalid url {newRelayLink} schema must be ws or wss");
-                return;
-            }
-
-            newRelayLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
-
-            if (settingsInfo.Relays.Any(a => a.Url == newRelayLink))
-            {
-                notificationComponent.ShowErrorMessage($"url exists {newRelayLink}");
-                return;
-            }
-
-            settingsInfo.Relays.Add(new SettingsUrl { Url = newRelayLink, IsPrimary = !settingsInfo.Relays.Any() });
-            _clientStorage.SetSettingsInfo(settingsInfo);
-            newRelayLink = string.Empty;
+            notificationComponent.ShowErrorMessage("Relay URL cannot be empty.");
+            return;
         }
+
+        if (!Uri.TryCreate(newRelayLink, UriKind.Absolute, out Uri? uri))
+        {
+            notificationComponent.ShowErrorMessage($"invalid url {newRelayLink}");
+            return;
+        }
+
+        if (uri.Scheme is not ("ws" or "wss"))
+        {
+            notificationComponent.ShowErrorMessage($"invalid url {newRelayLink} schema must be ws or wss");
+            return;
+        }
+
+        newRelayLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
+
+        if (settingsInfo.Relays.Any(a => a.Url == newRelayLink))
+        {
+            notificationComponent.ShowErrorMessage($"url exists {newRelayLink}");
+            return;
+        }
+
+        settingsInfo.Relays.Add(new SettingsUrl { Url = newRelayLink, IsPrimary = !settingsInfo.Relays.Any() });
+        _clientStorage.SetSettingsInfo(settingsInfo);
+        newRelayLink = string.Empty;
+
+        await Refresh(false);
+    }
+
+    private async Task AddExplorer()
+    {
+        if (string.IsNullOrWhiteSpace(newExplorerLink))
+        {
+            notificationComponent.ShowErrorMessage("Explorer URL cannot be empty.");
+            return;
+        }
+
+        if (!Uri.TryCreate(newExplorerLink, UriKind.Absolute, out Uri? uri))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL: {newExplorerLink}");
+            return;
+        }
+
+        if (uri.Scheme is not ("http" or "https"))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
+            return;
+        }
+        newExplorerLink = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
+
+        if (settingsInfo.Explorers.Any(a => a.Url == newExplorerLink))
+        {
+            notificationComponent.ShowErrorMessage($"URL already exists: {newExplorerLink}");
+            return;
+        }
+
+        // Add explorer to settings
+        var newExplorer = new SettingsUrl
+            {
+                Url = newExplorerLink,
+                LastCheck = DateTime.UtcNow,
+                Status = UrlStatus.Online,
+                IsPrimary = !settingsInfo.Explorers.Any(e => e.IsPrimary) // Set as primary if no primary exists
+            };   
+
+        settingsInfo.Explorers.Add(newExplorer);
+
+        _clientStorage.SetSettingsInfo(settingsInfo);
+        notificationComponent.ShowNotificationMessage("Explorer added successfully.");
+        newExplorerLink = string.Empty;
+
+        await Refresh(false);
+    }
+
+    private async Task AddChatApp()
+    {
+        if (string.IsNullOrWhiteSpace(newChatAppLink))
+        {
+            notificationComponent.ShowErrorMessage("Chat application URL cannot be empty.");
+            return;
+        }
+
+        if (!Uri.TryCreate(newChatAppLink, UriKind.Absolute, out Uri? uri))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL: {newChatAppLink}");
+            return;
+        }
+
+        if (uri.Scheme is not ("http" or "https"))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
+            return;
+        }
+
+        newChatAppLink = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
+       
+        if (settingsInfo.ChatApps.Any(a => a.Url == newChatAppLink))
+        {
+            notificationComponent.ShowErrorMessage($"URL already exists: {newChatAppLink}");
+            return;
+        }
+
+        var newChatApp = new SettingsUrl
+        {
+            Url = newChatAppLink,
+            Name = uri.Host,
+            LastCheck = DateTime.UtcNow,
+            Status = UrlStatus.Online,
+            IsPrimary = !settingsInfo.ChatApps.Any(c => c.IsPrimary)
+        };
+
+        settingsInfo.ChatApps.Add(newChatApp);
+
+        _clientStorage.SetSettingsInfo(settingsInfo);
+        notificationComponent.ShowNotificationMessage("Chat application added successfully.");
+        newChatAppLink = string.Empty;
 
         await Refresh(false);
     }
@@ -594,6 +831,50 @@
             {
                 var next = settingsInfo.Relays.OrderBy(a => a.Status).First();
                 next.IsPrimary = true;
+            }
+
+            _clientStorage.SetSettingsInfo(settingsInfo);
+        }
+    }
+
+    private void RemoveExplorer(string url)
+    {
+        var res = settingsInfo.Explorers.FirstOrDefault(f => f.Url == url);
+        if (res != null)
+        {
+            settingsInfo.Explorers.Remove(res);
+
+            // If removing primary explorer, try to set a new primary
+            if (res.IsPrimary && settingsInfo.Explorers.Any())
+            {
+                // First try to find an online explorer
+                var next = settingsInfo.Explorers
+                .Where(e => e.Status == UrlStatus.Online)
+                .FirstOrDefault();
+
+                // If no online explorer found, fall back to first available
+                if (next == null)
+                {
+                    next = settingsInfo.Explorers.First();
+                }
+
+                next.IsPrimary = true;
+            }
+
+            _clientStorage.SetSettingsInfo(settingsInfo);
+        }
+    }
+
+    private void RemoveChatApp(string url)
+    {
+        var chatApp = settingsInfo.ChatApps.FirstOrDefault(f => f.Url == url);
+        if (chatApp != null)
+        {
+            settingsInfo.ChatApps.Remove(chatApp);
+
+            if (chatApp.IsPrimary && settingsInfo.ChatApps.Any())
+            {
+                settingsInfo.ChatApps.First().IsPrimary = true;
             }
 
             _clientStorage.SetSettingsInfo(settingsInfo);
@@ -635,6 +916,35 @@
 
         _clientStorage.SetSettingsInfo(settingsInfo);
 
+        StateHasChanged();
+    }
+
+    private void SetPrimaryExplorer(SettingsUrl explorer)
+    {
+        foreach (var exp in settingsInfo.Explorers)
+        {
+            if (exp.Url == explorer.Url)
+            {
+                exp.IsPrimary = true;
+            }
+            else
+            {
+                exp.IsPrimary = false;
+            }
+        }
+
+        _clientStorage.SetSettingsInfo(settingsInfo);
+        StateHasChanged();
+    }
+
+    private void SetPrimaryChatApp(SettingsUrl chatApp)
+    {
+        foreach (var app in settingsInfo.ChatApps)
+        {
+            app.IsPrimary = app.Url == chatApp.Url;
+        }
+
+        _clientStorage.SetSettingsInfo(settingsInfo);
         StateHasChanged();
     }
 
