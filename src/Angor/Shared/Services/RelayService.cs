@@ -219,7 +219,7 @@ namespace Angor.Shared.Services
             
             var content = _serializer.Serialize(project);
             
-            var signed = GetNip78NostrEvent(content)
+            var signed = GetNip3030NostrEvent(content)
                 .Sign(key);
 
             _subscriptionsHandling.TryAddOKAction(signed.Id,action);
@@ -271,8 +271,10 @@ namespace Angor.Shared.Services
             return Task.FromResult(deleteEvent.Id);
         }
         
-        private static NostrEvent GetNip78NostrEvent( string content)
+        private static NostrEvent GetNip3030NostrEvent( string content)
         {
+            // https://github.com/block-core/nips/blob/peer-to-peer-decentralized-funding/3030.md
+
             var ev = new NostrEvent
             {
                 //Kind = NostrKind.ApplicationSpecificData,
