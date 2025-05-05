@@ -177,7 +177,7 @@ public class WalletOperationsTest : AngorTestData
 
         var signedInvestmentTransaction1 = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, 3000);
 
-        var psbt = _sut.CreatePsbtForTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, accountInfo, 3000);
+        var psbt = _sut.CreatePsbtForTransaction(investmentTransaction, accountInfo, 3000);
         var signedInvestmentTransaction = _sut.SignPsbt(psbt, words);
 
         var strippedInvestmentTransaction = network.CreateTransaction(signedInvestmentTransaction.Transaction.ToHex());
