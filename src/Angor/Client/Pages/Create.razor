@@ -241,18 +241,23 @@
                             <Icon IconName="calendar" Width="20" Height="20" Class="me-2 text-primary" />
                             <label for="startDate" class="form-label mb-0 fw-semibold">Start Date</label>
                         </div>
-                        <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period begins (today).</p>
-                        <InputDate id="startDate" @bind-Value="project.ProjectInfo.StartDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
+                        <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period begins (automatically set to today).</p>
+                        <div class="form-control disabled">@DateTime.Today.ToString("dd/MM/yyyy")</div>
+                        <input type="hidden" @bind="project.ProjectInfo.StartDate" />
                     </div>
 
                     <!-- End Date -->
                     <div class="mb-3">
                         <div class="d-flex align-items-center mb-2">
                             <Icon IconName="calendar" Width="20" Height="20" Class="me-2 text-primary" />
-                            <label for="endDate" class="form-label mb-0 fw-semibold">Start Date</label>
+                            <label for="endDate" class="form-label mb-0 fw-semibold">End Date</label>
                         </div>
-                        <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period ends.</p>
-                        <InputDate id="endDate" @bind-Value="project.ProjectInfo.EndDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
+                        <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period ends (must be before first stage date).</p>
+                        <InputDate id="endDate" @bind-Value="project.ProjectInfo.EndDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" @onchange="ValidateEndDate" />
+                        @if (endDateError)
+                        {
+                            <div class="text-danger mt-1">End date must be before the first stage date</div>
+                        }
                     </div>
                 </div>
 
@@ -264,7 +269,7 @@
                             <Icon IconName="sad-circle" Width="20" Height="20" Class="me-2 text-danger" />
                             <label for="penaltyDays" class="form-label mb-0 fw-semibold">Penalty Days</label>
                         </div>
-                        <p class="form-text text-muted mt-0 mb-2 small">Number of days to lock finds for departing investors who wish to withdraw early.</p>
+                        <p class="form-text text-muted mt-0 mb-2 small">Number of days to lock funds for departing investors who wish to withdraw early.</p>
                         <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
                     </div>
 
@@ -272,11 +277,11 @@
                     <div class="mb-4">
                         <div class="d-flex align-items-center mb-2">
                             <Icon IconName="calendar" Width="20" Height="20" Class="me-2 text-warning" />
-                            <label for="expiryDate" class="form-label mb-0 fw-semibold">End Date</label>
+                            <label for="expiryDate" class="form-label mb-0 fw-semibold">Expiry Date</label>
                         </div>
-                        <p class="form-text text-muted mt-0 mb-2 small">Emergency date when all remaining funds can be released, in case something happens to the founder or the project is abandoned.</p>
-                        <InputDate id="expiryDate" @bind-Value="project.ProjectInfo.ExpiryDate" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
-                        <p class="form-text text-muted mt-0 mb-2 small">Automatically set to 60 days after the last stage.</p>
+                        <p class="form-text text-muted mt-0 mb-2 small">Emergency date when all remaining funds can be released in case of project abandonment. Automatically set to 60 days after the last stage.</p>
+                        <div class="form-control disabled">@CalculateExpiryDate().ToString("dd/MM/yyyy")</div>
+                        <input type="hidden" @bind="project.ProjectInfo.ExpiryDate" />
                     </div>
                 </div>
 
@@ -927,6 +932,12 @@
         project = projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier)
                   ?? CreateDefaultProject(projectsKeys);
 
+        // Set start date to today automatically
+        project.ProjectInfo.StartDate = DateTime.Today;
+        
+        // Always update expiry date based on stages
+        project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
+
         if (network.NetworkType == NetworkType.Testnet)
         {
             PopulateTestnetData(project);
@@ -1299,6 +1310,10 @@
         }
 
         project.ProjectInfo.Stages.Add(new Stage { ReleaseDate = DateTime.UtcNow });
+        
+        // Update expiry date
+        project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
+        StateHasChanged();
     }
 
     private void RemoveStage(Stage stage)
@@ -1310,7 +1325,10 @@
         }
 
         project.ProjectInfo.Stages.Remove(stage);
-
+        
+        // Update expiry date
+        project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
+        StateHasChanged();
     }
 
     public MarkupString ConvertToMarkupString(string input)
@@ -1631,9 +1649,46 @@
         {
             ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}","text-success"),
             ("calendar", "Start date", $"{project.ProjectInfo.StartDate:dd/MM/yyyy} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days","text-warning"),
+            ("calendar", "End date", $"{project.ProjectInfo.EndDate:dd/MM/yyyy} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days","text-warning"),
             ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate:dd/MM/yyyy} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days","text-warning"),
             ("sad-circle", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days","text-warning")
         };
     }
 
+    // Variable to track end date validation error
+    private bool endDateError = false;
+
+    // Validates that End Date is before first stage
+    private void ValidateEndDate()
+    {
+        if (project.ProjectInfo.Stages.Any())
+        {
+            var firstStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
+            if (project.ProjectInfo.EndDate >= firstStageDate)
+            {
+                endDateError = true;
+            }
+            else
+            {
+                endDateError = false;
+            }
+        }
+        
+        // Update hidden expiry date field
+        project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
+        StateHasChanged();
+    }
+
+    // Calculate expiry date as 60 days after the last stage
+    private DateTime CalculateExpiryDate()
+    {
+        if (project.ProjectInfo.Stages.Any())
+        {
+            var lastStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).Last().ReleaseDate;
+            return lastStageDate.AddDays(60);
+        }
+        
+        // Default to 60 days after start date if no stages
+        return project.ProjectInfo.StartDate.AddDays(60);
+    }
 }
