@@ -38,10 +38,12 @@ public class WalletOperations : IWalletOperations
     }
 
 
-    public PsbtWrapper CreatePsbtForTransaction(string changeAddress, Transaction transaction, AccountInfo accountInfo, long feeRate)
+    public PsbtWrapper CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null)
     {
         Network network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
+
+        changeAddress = changeAddress ?? accountInfo.GetNextChangeReceiveAddress();
 
         var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
         var coins = utxoDataWithPaths.Select(u => new Coin(uint256.Parse(u.UtxoData.outpoint.transactionId), (uint)u.UtxoData.outpoint.outputIndex, Money.Satoshis(u.UtxoData.value), Script.FromHex(u.UtxoData.scriptHex))).ToList();
