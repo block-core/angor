@@ -1,6 +1,6 @@
 using Angor.Contexts.Funding.Investor;
+using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
-using Angor.Contexts.Wallet.Domain;
 using AngorApp.UI.Services;
 using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.CSharpFunctionalExtensions;

@@ -58,7 +58,8 @@ public class FounderTransactionActions : IFounderTransactionActions
         {
             var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
 
-            var execData = new TaprootExecutionData(stageIndex, new NBitcoin.Script(scriptStages.Recover.ToBytes()).TaprootV1LeafHash) { SigHash = sigHash };
+            var tapScript = new NBitcoin.Script(scriptStages.Recover.ToBytes()).ToTapScript(TapLeafVersion.C0);
+            var execData = new TaprootExecutionData(stageIndex, tapScript.LeafHash) { SigHash = sigHash };
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
             var sig = key.SignTaprootKeySpend(hash, sigHash).ToString();
@@ -127,7 +128,8 @@ public class FounderTransactionActions : IFounderTransactionActions
             var scriptToExecute = new NBitcoin.Script(input.WitScript[1]);
             var controlBlock = input.WitScript[2];
 
-            var execData = new TaprootExecutionData(inputIndex, scriptToExecute.TaprootV1LeafHash) { SigHash = sigHash };
+            var tapScript = scriptToExecute.ToTapScript(TapLeafVersion.C0);
+            var execData = new TaprootExecutionData(inputIndex, tapScript.LeafHash) { SigHash = sigHash };
             var hash = spendingTransaction.GetSignatureHashTaproot(trxData, execData);
 
             _logger.LogInformation($"sig hash of inputIndex {inputIndex} spendingTransaction hex {hash.ToString()}");
