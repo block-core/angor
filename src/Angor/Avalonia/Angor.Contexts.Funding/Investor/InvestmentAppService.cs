@@ -25,7 +25,7 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
         return mediator.Send(new RequestInvestment.RequestFounderSignaturesRequest(sourceWalletId, projectId, draft));
     }
     
-    public Task<Result<IEnumerable<GetPendingInvestments.PendingDto>>> GetPendingInvestments(Guid walletId, ProjectId projectId)
+    public Task<Result<IEnumerable<GetPendingInvestments.PendingInvestmentDto>>> GetPendingInvestments(Guid walletId, ProjectId projectId)
     {
         return mediator.Send(new GetPendingInvestments.GetPendingInvestmentsRequest(walletId, projectId));
     }
