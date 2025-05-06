@@ -1,4 +1,5 @@
-﻿using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+﻿using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Tests.TestDoubles;
 using Angor.Shared;
@@ -17,6 +18,18 @@ public class ProjectAppServiceTests(ITestOutputHelper output)
         var result = await sut.Latest();
         Assert.NotEmpty(result);
     }
+    
+    [Fact]
+    public async Task Get_founder_projects()
+    {
+        var sut = CreateSut();
+        
+        var projectId = new ProjectId("angor1qkmmqqktfhe79wxp20555cdp5gfardr4s26wr00");
+        var result = await sut.GetFounderProjects(Guid.NewGuid(), projectId);
+        
+        Assert.NotEmpty(result.Value);
+    }
+
 
     private IProjectAppService CreateSut()
     {
@@ -24,7 +37,7 @@ public class ProjectAppServiceTests(ITestOutputHelper output)
 
         var logger = new LoggerConfiguration().WriteTo.TestOutput(output).CreateLogger();
         FundingContextServices.Register(serviceCollection, logger);
-        serviceCollection.AddSingleton<ISeedwordsProvider>(sp => new TestingSeedwordsProvider("print foil moment average quarter keep amateur shell tray roof acoustic where", "", sp.GetRequiredService<IDerivationOperations>()));
+        serviceCollection.AddSingleton<ISeedwordsProvider>(sp => new TestingSeedwordsProvider("oven suggest panda hip orange cheap kite focus cross never tornado forget", "", sp.GetRequiredService<IDerivationOperations>()));
 
         var serviceProvider = serviceCollection.BuildServiceProvider();
         var projectAppService = serviceProvider.GetService<IProjectAppService>();
