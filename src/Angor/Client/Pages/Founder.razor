@@ -167,6 +167,7 @@
 
                         break;
 
+                    case { Kind: (NostrKind)3030 }:
                     case { Kind: NostrKind.ApplicationSpecificData }:
 
                         if (e.Id != founderProjectsToLookup[e.Pubkey].NostrEventId)

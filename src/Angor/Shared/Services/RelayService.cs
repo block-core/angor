@@ -55,7 +55,7 @@ namespace Angor.Shared.Services
             var request = new NostrRequest(subscriptionName, new NostrFilter
             {
                 Ids = nostrEventIds,
-                Kinds = [NostrKind.ApplicationSpecificData]
+                Kinds = [(NostrKind)3030, NostrKind.ApplicationSpecificData]
             });
             
             nostrClient.Send(request);
@@ -86,7 +86,7 @@ namespace Angor.Shared.Services
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 Authors = nPubs,
-                Kinds = [NostrKind.ApplicationSpecificData, NostrKind.Metadata],
+                Kinds = [(NostrKind)3030, NostrKind.ApplicationSpecificData, NostrKind.Metadata],
             }));
         }
 
