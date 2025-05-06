@@ -9,7 +9,7 @@ namespace Angor.Contexts.Funding.Investor;
 public interface IInvestmentAppService
 {
     Task<Result<IEnumerable<InvestmentDto>>> GetInvestments(ProjectId projectId);
-    Task<Result<CreateInvestment.Draft>> CreateInvestmentDraft(Guid sourceWalletId, ProjectId projectId, Amount amount);
-    Task<Result<Guid>> Invest(Guid sourceWalletId, ProjectId projectId, CreateInvestment.Draft draft);
-    Task<Result<IEnumerable<GetPendingInvestments.PendingInvestmentDto>>> GetPendingInvestments(Guid walletId, ProjectId projectId);
+    Task<Result<CreateInvestment.Draft>> CreateDraft(Guid sourceWalletId, ProjectId projectId, Amount amount);
+    Task<Result<Guid>> RequestInvestment(Guid sourceWalletId, ProjectId projectId, CreateInvestment.Draft draft);
+    Task<Result<IEnumerable<GetPendingInvestments.PendingDto>>> GetPendingInvestments(Guid walletId, ProjectId projectId);
 }

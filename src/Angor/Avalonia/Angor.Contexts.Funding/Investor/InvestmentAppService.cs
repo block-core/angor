@@ -15,17 +15,17 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
         return investmentRepository.GetByProject(projectId);
     }
 
-    public Task<Result<CreateInvestment.Draft>> CreateInvestmentDraft(Guid sourceWalletId, ProjectId projectId, Amount amount)
+    public Task<Result<CreateInvestment.Draft>> CreateDraft(Guid sourceWalletId, ProjectId projectId, Amount amount)
     {
         return mediator.Send(new CreateInvestment.CreateInvestmentTransactionRequest(sourceWalletId, projectId, amount));
     }
 
-    public Task<Result<Guid>> Invest(Guid sourceWalletId, ProjectId projectId, CreateInvestment.Draft draft)
+    public Task<Result<Guid>> RequestInvestment(Guid sourceWalletId, ProjectId projectId, CreateInvestment.Draft draft)
     {
         return mediator.Send(new RequestInvestment.RequestFounderSignaturesRequest(sourceWalletId, projectId, draft));
     }
     
-    public Task<Result<IEnumerable<GetPendingInvestments.PendingInvestmentDto>>> GetPendingInvestments(Guid walletId, ProjectId projectId)
+    public Task<Result<IEnumerable<GetPendingInvestments.PendingDto>>> GetPendingInvestments(Guid walletId, ProjectId projectId)
     {
         return mediator.Send(new GetPendingInvestments.GetPendingInvestmentsRequest(walletId, projectId));
     }

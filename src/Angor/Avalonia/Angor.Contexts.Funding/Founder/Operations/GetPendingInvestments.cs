@@ -11,7 +11,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public class GetPendingInvestments
 {
-    public class GetPendingInvestmentsRequest(Guid walletId, ProjectId projectId) : IRequest<Result<IEnumerable<PendingInvestmentDto>>>
+    public class GetPendingInvestmentsRequest(Guid walletId, ProjectId projectId) : IRequest<Result<IEnumerable<PendingDto>>>
     {
         public Guid WalletId { get; } = walletId;
         public ProjectId ProjectId { get; } = projectId;
@@ -21,33 +21,19 @@ public class GetPendingInvestments
         ISignService signService, 
         INostrDecrypter nostrDecrypter, 
         INetworkConfiguration networkConfiguration,
-        ISerializer serializer) : IRequestHandler<GetPendingInvestmentsRequest, Result<IEnumerable<PendingInvestmentDto>>>
+        ISerializer serializer) : IRequestHandler<GetPendingInvestmentsRequest, Result<IEnumerable<PendingDto>>>
     {
-        public async Task<Result<IEnumerable<PendingInvestmentDto>>> Handle(GetPendingInvestmentsRequest request, CancellationToken cancellationToken)
+        public async Task<Result<IEnumerable<PendingDto>>> Handle(GetPendingInvestmentsRequest request, CancellationToken cancellationToken)
         {
             var project = await projectRepository.Get(request.ProjectId);
             if (project.IsFailure)
             {
-                return Result.Failure<IEnumerable<PendingInvestmentDto>>(project.Error);
+                return Result.Failure<IEnumerable<PendingDto>>(project.Error);
             }
             
             var nostrPubKey = project.Value.NostrPubKey;
-            var investingMessages = InvestmentMessages(nostrPubKey);
-            var pendingInvestmentResults = await investingMessages.SelectMany(nostrMessage => DecryptInvestmentMessage(request.WalletId, project, nostrMessage)).ToList();
 
-            return pendingInvestmentResults.Combine();
-        }
-
-        private Task<Result<PendingInvestmentDto>> DecryptInvestmentMessage(Guid walletId, Result<Project> project, NostrMessage nostrMessage)
-        {
-            return from decrypted in nostrDecrypter.Decrypt(walletId, project.Value.Id, nostrMessage)
-                from signRecoveryRequest in Result.Try(() => serializer.Deserialize<SignRecoveryRequest>(decrypted))
-                select new PendingInvestmentDto(nostrMessage.Created, GetAmount(signRecoveryRequest), nostrMessage.InvestorNostrPubKey);
-        }
-
-        private IObservable<NostrMessage> InvestmentMessages(string nostrPubKey)
-        {
-            return Observable.Create<NostrMessage>(observer =>
+            var pendingObs = Observable.Create<NostrMessage>(observer =>
             {
                 signService.LookupInvestmentRequestsAsync(nostrPubKey, null, null,
                     (id, pubKey, content, created) => observer.OnNext(new NostrMessage(id, pubKey, content, created)),
@@ -56,6 +42,15 @@ public class GetPendingInvestments
 
                 return Disposable.Empty;
             });
+
+            var list = await pendingObs.SelectMany(nostrMessage =>
+            {
+                return from decrypted in nostrDecrypter.Decrypt(request.WalletId, project.Value.Id, nostrMessage)
+                    from sign in Result.Try(() => serializer.Deserialize<SignRecoveryRequest>(decrypted))
+                    select new PendingDto(nostrMessage.Created, GetAmount(sign), nostrMessage.InvestorNostrPubKey);
+            }).ToList();
+
+            return list.Combine();
         }
 
         private decimal GetAmount(SignRecoveryRequest signRecoveryRequest)
@@ -69,5 +64,5 @@ public class GetPendingInvestments
         }
     }
 
-    public record PendingInvestmentDto(DateTime Created, decimal Amount, string InvestorNostrPubKey);
+    public record PendingDto(DateTime Created, decimal Amount, string InvestorNostrPubKey);
 }

@@ -79,6 +79,15 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
         Assert.NotEmpty(result.Value);
     }
 
+    [Fact]
+    public async Task GetPendingInvestments()
+    {
+        var sut = CreateSut();
+        var result = await sut.GetPendingInvestments(Guid.Empty, new ProjectId("angor1qatlv9htzte8vtddgyxpgt78ruyzaj57n4l7k46"));
+        Assert.True(result.IsSuccess);
+        Assert.NotEmpty(result.Value);
+    }
+
     private IInvestmentAppService CreateSut()
     {
         var serviceCollection = new ServiceCollection();
