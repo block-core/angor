@@ -8,4 +8,5 @@ public interface IProjectAppService
 {
     Task<IList<ProjectDto>> Latest();
     Task<Maybe<ProjectDto>> FindById(ProjectId projectId);
+    Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(Guid walletId, ProjectId projectId);
 }
