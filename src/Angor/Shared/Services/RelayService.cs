@@ -55,7 +55,6 @@ namespace Angor.Shared.Services
             var request = new NostrRequest(subscriptionName, new NostrFilter
             {
                 Ids = nostrEventIds,
-                Kinds = [(NostrKind)3030, NostrKind.ApplicationSpecificData]
             });
             
             nostrClient.Send(request);
