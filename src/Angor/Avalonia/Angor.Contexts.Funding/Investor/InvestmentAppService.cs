@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -22,5 +23,10 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
     public Task<Result<Guid>> RequestInvestment(Guid sourceWalletId, ProjectId projectId, CreateInvestment.Draft draft)
     {
         return mediator.Send(new RequestInvestment.RequestFounderSignaturesRequest(sourceWalletId, projectId, draft));
+    }
+    
+    public Task<Result<IEnumerable<GetPendingInvestments.PendingDto>>> GetPendingInvestments(Guid walletId, ProjectId projectId)
+    {
+        return mediator.Send(new GetPendingInvestments.GetPendingInvestmentsRequest(walletId, projectId));
     }
 }

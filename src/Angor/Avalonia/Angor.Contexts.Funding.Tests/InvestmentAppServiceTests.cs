@@ -3,10 +3,14 @@ using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Tests.TestDoubles;
+using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
 using Microsoft.Extensions.DependencyInjection;
+using Nostr.Client.Utils;
 using Serilog;
 using Xunit.Abstractions;
+using Amount = Angor.Contexts.Funding.Projects.Domain.Amount;
 
 namespace Angor.Contexts.Funding.Tests;
 
@@ -50,13 +54,22 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
         Assert.NotEmpty(result.Value);
     }
 
+    [Fact]
+    public async Task GetPendingInvestments()
+    {
+        var sut = CreateSut();
+        var result = await sut.GetPendingInvestments(Guid.Empty, new ProjectId("angor1qatlv9htzte8vtddgyxpgt78ruyzaj57n4l7k46"));
+        Assert.True(result.IsSuccess);
+        Assert.NotEmpty(result.Value);
+    }
+
     private IInvestmentAppService CreateSut()
     {
         var serviceCollection = new ServiceCollection();
 
         var logger = new LoggerConfiguration().WriteTo.TestOutput(output).CreateLogger();
         FundingContextServices.Register(serviceCollection, logger);
-        serviceCollection.AddSingleton<ISeedwordsProvider>(sp => new TestingSeedwordsProvider("print foil moment average quarter keep amateur shell tray roof acoustic where", "", sp.GetRequiredService<IDerivationOperations>()));
+        serviceCollection.AddSingleton<ISeedwordsProvider>(sp => new TestingSeedwordsProvider("oven suggest panda hip orange cheap kite focus cross never tornado forget", "", sp.GetRequiredService<IDerivationOperations>()));
 
         var serviceProvider = serviceCollection.BuildServiceProvider();
         var projectAppService = serviceProvider.GetService<IInvestmentAppService>();
