@@ -4,7 +4,6 @@ using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
-using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Zafiro.CSharpFunctionalExtensions;
@@ -22,7 +21,8 @@ public static class GetFounderProjects
         public Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
         {
             return GetProjectIds(request)
-                .Traverse(projectRepository.Get)
+                .Traverse(projectRepository.TryGet)
+                .Map(projectMaybes => projectMaybes.Values())
                 .MapEach(project => project.ToDto());
         }
 
