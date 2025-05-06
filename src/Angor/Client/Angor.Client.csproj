@@ -12,7 +12,7 @@
     <PackageReference Include="HtmlAgilityPack" Version="1.11.71" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
     <PackageReference Include="Microsoft.JSInterop" Version="8.0.11" />
-    <PackageReference Include="NBitcoin" Version="7.0.25" />
+    <PackageReference Include="NBitcoin" Version="7.0.46" />
     <PackageReference Include="Nostr.Client" Version="2.0.0" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
