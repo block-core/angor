@@ -25,7 +25,7 @@ public class ProjectAppServiceTests(ITestOutputHelper output)
         var sut = CreateSut();
         
         var projectId = new ProjectId("angor1qkmmqqktfhe79wxp20555cdp5gfardr4s26wr00");
-        var result = await sut.GetFounderProjects(Guid.NewGuid(), projectId);
+        var result = await sut.GetFounderProjects(Guid.NewGuid());
         
         Assert.NotEmpty(result.Value);
     }

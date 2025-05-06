@@ -54,12 +54,12 @@
             </controls:IconButton.Icon>
         </controls:IconButton>
 
-        <Button Content="Get pending investments" Command="{Binding GetPendingInvestments}" />
-        <sdg:SlimDataGrid ItemsSource="{Binding Pending}">
+        <Button Content="Get pending investments" Command="{Binding GetProjects}" />
+        <sdg:SlimDataGrid ItemsSource="{Binding Projects}">
             <sdg:SlimDataGrid.Columns>
-                <sdg:Column Width="Auto" Header="Amount" Binding="{Binding Amount}" />
-                <sdg:Column Width="Auto" Header="Created" Binding="{Binding Created}" />
-                <sdg:Column Width="Auto" Header="Investor (npub)" Binding="{Binding InvestorNostrPubKey}" />
+                <sdg:Column Width="Auto" Header="Amount" Binding="{Binding Name}" />
+                <sdg:Column Width="Auto" Header="Created" Binding="{Binding StartingDate}" />
+                <sdg:Column Width="Auto" Header="Investor (npub)" Binding="{Binding InformationUri}" />
             </sdg:SlimDataGrid.Columns>
         </sdg:SlimDataGrid>
 
