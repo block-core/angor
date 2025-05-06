@@ -43,6 +43,16 @@ public static class MiscConverters
     });
     
     public static readonly FuncValueConverter<TimeSpan, string> HumanizeTimeSpan = new(offset => offset.Humanize());
+    
+    public static readonly FuncValueConverter<DateTimeOffset, string> HumanizeDate = new(offset =>
+    {
+        if (DateTimeOffset.Now.Date - offset < 2.Days())
+        {
+            return offset.Humanize();
+        }
+
+        return offset.ToString("d");
+    });
 
     public static readonly FuncValueConverter<bool, double> BoolToOpacity = new(b => b ? 1 : 0);
 

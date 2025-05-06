@@ -1,7 +1,8 @@
+using Angor.Shared;
 using NBitcoin;
 using NBitcoin.Secp256k1;
 
-namespace Angor.Shared.Tests
+namespace Angor.Test
 {
     public class ProjectIdentifierDerivationTests
     {

@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using Angor.Contexts.Wallet.Domain;
+using Humanizer;
 using ReactiveUI.SourceGenerators;
 using Zafiro.UI;
 
@@ -12,11 +13,48 @@ public class WalletViewModelDesign : ReactiveObject, IWalletViewModel
     public IWallet Wallet { get; } = new WalletDesign();
 
     public ICommand Send { get; }
-    public string Name { get; init; } = "Test Wallet";
 
     ReactiveCommand<Unit, ResultViewModel<string>> IWalletViewModel.GetReceiveAddress => getReceiveAddress;
 
     public ResultViewModel<string> ReceiveAddressResult { get; }
     public StoppableCommand<Unit, Result<BroadcastedTransaction>> Sync { get; set; }
-    public IEnumerable<IdentityContainer<TransactionViewModel>> History { get; }
+    public IEnumerable<IdentityContainer<ITransactionViewModel>> History { get; } = 
+        [
+            new()
+            {
+                Content = new TransactionViewModelDesign()
+                {
+                    Transaction = new BroadcastedTransactionDesign()
+                    {
+                        Balance = new AmountUI(200),
+                        BlockTime = DateTimeOffset.Now,
+                        Id = "12345"
+                    }
+                },
+            },
+            new()
+            {
+                Content = new TransactionViewModelDesign()
+                {
+                    Transaction = new BroadcastedTransactionDesign()
+                    {
+                        Balance = new AmountUI(-400),
+                        BlockTime = DateTimeOffset.Now  - 1.Days(),
+                        Id = "12345"
+                    }
+                },
+            },
+            new()
+            {
+                Content = new TransactionViewModelDesign()
+                {
+                    Transaction = new BroadcastedTransactionDesign()
+                    {
+                        Balance = new AmountUI(0),
+                        BlockTime = DateTimeOffset.Now  - 2.Days(),
+                        Id = "12345"
+                    }
+                },
+            },
+        ];
 }

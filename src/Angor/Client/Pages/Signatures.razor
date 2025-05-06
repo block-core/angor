@@ -3,13 +3,13 @@
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Angor.Client.Services
-@using Angor.Shared.ProtocolNew
 @using Angor.Client.Models
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 @using System.Text.Json
 @using Angor.Shared.Services
 @using System.Security.Cryptography
+@using Angor.Shared.Protocol
 @using Angor.Shared.Utilities
 @using Nostr.Client.Messages
 @using System.Collections.ObjectModel
@@ -28,10 +28,6 @@
 @inject NavMenuState NavMenuState
 @inject NostrConversionHelper NostrHelper
 @inject INetworkService _networkService
-@inject INostrCommunicationFactory _nostrCommunicationFactory
-@inject IEncryptionService _encryptionService
-@inject IRelayService _RelayService
-@inject NavigationManager NavigationManager
 
 @inherits BaseComponent
 
@@ -142,7 +138,7 @@
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Npub</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Message</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Chat</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -174,36 +170,27 @@
                                         }
                                         else
                                         {
-                                            <span class="badge bg-success">
-                                                <Icon IconName="check" Width="16" Height="16" class="me-1" />
-                                                Approved on @signature.TimeApproved.Value.ToString("dd/MM/yyyy HH:mm")
-                                            </span>
+                                            @if (signature.Invested != null)
+                                            {
+                                                <span class="badge bg-success">
+                                                    <Icon IconName="invest" Width="16" Height="16" class="me-1"/>
+                                                    Invested
+                                                </span>
+                                                <a href="@($"{_networkService.GetPrimaryExplorer().Url}/tx/{signature.Invested.TransactionId}")"
+                                                   target="_blank" class="d-inline mt-2 ms-2">view transaction</a>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-info">
+                                                    <Icon IconName="check" Width="16" Height="16" class="me-1" />
+                                                    Approved on @signature.TimeApproved.Value.ToString("dd/MM/yyyy HH:mm")
+                                                </span>
+                                            }
                                         }
                                     </td>
                                     <td>
-                                        <div class="d-flex flex-column">
-                                            <div class="mb-1">
-                                                <div class="d-flex align-items-center">
-                                                    <small class="text-muted">Investment npub:</small>
-                                                    <button class="btn btn-sm btn-icon ms-1" @onclick="() => CopyToClipboard(NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey))" title="Copy npub">
-                                                        <Icon IconName="copy" Width="12" Height="12" />
-                                                    </button>
-                                                </div>
-                                                <span class="d-block text-truncate" style="max-width: 200px;">@NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey)</span>
-                                            </div>
-                                            @if (!string.IsNullOrEmpty(signature.SignRecoveryRequest?.AdditionalNpub))
-                                            {
-                                                <div>
-                                                    <div class="d-flex align-items-center">
-                                                        <small class="text-muted">Additional npub:</small>
-                                                        <button class="btn btn-sm btn-icon ms-1" @onclick="() => CopyToClipboard(signature.SignRecoveryRequest.AdditionalNpub)" title="Copy npub">
-                                                            <Icon IconName="copy" Width="12" Height="12" />
-                                                        </button>
-                                                    </div>
-                                                    <span class="d-block text-truncate" style="max-width: 200px;">@signature.SignRecoveryRequest?.AdditionalNpub</span>
-                                                </div>
-                                            }
-                                        </div>
+                                        Investment npub: @NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey) <br />
+                                        Additional npub: @signature.SignRecoveryRequest?.AdditionalNpub
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-border-success" @onclick="() => ShowMessageModal(signature.investorNostrPubKey)">
@@ -263,14 +250,6 @@
     private string currentInvestorNpub = "";
     private string currentInvestorHexPub = "";
     private string founderNpub = "";
-    private string currentUserPrivateKeyHex = "";
-
-    private ElementReference messagesContainerRef;
-    private List<DirectMessage> chatMessages = new();
-    private string newMessage = "";
-    private bool isLoadingMessages = false;
-    private bool isSendingMessage = false;
-    private IDisposable messageSubscription;
 
     protected override async Task OnInitializedAsync()
     {
@@ -284,6 +263,9 @@
                              ?? throw new ArgumentException("The project was not found, try to scan in the founder page");
 
             await FetchPendingSignatures(FounderProject);
+
+            investments = await indexerService.GetInvestmentsAsync(FounderProject.ProjectInfo.ProjectIdentifier);
+
         }
         Logger.LogDebug("End of OnInitializedAsync");
     }
@@ -388,6 +370,8 @@
                     // Todo get the actual outputs with taproot type
                     pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3)
                         .Sum(_ => _.TxOut.Value.Satoshi);
+
+                    pendingSignature.Invested = investments.FirstOrDefault(_ => _.TransactionId == investorTrx.GetHash().ToString());
                 }
                 catch (FormatException fe)
                 {
@@ -623,8 +607,7 @@
             var nostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
             var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-            var encryptedContent = await encryption.EncryptNostrContentAsync(
-                nostrPrivateKeyHex, signature.investorNostrPubKey, sigJson);
+            var encryptedContent = await encryption.EncryptNostrContentAsync(nostrPrivateKeyHex, signature.investorNostrPubKey, sigJson);
 
             FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
 
@@ -670,6 +653,7 @@
         public string? EncryptedMessage { get; set; }
 
         public string EventId { get; set; }
+        public ProjectInvestment? Invested { get; set; }
     }
 
     private async Task CopyToClipboard(string text)

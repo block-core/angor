@@ -3,6 +3,8 @@ using Angor.Client.Storage;
 using Angor.Shared;
 using Blockcore.NBitcoin;
 
+namespace Angor.Client.Services;
+
 public class CurrencyService : ICurrencyService
 {
     private readonly ICurrencyRateService _currencyRateService;

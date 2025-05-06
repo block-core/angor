@@ -1,4 +1,5 @@
 using AspectInjector.Broker;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Angor.Contests.CrossCutting;
@@ -8,11 +9,11 @@ namespace Angor.Contests.CrossCutting;
 public class MemoizeTimedAttribute : Attribute
 {
     /// <summary>
-    /// Duración de la caché en segundos. Por defecto, 600 (10 minutos).
+    /// Cache expiration time in seconds
     /// </summary>
     public int ExpirationInSeconds { get; set; } = 600;
 
-    private readonly IMemoryCache _cache = new MemoryCache(new MemoryCacheOptions());
+    private readonly IMemoryCache cache = new MemoryCache(new MemoryCacheOptions());
 
     [Advice(Kind.Around, Targets = Target.Method)]
     public object Handle(
@@ -21,17 +22,17 @@ public class MemoizeTimedAttribute : Attribute
         [Argument(Source.Name)] string methodName,
         [Argument(Source.ReturnType)] Type returnType)
     {
-        // Genera la clave de caché a partir del nombre del método y sus argumentos.
+        // Generates the cache key based on the method name and its arguments.
         var cacheKey = $"{methodName}-{string.Join("_", args)}";
 
-        if (_cache.TryGetValue(cacheKey, out var cachedResult))
+        if (cache.TryGetValue(cacheKey, out var cachedResult))
         {
-            // Verifica si el método retorna Task<T>
+            // Checks if the method returns Task<T>
             if (returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(Task<>))
             {
-                // Obtiene el tipo T de Task<T>
+                // Gets the T type of Task<T>
                 var resultType = returnType.GetGenericArguments()[0];
-                // Invoca Task.FromResult<T>(cachedResult) para crear un Task<T> con el valor cacheado
+                // Calls Task.FromResult<T>(cachedResult) to create a Task<T> with the cached value
                 var fromResultMethod = typeof(Task)
                     .GetMethod(nameof(Task.FromResult))
                     .MakeGenericMethod(resultType);
@@ -40,39 +41,39 @@ public class MemoizeTimedAttribute : Attribute
             return cachedResult;
         }
 
-        // Ejecuta el método original
+        // Executes the original method
         var result = method(args);
 
         if (result is Task task)
         {
             if (returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(Task<>))
             {
-                // Si es Task<T>, espera su resultado, lo cachea y lo retorna correctamente
+                // If it is Task<T>, waits for its result, caches it, and returns it properly
                 return CacheTaskResultAsync((dynamic)result, cacheKey);
             }
             else
             {
-                // Para Task sin resultado genérico, se cachea la tarea entera
+                // For Task without a generic result, caches the entire task
                 task.ContinueWith(t =>
                 {
-                    _cache.Set(cacheKey, task, TimeSpan.FromSeconds(ExpirationInSeconds));
+                    cache.Set(cacheKey, task, TimeSpan.FromSeconds(ExpirationInSeconds));
                 });
                 return result;
             }
         }
         else
         {
-            // Para métodos sincrónicos, cachea el resultado y lo retorna
-            _cache.Set(cacheKey, result, TimeSpan.FromSeconds(ExpirationInSeconds));
+            // For synchronous methods, caches the result and returns it
+            cache.Set(cacheKey, result, TimeSpan.FromSeconds(ExpirationInSeconds));
             return result;
         }
     }
 
-    // Envuelve el resultado de la tarea en la caché y lo retorna como Task<T>
+    // Wraps the task result in the cache and returns it as Task<T>
     private async Task<T> CacheTaskResultAsync<T>(Task<T> task, string cacheKey)
     {
         T result = await task;
-        _cache.Set(cacheKey, result, TimeSpan.FromSeconds(ExpirationInSeconds));
+        cache.Set(cacheKey, result, TimeSpan.FromSeconds(ExpirationInSeconds));
         return result;
     }
 }

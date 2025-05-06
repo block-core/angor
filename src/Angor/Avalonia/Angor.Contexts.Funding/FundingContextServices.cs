@@ -1,16 +1,16 @@
 ﻿using Angor.Client;
 using Angor.Client.Services;
 using Angor.Contexts.Funding.Investor;
+using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Shared;
 using Angor.Shared.Networks;
-using Angor.Shared.ProtocolNew;
-using Angor.Shared.ProtocolNew.Scripts;
-using Angor.Shared.ProtocolNew.TransactionBuilders;
+using Angor.Shared.Protocol;
+using Angor.Shared.Protocol.Scripts;
+using Angor.Shared.Protocol.TransactionBuilders;
 using Angor.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -47,6 +47,7 @@ public static class FundingContextServices
         services.TryAddSingleton<IProjectScriptsBuilder, ProjectScriptsBuilder>();
         services.TryAddSingleton<IDerivationOperations, DerivationOperations>();
         services.TryAddSingleton<IHdOperations, HdOperations>();
+        services.TryAddSingleton<ISignService, SignService>();
         services.TryAddSingleton<ISpendingTransactionBuilder, SpendingTransactionBuilder>();
         services.TryAddSingleton<IInvestmentTransactionBuilder, InvestmentTransactionBuilder>();
         services.TryAddSingleton<ITaprootScriptBuilder, TaprootScriptBuilder>();

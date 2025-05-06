@@ -3,10 +3,8 @@ using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.Sections.Wallet.Operate;
 
-public class TransactionViewModel(IBroadcastedTransaction transaction,UIServices uiServices)
+public class TransactionViewModel(IBroadcastedTransaction transaction, UIServices uiServices) : ITransactionViewModel
 {
-    public string Address => transaction.Address;
-    public long Amount => transaction.Amount;
-    public int UtxoCount => transaction.UtxoCount;
-    public ReactiveCommand<Unit, Unit> ShowJson => ReactiveCommand.CreateFromTask(() => uiServices.Dialog.Show(new TransactionJsonViewModel(transaction.ViewRawJson), "Transaction Json", Observable.Return(true)));
+    public ReactiveCommand<Unit, Unit> ShowJson => ReactiveCommand.CreateFromTask(() => uiServices.Dialog.Show(new TransactionJsonViewModel(Transaction.RawJson), "Transaction Json", Observable.Return(true)));
+    public IBroadcastedTransaction Transaction { get; } = transaction;
 }

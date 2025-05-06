@@ -28,7 +28,7 @@
                 <span class="header-icon-wrapper">
                     <Icon IconName="settings" Width="32" Height="32" />
                 </span>
-                <h5 class="header-text">settings</h5>
+                <h5 class="header-text">Settings</h5>
             </div>
             <div class="header-actions">
             </div>
@@ -344,7 +344,6 @@
                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
                         <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
                     </tr>
                 </thead>
@@ -356,20 +355,6 @@
                             <td>@relay.Name</td>
                             <td class="@((relay.Status == UrlStatus.Online) ? "text-success" : (relay.Status == UrlStatus.NotReady) ? "text-warning" : "text-danger")">
                                 @relay.Status.ToString()
-                            </td>
-                            <td>
-                                @if (relay.IsPrimary)
-                                {
-                                    <span role="button">
-                                        <Icon IconName="primary" Height="24" Width="24"></Icon>
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span @onclick="() => SetPrimaryRelay(relay)" role="button">
-                                        <Icon IconName="set" Height="24" Width="24"></Icon>
-                                    </span>
-                                }
                             </td>
                             <td class="text-end">
                                 <button class="btn btn-border-danger btn-sm" @onclick="() => RemoveRelay(relay.Url)">
@@ -630,179 +615,191 @@
 
     private async Task AddIndexer()
     {
-        if (!string.IsNullOrWhiteSpace(newIndexerLink))
+        if (string.IsNullOrWhiteSpace(newIndexerLink))
         {
-            if (!Uri.TryCreate(newIndexerLink, UriKind.Absolute, out Uri? uri))
-            {
-                notificationComponent.ShowErrorMessage($"Invalid URL: {newIndexerLink}");
-                return;
-            }
-
-            if (uri.Scheme is not ("http" or "https"))
-            {
-                notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
-                return;
-            }
-
-            newIndexerLink = $"{uri.Scheme}://{uri.Authority}".TrimEnd('/');
-
-            Logger.LogInformation($"Normalized URL: {newIndexerLink}");
-
-            if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
-            {
-                notificationComponent.ShowErrorMessage($"URL already exists: {newIndexerLink}");
-                return;
-            }
-
-            // Check indexer status and fetch genesis block hash
-            var (isOnline, genesisHash) = await _indexerService.CheckIndexerNetwork(newIndexerLink);
-            if (!isOnline)
-            {
-                notificationComponent.ShowErrorMessage("The indexer is offline or unreachable.");
-                return;
-            }
-
-            var expectedHash = _networkConfiguration.GetGenesisBlockHash();
-            if (!_indexerService.ValidateGenesisBlockHash(genesisHash, expectedHash))
-            {
-                var expectedNetworkName = _networkConfiguration.GetNetwork().Name;
-                var fetchedNetworkName = _networkConfiguration.GetNetworkNameFromGenesisBlockHash(genesisHash);
-                notificationComponent.ShowErrorMessage($"The indexer is not compatible with the selected network. " +
-                $"Expected: {expectedNetworkName}, Provided: {fetchedNetworkName ?? "Unknown"}");
-                return;
-            }
-
-            // Add indexer to settings
-            settingsInfo.Indexers.Add(new SettingsUrl
-                {
-                    Url = newIndexerLink,
-                    LastCheck = DateTime.UtcNow,
-                    Status = UrlStatus.Online
-                });
-
-            _clientStorage.SetSettingsInfo(settingsInfo);
-            notificationComponent.ShowNotificationMessage("Indexer added successfully.");
-            newIndexerLink = string.Empty;
-
-            await Refresh(false);
+            notificationComponent.ShowErrorMessage("Indexer URL cannot be empty.");
+            return;
         }
+
+        if (!Uri.TryCreate(newIndexerLink, UriKind.Absolute, out Uri? uri))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL: {newIndexerLink}");
+            return;
+        }
+
+        if (uri.Scheme is not ("http" or "https"))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
+            return;
+        }
+
+        newIndexerLink = $"{uri.Scheme}://{uri.Authority}".TrimEnd('/');
+
+        Logger.LogInformation($"Normalized URL: {newIndexerLink}");
+
+        if (settingsInfo.Indexers.Any(a => a.Url == newIndexerLink))
+        {
+            notificationComponent.ShowErrorMessage($"URL already exists: {newIndexerLink}");
+            return;
+        }
+
+        // Check indexer status and fetch genesis block hash
+        var (isOnline, genesisHash) = await _indexerService.CheckIndexerNetwork(newIndexerLink);
+        if (!isOnline)
+        {
+            notificationComponent.ShowErrorMessage("The indexer is offline or unreachable.");
+            return;
+        }
+
+        var expectedHash = _networkConfiguration.GetGenesisBlockHash();
+        if (!_indexerService.ValidateGenesisBlockHash(genesisHash, expectedHash))
+        {
+            var expectedNetworkName = _networkConfiguration.GetNetwork().Name;
+            var fetchedNetworkName = _networkConfiguration.GetNetworkNameFromGenesisBlockHash(genesisHash);
+            notificationComponent.ShowErrorMessage($"The indexer is not compatible with the selected network. " +
+            $"Expected: {expectedNetworkName}, Provided: {fetchedNetworkName ?? "Unknown"}");
+            return;
+        }
+
+        // Add indexer to settings
+        settingsInfo.Indexers.Add(new SettingsUrl
+            {
+                Url = newIndexerLink,
+                LastCheck = DateTime.UtcNow,
+                Status = UrlStatus.Online
+            });
+
+        _clientStorage.SetSettingsInfo(settingsInfo);
+        notificationComponent.ShowNotificationMessage("Indexer added successfully.");
+        newIndexerLink = string.Empty;
+
+        await Refresh(false);
     }
 
     private async Task AddRelay()
     {
-        if (!string.IsNullOrWhiteSpace(newRelayLink))
+        if (string.IsNullOrWhiteSpace(newRelayLink))
         {
-            if (!Uri.TryCreate(newRelayLink, UriKind.Absolute, out Uri? uri))
-            {
-                notificationComponent.ShowErrorMessage($"invalid url {newRelayLink}");
-                return;
-            }
-
-            if (uri.Scheme is not ("ws" or "wss"))
-            {
-                notificationComponent.ShowErrorMessage($"invalid url {newRelayLink} schema must be ws or wss");
-                return;
-            }
-
-            newRelayLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
-
-            if (settingsInfo.Relays.Any(a => a.Url == newRelayLink))
-            {
-                notificationComponent.ShowErrorMessage($"url exists {newRelayLink}");
-                return;
-            }
-
-            settingsInfo.Relays.Add(new SettingsUrl { Url = newRelayLink, IsPrimary = !settingsInfo.Relays.Any() });
-            _clientStorage.SetSettingsInfo(settingsInfo);
-            newRelayLink = string.Empty;
+            notificationComponent.ShowErrorMessage("Relay URL cannot be empty.");
+            return;
         }
+
+        if (!Uri.TryCreate(newRelayLink, UriKind.Absolute, out Uri? uri))
+        {
+            notificationComponent.ShowErrorMessage($"invalid url {newRelayLink}");
+            return;
+        }
+
+        if (uri.Scheme is not ("ws" or "wss"))
+        {
+            notificationComponent.ShowErrorMessage($"invalid url {newRelayLink} schema must be ws or wss");
+            return;
+        }
+
+        newRelayLink = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
+
+        if (settingsInfo.Relays.Any(a => a.Url == newRelayLink))
+        {
+            notificationComponent.ShowErrorMessage($"url exists {newRelayLink}");
+            return;
+        }
+
+        settingsInfo.Relays.Add(new SettingsUrl { Url = newRelayLink, IsPrimary = !settingsInfo.Relays.Any() });
+        _clientStorage.SetSettingsInfo(settingsInfo);
+        newRelayLink = string.Empty;
 
         await Refresh(false);
     }
 
     private async Task AddExplorer()
     {
-        if (!string.IsNullOrWhiteSpace(newExplorerLink))
+        if (string.IsNullOrWhiteSpace(newExplorerLink))
         {
-            if (!Uri.TryCreate(newExplorerLink, UriKind.Absolute, out Uri? uri))
-            {
-                notificationComponent.ShowErrorMessage($"Invalid URL: {newExplorerLink}");
-                return;
-            }
-
-            if (uri.Scheme is not ("http" or "https"))
-            {
-                notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
-                return;
-            }
-             newExplorerLink = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
-
-            if (settingsInfo.Explorers.Any(a => a.Url == newExplorerLink))
-            {
-                notificationComponent.ShowErrorMessage($"URL already exists: {newExplorerLink}");
-                return;
-            }
-
-            // Add explorer to settings
-            var newExplorer = new SettingsUrl
-                {
-                    Url = newExplorerLink,
-                    LastCheck = DateTime.UtcNow,
-                    Status = UrlStatus.Online,
-                    IsPrimary = !settingsInfo.Explorers.Any(e => e.IsPrimary) // Set as primary if no primary exists
-                };
-
-            settingsInfo.Explorers.Add(newExplorer);
-
-            _clientStorage.SetSettingsInfo(settingsInfo);
-            notificationComponent.ShowNotificationMessage("Explorer added successfully.");
-            newExplorerLink = string.Empty;
-
-            await Refresh(false);
+            notificationComponent.ShowErrorMessage("Explorer URL cannot be empty.");
+            return;
         }
+
+        if (!Uri.TryCreate(newExplorerLink, UriKind.Absolute, out Uri? uri))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL: {newExplorerLink}");
+            return;
+        }
+
+        if (uri.Scheme is not ("http" or "https"))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
+            return;
+        }
+        newExplorerLink = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
+
+        if (settingsInfo.Explorers.Any(a => a.Url == newExplorerLink))
+        {
+            notificationComponent.ShowErrorMessage($"URL already exists: {newExplorerLink}");
+            return;
+        }
+
+        // Add explorer to settings
+        var newExplorer = new SettingsUrl
+            {
+                Url = newExplorerLink,
+                LastCheck = DateTime.UtcNow,
+                Status = UrlStatus.Online,
+                IsPrimary = !settingsInfo.Explorers.Any(e => e.IsPrimary) // Set as primary if no primary exists
+            };   
+
+        settingsInfo.Explorers.Add(newExplorer);
+
+        _clientStorage.SetSettingsInfo(settingsInfo);
+        notificationComponent.ShowNotificationMessage("Explorer added successfully.");
+        newExplorerLink = string.Empty;
+
+        await Refresh(false);
     }
 
     private async Task AddChatApp()
     {
-        if (!string.IsNullOrWhiteSpace(newChatAppLink))
+        if (string.IsNullOrWhiteSpace(newChatAppLink))
         {
-            if (!Uri.TryCreate(newChatAppLink, UriKind.Absolute, out Uri? uri))
-            {
-                notificationComponent.ShowErrorMessage($"Invalid URL: {newChatAppLink}");
-                return;
-            }
-
-            if (uri.Scheme is not ("http" or "https"))
-            {
-                notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
-                return;
-            }
-
-            newChatAppLink = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
-           
-            if (settingsInfo.ChatApps.Any(a => a.Url == newChatAppLink))
-            {
-                notificationComponent.ShowErrorMessage($"URL already exists: {newChatAppLink}");
-                return;
-            }
-
-            var newChatApp = new SettingsUrl
-            {
-                Url = newChatAppLink,
-                Name = uri.Host,
-                LastCheck = DateTime.UtcNow,
-                Status = UrlStatus.Online,
-                IsPrimary = !settingsInfo.ChatApps.Any(c => c.IsPrimary)
-            };
-
-            settingsInfo.ChatApps.Add(newChatApp);
-
-            _clientStorage.SetSettingsInfo(settingsInfo);
-            notificationComponent.ShowNotificationMessage("Chat application added successfully.");
-            newChatAppLink = string.Empty;
-
-            await Refresh(false);
+            notificationComponent.ShowErrorMessage("Chat application URL cannot be empty.");
+            return;
         }
+
+        if (!Uri.TryCreate(newChatAppLink, UriKind.Absolute, out Uri? uri))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL: {newChatAppLink}");
+            return;
+        }
+
+        if (uri.Scheme is not ("http" or "https"))
+        {
+            notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
+            return;
+        }
+
+        newChatAppLink = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
+       
+        if (settingsInfo.ChatApps.Any(a => a.Url == newChatAppLink))
+        {
+            notificationComponent.ShowErrorMessage($"URL already exists: {newChatAppLink}");
+            return;
+        }
+
+        var newChatApp = new SettingsUrl
+        {
+            Url = newChatAppLink,
+            Name = uri.Host,
+            LastCheck = DateTime.UtcNow,
+            Status = UrlStatus.Online,
+            IsPrimary = !settingsInfo.ChatApps.Any(c => c.IsPrimary)
+        };
+
+        settingsInfo.ChatApps.Add(newChatApp);
+
+        _clientStorage.SetSettingsInfo(settingsInfo);
+        notificationComponent.ShowNotificationMessage("Chat application added successfully.");
+        newChatAppLink = string.Empty;
+
+        await Refresh(false);
     }
 
     private void RemoveIndexer(string url)

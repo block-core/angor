@@ -22,7 +22,7 @@ public static class ProjectExtensions
             {
                 Amount = stage.Amount,
                 Index = stage.Index,
-                Weight = stage.Weight,
+                RatioOfTotal = stage.RatioOfTotal,
                 ReleaseDate = stage.ReleaseDate,
             }).ToList()
         };

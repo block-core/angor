@@ -44,7 +44,7 @@ public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
 
         History = transactions;
 
-        balanceHelper = changes.Sum(x => x.Balance.Value).ToProperty(this, x => x.Balance);
+        balanceHelper = changes.Sum(transaction => transaction.GetBalance().Sats).ToProperty(this, x => x.Balance);
     }
     public StoppableCommand<Unit, Result<Event>> Sync { get; }
 

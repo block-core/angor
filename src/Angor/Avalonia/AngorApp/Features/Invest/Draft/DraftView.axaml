@@ -3,14 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:c="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-             xmlns:draft1="clr-namespace:AngorApp.Features.Invest.Draft"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="850"
-             x:Class="AngorApp.Features.Invest.Draft.DraftView"
-             x:DataType="draft1:IDraftViewModel">
+             xmlns:df="clr-namespace:AngorApp.Features.Invest.Draft"
+             xmlns:p="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
+             mc:Ignorable="d" x:Class="AngorApp.Features.Invest.Draft.DraftView"
+             Height="390"
+             x:DataType="df:IDraftViewModel">
 
     <Design.DataContext>
-        <draft1:DraftViewModelDesign />
+        <df:DraftViewModelDesign />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -20,28 +20,13 @@
     </UserControl.Styles>
 
     <DockPanel Grid.IsSharedSizeScope="True">
-        <StackPanel DockPanel.Dock="Top">
-            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Amount to invest">
-                <TextBlock Text="{Binding SatsToInvest, StringFormat={x:Static controls:MiscConverters.Sats}}" />
+        <p:Pane Header="Choose your speed:" DockPanel.Dock="Top">
+            <controls:FeerateSelector Presets="{Binding Presets}" FeeCalculator="{Binding FeeCalculator}" Feerate="{Binding Feerate}" />
+        </p:Pane>
+        <p:Loading IsLoading="{Binding Path=IsBusy^}" LoadingText="Calculating transaction...">
+            <HeaderedContentControl Margin="0 20 0 0" VerticalAlignment="Top" IsVisible="{Binding Draft, Converter={x:Static ObjectConverters.IsNotNull}}" Header="Fee" Theme="{StaticResource InlineHeaderedContentControl}">
+                <TextBlock Text="{Binding Draft.TotalFee, StringFormat={x:Static controls:MiscConverters.Sats}}" />
             </HeaderedContentControl>
-            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Feerate">
-                <NumericUpDown ShowButtonSpinner="False" MaxWidth="250" HorizontalAlignment="Left" Value="{Binding Feerate, Mode=TwoWay}">
-                    <NumericUpDown.InnerRightContent>
-                        <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">sats/vByte</TextBlock>
-                    </NumericUpDown.InnerRightContent>
-                </NumericUpDown>
-            </HeaderedContentControl>
-        </StackPanel>
-        <Panel Margin="0 20 0 0">
-            <StackPanel IsVisible="{Binding !IsBusy^}">
-                <HeaderedContentControl Header="Fee" Theme="{StaticResource InlineHeaderedContentControl}">
-                    <TextBlock Text="{Binding Draft.TotalFee, StringFormat={x:Static controls:MiscConverters.Sats}}" />
-                </HeaderedContentControl>
-            </StackPanel>
-            <StackPanel IsVisible="{Binding IsBusy^}" VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock>Calculating investment transaction...</TextBlock>
-                <c:ProgressRing IsIndeterminate="True" Height="64" Width="64" />
-            </StackPanel>
-        </Panel>
+        </p:Loading>
     </DockPanel>
 </UserControl>

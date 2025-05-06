@@ -5,13 +5,13 @@ using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Angor.Shared.ProtocolNew;
+using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 using MediatR;
 
-namespace Angor.Contexts.Funding.Investor;
+namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class CreateInvestment
 {
