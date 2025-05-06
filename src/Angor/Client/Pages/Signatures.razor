@@ -28,6 +28,11 @@
 @inject NavMenuState NavMenuState
 @inject NostrConversionHelper NostrHelper
 @inject INetworkService _networkService
+@inject INostrCommunicationFactory _nostrCommunicationFactory
+@inject IEncryptionService _encryptionService
+@inject IRelayService _RelayService
+@inject NavigationManager NavigationManager
+@inject IIndexerService indexerService
 
 @inherits BaseComponent
 
@@ -138,6 +143,8 @@
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Npub</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Message</th>
+                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investor Npub</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Chat</th>
                             </tr>
                         </thead>
@@ -189,8 +196,35 @@
                                         }
                                     </td>
                                     <td>
-                                        Investment npub: @NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey) <br />
-                                        Additional npub: @signature.SignRecoveryRequest?.AdditionalNpub
+
+                                        <div class="d-flex flex-column">
+                                            <div class="mb-1">
+                                                <div class="d-flex align-items-center">
+                                                    <small class="text-muted">Investment npub:</small>
+                                                    <button class="btn btn-sm btn-icon ms-1" @onclick="() => CopyToClipboard(NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey))" title="Copy npub">
+                                                        <Icon IconName="copy" Width="12" Height="12" />
+                                                    </button>
+                                                </div>
+                                                <span class="d-block text-truncate" style="max-width: 200px;">@NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey)</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(signature.SignRecoveryRequest?.AdditionalNpub))
+                                            {
+                                                <div>
+                                                    <div class="d-flex align-items-center">
+                                                        <small class="text-muted">Additional npub:</small>
+                                                        <button class="btn btn-sm btn-icon ms-1" @onclick="() => CopyToClipboard(signature.SignRecoveryRequest.AdditionalNpub)" title="Copy npub">
+                                                            <Icon IconName="copy" Width="12" Height="12" />
+                                                        </button>
+                                                    </div>
+                                                    <span class="d-block text-truncate" style="max-width: 200px;">@signature.SignRecoveryRequest?.AdditionalNpub</span>
+                                                </div>
+                                            }
+                                        </div>
+                                        @NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey) <br />
+                                        @if (signature.SignRecoveryRequest?.AdditionalNpub != null)
+                                        {
+                                            <span>Additional NPUB: @signature.SignRecoveryRequest?.AdditionalNpub</span>
+                                        }
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-border-success" @onclick="() => ShowMessageModal(signature.investorNostrPubKey)">
@@ -250,6 +284,15 @@
     private string currentInvestorNpub = "";
     private string currentInvestorHexPub = "";
     private string founderNpub = "";
+    private string currentUserPrivateKeyHex = "";
+
+    private ElementReference messagesContainerRef;
+    private List<DirectMessage> chatMessages = new();
+    private string newMessage = "";
+    private bool isLoadingMessages = false;
+    private bool isSendingMessage = false;
+    private IDisposable messageSubscription;
+    private List<ProjectInvestment> investments = new();
 
     protected override async Task OnInitializedAsync()
     {
