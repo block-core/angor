@@ -136,6 +136,10 @@
         <Setter Property="Foreground" Value="{StaticResource Level4}" />
     </Style>
     
+    <Style Selector="Button.HorizontalStretch">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+    
     <Style Selector=":is(ItemsControl):not(MenuItem):empty">
         <Setter Property="Template">
             <Setter.Value>

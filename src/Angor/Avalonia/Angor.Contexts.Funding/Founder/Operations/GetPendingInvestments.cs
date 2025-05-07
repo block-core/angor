@@ -69,5 +69,7 @@ public class GetPendingInvestments
         }
     }
 
-    public record PendingInvestmentDto(DateTime Created, decimal Amount, string InvestorNostrPubKey);
+    public record PendingInvestmentDto(DateTime Created, decimal Amount, string InvestorNostrPubKey)
+    {
+    }
 }
