@@ -1,5 +1,6 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -25,22 +26,25 @@ public class GetPendingInvestments
     {
         public async Task<Result<IEnumerable<PendingInvestmentDto>>> Handle(GetPendingInvestmentsRequest request, CancellationToken cancellationToken)
         {
-            var project = await projectRepository.Get(request.ProjectId);
-            if (project.IsFailure)
+            var projectResult = await projectRepository.Get(request.ProjectId);
+            if (projectResult.IsFailure)
             {
-                return Result.Failure<IEnumerable<PendingInvestmentDto>>(project.Error);
+                return Result.Failure<IEnumerable<PendingInvestmentDto>>(projectResult.Error);
             }
             
-            var nostrPubKey = project.Value.NostrPubKey;
+            var nostrPubKey = projectResult.Value.NostrPubKey;
             var investingMessages = InvestmentMessages(nostrPubKey);
-            var pendingInvestmentResults = await investingMessages.SelectMany(nostrMessage => DecryptInvestmentMessage(request.WalletId, project, nostrMessage)).ToList();
+            var pendingInvestmentResults = await investingMessages
+                .SelectMany(nostrMessage => DecryptInvestmentMessage(request.WalletId, projectResult.Value, nostrMessage))
+                .ToList();
 
             return pendingInvestmentResults.Combine();
         }
 
-        private Task<Result<PendingInvestmentDto>> DecryptInvestmentMessage(Guid walletId, Result<Project> project, NostrMessage nostrMessage)
+        private Task<Result<PendingInvestmentDto>> DecryptInvestmentMessage(Guid walletId, Project project, NostrMessage nostrMessage)
         {
-            return from decrypted in nostrDecrypter.Decrypt(walletId, project.Value.Id, nostrMessage)
+            return 
+                from decrypted in nostrDecrypter.Decrypt(walletId, project.Id, nostrMessage)
                 from signRecoveryRequest in Result.Try(() => serializer.Deserialize<SignRecoveryRequest>(decrypted))
                 select new PendingInvestmentDto(nostrMessage.Created, GetAmount(signRecoveryRequest), nostrMessage.InvestorNostrPubKey);
         }
