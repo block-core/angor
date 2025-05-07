@@ -16,8 +16,10 @@ namespace Angor.Shared.Services
         private readonly INetworkService _networkService;
         private readonly IRelaySubscriptionsHandling _subscriptionsHandling;
         private readonly ISerializer _serializer;
-        
-        
+
+        // https://github.com/block-core/nips/blob/peer-to-peer-decentralized-funding/3030.md
+        public const NostrKind Nip3030NostrKind = (NostrKind)3030;
+
         public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService, IRelaySubscriptionsHandling subscriptionsHanding, ISerializer serializer)
         {
             _logger = logger;
@@ -85,7 +87,7 @@ namespace Angor.Shared.Services
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 Authors = nPubs,
-                Kinds = [(NostrKind)3030, NostrKind.ApplicationSpecificData, NostrKind.Metadata],
+                Kinds = [Nip3030NostrKind, NostrKind.ApplicationSpecificData, NostrKind.Metadata],
             }));
         }
 
@@ -277,7 +279,7 @@ namespace Angor.Shared.Services
             var ev = new NostrEvent
             {
                 //Kind = NostrKind.ApplicationSpecificData,
-                Kind = (NostrKind)3030,
+                Kind = Nip3030NostrKind,
                 CreatedAt = DateTime.UtcNow,
                 Content = content
             };
