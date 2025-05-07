@@ -6,62 +6,84 @@
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.FounderSectionView"
              xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
-             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:sdg="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
-             x:DataType="founder:IFounderSectionViewModel" >
+             xmlns:co="clr-namespace:AngorApp.UI.Controls"
+             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
+             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             x:DataType="founder:IFounderSectionViewModel">
 
     <Design.DataContext>
         <founder:FounderSectionViewModelDesign />
     </Design.DataContext>
+    
+    <Interaction.Behaviors>
+        <DataContextChangedTrigger>
+            <InvokeCommandAction Command="{Binding LoadProjects}" />
+        </DataContextChangedTrigger>
+    </Interaction.Behaviors>
 
-    <UserControl.Styles>
+    <UserControl.Resources>
+        <ControlTheme TargetType="z:Pane" x:Key="RoundPane" BasedOn="{StaticResource {x:Type z:Pane}}">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="10" />
+        </ControlTheme>
+    </UserControl.Resources>
 
-        <Style Selector="TextBox">
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-        </Style>
-
-        <Style Selector="i|Icon">
-            <Setter Property="FontSize" Value="25" />
-        </Style>
-
-        <Style Selector="TextBlock">
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-
-    </UserControl.Styles>
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="founder:IFounderProjectViewModel">
+            <Button Margin="10" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" Command="{Binding GoToDetails}">
+                <Border ClipToBounds="True" CornerRadius="10" Background="White">
+                    <Grid RowDefinitions="Auto *">
+                        <asyncImageLoader:AdvancedImage
+                            DockPanel.Dock="Top"
+                            Source="{Binding Banner}" VerticalAlignment="Top" />
+                        <StackPanel Grid.Row="1" Margin="10" Spacing="10">
+                            <TextBlock TextWrapping="Wrap" HorizontalAlignment="Center" Classes="SizeBig" Text="{Binding Name}" />
+                            <TextBlock MaxLines="4" TextElement.FontWeight="Normal" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Text="{Binding ShortDescription}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Button>
+        </DataTemplate>
+    </UserControl.DataTemplates>
 
     <StackPanel Spacing="20">
 
-        <controls:Pane Title="Founder" IsTitleVisible="True" Subtitle="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required">
-            <controls:Pane.TitleRightContent>
-                <controls:IconButton DockPanel.Dock="Right" VerticalAlignment="Top">
+        <co:Pane Title="Founder" IsTitleVisible="True">
+            <co:Pane.TitleRightContent>
+                <co:IconButton DockPanel.Dock="Right" VerticalAlignment="Top">
                     CREATE PROJECT
-                    <controls:IconButton.Icon>
-                        <i:Icon Value="fa-plus" FontSize="20" />
-                    </controls:IconButton.Icon>
-                </controls:IconButton>
-            </controls:Pane.TitleRightContent>
-            <controls:Pane.TitleIcon>
-                <i:Icon Value="fa-magnifying-glass" />
-            </controls:Pane.TitleIcon>
-        </controls:Pane>
+                    <co:IconButton.Icon>
+                        <i:Icon Value="mdi-plus-box-outline" FontSize="20" />
+                    </co:IconButton.Icon>
+                </co:IconButton>
+            </co:Pane.TitleRightContent>
+            <co:Pane.TitleIcon>
+                <i:Icon Value="mdi-shield-account-outline" />
+            </co:Pane.TitleIcon>
+        </co:Pane>
+        
+        <co:Pane>
+            To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required
+        </co:Pane>
 
-        <controls:IconButton Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" Content="SCAN FOR FOUNDER PROJECTS">
-            <controls:IconButton.Icon>
-                <i:Icon Value="fa-magnifying-glass" />
-            </controls:IconButton.Icon>
-        </controls:IconButton>
-
-        <Button Content="Get pending investments" Command="{Binding GetProjects}" />
-        <sdg:SlimDataGrid ItemsSource="{Binding Projects}">
-            <sdg:SlimDataGrid.Columns>
-                <sdg:Column Width="Auto" Header="Amount" Binding="{Binding Name}" />
-                <sdg:Column Width="Auto" Header="Created" Binding="{Binding StartingDate}" />
-                <sdg:Column Width="Auto" Header="Investor (npub)" Binding="{Binding InformationUri}" />
-            </sdg:SlimDataGrid.Columns>
-        </sdg:SlimDataGrid>
+        <co:Pane Title="Projects" IsTitleVisible="True">
+            <co:Pane.TitleRightContent>
+                <Button i:Attached.Icon="fa-arrow-rotate-right" Command="{Binding LoadProjects}" Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" />
+            </co:Pane.TitleRightContent>
+        </co:Pane>
+        
+        <z:Pane>
+            <z:Loading LoadingText="Loading projects. Please wait." VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" IsLoading="{Binding LoadProjects.IsExecuting^}">
+                <ItemsControl ItemsSource="{Binding Projects}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel ItemWidth="300" ItemHeight="350" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </z:Loading>
+        </z:Pane>
 
     </StackPanel>
 </UserControl>

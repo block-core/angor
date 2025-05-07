@@ -47,6 +47,13 @@
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj" />
         <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Sections\Founder\Details\FounderProjectDetailsView.axaml.cs">
+        <DependentUpon>FounderProjectDetailsView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
     
     
 </Project>
