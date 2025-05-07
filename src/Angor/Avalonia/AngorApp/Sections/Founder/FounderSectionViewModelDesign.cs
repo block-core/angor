@@ -1,11 +1,12 @@
 using System.Linq;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
+using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder;
 
 public class FounderSectionViewModelDesign : IFounderSectionViewModel
 {
-    public ReactiveCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; set; } = ReactiveCommand.Create(() => Result.Success(Enumerable.Empty<ProjectDto>()));
+    public IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; } = EnhancedCommand.Create(ReactiveCommand.Create(() => Result.Success(Enumerable.Empty<ProjectDto>())));
 
     public IEnumerable<IFounderProjectViewModel> Projects { get; } = new List<IFounderProjectViewModel>()
     {
