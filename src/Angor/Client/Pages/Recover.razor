@@ -62,7 +62,7 @@
                         <span class="button-text ms-2">Refresh</span>
                     }
                 </button>
-                <button class="btn btn-border-success ms-2" @onclick="ShowMessageModal" title="Message">
+                <button class="btn btn-border-success ms-2" @onclick="ShowMessageWithPassword" title="Message">
                     <Icon IconName="chat" Width="24" Height="24" />
                     <span class="button-text ms-2">Message</span>
                 </button>
@@ -1290,7 +1290,7 @@
         NavigationManager.NavigateTo($"/release/{ProjectIdentifier}");
     }
 
-    private void ShowMessageModal()
+    private void ShowMessageWithPassword()
     {
         showMessageModal = true;
 
@@ -1306,12 +1306,12 @@
             // If password is available, get the private key
             if (passwordComponent.HasPassword())
             {
-                _ = InitializeMessaging();
+                _ = ShowMessage();
             }
             else
             {
                 passwordComponent.ShowPassword(async () => {
-                    await InitializeMessaging();
+                    await ShowMessage();
                 });
             }
         }
@@ -1319,7 +1319,7 @@
         StateHasChanged();
     }
 
-    private async Task InitializeMessaging()
+    private async Task ShowMessage()
     {
         try
         {

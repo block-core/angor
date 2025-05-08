@@ -715,28 +715,28 @@
         
         showMessageModal = true;
         
-        // Initialize messaging
-        InitializeMessagingAndCheckPassword();
+        // Show Message
+        ShowMessageAndCheckPassword();
         
         StateHasChanged();
     }
     
-    private void InitializeMessagingAndCheckPassword()
+    private void ShowMessageAndCheckPassword()
     {
         if (!passwordComponent.HasPassword())
         {
             passwordComponent.ShowPassword(async () =>
             {
-                await InitializeMessaging();
+                await ShowMessage();
             });
         }
         else
         {
-            _ = InitializeMessaging();
+            _ = ShowMessage();
         }
     }
     
-    private async Task InitializeMessaging()
+    private async Task ShowMessage()
     {
         try
         {

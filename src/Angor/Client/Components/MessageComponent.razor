@@ -170,7 +170,7 @@
 
         if (!string.IsNullOrEmpty(CurrentUserPrivateKeyHex) && !string.IsNullOrEmpty(CurrentUserNpub) && !string.IsNullOrEmpty(ContactHexPub))
         {
-            await InitializeMessaging();
+            await ShowMessage();
         }
     }
 
@@ -183,7 +183,7 @@
         }
     }
 
-    private async Task InitializeMessaging()
+    private async Task ShowMessage()
     {
         if (string.IsNullOrEmpty(CurrentUserPrivateKeyHex) ||
             string.IsNullOrEmpty(CurrentUserNpub) ||
