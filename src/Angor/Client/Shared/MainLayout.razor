@@ -13,6 +13,7 @@
 @inject NavMenuState NavMenuState;
 @inject INetworkStorage _networkStorage
 @inject IClientStorage storage;
+@inject INotificationService NotificationService;
 
 <div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show @(isSidebarCollapsed ? "sidenav-hidden" : "")">
     <NavMenu @bind-IsCollapsed="isSidebarCollapsed" IsDarkTheme="isDarkTheme"/>
@@ -37,6 +38,15 @@
                 </nav>
                 <div class="navbar-collapse">
                     <ul class="navbar-nav user-select-none">
+                        <li class="nav-item" id="notification">
+                            <span role="button" @onclick="OpenNotifications" data-tooltip="Notifications" class="position-relative">
+                                <Icon IconName="notifications" Height="24" Width="24" />
+                                @if (unreadNotificationsCount > 0)
+                                {
+                                    <span class="notification-badge"></span>
+                                }
+                            </span>
+                        </li>
                         <li class="nav-item d-none" id="updateButton">
                             <span role="button" @onclick="UpdateApp" data-tooltip="Update application">
                                 <Icon IconName="update" />
@@ -87,6 +97,10 @@
     private string sidenavClass = "sidenav-hidden";
     private bool isSidebarCollapsed;
 
+    private int unreadNotificationsCount = 0;
+    private NotificationComponent notificationComponent;
+    private int previousNotificationCount = 0;
+    
     private string networkText = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -233,4 +247,26 @@
             sidenavClass = "";
         }
     }
+
+    private async Task OpenNotifications()
+    {
+        // Navigate to notifications page
+        _navManager.NavigateTo("/notifications");
+    }
+
+    private void UpdateNotificationCount()
+    {
+        int newCount = NotificationService.GetUnreadNotificationsCount();
+        
+        // Check if there are new notifications since last update
+        if (newCount > previousNotificationCount && previousNotificationCount >= 0)
+        {
+            notificationComponent?.ShowNotificationMessage("You have new notifications");
+        }
+        
+        unreadNotificationsCount = newCount;
+        previousNotificationCount = newCount;
+        StateHasChanged();
+    }
+
 }
