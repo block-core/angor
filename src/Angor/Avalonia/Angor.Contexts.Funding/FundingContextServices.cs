@@ -5,6 +5,7 @@ using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Shared;
 using Angor.Shared.Networks;
@@ -30,6 +31,7 @@ public static class FundingContextServices
         services.AddSingleton<IInvestmentAppService, InvestmentAppService>();
         services.AddSingleton<IInvestmentRepository, InvestmentRepository>();
         services.AddSingleton<IProjectRepository, ProjectRepository>();
+        services.AddSingleton<INostrDecrypter, NostrDecrypter>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateInvestment.CreateInvestmentTransactionHandler).Assembly));
         
         services.TryAddSingleton<ISerializer, Serializer>();

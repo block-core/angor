@@ -26,7 +26,7 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel
             .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Do(_ => isBusy.OnNext(true))
-            .Select(_ => Observable.FromAsync(() => investmentAppService.CreateDraft(walletId.Id.Value, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(sats))))
+            .Select(_ => Observable.FromAsync(() => investmentAppService.CreateInvestmentDraft(walletId.Id.Value, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(sats))))
             .Switch()
             .ObserveOn(RxApp.MainThreadScheduler)
             .Do(_ => isBusy.OnNext(false), _ => isBusy.OnNext(false))
