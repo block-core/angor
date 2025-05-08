@@ -16,7 +16,7 @@
 
 <div class="@($"{(isDarkTheme ? "dark" : "")}") sidenav-show @(isSidebarCollapsed ? "sidenav-hidden" : "")">
     <NavMenu @bind-IsCollapsed="isSidebarCollapsed" IsDarkTheme="isDarkTheme"/>
-    <main class="main-content">
+    <main class="main-content" @onclick="NotifyActivity" @onscroll="NotifyActivity">
         <!-- Navbar -->
         <nav class="navbar navbar-main navbar-expand-lg px-0 border-radius-xl position-sticky mt-3 z-index-sticky left-auto ms-2 me-2" id="navbarBlur">
             <div class="container-fluid">
@@ -232,5 +232,10 @@
         {
             sidenavClass = "";
         }
+    }
+
+    private void NotifyActivity()
+    {
+       
     }
 }
