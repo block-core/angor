@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:df="clr-namespace:AngorApp.Features.Invest.Draft"
+             xmlns:p="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
+             mc:Ignorable="d" x:Class="AngorApp.Features.Invest.Draft.DraftView"
+             Height="390"
+             x:DataType="df:IDraftViewModel">
+
+    <Design.DataContext>
+        <df:DraftViewModelDesign />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="StackPanel">
+            <Setter Property="Spacing" Value="10" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel Grid.IsSharedSizeScope="True">
+        <p:Pane Header="Choose your speed:" DockPanel.Dock="Top">
+            <controls:FeerateSelector Presets="{Binding Presets}" FeeCalculator="{Binding FeeCalculator}" Feerate="{Binding Feerate}" />
+        </p:Pane>
+        <p:Loading IsLoading="{Binding Path=IsBusy^}" LoadingText="Calculating transaction...">
+            <HeaderedContentControl Margin="0 20 0 0" VerticalAlignment="Top" IsVisible="{Binding Draft, Converter={x:Static ObjectConverters.IsNotNull}}" Header="Fee" Theme="{StaticResource InlineHeaderedContentControl}">
+                <TextBlock Text="{Binding Draft.TotalFee, StringFormat={x:Static controls:MiscConverters.Sats}}" />
+            </HeaderedContentControl>
+        </p:Loading>
+    </DockPanel>
+</UserControl>

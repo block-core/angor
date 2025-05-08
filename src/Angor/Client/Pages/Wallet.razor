@@ -155,23 +155,44 @@
 
                                         case 2:
                                             <div class="info-card slide-in">
-                                                <p class="text-muted mb-3">@stepDescription</p>
-                                                @foreach (var (index, word) in selectedWordsToVerify)
-                                                {
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Word #@index</label>
-                                                        <input type="text" class="form-control"
-                                                               @bind="userVerificationInputs[index]"
-                                                               @bind:after="ValidateWordInput"
-                                                               placeholder="Enter word #@index" />
-                                                    </div>
-                                                }
-                                                @if (showVerificationError)
-                                                {
-                                                    <div class="alert alert-danger">
-                                                        Words don't match. Please check your backup.
-                                                    </div>
-                                                }
+                                                <p class="text-muted mb-5">@stepDescription</p>
+                                                <div class="row g-4">
+                                                    @for (int i = 0; i < selectedWordsToVerify.Count; i++)
+                                                    {
+                                                        var wordIndex = selectedWordsToVerify[i].index;
+                                                        <div class="col-md-4 col-sm-6 mt-0">
+                                                            <div class="mb-3 position-relative">
+                                                                <label class="form-label">Word #@wordIndex</label>
+                                                                <input type="text" class="form-control"
+                                                                       value="@userVerificationInputs[wordIndex]"
+                                                                       @oninput="(e) => HandleWordInput(wordIndex, e)"
+                                                                       @onfocus="() => ShowSuggestionsIfNeeded(wordIndex)"
+                                                                       placeholder="Enter word #@wordIndex" />
+                                                                @if (showSuggestions.TryGetValue(wordIndex, out bool showForWord) &&
+                                                               showForWord &&
+                                                               !string.IsNullOrWhiteSpace(userVerificationInputs[wordIndex]))
+                                                                {
+                                                                    var suggestions = GetFilteredWordSuggestions(userVerificationInputs[wordIndex]);
+                                                                    @if (suggestions.Any())
+                                                                    {
+                                                                        <div class="word-suggestions-dropdown">
+                                                                            <div class="suggestions-container">
+                                                                                @foreach (var suggestion in suggestions.Take(5))
+                                                                                {
+                                                                                    <div class="suggestion-item"
+                                                                                         @onclick="() => SelectSuggestion(wordIndex, suggestion)"
+                                                                                         @key="suggestion">
+                                                                                        @suggestion
+                                                                                    </div>
+                                                                                }
+                                                                            </div>
+                                                                        </div>
+                                                                    }
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
                                             </div>
                                             break;
 
@@ -780,15 +801,15 @@ else
                                             </div>
                                         </div>
 
-           <FeeSelector SendFee="@_sendInfo.SendFee"
-             CoinTicker="@network.CoinTicker"
-             FeeRate="@_sendInfo.FeeRate"
-             FeeBlockCount="@_sendInfo.FeeBlockCount"
-             FeePosition="@FeePosition"
-             FeeMin="@FeeMin"
-             FeeMax="@_feeMax"
-             RecommendedMinFee="@GetRecommendedMinFee()"
-             OnFeeChanged="@HandleFeeChanged"></FeeSelector>
+                                        <FeeSelector SendFee="@_sendInfo.SendFee"
+                                                     CoinTicker="@network.CoinTicker"
+                                                     FeeRate="@_sendInfo.FeeRate"
+                                                     FeeBlockCount="@_sendInfo.FeeBlockCount"
+                                                     FeePosition="@FeePosition"
+                                                     FeeMin="@FeeMin"
+                                                     FeeMax="@_feeMax"
+                                                     RecommendedMinFee="@GetRecommendedMinFee()"
+                                                     OnFeeChanged="@HandleFeeChanged"></FeeSelector>
                                         @if (_sendInfo.SendUtxos.Any())
                                         {
                                             <div class="info-card utxo-details p-3 rounded mt-4">
@@ -1055,6 +1076,9 @@ else
     private Dictionary<int, string> userVerificationInputs = new();
     private bool verificationPassed;
     private bool showVerificationError;
+    private List<(int originalIndex, int shuffledIndex)> shuffledWordIndices = new();
+
+    private Dictionary<int, bool> showSuggestions = new();
 
     private decimal sendAmount
     {
@@ -1118,8 +1142,16 @@ else
                 return;
             }
 
-            SelectRandomWordsForVerification();
+            PrepareFullVerification();
             showVerificationError = false; // Reset error state
+        }
+        else if (currentStep == 2 && isNewWallet)
+        {
+            if (!verificationPassed)
+            {
+                notificationComponent.ShowNotificationMessage("Please correctly enter all recovery words to proceed.");
+                return;
+            }
         }
 
         if (currentStep < totalSteps)
@@ -1141,7 +1173,7 @@ else
         return currentStep switch
         {
             1 => !string.IsNullOrWhiteSpace(newWalletWords) && (isNewWallet ? backupConfirmation : true),
-            2 => isNewWallet ? verificationPassed : true, // Only require verification for new wallets
+            2 => isNewWallet ? verificationPassed : true,
             3 => true,
             _ => false
         };
@@ -1803,36 +1835,57 @@ else
         showTransactionJsonModal = isVisible;
     }
 
-    private void SelectRandomWordsForVerification()
+    private void PrepareFullVerification()
     {
         if (string.IsNullOrEmpty(newWalletWords)) return;
 
-        var words = newWalletWords.Split(' ').ToList();
+        var words = newWalletWords.Trim().Split(' ').ToList();
+        if (words.Count != 12)
+        {
+            notificationComponent.ShowErrorMessage("Recovery phrase should contain 12 words.");
+            return;
+        }
+
         selectedWordsToVerify.Clear();
         userVerificationInputs.Clear();
+        shuffledWordIndices.Clear();
         verificationPassed = false;
 
         var random = new Random();
-        var indices = Enumerable.Range(0, words.Count)
-            .OrderBy(x => random.Next())
-            .Take(2)
-            .ToList();
+        var originalIndices = Enumerable.Range(0, words.Count).ToList();
+        var shuffled = originalIndices.OrderBy(x => random.Next()).ToList();
 
-        foreach (var index in indices)
+        for (int i = 0; i < words.Count; i++)
         {
-            selectedWordsToVerify.Add((index + 1, words[index]));
-            userVerificationInputs[index + 1] = string.Empty; // Initialize the dictionary entry
+            int originalIndex = i;
+            int shuffledDisplayOrder = shuffled.IndexOf(originalIndex);
+
+            selectedWordsToVerify.Add((originalIndex + 1, words[originalIndex]));
+            userVerificationInputs[originalIndex + 1] = string.Empty;
+            shuffledWordIndices.Add((originalIndex, shuffledDisplayOrder));
         }
+
+        shuffledWordIndices = shuffledWordIndices.OrderBy(item => item.shuffledIndex).ToList();
     }
 
     private bool VerifyWords()
     {
-        if (!selectedWordsToVerify.Any()) return false;
+        if (string.IsNullOrEmpty(newWalletWords)) return false;
+        var originalWords = newWalletWords.Trim().Split(' ').ToList();
 
-        return selectedWordsToVerify.All(word =>
-            userVerificationInputs.ContainsKey(word.index) &&
-            !string.IsNullOrWhiteSpace(userVerificationInputs[word.index]) &&
-            userVerificationInputs[word.index].Trim().ToLower() == word.word.ToLower());
+        if (userVerificationInputs.Count != 12) return false;
+
+        for (int i = 1; i <= 12; i++)
+        {
+            if (!userVerificationInputs.ContainsKey(i) ||
+                string.IsNullOrWhiteSpace(userVerificationInputs[i]) ||
+                userVerificationInputs[i].Trim().ToLower() != originalWords[i - 1].ToLower())
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private async Task CopyWalletWords()
@@ -1846,12 +1899,16 @@ else
 
     private void ValidateWordInput()
     {
-        // Only show error if all words have been entered
-        if (userVerificationInputs.Count == selectedWordsToVerify.Count &&
-            userVerificationInputs.All(x => !string.IsNullOrWhiteSpace(x.Value)))
+        if (userVerificationInputs.Count == 12 &&
+            userVerificationInputs.All(kvp => !string.IsNullOrWhiteSpace(kvp.Value)))
         {
             verificationPassed = VerifyWords();
             showVerificationError = !verificationPassed;
+        }
+        else
+        {
+            verificationPassed = false;
+            showVerificationError = false;
         }
     }
 
@@ -1872,6 +1929,7 @@ else
         // Reset verification state
         selectedWordsToVerify.Clear();
         userVerificationInputs.Clear();
+        shuffledWordIndices.Clear();
         verificationPassed = false;
         showVerificationError = false;
     }
@@ -1887,5 +1945,47 @@ else
     {
         NavMenuState.SetActivePage("wallet");
         base.OnInitialized();
+    }
+
+    private void HandleWordInput(int wordIndex, ChangeEventArgs e)
+    {
+        string input = e.Value?.ToString() ?? string.Empty;
+        userVerificationInputs[wordIndex] = input;
+        showSuggestions[wordIndex] = !string.IsNullOrWhiteSpace(input);
+        ValidateWordInput();
+    }
+
+    private void ShowDropdown(int wordIndex)
+    {
+        showSuggestions[wordIndex] = true;
+    }
+
+    private void CloseDropdown(int wordIndex)
+    {
+        showSuggestions[wordIndex] = false;
+    }
+
+    private void ShowSuggestionsIfNeeded(int wordIndex)
+    {
+        if (!string.IsNullOrWhiteSpace(userVerificationInputs[wordIndex]))
+        {
+            showSuggestions[wordIndex] = true;
+            StateHasChanged();
+        }
+    }
+
+    private void SelectSuggestion(int wordIndex, string suggestion)
+    {
+        userVerificationInputs[wordIndex] = suggestion;
+        showSuggestions[wordIndex] = false;
+        ValidateWordInput();
+        StateHasChanged();
+    }
+
+    private IEnumerable<string> GetFilteredWordSuggestions(string input)
+    {
+        var wordlist = NBitcoin.Wordlist.English;
+        var words = wordlist.GetWords();
+        return words.Where(word => word.StartsWith(input, StringComparison.OrdinalIgnoreCase));
     }
 }

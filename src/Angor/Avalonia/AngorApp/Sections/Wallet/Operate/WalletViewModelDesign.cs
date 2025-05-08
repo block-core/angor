@@ -1,24 +1,60 @@
 using System.Windows.Input;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Domain;
+using Humanizer;
 using ReactiveUI.SourceGenerators;
-using SuppaWallet.Gui.Wallet.Main;
 using Zafiro.UI;
 
 namespace AngorApp.Sections.Wallet.Operate;
 
-public partial class WalletViewModelDesign : ReactiveObject, IWalletViewModel
+public class WalletViewModelDesign : ReactiveObject, IWalletViewModel
 {
     private ReactiveCommand<Unit, ResultViewModel<string>> getReceiveAddress;
 
     public IWallet Wallet { get; } = new WalletDesign();
 
     public ICommand Send { get; }
-    public string Name { get; init; } = "Test Wallet";
 
     ReactiveCommand<Unit, ResultViewModel<string>> IWalletViewModel.GetReceiveAddress => getReceiveAddress;
 
     public ResultViewModel<string> ReceiveAddressResult { get; }
-    public StoppableCommand<Unit, Result<BroadcastedTransaction>> SyncCommand { get; set; }
-    public IEnumerable<IdentityContainer<TransactionViewModel>> History { get; }
-    [Reactive] private WalletDisplayStatus walletDisplayStatus;
+    public StoppableCommand<Unit, Result<BroadcastedTransaction>> Sync { get; set; }
+    public IEnumerable<IdentityContainer<ITransactionViewModel>> History { get; } = 
+        [
+            new()
+            {
+                Content = new TransactionViewModelDesign()
+                {
+                    Transaction = new BroadcastedTransactionDesign()
+                    {
+                        Balance = new AmountUI(200),
+                        BlockTime = DateTimeOffset.Now,
+                        Id = "12345"
+                    }
+                },
+            },
+            new()
+            {
+                Content = new TransactionViewModelDesign()
+                {
+                    Transaction = new BroadcastedTransactionDesign()
+                    {
+                        Balance = new AmountUI(-400),
+                        BlockTime = DateTimeOffset.Now  - 1.Days(),
+                        Id = "12345"
+                    }
+                },
+            },
+            new()
+            {
+                Content = new TransactionViewModelDesign()
+                {
+                    Transaction = new BroadcastedTransactionDesign()
+                    {
+                        Balance = new AmountUI(0),
+                        BlockTime = DateTimeOffset.Now  - 2.Days(),
+                        Id = "12345"
+                    }
+                },
+            },
+        ];
 }

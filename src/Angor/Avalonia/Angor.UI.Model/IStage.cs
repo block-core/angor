@@ -2,8 +2,8 @@ namespace Angor.UI.Model;
 
 public interface IStage
 {
-    DateOnly ReleaseDate { get; }
+    DateTime ReleaseDate { get; }
     long Amount { get; }
     int Index { get; }
-    double Weight { get; }
+    double RatioOfTotal { get; }
 }

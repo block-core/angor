@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:b="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:addressAndAmount="clr-namespace:AngorApp.Sections.Wallet.Operate.Send.AddressAndAmount"
+             xmlns:c="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
+             mc:Ignorable="d" 
+             d:DesignWidth="300"
+             x:Class="AngorApp.Sections.Wallet.Operate.Send.AddressAndAmount.AddressAndAmountView" 
+             x:DataType="addressAndAmount:IAddressAndAmountViewModel">
+    
+    <Design.DataContext>
+        <addressAndAmount:AddressAndAmountViewModelDesign />
+    </Design.DataContext>
+
+    <StackPanel Spacing="20">
+        <c:Pane Header="Enter recipient address:">
+            <TextBox Text="{Binding Address}" Classes="clearButton" Watermark="Enter address" AcceptsReturn="False">
+                <Interaction.Behaviors>
+                    <b:UntouchedClassBehavior />
+                </Interaction.Behaviors>
+                <TextBox.InnerLeftContent>
+                    <i:Icon Value="fa-solid fa-pen-to-square" Margin="10 0 0 0" />
+                </TextBox.InnerLeftContent>
+            </TextBox>
+        </c:Pane>
+        <c:Pane Header="Enter amount to send:">
+            <controls:AmountControl Padding="0" Satoshis="{Binding Amount}">
+                <Interaction.Behaviors>
+                    <b:UntouchedClassBehavior />
+                </Interaction.Behaviors>
+            </controls:AmountControl>
+        </c:Pane>
+        <TextBlock Text="{Binding WalletBalance.BtcString, StringFormat='Available balance: {0}'}" />
+    </StackPanel>
+
+</UserControl>

@@ -1,5 +1,5 @@
-using Angor.Wallet.Domain;
-using Angor.Wallet.Infrastructure.Interfaces;
+using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Dialogs;
 
@@ -9,6 +9,6 @@ public class  PassphraseProviderAdapter(IDialog dialog): IPassphraseProvider
 {
     public Task<Maybe<string>> Get(WalletId walletId)
     {
-        return new DialogEncryptionKeyProvider(dialog, "Please, enter the passphrase").Get(walletId);
+        return new DialogPasswordProvider(dialog, "Please, enter the passphrase", "Wallet Unlock", new Icon("mdi-lock")).Get(walletId);
     }
 }

@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:commit="clr-namespace:AngorApp.Features.Invest.Commit"
+             xmlns:pr="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:c="clr-namespace:AngorApp.UI.Controls"
+             xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
+             xmlns:designTime="clr-namespace:Zafiro.Avalonia.DesignTime;assembly=Zafiro.Avalonia"
+             mc:Ignorable="d" 
+             x:Class="AngorApp.Features.Invest.Commit.CommitView"
+             x:DataType="commit:ICommitViewModel">
+    
+    <Design.DataContext>
+        <commit:CommitViewModelDesign IsInvesting="{designTime:Return False}" />
+    </Design.DataContext>
+
+    <DockPanel Grid.IsSharedSizeScope="True">
+        <StackPanel Spacing="10" DockPanel.Dock="Top">
+            <c:IconLabel Margin="0 20" Icon="fa-triangle-exclamation">Please, check the investment information below.</c:IconLabel>
+            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Amount to invest">
+                <TextBlock Text="{Binding SatsToInvest, StringFormat={x:Static c:MiscConverters.Sats}}" />
+            </HeaderedContentControl>
+            <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Total fee">
+                <TextBlock Text="{Binding Totalfee, StringFormat={x:Static c:MiscConverters.Sats}}" />
+            </HeaderedContentControl>
+        </StackPanel>
+        <Button Theme="{StaticResource DarkerButton}" Margin="20" Command="{Binding RequestInvestment}" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Button.Content>
+                <Panel>
+                    <pr:ProgressRing IsActive="{Binding IsInvesting^}" IsIndeterminate="True" />
+                    <TextBlock Text="Confirm" Opacity="{Binding !IsInvesting^, Converter={x:Static converters:OpacityConverters.BoolToOpacity}}" VerticalAlignment="Center" TextAlignment="Center" Margin="10 0" />
+                </Panel>
+            </Button.Content>
+        </Button>
+    </DockPanel>
+</UserControl>

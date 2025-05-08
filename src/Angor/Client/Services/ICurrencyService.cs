@@ -1,3 +1,5 @@
+namespace Angor.Client.Services;
+
 public interface ICurrencyService
 {
     Task<IReadOnlyList<string>> GetBtcValuesInPreferredCurrency(params long[] satBalances);

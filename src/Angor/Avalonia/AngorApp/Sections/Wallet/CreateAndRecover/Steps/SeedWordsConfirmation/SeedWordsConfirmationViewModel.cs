@@ -22,8 +22,13 @@ public class SeedWordsConfirmationViewModel : ISeedWordsConfirmationViewModel, I
             .Take(count)
             .ToArray();
     }
-
-    public IObservable<bool> IsValid =>  Challenges.Select(x => x.IsValid()).CombineLatest(results => results.All(x => x));
+    
+    #if !DEBUG
+        public IObservable<bool> IsValid =>  Challenges.Select(x => x.IsValid()).CombineLatest(results => results.All(x => x));
+    #else
+        public IObservable<bool> IsValid => Observable.Return(true);
+    #endif
+    
     public IObservable<bool> IsBusy => Observable.Return(false);
     public bool AutoAdvance => false;
     public SeedWords SeedWords { get; }

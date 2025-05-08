@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 using Angor.Client.Storage;
 
+namespace Angor.Client.Services;
+
 public class CurrencyRateService : ICurrencyRateService
 {
     private readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(10);

@@ -1,13 +1,11 @@
 using System.Diagnostics;
-using AngorApp.Sections.Shell;
-using AngorApp.Sections.Shell.Sections;
 using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Svg;
 using Humanizer;
 using Projektanker.Icons.Avalonia;
 using Zafiro.Mixins;
-using Separator = AngorApp.Sections.Shell.Sections.Separator;
+using Zafiro.UI.Navigation.Sections;
 
 namespace AngorApp.UI.Controls;
 
@@ -35,7 +33,7 @@ public static class MiscConverters
         };
     });
 
-    public static readonly FuncValueConverter<SectionBase, bool> IsActivatable = new(sectionBase => sectionBase is not Separator);
+    public static readonly FuncValueConverter<ISection, bool> IsActivatable = new(sectionBase => sectionBase is not ISectionSeparator);
 
     public static readonly FuncValueConverter<bool, Dock> IsPrimaryToDock = new(isPrimary => isPrimary ? Dock.Top : Dock.Bottom);
     
@@ -45,6 +43,16 @@ public static class MiscConverters
     });
     
     public static readonly FuncValueConverter<TimeSpan, string> HumanizeTimeSpan = new(offset => offset.Humanize());
+    
+    public static readonly FuncValueConverter<DateTimeOffset, string> HumanizeDate = new(offset =>
+    {
+        if (DateTimeOffset.Now.Date - offset < 2.Days())
+        {
+            return offset.Humanize();
+        }
+
+        return offset.ToString("d");
+    });
 
     public static readonly FuncValueConverter<bool, double> BoolToOpacity = new(b => b ? 1 : 0);
 
@@ -65,7 +73,7 @@ public static class MiscConverters
 
     public static FuncValueConverter<long, string> SatsToBtcString { get; } = new(satoshis =>
     {
-        var btc = satoshis / 10000_0000;
+        var btc = satoshis / (decimal)10000_0000;
         return $"{btc:0.0000 0000}" + " BTC";
     });
 
@@ -81,7 +89,7 @@ public static class MiscConverters
 
     public static FuncValueConverter<long, decimal> SatsToBtc { get; } = new(satoshis =>
     {
-        var btc = satoshis / 1_0000_0000;
+        var btc = satoshis / (decimal)1_0000_0000;
         return btc;
     });
 }

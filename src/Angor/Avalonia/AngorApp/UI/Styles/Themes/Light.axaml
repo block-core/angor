@@ -3,7 +3,8 @@
         xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
         xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
         xmlns:wizards="clr-namespace:Zafiro.Avalonia.Controls.Wizards;assembly=Zafiro.Avalonia"
-        xmlns:controls="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia">
+        xmlns:zafiro="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
+        xmlns:views="clr-namespace:Zafiro.Avalonia.Dialogs.Views;assembly=Zafiro.Avalonia.Dialogs">
 
     <Styles.Resources>
         <Color x:Key="Level1">#F5FDFF</Color>
@@ -77,6 +78,15 @@
         <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
     </Style>
     
+    <Style Selector="zafiro|Pane.BoldTitle ContentPresenter#PART_HeaderTitle">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    
+    <Style Selector="zafiro|Pane ContentPresenter#PART_HeaderTitle">
+        <Setter Property="Padding" Value="0 0 0 6" />
+    </Style>
+
     <Style Selector="TextBlock.Wrap">
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
@@ -97,9 +107,9 @@
         <Setter Property="Foreground" Value="{StaticResource Level5}" />
     </Style>
 
-    <Style Selector="wizards|WizardControl">
+    <Style Selector="views|DialogControl wizards|WizardControl">
         <Setter Property="Width" Value="500" />
-        <Setter Property="MinHeight" Value="300" />
+        <Setter Property="MinHeight" Value="340" />
     </Style>
     
     <Style Selector="Separator">
@@ -121,7 +131,7 @@
         <Setter Property="Margin" Value="0,16" />
     </Style>
     
-    <Style Selector="controls|StepIndicator">
+    <Style Selector="zafiro|StepIndicator">
         <Setter Property="Background" Value="{StaticResource Level3}" />
         <Setter Property="Foreground" Value="{StaticResource Level4}" />
     </Style>
@@ -130,7 +140,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <ContentControl Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(controls:Empty.Content)}" />
+                    <ContentControl Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(zafiro:Empty.Content)}" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

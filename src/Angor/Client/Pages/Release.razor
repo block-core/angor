@@ -2,7 +2,6 @@
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
-@using Angor.Shared.ProtocolNew
 @using Angor.Client.Models
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
@@ -10,6 +9,7 @@
 @using System.Security.Cryptography
 @using Blockcore.Consensus.TransactionInfo
 @using Angor.Client.Shared
+@using Angor.Shared.Protocol
 
 @inject INetworkService _NetworkService
 @inject ILogger<Release> Logger
@@ -96,7 +96,7 @@
                         <h6 class="text-muted mb-2">Transaction ID</h6>
                         <div class="d-flex align-items-center">
                             <span class="transaction-id text-truncate">@InvestorProject.UnfundedReleaseTransactionId</span>
-                            <a href="@explorerLink" target="_blank" class="ms-2 btn btn-sm btn-outline-primary">
+                            <a href="@explorerLink" target="_blank" rel="noopener noreferrer" class="ms-2 btn btn-sm btn-outline-primary">
                                 <Icon IconName="link" Width="16" Height="16" Class="me-1" />
                                 View on Explorer
                             </a>

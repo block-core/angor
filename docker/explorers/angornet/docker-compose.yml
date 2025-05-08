@@ -52,6 +52,7 @@ services:
     container_name: mempool-api
     image: blockcore/mempool-backend:latest
     environment:
+      MEMPOOL_NETWORK: "signet"
       MEMPOOL_BACKEND: "electrum"
       ESPLORA_REST_API_URL: "http://mempool-electrs:3003"
       ESPLORA_REQUEST_TIMEOUT: "50000"

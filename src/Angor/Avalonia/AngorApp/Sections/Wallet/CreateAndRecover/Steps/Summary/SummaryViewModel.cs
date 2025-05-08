@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
-using Angor.Wallet.Application;
-using Angor.Wallet.Domain;
+using Angor.Contexts.Wallet.Application;
+using Angor.Contexts.Wallet.Domain;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;
@@ -34,8 +34,8 @@ public partial class SummaryViewModel : ReactiveValidationObject, IStep, ISummar
     private Task<Result<IWallet>> CreateAndActivate()
     {
         return walletAppService.CreateWallet("<default>", options.Seedwords.ToString(), options.Passphrase, options.EncryptionKey, getNetwork())
-            .Bind(id => walletBuilder.Create(id))
-            .Tap(w => uiServices.ActiveWallet.Current = w.AsMaybe());
+            .Bind(id => walletBuilder.Get(id))
+            .Tap(w => uiServices.ActiveWallet.SetCurrent(w));
     }
 
     public string CreateWalletText => IsRecovery ? "Recover Wallet" : "Create Wallet";

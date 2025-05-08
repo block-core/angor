@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Logging;
 
+namespace Angor.Shared.Utilities;
+
 public static class AssemblyInfoHelper
 {
     public static List<AssemblyInfo> GetAllAssembliesInfo()

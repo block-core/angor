@@ -4363,3 +4363,62 @@ select.form-control {
         padding-right: 4rem !important;
     }
 }
+
+.word-suggestions-dropdown {
+    position: absolute;
+    width: 100%;
+    z-index: 1000;
+    top: 100%;
+    left: 0;
+    margin-top: 2px;
+    background-color: var(--angor-card-bg);
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.suggestions-container {
+    padding: 4px 0;
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.suggestion-item:hover {
+    background-color: var(--angor-hover);
+    color: var(--angor-primary);
+}
+
+.word-suggestions-dropdown {
+    position: absolute;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 6px 0;
+    z-index: 1000;
+    margin-top: 4px;
+    border-radius: 8px;
+    border: 1px solid var(--form-border);
+    background-color: var(--form-bg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.suggestions-container {
+    padding: 6px 0;
+}
+
+.suggestion-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--form-text);
+}
+
+.suggestion-item:hover {
+    background-color: rgba(var(--angor-secondary-rgb), 0.1);
+}
