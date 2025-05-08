@@ -526,7 +526,6 @@ else
         CurrentUserNpub="@npubValue"
         CurrentUserPrivateKeyHex="@currentUserPrivateKeyHex"
         MessageTitle="Founder"
-        MessageAppUrl="@($"/messages/{project.ProjectInfo.ProjectIdentifier}/investor")"
         OnClose="@(() => showChatModal = false)"
         OnNsecRequest="@ShowNsecAndCheckPassword"
         OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />

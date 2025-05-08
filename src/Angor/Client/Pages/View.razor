@@ -604,11 +604,6 @@
                                 <Icon IconName="edit" Class="me-2" />
                                 Edit project profile
                             </button>
-
-                            <a href=@($"/messages/{project.ProjectInfo.ProjectIdentifier}/founder") class="btn btn-border-success m-2">
-                                <Icon IconName="chat" Class="me-2" />
-                                Investor Messages
-                            </a>
                         }
 
                         @if (invested || founder)
@@ -715,7 +710,6 @@
         CurrentUserNpub="@npubValue"
         CurrentUserPrivateKeyHex="@NostrHexSecKey"
         MessageTitle="Founder"
-        MessageAppUrl="@($"/messages/{project.ProjectInfo.ProjectIdentifier}/investor")"
         OnClose="@(() => showMessageModal = false)"
         OnNsecRequest="@ShowNsecAsync"
         OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />

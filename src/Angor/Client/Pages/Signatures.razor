@@ -250,7 +250,6 @@
         CurrentUserNpub="@founderNpub"
         CurrentUserPrivateKeyHex="@currentUserPrivateKeyHex"
         MessageTitle="Investor"
-        MessageAppUrl="@($"/messages/{FounderProject.ProjectInfo.ProjectIdentifier}/founder/{currentInvestorHexPub}")"
         OnClose="@(() => showMessageModal = false)"
         OnNsecRequest="@ShowNsecAndCheckPassword"
         OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />

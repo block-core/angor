@@ -51,13 +51,6 @@
                                         <Icon IconName="key" Height="16" Width="16" class="me-2" />
                                         <span>Copy Private Key</span>
                                     </button>
-                                    @if (!string.IsNullOrEmpty(MessageAppUrl))
-                                    {
-                                        <button class="dropdown-item d-flex align-items-center px-3 py-2" @onclick="OpenMessageApp">
-                                            <Icon IconName="chat" Height="16" Width="16" class="me-2" />
-                                            <span>Open in Message App</span>
-                                        </button>
-                                    }
                                 </div>
                             }
                         </div>
@@ -142,7 +135,6 @@
     [Parameter] public string CurrentUserNpub { get; set; }
     [Parameter] public string CurrentUserPrivateKeyHex { get; set; }
     [Parameter] public string MessageTitle { get; set; } = "Investor";
-    [Parameter] public string MessageAppUrl { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback<bool> OnNsecRequest { get; set; }
     [Parameter] public EventCallback<string> OnNotification { get; set; }
@@ -166,8 +158,7 @@
 
         if (!string.IsNullOrEmpty(ContactHexPub) && string.IsNullOrEmpty(ContactNpub))
         {
-            try { ContactNpub = NostrHelper.ConvertHexToNpub(ContactHexPub) ?? ContactHexPub; }
-            catch { ContactNpub = ContactHexPub; }
+            ContactNpub = NostrHelper.ConvertHexToNpub(ContactHexPub) ?? ContactHexPub; 
         }
 
         MessageService.OnChange += HandleMessageServiceChange;
@@ -344,24 +335,6 @@
     private void ToggleActionsMenu()
     {
         showActionsMenu = !showActionsMenu;
-        StateHasChanged();
-    }
-
-    private void OpenMessageApp()
-    {
-        if (!string.IsNullOrEmpty(MessageAppUrl))
-        {
-            try
-            {
-                JS.InvokeVoidAsync("open", MessageAppUrl, "_blank");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to open message app URL.");
-                OnNotification.InvokeAsync("Could not open message app link.");
-            }
-        }
-        showActionsMenu = false;
         StateHasChanged();
     }
 
