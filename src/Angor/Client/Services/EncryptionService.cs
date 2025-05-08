@@ -1,4 +1,5 @@
-﻿using Blockcore.NBitcoin;
+﻿using System.Threading.Tasks;
+using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.JSInterop;
@@ -8,42 +9,38 @@ namespace Angor.Client.Services
 {
     public class EncryptionService : IEncryptionService
     {
-        private readonly IJSRuntime _jsRuntime;
+        private readonly IJSRuntime _js;
 
         public EncryptionService(IJSRuntime jsRuntime)
         {
-            _jsRuntime = jsRuntime;
+            _js = jsRuntime;
         }
 
-        public async Task<string> EncryptData(string secretData, string password)
+        public Task<string> EncryptData(string secretData, string password)
+            => _js.InvokeAsync<string>("encryptData", secretData, password).AsTask();
+
+        public Task<string> DecryptData(string encryptedData, string password)
+            => _js.InvokeAsync<string>("decryptData", encryptedData, password).AsTask();
+
+        public Task<string> EncryptNostrContentAsync(string nsec, string npub, string content)
         {
-            return await _jsRuntime.InvokeAsync<string>("encryptData", secretData, password);
+            var sharedSecret = GetSharedSecretHex(nsec, npub);
+            return _js.InvokeAsync<string>("nip57Encrypt", sharedSecret, content).AsTask();
         }
 
-        public async Task<string> DecryptData(string encryptedData, string password)
+        public Task<string> DecryptNostrContentAsync(string nsec, string npub, string encryptedContent)
         {
-            return await _jsRuntime.InvokeAsync<string>("decryptData", encryptedData, password);
+            var sharedSecret = GetSharedSecretHex(nsec, npub);
+            return _js.InvokeAsync<string>("nip57Decrypt", sharedSecret, encryptedContent).AsTask();
         }
 
-        public async Task<string> EncryptNostrContentAsync(string nsec, string npub, string content)
+        private static string GetSharedSecretHex(string nsec, string npub)
         {
-            var secertHex = GetSharedSecretHexWithoutPrefix(nsec, npub);
-            return await _jsRuntime.InvokeAsync<string>("encryptNostr", secertHex, content);
-        }
-
-        public async Task<string> DecryptNostrContentAsync(string nsec, string npub, string encryptedContent)
-        {
-            var secertHex = GetSharedSecretHexWithoutPrefix(nsec, npub);
-            return await _jsRuntime.InvokeAsync<string>("decryptNostr", secertHex, encryptedContent);
-        }
-
-        private static string GetSharedSecretHexWithoutPrefix(string nsec, string npub)
-        {
-            var privateKey = new Key(Encoders.Hex.DecodeData(nsec));
-            var publicKey = new PubKey("02" + npub);
-            
-            var secert = publicKey.GetSharedPubkey(privateKey);
-            return Encoders.Hex.EncodeData(secert.ToBytes()[1..]);
+            var priv = new Key(Encoders.Hex.DecodeData(nsec));
+            var pub = new PubKey("02" + npub);
+            var secretPoint = pub.GetSharedPubkey(priv);
+            var raw = secretPoint.ToBytes();
+            return Encoders.Hex.EncodeData(raw, 1, raw.Length - 1);
         }
     }
 }
