@@ -144,9 +144,7 @@
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Npub</th>
                                 <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Message</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investor Npub</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Chat</th>
-                            </tr>
+                              </tr>
                         </thead>
                         <tbody>
                             @foreach (var signature in signaturesRequests.Where(_ => _ is { SignRecoveryRequest.InvestmentTransactionHex: not null, AmountToInvest: not null }))
@@ -220,8 +218,7 @@
                                                 </div>
                                             }
                                         </div>
-                                        @NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey) <br />
-                                        @if (signature.SignRecoveryRequest?.AdditionalNpub != null)
+                                         @if (signature.SignRecoveryRequest?.AdditionalNpub != null)
                                         {
                                             <span>Additional NPUB: @signature.SignRecoveryRequest?.AdditionalNpub</span>
                                         }
