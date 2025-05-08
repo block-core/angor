@@ -882,7 +882,9 @@ else
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(), unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
+
+            signedTransaction = _WalletOperations.SignPsbt(psbt, words);
 
             showCreateModal = true;
         }
@@ -919,12 +921,10 @@ else
             }
 
             var accountInfo = storage.GetAccountInfo(network.Name);
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
-                accountInfo.GetNextChangeReceiveAddress(),
-                unSignedTransaction,
-                await passwordComponent.GetWalletAsync(),
-                accountInfo,
-                feeData.SelectedFeeEstimation.FeeRate);
+
+            var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+
+            signedTransaction = _WalletOperations.SignPsbt(psbt, await passwordComponent.GetWalletAsync());
 
             StateHasChanged();
         }

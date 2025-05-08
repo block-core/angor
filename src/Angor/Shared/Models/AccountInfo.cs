@@ -3,6 +3,7 @@ namespace Angor.Shared.Models;
 public class AccountInfo
 {
     public string ExtPubKey { get; set; }
+    public string RootExtPubKey { get; set; }
     public string Path { get; set; }
     public int LastFetchIndex { get; set; }
     public int LastFetchChangeIndex { get; set; }
