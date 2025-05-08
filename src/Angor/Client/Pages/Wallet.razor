@@ -1,4 +1,4 @@
-﻿@page "/wallet"
+@page "/wallet"
 
 @using System.Text.Json
 @using Angor.Client.Models
@@ -23,6 +23,7 @@
 @inject IEncryptionService _encryptionService
 @inject IClipboardService ClipboardService
 @inject IWalletUIService _walletUIService
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Wallet and balances</PageTitle>
 <NotificationComponent @ref="notificationComponent" />
@@ -163,9 +164,10 @@
                                                         <div class="col-md-4 col-sm-6 mt-0">
                                                             <div class="mb-3 position-relative">
                                                                 <label class="form-label">Word #@wordIndex</label>
-                                                                <input type="text" class="form-control"
+                                                                <input type="text" class="form-control word-input"
                                                                        value="@userVerificationInputs[wordIndex]"
                                                                        @oninput="(e) => HandleWordInput(wordIndex, e)"
+                                                                       @onkeydown="(e) => HandleKeyDown(e, wordIndex)"
                                                                        @onfocus="() => ShowSuggestionsIfNeeded(wordIndex)"
                                                                        placeholder="Enter word #@wordIndex" />
                                                                 @if (showSuggestions.TryGetValue(wordIndex, out bool showForWord) &&
@@ -1987,5 +1989,65 @@ else
         var wordlist = NBitcoin.Wordlist.English;
         var words = wordlist.GetWords();
         return words.Where(word => word.StartsWith(input, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e, int currentWordIndex)
+    {
+        if (e.Key == " " || e.Key == "Space")
+        {
+            // Find the next word index sequentially
+            int nextWordIndex = -1;
+            for (int i = 0; i < selectedWordsToVerify.Count; i++)
+            {
+                if (selectedWordsToVerify[i].index > currentWordIndex)
+                {
+                    nextWordIndex = selectedWordsToVerify[i].index;
+                    break;
+                }
+            }
+            
+            // If it found a next word index, focus that input
+            if (nextWordIndex > 0)
+            {
+                // use JavaScript to prevent the default space and focus next input
+                await JSRuntime.InvokeVoidAsync("handleSpaceAndFocusNext", nextWordIndex);
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("eval", @"
+                window.focusNextWordInput = function(nextWordIndex) {
+                    setTimeout(function() {
+                        const nextInput = document.querySelector(`input[placeholder=""Enter word #${nextWordIndex}""]`);
+                        if (nextInput) {
+                            nextInput.focus();
+                        }
+                    }, 0);
+                };
+
+                window.handleSpaceAndFocusNext = function(nextWordIndex) {
+                    // Prevent the default space behavior by attaching keydown handler to all word inputs
+                    document.querySelectorAll('.word-input').forEach(input => {
+                        if (!input.dataset.handlerAttached) {
+                            input.addEventListener('keydown', function(e) {
+                                if (e.key === ' ' || e.keyCode === 32) {
+                                    e.preventDefault();
+                                }
+                            });
+                            input.dataset.handlerAttached = 'true';
+                        }
+                    });
+                    
+                    // Focus the next input
+                    window.focusNextWordInput(nextWordIndex);
+                };
+            ");
+        }
+        
+        await base.OnAfterRenderAsync(firstRender);
     }
 }
