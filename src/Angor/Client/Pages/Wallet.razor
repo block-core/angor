@@ -9,7 +9,6 @@
 @using Angor.Shared.Utilities
 @using Blockcore.NBitcoin
 @using Blockcore.Networks
-@inherits BaseComponent
 @inject HttpClient _httpClient;
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
@@ -23,6 +22,8 @@
 @inject IEncryptionService _encryptionService
 @inject IClipboardService ClipboardService
 @inject IWalletUIService _walletUIService
+
+@inherits BaseComponent
 
 <PageTitle>Wallet and balances</PageTitle>
 <NotificationComponent @ref="notificationComponent" />

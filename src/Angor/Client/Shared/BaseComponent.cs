@@ -1,4 +1,5 @@
-﻿using Angor.Client.Storage;
+﻿using Angor.Client.Services;
+using Angor.Client.Storage;
 using Angor.Shared;
 using Blockcore.Networks;
 using Microsoft.AspNetCore.Components;
@@ -16,6 +17,9 @@ namespace Angor.Client.Shared
         [Inject]
         protected NavigationManager NavigationManager { get; set; }
 
+        [Inject]
+        protected IPasswordCacheService _PasswordCacheService { get; set; }
+
         public NotificationComponent notificationComponent;
         public PasswordComponent passwordComponent;
 
@@ -32,6 +36,8 @@ namespace Angor.Client.Shared
         {
             hasWallet = _walletStorage.HasWallet();
             network = _networkConfiguration.GetNetwork();
+
+            _PasswordCacheService.ResetLastSet();
         }
     }
 }
