@@ -48,8 +48,8 @@
     --form-disabled-text: #6c757d;
     --form-focus-border: #086c81;
     --form-focus-shadow: rgba(8, 108, 129, 0.25);
-    --angor-chat-incoming-bg: #f3f4f6;
-    --angor-chat-outgoing-bg: #dbeafe;
+    --angor-chat-incoming-bg: #bdbdbd;
+    --angor-chat-outgoing-bg: #bad8ff;
     --angor-chat-bubble-radius: 18px;
 }
 
