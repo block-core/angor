@@ -94,11 +94,7 @@
                                 else
                                 {
                                     <div class="messages-list p-2">
-                                        @foreach (var message in MessageService.DirectMessages
-                                       .Where(m => m != null &&
-                                       ((m.SenderPubkey == _currentHexForFiltering && m.RecipientPubkey == _contactHexForFiltering) ||
-                                       (m.SenderPubkey == _contactHexForFiltering && m.RecipientPubkey == _currentHexForFiltering))
-                                       ))
+                                        @foreach (var message in MessageService.DirectMessages.Where(m => m != null)) // Retain null check for safety
                                         {
                                             <div class="message-item @(message.IsFromCurrentUser ? "outgoing" : "incoming")">
                                                 <div class="message-bubble">
@@ -160,9 +156,6 @@
     private int _messageCount = 0;
     private Timer? _refreshTimer;
 
-    private string? _currentHexForFiltering;
-    private string? _contactHexForFiltering;
-
     private string CurrentUserHexPub => !string.IsNullOrEmpty(CurrentUserNpub)
         ? NostrHelper.ConvertBech32ToHex(CurrentUserNpub)
         : null;
@@ -179,18 +172,11 @@
         }
     }
 
-    private void UpdateHexKeysForFiltering()
-    {
-        _currentHexForFiltering = CurrentUserHexPub;
-        _contactHexForFiltering = ContactHexPub;
-    }
-
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
         EnsureContactKeysConsistency();
-        UpdateHexKeysForFiltering();
 
         MessageService.OnChange += HandleMessageServiceChange;
 
@@ -212,7 +198,6 @@
         await base.OnParametersSetAsync();
 
         EnsureContactKeysConsistency();
-        UpdateHexKeysForFiltering();
 
         if (!string.IsNullOrEmpty(CurrentUserPrivateKeyHex) && !string.IsNullOrEmpty(CurrentUserNpub) && !string.IsNullOrEmpty(ContactHexPub))
         {
