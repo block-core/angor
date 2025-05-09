@@ -300,10 +300,21 @@
         {
             if (System.Text.RegularExpressions.Regex.IsMatch(nsec, "^[0-9a-fA-F]{64}$"))
             {
-                try { nsecValue = NostrHelper.ConvertHexToNsec(nsec); }
-                catch (Exception ex) { Logger.LogError(ex, "Error converting provided hex key to nsec."); nsecValue = nsec; }
+                try
+                {
+                    nsecValue = NostrHelper.ConvertHexToNsec(nsec);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Error converting provided hex key to nsec.");
+                    nsecValue = nsec;
+                }
             }
-            else { nsecValue = nsec; }
+            else
+            {
+                nsecValue = nsec;
+            }
+
             StateHasChanged();
         }
     }
