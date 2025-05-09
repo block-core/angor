@@ -189,12 +189,21 @@ namespace Angor.Client.Services
             string eventId = eventMessage.Id;
             bool isFromCurrentUser = eventMessage.Pubkey == _currentUserHexPub;
             string decryptedContent;
+            string recipientPubkey = null;
 
             try
             {
-                string partnerPubKeyHex = isFromCurrentUser
-                    ? eventMessage.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier)
-                    : eventMessage.Pubkey;
+                string partnerPubKeyHex;
+                if (isFromCurrentUser)
+                {
+                    partnerPubKeyHex = eventMessage.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier);
+                    recipientPubkey = partnerPubKeyHex;
+                }
+                else
+                {
+                    partnerPubKeyHex = eventMessage.Pubkey; 
+                    recipientPubkey = _currentUserHexPub; 
+                }
 
                 if (string.IsNullOrEmpty(partnerPubKeyHex))
                 {
@@ -237,6 +246,7 @@ namespace Angor.Client.Services
                     Id = eventId,
                     Content = decryptedContent,
                     SenderPubkey = eventMessage.Pubkey,
+                    RecipientPubkey = recipientPubkey,
                     Timestamp = eventMessage.CreatedAt.GetValueOrDefault(DateTime.UtcNow),
                     IsFromCurrentUser = isFromCurrentUser
                 };
@@ -277,6 +287,7 @@ namespace Angor.Client.Services
                     Id = sentMessageId,
                     Content = messageContent,
                     SenderPubkey = _currentUserHexPub,
+                    RecipientPubkey = _contactHexPub,
                     Timestamp = DateTime.UtcNow,
                     IsFromCurrentUser = true
                 };

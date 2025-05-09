@@ -84,7 +84,7 @@
                                         </div>
                                     </div>
                                 }
-                                else if (!MessageService.DirectMessages.Any())
+                                else if (MessageService.DirectMessages == null || !MessageService.DirectMessages.Any())
                                 {
                                     <div class="empty-messages d-flex flex-column justify-content-center align-items-center h-100">
                                         <Icon IconName="chat" Width="32" Height="32" />
@@ -93,12 +93,15 @@
                                 }
                                 else
                                 {
+                                    var currentHex = CurrentUserHexPub;
+                                    var contactHex = ContactHexPub;
+
                                     <div class="messages-list p-2">
                                         @foreach (var message in MessageService.DirectMessages
-                                            .Where(m =>
-                                                (m.SenderPubkey == NostrHelper.ConvertBech32ToHex(CurrentUserNpub) && ContactHexPub == NostrHelper.ConvertBech32ToHex(ContactNpub)) ||
-                                                (m.SenderPubkey == NostrHelper.ConvertBech32ToHex(ContactNpub) && CurrentUserHexPub == NostrHelper.ConvertBech32ToHex(CurrentUserNpub))
-                                            ))
+                                       .Where(m => m != null && // Add null check for individual messages if necessary
+                                       (m.SenderPubkey == currentHex && m.RecipientPubkey == contactHex) ||
+                                       (m.SenderPubkey == contactHex && m.RecipientPubkey == currentHex)
+                                       ))
                                         {
                                             <div class="message-item @(message.IsFromCurrentUser ? "outgoing" : "incoming")">
                                                 <div class="message-bubble">
@@ -175,7 +178,7 @@
 
         if (!string.IsNullOrEmpty(ContactHexPub) && string.IsNullOrEmpty(ContactNpub))
         {
-            ContactNpub = NostrHelper.ConvertHexToNpub(ContactHexPub) ?? ContactHexPub; 
+            ContactNpub = NostrHelper.ConvertHexToNpub(ContactHexPub) ?? ContactHexPub;
         }
 
         MessageService.OnChange += HandleMessageServiceChange;
