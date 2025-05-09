@@ -248,7 +248,8 @@
         MessageTitle="Investor"
         OnClose="@(() => showMessageModal = false)"
         OnNsecRequest="@ShowNsecAndCheckPassword"
-        OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
+        OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))"
+        NsecValue="@_nsecForMessageComponent" />
 }
 
 @code {
@@ -280,6 +281,7 @@
     private string currentInvestorHexPub = "";
     private string founderNpub = "";
     private string currentUserPrivateKeyHex = "";
+    private string _nsecForMessageComponent; // Field to hold the nsec value
 
     private ElementReference messagesContainerRef;
     private List<DirectMessage> chatMessages = new();
@@ -740,7 +742,6 @@
             var founderNostrPrivateKey = DerivationOperations.DeriveProjectNostrPrivateKey(words, FounderProject.ProjectInfo.FounderKey);
             currentUserPrivateKeyHex = Encoders.Hex.EncodeData(founderNostrPrivateKey.ToBytes());
             
-            // Now that we have the private key, the message component will automatically initialize
             StateHasChanged();
         }
         catch (Exception ex)
@@ -776,8 +777,8 @@
                 var nostrHexSecKey = Encoders.Hex.EncodeData(founderNostrPrivateKey.ToBytes());
                 var nsecValue = NostrHelper.ConvertHexToNsec(nostrHexSecKey)!;
                 
-                // Find the MessageComponent instance using JS interop and set the nsec value
-                await JS.InvokeVoidAsync("document.querySelector('message-component').nsecValue", nsecValue);
+                _nsecForMessageComponent = nsecValue; 
+                
                 StateHasChanged();
             }
             else

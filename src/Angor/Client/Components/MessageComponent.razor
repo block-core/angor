@@ -143,10 +143,12 @@
     [Parameter] public string CurrentUserNpub { get; set; }
     [Parameter] public string CurrentUserPrivateKeyHex { get; set; }
     [Parameter] public string MessageTitle { get; set; } = "Investor";
+    [Parameter] public string NsecValue { get; set; }
+
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback<bool> OnNsecRequest { get; set; }
     [Parameter] public EventCallback<string> OnNotification { get; set; }
-
+    
     private ElementReference messagesContainerRef;
     private string newMessage = "";
     private bool showNsec = false;
