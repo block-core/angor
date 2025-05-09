@@ -142,6 +142,50 @@ namespace Angor.Client.Services
             }
         }
 
+        private async Task LoadNewMessagesAsync()
+        {
+            if (string.IsNullOrEmpty(_currentUserPrivateKeyHex) || string.IsNullOrEmpty(_contactHexPub) || string.IsNullOrEmpty(_currentUserHexPub))
+            {
+                _logger.LogWarning("LoadNewMessagesAsync - Missing required keys.");
+                return;
+            }
+
+            DateTime sinceTime = DateTime.UtcNow.AddDays(-7);
+            if (_directMessages.Any())
+            {
+                sinceTime = _directMessages.Max(m => m.Timestamp);
+            }
+
+            try
+            {
+                await _relayService.LookupDirectMessagesForPubKeyAsync(
+                    _currentUserHexPub,
+                    sinceTime,
+                    100,
+                    async eventMessage => await ProcessDirectMessage(eventMessage),
+                    _contactHexPub
+                );
+
+                await _relayService.LookupDirectMessagesForPubKeyAsync(
+                    _contactHexPub,
+                    sinceTime,
+                    100,
+                    async eventMessage => await ProcessDirectMessage(eventMessage),
+                    _currentUserHexPub
+                );
+
+                _directMessages = _directMessages.OrderBy(m => m.Timestamp).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to load new messages: {ex.Message}");
+            }
+            finally
+            {
+                NotifyStateChanged();
+            }
+        }
+
         private void SubscribeToMessages()
         {
             if (string.IsNullOrEmpty(_currentUserHexPub) || string.IsNullOrEmpty(_contactHexPub))
@@ -300,7 +344,7 @@ namespace Angor.Client.Services
                 _messageSubscription?.Dispose(); 
                 _messageSubscription = null;
 
-                await LoadMessagesAsync();
+                await LoadNewMessagesAsync();
 
                 SubscribeToMessages();
             }
