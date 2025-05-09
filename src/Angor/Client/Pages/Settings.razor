@@ -795,15 +795,6 @@
         }
 
 
-        var newChatApp = new SettingsUrl
-        {
-            Url = newChatAppLink,
-            Name = uri.Host,
-            LastCheck = DateTime.UtcNow,
-            Status = UrlStatus.Online,
-            IsPrimary = !settingsInfo.ChatApps.Any(c => c.IsPrimary)
-        };
-
         settingsInfo.ChatApps.Add(newChatApp);
 
         _clientStorage.SetSettingsInfo(settingsInfo);
