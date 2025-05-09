@@ -7,6 +7,7 @@
 @using System.Reactive.Linq
 @using System.Security.Cryptography
 @using Blockcore.NBitcoin.DataEncoders
+@using System.Timers
 @implements IDisposable
 @implements IAsyncDisposable
 
@@ -153,6 +154,7 @@
     private bool showActionsMenu = false;
     private bool _needsScroll = false;
     private int _messageCount = 0;
+    private Timer? _refreshTimer;
 
     protected override async Task OnInitializedAsync()
     {
@@ -169,6 +171,19 @@
         }
 
         MessageService.OnChange += HandleMessageServiceChange;
+
+        // Start auto-refresh timer
+        _refreshTimer = new Timer(5000);
+        _refreshTimer.Elapsed += async (s, e) =>
+        {
+            // Prevent overlapping refreshes
+            if (!MessageService.IsRefreshing)
+            {
+                await InvokeAsync(async () => await RefreshMessagesAsync());
+            }
+        };
+        _refreshTimer.AutoReset = true;
+        _refreshTimer.Start();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -237,8 +252,6 @@
     private async Task RefreshMessagesAsync()
     {
         if (MessageService.IsRefreshing) return;
-
-        showActionsMenu = false;
 
         try
         {
@@ -368,11 +381,25 @@
     public void Dispose()
     {
         MessageService.OnChange -= HandleMessageServiceChange;
+        // Dispose timer
+        if (_refreshTimer != null)
+        {
+            _refreshTimer.Stop();
+            _refreshTimer.Dispose();
+            _refreshTimer = null;
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
         MessageService.OnChange -= HandleMessageServiceChange;
+        // Dispose timer
+        if (_refreshTimer != null)
+        {
+            _refreshTimer.Stop();
+            _refreshTimer.Dispose();
+            _refreshTimer = null;
+        }
         await ValueTask.CompletedTask;
     }
 }
