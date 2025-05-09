@@ -94,7 +94,11 @@
                                 else
                                 {
                                     <div class="messages-list p-2">
-                                        @foreach (var message in MessageService.DirectMessages)
+                                        @foreach (var message in MessageService.DirectMessages
+                                            .Where(m =>
+                                                (m.SenderPubkey == NostrHelper.ConvertBech32ToHex(CurrentUserNpub) && ContactHexPub == NostrHelper.ConvertBech32ToHex(ContactNpub)) ||
+                                                (m.SenderPubkey == NostrHelper.ConvertBech32ToHex(ContactNpub) && CurrentUserHexPub == NostrHelper.ConvertBech32ToHex(CurrentUserNpub))
+                                            ))
                                         {
                                             <div class="message-item @(message.IsFromCurrentUser ? "outgoing" : "incoming")">
                                                 <div class="message-bubble">
@@ -155,6 +159,10 @@
     private bool _needsScroll = false;
     private int _messageCount = 0;
     private Timer? _refreshTimer;
+
+    private string CurrentUserHexPub => !string.IsNullOrEmpty(CurrentUserNpub)
+        ? NostrHelper.ConvertBech32ToHex(CurrentUserNpub)
+        : null;
 
     protected override async Task OnInitializedAsync()
     {
