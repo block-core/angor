@@ -26,7 +26,14 @@
                     </div>
                     <div class="d-flex align-items-center">
                         <button class="btn-menu-custom" @onclick="RefreshMessagesAsync" disabled="@MessageService.IsRefreshing">
-                            <Icon IconName="refresh" Height="24" Width="24" />
+                            @if (MessageService.IsRefreshing)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            }
+                            else
+                            {
+                                <Icon IconName="refresh" Height="24" Width="24" />
+                            }
                         </button>
                         <div class="dropdown me-2 position-relative">
                             <button class="btn-menu-custom" @onclick="ToggleActionsMenu">
@@ -237,16 +244,13 @@
         {
             await MessageService.RefreshMessagesAsync();
             _needsScroll = true;
-            await OnNotification.InvokeAsync("Messages refreshed.");
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to refresh messages.");
             await OnNotification.InvokeAsync($"Failed to refresh messages: {ex.Message}");
         }
-
     }
-
 
     private async Task ShowNsecAsync()
     {
