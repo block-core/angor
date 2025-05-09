@@ -115,4 +115,14 @@ window.angor = {
     }
 };
 
+ window.scrollToBottom = function(element) {
+    if (element) {
+        element.scrollTop = element.scrollHeight;
+    }
+};
+
+window.preventDefault = function(event) {
+    event.preventDefault();
+};
+
 

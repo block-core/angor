@@ -4493,7 +4493,6 @@ fieldset:disabled .btn {
 .nav-link {
     display: block;
     padding: var(--angor-nav-link-padding-y) var(--angor-nav-link-padding-x);
-    padding-left:11px !important;
     font-size: var(--angor-nav-link-font-size);
     font-weight: var(--angor-nav-link-font-weight);
     color: var(--angor-nav-link-color);

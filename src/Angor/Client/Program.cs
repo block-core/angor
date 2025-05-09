@@ -68,6 +68,8 @@ builder.Services.AddScoped<IconService>();
 
 builder.Services.AddScoped<IWalletUIService, WalletUIService>();
 
+builder.Services.AddScoped<IMessageService, MessageService>();
+
 // to change culture dynamically during startup,
 // set <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
 // in the application's project file.)
