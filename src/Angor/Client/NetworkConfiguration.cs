@@ -50,9 +50,10 @@ public class NetworkConfiguration : INetworkConfiguration
         {
             return new List<SettingsUrl>
             {
-                new SettingsUrl { Name = "", Url = "https://indexer.angor.io", IsPrimary = true },
-                new SettingsUrl { Name = "", Url = "https://fulcrum.angor.online", IsPrimary = false },
+                new SettingsUrl { Name = "", Url = "https://indexer.angor.io", IsPrimary = false },
+                new SettingsUrl { Name = "", Url = "https://fulcrum.angor.online", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "https://electrs.angor.online", IsPrimary = false },
+                new SettingsUrl { Name = "", Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
             };
         }
 
@@ -96,7 +97,6 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "", Url = "wss://relay.angor.io", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "wss://relay2.angor.io", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "wss://relay.damus.io", IsPrimary = true },
-                new SettingsUrl { Name = "", Url = "wss://relay.primal.net", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "wss://nos.lol", IsPrimary = true },
             };
         }
@@ -115,9 +115,10 @@ public class NetworkConfiguration : INetworkConfiguration
         {
             return new List<SettingsUrl>
             {
-                new SettingsUrl { Name = "", Url = "https://explorer.angor.io", IsPrimary = true },
-                new SettingsUrl { Name = "", Url = "https://fulcrum.angor.online", IsPrimary = false },
+                new SettingsUrl { Name = "", Url = "https://explorer.angor.io", IsPrimary = false },
+                new SettingsUrl { Name = "", Url = "https://fulcrum.angor.online", IsPrimary = true},
                 new SettingsUrl { Name = "", Url = "https://electrs.angor.online", IsPrimary = false },
+                new SettingsUrl { Name = "", Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
             };
         }
 
