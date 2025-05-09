@@ -26,8 +26,8 @@
                         <h5 class="modal-title">Message @MessageTitle</h5>
                     </div>
                     <div class="d-flex align-items-center">
-                        <button class="btn-menu-custom" @onclick="RefreshMessagesAsync" disabled="@MessageService.IsRefreshing">
-                            @if (MessageService.IsRefreshing)
+                        <button class="btn-menu-custom" @onclick="RefreshMessagesAsync" disabled="@(_localIsRefreshing || MessageService.IsRefreshing)">
+                            @if (_localIsRefreshing || MessageService.IsRefreshing)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                             }
@@ -73,14 +73,14 @@
                         <!-- Messages Section -->
                         <div class="info-card chat-container-modal">
                             <div class="chat-messages" @ref="messagesContainerRef" style="height: 300px; overflow-y: auto;">
-                                @if (MessageService.IsLoadingMessages || MessageService.IsRefreshing)
+                                @if (MessageService.IsLoadingMessages)
                                 {
                                     <div class="loading-messages d-flex justify-content-center align-items-center h-100">
                                         <div>
                                             <div class="spinner-border" role="status">
                                                 <span class="visually-hidden">Loading...</span>
                                             </div>
-                                            <p class="mt-2">@(MessageService.IsRefreshing ? "Refreshing messages..." : "Loading messages...")</p>
+                                            <p class="mt-2">Loading messages...</p>
                                         </div>
                                     </div>
                                 }
@@ -94,7 +94,7 @@
                                 else
                                 {
                                     <div class="messages-list p-2">
-                                        @foreach (var message in MessageService.DirectMessages.Where(m => m != null)) // Retain null check for safety
+                                        @foreach (var message in MessageService.DirectMessages.Where(m => m != null))
                                         {
                                             <div class="message-item @(message.IsFromCurrentUser ? "outgoing" : "incoming")">
                                                 <div class="message-bubble">
@@ -155,6 +155,7 @@
     private bool _needsScroll = false;
     private int _messageCount = 0;
     private Timer? _refreshTimer;
+    private bool _localIsRefreshing = false;
 
     private string CurrentUserHexPub => !string.IsNullOrEmpty(CurrentUserNpub)
         ? NostrHelper.ConvertBech32ToHex(CurrentUserNpub)
@@ -258,10 +259,15 @@
 
     private async Task RefreshMessagesAsync()
     {
-        if (MessageService.IsRefreshing) return;
+        if (MessageService.IsRefreshing || _localIsRefreshing) return;
 
         try
         {
+            _localIsRefreshing = true;
+            await InvokeAsync(StateHasChanged);
+            
+            await Task.Delay(50);
+            
             await MessageService.RefreshMessagesAsync();
             _needsScroll = true;
         }
@@ -269,6 +275,11 @@
         {
             Logger.LogError(ex, "Failed to refresh messages.");
             await OnNotification.InvokeAsync($"Failed to refresh messages: {ex.Message}");
+        }
+        finally
+        {
+            _localIsRefreshing = false;
+            await InvokeAsync(StateHasChanged);
         }
     }
 
