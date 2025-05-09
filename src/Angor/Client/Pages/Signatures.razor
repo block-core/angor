@@ -166,8 +166,10 @@
                                                         <Icon IconName="copy" Width="12" Height="12" />
                                                     </button>
                                                 </div>
-                                                <span class="d-block text-truncate" style="max-width: 200px;">@NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey)</span>
-                                            </div>
+                                                   <span class="d-block ms-2">
+                                                    @GetShortenedNpub(NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey))
+                                                </span> 
+                                             </div>
                                             @if (!string.IsNullOrEmpty(signature.SignRecoveryRequest?.AdditionalNpub))
                                             {
                                                 <div>
@@ -177,22 +179,12 @@
                                                             <Icon IconName="copy" Width="12" Height="12" />
                                                         </button>
                                                     </div>
-                                                    <span class="d-block text-truncate" style="max-width: 200px;">@signature.SignRecoveryRequest?.AdditionalNpub</span>
-                                                </div>
+                                                 <span class="d-block ms-2">
+                                                    @GetShortenedNpub(signature.SignRecoveryRequest?.AdditionalNpub)
+                                                </span>                                                </div>
                                             }
                                         </div>
-                                        @if (signature.SignRecoveryRequest?.AdditionalNpub != null)
-                                        {
-                                            <div class="d-flex align-items-center mt-1">
-                                                <small class="text-muted">Additional NPUB:</small>
-                                                <button class="btn btn-sm btn-icon ms-1" @onclick="() => CopyToClipboard(signature.SignRecoveryRequest.AdditionalNpub)" title="Copy npub">
-                                                    <Icon IconName="copy" Width="12" Height="12" />
-                                                </button>
-                                                <span class="d-block text-truncate ms-2" style="max-width: 200px;">
-                                                    @signature.SignRecoveryRequest?.AdditionalNpub
-                                                </span>
-                                            </div>
-                                        }
+                        
                                     </td>
                                     <td>
                                         @if (signature.TimeApproved is null)
@@ -797,6 +789,12 @@
         {
             notificationComponent.ShowErrorMessage("Failed to retrieve NSEC: " + e.Message);
         }
+    }
+
+    private string GetShortenedNpub(string npub)
+    {
+        if (string.IsNullOrEmpty(npub) || npub.Length <= 20) return npub;
+        return $"{npub.Substring(0, 10)}...{npub.Substring(npub.Length - 10)}";
     }
     
     public void Dispose()
