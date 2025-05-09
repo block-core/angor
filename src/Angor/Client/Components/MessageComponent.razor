@@ -93,14 +93,11 @@
                                 }
                                 else
                                 {
-                                    var currentHex = CurrentUserHexPub;
-                                    var contactHex = ContactHexPub;
-
                                     <div class="messages-list p-2">
                                         @foreach (var message in MessageService.DirectMessages
-                                       .Where(m => m != null && // Add null check for individual messages if necessary
-                                       (m.SenderPubkey == currentHex && m.RecipientPubkey == contactHex) ||
-                                       (m.SenderPubkey == contactHex && m.RecipientPubkey == currentHex)
+                                       .Where(m => m != null &&
+                                       ((m.SenderPubkey == _currentHexForFiltering && m.RecipientPubkey == _contactHexForFiltering) ||
+                                       (m.SenderPubkey == _contactHexForFiltering && m.RecipientPubkey == _currentHexForFiltering))
                                        ))
                                         {
                                             <div class="message-item @(message.IsFromCurrentUser ? "outgoing" : "incoming")">
@@ -163,23 +160,37 @@
     private int _messageCount = 0;
     private Timer? _refreshTimer;
 
+    private string? _currentHexForFiltering;
+    private string? _contactHexForFiltering;
+
     private string CurrentUserHexPub => !string.IsNullOrEmpty(CurrentUserNpub)
         ? NostrHelper.ConvertBech32ToHex(CurrentUserNpub)
         : null;
+
+    private void EnsureContactKeysConsistency()
+    {
+        if (string.IsNullOrEmpty(ContactHexPub) && !string.IsNullOrEmpty(ContactNpub))
+        {
+            ContactHexPub = NostrHelper.ConvertBech32ToHex(ContactNpub);
+        }
+        else if (!string.IsNullOrEmpty(ContactHexPub) && string.IsNullOrEmpty(ContactNpub))
+        {
+            ContactNpub = NostrHelper.ConvertHexToNpub(ContactHexPub) ?? ContactNpub;
+        }
+    }
+
+    private void UpdateHexKeysForFiltering()
+    {
+        _currentHexForFiltering = CurrentUserHexPub;
+        _contactHexForFiltering = ContactHexPub;
+    }
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
-        if (string.IsNullOrEmpty(ContactHexPub) && !string.IsNullOrEmpty(ContactNpub))
-        {
-            ContactHexPub = NostrHelper.ConvertBech32ToHex(ContactNpub);
-        }
-
-        if (!string.IsNullOrEmpty(ContactHexPub) && string.IsNullOrEmpty(ContactNpub))
-        {
-            ContactNpub = NostrHelper.ConvertHexToNpub(ContactHexPub) ?? ContactHexPub;
-        }
+        EnsureContactKeysConsistency();
+        UpdateHexKeysForFiltering();
 
         MessageService.OnChange += HandleMessageServiceChange;
 
@@ -187,7 +198,6 @@
         _refreshTimer = new Timer(5000);
         _refreshTimer.Elapsed += async (s, e) =>
         {
-            // Prevent overlapping refreshes
             if (!MessageService.IsRefreshing)
             {
                 await InvokeAsync(async () => await RefreshMessagesAsync());
@@ -200,6 +210,9 @@
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
+
+        EnsureContactKeysConsistency();
+        UpdateHexKeysForFiltering();
 
         if (!string.IsNullOrEmpty(CurrentUserPrivateKeyHex) && !string.IsNullOrEmpty(CurrentUserNpub) && !string.IsNullOrEmpty(ContactHexPub))
         {
@@ -228,7 +241,6 @@
 
         try
         {
-
             await MessageService.InitializeAsync(CurrentUserPrivateKeyHex, CurrentUserNpub, ContactHexPub);
             _needsScroll = true;
         }
@@ -237,7 +249,6 @@
             Logger.LogError(ex, "Failed to initialize messaging service.");
             await OnNotification.InvokeAsync($"Error initializing messages: {ex.Message}");
         }
-
     }
 
     private async Task SendMessageAsync()
@@ -291,7 +302,6 @@
     {
         if (!string.IsNullOrEmpty(nsec))
         {
-
             if (System.Text.RegularExpressions.Regex.IsMatch(nsec, "^[0-9a-fA-F]{64}$"))
             {
                 try { nsecValue = NostrHelper.ConvertHexToNsec(nsec); }
@@ -332,7 +342,6 @@
             }
         }
         await CopyToClipboard(nsecValue);
-
     }
 
     private async Task RequestAndSetNsecValue()
@@ -345,10 +354,8 @@
             }
             else
             {
-
                 await OnNsecRequest.InvokeAsync(true);
                 await OnNotification.InvokeAsync("Requesting private key...");
-
             }
         }
         catch (Exception ex)
@@ -392,7 +399,6 @@
     public void Dispose()
     {
         MessageService.OnChange -= HandleMessageServiceChange;
-        // Dispose timer
         if (_refreshTimer != null)
         {
             _refreshTimer.Stop();
@@ -404,7 +410,6 @@
     public async ValueTask DisposeAsync()
     {
         MessageService.OnChange -= HandleMessageServiceChange;
-        // Dispose timer
         if (_refreshTimer != null)
         {
             _refreshTimer.Stop();
