@@ -1284,20 +1284,4 @@ else
         }
     }
 
-    private async void OpenChatApp()
-    {
-        if (project != null)
-        {
-            var primaryChatApp = _networkService.GetPrimaryChatApp();
-            var url = $"{primaryChatApp.Url}/{founderNpub}";
-
-            // Open chat app with project information
-            // NavigationManager.NavigateTo($"{url}", true);
-            await JS.InvokeVoidAsync("window.open", url, "_blank");
-        }
-        else
-        {
-            notificationComponent.ShowErrorMessage("Project information not available");
-        }
-    }
 }
