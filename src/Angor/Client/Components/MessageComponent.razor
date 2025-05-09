@@ -23,7 +23,7 @@
                 <div class="modal-header border-0 pb-0">
                     <div class="d-flex align-items-center">
                         <Icon IconName="chat" Height="32" Width="32" class="me-2" />
-                        <h5 class="modal-title">Message @MessageTitle</h5>
+                        <h5 class="modal-title" title="@ContactNpub">@GetShortenedNpub(ContactNpub)</h5>
                     </div>
                     <div class="d-flex align-items-center">
                         <button class="btn-menu-custom" @onclick="RefreshMessagesAsync" disabled="@(_localIsRefreshing || MessageService.IsRefreshing)">
@@ -372,6 +372,12 @@
     private void CloseModal()
     {
         OnClose.InvokeAsync();
+    }
+
+    private string GetShortenedNpub(string npub)
+    {
+        if (string.IsNullOrEmpty(npub) || npub.Length <= 20) return npub;
+        return $"{npub.Substring(0, 10)}...{npub.Substring(npub.Length - 10)}";
     }
 
     private string GetMaskedNsec(string nsec)
