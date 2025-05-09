@@ -74,17 +74,7 @@ public class InvestmentRepository(
         }));
     }
 
-    // public Task<Result<PendingInvestment>> GetPendingInvestment(Guid walletId, ProjectId projectId)
-    // {
-    //     throw new NotImplementedException();
-    // }
-    //
-    // public Task<Result<SignedInvestment>> GetSignedInvestment(Guid walletId, ProjectId projectId)
-    // {
-    //     throw new NotImplementedException();
-    // }
-
-    private async Task<List<Domain.Investment>> GetAllConfirmedInvestments()
+    private async Task<List<Investment>> GetAllConfirmedInvestments()
     {
         var allProjects = await indexerService.GetProjectsAsync(0, 20);
         var investments = new List<Domain.Investment>();

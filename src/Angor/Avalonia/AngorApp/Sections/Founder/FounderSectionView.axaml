@@ -6,12 +6,12 @@
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.FounderSectionView"
              xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
-             xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             x:DataType="browse:IBrowseSectionViewModel" >
+             xmlns:sdg="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
+             x:DataType="founder:IFounderSectionViewModel" >
 
     <Design.DataContext>
-        <founder:FounderSectionViewModel />
+        <founder:FounderSectionViewModelDesign />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -53,6 +53,15 @@
                 <i:Icon Value="fa-magnifying-glass" />
             </controls:IconButton.Icon>
         </controls:IconButton>
+
+        <Button Content="Get pending investments" Command="{Binding GetPendingInvestments}" />
+        <sdg:SlimDataGrid ItemsSource="{Binding Pending}">
+            <sdg:SlimDataGrid.Columns>
+                <sdg:Column Width="Auto" Header="Amount" Binding="{Binding Amount}" />
+                <sdg:Column Width="Auto" Header="Created" Binding="{Binding Created}" />
+                <sdg:Column Width="Auto" Header="Investor (npub)" Binding="{Binding InvestorNostrPubKey}" />
+            </sdg:SlimDataGrid.Columns>
+        </sdg:SlimDataGrid>
 
     </StackPanel>
 </UserControl>

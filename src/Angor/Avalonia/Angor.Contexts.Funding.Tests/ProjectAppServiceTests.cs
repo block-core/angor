@@ -11,7 +11,7 @@ namespace Angor.Contexts.Funding.Tests;
 public class ProjectAppServiceTests(ITestOutputHelper output)
 {
     [Fact]
-    public async Task GetProjects()
+    public async Task Get_latest_projects()
     {
         var sut = CreateSut();
         var result = await sut.Latest();

@@ -23,8 +23,7 @@ public static class RequestInvestment
         INetworkConfiguration networkConfiguration,
         ISerializer serializer,
         IWalletOperations walletOperations,
-        ISignService signService,
-        IRelayService relayService) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
+        ISignService signService) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
     {
         public async Task<Result<Guid>> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
         {
