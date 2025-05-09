@@ -181,9 +181,17 @@
                                                 </div>
                                             }
                                         </div>
-                                         @if (signature.SignRecoveryRequest?.AdditionalNpub != null)
+                                        @if (signature.SignRecoveryRequest?.AdditionalNpub != null)
                                         {
-                                            <span>Additional NPUB: @signature.SignRecoveryRequest?.AdditionalNpub</span>
+                                            <div class="d-flex align-items-center mt-1">
+                                                <small class="text-muted">Additional NPUB:</small>
+                                                <button class="btn btn-sm btn-icon ms-1" @onclick="() => CopyToClipboard(signature.SignRecoveryRequest.AdditionalNpub)" title="Copy npub">
+                                                    <Icon IconName="copy" Width="12" Height="12" />
+                                                </button>
+                                                <span class="d-block text-truncate ms-2" style="max-width: 200px;">
+                                                    @signature.SignRecoveryRequest?.AdditionalNpub
+                                                </span>
+                                            </div>
                                         }
                                     </td>
                                     <td>
