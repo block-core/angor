@@ -342,46 +342,49 @@ tr[style*="cursor: pointer;"]:hover {
     align-items: center;
     z-index: 9999;
     flex-direction: column;
-    background-color: #e5eef0; 
+    background-color: #e5eef0;
 }
 
 .loader {
     box-sizing: border-box;
     width: 100px;
     height: 100px;
-    border: 12px solid #eaeaea; 
+    border: 12px solid #c5c5c5;
     border-top-color: #f7931a;
     border-radius: 50%;
     animation: spin 2s linear infinite;
     background: url("/assets/img/bitcoin.svg") no-repeat center center;
-    background-origin: content-box; /* Background relative to content area (inside border) */
-    background-size: 100%; /* Fill the content area completely */
+    background-origin: content-box;
+    background-size: 90%;
+    padding: 5px;
 }
 
 .loader-small {
     box-sizing: border-box;
     width: 50px;
     height: 50px;
-    border: 6px solid #eaeaea;
+    border: 6px solid #c5c5c5;
     border-top-color: #f7931a;
     border-radius: 50%;
     animation: spin 2s linear infinite;
     background: url("/assets/img/bitcoin.svg") no-repeat center center;
     background-origin: content-box;
-    background-size: 100%;
+    background-size: 90%;
+    padding: 3px;
 }
 
 .loader-slow {
     box-sizing: border-box;
     width: 100px;
     height: 100px;
-    border: 12px solid #eaeaea;
+    border: 12px solid #c5c5c5;
     border-top-color: #f7931a;
     border-radius: 50%;
     animation: spin 20s linear infinite;
     background: url("/assets/img/bitcoin.svg") no-repeat center center;
     background-origin: content-box;
-    background-size: 100%;
+    background-size: 90%;
+    padding: 5px;
 }
 
 .loader-slow-container {
