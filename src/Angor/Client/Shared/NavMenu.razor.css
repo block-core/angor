@@ -62,14 +62,14 @@
 .sidebar {
     position: fixed;
     width: 200px;
-    margin: 16px 16px 16px 8px;
+    margin: 8px;
     border-radius: 16px;
     background: #083b46;
-    height: calc(100vh - 32px);
+    height: calc(100vh - 16px);
     display: flex;
     flex-direction: column;
     transition: all 0.4s ease;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);    
     overflow: hidden;
 }
 
@@ -259,9 +259,9 @@
     .sidebar {
         position: fixed;
         width: 200px;
-        margin: 16px 16px 16px 8px;
+        margin: 8px;
         border-radius: 16px;
-        height: calc(100vh - 32px);
+        height: calc(100vh - 16px);
     }
     
     .sidebar.collapsed {
