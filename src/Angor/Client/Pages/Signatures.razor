@@ -135,104 +135,155 @@
                     </div>
                 </div>
 
-                <div class="table-responsive form-control mt-4 slide-in">
-                    <table class="table align-items-center mb-0">
-                        <thead>
-                            <tr>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investment</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Npub</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Message</th>
-                              </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var signature in signaturesRequests.Where(_ => _ is { SignRecoveryRequest.InvestmentTransactionHex: not null, AmountToInvest: not null }))
-                            {
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <Icon IconName="bitcoin" Width="24" Height="24" class="me-2" />
-                                            <span>@Money.Satoshis(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+<div class="mt-4 slide-in">
+    @if (signaturesRequests.Any(_ => _ is { SignRecoveryRequest.InvestmentTransactionHex: not null, AmountToInvest: not null }))
+    {
+        <div class="accordion" id="signaturesAccordion">
+            @foreach (var signature in signaturesRequests.Where(_ => _ is { SignRecoveryRequest.InvestmentTransactionHex: not null, AmountToInvest: not null }))
+            {
+                var accordionId = signature.GetHashCode().ToString();
+                <div class="info-card mb-2 shadow-sm border-0 animate-fade-in">
+                    <div class="card-header p-0 bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center p-0">
+                            <!-- Essential Info (Always Visible) -->
+                            <div class="d-flex align-items-center">
+                                <Icon IconName="balance" Width="20" Height="20" Class="me-2" />
+                                <span class="fw-bold text-nowrap">
+                                    @Money.Satoshis(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                </span>
+                                <small class="text-muted ms-3">
+                                    @signature.TimeArrived.ToString("dd/MM/yyyy HH:mm")
+                                </small>
+                            </div>
+                            
+                            <!-- Status Badges/Buttons -->
+                            <div class="d-flex align-items-center gap-2">
+                                <!-- Status Badge -->
+                                @if (signature.TimeApproved != null)
+                                {
+                                    @if (signature.Invested != null)
+                                    {
+                                        <div class="badge bg-success d-flex align-items-center" 
+                                             title="Approved on @signature.TimeApproved?.ToString("dd/MM/yyyy HH:mm")">
+                                            <Icon IconName="invest" Width="14" Height="14" Class="me-1" />
+                                            <span>Invested</span>
                                         </div>
-                                    </td>
-                                    <td>@signature.TimeArrived.ToString("dd/MM/yyyy HH:mm")</td>
-                                     <td>
-                                        <div class="d-flex flex-column">
-                                            <div class="mb-1">
-                                                <div class="d-flex align-items-center">
-                                                    <small class="text-muted">Investment npub:</small>
-                                                    <button class="btn btn-sm btn-icon ms-1" @onclick="() => CopyToClipboard(NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey))" title="Copy npub">
-                                                        <Icon IconName="copy" Width="12" Height="12" />
-                                                    </button>
-                                                </div>
-                                                   <span class="d-block ms-2">
-                                                    @GetShortenedNpub(NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey))
-                                                </span> 
-                                             </div>
-                                            @if (!string.IsNullOrEmpty(signature.SignRecoveryRequest?.AdditionalNpub))
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info d-flex align-items-center" 
+                                              title="Approved on @signature.TimeApproved?.ToString("dd/MM/yyyy HH:mm")">
+                                            <Icon IconName="check" Width="14" Height="14" Class="me-1" />
+                                            <span>Approved</span>
+                                        </span>
+                                    }
+                                }
+                                
+                                <!-- Action Buttons -->
+                                <div class="d-flex gap-2">
+                                    @if (signature.TimeApproved is null)
+                                    {
+                                        <button class="btn btn-sm btn-border-success animate-scale" 
+                                                @onclick="() => ApproveSignatureCheckPassword(signature)" 
+                                                disabled="@signaturesRequestsApproving.Any()" 
+                                                aria-label="Approve signature">
+                                            @if (signaturesRequestsApproving.ContainsKey(signature))
                                             {
-                                                <div>
-                                                    <div class="d-flex align-items-center">
-                                                        <small class="text-muted">Additional npub:</small>
-                                                        <button class="btn btn-sm btn-icon ms-1" @onclick="() => CopyToClipboard(signature.SignRecoveryRequest.AdditionalNpub)" title="Copy npub">
-                                                            <Icon IconName="copy" Width="12" Height="12" />
-                                                        </button>
-                                                    </div>
-                                                 <span class="d-block ms-2">
-                                                    @GetShortenedNpub(signature.SignRecoveryRequest?.AdditionalNpub)
-                                                </span>                                                </div>
-                                            }
-                                        </div>
-                        
-                                    </td>
-                                    <td>
-                                        @if (signature.TimeApproved is null)
-                                        {
-                                            <button class="btn btn-sm btn-border-success animate-scale" @onclick="() => ApproveSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.Any()">
-                                                @if (signaturesRequestsApproving.ContainsKey(signature))
-                                                {
-                                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                    <span>Approving...</span>
-                                                }
-                                                else
-                                                {
-                                                    <Icon IconName="approved" Width="20" Height="20" />
-                                                    <span class="ms-2">Approve</span>
-                                                }
-                                            </button>
-                                        }
-                                        else
-                                        {
-                                            @if (signature.Invested != null)
-                                            {
-                                                <span class="badge bg-success">
-                                                    <Icon IconName="invest" Width="16" Height="16" class="me-1"/>
-                                                    Invested
-                                                </span>
-                                                <a href="@($"{_networkService.GetPrimaryExplorer().Url}/tx/{signature.Invested.TransactionId}")"
-                                                   target="_blank" class="d-inline mt-2 ms-2">view transaction</a>
+                                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                <span>Approving...</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-info">
-                                                    <Icon IconName="check" Width="16" Height="16" class="me-1" />
-                                                    Approved on @signature.TimeApproved.Value.ToString("dd/MM/yyyy HH:mm")
-                                                </span>
+                                                <Icon IconName="approved" Width="16" Height="16" Class="me-1" />
+                                                <span>Approve</span>
                                             }
-                                        }
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-border-success" @onclick="() => ShowMessageModal(signature.investorNostrPubKey)">
-                                            <Icon IconName="chat" Width="16" Height="16" class="me-1" />
-                                            Message
                                         </button>
-                                    </td>
-                                </tr>
+                                    }
+                                    @if (signature.Invested != null)
+                                    {
+                                        <a href="@($"{_networkService.GetPrimaryExplorer().Url}/tx/{signature.Invested.TransactionId}")"
+                                           target="_blank" 
+                                           class="btn btn-sm btn-border-success d-flex align-items-center" 
+                                           rel="noopener noreferrer">
+                                            <Icon IconName="external-link" Width="16" Height="16" Class="me-1" />
+                                            <span>View TX</span>
+                                        </a>
+                                    }
+                                    <button class="btn btn-sm btn-border-success animate-scale" 
+                                            @onclick="() => ShowMessageModal(signature.investorNostrPubKey)" 
+                                            aria-label="Message investor">
+                                        <Icon IconName="chat" Width="16" Height="16" Class="me-1" />
+                                    </button>
+                                    <span class="animate-scale" 
+                                            @onclick="() => ToggleAccordion(accordionId)"
+                                            aria-expanded="@(expandedAccordions.Contains(accordionId))" 
+                                            aria-label="Toggle details">
+                                        <Icon IconName="@(expandedAccordions.Contains(accordionId) ? "chevron-up" : "chevron-down")" Width="16" />
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Collapsible Content -->
+                    <div class="@(expandedAccordions.Contains(accordionId) ? "show" : "collapse")">
+                        <div class="card-body pt-0 pb-3 px-3 mt-4">
+                            <!-- Investor npub -->
+                            <div class="mb-2">
+                                <label class="form-label small text-muted mb-1">Investor npub</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" 
+                                           class="form-control form-control-sm text-break" 
+                                           value="@NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey)" 
+                                           readonly 
+                                           aria-label="Investor npub" />
+                                    <button class="btn btn-sm btn-border-success animate-scale" 
+                                            @onclick="() => CopyToClipboard(NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey))" 
+                                            title="Copy investor npub" 
+                                            aria-label="Copy investor npub">
+                                        <Icon IconName="copy" Width="14" Height="14" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Additional npub -->
+                            @if (!string.IsNullOrEmpty(signature.SignRecoveryRequest?.AdditionalNpub))
+                            {
+                                <div class="mb-0">
+                                    <label class="form-label small text-muted mb-1">Additional npub</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" 
+                                               class="form-control form-control-sm text-break" 
+                                               value="@signature.SignRecoveryRequest.AdditionalNpub" 
+                                               readonly 
+                                               aria-label="Additional npub" />
+                                        <button class="btn btn-sm btn-border-success animate-scale" 
+                                                @onclick="() => CopyToClipboard(signature.SignRecoveryRequest.AdditionalNpub)" 
+                                                title="Copy additional npub" 
+                                                aria-label="Copy additional npub">
+                                            <Icon IconName="copy" Width="14" Height="14" />
+                                        </button>
+                                    </div>
+                                </div>
                             }
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
                 </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card card-body angor-alert-info hover-effect animate-fade-in">
+            <div class="d-flex align-items-center justify-content-center py-4">
+                <span class="me-3 user-select-none animate-rotate">
+                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
+                </span>
+                <span class="text-white fs-5" data-cy="no-pending-signatures">No pending signatures yet...</span>
+            </div>
+        </div>
+    }
+</div>
             </div>
         }
     }
@@ -258,7 +309,7 @@
 
     public FounderProject FounderProject { get; set; }
     private List<SignatureItem> signaturesRequests = new();
-
+    private HashSet<string> expandedAccordions = new();
 
     private Dictionary<SignatureItem, string> signaturesRequestsApproving = new();
 
@@ -798,6 +849,18 @@
         return $"{npub.Substring(0, 10)}...{npub.Substring(npub.Length - 10)}";
     }
     
+    private void ToggleAccordion(string accordionId)
+    {
+        if (expandedAccordions.Contains(accordionId))
+        {
+            expandedAccordions.Remove(accordionId);
+        }
+        else
+        {
+            expandedAccordions.Add(accordionId);
+        }
+    }
+
     public void Dispose()
     {
         messageSubscription?.Dispose();
