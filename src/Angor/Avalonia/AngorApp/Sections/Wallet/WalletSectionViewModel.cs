@@ -12,15 +12,15 @@ namespace AngorApp.Sections.Wallet;
 
 public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionViewModel
 {
-    // Propiedades ObservableAsProperty
     [ObservableAsProperty] private IWalletViewModel? activeWallet;
     [ObservableAsProperty] private bool canCreateWallet;
     
-    public WalletSectionViewModel(UIServices uiServices, IWalletWizard walletWizard, 
+    public WalletSectionViewModel(UIServices uiServices, WalletCreationWizard creationWizard,
+        WalletRecoveryWizard recoveryWizard,
         IWalletAppService walletAppService)
     {
-        CreateWallet = ReactiveCommand.CreateFromTask(() => walletWizard.CreateNew());
-        RecoverWallet = ReactiveCommand.CreateFromTask(() => walletWizard.Recover());
+        CreateWallet = ReactiveCommand.CreateFromTask(creationWizard.Start);
+        RecoverWallet = ReactiveCommand.CreateFromTask(recoveryWizard.Start);
         
         LoadWallet = ReactiveCommand.CreateFromTask(() => uiServices.WalletRoot.GetDefaultWalletAndActivate());
         LoadWallet.HandleErrorsWith(uiServices.NotificationService, "Failed to load wallet");

@@ -19,9 +19,9 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
     private readonly IWalletAppService walletAppService;
     private readonly UIServices uiServices;
     [Reactive] private long? feerate;
-    [ObservableAsProperty] private ITransactionDraft? transactionDraft;
+    [ObservableAsProperty] private ITransactionDraft? draft;
     [ObservableAsProperty] private IAmountUI? fee;
-    private readonly Subject<bool> isCalculatingDraft = new();
+    private readonly BehaviorSubject<bool> isCalculatingDraft = new(false);
 
     public TransactionDraftViewModel(WalletId walletId, 
         IWalletAppService walletAppService, 
@@ -32,18 +32,27 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
         this.walletAppService = walletAppService;
         this.uiServices = uiServices;
 
-        transactionDraftHelper = this.WhenAnyValue(x => x.Feerate)
+        draftHelper = this.WhenAnyValue(x => x.Feerate)
             .WhereNotNull()
             .SelectLatest(f => CreateDraftTo(sendAmount.Amount, sendAmount.BitcoinAddress, f.Value), isCalculatingDraft, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Successes()
-            .ToProperty(this, model => model.TransactionDraft);
+            .ToProperty(this, model => model.Draft);
 
-        Confirm = ReactiveCommand.CreateFromTask(() => TransactionDraft!.Submit(), this.WhenAnyValue(model => model.TransactionDraft).NotNull());
-        IsValid = Confirm.Any().StartWith(false);
-        IsBusy = isCalculatingDraft.CombineLatest(Confirm.IsExecuting, (a, b) => a || b).StartWith(false);
-        feeHelper = this.WhenAnyValue(model => model.TransactionDraft.TotalFee).ToProperty(this, model => model.Fee);
+        var canConfirm = this.WhenAnyValue(model => model.Draft).NotNull().CombineLatest(isCalculatingDraft, (hasDraft, calculating) => hasDraft && !calculating);
+        Confirm = ReactiveCommand.CreateFromTask(() => Draft!.Submit(), canConfirm);
+        IsSending = Confirm.IsExecuting;
+        feeHelper = this.WhenAnyValue(model => model.Draft!.TotalFee).ToProperty(this, model => model.Fee);
+        IsCalculating = isCalculatingDraft.AsObservable();
     }
+
+    public IObservable<bool> IsCalculating { get; }
+
+    public IObservable<bool> IsSending { get; }
+
+    public ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
+    
+    public IEnumerable<IFeeratePreset> Presets => uiServices.FeeratePresets;
 
     private Task<Result<ITransactionDraft>> CreateDraftTo(long destinationAmount, string destinationBitcoinAddress, long feeRate)
     {
@@ -57,11 +66,4 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
             feeRate: new DomainFeeRate(feeRate),
             walletAppService: walletAppService));
     }
-
-    public ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
-
-    public IObservable<bool> IsBusy { get; }
-    public IEnumerable<IFeeratePreset> Presets => uiServices.FeeratePresets;
-    public bool AutoAdvance => true;
-    public IObservable<bool> IsValid { get; }
 }

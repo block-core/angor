@@ -4,7 +4,9 @@
         xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
         xmlns:wizards="clr-namespace:Zafiro.Avalonia.Controls.Wizards;assembly=Zafiro.Avalonia"
         xmlns:zafiro="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
-        xmlns:views="clr-namespace:Zafiro.Avalonia.Dialogs.Views;assembly=Zafiro.Avalonia.Dialogs">
+        xmlns:views="clr-namespace:Zafiro.Avalonia.Dialogs.Views;assembly=Zafiro.Avalonia.Dialogs"
+        xmlns:classic="clr-namespace:Zafiro.Avalonia.Controls.Wizards.Classic;assembly=Zafiro.Avalonia"
+        xmlns:slim="clr-namespace:Zafiro.Avalonia.Controls.Wizards.Slim;assembly=Zafiro.Avalonia">
 
     <Styles.Resources>
         <Color x:Key="Level1">#F5FDFF</Color>
@@ -107,7 +109,7 @@
         <Setter Property="Foreground" Value="{StaticResource Level5}" />
     </Style>
 
-    <Style Selector="views|DialogControl wizards|WizardControl">
+    <Style Selector="views|DialogControl slim|SlimWizardControl">
         <Setter Property="Width" Value="500" />
         <Setter Property="MinHeight" Value="340" />
     </Style>

@@ -6,42 +6,43 @@ using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
+using Zafiro.UI.Reactive;
 
 namespace AngorApp.Features.Invest.Draft;
 
 public partial class DraftViewModel : ReactiveObject, IDraftViewModel
 {
     private readonly UIServices uiServices;
-    [ObservableAsProperty] private InvestmentDraft? draft;
+    [ObservableAsProperty] private IInvestmentDraft? draft;
     [Reactive] private long? feerate;
-    private readonly BehaviorSubject<bool> isBusy = new(false);
+    [ObservableAsProperty] private IAmountUI? fee;
+    private readonly BehaviorSubject<bool> isCalculatingDraft = new(false);
 
-    public DraftViewModel(IInvestmentAppService investmentAppService, IWallet walletId, long sats, IProject project, UIServices uiServices)
+    public DraftViewModel(IInvestmentAppService investmentAppService, IWallet wallet, long sats, IProject project, UIServices uiServices)
     {
         this.uiServices = uiServices;
         SatsToInvest = sats;
 
-        var drafts = this.WhenAnyValue(x => x.Feerate)
+        draftHelper = this.WhenAnyValue(x => x.Feerate)
             .WhereNotNull()
-            .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+            .SelectLatest(l => investmentAppService.CreateInvestmentDraft(wallet.Id.Value, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(sats)), isCalculatingDraft, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Do(_ => isBusy.OnNext(true))
-            .Select(_ => Observable.FromAsync(() => investmentAppService.CreateInvestmentDraft(walletId.Id.Value, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(sats))))
-            .Switch()
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .Do(_ => isBusy.OnNext(false), _ => isBusy.OnNext(false))
             .Successes()
-            .Select(transaction => new InvestmentDraft(transaction));
+            .Select(d => new InvestmentDraft(investmentAppService, wallet, project, d))
+            .ToProperty(this, x => x.Draft);
 
-        draftHelper = drafts.ToProperty(this, x => x.Draft);
-        IsValid = this.WhenAnyValue(x => x.Draft).CombineLatest(IsBusy, (investmentDraft, busy) => investmentDraft != null && !busy);
+        var canConfirm = this.WhenAnyValue(model => model.Draft).NotNull().CombineLatest(isCalculatingDraft, (hasDraft, calculating) => hasDraft && !calculating);
+        Confirm = ReactiveCommand.CreateFromTask(() => Draft!.Confirm(), canConfirm);
+        IsSending = Confirm.IsExecuting;
 
+        IsCalculating = isCalculatingDraft.AsObservable();
         FeeCalculator = new FeeCalculatorDesignTime();
+        feeHelper = this.WhenAnyValue(model => model.Draft!.TotalFee).ToProperty(this, model => model.Fee);
     }
 
-    public IObservable<bool> IsValid { get; }
-    public IObservable<bool> IsBusy => isBusy.AsObservable();
-    public bool AutoAdvance => false;
+    public IObservable<bool> IsCalculating { get; }
+    public IObservable<bool> IsSending { get; }
+    public ReactiveCommand<Unit, Result<Guid>> Confirm { get; }
     public long SatsToInvest { get; }
     public IFeeCalculator FeeCalculator { get; }
     public IEnumerable<IFeeratePreset> Presets => uiServices.FeeratePresets;
