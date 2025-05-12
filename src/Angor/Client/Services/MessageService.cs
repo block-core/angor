@@ -25,7 +25,7 @@ namespace Angor.Client.Services
         private readonly IRelayService _relayService;
         private readonly NostrConversionHelper _nostrHelper;
 
-        private List<DirectMessage> _directMessages = new();
+        private Dictionary<string, DirectMessage> _directMessagesDictionary = new Dictionary<string, DirectMessage>();
         private IDisposable _messageSubscription;
         private string _currentUserPrivateKeyHex;
         private string _currentUserNpub;
@@ -33,7 +33,10 @@ namespace Angor.Client.Services
         private string _contactHexPub;
         private bool _subscriptionActive = false;
 
-        public IReadOnlyList<DirectMessage> DirectMessages => _directMessages.AsReadOnly();
+        public IReadOnlyList<DirectMessage> DirectMessages => _directMessagesDictionary.Values
+            .OrderBy(m => m.Timestamp)
+            .ToList()
+            .AsReadOnly();
         public bool IsLoadingMessages { get; private set; }
         public bool IsSendingMessage { get; private set; }
         public bool IsRefreshing { get; private set; }
@@ -113,7 +116,7 @@ namespace Angor.Client.Services
                 return;
             }
 
-            _directMessages.Clear();
+            _directMessagesDictionary.Clear();
             NotifyStateChanged(); 
 
             try
@@ -133,8 +136,6 @@ namespace Angor.Client.Services
                     async eventMessage => await ProcessDirectMessage(eventMessage),
                     _contactHexPub
                 );
-
-                _directMessages = _directMessages.OrderBy(m => m.Timestamp).ToList();
             }
             catch (Exception ex)
             {
@@ -155,9 +156,9 @@ namespace Angor.Client.Services
             }
 
             DateTime sinceTime = DateTime.UtcNow.AddDays(-7);
-            if (_directMessages.Any())
+            if (_directMessagesDictionary.Any())
             {
-                sinceTime = _directMessages.Max(m => m.Timestamp);
+                sinceTime = _directMessagesDictionary.Values.Max(m => m.Timestamp);
             }
 
             try
@@ -177,8 +178,6 @@ namespace Angor.Client.Services
                     async eventMessage => await ProcessDirectMessage(eventMessage),
                     _currentUserHexPub
                 );
-
-                _directMessages = _directMessages.OrderBy(m => m.Timestamp).ToList();
             }
             catch (Exception ex)
             {
@@ -242,7 +241,7 @@ namespace Angor.Client.Services
                 return;
             }
 
-            if (_directMessages.Any(m => m.Id == eventMessage.Id))
+            if (_directMessagesDictionary.ContainsKey(eventMessage.Id))
             {
                 return;
             }
@@ -252,23 +251,13 @@ namespace Angor.Client.Services
 
             try
             {
-                string partnerPubKeyHex = isFromCurrentUser
-                    ? eventMessage.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier)
-                    : eventMessage.Pubkey;
+                string otherPartyPubkey = isFromCurrentUser ? _contactHexPub : eventMessage.Pubkey;
 
-                if (string.IsNullOrEmpty(partnerPubKeyHex))
-                {
-                    _logger.LogWarning($"Could not determine partner pubkey for message {eventMessage.Id}");
-                    decryptedContent = "[Error: Missing recipient/sender info]";
-                }
-                else
-                {
-                    decryptedContent = await _encryptionService.DecryptNostrContentAsync(
-                        _currentUserPrivateKeyHex,
-                        partnerPubKeyHex,
-                        eventMessage.Content
-                    );
-                }
+                decryptedContent = await _encryptionService.DecryptNostrContentAsync(
+                    _currentUserPrivateKeyHex,
+                    otherPartyPubkey,
+                    eventMessage.Content
+                );
             }
             catch (Exception ex)
             {
@@ -276,12 +265,14 @@ namespace Angor.Client.Services
                 decryptedContent = "[Could not decrypt message]";
             }
 
-            if (_directMessages.Any(m =>
+            bool isDuplicate = _directMessagesDictionary.Values.Any(m =>
                 m.Content == decryptedContent &&
                 m.IsFromCurrentUser == isFromCurrentUser &&
-                Math.Abs((m.Timestamp - eventMessage.CreatedAt.GetValueOrDefault()).TotalMinutes) < 1))
+                Math.Abs((m.Timestamp - eventMessage.CreatedAt.GetValueOrDefault()).TotalMinutes) < 1);
+            
+            if (isDuplicate)
             {
-                return; 
+                return;
             }
 
             var directMessage = new DirectMessage
@@ -293,8 +284,7 @@ namespace Angor.Client.Services
                 IsFromCurrentUser = isFromCurrentUser
             };
 
-            _directMessages.Add(directMessage);
-            _directMessages = _directMessages.OrderBy(m => m.Timestamp).ToList();
+            _directMessagesDictionary[eventMessage.Id] = directMessage;
         }
 
         public async Task SendMessageAsync(string messageContent)
@@ -335,8 +325,7 @@ namespace Angor.Client.Services
                     IsFromCurrentUser = true
                 };
 
-                _directMessages.Add(sentDirectMessage);
-                _directMessages = _directMessages.OrderBy(m => m.Timestamp).ToList();
+                _directMessagesDictionary[sentMessageId] = sentDirectMessage;
             }
             catch (Exception ex)
             {

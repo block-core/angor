@@ -26,7 +26,7 @@
                     </div>
                     <div class="d-flex align-items-center">
                         <div class="status-indicator me-2">
-                            <div class="@(MessageService.IsSubscriptionActive ? "connected" : "disconnected")" 
+                            <div class="@(MessageService.IsSubscriptionActive ? "connected" : "disconnected")"
                                  title="@(MessageService.IsSubscriptionActive ? "Connected - Real-time messages enabled" : "Disconnected - Messages may be delayed")">
                             </div>
                         </div>
@@ -152,7 +152,7 @@
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback<bool> OnNsecRequest { get; set; }
     [Parameter] public EventCallback<string> OnNotification { get; set; }
-    
+
     private ElementReference messagesContainerRef;
     private string newMessage = "";
     private bool showNsec = false;
@@ -197,21 +197,25 @@
         {
             await ShowMessage();
         }
-    }    protected override async Task OnAfterRenderAsync(bool firstRender)
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_needsScroll)
         {
             await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
             _needsScroll = false;
         }
-        
+
         // For first render, ensure real-time subscription is active
         if (firstRender && MessageService.DirectMessages.Any())
         {
             // Force a refresh to ensure connection is active
             await MessageService.RefreshMessagesAsync();
         }
-    }    private async Task ShowMessage()
+    }
+
+    private async Task ShowMessage()
     {
         if (string.IsNullOrEmpty(CurrentUserPrivateKeyHex) ||
             string.IsNullOrEmpty(CurrentUserNpub) ||
@@ -225,10 +229,10 @@
         {
             await MessageService.InitializeAsync(CurrentUserPrivateKeyHex, CurrentUserNpub, ContactHexPub);
             _needsScroll = true;
-            
+
             // Brief delay to allow message service to initialize properly
             await Task.Delay(100);
-            
+
             // Check if real-time connection is active, if not try to refresh
             if (!MessageService.IsSubscriptionActive)
             {
@@ -264,7 +268,9 @@
             await OnNotification.InvokeAsync($"Failed to send message: {ex.Message}");
             newMessage = messageToSend;
         }
-    }    private async Task RefreshMessagesAsync()
+    }
+
+    private async Task RefreshMessagesAsync()
     {
         if (MessageService.IsRefreshing || _localIsRefreshing) return;
 
@@ -272,16 +278,16 @@
         {
             _localIsRefreshing = true;
             await InvokeAsync(StateHasChanged);
-            
+
             await Task.Delay(50);
-            
+
             await MessageService.RefreshMessagesAsync();
-            
+
             if (MessageService.IsSubscriptionActive)
             {
                 await OnNotification.InvokeAsync("Real-time message connection active");
             }
-            else 
+            else
             {
                 await Task.Delay(100);
                 await MessageService.RefreshMessagesAsync();
@@ -420,11 +426,11 @@
         if (_messageCount > previousCount)
         {
             _needsScroll = true;
-            InvokeAsync(async () => 
+            InvokeAsync(async () =>
             {
-                await Task.Yield(); 
+                await Task.Yield();
                 StateHasChanged();
-                
+
                 await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
             });
         }
