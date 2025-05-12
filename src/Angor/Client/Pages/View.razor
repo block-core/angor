@@ -1078,7 +1078,7 @@
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
             var nostrKeyHex = Encoders.Hex.EncodeData(nostrKey.ToBytes());
 
-            var metadataResult = await _RelayService.CreateNostrProfileAsync(
+            var metadataEventId = _RelayService.CreateNostrProfile(
                 project.Metadata.ToNostrMetadata(),
                 nostrKeyHex,
                 _ =>
@@ -1089,18 +1089,18 @@
                     }
                 });
 
-            var projectInfoResult = await _RelayService.AddProjectAsync(
+            var projectInfoEventId = _RelayService.AddProject(
                 project.ProjectInfo, 
                 nostrKeyHex,
-                _ =>
+                e =>
                 {
-                    if (!_.Accepted)
+                    if (!e.Accepted)
                     {
                         Logger.LogWarning("Failed to republish project information to relay");
                     }
                 });
 
-            if (!string.IsNullOrEmpty(metadataResult) && !string.IsNullOrEmpty(projectInfoResult))
+            if (!string.IsNullOrEmpty(metadataEventId) && !string.IsNullOrEmpty(projectInfoEventId))
             {
                 notificationComponent.ShowNotificationMessage("Successfully republished to Nostr relays", 3);
             }

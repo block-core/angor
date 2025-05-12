@@ -8,8 +8,8 @@ namespace Angor.Shared.Services;
 public interface IRelayService
 {
     void LookupNostrProfileForNPub(Action<string, ProjectMetadata> onResponse, Action onEndOfStream, params string[] npub);
-    Task<string> AddProjectAsync(ProjectInfo project, string nsec,Action<NostrOkResponse> action);
-    Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string nsec, Action<NostrOkResponse> action);
+    string AddProject(ProjectInfo project, string nsec,Action<NostrOkResponse> action);
+    string CreateNostrProfile(NostrMetadata metadata, string nsec, Action<NostrOkResponse> action);
     Task<string> DeleteProjectAsync(string eventId, string hexPrivateKey);
     void LookupProjectsInfoByEventIds<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction, params string[] nostrEventIds);
     void RequestProjectCreateEventsByPubKey(Action<NostrEvent> onResponseAction, Action? onEoseAction,params string[] nostrPubKeys);

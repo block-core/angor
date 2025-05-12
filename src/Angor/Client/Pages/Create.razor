@@ -9,7 +9,8 @@
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
 @using Blockcore.Networks
-@using NBitcoin.DataEncoders
+@using Blockcore.NBitcoin.DataEncoders
+
 @inherits BaseComponent
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
@@ -1022,16 +1023,17 @@
             var words = await passwordComponent.GetWalletAsync();
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
 
-            var resultId = await _RelayService.CreateNostrProfileAsync(
+            var eventId = _RelayService.CreateNostrProfile(
                 project.Metadata.ToNostrMetadata(),
-                NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()),
+                Encoders.Hex.EncodeData(nostrKey.ToBytes()),
                 _ =>
                 {
                     createProfileSpinner = false;
 
                     if (!_.Accepted)
                     {
-                        notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!", $"{_.CommunicatorName} - {_.Message}"); //TODO add export project info
+                        //TODO add export project info
+                        notificationComponent.ShowErrorMessage("Failed to store the project information on the relay!!!", $"{_.CommunicatorName} - {_.Message}");
                         return;
                     }
 
@@ -1048,10 +1050,7 @@
                 });
 
 
-            if (string.IsNullOrEmpty(resultId))
-            {
-                notificationComponent.ShowErrorMessage("Failed to create nostr profile");
-            }
+            _Logger.LogInformation($"Created profile with event id - {eventId}");
         }
         catch (Exception e)
         {
@@ -1095,7 +1094,7 @@
 
             var nostrKeyHex = Encoders.Hex.EncodeData(nostrKey.ToBytes());
 
-            var resultId = await _RelayService.AddProjectAsync(project.ProjectInfo, nostrKeyHex,
+            var eventId = _RelayService.AddProject(project.ProjectInfo, nostrKeyHex,
                 _ =>
                 {
                     createApplicationDataSpinner = false;
@@ -1117,14 +1116,6 @@
 
                     StateHasChanged();
                 });
-
-            // todo: do we actually need this? does it actualy work to delete?
-            if (string.IsNullOrEmpty(resultId))
-            {
-                createApplicationDataSpinner = false;
-                await _RelayService.DeleteProjectAsync(resultId, nostrKeyHex);
-                notificationComponent.ShowErrorMessage("Failed to create application data");
-            }
         }
         catch (Exception e)
         {

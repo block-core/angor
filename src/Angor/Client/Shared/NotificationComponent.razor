@@ -95,7 +95,11 @@
 
     public void ShowErrorMessage(string message, string detailedMessage)
     {
-        ShowErrorMessage(message, new Exception(detailedMessage));
+        errorMessage = message;
+        exceptionDetails = detailedMessage;
+        showExceptionDetails = true;
+        Logger.LogError("An error occurred: {Message} {detailedMessage}", message, detailedMessage);
+        StateHasChanged();
     }
 
     public void ShowErrorMessage(string message, Exception exception = null)

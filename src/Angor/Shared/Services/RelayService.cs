@@ -211,7 +211,7 @@ namespace Angor.Shared.Services
             }));
         }
 
-        public Task<string> AddProjectAsync(ProjectInfo project, string hexPrivateKey, Action<NostrOkResponse> action)
+        public string AddProject(ProjectInfo project, string hexPrivateKey, Action<NostrOkResponse> action)
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
@@ -229,10 +229,10 @@ namespace Angor.Shared.Services
             
             nostrClient.Send(new NostrEventRequest(signed));
             
-            return Task.FromResult(signed.Id);
+            return signed.Id;
         }
 
-        public Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string hexPrivateKey, Action<NostrOkResponse> action)
+        public string CreateNostrProfile(NostrMetadata metadata, string hexPrivateKey, Action<NostrOkResponse> action)
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
@@ -251,7 +251,7 @@ namespace Angor.Shared.Services
             
             nostrClient.Send(new NostrEventRequest(signed));
             
-            return Task.FromResult(signed.Id);
+            return signed.Id;
         }
 
         public Task<string> DeleteProjectAsync(string eventId, string hexPrivateKey)

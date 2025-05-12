@@ -33,14 +33,6 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         _okHandlingSubscription = client.Streams.OkStream.Subscribe(HandleOkMessages);
         _eoseHandlingSubscription = client.Streams.EoseStream.Subscribe(HandleEoseMessages);
     }
-
-    // public void Init(INetworkService networkService)
-    // {
-    //     var client = _communicationFactory.GetOrCreateClient(networkService); 
-    //     
-    //     _okHandlingSubscription = client.Streams.OkStream.Subscribe(HandleOkMessages);
-    //     _eoseHandlingSubscription = client.Streams.EoseStream.Subscribe(HandleEoseMessages);
-    // }
     
     public bool TryAddOKAction(string eventId, Action<NostrOkResponse> action)
     {
@@ -54,9 +46,16 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
         if (!OkVerificationActions.TryGetValue(okResponse?.EventId ?? string.Empty, out var action)) 
             return;
-        
-        action(okResponse);
 
+        try
+        {
+            if (okResponse != null) action(okResponse);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,"Failed to invoke ok event action for event id {EventId} with accepted {Accepted}", okResponse.EventId, okResponse.Accepted);
+        }
+        
         if (!_communicationFactory.OkEventReceivedOnAllRelays(okResponse.EventId)) 
             return;
         

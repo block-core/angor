@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 using Nostr.Client.Requests;
+using Nostr.Client.Responses;
 
 namespace Angor.Shared.Services
 {
@@ -20,7 +21,7 @@ namespace Angor.Shared.Services
             _subscriptionsHanding = subscriptionsHanding;
         }
 
-        public (DateTime,string) RequestInvestmentSigs(string encryptedContent, string investorNostrPrivateKey, string founderNostrPubKey)
+        public (DateTime,string) RequestInvestmentSigs(string encryptedContent, string investorNostrPrivateKey, string founderNostrPubKey, Action<NostrOkResponse> onResponseAction)
         {
             var sender = NostrPrivateKey.FromHex(investorNostrPrivateKey);
 
@@ -40,6 +41,8 @@ namespace Angor.Shared.Services
 
             var signed = ev.Sign(sender);
 
+            _subscriptionsHanding.TryAddOKAction(signed.Id, onResponseAction);
+            
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
             nostrClient.Send(new NostrEventRequest(signed));
 

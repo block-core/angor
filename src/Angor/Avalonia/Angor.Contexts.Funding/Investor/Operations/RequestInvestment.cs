@@ -101,7 +101,14 @@ public static class RequestInvestment
                     nostrPubKey,
                     serializedRecoveryRequest);
 
-                var (time, id) = signService.RequestInvestmentSigs(encryptedContent, investorNostrPrivateKeyHex, project.NostrPubKey);
+                var (time, id) = signService.RequestInvestmentSigs(encryptedContent, investorNostrPrivateKeyHex, project.NostrPubKey,
+                    ok =>
+                    {
+                        if (ok.Accepted) 
+                            return;
+                        
+                        //TODO handle filaure with notification
+                    });
 
                 return Result.Success(id);
             }

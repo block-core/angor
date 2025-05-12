@@ -997,7 +997,14 @@ else
                 nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey,
                 sigJson);
 
-            var investmentSigsRequest = _SignService.RequestInvestmentSigs(encryptedContent, nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey);
+            var investmentSigsRequest = _SignService.RequestInvestmentSigs(encryptedContent, nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey,
+                ok =>
+                {
+                    if (ok.Accepted) 
+                        return;
+                    
+                    notificationComponent.ShowErrorMessage($"Failed to send signature request to the relay {ok.CommunicatorName}", ok.Message);
+                });
 
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
