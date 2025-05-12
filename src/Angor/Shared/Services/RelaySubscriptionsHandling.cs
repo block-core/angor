@@ -12,7 +12,9 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     protected Dictionary<string, IDisposable> relaySubscriptions;
     protected Dictionary<string, Action> userEoseActions;
     protected Dictionary<string, Action<NostrOkResponse>> OkVerificationActions;
-    
+
+    protected Dictionary<string, string> relaySubscriptionsKeepActive;
+
     private INostrCommunicationFactory _communicationFactory;
     private INetworkService _networkService;
 
@@ -27,7 +29,8 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         relaySubscriptions = new();
         userEoseActions = new();
         OkVerificationActions = new();
-        
+        relaySubscriptionsKeepActive = new();
+
         var client = _communicationFactory.GetOrCreateClient(networkService); 
         
         _okHandlingSubscription = client.Streams.OkStream.Subscribe(HandleOkMessages);
@@ -101,24 +104,26 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         
         if (!relaySubscriptions.ContainsKey(_.Subscription)) 
             return;
-        
-        if (_.Subscription.EndsWith("DM") || 
-            !_.Subscription.Contains("-") ||
-            _.Subscription.StartsWith("ProjectInfoLookups"))
-        {
-            _logger.LogDebug($"Keeping subscription active for real-time updates - {_.Subscription}");
+
+        if (relaySubscriptionsKeepActive.ContainsKey(_.Subscription))
             return;
-        }
-        
-        _logger.LogDebug($"Disposing of subscription - {_.Subscription}");
+
+        CloseSubscription(_.Subscription);
+    }
+
+    public void CloseSubscription(string subscriptionKey)
+    {
+        if (!relaySubscriptions.ContainsKey(subscriptionKey))
+            return;
         
         _communicationFactory
             .GetOrCreateClient(_networkService)
-            .Send(new NostrCloseRequest(_.Subscription));
+            .Send(new NostrCloseRequest(subscriptionKey));
+       
+        relaySubscriptions[subscriptionKey].Dispose();
+        relaySubscriptions.Remove(subscriptionKey);
         
-        relaySubscriptions[_.Subscription].Dispose();
-        relaySubscriptions.Remove(_.Subscription);
-        _logger.LogDebug($"subscription disposed - {_.Subscription}");
+        _logger.LogDebug($"subscription disposed - {subscriptionKey}");
     }
 
     public bool RelaySubscriptionAdded(string subscriptionKey)
@@ -126,9 +131,22 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         return relaySubscriptions.ContainsKey(subscriptionKey);
     }
 
-    public bool TryAddRelaySubscription(string subscriptionKey, IDisposable subscription)
+    public bool TryAddRelaySubscription(string subscriptionKey, IDisposable subscription, bool keepActive = false)
     {
-        return relaySubscriptions.ContainsKey(subscriptionKey) || relaySubscriptions.TryAdd(subscriptionKey, subscription);
+        if (relaySubscriptions.ContainsKey(subscriptionKey))
+            return true;
+
+        if (relaySubscriptions.TryAdd(subscriptionKey, subscription))
+        {
+            if (keepActive)
+            {
+                relaySubscriptionsKeepActive.TryAdd(subscriptionKey, string.Empty);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     public void Dispose()

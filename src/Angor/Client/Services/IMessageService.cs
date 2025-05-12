@@ -18,7 +18,7 @@ namespace Angor.Client.Services
         Task InitializeAsync(string currentUserPrivateKeyHex, string currentUserNpub, string contactHexPub);
         Task LoadMessagesAsync();
         Task SendMessageAsync(string messageContent);
-        Task RefreshMessagesAsync();
         void SetKeys(string currentUserPrivateKeyHex, string currentUserNpub, string contactHexPub);
+        void DisconnectSubscriptions();
     }
 }

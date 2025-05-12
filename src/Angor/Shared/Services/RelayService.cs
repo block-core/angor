@@ -29,6 +29,11 @@ namespace Angor.Shared.Services
             _serializer = serializer;
         }
 
+        public void DisconnectSubscription(string subscription)
+        {
+            _subscriptionsHandling.CloseSubscription(subscription);
+        }
+
         public void LookupProjectsInfoByEventIds<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,
             params string[] nostrEventIds)
         {
@@ -119,7 +124,7 @@ namespace Angor.Shared.Services
             return Task.CompletedTask;
         }
 
-        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Func<NostrEvent,Task> onResponseAction, string? senderNpub = null)
+        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Func<NostrEvent,Task> onResponseAction, string? senderNpub = null, bool keepActive = false)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
@@ -133,7 +138,7 @@ namespace Angor.Shared.Services
                     .Select(_ => _.Event)
                     .Subscribe(@event => onResponseAction(@event));
 
-                _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
+                _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription, keepActive);
             }
 
             var nostrFilter = new NostrFilter

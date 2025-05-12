@@ -206,13 +206,6 @@
             await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
             _needsScroll = false;
         }
-
-        // For first render, ensure real-time subscription is active
-        if (firstRender && MessageService.DirectMessages.Any())
-        {
-            // Force a refresh to ensure connection is active
-            await MessageService.RefreshMessagesAsync();
-        }
     }
 
     private async Task ShowMessage()
@@ -227,16 +220,12 @@
 
         try
         {
-            await MessageService.InitializeAsync(CurrentUserPrivateKeyHex, CurrentUserNpub, ContactHexPub);
-            _needsScroll = true;
-
-            // Brief delay to allow message service to initialize properly
-            await Task.Delay(100);
-
             // Check if real-time connection is active, if not try to refresh
             if (!MessageService.IsSubscriptionActive)
             {
-                await MessageService.RefreshMessagesAsync();
+                await MessageService.InitializeAsync(CurrentUserPrivateKeyHex, CurrentUserNpub, ContactHexPub);
+                _needsScroll = true;
+               
                 if (MessageService.IsSubscriptionActive)
                 {
                     await OnNotification.InvokeAsync("Real-time message connection established");
@@ -281,7 +270,7 @@
 
             await Task.Delay(50);
 
-            await MessageService.RefreshMessagesAsync();
+            await MessageService.LoadMessagesAsync();
 
             if (MessageService.IsSubscriptionActive)
             {
@@ -290,7 +279,7 @@
             else
             {
                 await Task.Delay(100);
-                await MessageService.RefreshMessagesAsync();
+                await MessageService.LoadMessagesAsync();
             }
         }
         catch (Exception ex)
@@ -404,6 +393,7 @@
 
     private void CloseModal()
     {
+        MessageService.DisconnectSubscriptions();
         OnClose.InvokeAsync();
     }
 

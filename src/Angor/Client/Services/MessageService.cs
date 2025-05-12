@@ -26,12 +26,13 @@ namespace Angor.Client.Services
         private readonly NostrConversionHelper _nostrHelper;
 
         private Dictionary<string, DirectMessage> _directMessagesDictionary = new Dictionary<string, DirectMessage>();
-        private IDisposable _messageSubscription;
         private string _currentUserPrivateKeyHex;
         private string _currentUserNpub;
         private string _currentUserHexPub;
         private string _contactHexPub;
         private bool _subscriptionActive = false;
+
+        private DateTime _sinceTime = DateTime.UtcNow.AddDays(-7);
 
         public IReadOnlyList<DirectMessage> DirectMessages => _directMessagesDictionary.Values
             .OrderBy(m => m.Timestamp)
@@ -78,6 +79,8 @@ namespace Angor.Client.Services
 
         public async Task InitializeAsync(string currentUserPrivateKeyHex, string currentUserNpub, string contactHexPub)
         {
+            _sinceTime = DateTime.UtcNow.AddDays(-7);
+
             SetKeys(currentUserPrivateKeyHex, currentUserNpub, contactHexPub);
 
             if (string.IsNullOrEmpty(_currentUserPrivateKeyHex) || string.IsNullOrEmpty(_contactHexPub) || string.IsNullOrEmpty(_currentUserHexPub))
@@ -93,9 +96,6 @@ namespace Angor.Client.Services
             try
             {
                 await LoadMessagesAsync();
-                
-                // Ensure we have a valid subscription
-                EnsureActiveSubscription();
             }
             catch (Exception ex)
             {
@@ -108,46 +108,20 @@ namespace Angor.Client.Services
             }
         }
 
-        public async Task LoadMessagesAsync()
+        public void DisconnectSubscriptions()
         {
-            if (string.IsNullOrEmpty(_currentUserPrivateKeyHex) || string.IsNullOrEmpty(_contactHexPub) || string.IsNullOrEmpty(_currentUserHexPub))
+            if (_subscriptionActive)
             {
-                _logger.LogWarning("LoadMessagesAsync - Missing required keys.");
-                return;
-            }
+                _relayService.DisconnectSubscription(_currentUserHexPub);
+                _relayService.DisconnectSubscription(_contactHexPub);
 
-            _directMessagesDictionary.Clear();
-            NotifyStateChanged(); 
-
-            try
-            {
-                await _relayService.LookupDirectMessagesForPubKeyAsync(
-                    _contactHexPub,
-                    DateTime.UtcNow.AddDays(-7),
-                    100,
-                    async eventMessage => await ProcessDirectMessage(eventMessage),
-                    _currentUserHexPub
-                );
-
-                await _relayService.LookupDirectMessagesForPubKeyAsync(
-                    _currentUserHexPub,
-                    DateTime.UtcNow.AddDays(-7),
-                    100,
-                    async eventMessage => await ProcessDirectMessage(eventMessage),
-                    _contactHexPub
-                );
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Failed to load messages: {ex.Message}");
-            }
-            finally
-            {
-                NotifyStateChanged(); 
+                _sinceTime = DateTime.UtcNow.AddDays(-7);
+                _subscriptionActive = false;
+                _directMessagesDictionary.Clear();
             }
         }
 
-        private async Task LoadNewMessagesAsync()
+        public async Task LoadMessagesAsync()
         {
             if (string.IsNullOrEmpty(_currentUserPrivateKeyHex) || string.IsNullOrEmpty(_contactHexPub) || string.IsNullOrEmpty(_currentUserHexPub))
             {
@@ -155,29 +129,31 @@ namespace Angor.Client.Services
                 return;
             }
 
-            DateTime sinceTime = DateTime.UtcNow.AddDays(-7);
-            if (_directMessagesDictionary.Any())
-            {
-                sinceTime = _directMessagesDictionary.Values.Max(m => m.Timestamp);
-            }
-
             try
             {
+                DisconnectSubscriptions();
+
+                NotifyStateChanged();
+
                 await _relayService.LookupDirectMessagesForPubKeyAsync(
                     _currentUserHexPub,
-                    sinceTime,
+                    _sinceTime,
                     100,
                     async eventMessage => await ProcessDirectMessage(eventMessage),
-                    _contactHexPub
+                    _contactHexPub,
+                    true
                 );
 
                 await _relayService.LookupDirectMessagesForPubKeyAsync(
                     _contactHexPub,
-                    sinceTime,
+                    _sinceTime,
                     100,
                     async eventMessage => await ProcessDirectMessage(eventMessage),
-                    _currentUserHexPub
+                    _currentUserHexPub,
+                    true
                 );
+
+                _subscriptionActive = true;
             }
             catch (Exception ex)
             {
@@ -188,52 +164,7 @@ namespace Angor.Client.Services
                 NotifyStateChanged();
             }
         }
-
-        private void EnsureActiveSubscription()
-        {
-            if (_subscriptionActive)
-            {
-                _logger.LogDebug("Message subscription already active, no need to resubscribe");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(_currentUserHexPub) || string.IsNullOrEmpty(_contactHexPub))
-            {
-                _logger.LogWarning("EnsureActiveSubscription - Missing required keys.");
-                return;
-            }
-
-            try
-            {
-                _messageSubscription?.Dispose();
-                var nostrClient = _nostrCommunicationFactory.GetOrCreateClient(_networkService);
-
-                _messageSubscription = nostrClient.Streams.EventStream
-                    .Where(ev => ev.Event?.Kind == NostrKind.EncryptedDm)
-                    .Where(ev =>
-                    {
-                        if (ev.Event == null) return false;
-                        string tagValue = ev.Event.Tags?.FindFirstTagValue(NostrEventTag.ProfileIdentifier);
-                        bool isFromUserToContact = ev.Event.Pubkey == _currentUserHexPub && tagValue == _contactHexPub;
-                        bool isFromContactToUser = ev.Event.Pubkey == _contactHexPub && tagValue == _currentUserHexPub;
-                        return isFromUserToContact || isFromContactToUser;
-                    })
-                    .Subscribe(async messageEvent =>
-                    {
-                        await ProcessDirectMessage(messageEvent.Event);
-                        NotifyStateChanged();
-                    });
-                
-                _subscriptionActive = true;
-                _logger.LogInformation("Real-time message subscription activated successfully");
-            }
-            catch (Exception ex)
-            {
-                _subscriptionActive = false;
-                _logger.LogError($"Error establishing message subscription: {ex.Message}");
-            }
-        }
-
+        
         private async Task ProcessDirectMessage(NostrEvent eventMessage)
         {
             if (eventMessage == null || string.IsNullOrEmpty(eventMessage.Content) || string.IsNullOrEmpty(_currentUserPrivateKeyHex))
@@ -265,16 +196,6 @@ namespace Angor.Client.Services
                 decryptedContent = "[Could not decrypt message]";
             }
 
-            bool isDuplicate = _directMessagesDictionary.Values.Any(m =>
-                m.Content == decryptedContent &&
-                m.IsFromCurrentUser == isFromCurrentUser &&
-                Math.Abs((m.Timestamp - eventMessage.CreatedAt.GetValueOrDefault()).TotalMinutes) < 1);
-            
-            if (isDuplicate)
-            {
-                return;
-            }
-
             var directMessage = new DirectMessage
             {
                 Id = eventMessage.Id,
@@ -285,6 +206,10 @@ namespace Angor.Client.Services
             };
 
             _directMessagesDictionary[eventMessage.Id] = directMessage;
+
+            _sinceTime = directMessage.Timestamp;
+
+            NotifyStateChanged();
         }
 
         public async Task SendMessageAsync(string messageContent)
@@ -300,9 +225,6 @@ namespace Angor.Client.Services
 
             try
             {
-                // Ensure subscription is active before sending
-                EnsureActiveSubscription();
-
                 string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
                     _currentUserPrivateKeyHex,
                     _contactHexPub,
@@ -338,43 +260,11 @@ namespace Angor.Client.Services
             }
         }
 
-        public async Task RefreshMessagesAsync()
-        {
-            if (IsRefreshing) return;
-
-            IsRefreshing = true;
-            NotifyStateChanged();
-
-            try
-            {
-                // Only dispose and resubscribe if the current subscription is not active
-                if (!_subscriptionActive)
-                {
-                    _messageSubscription?.Dispose();
-                    _messageSubscription = null;
-                }
-
-                await LoadNewMessagesAsync();
-                
-                // Ensure we have a valid subscription
-                EnsureActiveSubscription();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Failed to refresh messages: {ex.Message}");
-            }
-            finally
-            {
-                IsRefreshing = false;
-                NotifyStateChanged();
-            }
-        }
-
         private void NotifyStateChanged() => OnChange?.Invoke();
 
         public void Dispose()
         {
-            _messageSubscription?.Dispose();
+            DisconnectSubscriptions();
             _subscriptionActive = false;
             GC.SuppressFinalize(this);
         }
