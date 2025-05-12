@@ -1,12 +1,9 @@
-using System.Windows.Input;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Wallet.Application;
 using AngorApp.Features.Invest;
-using AngorApp.Sections.Browse.Details;
 using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
-using Zafiro.Avalonia.Controls.Navigation;
 using Zafiro.Reactive;
 using Zafiro.UI.Navigation;
 
