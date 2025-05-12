@@ -793,6 +793,77 @@ else
                     </div>
                 </div>
 
+                <div class="card card-body mt-4">
+                    <div class="d-flex align-items-center">
+                        <span class="user-select-none animate-rotate">
+                            <Icon IconName="broadcast"></Icon>
+                        </span>
+                        <div class="h-100 ms-3">
+                            <h5 class="mb-0 font-weight-bolder">
+                                Broadcast Raw Transaction
+                            </h5>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <form>
+                            <div class="mb-3">
+                                <label for="rawTransactionInput" class="form-label">Raw Transaction</label>
+                                <textarea class="form-control" id="rawTransactionInput" rows="4" @bind="rawTransactionHex" placeholder="Enter raw transaction hex"></textarea>
+                            </div>
+
+                            <div class="d-flex align-items-center">
+                                <button type="button" class="btn btn-border-success" @onclick="BroadcastRawTransaction" disabled="@broadcastSpinner">
+                                    @if (broadcastSpinner)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Broadcasting...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Broadcast</span>
+                                    }
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div> 
+
+                @if (showPsbtModal)
+                {
+                    <div class="modal-wrapper">
+                        <div class="modal fade show d-block" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content modern-modal">
+                                    <div class="modal-header border-0 pb-0">
+                                        <div class="d-flex align-items-center">
+                                            <Icon IconName="key" Height="32" Width="32" class="me-2" />
+                                            <h5 class="modal-title">PSBT to Sign</h5>
+                                        </div>
+                                        <button class="btn-close-custom" @onclick="() => showPsbtModal = false">
+                                            <Icon IconName="close-circle" Height="24" Width="24" />
+                                        </button>
+                                    </div>
+                                    <div class="modal-body modal-body-scroll py-4">
+                                        <p class="text-muted mb-3">
+                                            Below is the PSBT (Partially Signed Bitcoin Transaction) that you need to sign using your wallet. Once signed, use the "Broadcast Raw Transaction" option to spend the transaction.
+                                        </p>
+                                        <textarea class="form-control" rows="10" readonly>@psbtBase64</textarea>
+                                        <div class="d-flex justify-content-end mt-3">
+                                            <button class="btn btn-border-success" @onclick="CopyPsbtToClipboard">
+                                                <Icon IconName="copy" Height="20" Width="20" class="me-2" />
+                                                Copy PSBT
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button class="btn btn-border-success" @onclick="() => showPsbtModal = false">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
                 @if (coinControlModal)
                 {
                     <div class="modal-wrapper">
@@ -1174,6 +1245,59 @@ else
     private Dictionary<int, string> userVerificationInputs = new();
     private bool verificationPassed;
     private bool showVerificationError;
+
+    private string rawTransactionHex = string.Empty;
+    private bool broadcastSpinner = false;
+    private bool showPsbtModal = false;
+    private string psbtBase64 = string.Empty;
+
+    private async Task CopyPsbtToClipboard()
+    {
+        if (string.IsNullOrEmpty(psbtBase64))
+        {
+            notificationComponent.ShowErrorMessage("No PSBT available to copy.");
+            return;
+        }
+
+        await ClipboardService.WriteTextAsync(psbtBase64);
+        notificationComponent.ShowNotificationMessage("PSBT copied to clipboard!");
+    }
+
+    private async Task BroadcastRawTransaction()
+    {
+        if (string.IsNullOrWhiteSpace(rawTransactionHex))
+        {
+            notificationComponent.ShowErrorMessage("Please enter a valid raw transaction hex.");
+            return;
+        }
+
+        broadcastSpinner = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await _walletOperations.PublishRawTransactionAsync(network, rawTransactionHex);
+
+            if (result.Success)
+            {
+                notificationComponent.ShowNotificationMessage("Transaction broadcasted successfully!");
+                rawTransactionHex = string.Empty; // Clear the input field
+            }
+            else
+            {
+                notificationComponent.ShowErrorMessage($"Broadcast failed: {result.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage($"Error broadcasting transaction: {ex.Message}");
+        }
+        finally
+        {
+            broadcastSpinner = false;
+            StateHasChanged();
+        }
+    }
 
     private decimal sendAmount
     {
@@ -1712,6 +1836,24 @@ else
 
     private async Task SendCoins()
     {
+        if(hasExtPubKey){
+            try{
+                var psbt = _walletOperations.SendAmountToAddressPSBT(storage.GetAccountInfo(network.Name).ExtPubKey, _sendInfo);
+                psbtBase64 = psbt.ToBase64();
+                showPsbtModal = true;
+                sendConfirmModal = false;
+            }catch(Exception er){
+                Console.WriteLine(er);
+                notificationComponent.ShowErrorMessage("Error in creating psbt");
+            }
+
+            StateHasChanged();
+            await Task.Delay(10);    
+
+            
+            return;
+        }
+
         if (!passwordComponent.HasPassword())
         {
             sendConfirmSpinner = false;

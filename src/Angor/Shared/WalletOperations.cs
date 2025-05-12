@@ -230,6 +230,14 @@ public class WalletOperations : IWalletOperations
         return new OperationResult<Transaction> { Success = false, Message = res };
     }
 
+    public async Task<OperationResult<string>> PublishRawTransactionAsync(Network network, string trxhex)
+    {
+        var res = await _indexerService.PublishTransactionAsync(trxhex);
+        if (string.IsNullOrEmpty(res))
+            return new OperationResult<string> { Success = true, Data = trxhex };
+        return new OperationResult<string> { Success = false, Message = res };
+    }
+
     public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
     {
         var utxosToSpend = new List<UtxoDataWithPath>();
@@ -359,7 +367,9 @@ public class WalletOperations : IWalletOperations
                 throw new Exception("Please make sure you enter valid exPubKey.");
             throw;
         }
-        
+        var coinType = network.Consensus.CoinType;
+        string accountHdPath = _hdOperations.GetAccountHdPath(Purpose, coinType, AccountIndex);
+        accountInfo.Path = accountHdPath;
         return accountInfo;
     }
 
@@ -634,5 +644,75 @@ public class WalletOperations : IWalletOperations
             .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network));
 
         return builder.EstimateFees(new FeeRate(Money.Satoshis(feeRate))).ToUnit(MoneyUnit.BTC);
+    }
+    public List<(NBitcoin.Coin coin, NBitcoin.KeyPath path)> GetUnspentOutputsForTransactionWithoutKeys(ExtPubKey extPubKey, List<UtxoDataWithPath> utxoDataWithPaths)
+    {
+        var coin_keys = new List<(NBitcoin.Coin coin, NBitcoin.KeyPath keyPath)>();
+        foreach (var utxoDataWithPath in utxoDataWithPaths)
+        {
+            var utxoData = utxoDataWithPath.UtxoData;
+            var coin = new NBitcoin.Coin(NBitcoin.uint256.Parse(utxoData.outpoint.transactionId), (uint)utxoData.outpoint.outputIndex, NBitcoin.Money.Satoshis(utxoData.value), NBitcoin.Script.FromHex(utxoData.scriptHex));
+            var path = new NBitcoin.KeyPath(utxoDataWithPath.HdPath);
+            coin_keys.Add((coin, path));
+        }
+
+        return coin_keys;
+    }
+    public NBitcoin.PSBT SendAmountToAddressPSBT(string extPubKeyString, SendInfo sendInfo)
+    {
+        ExtPubKey extPubKey;
+        try
+        {
+            var encoder = new Base58CheckEncoder();
+            byte[] bytes = encoder.DecodeData(extPubKeyString);
+            extPubKey = new ExtPubKey(bytes[4..bytes.Length]);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception occurred: {0}", ex.ToString());
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid exPubKey.");
+            throw;
+        }
+
+        Network network = _networkConfiguration.GetNetwork();
+        var nbitcoinNetwork = NetworkMapper.Map(network);
+        NBitcoin.ExtPubKey nbitocinExtPubKey = new(extPubKey.ToBytes());
+        if (sendInfo.SendAmount > sendInfo.SendUtxos.Values.Sum(s => s.UtxoData.value))
+        {
+            throw new ApplicationException("not enough funds");
+        }
+
+
+        var coin_paths = GetUnspentOutputsForTransactionWithoutKeys(extPubKey, sendInfo.SendUtxos.Values.ToList());
+        if (coin_paths == null)
+        {
+            throw new ApplicationException("not enough funds in utxos");
+        }
+
+        var psbtBuilder = nbitcoinNetwork.CreateTransactionBuilder()
+            .Send(NBitcoin.BitcoinPubKeyAddress.Create(sendInfo.SendToAddress, nbitcoinNetwork), NBitcoin.Money.Satoshis(sendInfo.SendAmount))
+            .AddCoins(coin_paths.Select(ck => ck.coin).ToArray())
+            .SetChange(NBitcoin.BitcoinPubKeyAddress.Create(sendInfo.ChangeAddress, nbitcoinNetwork))
+            .SendEstimatedFees(new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(sendInfo.FeeRate)))
+            .BuildPSBT(false);
+
+        AddKeyPathFromPubKey(psbtBuilder, nbitocinExtPubKey, coin_paths.Select(coin_path => Tuple.Create(coin_path.path, (NBitcoin.Script?)coin_path.coin.ScriptPubKey)).ToArray());
+        return psbtBuilder;
+    }
+
+    public void AddKeyPathFromPubKey(NBitcoin.PSBT psbt, NBitcoin.ExtPubKey masterPubKey, params Tuple<NBitcoin.KeyPath, NBitcoin.Script?>[] paths)
+    {
+        if (masterPubKey == null)
+            throw new ArgumentNullException(nameof(masterPubKey));
+        if (paths == null)
+            throw new ArgumentNullException(nameof(paths));
+
+        var masterKeyFP = masterPubKey.GetPublicKey().GetHDFingerPrint();
+        foreach (var path in paths)
+        {
+            var pubKey = masterPubKey.Derive(path.Item1.GetAddressKeyPath());
+            psbt.AddKeyPath(pubKey.GetPublicKey(), new NBitcoin.RootedKeyPath(masterKeyFP, path.Item1), path.Item2);
+        }
     }
 }
