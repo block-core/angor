@@ -7,7 +7,6 @@
 @using System.Reactive.Linq
 @using System.Security.Cryptography
 @using Blockcore.NBitcoin.DataEncoders
-@using System.Timers
 @implements IDisposable
 @implements IAsyncDisposable
 
@@ -26,6 +25,11 @@
                         <h5 class="modal-title" title="@ContactNpub">@GetShortenedNpub(ContactNpub)</h5>
                     </div>
                     <div class="d-flex align-items-center">
+                        <div class="status-indicator me-2">
+                            <div class="@(MessageService.IsSubscriptionActive ? "connected" : "disconnected")" 
+                                 title="@(MessageService.IsSubscriptionActive ? "Connected - Real-time messages enabled" : "Disconnected - Messages may be delayed")">
+                            </div>
+                        </div>
                         <button class="btn-menu-custom" @onclick="RefreshMessagesAsync" disabled="@(_localIsRefreshing || MessageService.IsRefreshing)">
                             @if (_localIsRefreshing || MessageService.IsRefreshing)
                             {
@@ -156,7 +160,6 @@
     private bool showActionsMenu = false;
     private bool _needsScroll = false;
     private int _messageCount = 0;
-    private Timer? _refreshTimer;
     private bool _localIsRefreshing = false;
 
     private string CurrentUserHexPub => !string.IsNullOrEmpty(CurrentUserNpub)
@@ -182,18 +185,6 @@
         EnsureContactKeysConsistency();
 
         MessageService.OnChange += HandleMessageServiceChange;
-
-        // Start auto-refresh timer
-        _refreshTimer = new Timer(5000);
-        _refreshTimer.Elapsed += async (s, e) =>
-        {
-            if (!MessageService.IsRefreshing)
-            {
-                await InvokeAsync(async () => await RefreshMessagesAsync());
-            }
-        };
-        _refreshTimer.AutoReset = true;
-        _refreshTimer.Start();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -206,18 +197,21 @@
         {
             await ShowMessage();
         }
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    }    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_needsScroll)
         {
             await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
             _needsScroll = false;
         }
-    }
-
-    private async Task ShowMessage()
+        
+        // For first render, ensure real-time subscription is active
+        if (firstRender && MessageService.DirectMessages.Any())
+        {
+            // Force a refresh to ensure connection is active
+            await MessageService.RefreshMessagesAsync();
+        }
+    }    private async Task ShowMessage()
     {
         if (string.IsNullOrEmpty(CurrentUserPrivateKeyHex) ||
             string.IsNullOrEmpty(CurrentUserNpub) ||
@@ -231,6 +225,19 @@
         {
             await MessageService.InitializeAsync(CurrentUserPrivateKeyHex, CurrentUserNpub, ContactHexPub);
             _needsScroll = true;
+            
+            // Brief delay to allow message service to initialize properly
+            await Task.Delay(100);
+            
+            // Check if real-time connection is active, if not try to refresh
+            if (!MessageService.IsSubscriptionActive)
+            {
+                await MessageService.RefreshMessagesAsync();
+                if (MessageService.IsSubscriptionActive)
+                {
+                    await OnNotification.InvokeAsync("Real-time message connection established");
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -257,9 +264,7 @@
             await OnNotification.InvokeAsync($"Failed to send message: {ex.Message}");
             newMessage = messageToSend;
         }
-    }
-
-    private async Task RefreshMessagesAsync()
+    }    private async Task RefreshMessagesAsync()
     {
         if (MessageService.IsRefreshing || _localIsRefreshing) return;
 
@@ -271,7 +276,16 @@
             await Task.Delay(50);
             
             await MessageService.RefreshMessagesAsync();
-            @* _needsScroll = true; *@
+            
+            if (MessageService.IsSubscriptionActive)
+            {
+                await OnNotification.InvokeAsync("Real-time message connection active");
+            }
+            else 
+            {
+                await Task.Delay(100);
+                await MessageService.RefreshMessagesAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -406,31 +420,28 @@
         if (_messageCount > previousCount)
         {
             _needsScroll = true;
+            InvokeAsync(async () => 
+            {
+                await Task.Yield(); 
+                StateHasChanged();
+                
+                await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
+            });
         }
-
-        InvokeAsync(StateHasChanged);
+        else
+        {
+            InvokeAsync(StateHasChanged);
+        }
     }
 
     public void Dispose()
     {
         MessageService.OnChange -= HandleMessageServiceChange;
-        if (_refreshTimer != null)
-        {
-            _refreshTimer.Stop();
-            _refreshTimer.Dispose();
-            _refreshTimer = null;
-        }
     }
 
     public async ValueTask DisposeAsync()
     {
         MessageService.OnChange -= HandleMessageServiceChange;
-        if (_refreshTimer != null)
-        {
-            _refreshTimer.Stop();
-            _refreshTimer.Dispose();
-            _refreshTimer = null;
-        }
         await ValueTask.CompletedTask;
     }
 }

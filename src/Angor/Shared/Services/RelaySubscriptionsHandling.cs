@@ -102,6 +102,14 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         if (!relaySubscriptions.ContainsKey(_.Subscription)) 
             return;
         
+        if (_.Subscription.EndsWith("DM") || 
+            !_.Subscription.Contains("-") ||
+            _.Subscription.StartsWith("ProjectInfoLookups"))
+        {
+            _logger.LogDebug($"Keeping subscription active for real-time updates - {_.Subscription}");
+            return;
+        }
+        
         _logger.LogDebug($"Disposing of subscription - {_.Subscription}");
         
         _communicationFactory

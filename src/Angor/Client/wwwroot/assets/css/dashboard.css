@@ -4300,7 +4300,7 @@ fieldset:disabled .btn {
     padding: var(--angor-dropdown-item-padding-y) var(--angor-dropdown-item-padding-x);
     clear: both;
     font-weight: 400;
-    color: var(--angor-secondary);
+    color: var(--angor-primary);
     text-align: inherit;
     white-space: nowrap;
     background-color: transparent;

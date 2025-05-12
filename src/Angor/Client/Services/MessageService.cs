@@ -31,11 +31,13 @@ namespace Angor.Client.Services
         private string _currentUserNpub;
         private string _currentUserHexPub;
         private string _contactHexPub;
+        private bool _subscriptionActive = false;
 
         public IReadOnlyList<DirectMessage> DirectMessages => _directMessages.AsReadOnly();
         public bool IsLoadingMessages { get; private set; }
         public bool IsSendingMessage { get; private set; }
         public bool IsRefreshing { get; private set; }
+        public bool IsSubscriptionActive => _subscriptionActive;
 
         public event Action OnChange;
 
@@ -88,7 +90,9 @@ namespace Angor.Client.Services
             try
             {
                 await LoadMessagesAsync();
-                SubscribeToMessages();
+                
+                // Ensure we have a valid subscription
+                EnsureActiveSubscription();
             }
             catch (Exception ex)
             {
@@ -186,11 +190,17 @@ namespace Angor.Client.Services
             }
         }
 
-        private void SubscribeToMessages()
+        private void EnsureActiveSubscription()
         {
+            if (_subscriptionActive)
+            {
+                _logger.LogDebug("Message subscription already active, no need to resubscribe");
+                return;
+            }
+
             if (string.IsNullOrEmpty(_currentUserHexPub) || string.IsNullOrEmpty(_contactHexPub))
             {
-                _logger.LogWarning("SubscribeToMessages - Missing required keys.");
+                _logger.LogWarning("EnsureActiveSubscription - Missing required keys.");
                 return;
             }
 
@@ -214,10 +224,14 @@ namespace Angor.Client.Services
                         await ProcessDirectMessage(messageEvent.Event);
                         NotifyStateChanged();
                     });
+                
+                _subscriptionActive = true;
+                _logger.LogInformation("Real-time message subscription activated successfully");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error in SubscribeToMessages: {ex.Message}");
+                _subscriptionActive = false;
+                _logger.LogError($"Error establishing message subscription: {ex.Message}");
             }
         }
 
@@ -296,6 +310,9 @@ namespace Angor.Client.Services
 
             try
             {
+                // Ensure subscription is active before sending
+                EnsureActiveSubscription();
+
                 string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
                     _currentUserPrivateKeyHex,
                     _contactHexPub,
@@ -341,12 +358,17 @@ namespace Angor.Client.Services
 
             try
             {
-                _messageSubscription?.Dispose(); 
-                _messageSubscription = null;
+                // Only dispose and resubscribe if the current subscription is not active
+                if (!_subscriptionActive)
+                {
+                    _messageSubscription?.Dispose();
+                    _messageSubscription = null;
+                }
 
                 await LoadNewMessagesAsync();
-
-                SubscribeToMessages();
+                
+                // Ensure we have a valid subscription
+                EnsureActiveSubscription();
             }
             catch (Exception ex)
             {
@@ -364,6 +386,7 @@ namespace Angor.Client.Services
         public void Dispose()
         {
             _messageSubscription?.Dispose();
+            _subscriptionActive = false;
             GC.SuppressFinalize(this);
         }
     }

@@ -4702,3 +4702,22 @@ body.dark .message-item.outgoing .message-bubble {
     }
 }
 
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+}
+
+.status-indicator .connected, .status-indicator .disconnected {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-indicator .connected {
+    background-color: #4CAF50; 
+    box-shadow: 0 0 5px #4CAF50;
+}
+
+.status-indicator .disconnected {
+    background-color: #F44336; 
+}
