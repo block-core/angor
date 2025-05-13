@@ -43,7 +43,7 @@ namespace Angor.Client.Services
         public bool IsRefreshing { get; private set; }
         public bool IsSubscriptionActive => _subscriptionActive;
 
-        public event Action OnChange;
+        public event Action OnStateChange;
 
         public MessageService(
             ILogger<MessageService> logger,
@@ -260,7 +260,7 @@ namespace Angor.Client.Services
             }
         }
 
-        private void NotifyStateChanged() => OnChange?.Invoke();
+        private void NotifyStateChanged() => OnStateChange?.Invoke();
 
         public void Dispose()
         {

@@ -13,7 +13,7 @@ namespace Angor.Client.Services
         bool IsSendingMessage { get; }
         bool IsRefreshing { get; }
         bool IsSubscriptionActive { get; }
-        event Action OnChange;
+        event Action OnStateChange;
 
         Task InitializeAsync(string currentUserPrivateKeyHex, string currentUserNpub, string contactHexPub);
         Task LoadMessagesAsync();

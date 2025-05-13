@@ -179,7 +179,7 @@
     {
         await base.OnInitializedAsync();
 
-        MessageService.OnChange += HandleMessageServiceChange;
+        MessageService.OnStateChange += HandleMessageServiceChange;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -426,12 +426,12 @@
 
     public void Dispose()
     {
-        MessageService.OnChange -= HandleMessageServiceChange;
+        MessageService.OnStateChange -= HandleMessageServiceChange;
     }
 
     public async ValueTask DisposeAsync()
     {
-        MessageService.OnChange -= HandleMessageServiceChange;
+        MessageService.OnStateChange -= HandleMessageServiceChange;
         await ValueTask.CompletedTask;
     }
 }
