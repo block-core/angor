@@ -47,6 +47,8 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     
     public bool TryAddOKAction(string eventId, Action<NostrOkResponse> action)
     {
+        if (action == null) throw new ArgumentNullException(nameof(action));
+
         _communicationFactory.MonitoringOkReceivedOnSubscription(eventId);
         return OkVerificationActions.TryAdd(eventId,action);
     }
@@ -69,6 +71,8 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
     public bool TryAddEoseAction(string subscriptionName, Action action)
     {
+        if (action == null) throw new ArgumentNullException(nameof(action));
+
         var add = _communicationFactory.MonitoringEoseReceivedOnSubscription(subscriptionName);
 
         if (!add)

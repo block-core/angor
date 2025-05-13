@@ -219,7 +219,7 @@ namespace Angor.Client.Services
                     _currentUserPrivateKeyHex,
                     _otherUserHexPub,
                     encryptedContent,
-                    null 
+                    response =>  {}
                 );
 
                 var sentDirectMessage = new DirectMessage
