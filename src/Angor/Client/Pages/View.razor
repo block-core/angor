@@ -298,7 +298,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                <a href="@($"{_NetworkService.GetPrimaryIndexer().Url}/angor/projects/{project.ProjectInfo.ProjectIdentifier}")" target="_blank" rel="noopener noreferrer">
+                                <a href="@investorExplorerLink" target="_blank" rel="noopener noreferrer">
                                     <div class="stat-card p-3 rounded-3 border hover-effect h-100">
                                         <div class="d-flex justify-content-between h-100">
                                             <div>
@@ -700,6 +700,7 @@
 
     string myProjectExplorerLink;
     string projectExplorerLink;
+    string investorExplorerLink;
 
     private string NostrNsecSecKey { get; set; } = string.Empty;
     private string NostrHexSecKey { get; set; } = string.Empty;
@@ -855,6 +856,7 @@
         if (!string.IsNullOrEmpty(project?.CreationTransactionId))
         {
             projectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{project.CreationTransactionId}";
+            investorExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/angor/projects/{project.ProjectInfo.ProjectIdentifier}";
         }
         else
         {
