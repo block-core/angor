@@ -11,6 +11,9 @@
 @using System.Security.Cryptography
 @using Angor.Shared.Protocol
 @using Angor.Shared.Utilities
+@using Nostr.Client.Messages
+@using System.Collections.ObjectModel
+@using System.Reactive.Linq
 
 @inject IJSRuntime JS
 
@@ -25,6 +28,10 @@
 @inject NavMenuState NavMenuState
 @inject NostrConversionHelper NostrHelper
 @inject INetworkService _networkService
+@inject INostrCommunicationFactory _nostrCommunicationFactory
+@inject IEncryptionService _encryptionService
+@inject IRelayService _RelayService
+@inject NavigationManager NavigationManager
 @inject IIndexerService indexerService
 
 @inherits BaseComponent
@@ -74,7 +81,6 @@
     </div>
 </div>
 
- 
 <div class="slide-in mt-4">
     @if (!signaturesRequests.Any())
     {
@@ -111,7 +117,7 @@
         }
         else
         {
-            <div class="card card-body hover-effect">
+            <div class="card card-body">
                 <div class="header-container">
                     <div class="header-content">
                         <div class="header-title animate-fade-in">
@@ -129,165 +135,169 @@
                     </div>
                 </div>
 
-                <div class="table-responsive form-control mt-4 slide-in">
-                    <table class="table align-items-center mb-0">
-                        <thead>
-                            <tr>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investment</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Received</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Status</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Investor Npub</th>
-                                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Chat</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div class="mt-4 slide-in">
+                    @if (signaturesRequests.Any(_ => _ is { SignRecoveryRequest.InvestmentTransactionHex: not null, AmountToInvest: not null }))
+                    {
+                        <div class="accordion" id="signaturesAccordion">
                             @foreach (var signature in signaturesRequests.Where(_ => _ is { SignRecoveryRequest.InvestmentTransactionHex: not null, AmountToInvest: not null }))
                             {
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <Icon IconName="bitcoin" Width="24" Height="24" class="me-2" />
-                                            <span>@Money.Satoshis(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+                                var accordionId = signature.GetHashCode().ToString();
+                                <div class="info-card mb-2 shadow-sm border-0 animate-fade-in">
+                                    <div class="card-header p-0 bg-transparent">
+                                        <div class="d-flex justify-content-between align-items-center p-0">
+                                            <!-- Essential Info (Always Visible) -->
+                                            <div class="d-flex align-items-center">
+                                                <Icon IconName="balance" Width="20" Height="20" Class="me-2" />
+                                                <span class="fw-bold text-nowrap">
+                                                    @Money.Satoshis(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
+                                                </span>
+                                                <small class="text-muted ms-3">
+                                                    @signature.TimeArrived.ToString("dd/MM/yyyy HH:mm")
+                                                </small>
+                                            </div>
+
+                                            <!-- Status Badges/Buttons -->
+                                            <div class="d-flex align-items-center gap-2">
+                                                <!-- Status Badge -->
+                                                @if (signature.TimeApproved != null)
+                                                {
+                                                    @if (signature.Invested != null)
+                                                    {
+                                                        <div class="badge bg-success d-flex align-items-center"
+                                                             title="Approved on @signature.TimeApproved?.ToString("dd/MM/yyyy HH:mm")">
+                                                            <Icon IconName="invest" Width="14" Height="14" Class="me-1" />
+                                                            <span>Invested</span>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-info d-flex align-items-center"
+                                                              title="Approved on @signature.TimeApproved?.ToString("dd/MM/yyyy HH:mm")">
+                                                            <Icon IconName="check" Width="14" Height="14" Class="me-1" />
+                                                            <span>Approved</span>
+                                                        </span>
+                                                    }
+                                                }
+
+                                                <!-- Action Buttons -->
+                                                <div class="d-flex gap-2">
+                                                    @if (signature.TimeApproved is null)
+                                                    {
+                                                        <button class="btn btn-sm btn-border-success animate-scale"
+                                                                @onclick="() => ApproveSignatureCheckPassword(signature)"
+                                                                disabled="@signaturesRequestsApproving.Any()"
+                                                                aria-label="Approve signature">
+                                                            @if (signaturesRequestsApproving.ContainsKey(signature))
+                                                            {
+                                                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                                <span>Approving...</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <Icon IconName="approved" Width="16" Height="16" Class="me-1" />
+                                                                <span>Approve</span>
+                                                            }
+                                                        </button>
+                                                    }
+                                                    @if (signature.Invested != null)
+                                                    {
+                                                        <a href="@($"{_networkService.GetPrimaryExplorer().Url}/tx/{signature.Invested.TransactionId}")"
+                                                           target="_blank"
+                                                           class="btn btn-sm btn-border-success d-flex align-items-center"
+                                                           rel="noopener noreferrer">
+                                                            <Icon IconName="external-link" Width="16" Height="16" Class="me-1" />
+                                                            <span>View TX</span>
+                                                        </a>
+                                                    }
+                                                    <button class="btn btn-sm btn-border-success animate-scale"
+                                                            @onclick="() => ShowMessageModal(signature.investorNostrPubKey)"
+                                                            aria-label="Message investor">
+                                                        <Icon IconName="chat" Width="16" Height="16" Class="me-1" />
+                                                    </button>
+                                                    <span class="animate-scale"
+                                                          @onclick="() => ToggleAccordion(accordionId)"
+                                                          aria-expanded="@(expandedAccordions.Contains(accordionId))"
+                                                          aria-label="Toggle details">
+                                                        <Icon IconName="@(expandedAccordions.Contains(accordionId) ? "chevron-up" : "chevron-down")" Width="16" />
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </td>
-                                    <td>@signature.TimeArrived.ToString("dd/MM/yyyy HH:mm")</td>
-                                    <td>
-                                        @if (signature.TimeApproved is null)
-                                        {
-                                            <button class="btn btn-border-success animate-scale" @onclick="() => ApproveSignatureCheckPassword(signature)" disabled="@signaturesRequestsApproving.Any()">
-                                                @if (signaturesRequestsApproving.ContainsKey(signature))
-                                                {
-                                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                    <span>Approving...</span>
-                                                }
-                                                else
-                                                {
-                                                    <Icon IconName="approved" Width="20" Height="20" />
-                                                    <span class="ms-2">Approve</span>
-                                                }
-                                            </button>
-                                        }
-                                        else
-                                        {
-                                            @if (signature.Invested != null)
+                                    </div>
+
+                                    <!-- Collapsible Content -->
+                                    <div class="@(expandedAccordions.Contains(accordionId) ? "show" : "collapse")">
+                                        <div class="card-body pt-0 pb-3 px-3 mt-4">
+                                            <!-- Investor npub -->
+                                            <div class="mb-2">
+                                                <label class="form-label small text-muted mb-1">Investor npub</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text"
+                                                           class="form-control form-control-sm text-break"
+                                                           value="@NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey)"
+                                                           readonly
+                                                           aria-label="Investor npub" />
+                                                    <button class="btn btn-sm btn-border-success animate-scale"
+                                                            @onclick="() => CopyToClipboard(NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey))"
+                                                            title="Copy investor npub"
+                                                            aria-label="Copy investor npub">
+                                                        <Icon IconName="copy" Width="14" Height="14" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Additional npub -->
+                                            @if (!string.IsNullOrEmpty(signature.SignRecoveryRequest?.AdditionalNpub))
                                             {
-                                                <span class="badge bg-success">
-                                                    <Icon IconName="invest" Width="16" Height="16" class="me-1"/>
-                                                    Invested
-                                                </span>
-                                                <a href="@($"{_networkService.GetPrimaryExplorer().Url}/tx/{signature.Invested.TransactionId}")"
-                                                   target="_blank" class="d-inline mt-2 ms-2">view transaction</a>
+                                                <div class="mb-0">
+                                                    <label class="form-label small text-muted mb-1">Additional npub</label>
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="text"
+                                                               class="form-control form-control-sm text-break"
+                                                               value="@signature.SignRecoveryRequest.AdditionalNpub"
+                                                               readonly
+                                                               aria-label="Additional npub" />
+                                                        <button class="btn btn-sm btn-border-success animate-scale"
+                                                                @onclick="() => CopyToClipboard(signature.SignRecoveryRequest.AdditionalNpub)"
+                                                                title="Copy additional npub"
+                                                                aria-label="Copy additional npub">
+                                                            <Icon IconName="copy" Width="14" Height="14" />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             }
-                                            else
-                                            {
-                                                <span class="badge bg-info">
-                                                    <Icon IconName="check" Width="16" Height="16" class="me-1" />
-                                                    Approved on @signature.TimeApproved.Value.ToString("dd/MM/yyyy HH:mm")
-                                                </span>
-                                            }
-                                        }
-                                    </td>
-                                    <td>
-                                        @NostrHelper.ConvertHexToNpub(signature.investorNostrPubKey) <br />
-                                        @if (signature.SignRecoveryRequest?.AdditionalNpub != null)
-                                        {
-                                            <span>Additional NPUB: @signature.SignRecoveryRequest?.AdditionalNpub</span>
-                                        }
-                                    </td>
-                                    <td class="d-flex justify-content-end align-items-center">
-                                        <button class="btn btn-sm btn-border-success" @onclick="() => ShowChatModal(signature.investorNostrPubKey)">
-                                            <Icon IconName="chat" Width="16" Height="16" class="me-1" />
-                                            Chat
-                                        </button>
-                                    </td>
-                                </tr>
+                                        </div>
+                                    </div>
+                                </div>
                             }
-                        </tbody>
-                    </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="card card-body angor-alert-info hover-effect animate-fade-in">
+                            <div class="d-flex align-items-center justify-content-center py-4">
+                                <span class="me-3 user-select-none animate-rotate">
+                                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
+                                </span>
+                                <span class="text-white fs-5" data-cy="no-pending-signatures">No pending signatures yet...</span>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         }
     }
 </div>
 
-@if (showChatModal)
+@if (showMessageModal)
 {
-    <div class="modal-wrapper" style="z-index: 1050;">
-        <div class="modal fade show d-block" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content modern-modal animate-fade-in">
-                    <div class="modal-header border-0 pb-0">
-                        <div class="d-flex align-items-center">
-                            <Icon IconName="message" Height="32" Width="32" class="me-2" />
-                            <h5 class="modal-title">Chat Options</h5>
-                        </div>
-                        <button class="btn-close-custom" @onclick="() => showChatModal = false">
-                            <Icon IconName="close-circle" Height="24" Width="24" />
-                        </button>
-                    </div>
-
-                    <div class="modal-body py-4">
-                        <div class="d-flex flex-column gap-3">
-                            <div class="info-card p-3 mt-2 animate-fade-in">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="info-label mb-2">Investor NPUB:</div>
-                                    <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(currentInvestorNpub)">
-                                        <Icon IconName="copy" Width="16" Height="16" />
-                                    </button>
-                                </div>
-                                <div class="info-value text-break word-wrap">
-                                    @currentInvestorNpub
-                                </div>
-                            </div>
-                            
-                            <div class="info-card p-3 mt-2 animate-fade-in">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="info-label mb-2">Founder NPUB:</div>
-                                    <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(founderNpub)">
-                                        <Icon IconName="copy" Width="16" Height="16" />
-                                    </button>
-                                </div>
-                                <div class="info-value text-break word-wrap">
-                                    @founderNpub
-                                </div>
-                            </div>
-                            
-                            <button type="button" class="btn btn-border-success w-100" @onclick="OpenChatApp">
-                                <Icon IconName="message" Width="20" Height="20" class="me-2" />
-                                <span>Open Chat App</span>
-                            </button>
-                            
-                            <button type="button" class="btn btn-border-warning w-100" @onclick="ShowNsecAndCheckPassword">
-                                <Icon IconName="key" Width="20" Height="20" class="me-2" />
-                                <span>Show NSEC</span>
-                            </button>
-                            
-                            @if (showNsec)
-                            {
-                                <div class="info-card p-3 mt-2 animate-fade-in">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="info-label mb-2">NSEC:</div>
-                                        <button class="btn btn-sm btn-border" @onclick="() => CopyToClipboard(nsecValue)">
-                                            <Icon IconName="copy" Width="16" Height="16" />
-                                        </button>
-                                    </div>
-                                    <div class="info-value text-break word-wrap">
-                                        @nsecValue
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-border-warning" @onclick="() => showChatModal = false">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <MessageComponent 
+                      OtherUserPubkeyHex="@currentInvestorHexPub"
+                      CurrentUserPrvKeyHex="@currentUserPrivateKeyHex"
+                      MessageTitle="Investor"
+                      OnClose="@OnMessageModalClose"
+                      OnNsecRequest="@ShowNsecAndCheckPassword"
+                      OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))"/>
 }
 
 @code {
@@ -296,7 +306,7 @@
 
     public FounderProject FounderProject { get; set; }
     private List<SignatureItem> signaturesRequests = new();
-
+    private HashSet<string> expandedAccordions = new();
 
     private Dictionary<SignatureItem, string> signaturesRequestsApproving = new();
 
@@ -314,12 +324,19 @@
     private int numOfSignatureToSign = 0;
     private int numOfSignaturesSigned = 0;
 
-    private bool showChatModal = false;
-    private bool showNsec = false;
-    private string nsecValue = "";
+    private bool showMessageModal = false;
     private string currentInvestorNpub = "";
     private string currentInvestorHexPub = "";
     private string founderNpub = "";
+    private string currentUserPrivateKeyHex = "";
+    private string nsecForMessageComponent;
+
+    private ElementReference messagesContainerRef;
+    private List<DirectMessage> chatMessages = new();
+    private string newMessage = "";
+    private bool isLoadingMessages = false;
+    private bool isSendingMessage = false;
+    private IDisposable messageSubscription;
     private List<ProjectInvestment> investments = new();
 
     protected override async Task OnInitializedAsync()
@@ -732,47 +749,88 @@
         await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
         notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
     }
-    
-    private void ShowChatModal(string investorNostrPubKey)
+
+    private void ShowMessageModal(string investorNostrPubKey)
     {
         currentInvestorHexPub = investorNostrPubKey;
         currentInvestorNpub = NostrHelper.ConvertHexToNpub(investorNostrPubKey) ?? investorNostrPubKey;
-        
+
         // Get founder's npub
-        founderNpub = NostrHelper.ConvertHexToNpub(FounderProject.ProjectInfo.NostrPubKey) ?? 
+        founderNpub = NostrHelper.ConvertHexToNpub(FounderProject.ProjectInfo.NostrPubKey) ??
                       FounderProject.ProjectInfo.NostrPubKey;
-        
-        showChatModal = true;
-        showNsec = false;
-        StateHasChanged();
+        // Show Message
+        ShowMessageAndCheckPassword();
     }
-    
+
+    private void ShowMessageAndCheckPassword()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(async () =>
+            {
+                await ShowMessage();
+            });
+        }
+        else
+        {
+            _ = ShowMessage();
+        }
+    }
+
+    private async Task ShowMessage()
+    {
+        showMessageModal = true;
+
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+            var founderNostrPrivateKey = DerivationOperations.DeriveProjectNostrPrivateKey(words, FounderProject.ProjectInfo.FounderKey);
+            currentUserPrivateKeyHex = Encoders.Hex.EncodeData(founderNostrPrivateKey.ToBytes());
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage("Failed to initialize messaging", ex);
+        }
+    }
+
     private void ShowNsecAndCheckPassword()
     {
         if (!passwordComponent.HasPassword())
         {
-            showChatModal = false;
-            passwordComponent.ShowPassword(RetrieveAndShowNsec);
+            passwordComponent.ShowPassword(async () =>
+            {
+                await RetrieveAndShowNsec();
+            });
         }
         else
         {
             RetrieveAndShowNsec();
         }
     }
-    
+
+    private void OnMessageModalClose()
+    {
+        showMessageModal = false;
+        currentUserPrivateKeyHex = String.Empty;
+        StateHasChanged();
+    }
+
     private async Task RetrieveAndShowNsec()
     {
         try
         {
             var words = await passwordComponent.GetWalletAsync();
-            
+
             if (FounderProject != null)
             {
                 var founderNostrPrivateKey = await DerivationOperations.DeriveProjectNostrPrivateKeyAsync(words, FounderProject.ProjectInfo.FounderKey);
                 var nostrHexSecKey = Encoders.Hex.EncodeData(founderNostrPrivateKey.ToBytes());
-                nsecValue = NostrHelper.ConvertHexToNsec(nostrHexSecKey)!;
-                showChatModal = true;
-                showNsec = true;
+                var nsecValue = NostrHelper.ConvertHexToNsec(nostrHexSecKey)!;
+
+                nsecForMessageComponent = nsecValue;
+
                 StateHasChanged();
             }
             else
@@ -785,11 +843,27 @@
             notificationComponent.ShowErrorMessage("Failed to retrieve NSEC: " + e.Message);
         }
     }
-    
-    private async void OpenChatApp()
+
+    private string GetShortenedNpub(string npub)
     {
-        var primaryChatApp = _networkService.GetPrimaryChatApp();
-        var url = $"{primaryChatApp.Url}/{currentInvestorNpub}";
-        await JS.InvokeVoidAsync("window.open", url, "_blank");
+        if (string.IsNullOrEmpty(npub) || npub.Length <= 20) return npub;
+        return $"{npub.Substring(0, 10)}...{npub.Substring(npub.Length - 10)}";
+    }
+
+    private void ToggleAccordion(string accordionId)
+    {
+        if (expandedAccordions.Contains(accordionId))
+        {
+            expandedAccordions.Remove(accordionId);
+        }
+        else
+        {
+            expandedAccordions.Add(accordionId);
+        }
+    }
+
+    public void Dispose()
+    {
+        messageSubscription?.Dispose();
     }
 }

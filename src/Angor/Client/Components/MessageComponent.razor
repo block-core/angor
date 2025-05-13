@@ -1,0 +1,363 @@
+@using Angor.Client.Models
+@using Angor.Shared
+@using Angor.Shared.Services
+@using Angor.Client.Services
+@using Angor.Shared.Utilities
+@using Nostr.Client.Messages
+@using System.Reactive.Linq
+@using System.Security.Cryptography
+@using Blockcore.NBitcoin.DataEncoders
+@using Nostr.Client.Keys
+@implements IDisposable
+@implements IAsyncDisposable
+
+@inject IJSRuntime JS
+@inject ILogger<MessageComponent> Logger
+@inject IMessageService MessageService
+@inject NostrConversionHelper NostrHelper
+
+<div class="modal-wrapper">
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content modern-modal animate-fade-in">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center">
+                        <Icon IconName="chat" Height="32" Width="32" class="me-2" />
+                        <h5 class="modal-title" title="@OtherUserNpub">@NostrHelper.GetShortenedNpub(OtherUserNpub)</h5>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="status-indicator me-2">
+                            <div class="@(MessageService.IsSubscriptionActive ? "connected" : "disconnected")"
+                                 title="@(MessageService.IsSubscriptionActive ? "Connected - Real-time messages enabled" : "Disconnected - Messages may be delayed")">
+                            </div>
+                        </div>
+                        <button class="btn-menu-custom" @onclick="RefreshMessagesAsync" disabled="@(_localIsRefreshing || MessageService.IsRefreshing)">
+                            @if (_localIsRefreshing || MessageService.IsRefreshing)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            }
+                            else
+                            {
+                                <Icon IconName="refresh" Height="24" Width="24" />
+                            }
+                        </button>
+                        <div class="dropdown me-2 position-relative">
+                            <button class="btn-menu-custom" @onclick="ToggleActionsMenu">
+                                <Icon IconName="menu" Height="24" Width="24" />
+                            </button>
+                            @if (showActionsMenu)
+                            {
+                                <div class="card card-body position-absolute end-0 mt-1 p-1 border rounded shadow-sm" style="z-index: 1000; min-width: 200px;">
+                                    <button class="dropdown-item d-flex align-items-center px-3 py-2" @onclick="RefreshMessagesAsync" disabled="@MessageService.IsRefreshing">
+                                        <Icon IconName="refresh" Height="16" Width="16" class="me-2" />
+                                        <span>Refresh Messages</span>
+                                    </button>
+                                    <button class="dropdown-item d-flex align-items-center px-3 py-2" @onclick="() => CopyToClipboard(OtherUserNpub)">
+                                        <Icon IconName="copy" Height="16" Width="16" class="me-2" />
+                                        <span>Copy Contact NPUB</span>
+                                    </button>
+                                    <button class="dropdown-item d-flex align-items-center px-3 py-2" @onclick="() => CopyToClipboard(CurrentUserNpub)">
+                                        <Icon IconName="copy" Height="16" Width="16" class="me-2" />
+                                        <span>Copy Your NPUB</span>
+                                    </button>
+                                    <button class="dropdown-item d-flex align-items-center px-3 py-2" @onclick="CopyNsec">
+                                        <Icon IconName="key" Height="16" Width="16" class="me-2" />
+                                        <span>Copy Private Key</span>
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                        <button class="btn-close-custom" @onclick="CloseModal">
+                            <Icon IconName="close-circle" Height="24" Width="24" />
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-body py-4">
+                    <div class="d-flex flex-column">
+                        <!-- Messages Section -->
+                        <div class="info-card chat-container-modal">
+                            <div class="chat-messages" @ref="messagesContainerRef" style="height: 300px; overflow-y: auto;">
+                                @if (MessageService.IsLoadingMessages)
+                                {
+                                    <div class="loading-messages d-flex justify-content-center align-items-center h-100">
+                                        <div>
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="mt-2">Loading messages...</p>
+                                        </div>
+                                    </div>
+                                }
+                                else if (MessageService.DirectMessages == null || !MessageService.DirectMessages.Any())
+                                {
+                                    <div class="empty-messages d-flex flex-column justify-content-center align-items-center h-100">
+                                        <Icon IconName="chat" Width="32" Height="32" />
+                                        <p class="mt-2">No messages yet. Send a message!</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="messages-list p-2">
+                                        @foreach (var message in MessageService.DirectMessages.Where(m => m != null))
+                                        {
+                                            <div class="message-item @(message.IsFromCurrentUser ? "outgoing" : "incoming")">
+                                                <div class="message-bubble">
+                                                    <div class="message-content">@message.Content</div>
+                                                    <div class="message-timestamp">@message.Timestamp.ToLocalTime().ToString("HH:mm")</div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Input -->
+                            <div class="chat-input mt-3">
+                                <div class="input-group">
+                                    <input type="text" class="form-control"
+                                           placeholder="Type a message..."
+                                           @bind="newMessage"
+                                           @onkeypress="@(async e => { if(e.Key is "Enter" or "NumpadEnter") await SendMessageAsync(); })"
+                                           disabled="@MessageService.IsSendingMessage" />
+                                    <button class="btn btn-border-success"
+                                            @onclick="SendMessageAsync"
+                                            disabled="@MessageService.IsSendingMessage">
+                                        @if (MessageService.IsSendingMessage)
+                                        {
+                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        }
+                                        else
+                                        {
+                                            <Icon IconName="send" Height="20" Width="20" />
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    public string OtherUserNpub { get; set; }
+    public string CurrentUserNpub { get; set; }
+    [Parameter] public string OtherUserPubkeyHex { get; set; }
+    [Parameter] public string CurrentUserPrvKeyHex { get; set; }
+    [Parameter] public string MessageTitle { get; set; } = "Investor";
+
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<bool> OnNsecRequest { get; set; }
+    [Parameter] public EventCallback<string> OnNotification { get; set; }
+
+    private ElementReference messagesContainerRef;
+    private string newMessage = "";
+    private bool showNsec = false;
+    private string nsecValue = "";
+    private bool showActionsMenu = false;
+    private bool _needsScroll = false;
+    private int _messageCount = 0;
+    private bool _localIsRefreshing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        MessageService.OnStateChange += HandleMessageServiceChange;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        if (string.IsNullOrEmpty(CurrentUserNpub) && !string.IsNullOrEmpty(CurrentUserPrvKeyHex))
+        {
+            OtherUserNpub = NostrHelper.ConvertHexToNpub(OtherUserPubkeyHex)!;
+            var privateKey = NostrPrivateKey.FromHex(CurrentUserPrvKeyHex);
+            nsecValue = privateKey.Bech32;
+            CurrentUserNpub = privateKey.DerivePublicKey().Bech32;
+        }
+
+        if (!string.IsNullOrEmpty(CurrentUserNpub) && !string.IsNullOrEmpty(OtherUserNpub))
+        {
+            await ShowMessage();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_needsScroll)
+        {
+            await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
+            _needsScroll = false;
+        }
+    }
+
+    private async Task ShowMessage()
+    {
+        if (string.IsNullOrEmpty(CurrentUserNpub) ||
+            string.IsNullOrEmpty(OtherUserNpub))
+        {
+            await OnNotification.InvokeAsync("Missing required message information (keys/contact).");
+            return;
+        }
+
+        try
+        {
+            if (!MessageService.IsSubscriptionActive)
+            {
+                await MessageService.InitializeAsync(CurrentUserPrvKeyHex, OtherUserPubkeyHex);
+                _needsScroll = true;
+               
+                if (MessageService.IsSubscriptionActive)
+                {
+                    await OnNotification.InvokeAsync("Real-time message connection established");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to initialize messaging service.");
+            await OnNotification.InvokeAsync($"Error initializing messages: {ex.Message}");
+        }
+    }
+
+    private async Task SendMessageAsync()
+    {
+        if (string.IsNullOrWhiteSpace(newMessage) || MessageService.IsSendingMessage) return;
+
+        string messageToSend = newMessage;
+        newMessage = "";
+
+        try
+        {
+            await MessageService.SendMessageAsync(messageToSend);
+            _needsScroll = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to send message.");
+            await OnNotification.InvokeAsync($"Failed to send message: {ex.Message}");
+            newMessage = messageToSend;
+        }
+    }
+
+    private async Task RefreshMessagesAsync()
+    {
+        if (MessageService.IsRefreshing || _localIsRefreshing) return;
+
+        try
+        {
+            _localIsRefreshing = true;
+            await InvokeAsync(StateHasChanged);
+
+            await Task.Delay(50);
+
+            await MessageService.LoadMessagesAsync();
+
+            if (MessageService.IsSubscriptionActive)
+            {
+                await OnNotification.InvokeAsync("Real-time message connection active");
+            }
+            else
+            {
+                await Task.Delay(100);
+                await MessageService.LoadMessagesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to refresh messages.");
+            await OnNotification.InvokeAsync($"Failed to refresh messages: {ex.Message}");
+        }
+        finally
+        {
+            _localIsRefreshing = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    
+    private async Task CopyToClipboard(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            await OnNotification.InvokeAsync("Copied to clipboard.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to copy text to clipboard.");
+            await OnNotification.InvokeAsync("Failed to copy to clipboard.");
+        }
+        showActionsMenu = false;
+        StateHasChanged();
+    }
+
+    private async Task CopyNsec()
+    {
+        if (string.IsNullOrEmpty(nsecValue))
+        {
+            await OnNotification.InvokeAsync("Private key not available.");
+            return;
+        }
+
+        await CopyToClipboard(nsecValue);
+    }
+
+    private void ToggleActionsMenu()
+    {
+        showActionsMenu = !showActionsMenu;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        CurrentUserPrvKeyHex = string.Empty;
+        nsecValue = string.Empty;
+        MessageService.DisconnectSubscriptions();
+        OnClose.InvokeAsync();
+    }
+
+    private string GetMaskedNsec(string nsec)
+    {
+        if (string.IsNullOrEmpty(nsec) || nsec.Length <= 20) return nsec;
+        return $"{nsec.Substring(0, 10)}...{nsec.Substring(nsec.Length - 10)}";
+    }
+
+    private void HandleMessageServiceChange()
+    {
+        int previousCount = _messageCount;
+        _messageCount = MessageService.DirectMessages.Count;
+        if (_messageCount > previousCount)
+        {
+            _needsScroll = true;
+            InvokeAsync(async () =>
+            {
+                await Task.Yield();
+                StateHasChanged();
+
+                await JS.InvokeVoidAsync("scrollToBottom", messagesContainerRef);
+            });
+        }
+        else
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        MessageService.OnStateChange -= HandleMessageServiceChange;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        MessageService.OnStateChange -= HandleMessageServiceChange;
+        await ValueTask.CompletedTask;
+    }
+}
+
