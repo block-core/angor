@@ -7,7 +7,7 @@ namespace Angor.Client.Services
         string? Data { get; set; }
         void TryClear();
         void SetTimer(TimeSpan timeSpan);
-        bool StayLoggedIn { get; set; }
+        bool UnlockWhileActive { get; set; }
         void ResetLastSet();
     }
 
@@ -23,7 +23,7 @@ namespace Angor.Client.Services
 
         private TimeSpan oneMin = TimeSpan.FromMinutes(1);
 
-        public bool StayLoggedIn { get; set; }
+        public bool UnlockWhileActive { get; set; }
 
         public PasswordCacheService()
         {
@@ -47,7 +47,7 @@ namespace Angor.Client.Services
         public void TryClear()
         {
             // if the password is default of 1 min we clear it
-            if (!StayLoggedIn && unlockDuration.Ticks == oneMin.Ticks)
+            if (!UnlockWhileActive && unlockDuration.Ticks == oneMin.Ticks)
             {
                 Data = null;
             }
@@ -55,7 +55,7 @@ namespace Angor.Client.Services
 
         public void ResetLastSet()
         {
-            if (StayLoggedIn)
+            if (UnlockWhileActive)
             {
                 lastSet = DateTime.UtcNow.TimeOfDay;
             }
