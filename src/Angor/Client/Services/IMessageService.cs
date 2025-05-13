@@ -15,10 +15,10 @@ namespace Angor.Client.Services
         bool IsSubscriptionActive { get; }
         event Action OnStateChange;
 
-        Task InitializeAsync(string currentUserPrivateKeyHex, string currentUserNpub, string contactHexPub);
+        Task InitializeAsync(string currentUserPrivateKeyHex, string otherUserHexPub);
         Task LoadMessagesAsync();
         Task SendMessageAsync(string messageContent);
-        void SetKeys(string currentUserPrivateKeyHex, string currentUserNpub, string contactHexPub);
+        void SetKeys(string currentUserPrvKeyHex, string otherUserHexPub);
         void DisconnectSubscriptions();
     }
 }

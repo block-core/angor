@@ -29,7 +29,7 @@ namespace Angor.Client.Services
         private string _currentUserPrivateKeyHex;
         private string _currentUserNpub;
         private string _currentUserHexPub;
-        private string _contactHexPub;
+        private string _otherUserHexPub;
         private bool _subscriptionActive = false;
 
         private DateTime _sinceTime = DateTime.UtcNow.AddDays(-7);
@@ -61,29 +61,22 @@ namespace Angor.Client.Services
             _nostrHelper = nostrHelper;
         }
 
-        public void SetKeys(string currentUserPrivateKeyHex, string currentUserNpub, string contactHexPub)
+        public void SetKeys(string currentUserPrvKeyHex, string otherUserHexPub)
         {
-            _currentUserPrivateKeyHex = currentUserPrivateKeyHex;
-            _currentUserNpub = currentUserNpub;
-            _contactHexPub = contactHexPub;
-
-            if (!string.IsNullOrEmpty(_currentUserNpub))
-            {
-                _currentUserHexPub = _nostrHelper.ConvertBech32ToHex(_currentUserNpub);
-            }
-            else
-            {
-                _currentUserHexPub = null;
-            }
+            _otherUserHexPub = otherUserHexPub;
+            _currentUserPrivateKeyHex = currentUserPrvKeyHex;
+            var privateKey = NostrPrivateKey.FromHex(currentUserPrvKeyHex);
+            _currentUserNpub = privateKey.DerivePublicKey().Bech32!;
+            _currentUserHexPub = _nostrHelper.ConvertBech32ToHex(_currentUserNpub)!;
         }
 
-        public async Task InitializeAsync(string currentUserPrivateKeyHex, string currentUserNpub, string contactHexPub)
+        public async Task InitializeAsync(string currentUserPrivateKeyHex, string otherUserHexPub)
         {
             _sinceTime = DateTime.UtcNow.AddDays(-7);
 
-            SetKeys(currentUserPrivateKeyHex, currentUserNpub, contactHexPub);
+            SetKeys(currentUserPrivateKeyHex, otherUserHexPub);
 
-            if (string.IsNullOrEmpty(_currentUserPrivateKeyHex) || string.IsNullOrEmpty(_contactHexPub) || string.IsNullOrEmpty(_currentUserHexPub))
+            if (string.IsNullOrEmpty(_otherUserHexPub) || string.IsNullOrEmpty(_currentUserHexPub))
             {
                 _logger.LogWarning("InitializeAsync - Missing required keys.");
                 NotifyStateChanged();
@@ -113,7 +106,7 @@ namespace Angor.Client.Services
             if (_subscriptionActive)
             {
                 _relayService.DisconnectSubscription(_currentUserHexPub);
-                _relayService.DisconnectSubscription(_contactHexPub);
+                _relayService.DisconnectSubscription(_otherUserHexPub);
 
                 _sinceTime = DateTime.UtcNow.AddDays(-7);
                 _subscriptionActive = false;
@@ -123,7 +116,7 @@ namespace Angor.Client.Services
 
         public async Task LoadMessagesAsync()
         {
-            if (string.IsNullOrEmpty(_currentUserPrivateKeyHex) || string.IsNullOrEmpty(_contactHexPub) || string.IsNullOrEmpty(_currentUserHexPub))
+            if (string.IsNullOrEmpty(_otherUserHexPub) || string.IsNullOrEmpty(_currentUserHexPub))
             {
                 _logger.LogWarning("LoadNewMessagesAsync - Missing required keys.");
                 return;
@@ -140,12 +133,12 @@ namespace Angor.Client.Services
                     _sinceTime,
                     100,
                     async eventMessage => await ProcessDirectMessage(eventMessage),
-                    _contactHexPub,
+                    _otherUserHexPub,
                     true
                 );
 
                 await _relayService.LookupDirectMessagesForPubKeyAsync(
-                    _contactHexPub,
+                    _otherUserHexPub,
                     _sinceTime,
                     100,
                     async eventMessage => await ProcessDirectMessage(eventMessage),
@@ -182,7 +175,7 @@ namespace Angor.Client.Services
 
             try
             {
-                string otherPartyPubkey = isFromCurrentUser ? _contactHexPub : eventMessage.Pubkey;
+                string otherPartyPubkey = isFromCurrentUser ? _otherUserHexPub : eventMessage.Pubkey;
 
                 decryptedContent = await _encryptionService.DecryptNostrContentAsync(
                     _currentUserPrivateKeyHex,
@@ -214,7 +207,7 @@ namespace Angor.Client.Services
 
         public async Task SendMessageAsync(string messageContent)
         {
-            if (string.IsNullOrWhiteSpace(messageContent) || string.IsNullOrEmpty(_currentUserPrivateKeyHex) || string.IsNullOrEmpty(_contactHexPub))
+            if (string.IsNullOrWhiteSpace(messageContent) || string.IsNullOrEmpty(_currentUserPrivateKeyHex) || string.IsNullOrEmpty(_otherUserHexPub))
             {
                 _logger.LogWarning("SendMessageAsync - Missing required info or empty message.");
                 return;
@@ -227,13 +220,13 @@ namespace Angor.Client.Services
             {
                 string encryptedContent = await _encryptionService.EncryptNostrContentAsync(
                     _currentUserPrivateKeyHex,
-                    _contactHexPub,
+                    _otherUserHexPub,
                     messageContent
                 );
 
                 var sentMessageId = _relayService.SendDirectMessagesForPubKeyAsync(
                     _currentUserPrivateKeyHex,
-                    _contactHexPub,
+                    _otherUserHexPub,
                     encryptedContent,
                     null 
                 );

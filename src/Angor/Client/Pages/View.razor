@@ -705,10 +705,8 @@
 @if (showMessageModal && invested)
 {
     <MessageComponent 
-        ContactNpub="@founderNpub"
-        ContactHexPub="@project.ProjectInfo.NostrPubKey"
-        CurrentUserNpub="@npubValue"
-        CurrentUserPrivateKeyHex="@NostrHexSecKey"
+        OtherUserPubkeyHex="@project.ProjectInfo.NostrPubKey"
+        CurrentUserPrvKeyHex="@NostrHexSecKey"
         MessageTitle="Founder"
         OnClose="@OnMessageModalClose"
         OnNsecRequest="@ShowNsecAsync"

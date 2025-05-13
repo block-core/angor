@@ -7,6 +7,7 @@
 @using System.Reactive.Linq
 @using System.Security.Cryptography
 @using Blockcore.NBitcoin.DataEncoders
+@using Nostr.Client.Keys
 @implements IDisposable
 @implements IAsyncDisposable
 
@@ -22,7 +23,7 @@
                 <div class="modal-header border-0 pb-0">
                     <div class="d-flex align-items-center">
                         <Icon IconName="chat" Height="32" Width="32" class="me-2" />
-                        <h5 class="modal-title" title="@ContactNpubValue">@GetShortenedNpub(ContactNpubValue)</h5>
+                        <h5 class="modal-title" title="@OtherUserNpub">@NostrHelper.GetShortenedNpub(OtherUserNpub)</h5>
                     </div>
                     <div class="d-flex align-items-center">
                         <div class="status-indicator me-2">
@@ -51,7 +52,7 @@
                                         <Icon IconName="refresh" Height="16" Width="16" class="me-2" />
                                         <span>Refresh Messages</span>
                                     </button>
-                                    <button class="dropdown-item d-flex align-items-center px-3 py-2" @onclick="() => CopyToClipboard(ContactNpub)">
+                                    <button class="dropdown-item d-flex align-items-center px-3 py-2" @onclick="() => CopyToClipboard(OtherUserNpub)">
                                         <Icon IconName="copy" Height="16" Width="16" class="me-2" />
                                         <span>Copy Contact NPUB</span>
                                     </button>
@@ -142,10 +143,10 @@
 </div>
 
 @code {
-    [Parameter] public string ContactNpub { get; set; }
-    [Parameter] public string ContactHexPub { get; set; }
-    [Parameter] public string CurrentUserNpub { get; set; }
-    [Parameter] public string CurrentUserPrivateKeyHex { get; set; }
+    public string OtherUserNpub { get; set; }
+    public string CurrentUserNpub { get; set; }
+    [Parameter] public string OtherUserPubkeyHex { get; set; }
+    [Parameter] public string CurrentUserPrvKeyHex { get; set; }
     [Parameter] public string MessageTitle { get; set; } = "Investor";
 
     [Parameter] public EventCallback OnClose { get; set; }
@@ -161,20 +162,6 @@
     private int _messageCount = 0;
     private bool _localIsRefreshing = false;
 
-    private string CurrentUserHexPub => !string.IsNullOrEmpty(CurrentUserNpub)
-        ? NostrHelper.ConvertBech32ToHex(CurrentUserNpub)
-        : null;
-
-    private string ContactHexPubValue => string.IsNullOrEmpty(ContactHexPub) 
-        ? NostrHelper.ConvertBech32ToHex(ContactNpub)
-        : ContactHexPub;
-
-    private string ContactNpubValue => string.IsNullOrEmpty(ContactNpub)
-        ? NostrHelper.ConvertHexToNpub(ContactHexPub) ?? string.Empty
-        : ContactNpub;
-
-
-
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -186,7 +173,15 @@
     {
         await base.OnParametersSetAsync();
 
-        if (!string.IsNullOrEmpty(CurrentUserPrivateKeyHex) && !string.IsNullOrEmpty(CurrentUserNpub) && !string.IsNullOrEmpty(ContactHexPub))
+        if (string.IsNullOrEmpty(CurrentUserNpub) && !string.IsNullOrEmpty(CurrentUserPrvKeyHex))
+        {
+            OtherUserNpub = NostrHelper.ConvertHexToNpub(OtherUserPubkeyHex)!;
+            var privateKey = NostrPrivateKey.FromHex(CurrentUserPrvKeyHex);
+            nsecValue = privateKey.Bech32;
+            CurrentUserNpub = privateKey.DerivePublicKey().Bech32;
+        }
+
+        if (!string.IsNullOrEmpty(CurrentUserNpub) && !string.IsNullOrEmpty(OtherUserNpub))
         {
             await ShowMessage();
         }
@@ -203,9 +198,8 @@
 
     private async Task ShowMessage()
     {
-        if (string.IsNullOrEmpty(CurrentUserPrivateKeyHex) ||
-            string.IsNullOrEmpty(CurrentUserNpub) ||
-            string.IsNullOrEmpty(ContactHexPubValue))
+        if (string.IsNullOrEmpty(CurrentUserNpub) ||
+            string.IsNullOrEmpty(OtherUserNpub))
         {
             await OnNotification.InvokeAsync("Missing required message information (keys/contact).");
             return;
@@ -213,10 +207,9 @@
 
         try
         {
-            // Check if real-time connection is active, if not try to refresh
             if (!MessageService.IsSubscriptionActive)
             {
-                await MessageService.InitializeAsync(CurrentUserPrivateKeyHex, CurrentUserNpub, ContactHexPubValue);
+                await MessageService.InitializeAsync(CurrentUserPrvKeyHex, OtherUserPubkeyHex);
                 _needsScroll = true;
                
                 if (MessageService.IsSubscriptionActive)
@@ -286,43 +279,7 @@
             await InvokeAsync(StateHasChanged);
         }
     }
-
-    private async Task ShowNsecAsync()
-    {
-        showNsec = !showNsec;
-
-        if (showNsec && string.IsNullOrEmpty(nsecValue))
-        {
-            await RequestAndSetNsecValue();
-        }
-        StateHasChanged();
-    }
-
-    public void SetNsec(string nsec)
-    {
-        if (!string.IsNullOrEmpty(nsec))
-        {
-            if (System.Text.RegularExpressions.Regex.IsMatch(nsec, "^[0-9a-fA-F]{64}$"))
-            {
-                try
-                {
-                    nsecValue = NostrHelper.ConvertHexToNsec(nsec);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, "Error converting provided hex key to nsec.");
-                    nsecValue = nsec;
-                }
-            }
-            else
-            {
-                nsecValue = nsec;
-            }
-
-            StateHasChanged();
-        }
-    }
-
+    
     private async Task CopyToClipboard(string text)
     {
         if (string.IsNullOrEmpty(text)) return;
@@ -344,38 +301,11 @@
     {
         if (string.IsNullOrEmpty(nsecValue))
         {
-            await RequestAndSetNsecValue();
-
-            if (string.IsNullOrEmpty(nsecValue))
-            {
-                await OnNotification.InvokeAsync("Private key not available.");
-                return;
-            }
+            await OnNotification.InvokeAsync("Private key not available.");
+            return;
         }
+
         await CopyToClipboard(nsecValue);
-    }
-
-    private async Task RequestAndSetNsecValue()
-    {
-        try
-        {
-            if (!string.IsNullOrEmpty(CurrentUserPrivateKeyHex))
-            {
-                nsecValue = NostrHelper.ConvertHexToNsec(CurrentUserPrivateKeyHex);
-            }
-            else
-            {
-                await OnNsecRequest.InvokeAsync(true);
-                await OnNotification.InvokeAsync("Requesting private key...");
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error getting or converting private key.");
-            nsecValue = string.Empty;
-            await OnNsecRequest.InvokeAsync(true);
-            await OnNotification.InvokeAsync("Error accessing private key. Requesting again...");
-        }
     }
 
     private void ToggleActionsMenu()
@@ -386,15 +316,10 @@
 
     private void CloseModal()
     {
-        CurrentUserPrivateKeyHex = string.Empty;
+        CurrentUserPrvKeyHex = string.Empty;
+        nsecValue = string.Empty;
         MessageService.DisconnectSubscriptions();
         OnClose.InvokeAsync();
-    }
-
-    private string GetShortenedNpub(string npub)
-    {
-        if (string.IsNullOrEmpty(npub) || npub.Length <= 20) return npub;
-        return $"{npub.Substring(0, 10)}...{npub.Substring(npub.Length - 10)}";
     }
 
     private string GetMaskedNsec(string nsec)

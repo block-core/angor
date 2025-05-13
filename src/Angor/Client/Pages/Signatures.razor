@@ -291,10 +291,9 @@
 
 @if (showMessageModal)
 {
-    <MessageComponent ContactNpub="@currentInvestorNpub"
-                      ContactHexPub="@currentInvestorHexPub"
-                      CurrentUserNpub="@founderNpub"
-                      CurrentUserPrivateKeyHex="@currentUserPrivateKeyHex"
+    <MessageComponent 
+                      OtherUserPubkeyHex="@currentInvestorHexPub"
+                      CurrentUserPrvKeyHex="@currentUserPrivateKeyHex"
                       MessageTitle="Investor"
                       OnClose="@OnMessageModalClose"
                       OnNsecRequest="@ShowNsecAndCheckPassword"

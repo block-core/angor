@@ -59,5 +59,11 @@ namespace Angor.Shared.Utilities
         {
             return NostrConverter.ToNote(hexKey);
         }
+
+        public string GetShortenedNpub(string npub)
+        {
+            if (string.IsNullOrEmpty(npub) || npub.Length <= 20) return npub;
+            return $"{npub.Substring(0, 10)}...{npub.Substring(npub.Length - 10)}";
+        }
     }
 }
