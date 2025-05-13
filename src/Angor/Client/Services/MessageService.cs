@@ -1,18 +1,9 @@
 using Angor.Client.Models;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
-using Microsoft.Extensions.Logging;
-using Nostr.Client.Client;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
-using Nostr.Client.Messages.Direct;
-using Nostr.Client.Responses;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using Nostr.Client.Messages.Contacts;
 
 namespace Angor.Client.Services
 {
