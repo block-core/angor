@@ -296,7 +296,7 @@
                       CurrentUserNpub="@founderNpub"
                       CurrentUserPrivateKeyHex="@currentUserPrivateKeyHex"
                       MessageTitle="Investor"
-                      OnClose="@(() => showMessageModal = false)"
+                      OnClose="@OnMessageModalClose"
                       OnNsecRequest="@ShowNsecAndCheckPassword"
                       OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))"/>
 }
@@ -759,13 +759,8 @@
         // Get founder's npub
         founderNpub = NostrHelper.ConvertHexToNpub(FounderProject.ProjectInfo.NostrPubKey) ??
                       FounderProject.ProjectInfo.NostrPubKey;
-
-        showMessageModal = true;
-
         // Show Message
         ShowMessageAndCheckPassword();
-
-        StateHasChanged();
     }
 
     private void ShowMessageAndCheckPassword()
@@ -785,6 +780,8 @@
 
     private async Task ShowMessage()
     {
+        showMessageModal = true;
+
         try
         {
             var words = await passwordComponent.GetWalletAsync();
@@ -812,6 +809,13 @@
         {
             RetrieveAndShowNsec();
         }
+    }
+
+    private void OnMessageModalClose()
+    {
+        showMessageModal = false;
+        currentUserPrivateKeyHex = String.Empty;
+        StateHasChanged();
     }
 
     private async Task RetrieveAndShowNsec()

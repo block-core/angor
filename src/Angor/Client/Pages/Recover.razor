@@ -540,7 +540,7 @@
                 CurrentUserNpub="@npubValue"
                 CurrentUserPrivateKeyHex="@currentUserPrivateKeyHex"
                 MessageTitle="Founder"
-                OnClose="@(() => showMessageModal = false)"
+                OnClose="@OnMessageModalClose"
                 OnNsecRequest="@ShowNsecAndCheckPassword"
                 OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
         }
@@ -1292,8 +1292,6 @@
 
     private void ShowMessageWithPassword()
     {
-        showMessageModal = true;
-
         // Set npub based on the project or recovery information
         if (project != null)
         {
@@ -1321,6 +1319,8 @@
 
     private async Task ShowMessage()
     {
+        showMessageModal = true;
+
         try
         {
             var words = await passwordComponent.GetWalletAsync();
@@ -1334,6 +1334,13 @@
         }
     }
     
+    private void OnMessageModalClose()
+    {
+        showMessageModal = false;
+        currentUserPrivateKeyHex = String.Empty;
+        StateHasChanged();
+    }
+
     private void ShowNsecAndCheckPassword()
     {
         if (!passwordComponent.HasPassword())

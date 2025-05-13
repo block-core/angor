@@ -710,7 +710,7 @@
         CurrentUserNpub="@npubValue"
         CurrentUserPrivateKeyHex="@NostrHexSecKey"
         MessageTitle="Founder"
-        OnClose="@(() => showMessageModal = false)"
+        OnClose="@OnMessageModalClose"
         OnNsecRequest="@ShowNsecAsync"
         OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
 }
@@ -1094,6 +1094,14 @@
                 showMessageAction();
             }
         }
+    }
+
+    private void OnMessageModalClose()
+    {
+        showMessageModal = false;
+        NostrHexSecKey = String.Empty;
+        NostrNsecSecKey = String.Empty;
+        StateHasChanged();
     }
 
     public MarkupString ConvertToMarkupString(string input)

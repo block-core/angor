@@ -518,7 +518,7 @@ else
     }
 }
 
-@if (showChatModal)
+@if (showMessageModal)
 {
     <MessageComponent 
         ContactNpub="@founderNpub"
@@ -526,7 +526,7 @@ else
         CurrentUserNpub="@npubValue"
         CurrentUserPrivateKeyHex="@currentUserPrivateKeyHex"
         MessageTitle="Founder"
-        OnClose="@(() => showChatModal = false)"
+        OnClose="@OnMessageModalClose"
         OnNsecRequest="@ShowNsecAndCheckPassword"
         OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
 }
@@ -542,7 +542,7 @@ else
     private bool refreshSpinner = false;
     private bool showTransactionJsonModal = false;
     private string transactionJson;
-    private bool showChatModal = false;
+    private bool showMessageModal = false;
     private bool showNsec = false;
     private string nsecValue = "";
     private string npubValue = "";
@@ -1208,7 +1208,7 @@ else
 
     private void ShowMessageWithPassword()
     {
-        showChatModal = true;
+     
         var investorProject = project as InvestorProject;
         npubValue = NostrHelper.ConvertHexToNpub(investorProject?.InvestorNPub ?? "") ?? investorProject?.InvestorNPub ?? "";
 
@@ -1231,8 +1231,17 @@ else
         StateHasChanged();
     }
 
+    private void OnMessageModalClose()
+    {
+        showMessageModal = false;
+        currentUserPrivateKeyHex = String.Empty;
+        StateHasChanged();
+    }
+
     private async Task ShowMessage()
     {
+        showMessageModal = true;
+
         try
         {
             var words = await passwordComponent.GetWalletAsync();
@@ -1269,7 +1278,7 @@ else
                 var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
                 var nostrHexSecKey = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
                 nsecValue = NostrHelper.ConvertHexToNsec(nostrHexSecKey)!;
-                showChatModal = true;
+                showMessageModal = true;
                 showNsec = true;
                 StateHasChanged();
             }

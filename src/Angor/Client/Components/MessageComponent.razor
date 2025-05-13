@@ -372,7 +372,7 @@
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error getting or converting private key.");
-            nsecValue = "";
+            nsecValue = string.Empty;
             await OnNsecRequest.InvokeAsync(true);
             await OnNotification.InvokeAsync("Error accessing private key. Requesting again...");
         }
@@ -386,6 +386,7 @@
 
     private void CloseModal()
     {
+        CurrentUserPrivateKeyHex = string.Empty;
         MessageService.DisconnectSubscriptions();
         OnClose.InvokeAsync();
     }
