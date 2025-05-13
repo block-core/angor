@@ -1,31 +1,36 @@
-using Angor.Contexts.Funding.Founder.Operations;
-using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Application.Dtos;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.UI.Services;
-using ReactiveUI.SourceGenerators;
+using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
+using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder;
 
-public partial class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel
+public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel
 {
-    public FounderSectionViewModel(UIServices uiServices, IInvestmentAppService investmentAppService)
+    public FounderSectionViewModel(UIServices uiServices, IProjectAppService projectAppService, Func<ProjectDto, IFounderProjectViewModel> projectViewModelFactory)
     {
-        this.GetPendingInvestments = ReactiveCommand.CreateFromTask(() =>
+        LoadProjects = EnhancedCommand.Create(ReactiveCommand.CreateFromTask(() =>
         {
             return uiServices.WalletRoot.GetDefaultWalletAndActivate()
                 .Bind(maybeWallet => maybeWallet
-                    .ToResult("No default wallet")
-                    .Bind(wallet => investmentAppService.GetPendingInvestments(wallet.Id.Value, new ProjectId("angor1qatlv9htzte8vtddgyxpgt78ruyzaj57n4l7k46"))));
-        });
+                    .ToResult("Please, create a wallet first")
+                    .Bind(wallet => projectAppService.GetFounderProjects(wallet.Id.Value)));
+        }));
         
-        GetPendingInvestments.HandleErrorsWith(uiServices.NotificationService, "Failed to get pending investments");
-        pendingHelper = GetPendingInvestments.Successes().ToProperty(this, model => model.Pending);
+        LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Failed to get pending investments");
+        LoadProjects.Successes()
+            .EditDiff(dto => dto.Id)
+            .Transform(projectViewModelFactory)
+            .Bind(out var projectList)
+            .Subscribe();
+        
+        Projects = projectList;
     }
 
-    public ReactiveCommand<Unit, Result<IEnumerable<GetPendingInvestments.PendingInvestmentDto>>> GetPendingInvestments { get; set; }
-
-    [ObservableAsProperty]
-    private IEnumerable<GetPendingInvestments.PendingInvestmentDto> pending;
+    public IEnumerable<IFounderProjectViewModel> Projects { get; }
+    
+    public IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; }
 }

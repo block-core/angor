@@ -1,10 +1,10 @@
-using System.Windows.Input;
-using Angor.Contexts.Funding.Founder.Operations;
+using Angor.Contexts.Funding.Projects.Application.Dtos;
+using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder;
 
 public interface IFounderSectionViewModel
 {
-    public ReactiveCommand<Unit, Result<IEnumerable<GetPendingInvestments.PendingInvestmentDto>>> GetPendingInvestments { get; }
-    public IEnumerable<GetPendingInvestments.PendingInvestmentDto> Pending { get; }
+    IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; }
+    public IEnumerable<IFounderProjectViewModel> Projects { get; }
 }
