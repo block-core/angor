@@ -801,7 +801,7 @@ else
     private async Task InvestFunds()
     {
         bool isTestnet = network.NetworkType == NetworkType.Testnet;
-        decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.1m; // 0.1 BTC for mainnet, unlimited for testnet
+        decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.2m; // 0.1 BTC for mainnet, unlimited for testnet
         decimal minInvestmentBtc = 0.001m; // Minimum investment for all networks
 
         if (Investment.IsSeeder)
