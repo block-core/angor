@@ -1,19 +1,15 @@
-using Blazored.LocalStorage;
+using Angor.Client.Storage;
 
 namespace Angor.Client.Services;
 
 public class FeatureFlagService : IFeatureFlagService
 {
-    private readonly ISyncLocalStorageService _storage; // Injected storage service
+    private readonly IClientStorage _storage;
     private readonly Dictionary<string, bool> _featureFlags;
-    public FeatureFlagService(ISyncLocalStorageService storage)
+    public FeatureFlagService(IClientStorage storage)
     {
-        Console.WriteLine("Feature flags fetched");
         _storage = storage;
-        _featureFlags = _storage.GetItem<Dictionary<string, bool>>("FeatureFlags") ?? new()
-        {
-            {"HW_Support", false}
-        };
+        _featureFlags = _storage.getFeatureFlags();
     }
 
     public bool IsFeatureEnabled(string featureName)
@@ -23,17 +19,15 @@ public class FeatureFlagService : IFeatureFlagService
 
     public void SetFeatureFlag(string featureName, bool isEnabled)
     {
-        Console.WriteLine(featureName + "is" + isEnabled);
         if (_featureFlags.ContainsKey(featureName))
         {
             _featureFlags[featureName] = isEnabled;
-            _storage.SetItem("FeatureFlags", _featureFlags);
+            _storage.setFeatureFlags(_featureFlags);
         }
     }
 
     public Dictionary<string, bool> GetAllFeatureFlags()
     {
-        Console.WriteLine("Get all feature flags");
-        return new Dictionary<string, bool>(_featureFlags);
+        return _storage.getFeatureFlags();
     }
 }

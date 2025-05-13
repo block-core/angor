@@ -223,5 +223,16 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.RemoveItem("recovery-signatures");
     }
 
-    
+    public void setFeatureFlags(Dictionary<string, bool> featureFlags)
+    {
+        _storage.SetItem("FeatureFlags", featureFlags); 
+    }
+
+    public Dictionary<string, bool> getFeatureFlags()
+    {
+        return _storage.GetItem<Dictionary<string, bool>>("FeatureFlags") ?? new()
+        {
+            {"HW_Support", false}
+        };
+    }
 }
