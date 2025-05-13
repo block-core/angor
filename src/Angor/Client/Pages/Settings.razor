@@ -15,7 +15,7 @@
 @inject NavMenuState NavMenuState
 @inject ILogger<Settings> Logger;
 @inject NavigationManager _navManager
-
+@inject IFeatureFlagService _featureFlagService
 @inherits BaseComponent
 <NotificationComponent @ref="notificationComponent" />
 
@@ -116,7 +116,29 @@
                                             </div>
                                         </div>
                                     </div>
-
+                                    @if (selectedNetwork == "Angornet")
+                                    {
+                                        <div class="modal-body modal-body-scroll py-4">
+                                            <div class="transaction-info-section">
+                                                <div class="experimental-features mt-2">
+                                                    <h5 class="mb-3">Enable Experimental Features</h5>
+                                                    @foreach (var feature in _featureFlags)
+                                                    {
+                                                        <div class="form-check mb-3">
+                                                            <input class="form-check-input"
+                                                                type="checkbox"
+                                                                id="@feature.Key"
+                                                                checked="@feature.Value"
+                                                                @onchange="(e) => OnFeatureFlagChanged(feature.Key, e.Value is bool value && value)" />
+                                                            <label class="form-check-label" for="@feature.Key">
+                                                                @feature.Key
+                                                            </label>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
                                     <div class="modal-footer border-0 pt-0">
                                         <button class="btn btn-border-success w-100 w-md-auto" @onclick="ChangeNetwork">
                                             Change Network
@@ -554,6 +576,7 @@
 
 
 @code {
+
     private string newIndexerLink;
     private string newRelayLink;
     private string newExplorerLink;
@@ -573,7 +596,7 @@
     private string selectedCurrency = "BTC"; // Default to BTC
 
     private SettingsInfo settingsInfo;
-
+    private Dictionary<string, bool> _featureFlags;
     protected override Task OnInitializedAsync()
     {
         // Set active menu
@@ -591,9 +614,15 @@
 
         selectedNetwork = networkType;
 
+        _featureFlags = _featureFlagService.GetAllFeatureFlags();
+
         return base.OnInitializedAsync();
     }
-
+    private void OnFeatureFlagChanged(string key, bool value)
+    {
+        _featureFlagService.SetFeatureFlag(key, value);
+        _featureFlags[key] = value;
+    }
     private void UpdateUI()
     {
         settingsInfo = _clientStorage.GetSettingsInfo();
