@@ -298,8 +298,7 @@
                       MessageTitle="Investor"
                       OnClose="@(() => showMessageModal = false)"
                       OnNsecRequest="@ShowNsecAndCheckPassword"
-                      OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))"
-                      NsecValue="@nsecForMessageComponent" />
+                      OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))"/>
 }
 
 @code {
