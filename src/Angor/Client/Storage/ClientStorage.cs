@@ -11,10 +11,11 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
     private const string utxoKey = "utxo:{0}";
     private readonly ISyncLocalStorageService _storage;
-
-    public ClientStorage(ISyncLocalStorageService storage)
+    private readonly INetworkConfiguration _networkConfiguration;
+    public ClientStorage(ISyncLocalStorageService storage, INetworkConfiguration networkConfiguration)
     {
         _storage = storage;
+        _networkConfiguration = networkConfiguration;
     }
 
     public AccountInfo GetAccountInfo(string network)
@@ -230,9 +231,6 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
     public Dictionary<string, bool> getFeatureFlags()
     {
-        return _storage.GetItem<Dictionary<string, bool>>("FeatureFlags") ?? new()
-        {
-            {"HW_Support", false}
-        };
+        return _storage.GetItem<Dictionary<string, bool>>("FeatureFlags") ?? _networkConfiguration.GetFeatureFlags();
     }
 }
