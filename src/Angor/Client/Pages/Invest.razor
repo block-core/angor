@@ -814,7 +814,7 @@ else
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
 
-            if (_featureFlagService.IsFeatureEnabled("HW_Support"))
+            if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
                 var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
@@ -862,7 +862,7 @@ else
 
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            if (_featureFlagService.IsFeatureEnabled("HW_Support"))
+            if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
                 var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
