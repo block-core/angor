@@ -38,7 +38,7 @@ public class WalletOperations : IWalletOperations
     }
 
 
-    public PsbtWrapper CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null)
+    public PsbtData CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null)
     {
         Network network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
@@ -86,15 +86,15 @@ public class WalletOperations : IWalletOperations
             psbt.Inputs[i].HDKeyPaths.Add(new NBitcoin.PubKey(pubKey.ToBytes()), rootedKeyPath);
         }
 
-        return new PsbtWrapper { PsbtHex = psbt.ToHex() };
+        return new PsbtData { PsbtHex = psbt.ToHex() };
     }
 
-    public TransactionInfo SignPsbt(PsbtWrapper psbtWrapper, WalletWords walletWords)
+    public TransactionInfo SignPsbt(PsbtData psbtData, WalletWords walletWords)
     {
         Network network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
 
-        var psbt = NBitcoin.PSBT.Parse(psbtWrapper.PsbtHex, nbitcoinNetwork);
+        var psbt = NBitcoin.PSBT.Parse(psbtData.PsbtHex, nbitcoinNetwork);
 
         ExtKey extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
 

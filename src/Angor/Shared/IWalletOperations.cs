@@ -9,8 +9,8 @@ public interface IWalletOperations
 {
     string GenerateWalletWords();
 
-    PsbtWrapper CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null);
-    TransactionInfo SignPsbt(PsbtWrapper psbtWrapper, WalletWords walletWords);
+    PsbtData CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null);
+    TransactionInfo SignPsbt(PsbtData psbtData, WalletWords walletWords);
 
     Task<OperationResult<Transaction>> SendAmountToAddress(WalletWords walletWords, SendInfo sendInfo);
     AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords);
