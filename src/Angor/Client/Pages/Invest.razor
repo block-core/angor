@@ -814,9 +814,18 @@ else
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
 
-            var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            // temporary hack for older wallets.
+            if (string.IsNullOrEmpty(accountBalanceInfo.AccountInfo.RootExtPubKey))
+            {
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(), 
+                    unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            }
+            else
+            {
+                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
-            signedTransaction = _WalletOperations.SignPsbt(psbt, words);
+                signedTransaction = _WalletOperations.SignPsbt(psbt, words);    
+            }
 
             showCreateModal = true;
         }
@@ -854,9 +863,20 @@ else
 
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            if (string.IsNullOrEmpty(accountInfo.RootExtPubKey))
+            {
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                    accountInfo.GetNextChangeReceiveAddress(),
+                    unSignedTransaction,
+                    await passwordComponent.GetWalletAsync(),
+                    accountInfo,
+                    feeData.SelectedFeeEstimation.FeeRate);            }
+            else
+            {
+                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
-            signedTransaction = _WalletOperations.SignPsbt(psbt, await passwordComponent.GetWalletAsync());
+                signedTransaction = _WalletOperations.SignPsbt(psbt, await passwordComponent.GetWalletAsync());
+            }
 
             StateHasChanged();
         }

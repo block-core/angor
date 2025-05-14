@@ -38,6 +38,11 @@ public class WalletOperations : IWalletOperations
 
     public PsbtData CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null)
     {
+        if (string.IsNullOrEmpty(accountInfo.RootExtPubKey))
+        {
+            throw new ApplicationException("The Root ExtPubKey is missing");
+        }
+
         Network network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
 
