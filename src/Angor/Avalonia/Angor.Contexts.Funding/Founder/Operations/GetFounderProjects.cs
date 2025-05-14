@@ -23,7 +23,8 @@ public static class GetFounderProjects
             return GetProjectIds(request)
                 .Traverse(projectRepository.TryGet)
                 .Map(projectMaybes => projectMaybes.Values())
-                .MapEach(project => project.ToDto());
+                .MapEach(project => project.ToDto())
+                .WithTimeout(TimeSpan.FromSeconds(5));
         }
 
         private Task<Result<IEnumerable<ProjectId>>> GetProjectIds(GetFounderProjectsRequest request)

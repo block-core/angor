@@ -28,7 +28,7 @@ public static class ProjectExtensions
         };
     }
     
-    public static ProjectInfo ToSharedModel(this Project project)
+    public static ProjectInfo ToProjectInfo(this Project project)
     {
         return new ProjectInfo
         {
