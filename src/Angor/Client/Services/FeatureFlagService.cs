@@ -30,4 +30,6 @@ public class FeatureFlagService : IFeatureFlagService
     {
         return _storage.getFeatureFlags();
     }
+
+    public bool IsFeatureHWSupportEnabled() => IsFeatureEnabled("HW_Support");
 }
