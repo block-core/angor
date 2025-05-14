@@ -1,10 +1,8 @@
 using Angor.Client.Models;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
-using Ganss.Xss;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
-using System.Reactive.Linq;
 
 namespace Angor.Client.Services
 {
@@ -16,7 +14,7 @@ namespace Angor.Client.Services
         private readonly INetworkService _networkService;
         private readonly IRelayService _relayService;
         private readonly NostrConversionHelper _nostrHelper;
-        private readonly HtmlSanitizer _sanitizer;
+        private readonly IHtmlSanitizerService _sanitizerService;
 
         private Dictionary<string, DirectMessage> _directMessagesDictionary = new Dictionary<string, DirectMessage>();
         private string _currentUserPrivateKeyHex;
@@ -44,7 +42,8 @@ namespace Angor.Client.Services
             IEncryptionService encryptionService,
             INetworkService networkService,
             IRelayService relayService,
-            NostrConversionHelper nostrHelper)
+            NostrConversionHelper nostrHelper,
+            IHtmlSanitizerService sanitizerService)
         {
             _logger = logger;
             _nostrCommunicationFactory = nostrCommunicationFactory;
@@ -52,7 +51,7 @@ namespace Angor.Client.Services
             _networkService = networkService;
             _relayService = relayService;
             _nostrHelper = nostrHelper;
-            _sanitizer = new HtmlSanitizer();
+            _sanitizerService = sanitizerService;
         }
 
         public void SetKeys(string currentUserPrvKeyHex, string otherUserHexPub)
@@ -178,7 +177,7 @@ namespace Angor.Client.Services
                 );
 
                 // Sanitize the decrypted content to prevent XSS attacks
-                decryptedContent = _sanitizer.Sanitize(decryptedContent);
+                decryptedContent = _sanitizerService.Sanitize(decryptedContent);
             }
             catch (Exception ex)
             {
