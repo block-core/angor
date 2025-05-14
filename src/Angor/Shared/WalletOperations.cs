@@ -7,7 +7,6 @@ using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.BIP39;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
-using PSBTError = NBitcoin.PSBTError;
 
 namespace Angor.Shared;
 
@@ -36,7 +35,6 @@ public class WalletOperations : IWalletOperations
         string walletWords = mnemonic.ToString();
         return walletWords;
     }
-
 
     public PsbtData CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null)
     {
@@ -102,7 +100,7 @@ public class WalletOperations : IWalletOperations
 
         psbt.SignAll(NBitcoin.ScriptPubKeyType.Segwit, nbitcoinExtendedKey); 
 
-        if (!psbt.TryFinalize(out IList<PSBTError>? errors))
+        if (!psbt.TryFinalize(out IList<NBitcoin.PSBTError>? errors))
         {
             throw new NBitcoin.PSBTException(errors);
         }
