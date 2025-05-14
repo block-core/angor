@@ -4,12 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:c="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              xmlns:sdg="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
-             xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:pt="https://github.com/projektanker/icons.avalonia"
              xmlns:details="clr-namespace:AngorApp.Sections.Founder.Details"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" 
              x:Class="AngorApp.Sections.Founder.Details.FounderProjectDetailsView" x:DataType="details:IFounderProjectDetailsViewModel">
 
     <Design.DataContext>
@@ -18,33 +17,57 @@
 
     <Interaction.Behaviors>
         <DataContextChangedTrigger>
-            <InvokeCommandAction Command="{Binding LoadPendingInvestments}" />
+            <InvokeCommandAction Command="{Binding LoadInvestments}" />
         </DataContextChangedTrigger>
     </Interaction.Behaviors>
 
-    <StackPanel Spacing="10">
-        <controls:Pane Padding="0" CornerRadius="20">
-            <StackPanel>
-                <asyncImageLoader:AdvancedImage CornerRadius="20 20 0 0" Height="200" Stretch="UniformToFill" Source="{Binding BannerUrl}" />
-                <StackPanel Margin="20" Spacing="10">
-                    <TextBlock Classes="SizeBig" Text="{Binding Name}" />
-                    <TextBlock TextWrapping="Wrap" Text="{Binding ShortDescription}" />
+    <ScrollViewer>
+        <StackPanel Spacing="10">
+            <controls:Pane Padding="0" CornerRadius="20">
+                <StackPanel>
+                    <asyncImageLoader:AdvancedImage CornerRadius="20 20 0 0" Height="200" Stretch="UniformToFill" Source="{Binding BannerUrl}" />
+                    <StackPanel Margin="20" Spacing="10">
+                        <TextBlock Classes="SizeBig" Text="{Binding Name}" />
+                        <TextBlock TextWrapping="Wrap" Text="{Binding ShortDescription}" />
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
-        </controls:Pane>
-        <controls:Pane Title="Investments pending approval" IsTitleVisible="True">
-            <controls:Pane.TitleRightContent>
-                <Button pt:Attached.Icon="fa-rotate-right" Command="{Binding LoadPendingInvestments}" />
-            </controls:Pane.TitleRightContent>
-            <c:Loading IsLoading="{Binding LoadPendingInvestments.IsExecuting^}">
-                <sdg:SlimDataGrid Margin="0 10" ItemsSource="{Binding PendingInvestments}">
-                    <sdg:SlimDataGrid.Columns>
-                        <sdg:Column Header="Amount" Binding="{Binding Amount}" />
-                        <sdg:Column Header="NPub" Binding="{Binding InvestorNostrPubKey}" />
-                        <sdg:Column Header="Date" Binding="{Binding Created}" />
-                    </sdg:SlimDataGrid.Columns>
-                </sdg:SlimDataGrid>
-            </c:Loading>
-        </controls:Pane>
-    </StackPanel>
+            </controls:Pane>
+            <controls:Pane Title="Investments" IsTitleVisible="True">
+                <controls:Pane.TitleRightContent>
+                    <Button pt:Attached.Icon="fa-rotate-right" Command="{Binding LoadInvestments}" />
+                </controls:Pane.TitleRightContent>
+                <c:Loading IsLoading="{Binding LoadInvestments.IsExecuting^}">
+                    <sdg:SlimDataGrid Margin="0 10" ItemsSource="{Binding Investments}">
+                        <sdg:SlimDataGrid.Styles>
+                            <Style Selector="sdg|Row">
+                                <Setter Property="Height" Value="60" />
+                                <Setter Property="Margin" Value="6" />
+                                <Setter Property="Padding" Value="6" />
+                                <Setter Property="BorderBrush" Value="#32000000" />
+                                <Setter Property="BorderThickness" Value="1" />
+                                <Setter Property="CornerRadius" Value="10" />
+                            </Style>
+                            <Style Selector="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                                <Setter Property="HorizontalAlignment" Value="Center" />
+                            </Style>
+                        </sdg:SlimDataGrid.Styles>
+                        <sdg:SlimDataGrid.Columns>
+                            <sdg:Column Header="Amount" Binding="{Binding Content.Amount.BtcString}" />
+                            <sdg:Column Header="Date" Binding="{Binding Content.Created, Converter={x:Static controls:MiscConverters.HumanizeDate}}" />
+                            <sdg:Column Header="Investor" Binding="{Binding Content.InvestorNostrPubKey}" />
+                            <sdg:Column Header="Approved" Binding="{Binding Content.IsApproved}" />
+                            <sdg:Column Header="" Binding="{Binding}">
+                                <sdg:Column.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding Content.Approve}" Content="Approve" IsVisible="{Binding !Content.IsApproved}" />
+                                    </DataTemplate>
+                                </sdg:Column.CellTemplate>
+                            </sdg:Column>
+                        </sdg:SlimDataGrid.Columns>
+                    </sdg:SlimDataGrid>
+                </c:Loading>
+            </controls:Pane>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>
