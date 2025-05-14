@@ -187,4 +187,19 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "Primal", Url = "https://primal.net/dms", IsPrimary = false },
             };
     }
+    public Dictionary<string, bool> GetFeatureFlags()
+    {
+        return currentNetwork.Name switch
+        {
+            "Main" => new() {},
+            "Testnet" => new() { },
+            "Signet" => new() { },
+            "Regtest" => new() { },
+            "Angornet" => new()
+            {
+                {"HW_Support", false}
+            },
+            _ => throw new NotSupportedException($"Network type {currentNetwork.NetworkType.ToString()} is not supported")
+        };
+    }
 }
