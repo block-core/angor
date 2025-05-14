@@ -5,13 +5,6 @@ using Angor.Contexts.Funding.Projects.Domain;
 
 namespace AngorApp.Features.Invest.Draft;
 
-public interface IInvestmentDraft
-{
-    CreateInvestment.Draft DraftModel { get; }
-    AmountUI TotalFee { get; }
-    Task<Result<Guid>> Confirm();
-}
-
 public class InvestmentDraft(IInvestmentAppService investmentAppService, IWallet wallet, IProject project,  CreateInvestment.Draft draftModel) : IInvestmentDraft
 {
     public CreateInvestment.Draft DraftModel { get; } = draftModel;
