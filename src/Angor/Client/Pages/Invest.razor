@@ -30,7 +30,7 @@
 @inject IRelayService _RelayService;
 @inject IWalletUIService _walletUIService
 @inject IIndexerService _IndexerService
-
+@inject IFeatureFlagService _featureFlagService
 @inject INetworkService _networkService
 @inject NostrConversionHelper NostrHelper
 @inject IInvestorTransactionActions _InvestorTransactionActions;
@@ -814,17 +814,16 @@ else
 
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
 
-            // temporary hack for older wallets.
-            if (string.IsNullOrEmpty(accountBalanceInfo.AccountInfo.RootExtPubKey))
-            {
-                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(), 
-                    unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
-            }
-            else
+            if (_featureFlagService.IsFeatureEnabled("HW_Support"))
             {
                 var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
                 signedTransaction = _WalletOperations.SignPsbt(psbt, words);    
+            }
+            else
+            {
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(), 
+                    unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
             }
 
             showCreateModal = true;
@@ -863,19 +862,20 @@ else
 
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            if (string.IsNullOrEmpty(accountInfo.RootExtPubKey))
+            if (_featureFlagService.IsFeatureEnabled("HW_Support"))
+            {
+                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+
+                signedTransaction = _WalletOperations.SignPsbt(psbt, await passwordComponent.GetWalletAsync());
+            }
+            else
             {
                 signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
                     accountInfo.GetNextChangeReceiveAddress(),
                     unSignedTransaction,
                     await passwordComponent.GetWalletAsync(),
                     accountInfo,
-                    feeData.SelectedFeeEstimation.FeeRate);            }
-            else
-            {
-                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
-
-                signedTransaction = _WalletOperations.SignPsbt(psbt, await passwordComponent.GetWalletAsync());
+                    feeData.SelectedFeeEstimation.FeeRate);
             }
 
             StateHasChanged();
