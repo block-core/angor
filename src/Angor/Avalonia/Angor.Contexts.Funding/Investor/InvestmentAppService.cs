@@ -7,14 +7,8 @@ using MediatR;
 
 namespace Angor.Contexts.Funding.Investor;
 
-public class InvestmentAppService(IInvestmentRepository investmentRepository, IMediator mediator
-    ) : IInvestmentAppService
+public class InvestmentAppService(IInvestmentRepository investmentRepository, IMediator mediator) : IInvestmentAppService 
 {
-    public Task<Result<IEnumerable<InvestmentDto>>> GetInvestments(ProjectId projectId)
-    {
-        return investmentRepository.GetByProject(projectId);
-    }
-
     public Task<Result<CreateInvestment.Draft>> CreateInvestmentDraft(Guid sourceWalletId, ProjectId projectId, Amount amount)
     {
         return mediator.Send(new CreateInvestment.CreateInvestmentTransactionRequest(sourceWalletId, projectId, amount));
@@ -24,9 +18,14 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
     {
         return mediator.Send(new RequestInvestment.RequestFounderSignaturesRequest(sourceWalletId, projectId, draft));
     }
-    
-    public Task<Result<IEnumerable<GetPendingInvestments.PendingInvestmentDto>>> GetPendingInvestments(Guid walletId, ProjectId projectId)
+
+    public Task<Result<IEnumerable<GetInvestments.Investment>>> GetInvestments(Guid walletId, ProjectId projectId)
     {
-        return mediator.Send(new GetPendingInvestments.GetPendingInvestmentsRequest(walletId, projectId));
+        return mediator.Send(new GetInvestments.GetInvestmentsRequest(walletId, projectId));
+    }
+
+    public Task<Result> ApproveInvestment(Guid walletId, ProjectId projectId, GetInvestments.Investment investment)
+    {
+        return mediator.Send(new ApproveInvestment.ApproveInvestmentRequest(walletId, projectId, investment));
     }
 }

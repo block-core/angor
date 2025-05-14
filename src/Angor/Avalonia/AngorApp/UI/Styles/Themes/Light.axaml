@@ -98,7 +98,18 @@
         <Setter Property="Foreground" Value="{StaticResource Level5}" />
     </Style>
 
+    
+    <Style Selector="views|DialogControl" >
+        <Setter Property="MinWidth" Value="400" />
+        <Setter Property="MinHeight" Value="300" />
+    </Style>
+    
     <Style Selector="views|DialogControl slim|SlimWizardControl">
+        <Setter Property="Width" Value="500" />
+        <Setter Property="MinHeight" Value="340" />
+    </Style>
+    
+    <Style Selector="views|DialogControl wizards|WizardControl">
         <Setter Property="Width" Value="500" />
         <Setter Property="MinHeight" Value="340" />
     </Style>

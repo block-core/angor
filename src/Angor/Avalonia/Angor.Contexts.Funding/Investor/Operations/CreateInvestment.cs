@@ -59,7 +59,7 @@ public static class CreateInvestment
                 }
 
                 var transactionResult = Result.Try(() => investorTransactionActions.CreateInvestmentTransaction(
-                    projectResult.Value.ToSharedModel(),
+                    projectResult.Value.ToProjectInfo(),
                     investorKey,
                     transactionRequest.Amount.Sats));
 

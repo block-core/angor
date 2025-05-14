@@ -1,8 +1,12 @@
+using System.Threading.Tasks;
 using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
+using Angor.Contexts.Funding.Projects.Domain;
 using AngorApp.UI.Services;
 using DynamicData;
+using Zafiro;
+using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
 
@@ -10,32 +14,40 @@ namespace AngorApp.Sections.Founder.Details;
 
 public class FounderProjectDetailsViewModel : IFounderProjectDetailsViewModel
 {
-    private readonly ProjectDto projectDto;
+    private readonly ProjectDto project;
 
-    public FounderProjectDetailsViewModel(ProjectDto projectDto, IInvestmentAppService investmentAppService, UIServices uiServices)
+    public FounderProjectDetailsViewModel(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices)
     {
-        this.projectDto = projectDto;
-        LoadPendingInvestments = ReactiveCommand.CreateFromTask(token =>
+        this.project = project;
+        LoadInvestments = ReactiveCommand.CreateFromTask(() =>
         {
             return uiServices.WalletRoot.GetDefaultWalletAndActivate()
                 .Bind(maybe => maybe.ToResult("You need to create a wallet first"))
-                .Bind(wallet => investmentAppService.GetPendingInvestments(wallet.Id.Value, projectDto.Id));
+                .Bind(wallet => investmentAppService.GetInvestments(wallet.Id.Value, project.Id)
+                    .MapEach(IInvestmentViewModel (investment) => new InvestmentViewModel(investment, () => Approve(project, investmentAppService, uiServices, wallet, investment))));
         });
 
-        LoadPendingInvestments.HandleErrorsWith(uiServices.NotificationService, "Failed to get pending investments");
-        
-        LoadPendingInvestments.Successes()
-            .EditDiff(dto => dto)
+        LoadInvestments.HandleErrorsWith(uiServices.NotificationService, "Failed to get pending investments");
+
+        LoadInvestments.Successes()
+            .EditDiff(x => x, new LambdaComparer<IInvestmentViewModel>((a, b) => a.InvestorNostrPubKey == b.InvestorNostrPubKey))
+            .TransformWithInlineUpdate(x => new IdentityContainer<IInvestmentViewModel> { Content = x }, (container, model) => container.Content = model)
             .Bind(out var pendingInvestments)
             .Subscribe();
-        
-        PendingInvestments = pendingInvestments;
+
+        Investments = pendingInvestments;
     }
 
-    public IEnumerable<GetPendingInvestments.PendingInvestmentDto> PendingInvestments { get; }
+    private static Task<Maybe<Result>> Approve(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices, IWallet wallet, GetInvestments.Investment investment)
+    {
+        return uiServices.Dialog
+            .ShowConfirmation("Do you want to approve this investment?", "Approve investment")
+            .Map(isConfirmed => isConfirmed ? investmentAppService.ApproveInvestment(wallet.Id.Value, project.Id, investment) : Task.FromResult(Result.Success()));
+    }
 
-    public ReactiveCommand<Unit, Result<IEnumerable<GetPendingInvestments.PendingInvestmentDto>>> LoadPendingInvestments { get; }
-    public Uri? BannerUrl => projectDto.Banner;
-    public string ShortDescription => projectDto.ShortDescription;
-    public string Name => projectDto.Name;
+    public IEnumerable<IdentityContainer<IInvestmentViewModel>> Investments { get; }
+    public ReactiveCommand<Unit, Result<IEnumerable<IInvestmentViewModel>>> LoadInvestments { get; }
+    public Uri? BannerUrl => project.Banner;
+    public string ShortDescription => project.ShortDescription;
+    public string Name => project.Name;
 }
