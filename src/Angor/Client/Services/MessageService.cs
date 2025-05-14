@@ -124,7 +124,7 @@ namespace Angor.Client.Services
                     _sinceTime,
                     100,
                     async eventMessage => await ProcessDirectMessage(eventMessage),
-                    _otherUserHexPub,
+                    new [] { _otherUserHexPub },
                     true
                 );
 
@@ -133,7 +133,7 @@ namespace Angor.Client.Services
                     _sinceTime,
                     100,
                     async eventMessage => await ProcessDirectMessage(eventMessage),
-                    _currentUserHexPub,
+                    new [] { _currentUserHexPub },
                     true
                 );
 
