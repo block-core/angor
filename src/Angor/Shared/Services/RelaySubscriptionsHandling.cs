@@ -117,6 +117,8 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
     public void CloseSubscription(string subscriptionKey)
     {
+        relaySubscriptionsKeepActive.Remove(subscriptionKey);
+
         if (!relaySubscriptions.ContainsKey(subscriptionKey))
             return;
         
