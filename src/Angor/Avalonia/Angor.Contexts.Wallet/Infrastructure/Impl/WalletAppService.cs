@@ -1,40 +1,26 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.Wallet.Infrastructure.History;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Angor.Shared.Services;
 using Blockcore.NBitcoin.BIP39;
 using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Wallet.Infrastructure.Impl;
 
-public class WalletAppService : IWalletAppService 
+public class WalletAppService(
+    ISensitiveWalletDataProvider sensitiveWalletDataProvider,
+    IWalletFactory walletFactory,
+    IWalletOperations walletOperations,
+    IWalletStore walletStore,
+    ITransactionHistory transactionHistory)
+    : IWalletAppService
 {
     public static readonly WalletId SingleWalletId = new(new Guid("8E3C5250-4E26-4A13-8075-0A189AEAF793"));
     private const string SingleWalletName = "<default>";
-        
-    private readonly ISensitiveWalletDataProvider sensitiveWalletDataProvider;
-    private readonly IIndexerService indexerService;
-    private readonly IWalletFactory walletFactory;
-    private readonly IWalletOperations walletOperations;
-    private readonly IWalletStore walletStore;
 
-    public WalletAppService(
-        ISensitiveWalletDataProvider sensitiveWalletDataProvider,
-        IIndexerService indexerService,
-        IWalletFactory walletFactory,
-        IWalletOperations walletOperations, IWalletStore walletStore)
-    {
-        this.sensitiveWalletDataProvider = sensitiveWalletDataProvider;
-        this.indexerService = indexerService;
-        this.walletFactory = walletFactory;
-        this.walletOperations = walletOperations;
-        this.walletStore = walletStore;
-    }
-
-    [MemoizeTimed(ExpirationInSeconds = 300)]
     public Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
     {
         List<WalletMetadata> singleWalletList = [new(SingleWalletName, SingleWalletId)];
@@ -54,47 +40,8 @@ public class WalletAppService : IWalletAppService
             var sensitiveData = sensitiveDataResult.Value;
             
             var walletWords = sensitiveData.ToWalletWords();
-            var transactions = new List<BroadcastedTransaction>();
-                
-            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
-                
-            // Update existing UTXOs information
-            await walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
-            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
-
-            foreach (var address in accountInfo.AllAddresses())
-            {
-                var (_, utxos) = await walletOperations.FetchUtxoForAddressAsync(address.Address);
-                    
-                foreach (var utxo in utxos)
-                {
-                    var txInfo = await indexerService.GetTransactionInfoByIdAsync(utxo.outpoint.transactionId);
-                    if (txInfo == null) continue;
-
-                    // Calculate the balance for this transaction
-                    var txBalance = CalculateTransactionBalance(txInfo, address.Address);
-                            
-                    // Map inputs and outputs
-                    var (inputs, outputs) = MapInputsAndOutputs(txInfo);
-                            
-                    transactions.Add(new BroadcastedTransaction(
-                        Balance: new Balance(txBalance),
-                        Id: txInfo.TransactionId,
-                        WalletInputs: inputs.Where(i => i.Address == address.Address).Select(i => new TransactionInputInfo(i)),
-                        WalletOutputs: outputs.Where(o => o.Address == address.Address).Select(o => new TransactionOutputInfo(o)),
-                        AllInputs: inputs,
-                        AllOutputs: outputs,
-                        Fee: txInfo.Fee,
-                        IsConfirmed: txInfo.Confirmations > 0,
-                        BlockHeight: txInfo.BlockIndex,
-                        BlockTime: DateTimeOffset.FromUnixTimeSeconds(txInfo.Timestamp),
-                        RawJson: System.Text.Json.JsonSerializer.Serialize(txInfo)
-                    ));
-                }
-            }
-
-            var list = transactions.OrderByDescending(t => t.BlockTime ?? DateTimeOffset.MaxValue).ToList();
-            return Result.Success<IEnumerable<BroadcastedTransaction>>(list);
+            
+            return await transactionHistory.GetTransactions(walletWords);
         }
         catch (Exception ex)
         {
@@ -104,16 +51,11 @@ public class WalletAppService : IWalletAppService
     
     public Task<Result<Balance>> GetBalance(WalletId walletId)
     {
-        return GetTransactions(walletId).Map(txns => txns.Sum(x => x.Balance.Value)).Map(l => new Balance(l));
+        return GetTransactions(walletId).Map(txns => txns.Sum(x => x.GetBalance().Sats)).Map(l => new Balance(l));
     }
 
     public async Task<Result<Fee>> EstimateFee(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate)
     {
-        if (walletId != SingleWalletId)
-            return Result.Failure<Fee>("Invalid wallet ID");
-
-        var satsPerVirtualKB = feeRate.SatsPerVByte * 1000;
-        
         try
         {
             var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
@@ -132,13 +74,14 @@ public class WalletAppService : IWalletAppService
             if (string.IsNullOrEmpty(changeAddress))
                 return Result.Failure<Fee>("No change address available");
 
+            var satsPerVirtualKB = feeRate.SatsPerVByte * 1000;
             var sendInfo = new SendInfo
             {
                 FeeRate = satsPerVirtualKB,
-                SendAmount = amount.Value,
+                SendAmount = amount.Sats,
                 SendToAddress = address.Value,
                 ChangeAddress = changeAddress,
-                SendUtxos = walletOperations.FindOutputsForTransaction(amount.Value, accountInfo)
+                SendUtxos = walletOperations.FindOutputsForTransaction(amount.Sats, accountInfo)
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
 
@@ -186,8 +129,6 @@ public class WalletAppService : IWalletAppService
         if (walletId != SingleWalletId)
             return Result.Failure<TxId>("Invalid wallet ID");
         
-        var satsPerVirtualKB = feeRate.SatsPerVByte * 1000; 
-
         try
         {
             var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
@@ -202,13 +143,15 @@ public class WalletAppService : IWalletAppService
             var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
             await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
             
+            var satsPerVirtualKB = feeRate.SatsPerVByte * 1000;
+            
             var sendInfo = new SendInfo
             {
-                SendAmount = amount.Value,
+                SendAmount = amount.Sats,
                 SendToAddress = address.Value,
                 FeeRate = satsPerVirtualKB,
                 ChangeAddress = accountInfo.GetNextChangeReceiveAddress(),
-                SendUtxos = walletOperations.FindOutputsForTransaction(amount.Value, accountInfo)
+                SendUtxos = walletOperations.FindOutputsForTransaction(amount.Sats, accountInfo)
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
             
@@ -238,33 +181,5 @@ public class WalletAppService : IWalletAppService
     {
         var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
         return mnemonic.ToString();
-    }
-
-    private (List<TransactionAddressInfo> inputs, List<TransactionAddressInfo> outputs) MapInputsAndOutputs(QueryTransaction tx)
-    {
-        var inputs = tx.Inputs.Select(input => new TransactionAddressInfo(
-            input.InputAddress,
-            input.InputAmount
-        )).ToList();
-
-        var outputs = tx.Outputs.Select(output => new TransactionAddressInfo(
-            output.Address,
-            output.Balance
-        )).ToList();
-
-        return (inputs, outputs);
-    }
-
-    private long CalculateTransactionBalance(QueryTransaction tx, string walletAddress)
-    {
-        var outputAmount = tx.Outputs
-            .Where(o => o.Address == walletAddress)
-            .Sum(o => o.Balance);
-
-        var inputAmount = tx.Inputs
-            .Where(i => i.InputAddress == walletAddress)
-            .Sum(i => i.InputAmount);
-
-        return outputAmount - inputAmount;
     }
 }

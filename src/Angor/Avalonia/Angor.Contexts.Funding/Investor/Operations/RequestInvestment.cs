@@ -22,7 +22,8 @@ public static class RequestInvestment
         IEncryptionService encryptionService,
         INetworkConfiguration networkConfiguration,
         ISerializer serializer,
-        IRelayService relayService) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
+        IWalletOperations walletOperations,
+        ISignService signService) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
     {
         public async Task<Result<Guid>> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
         {
@@ -58,7 +59,7 @@ public static class RequestInvestment
             var requestId = sendSignatureResult.Value;
             // TODO: Don't forget to uncomment. We really need to save info
             //var saveResult = await Save(requestId, txnHex, requestFounderSignaturesRequest.InvestmentTransaction.InvestorKey, requestFounderSignaturesRequest.ProjectId);
-            //return saveResult.Value;
+            //return saveResult.Sats;
             return Result.Success(Guid.Empty);
         }
 
@@ -74,44 +75,50 @@ public static class RequestInvestment
             {
                 string nostrPubKey = project.NostrPubKey;
 
-                var senderPrivateKey = derivationOperations.DeriveNostrStorageKey(walletWords);
-                var senderPrivateKeyHex = Encoders.Hex.EncodeData(senderPrivateKey.ToBytes());
+                var investorNostrPrivateKey = await derivationOperations.DeriveProjectNostrPrivateKeyAsync(walletWords, project.FounderKey);
+                var investorNostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
+                var releaseAddressResult = await GetUnfundedReleaseAddress(walletWords);
 
-                var signRequest = new SignRecoveryRequest
+                if (releaseAddressResult.IsFailure)
+                {
+                    return Result.Failure<string>(releaseAddressResult.Error);
+                }
+                
+                var releaseAddress = releaseAddressResult.Value;
+
+                var signRecoveryRequest = new SignRecoveryRequest
                 {
                     ProjectIdentifier = project.Id.Value,
-                    InvestmentTransactionHex = signedTransactionHex
+                    InvestmentTransactionHex = signedTransactionHex,
+                    UnfundedReleaseAddress = releaseAddress,
                 };
 
-                var serialized = serializer.Serialize(signRequest);
-
+                var serializedRecoveryRequest = serializer.Serialize(signRecoveryRequest);
+                
                 var encryptedContent = await encryptionService.EncryptNostrContentAsync(
-                    senderPrivateKeyHex,
+                    investorNostrPrivateKeyHex,
                     nostrPubKey,
-                    serialized);
+                    serializedRecoveryRequest);
 
-                var tcs = new TaskCompletionSource<(bool Success, string Message)>();
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+                var (time, id) = signService.RequestInvestmentSigs(encryptedContent, investorNostrPrivateKeyHex, project.NostrPubKey);
 
-                cts.Token.Register(() =>
-                        tcs.TrySetResult((false, "Timeout while waiting the response from the relay")),
-                    useSynchronizationContext: false);
-
-                var eventId = relayService.SendDirectMessagesForPubKeyAsync(
-                    senderPrivateKeyHex,
-                    nostrPubKey,
-                    encryptedContent,
-                    response => { tcs.TrySetResult((response.Accepted, response.Message ?? "No message")); });
-
-                var result = await tcs.Task;
-                return result.Success
-                    ? Result.Success(eventId)
-                    : Result.Failure<string>($"Relay error: {result.Message}");
+                return Result.Success(id);
             }
             catch (Exception ex)
             {
                 return Result.Failure<string>($"Error while sending the signature request {ex.Message}");
             }
+        }
+
+        private Task<Result<string>> GetUnfundedReleaseAddress(WalletWords wallet)
+        {
+            return Result.Try(async () =>
+            {
+                var accountInfo = walletOperations.BuildAccountInfoForWalletWords(wallet);
+                await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+
+                return accountInfo.GetNextReceiveAddress();
+            }).EnsureNotNull("Could not get the unfunded release address");
         }
     }
     

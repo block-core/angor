@@ -21,7 +21,7 @@ public class WalletProvider(IWalletAppService walletAppService, ITransactionWatc
         
         var tcs = new TaskCompletionSource<Result<IWallet>>();
 
-        IDisposable syncSubscription = null!;
+        IDisposable syncSubscription = null;
         
         dynamicWallet.Sync.StartReactive.Take(1)
             .Subscribe(result =>
@@ -34,7 +34,7 @@ public class WalletProvider(IWalletAppService walletAppService, ITransactionWatc
                 else
                 {
                     tcs.SetResult(Result.Failure<IWallet>(result.Error));
-                    syncSubscription.Dispose();
+                    syncSubscription?.Dispose();
                 }
             });
 

@@ -9,7 +9,7 @@ public class TransactionDraftDesign : ITransactionDraft
     
     public long FeeRate { get; set; }
 
-    public long TotalFee { get; set; }
+    public IAmountUI TotalFee { get; set; }
     public long Amount { get; set; }
     public string Path { get; set; }
     public int UtxoCount { get; set; }

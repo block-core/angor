@@ -9,6 +9,6 @@ public class  PassphraseProviderAdapter(IDialog dialog): IPassphraseProvider
 {
     public Task<Maybe<string>> Get(WalletId walletId)
     {
-        return new DialogPasswordProvider(dialog, "Please, enter the passphrase").Get(walletId);
+        return new DialogPasswordProvider(dialog, "Please, enter the passphrase", "Wallet Unlock", new Icon("mdi-lock")).Get(walletId);
     }
 }

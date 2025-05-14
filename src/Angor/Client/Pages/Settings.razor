@@ -15,7 +15,7 @@
 @inject NavMenuState NavMenuState
 @inject ILogger<Settings> Logger;
 @inject NavigationManager _navManager
-
+@inject IFeatureFlagService _featureFlagService
 @inherits BaseComponent
 <NotificationComponent @ref="notificationComponent" />
 
@@ -28,7 +28,7 @@
                 <span class="header-icon-wrapper">
                     <Icon IconName="settings" Width="32" Height="32" />
                 </span>
-                <h5 class="header-text">settings</h5>
+                <h5 class="header-text">Settings</h5>
             </div>
             <div class="header-actions">
             </div>
@@ -116,7 +116,29 @@
                                             </div>
                                         </div>
                                     </div>
-
+                                    @if (_featureFlags.Count() > 0)
+                                    {
+                                        <div class="modal-body modal-body-scroll py-4">
+                                            <div class="transaction-info-section">
+                                                <div class="experimental-features mt-2">
+                                                    <h5 class="mb-3">Enable Experimental Features</h5>
+                                                    @foreach (var feature in _featureFlags)
+                                                    {
+                                                        <div class="form-check mb-3">
+                                                            <input class="form-check-input"
+                                                                type="checkbox"
+                                                                id="@feature.Key"
+                                                                checked="@feature.Value"
+                                                                @onchange="(e) => OnFeatureFlagChanged(feature.Key, e.Value is bool value && value)" />
+                                                            <label class="form-check-label" for="@feature.Key">
+                                                                @feature.Key
+                                                            </label>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
                                     <div class="modal-footer border-0 pt-0">
                                         <button class="btn btn-border-success w-100 w-md-auto" @onclick="ChangeNetwork">
                                             Change Network
@@ -370,73 +392,6 @@
 
 </div>
 
-@* Chat Apps *@
-<div class="row mt-4 slide-in">
-    <div class="card card-body">
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div class="d-flex align-items-center">
-                <span class="user-select-none animate-rotate">
-                    <Icon IconName="chat" Height="32" Width="32"></Icon>
-                </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        Chat Applications
-                    </h5>
-                </div>
-            </div>
-        </div>
-        <form @onsubmit="AddChatApp">
-            <div class="input-group mb-3">
-                <input type="text" @bind-value="newChatAppLink" class="form-control" placeholder="Enter new chat app link"
-                       aria-label="Enter new chat app link" aria-describedby="button-addon4">
-                <button class="btn btn-border" type="submit" id="button-addon4">
-                    <Icon IconName="plus" Height="24" Width="24"></Icon>
-                </button>
-            </div>
-        </form>
-        <div class="table-responsive form-control">
-            <table class="table align-items-center mb-0">
-                <thead>
-                    <tr>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Link</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Name</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Default</th>
-                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var chatApp in settingsInfo.ChatApps)
-                    {
-                        <tr>
-                            <td><a href="@chatApp.Url" target="_blank" rel="noopener noreferrer">@chatApp.Url</a></td>
-                            <td>@chatApp.Name</td>
-                            <td>
-                                @if (chatApp.IsPrimary)
-                                {
-                                    <span role="button">
-                                        <Icon IconName="primary" Height="24" Width="24"></Icon>
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span @onclick="() => SetPrimaryChatApp(chatApp)" role="button">
-                                        <Icon IconName="set" Height="24" Width="24"></Icon>
-                                    </span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                <button class="btn btn-border-danger btn-sm" @onclick="() => RemoveChatApp(chatApp.Url)">
-                                    <Icon IconName="delete" Height="20" Width="20" Color="var(--angor-primary)"></Icon>
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
 @* Currency Display Settings *@
 <div class="row mt-4 slide-in">
     <div class="card card-body">
@@ -554,6 +509,7 @@
 
 
 @code {
+
     private string newIndexerLink;
     private string newRelayLink;
     private string newExplorerLink;
@@ -573,7 +529,7 @@
     private string selectedCurrency = "BTC"; // Default to BTC
 
     private SettingsInfo settingsInfo;
-
+    private Dictionary<string, bool> _featureFlags;
     protected override Task OnInitializedAsync()
     {
         // Set active menu
@@ -591,9 +547,15 @@
 
         selectedNetwork = networkType;
 
+        _featureFlags = _featureFlagService.GetAllFeatureFlags();
+
         return base.OnInitializedAsync();
     }
-
+    private void OnFeatureFlagChanged(string key, bool value)
+    {
+        _featureFlagService.SetFeatureFlag(key, value);
+        _featureFlags[key] = value;
+    }
     private void UpdateUI()
     {
         settingsInfo = _clientStorage.GetSettingsInfo();
@@ -756,52 +718,6 @@
         await Refresh(false);
     }
 
-    private async Task AddChatApp()
-    {
-        if (string.IsNullOrWhiteSpace(newChatAppLink))
-        {
-            notificationComponent.ShowErrorMessage("Chat application URL cannot be empty.");
-            return;
-        }
-
-        if (!Uri.TryCreate(newChatAppLink, UriKind.Absolute, out Uri? uri))
-        {
-            notificationComponent.ShowErrorMessage($"Invalid URL: {newChatAppLink}");
-            return;
-        }
-
-        if (uri.Scheme is not ("http" or "https"))
-        {
-            notificationComponent.ShowErrorMessage($"Invalid URL schema. Must be HTTP or HTTPS.");
-            return;
-        }
-
-        newChatAppLink = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
-       
-        if (settingsInfo.ChatApps.Any(a => a.Url == newChatAppLink))
-        {
-            notificationComponent.ShowErrorMessage($"URL already exists: {newChatAppLink}");
-            return;
-        }
-
-        var newChatApp = new SettingsUrl
-        {
-            Url = newChatAppLink,
-            Name = uri.Host,
-            LastCheck = DateTime.UtcNow,
-            Status = UrlStatus.Online,
-            IsPrimary = !settingsInfo.ChatApps.Any(c => c.IsPrimary)
-        };
-
-        settingsInfo.ChatApps.Add(newChatApp);
-
-        _clientStorage.SetSettingsInfo(settingsInfo);
-        notificationComponent.ShowNotificationMessage("Chat application added successfully.");
-        newChatAppLink = string.Empty;
-
-        await Refresh(false);
-    }
-
     private void RemoveIndexer(string url)
     {
         var res = settingsInfo.Indexers.FirstOrDefault(f => f.Url == url);
@@ -865,22 +781,6 @@
         }
     }
 
-    private void RemoveChatApp(string url)
-    {
-        var chatApp = settingsInfo.ChatApps.FirstOrDefault(f => f.Url == url);
-        if (chatApp != null)
-        {
-            settingsInfo.ChatApps.Remove(chatApp);
-
-            if (chatApp.IsPrimary && settingsInfo.ChatApps.Any())
-            {
-                settingsInfo.ChatApps.First().IsPrimary = true;
-            }
-
-            _clientStorage.SetSettingsInfo(settingsInfo);
-        }
-    }
-
     private void SetPrimaryIndexer(SettingsUrl indexer)
     {
         foreach (var idx in settingsInfo.Indexers)
@@ -937,16 +837,6 @@
         StateHasChanged();
     }
 
-    private void SetPrimaryChatApp(SettingsUrl chatApp)
-    {
-        foreach (var app in settingsInfo.ChatApps)
-        {
-            app.IsPrimary = app.Url == chatApp.Url;
-        }
-
-        _clientStorage.SetSettingsInfo(settingsInfo);
-        StateHasChanged();
-    }
 
     private async Task Refresh()
     {
@@ -1039,6 +929,7 @@
             // Update network settings
             _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
             _networkService.AddSettingsIfNotExist();
+            _featureFlags = _featureFlagService.GetAllFeatureFlags();
 
             // Refresh UI data
             networkType = _networkConfiguration.GetNetwork().Name;

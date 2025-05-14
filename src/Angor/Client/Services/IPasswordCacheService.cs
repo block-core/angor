@@ -7,6 +7,8 @@ namespace Angor.Client.Services
         string? Data { get; set; }
         void TryClear();
         void SetTimer(TimeSpan timeSpan);
+        bool UnlockWhileActive { get; set; }
+        void ResetLastSet();
     }
 
     public class PasswordCacheService : IPasswordCacheService
@@ -14,9 +16,14 @@ namespace Angor.Client.Services
         private Timer timer;
 
         private TimeSpan lastSet;
+
+        private TimeSpan unlockDuration;
+
         public string? Data { get; set; }
 
         private TimeSpan oneMin = TimeSpan.FromMinutes(1);
+
+        public bool UnlockWhileActive { get; set; }
 
         public PasswordCacheService()
         {
@@ -25,21 +32,32 @@ namespace Angor.Client.Services
 
         private void Callback(object? state)
         {
-            Data = null;
+            if (DateTime.UtcNow.TimeOfDay - lastSet > unlockDuration)
+            {
+                Data = null;
+            }
         }
         
         public void SetTimer(TimeSpan timeSpan)
         {
-            lastSet = timeSpan;
-            this.timer.Change(timeSpan, timeSpan);
+            unlockDuration = timeSpan;
+            lastSet = DateTime.UtcNow.TimeOfDay;
         }
 
         public void TryClear()
         {
             // if the password is default of 1 min we clear it
-            if (lastSet.Ticks == oneMin.Ticks)
+            if (!UnlockWhileActive && unlockDuration.Ticks == oneMin.Ticks)
             {
                 Data = null;
+            }
+        }
+
+        public void ResetLastSet()
+        {
+            if (UnlockWhileActive)
+            {
+                lastSet = DateTime.UtcNow.TimeOfDay;
             }
         }
     }

@@ -1,7 +1,9 @@
 using Angor.Client;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.Wallet.Infrastructure.History;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Contexts.Wallet.Infrastructure.Impl.History;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Networks;
@@ -31,8 +33,9 @@ public static class WalletContextServices
         services.TryAddSingleton<IIndexerService>(provider => new IndexerService(provider.GetRequiredService<INetworkConfiguration>(), provider.GetRequiredService<IHttpClientFactory>().CreateClient(), provider.GetRequiredService<INetworkService>()));
         services.AddSingleton<IWalletFactory, WalletFactory>();
         services.AddSingleton<IWalletOperations, WalletOperations>();
-        services.AddSingleton<ISensitiveWalletDataProvider, SensitiveWalletDataProvider>();
+        services.TryAddSingleton<ISensitiveWalletDataProvider, SensitiveWalletDataProvider>();
         services.AddSingleton<IWalletStore, WalletStore>();
+        services.AddSingleton<ITransactionHistory, TransactionHistory>();
         services.AddHttpClient();
         services.AddSingleton<ITransactionWatcher, TransactionWatcher>();
         

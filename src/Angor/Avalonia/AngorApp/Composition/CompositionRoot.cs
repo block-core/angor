@@ -28,7 +28,10 @@ public static class CompositionRoot
     {
         var services = new ServiceCollection();
 
-        var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
+        var logger = new LoggerConfiguration()
+            .WriteTo.Console()
+            .MinimumLevel.Debug().CreateLogger();
+        
         RegisterLogger(services, logger);
         services.AddSingleton<Func<BitcoinNetwork>>(() => BitcoinNetwork.Testnet);
 
@@ -58,7 +61,6 @@ public static class CompositionRoot
             .Add<IBrowseSectionViewModel>("Browse", "fa-magnifying-glass")
             .Add<IPortfolioSectionViewModel>("Portfolio", "fa-hand-holding-dollar")
             .Add<IFounderSectionViewModel>("Founder", "fa-money-bills")
-            .Separator()
             .Command("Angor Hub", ReactiveCommand.Create(() => { }), "fa-gear", false)
         );
     }

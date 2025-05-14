@@ -9,6 +9,7 @@ public interface IRelaySubscriptionsHandling
     bool TryAddEoseAction(string subscriptionName, Action action);
     void HandleEoseMessages(NostrEoseResponse _);
     bool RelaySubscriptionAdded(string subscriptionKey);
-    bool TryAddRelaySubscription(string subscriptionKey, IDisposable subscription);
+    bool TryAddRelaySubscription(string subscriptionKey, IDisposable subscription, bool keepActive = false);
+    void CloseSubscription(string subscriptionKey);
     void Dispose();
 }

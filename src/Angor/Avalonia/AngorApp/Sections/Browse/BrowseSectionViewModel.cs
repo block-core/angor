@@ -1,11 +1,9 @@
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Wallet.Application;
 using AngorApp.Features.Invest;
-using AngorApp.Sections.Browse.Details;
 using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
-using Zafiro.Avalonia.Controls.Navigation;
 using Zafiro.Reactive;
 using Zafiro.UI.Navigation;
 
@@ -33,8 +31,11 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
         OpenHub = ReactiveCommand.CreateFromTask(() =>
             uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io")));
         projectsHelper = LoadLatestProjects.ToProperty(this, x => x.Projects);
+        IsLoading = LoadLatestProjects.IsExecuting;
         LoadLatestProjects.Execute().Subscribe();
     }
+
+    public IObservable<bool> IsLoading { get; }
 
     public IProjectLookupViewModel ProjectLookupViewModel { get; }
 

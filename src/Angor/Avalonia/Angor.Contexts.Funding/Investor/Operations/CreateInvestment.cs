@@ -1,17 +1,15 @@
-using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Angor.Shared.ProtocolNew;
-using Angor.Shared.Services;
+using Angor.Shared.Protocol;
 using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 using MediatR;
 
-namespace Angor.Contexts.Funding.Investor;
+namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class CreateInvestment
 {
@@ -36,10 +34,7 @@ public static class CreateInvestment
         IInvestorTransactionActions investorTransactionActions,
         ISeedwordsProvider seedwordsProvider,
         IWalletOperations walletOperations,
-        IDerivationOperations derivationOperations,
-        IEncryptionService encryptionService,
-        ISerializer serializer,
-        IRelayService relayService) : IRequestHandler<CreateInvestmentTransactionRequest, Result<Draft>>
+        IDerivationOperations derivationOperations) : IRequestHandler<CreateInvestmentTransactionRequest, Result<Draft>>
     {
         public async Task<Result<Draft>> Handle(CreateInvestmentTransactionRequest transactionRequest, CancellationToken cancellationToken)
         {

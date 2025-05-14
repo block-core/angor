@@ -58,7 +58,7 @@ public static class ProjectDataExtensions
                     ReleaseDate = stage.ReleaseDate,
                     Amount = stageAmountToRelease,
                     Index = index + 1,
-                    Weight = (double)stageAmountToRelease / data.ProjectInfo.TargetAmount,
+                    RatioOfTotal = (double)stageAmountToRelease / data.ProjectInfo.TargetAmount,
                 };
             })
             .ToList();
