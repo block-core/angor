@@ -4098,6 +4098,31 @@ body.dark .message-item.outgoing .message-bubble {
     background-color: #f44336
 }
 
+.radio-options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.radio-option-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 0.2rem;
+    transition: background-color 0.2s ease-in-out
+}
+
+.radio-option-item .form-check-input {
+    margin-right: 8px; 
+    flex-shrink: 0
+}
+
+.radio-option-item .form-check-label {
+    cursor: pointer;
+    flex-grow: 1;
+    margin-bottom: 0
+}
+
 @-webkit-keyframes spin {
     0% {
         -webkit-transform: rotate(0deg)
