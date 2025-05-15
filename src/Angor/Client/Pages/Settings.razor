@@ -79,7 +79,7 @@
                                     <div class="modal-body modal-body-scroll py-4">
                                         <div class="transaction-info-section">
                                             <div class="alert alert-danger" role="alert">
-                                                <p>This will wipe your wallet!</p>
+                                                <p>Changing these settings will wipe your wallet!</p>
                                             </div>
 
                                             <div class="" role="alert">
@@ -141,7 +141,7 @@
                                     }
                                     <div class="modal-footer border-0 pt-0">
                                         <button class="btn btn-border-success w-100 w-md-auto" @onclick="ChangeNetwork">
-                                            Change Network
+                                            Change Network Settings
                                         </button>
                                     </div>
                                 </div>
@@ -906,6 +906,20 @@
             notificationComponent.ShowErrorMessage("Failed to wipe data: " + e.Message);
         }
     }
+    private void ChangeFeatureFlags()
+    {
+        var newFlags = _featureFlagService.GetAllFeatureFlags();
+
+        foreach (var (key, value) in newFlags)
+        {
+            if (_featureFlags.TryGetValue(key, out var currentValue))
+            {
+                newFlags[key] = currentValue;
+            }
+        }
+        _featureFlags = newFlags;
+        _featureFlagService.SetAllFeatureFlags(_featureFlags);
+    }
 
     private void ChangeNetwork()
     {
@@ -929,7 +943,9 @@
             // Update network settings
             _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
             _networkService.AddSettingsIfNotExist();
-            _featureFlags = _featureFlagService.GetAllFeatureFlags();
+
+            // save the new feature flags if not overridden by network changes
+            ChangeFeatureFlags();
 
             // Refresh UI data
             networkType = _networkConfiguration.GetNetwork().Name;

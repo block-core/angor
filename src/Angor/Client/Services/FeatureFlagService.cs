@@ -31,5 +31,10 @@ public class FeatureFlagService : IFeatureFlagService
         return _storage.getFeatureFlags();
     }
 
+    public void SetAllFeatureFlags(Dictionary<string, bool> featureFlags)
+    {
+        _storage.setFeatureFlags(featureFlags);
+    }
+
     public bool IsFeatureHWSupportEnabled() => IsFeatureEnabled("HW_Support");
 }
