@@ -12,12 +12,13 @@
     <PackageReference Include="HtmlAgilityPack" Version="1.11.71" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
     <PackageReference Include="Microsoft.JSInterop" Version="8.0.11" />
-    <PackageReference Include="NBitcoin" Version="7.0.25" />
-    <PackageReference Include="Nostr.Client" Version="2.0.0" />
+    <PackageReference Include="NBitcoin" Version="7.0.46" />
+    <PackageReference Include="Blockcore.Nostr.Client" Version="2.0.1" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.11" PrivateAssets="all" />
+    <PackageReference Include="HtmlSanitizer" Version="8.0.843" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,8 +29,8 @@
     <PackageReference Update="Microsoft.SourceLink.GitHub" Version="8.0.0" />
   </ItemGroup>
 
-	<ItemGroup>
-		<EmbeddedResource Include="wwwroot\assets\icons\*.svg" />
-	</ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\assets\icons\*.svg" />
+  </ItemGroup>
 
 </Project>

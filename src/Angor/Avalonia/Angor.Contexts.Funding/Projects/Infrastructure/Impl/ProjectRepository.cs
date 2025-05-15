@@ -15,7 +15,7 @@ public class ProjectRepository(
 {
     public Task<Result<Project>> Get(ProjectId id)
     {
-        return FindById(id);
+        return TryGet(id).Bind(maybe => maybe.ToResult("Project not found"));
     }
 
     public Task<IList<Project>> Latest()
@@ -23,10 +23,11 @@ public class ProjectRepository(
         return ProjectsFrom(indexerService.GetLatest()).ToList().ToTask();
     }
 
-    public async Task<Result<Project>> FindById(ProjectId projectId)
+    public Task<Result<Maybe<Project>>> TryGet(ProjectId projectId)
     {
-        var project = (await indexerService.GetProjectByIdAsync(projectId.Value)).AsMaybe();
-        return await project.Map(async data => await ProjectsFrom(new[] { data }.ToObservable()).FirstAsync()).ToResult($"Project {projectId} not Found");
+        return Result.Try(() => indexerService.GetProjectByIdAsync(projectId.Value))
+            .Map(data => data.AsMaybe())
+            .Map(maybe => maybe.Map(async data => await ProjectsFrom(new[]{ data}.ToObservable())));
     }
 
     private IObservable<Project> ProjectsFrom(IObservable<ProjectIndexerData> projectIndexerDatas)

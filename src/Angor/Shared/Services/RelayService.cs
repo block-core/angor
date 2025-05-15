@@ -16,8 +16,10 @@ namespace Angor.Shared.Services
         private readonly INetworkService _networkService;
         private readonly IRelaySubscriptionsHandling _subscriptionsHandling;
         private readonly ISerializer _serializer;
-        
-        
+
+        // https://github.com/block-core/nips/blob/peer-to-peer-decentralized-funding/3030.md
+        public const NostrKind Nip3030NostrKind = (NostrKind)3030;
+
         public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService, IRelaySubscriptionsHandling subscriptionsHanding, ISerializer serializer)
         {
             _logger = logger;
@@ -25,6 +27,11 @@ namespace Angor.Shared.Services
             _networkService = networkService;
             _subscriptionsHandling = subscriptionsHanding;
             _serializer = serializer;
+        }
+
+        public void DisconnectSubscription(string subscription)
+        {
+            _subscriptionsHandling.CloseSubscription(subscription);
         }
 
         public void LookupProjectsInfoByEventIds<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,
@@ -55,7 +62,6 @@ namespace Angor.Shared.Services
             var request = new NostrRequest(subscriptionName, new NostrFilter
             {
                 Ids = nostrEventIds,
-                Kinds = [NostrKind.ApplicationSpecificData]
             });
             
             nostrClient.Send(request);
@@ -86,7 +92,7 @@ namespace Angor.Shared.Services
             nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 Authors = nPubs,
-                Kinds = [NostrKind.ApplicationSpecificData, NostrKind.Metadata],
+                Kinds = [Nip3030NostrKind, NostrKind.ApplicationSpecificData, NostrKind.Metadata],
             }));
         }
 
@@ -118,7 +124,7 @@ namespace Angor.Shared.Services
             return Task.CompletedTask;
         }
 
-        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Func<NostrEvent,Task> onResponseAction, string? senderNpub = null)
+        public Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Func<NostrEvent,Task> onResponseAction, string? senderNpub = null, bool keepActive = false)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
@@ -132,7 +138,7 @@ namespace Angor.Shared.Services
                     .Select(_ => _.Event)
                     .Subscribe(@event => onResponseAction(@event));
 
-                _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
+                _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription, keepActive);
             }
 
             var nostrFilter = new NostrFilter
@@ -219,7 +225,7 @@ namespace Angor.Shared.Services
             
             var content = _serializer.Serialize(project);
             
-            var signed = GetNip78NostrEvent(content)
+            var signed = GetNip3030NostrEvent(content)
                 .Sign(key);
 
             _subscriptionsHandling.TryAddOKAction(signed.Id,action);
@@ -271,11 +277,14 @@ namespace Angor.Shared.Services
             return Task.FromResult(deleteEvent.Id);
         }
         
-        private static NostrEvent GetNip78NostrEvent( string content)
+        private static NostrEvent GetNip3030NostrEvent( string content)
         {
+            // https://github.com/block-core/nips/blob/peer-to-peer-decentralized-funding/3030.md
+
             var ev = new NostrEvent
             {
-                Kind = NostrKind.ApplicationSpecificData,
+                //Kind = NostrKind.ApplicationSpecificData,
+                Kind = Nip3030NostrKind,
                 CreatedAt = DateTime.UtcNow,
                 Content = content
             };

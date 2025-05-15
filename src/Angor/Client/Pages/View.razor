@@ -298,17 +298,22 @@
                             </div>
 
                             <div class="col-md-4">
-                                <div class="stat-card p-3 rounded-3 border hover-effect h-100">
-                                    <div class="d-flex justify-content-between h-100">
-                                        <div>
-                                            <h6 class="text-muted">Total Investors</h6>
-                                            <h4 class="mb-0">@projectStats.TotalInvestors</h4>
-                                        </div>
-                                        <div class="stat-icon">
-                                            <Icon IconName="users" Height="32" Width="32" />
+                                <a href="@investorExplorerLink" target="_blank" rel="noopener noreferrer">
+                                    <div class="stat-card p-3 rounded-3 border hover-effect h-100">
+                                        <div class="d-flex justify-content-between h-100">
+                                            <div>
+                                                <h6 class="text-muted">Total Investors</h6>
+                                                <h4 class="mb-0">@projectStats.TotalInvestors</h4>
+                                                <button class="btn btn-border-success btn-sm mt-2">
+                                                    Investors <Icon IconName="arrow-right" Height="16" Width="16" />
+                                                </button>
+                                            </div>
+                                            <div class="stat-icon">
+                                                <Icon IconName="users" Height="32" Width="32" />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                             </div>
 
                             <div class="col-md-4">
@@ -373,14 +378,19 @@
                         @for (var index = 0; index < project.ProjectInfo.Stages.Count; index++)
                         {
                             var stage = project.ProjectInfo.Stages[index];
-                            var daysUntilStage = (stage.ReleaseDate - currentDate).Days;
+                            var daysUntilStage = (stage.ReleaseDate.Date - currentDate.Date).Days;
+
                             var amountInStage = Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) * stage.AmountToRelease / 100;
                             <tr>
                                 <td>@(index + 1)</td>
                                 <td>@stage.AmountToRelease %</td>
                                 <td>@stage.ReleaseDate.ToString("dd/MM/yyyy")</td>
                                 <td>
-                                    @if (daysUntilStage < 0)
+                                    @if (daysUntilStage == 0)
+                                    {
+                                        <span>Just Released</span>
+                                    }
+                                    else if (daysUntilStage < 0)
                                     {
                                         <span>Released</span>
                                     }
@@ -421,7 +431,7 @@
         <div class="card card-body mt-4">
             @if (founder)
             {
-                <div class="action-card founder-card animate-fade-in">
+                <div class="text-center animate-fade-in">
                     <i class="me-2">
                         <Icon IconName="verified-check" Height="100" Width="100" Class="action-icon" />
                     </i>
@@ -443,7 +453,7 @@
                         </a>
 
                         <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}")
-                           class="btn btn-border animate-scale warning-button @(CanReleaseUnfundedProject() ? "" : "disabled")">
+                           class="btn btn-border-danger animate-scale @(CanReleaseUnfundedProject() ? "" : "disabled")">
                             <i class="me-2">
                                 @if (CanReleaseUnfundedProject())
                                 {
@@ -471,7 +481,7 @@
                     <h3 class="mt-4">Investment Active</h3>
                     <p class="action-text">
                         You are part of this project's success!
-                        <a href="@myProjectExplorerLink" target="_blank" class="d-block mt-2" rel="noopener noreferrer">View Transaction Details</a>
+                        <a href="@myProjectExplorerLink" target="_blank" class="d-block mt-2">View Transaction Details</a>
                     </p>
                     <div class="d-flex justify-content-center item-center mt-4">
 
@@ -545,66 +555,72 @@
 
                     <div class="input-group">
                         <InputText id="NostrNpubPublicKey" @bind-Value="@Npub" class="form-control" placeholder="@Npub" readonly />
+                        <button @onclick="() => CopyToClipboard(Npub)" class="btn btn-border">
+                            <Icon IconName="copy" />
+                        </button>
                         <button @onclick="OpenInHUBAsync" class="btn btn-border">
-                            <i>
-                                <Icon IconName="link" />
-                            </i>
+                            <Icon IconName="link" />
                         </button>
                     </div>
                     <br />
                     <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                     <div class="input-group">
                         <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                        @*<button @onclick="OpenInHUBAsync" class="btn btn-border">
-                           <Icon IconName="link"></Icon>
-                       </button> *@
+                        <button @onclick="() => CopyToClipboard(project.ProjectInfo.NostrPubKey)" class="btn btn-border">
+                            <Icon IconName="copy" />
+                        </button>
                     </div>
-                    
+
                     @if (invested)
                     {
-                        var invpub = (project as InvestorProject).InvestorNPub;
-                        var invNpub = NostrHelper.ConvertHexToNpub(invpub);
+                        var invPubKey = (project as InvestorProject).InvestorNPub;
+                        var invNpub = NostrHelper.ConvertHexToNpub(invPubKey);
 
-                        <label for="NostrNpubPublicKey" class="form-label mt-6">Investor NOSTR public key (npub)</label>
+                        <label for="InvestorNostrNpubPublicKey" class="form-label mt-4">Investor NOSTR public key (npub)</label>
 
                         <div class="input-group">
-                            <InputText id="NostrNpubPublicKey" @bind-Value="@invNpub" class="form-control" placeholder="@Npub" readonly />
-                            <button @onclick="OpenInHUBAsync" class="btn btn-border">
-                                <i>
-                                    <Icon IconName="link"/>
-                                </i>
+                            <InputText id="InvestorNostrNpubPublicKey" @bind-Value="@invNpub" class="form-control" placeholder="@invNpub" readonly />
+                            <button @onclick="() => CopyToClipboard(invNpub)" class="btn btn-border">
+                                <Icon IconName="copy" />
                             </button>
                         </div>
-                        <br/>
-                        <label for="NostrHexPublicKey" class="form-label">Investor NOSTR public key (hex)</label>
+                        <br />
+                        <label for="InvestorNostrHexPublicKey" class="form-label">Investor NOSTR public key (hex)</label>
                         <div class="input-group">
-                            <InputText id="NostrHexPublicKey" @bind-Value="@invpub" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                            @*<button @onclick="OpenInHUBAsync" class="btn btn-border">
-                                <Icon IconName="link"></Icon>
-                            </button> *@
+                            <InputText id="InvestorNostrHexPublicKey" @bind-Value="@invPubKey" class="form-control" placeholder="@invPubKey" readonly />
+                            <button @onclick="() => CopyToClipboard(invPubKey)" class="btn btn-border">
+                                <Icon IconName="copy" />
+                            </button>
                         </div>
-
                     }
-                   
-                    <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                        <button @onclick="OpenInHUBAsync" class="btn btn-border-success mt-4 mr-1">
+
+                    <div class="action-buttons d-flex flex-wrap justify-content-center mt-4">
+                        <button @onclick="OpenInHUBAsync" class="btn btn-border-success m-2">
                             <Icon IconName="link" Class="me-2" />
                             Open in Angor Hub
                         </button>
-                       
+
+                        @if (invested)
+                        {
+                            <button @onclick="OpenMessagingWithFounder" class="btn btn-border-success m-2">
+                                <Icon IconName="chat" Class="me-2" />
+                                Message Project Founder
+                            </button>
+                        }
+
                         @if (founder)
                         {
-                            <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning mt-4 mr-1">
-                                <Icon IconName="edit" Class="me-2"/>
+                            <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning m-2">
+                                <Icon IconName="edit" Class="me-2" />
                                 Edit project profile
                             </button>
                         }
 
                         @if (invested || founder)
                         {
-                            <button @onclick="ShowNsecAsync" class="btn btn-border-danger mt-4">
-                                <Icon IconName="shield" Class="me-2"/>
-                                View nsec
+                            <button @onclick="ShowNsecAsync" class="btn btn-border-danger m-2">
+                                <Icon IconName="shield" Class="me-2" />
+                                View Private Keys (nsec)
                             </button>
                         }
                     </div>
@@ -625,66 +641,87 @@
 
                     @if (!string.IsNullOrEmpty(NostrHexSecKey) || !string.IsNullOrEmpty(NostrNsecSecKey))
                     {
-                        <br />
-                        <label for="NostrNsecSecKey" class="form-label mt-4"> @(invested ? "Investor" : "Project") NOSTR private key (nsec)</label>
-                        <div class="input-group">
-                            <InputText id="NostrNsecSecKey" @bind-Value="NostrNsecSecKey" class="form-control nsec-box" readonly />
-                            <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border">
-                                <i>
+                        <div class="card mt-4 p-3 border border-danger">
+                            <h6 class="mb-3 text-danger"><Icon IconName="shield" Class="me-2" />@(invested ? "Investor" : "Project") NOSTR Private Keys</h6>
+                            <label for="NostrNsecSecKey" class="form-label">NOSTR private key (nsec)</label>
+                            <div class="input-group mb-3">
+                                <input type="@(showPrivateKeys ? "text" : "password")" id="NostrNsecSecKey" value="@NostrNsecSecKey" 
+                                    class="form-control nsec-box" readonly />
+                                <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
+                                    <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" />
+                                </button>
+                                <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border">
                                     <Icon IconName="copy" />
-                                </i>
-                            </button>
-                        </div>
+                                </button>
+                            </div>
 
-                        <br />
-                        <label for="NostrHexSecKey" class="form-label mt-4">@(invested ? "Investor" : "Project") NOSTR private key (hex)</label>
-                        <div class="input-group">
-                            <InputText id="NostrHexSecKey" @bind-Value="NostrHexSecKey" class="form-control nsec-box" readonly />
-                            <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border">
-                                <i>
+                            <label for="NostrHexSecKey" class="form-label">NOSTR private key (hex)</label>
+                            <div class="input-group">
+                                <input type="@(showPrivateKeys ? "text" : "password")" id="NostrHexSecKey" value="@NostrHexSecKey"
+                                    class="form-control nsec-box" readonly />
+                                <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
+                                    <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" />
+                                </button>
+                                <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border">
                                     <Icon IconName="copy" />
-                                </i>
-                            </button>
+                                </button>
+                            </div>
+                            <div class="text-center mt-3">
+                                <small class="text-danger">
+                                    <Icon IconName="warning" Class="me-1" /> Never share your private keys with anyone.
+                                </small>
+                            </div>
                         </div>
                     }
-
                 </div>
             }
 
-            <br />
-            <h6>Relays</h6>
-            @foreach (var relay in NostrClients)
-            {
-                <a href="@relay" target="_blank" rel="noopener noreferrer">
-                    <div class="form-control mt-2 d-flex align-items-center">
-                        <i class="me-2">
-                            <Icon IconName="menu_open" />
-                        </i>
-                        <p class="card-text ms-2">@relay</p>
+            <div class="mt-4">
+                <h6>Relays</h6>
+                @foreach (var relay in NostrClients)
+                {
+                    <a href="@relay" target="_blank" rel="noopener noreferrer">
+                        <div class="form-control mt-2 d-flex align-items-center">
+                            <i class="me-2">
+                                <Icon IconName="menu_open" />
+                            </i>
+                            <p class="card-text ms-2">@relay</p>
+                        </div>
+                    </a>
+                }
+
+                @if (founder)
+                {
+                    <div class="action-buttons d-flex justify-content-center item-center mt-4">
+                        <button @onclick="RepublishToNostr" class="btn btn-border mt-4" disabled="@isRepublishing">
+                            @if (isRepublishing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Republishing...</span>
+                            }
+                            else
+                            {
+                                <Icon IconName="refresh" Class="me-2" />
+                                <span>Republish to Nostr Relays</span>
+                            }
+                        </button>
                     </div>
-                </a>
-            }
-            
-            @if (founder)
-            {
-                <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                    <button @onclick="RepublishToNostr" class="btn btn-border mt-4" disabled="@isRepublishing">
-                        @if (isRepublishing)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                            <span>Republishing...</span>
-                        }
-                        else
-                        {
-                            <Icon IconName="refresh" Class="me-2"/>
-                            <span>Republish to Nostr Relays</span>
-                        }
-                    </button>
-                </div>
-            }
+                }
+            </div>       
         </div>
     }
 </div>
+
+@if (showMessageModal && invested)
+{
+    <MessageComponent 
+        OtherUserPubkeyHex="@project.ProjectInfo.NostrPubKey"
+        CurrentUserPrvKeyHex="@NostrHexSecKey"
+        MessageTitle="Founder"
+        OnClose="@OnMessageModalClose"
+        OnNsecRequest="@ShowNsecAsync"
+        OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
+}
 
 @code {
     [Parameter] public string ProjectId { get; set; }
@@ -695,6 +732,7 @@
 
     string myProjectExplorerLink;
     string projectExplorerLink;
+    string investorExplorerLink;
 
     private string NostrNsecSecKey { get; set; } = string.Empty;
     private string NostrHexSecKey { get; set; } = string.Empty;
@@ -740,6 +778,13 @@
 
     private List<string> NostrClients = new();
 
+    private bool showPrivateKeys = false;
+    private bool showMessageModal = false;
+    private string currentInvestorHexPub = "";
+    private string currentInvestorNpub = "";
+    private string founderNpub = ""; // Add this variable
+    private string npubValue = ""; // Add this variable
+
     protected override async Task OnInitializedAsync()
     {
         NavMenuState.SetActivePage("browse");
@@ -750,7 +795,7 @@
 
         try
         {
-            NostrClients = _NetworkService.GetRelays().Select(_ => _.Url.ToString()).ToList();
+            NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
 
             project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
             if (project != null)
@@ -850,6 +895,7 @@
         if (!string.IsNullOrEmpty(project?.CreationTransactionId))
         {
             projectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{project.CreationTransactionId}";
+            investorExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/angor/projects/{project.ProjectInfo.ProjectIdentifier}";
         }
         else
         {
@@ -932,7 +978,7 @@
         }
     }
 
-    private async Task GenerateNsec()
+    private async Task GenerateNsec(Action? onSuccessCallback = null)
     {
         isGeneratingNsec = true;
         errorMessage = string.Empty;
@@ -946,12 +992,16 @@
                 var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
                 NostrHexSecKey = Encoders.Hex.EncodeData(nostrKey.ToBytes());
                 NostrNsecSecKey = NostrHelper.ConvertHexToNsec(NostrHexSecKey)!;
+                
+                // Execute the callback if provided and keys were generated successfully
+                onSuccessCallback?.Invoke();
+                
                 StateHasChanged();
             }
         }
         catch (InvalidOperationException ex)
         {
-            HandlePasswordError();
+            HandlePasswordError(); // Keep HandlePasswordError as is, it will call GenerateNsec again without callback
             Logger.LogWarning(ex, "InvalidOperationException occurred during NSEC generation.");
         }
         catch (Exception ex)
@@ -965,7 +1015,6 @@
             StateHasChanged();
         }
     }
-
 
     private async Task CopyNsecSecKeyToClipboardAsync()
     {
@@ -996,12 +1045,12 @@
         errorMessage = string.Empty;
         StateHasChanged();
 
-        // Reopen password prompt
+        // Reopen password prompt - no specific callback needed here after generation
         passwordComponent.ShowPassword(async () =>
         {
             isGeneratingNsec = true;
             StateHasChanged();
-            await GenerateNsec();
+            await GenerateNsec(); // Call GenerateNsec without a callback
         });
     }
 
@@ -1027,6 +1076,43 @@
 
         await Js.InvokeVoidAsync("window.open", url, "_blank");
     }
+    
+    private void OpenMessagingWithFounder()
+    {
+        if (project?.ProjectInfo != null && project is InvestorProject invProject)
+        {
+            Action showMessageAction = () => {
+                // Set message parameters
+                founderNpub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey) ?? 
+                              project.ProjectInfo.NostrPubKey;
+                npubValue = NostrHelper.ConvertHexToNpub(invProject.InvestorNPub) ?? invProject.InvestorNPub;
+                
+                // Show message component
+                showMessageModal = true;
+                InvokeAsync(StateHasChanged); // Use InvokeAsync for UI updates from callbacks
+            };
+
+            if (string.IsNullOrEmpty(NostrHexSecKey))
+            {
+                // Private key not available, show password prompt first
+                // Pass the showMessageAction as a callback to GenerateNsec
+                passwordComponent.ShowPassword(async () => { await GenerateNsec(showMessageAction); });
+            }
+            else
+            {
+                // Private key is already available, show message directly
+                showMessageAction();
+            }
+        }
+    }
+
+    private void OnMessageModalClose()
+    {
+        showMessageModal = false;
+        NostrHexSecKey = String.Empty;
+        NostrNsecSecKey = String.Empty;
+        StateHasChanged();
+    }
 
     public MarkupString ConvertToMarkupString(string input)
     {
@@ -1047,7 +1133,6 @@
         return project.ProjectInfo.StartDate <= DateTime.UtcNow
                && projectStats?.TotalRaised < project.ProjectInfo.TargetAmount;
     }
-
     private async Task RepublishToNostr()
     {
         if (!founder)
@@ -1090,7 +1175,7 @@
                 });
 
             var projectInfoResult = await _RelayService.AddProjectAsync(
-                project.ProjectInfo, 
+                project.ProjectInfo,
                 nostrKeyHex,
                 _ =>
                 {
@@ -1121,3 +1206,4 @@
         }
     }
 }
+ 

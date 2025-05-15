@@ -5,10 +5,9 @@ namespace Angor.Client.Models;
 
 public class FlattenedProjectTest
 {
-    private const string displayName = "display_name";
-    
     public string Name { get; set; }
     public string Website { get; set; }
+    public string DisplayName { get; set; }
     public string About { get; set; }
     public string Picture { get; set; }
     public string Nip05 { get; set; }
@@ -35,7 +34,7 @@ public class FlattenedProjectTest
         return new ProjectMetadata
         {
             About = About, Banner = Banner, Lud16 = Lud16, Name = Name, Nip05 = Nip05, Nip57 = Nip57, Picture = Picture,
-            Website = Website
+            Website = Website, DisplayName = DisplayName
         };
     }
 
@@ -44,7 +43,7 @@ public class FlattenedProjectTest
         if (p is null)
             return;
         About = p.About; Banner = p.Banner; Lud16 = p.Lud16; Name = p.Name; Nip05 = p.Nip05; Nip57 = p.Nip57;
-        Picture = p.Picture; Website = p.Website;
+        Picture = p.Picture; Website = p.Website; DisplayName = p.DisplayName;
     }
     
     public ProjectInfo GetProjectInfo()

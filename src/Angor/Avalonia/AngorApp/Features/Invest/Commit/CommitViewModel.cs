@@ -12,7 +12,7 @@ public class CommitViewModel : ReactiveObject, IStep, ICommitViewModel
 {
     public CommitViewModel(IInvestmentAppService investmentAppService, UIServices uiServices, IWallet wallet, long satsToInvest, IProject project, CreateInvestment.Draft draft)
     {
-        RequestInvestment = ReactiveCommand.CreateFromTask(() => investmentAppService.RequestInvestment(wallet.Id.Value, new ProjectId(project.Id), draft));
+        RequestInvestment = ReactiveCommand.CreateFromTask(() => investmentAppService.Invest(wallet.Id.Value, new ProjectId(project.Id), draft));
         RequestInvestment.HandleErrorsWith(uiServices.NotificationService, "Investment request failed");
         Totalfee = draft.TotalFee.Sats;
         SatsToInvest = satsToInvest;

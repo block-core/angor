@@ -37,7 +37,7 @@ builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
 builder.Services.AddScoped<NavMenuState>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ICurrencyRateService, CurrencyRateService>();
-
+builder.Services.AddScoped<IFeatureFlagService, FeatureFlagService>();
 //builder.Services.AddScoped<IIndexerService, IndexerService>();
 builder.Services.AddScoped<IIndexerService, MempoolSpaceIndexerApi>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
@@ -61,12 +61,15 @@ builder.Services.AddSingleton<INostrCommunicationFactory, NostrCommunicationFact
 builder.Services.AddScoped<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
 builder.Services.AddSingleton<IPasswordCacheService, PasswordCacheService>();
 builder.Services.AddTransient<IHtmlStripperService, HtmlStripperService>();
+builder.Services.AddTransient<IHtmlSanitizerService, HtmlSanitizerService>();
 
 builder.Services.AddScoped<NostrConversionHelper>();
 
 builder.Services.AddScoped<IconService>();
 
 builder.Services.AddScoped<IWalletUIService, WalletUIService>();
+
+builder.Services.AddScoped<IMessageService, MessageService>();
 
 // to change culture dynamically during startup,
 // set <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>

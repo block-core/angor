@@ -1,12 +1,13 @@
+using Newtonsoft.Json;
 using Nostr.Client.Messages.Metadata;
 
 namespace Angor.Shared.Models;
 
 public class ProjectMetadata
 {
-    private const string displayName = "display_name";
-    
     public string Name { get; set; }
+    [JsonProperty("display_name")]
+    public string DisplayName { get; set; }
     public string Website { get; set; }
     public string About { get; set; }
     public string Picture { get; set; }
@@ -25,12 +26,11 @@ public class ProjectMetadata
             About = nostrMetadata.About,
             Banner = nostrMetadata.Banner,
             Picture = nostrMetadata.Picture,
-            Name = nostrMetadata.Name
+            Name = nostrMetadata.Name,
+            Website = nostrMetadata.Website,
+            DisplayName = nostrMetadata.DisplayName
         };
-        if (nostrMetadata.AdditionalData.ContainsKey(nameof(project.Website)))
-            project.Website = nostrMetadata.AdditionalData[nameof(project.Website)].ToString();
-        if (nostrMetadata.AdditionalData.ContainsKey(displayName))
-            project.Name = nostrMetadata.AdditionalData[displayName].ToString();
+
         return project;
     }
 
@@ -45,12 +45,10 @@ public class ProjectMetadata
             Nip05 = Nip05,
             Nip57 = Nip57,
             Picture = Picture,
-            AdditionalData = new (){{displayName,Name}}
+            Website = Website,
+            DisplayName = DisplayName
         };
 
-        if (Website != null) 
-            nostr.AdditionalData.Add("website",Website);
-        
         return nostr;
     }
 }
