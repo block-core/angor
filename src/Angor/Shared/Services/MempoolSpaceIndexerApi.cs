@@ -314,6 +314,24 @@ public class MempoolSpaceIndexerApi : IIndexerService
         return utxoDataList;
     }
 
+    public async Task<List<QueryTransaction>?> FetchAddressHistoryAsync(string address, int limit, int offset) //TODO check the paging (I think it is 50 by default 
+    {
+        var indexer = _networkService.GetPrimaryIndexer();
+
+        var txsUrl = $"{MempoolApiRoute}/address/{address}/txs";
+
+        var response = await _httpClient.GetAsync(indexer.Url + txsUrl);
+        _networkService.CheckAndHandleError(response);
+
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException(response.ReasonPhrase);
+
+        var trx = await response.Content.ReadFromJsonAsync<List<MempoolTransaction>>(new JsonSerializerOptions()
+            { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+
+        return trx?.Select(t => MapToQueryTransaction(t)).ToList() ?? new List<QueryTransaction>();
+    }
+
     public async Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations)
     {
         var indexer = _networkService.GetPrimaryIndexer();
@@ -392,30 +410,76 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
         await PopulateSpentMissingData(spends, trx);
 
-        return new QueryTransaction
-        {
-            TransactionId = trx.Txid,
-            Timestamp = trx.Status.BlockTime,
-            Inputs = trx.Vin.Select((x, i) => new QueryTransactionInput
-            {
-                InputIndex = x.Vout,
-                InputTransactionId = x.Txid,
-                WitScript = new WitScript(x.Witness.Select(s => Encoders.Hex.DecodeData(s)).ToArray()).ToScript().ToHex(),
-            }).ToList(),
-            Outputs = trx.Vout
-                .Select((x, i) => new QueryTransactionOutput
-                {
-                    Address = x.ScriptpubkeyAddress, //TODO check that this is correct
-                    Balance = x.Value,
-                    Index = i,
-                    ScriptPubKey = x.Scriptpubkey,
-                    OutputType = x.ScriptpubkeyType,
-                    ScriptPubKeyAsm = x.ScriptpubkeyAsm,
-                    SpentInTransaction = spends.ElementAtOrDefault(i)?.Txid
-                }).ToList()
-        };
+        return MapToQueryTransaction(trx, spends);
+        
+        // return new QueryTransaction
+        // {
+        //     TransactionId = trx.Txid,
+        //     Timestamp = trx.Status.BlockTime,
+        //     Inputs = trx.Vin.Select((x, i) => new QueryTransactionInput
+        //     {
+        //         InputIndex = x.Vout,
+        //         InputTransactionId = x.Txid,
+        //         WitScript = new WitScript(x.Witness.Select(s => Encoders.Hex.DecodeData(s)).ToArray()).ToScript().ToHex(),
+        //     }).ToList(),
+        //     Outputs = trx.Vout
+        //         .Select((x, i) => new QueryTransactionOutput
+        //         {
+        //             Address = x.ScriptpubkeyAddress, //TODO check that this is correct
+        //             Balance = x.Value,
+        //             Index = i,
+        //             ScriptPubKey = x.Scriptpubkey,
+        //             OutputType = x.ScriptpubkeyType,
+        //             ScriptPubKeyAsm = x.ScriptpubkeyAsm,
+        //             SpentInTransaction = spends.ElementAtOrDefault(i)?.Txid
+        //         }).ToList()
+        // };
     }
 
+    private QueryTransaction MapToQueryTransaction(MempoolTransaction x, List<Outspent>? spends = null)
+    {
+        return new QueryTransaction
+        {
+            BlockHash = x.Status.BlockHash,
+            BlockIndex = x.Status.BlockHeight,
+            Size = x.Size,
+            // Confirmations = null,
+            Fee = x.Fee,
+            // HasWitness = null,
+            Inputs = x.Vin.Select((vin, i) => new QueryTransactionInput
+            {
+               // CoinBase = null,
+                InputAddress = vin.Prevout.ScriptpubkeyAddress,
+                InputAmount = vin.Prevout.Value,
+                InputIndex = vin.Vout,
+                InputTransactionId = vin.Txid,
+                WitScript = new WitScript(vin.Witness.Select(s => Encoders.Hex.DecodeData(s)).ToArray()).ToScript()
+                    .ToHex(),
+                SequenceLock = vin.Sequence.ToString(),
+                ScriptSig = vin.Scriptsig,
+                ScriptSigAsm = vin.Asm
+            }).ToList(),
+            LockTime = x.Locktime.ToString(),
+            Outputs = x.Vout.Select((vout, i) =>
+                new QueryTransactionOutput
+                {
+                    Address = vout.ScriptpubkeyAddress,
+                    Balance = vout.Value,
+                    Index = i,
+                    ScriptPubKey = vout.Scriptpubkey,
+                    OutputType = vout.ScriptpubkeyType,
+                    ScriptPubKeyAsm = vout.ScriptpubkeyAsm,
+                    SpentInTransaction = spends?.ElementAtOrDefault(i)?.Txid ?? string.Empty
+                }).ToList(),
+            Timestamp = x.Locktime,
+            TransactionId = x.Txid,
+            TransactionIndex = null,
+            Version = (uint)x.Version,
+            VirtualSize = x.Size,
+            Weight = x.Weight
+        };
+    }
+    
     private async Task PopulateSpentMissingData(List<Outspent> outspents, MempoolTransaction mempoolTransaction)
     {
         var indexer = _networkService.GetPrimaryIndexer();
