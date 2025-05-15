@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 using Nostr.Client.Requests;
+using Nostr.Client.Responses;
 
 namespace Angor.Shared.Services
 {
@@ -20,7 +21,7 @@ namespace Angor.Shared.Services
             _subscriptionsHanding = subscriptionsHanding;
         }
 
-        public (DateTime,string) RequestInvestmentSigs(string encryptedContent, string investorNostrPrivateKey, string founderNostrPubKey)
+        public (DateTime,string) RequestInvestmentSigs(string encryptedContent, string investorNostrPrivateKey, string founderNostrPubKey, Action<NostrOkResponse> okResponse)
         {
             var sender = NostrPrivateKey.FromHex(investorNostrPrivateKey);
 
@@ -40,10 +41,13 @@ namespace Angor.Shared.Services
 
             var signed = ev.Sign(sender);
 
+            if(!_subscriptionsHanding.TryAddOKAction(signed.Id!,okResponse))
+                throw new Exception("Failed to add OK action");
+            
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
             nostrClient.Send(new NostrEventRequest(signed));
 
-            return (signed.CreatedAt!.Value, signed.Id);
+            return (signed.CreatedAt!.Value, signed.Id!);
         }
 
         public void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action)

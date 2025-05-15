@@ -7,13 +7,12 @@
 @using Money = Blockcore.NBitcoin.Money
 @using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
 @using Angor.Shared.Services
-@using Nostr.Client.Keys
+@using Nostr.Client.Keys //TODO remove this dependency
 @using System.Diagnostics
 @using Angor.Client.Models
 @using Blockcore.Networks
 @using System.Text.Json
 @using Angor.Shared.Utilities
-@using Angor.Client.Shared
 @using Angor.Shared.Protocol
 
 @inherits BaseComponent
@@ -929,7 +928,20 @@ else
                 nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey,
                 sigJson);
 
-            var investmentSigsRequest = _SignService.RequestInvestmentSigs(encryptedContent, nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey);
+            var investmentSigsRequest = _SignService.RequestInvestmentSigs(encryptedContent, nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey,
+                response =>
+                {
+                    if (response.Accepted)
+                    {
+                        _Logger.LogInformation("Signature request sent to the founder on relay {CommunicatorName} successfully", response.CommunicatorName);
+                        notificationComponent.ShowNotificationMessage("Signature request sent to the founder",5);
+                    }
+                    else
+                    {
+                        _Logger.LogWarning("Signature request failed to send to the founder on relay {CommunicatorName}", response.CommunicatorName);
+                        notificationComponent.ShowErrorMessage($"Failed to send the request to the {response.CommunicatorName} relay");
+                    }
+                });
 
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
@@ -950,8 +962,6 @@ else
                 investorProject.SignaturesInfo.TimeOfSignatureRequest.Value,
                 investorProject.SignaturesInfo.SignatureRequestEventId,
                 signatures => HandleSignatureReceivedAsync(nostrPrivateKeyHex, signatures));
-
-            notificationComponent.ShowNotificationMessage("Signature request sent", 5);
         }
         catch (Exception e)
         {
