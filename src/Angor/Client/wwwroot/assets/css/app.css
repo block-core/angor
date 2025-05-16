@@ -4123,6 +4123,10 @@ body.dark .message-item.outgoing .message-bubble {
     margin-bottom: 0
 }
 
+#NostrMetadataAbout{
+    min-height:130px;
+}
+
 @-webkit-keyframes spin {
     0% {
         -webkit-transform: rotate(0deg)

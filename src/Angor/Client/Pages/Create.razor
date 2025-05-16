@@ -121,12 +121,18 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="NostrMetadataBanner" class="form-label">Banner Image Url</label>
+                                <label for="NostrMetadataBanner" class="form-label d-flex align-items-center">
+                                    Banner Image Url
+                                    <span class="ms-2">(Recommended size: 820×312px)</span>
+                                </label>
                                 <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated" />
                             </div>
 
                             <div class="mb-3">
-                                <label for="NostrMetadataPicture" class="form-label">Avatar Image Url</label>
+                                <label for="NostrMetadataPicture" class="form-label d-flex align-items-center">
+                                    Avatar Image Url
+                                    <span class="ms-2">(Recommended size: 170×170px)</span>
+                                </label>
                                 <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated" />
                             </div>
                         </div>
