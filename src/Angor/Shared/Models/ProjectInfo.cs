@@ -9,9 +9,9 @@ public class ProjectInfo
     public string FounderKey { get; set; }
     public string FounderRecoveryKey { get; set; }
     public string ProjectIdentifier { get; set; }
-    
     public string NostrPubKey { get; set; }
     public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
     public int PenaltyDays { get; set; }
     public DateTime ExpiryDate { get; set; }
     public long TargetAmount { get; set; }
