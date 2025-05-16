@@ -1,10 +1,9 @@
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;
-using Zafiro.Avalonia.Controls.Wizards.Builder;
 
 namespace AngorApp.Sections.Wallet.CreateAndRecover.Steps.Passphrase.Recover;
 
-public partial class PassphraseRecoverViewModel : ReactiveValidationObject, IStep, IPassphraseRecoverViewModel
+public partial class PassphraseRecoverViewModel : ReactiveValidationObject, IPassphraseRecoverViewModel
 {
     [Reactive] private string? passphrase;
     public IObservable<bool> IsValid => Observable.Return(true);

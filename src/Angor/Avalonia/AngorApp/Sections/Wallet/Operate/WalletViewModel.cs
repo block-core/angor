@@ -1,14 +1,14 @@
 using System.Windows.Input;
 using Angor.Contexts.Wallet.Application;
-using Angor.Contexts.Wallet.Domain;
 using AngorApp.UI.Controls.Common.Success;
 using AngorApp.UI.Services;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI.SourceGenerators;
-using Zafiro.Avalonia.Controls.Wizards.Builder;
-using Zafiro.Avalonia.Dialogs;
+using Zafiro.UI.Wizards.Slim.Builder;
+using Zafiro.Avalonia.Dialogs.Wizards.Slim;
 using Zafiro.UI;
+using Zafiro.UI.Commands;
 using AddressAndAmountViewModel = AngorApp.Sections.Wallet.Operate.Send.AddressAndAmount.AddressAndAmountViewModel;
 using TransactionDraftViewModel = AngorApp.Sections.Wallet.Operate.Send.TransactionDraft.TransactionDraftViewModel;
 
@@ -43,10 +43,10 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
 
     public ICommand Send => ReactiveCommand.CreateFromTask(async () =>
     {
-        var wizard = WizardBuilder.StartWith(() => new AddressAndAmountViewModel(Wallet))
-            .Then(model => new TransactionDraftViewModel(Wallet.Id, walletAppService, new SendAmount("Test", model.Amount!.Value, model.Address!), uiServices))
-            .Then(_ => new SuccessViewModel("Transaction sent!", "Success"))
-            .FinishWith(_ => Unit.Default);
+        var wizard = WizardBuilder.StartWith(() => new AddressAndAmountViewModel(Wallet), model => ReactiveCommand.Create(() => Result.Success((model.Amount, model.Address)), model.IsValid).Enhance("Next"), "Amount and address")
+            .Then(sendData => new TransactionDraftViewModel(Wallet.Id, walletAppService, new SendAmount("Test", sendData.Amount.Value, sendData.Address), uiServices), model => model.Confirm.Enhance("Confirm"), "Summary")
+            .Then(_ => new SuccessViewModel("Transaction sent!"), _ => ReactiveCommand.Create(() => Result.Success(Unit.Default)).Enhance("Close"), "Transaction sent")
+            .WithCompletionFinalStep();
 
         return await uiServices.Dialog.ShowWizard(wizard, "Send");
     });

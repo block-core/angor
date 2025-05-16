@@ -1,13 +1,8 @@
 using System.Linq;
-using System.Reactive.Linq;
-using Angor.UI.Model;
-using CSharpFunctionalExtensions;
-using ReactiveUI.Validation.Extensions;
-using Zafiro.Avalonia.Controls.Wizards.Builder;
 
 namespace AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsConfirmation;
 
-public class SeedWordsConfirmationViewModel : ISeedWordsConfirmationViewModel, IStep
+public class SeedWordsConfirmationViewModel : ISeedWordsConfirmationViewModel
 {
     public SeedWordsConfirmationViewModel(SeedWords seedWords)
     {
@@ -29,9 +24,6 @@ public class SeedWordsConfirmationViewModel : ISeedWordsConfirmationViewModel, I
         public IObservable<bool> IsValid => Observable.Return(true);
     #endif
     
-    public IObservable<bool> IsBusy => Observable.Return(false);
-    public bool AutoAdvance => false;
     public SeedWords SeedWords { get; }
     public IEnumerable<Challenge> Challenges { get; }
-    public Maybe<string> Title => "Confirm Seed Words";
 }

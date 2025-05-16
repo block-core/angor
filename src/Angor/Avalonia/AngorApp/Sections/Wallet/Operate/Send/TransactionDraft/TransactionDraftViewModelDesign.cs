@@ -5,10 +5,8 @@ namespace AngorApp.Sections.Wallet.Operate.Send.TransactionDraft;
 
 public class TransactionDraftViewModelDesign : ITransactionDraftViewModel
 {
-    public IObservable<bool> IsBusy { get; set; }
     public ReactiveCommand<Unit, Result<TxId>> Confirm => ReactiveCommand.Create(() => Result.Success(default(TxId)));
     public long? Feerate { get; set; }
-    public long? Sats { get; set; } = 1;
 
     public IEnumerable<IFeeratePreset> Presets
     {
@@ -24,7 +22,6 @@ public class TransactionDraftViewModelDesign : ITransactionDraftViewModel
     }
 
     public IAmountUI? Fee { get; }
-
-    public IObservable<bool> IsValid { get; } = Observable.Return(true);
-    public bool AutoAdvance => false;
+    public IObservable<bool> IsSending { get; set; }
+    public IObservable<bool> IsCalculating { get; set; }
 }

@@ -6,7 +6,7 @@ namespace AngorApp.Sections.Founder;
 
 public class FounderSectionViewModelDesign : IFounderSectionViewModel
 {
-    public IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; } = EnhancedCommand.Create(ReactiveCommand.Create(() => Result.Success(Enumerable.Empty<ProjectDto>())));
+    public IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; } = ReactiveCommand.Create(() => Result.Success(Enumerable.Empty<ProjectDto>())).Enhance();
 
     public IEnumerable<IFounderProjectViewModel> Projects { get; } = new List<IFounderProjectViewModel>()
     {

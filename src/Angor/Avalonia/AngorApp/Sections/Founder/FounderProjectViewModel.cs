@@ -18,7 +18,7 @@ public class FounderProjectViewModel(INavigator navigation, ProjectDto dto, Func
     public Uri? Picture { get; } = dto.Picture;
     public Uri? Banner { get; } = dto.Banner;
     public long TargetAmount { get; } = dto.TargetAmount;
-    public IEnhancedCommand GoToDetails => EnhancedCommand.Create(ReactiveCommand.CreateFromTask(() => navigation.Go(() => detailsFactory(dto))));
+    public IEnhancedCommand GoToDetails => ReactiveCommand.CreateFromTask(() => navigation.Go(() => detailsFactory(dto))).Enhance();
     public DateTime StartingDate { get; } = dto.StartingDate;
     public TimeSpan PenaltyDuration { get; } = dto.PenaltyDuration;
     public string NostrNpubKey { get; } = dto.NostrNpubKey;

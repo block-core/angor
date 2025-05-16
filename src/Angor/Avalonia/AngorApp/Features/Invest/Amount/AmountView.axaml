@@ -22,7 +22,7 @@
     </UserControl.Styles>
 
     <Panel>
-        <StackPanel Spacing="20" IsVisible="{Binding !IsBusy^}">
+        <StackPanel Spacing="20">
             <StackPanel Spacing="10" Grid.IsSharedSizeScope="True">
 
                 <controls:AmountControl Satoshis="{Binding Amount}">
@@ -42,11 +42,6 @@
                     </controls:IconButton.Flyout>
                 </controls:IconButton>
             </StackPanel>
-        </StackPanel>
-        <StackPanel Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsBusy^}">
-            <TextBlock Text="Loading wallet properties" TextAlignment="Center" />
-            <TextBlock Text="Please wait..." TextAlignment="Center" />
-            <fa:ProgressRing IsIndeterminate="True" Height="120" Width="120" />
         </StackPanel>
     </Panel>
 </UserControl>

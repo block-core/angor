@@ -12,13 +12,13 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel
 {
     public FounderSectionViewModel(UIServices uiServices, IProjectAppService projectAppService, Func<ProjectDto, IFounderProjectViewModel> projectViewModelFactory)
     {
-        LoadProjects = EnhancedCommand.Create(ReactiveCommand.CreateFromTask(() =>
+        LoadProjects = ReactiveCommand.CreateFromTask(() =>
         {
             return uiServices.WalletRoot.GetDefaultWalletAndActivate()
                 .Bind(maybeWallet => maybeWallet
                     .ToResult("Please, create a wallet first")
                     .Bind(wallet => projectAppService.GetFounderProjects(wallet.Id.Value)));
-        }));
+        }).Enhance();
         
         LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Failed to get pending investments");
         LoadProjects.Successes()

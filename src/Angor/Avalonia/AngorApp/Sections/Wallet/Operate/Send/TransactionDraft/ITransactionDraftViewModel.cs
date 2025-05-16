@@ -1,13 +1,14 @@
 using Angor.Contexts.Wallet.Domain;
 using AngorApp.UI.Controls;
-using Zafiro.Avalonia.Controls.Wizards.Builder;
+using Zafiro.UI.Wizards.Classic.Builder;
 
 namespace AngorApp.Sections.Wallet.Operate.Send.TransactionDraft;
 
-public interface ITransactionDraftViewModel : IStep
+public interface ITransactionDraftViewModel
 {
-    ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
     public long? Feerate { get; set; }
     public IEnumerable<IFeeratePreset> Presets { get; }
     public IAmountUI? Fee { get; }
+    public IObservable<bool> IsSending { get; }
+    public IObservable<bool> IsCalculating { get; }
 }

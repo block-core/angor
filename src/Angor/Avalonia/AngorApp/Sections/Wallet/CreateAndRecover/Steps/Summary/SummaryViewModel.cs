@@ -4,13 +4,12 @@ using Angor.Contexts.Wallet.Domain;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;
-using Zafiro.Avalonia.Controls.Wizards.Builder;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
 
 namespace AngorApp.Sections.Wallet.CreateAndRecover.Steps.Summary;
 
-public partial class SummaryViewModel : ReactiveValidationObject, IStep, ISummaryViewModel
+public partial class SummaryViewModel : ReactiveValidationObject, ISummaryViewModel
 {
     private readonly IWalletAppService walletAppService;
     private readonly IWalletBuilder walletBuilder;

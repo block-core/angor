@@ -1,9 +1,6 @@
-using System.Linq;
-using Zafiro.Avalonia.Controls.Wizards.Builder;
-
 namespace AngorApp.Features.Invest.Amount;
 
-public interface IAmountViewModel : IStep
+public interface IAmountViewModel
 {
     public long? Amount { get; set; }
     IProject Project { get; }

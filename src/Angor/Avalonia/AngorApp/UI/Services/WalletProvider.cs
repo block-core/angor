@@ -28,7 +28,7 @@ public class WalletProvider(IWalletAppService walletAppService, ITransactionWatc
             {
                 if (result.IsSuccess)
                 {
-                    runningWallets.Add(walletId, dynamicWallet);
+                    runningWallets.TryAdd(walletId, dynamicWallet);
                     tcs.SetResult(Result.Success<IWallet>(dynamicWallet));
                 }
                 else
