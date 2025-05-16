@@ -6,8 +6,6 @@
 @using Angor.Shared
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin.DataEncoders
-@using Nostr.Client.Messages
-@using Angor.Client.Shared
 
 @inject ILogger<Investor> _Logger
 @inject NavMenuState NavMenuState
@@ -21,8 +19,6 @@
 @inject ISignService _SignService
 @inject ISerializer serializer
 @inject IEncryptionService _encryptionService
-
-@inject IJSRuntime JS
 
 @inherits BaseComponent
 
@@ -61,7 +57,7 @@
                     </button>
                     <button class="btn btn-border-warning test-coins-btn h-100" @onclick="NavigateToPenalties" data-toggle="tooltip" title="Penalties return control to investors but put Bitcoin on hold for a penalty duration.">
                         <i>
-                            <Icon IconName="sad-circle" Width="24" Height="24"></Icon>
+                            <Icon IconName="unlock" Width="24" Height="24"></Icon>
                         </i>
                         <span class="button-text ms-2">Penalties</span>
                     </button>
@@ -514,10 +510,10 @@
     //TODO David check if we should replace the logic to get all projects first and then get signatures for them?
     private void FetchProjectsData(params string[] eventIds)
     {
-        _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(x =>
+        _RelayService.LookupProjectsInfoByEventIds<ProjectInfo?>(projectInfo =>
             {
-                var projectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
-                                  throw new Exception("The project info must be in the application specific data event");
+                if(projectInfo == null) 
+                    throw new Exception("The project info must be in the application specific data event");
 
                 if (projects.Any(x => x.ProjectInfo.ProjectIdentifier == projectInfo.ProjectIdentifier))
                     return;
@@ -570,14 +566,10 @@
         DateTime? createdAt = null;
         string? eventId = null;
 
-        _RelayService.LookupProjectsInfoByEventIds<NostrEvent>(
+        _RelayService.LookupProjectsInfoByEventIds<ProjectInfo>(
             x =>
             {
-                if (investorProject.ProjectInfo == null)
-                {
-                    investorProject.ProjectInfo = serializer.Deserialize<ProjectInfo>(x.Content!) ??
-                                                  throw new Exception("The project info must be in the application specific data event");
-                }
+                investorProject.ProjectInfo ??= x;
             },
             () =>
             {

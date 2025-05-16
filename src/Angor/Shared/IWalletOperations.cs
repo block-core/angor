@@ -8,6 +8,10 @@ namespace Angor.Shared;
 public interface IWalletOperations
 {
     string GenerateWalletWords();
+
+    PsbtData CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null);
+    TransactionInfo SignPsbt(PsbtData psbtData, WalletWords walletWords);
+
     Task<OperationResult<Transaction>> SendAmountToAddress(WalletWords walletWords, SendInfo sendInfo);
     AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords);
     Task UpdateDataForExistingAddressesAsync(AccountInfo accountInfo);
