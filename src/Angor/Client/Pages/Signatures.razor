@@ -20,6 +20,7 @@
 @inject ILogger<Signatures> Logger
 @inject IDerivationOperations DerivationOperations
 @inject IClientStorage Storage;
+@inject ICacheStorage SessionStorage;
 @inject ISignService SignService
 @inject IInvestorTransactionActions InvestorTransactionActions
 @inject IFounderTransactionActions FounderTransactionActions
@@ -361,7 +362,7 @@
             await FetchPendingSignatures(FounderProject);
 
             investments = await indexerService.GetInvestmentsAsync(FounderProject.ProjectInfo.ProjectIdentifier);
-
+            
         }
         Logger.LogDebug("End of OnInitializedAsync");
     }
@@ -769,7 +770,12 @@
         founderNpub = NostrHelper.ConvertHexToNpub(FounderProject.ProjectInfo.NostrPubKey) ??
                       FounderProject.ProjectInfo.NostrPubKey;
 
+        // Remove this npub from the HashSet of pubkeys with messages
         pubkeyWithMessages.Remove(investorNostrPubKey);
+
+        var lastScanList = SessionStorage.GetFounderMessagesTimes();
+        lastScanList[investorNostrPubKey] = DateTime.UtcNow;
+        SessionStorage.SetFounderMessagesTimes(lastScanList);
 
         // Show Message
         ShowMessageAndCheckPassword();
@@ -799,7 +805,6 @@
             var words = await passwordComponent.GetWalletAsync();
             var founderNostrPrivateKey = DerivationOperations.DeriveProjectNostrPrivateKey(words, FounderProject.ProjectInfo.FounderKey);
             currentUserPrivateKeyHex = Encoders.Hex.EncodeData(founderNostrPrivateKey.ToBytes());
-
             StateHasChanged();
         }
         catch (Exception ex)
@@ -861,25 +866,24 @@
 
     protected async Task ScanForDmMessages()
     {
+        var lastScanList = SessionStorage.GetFounderMessagesTimes();
+
         foreach (var signatureRequest in signaturesRequests)
         {
-            if (!pubkeyWithMessages.Contains(signatureRequest.investorNostrPubKey))
-            {
-                await _RelayService.LookupDirectMessagesForPubKeyAsync(
-                    FounderProject.ProjectInfo.NostrPubKey,
-                    FounderProject.LastRequestForMessagesTime?.AddSeconds(1),
-                    1,
-                    _ =>
+            await _RelayService.LookupDirectMessagesForPubKeyAsync(
+                FounderProject.ProjectInfo.NostrPubKey,
+                lastScanList.TryGet(signatureRequest.investorNostrPubKey)?.AddSeconds(1),
+                1,
+                _ =>
+                {
+                    if (!string.IsNullOrEmpty(_.Pubkey))
                     {
-                        if (!string.IsNullOrEmpty(_.Pubkey))
-                            pubkeyWithMessages.Add(_.Pubkey);
-                        return Task.CompletedTask;
-                    }, new[] { signatureRequest.investorNostrPubKey });
-            }
-        }
+                        pubkeyWithMessages.Add(_.Pubkey);
+                    }
+                    return Task.CompletedTask;
+                }, new[] { signatureRequest.investorNostrPubKey });
 
-        FounderProject.LastRequestForMessagesTime = DateTime.UtcNow;
-        Storage.UpdateFounderProject(FounderProject);
+        }
     }
 
     private string GetShortenedNpub(string npub)
