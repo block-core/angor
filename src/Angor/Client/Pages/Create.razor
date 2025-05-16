@@ -1705,7 +1705,7 @@
             ("calendar", "Start date", $"{project.ProjectInfo.StartDate:dd/MM/yyyy} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days","text-warning"),
             ("calendar", "End date", $"{project.ProjectInfo.EndDate:dd/MM/yyyy} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days","text-warning"),
             ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate:dd/MM/yyyy} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days","text-warning"),
-            ("sad-circle", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days","text-warning")
+            ("unlock", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days","text-warning")
         };
     }
 
