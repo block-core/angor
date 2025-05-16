@@ -121,12 +121,12 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="NostrMetadataBanner" class="form-label">Banner</label>
+                                <label for="NostrMetadataBanner" class="form-label">Banner Image Url</label>
                                 <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated" />
                             </div>
 
                             <div class="mb-3">
-                                <label for="NostrMetadataPicture" class="form-label">Image</label>
+                                <label for="NostrMetadataPicture" class="form-label">Avatar Image Url</label>
                                 <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated" />
                             </div>
                         </div>
@@ -252,7 +252,7 @@
                             <label for="startDate" class="form-label mb-0 fw-semibold">Start Date</label>
                         </div>
                         <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period begins (automatically set to today).</p>
-                        <div class="form-control disabled">@DateTime.Today.ToString("dd/MM/yyyy")</div>
+                        <div class="form-control disabled">@DateTime.Today</div>
                         <input type="hidden" @bind="project.ProjectInfo.StartDate" />
                     </div>
 
@@ -263,9 +263,6 @@
                             <label for="endDate" class="form-label mb-0 fw-semibold">End Date</label>
                         </div>
                         <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period ends (must be before first stage date).</p>
-  
-
-
                             <div class="input-group">
                                  <InputDate id="endDate" @bind-Value="project.ProjectInfo.EndDate" class="form-control" placeholder="Select end date" title="Investment end date" disabled="@nostrApplicationSpecificDataCreated" @onchange="ValidateEndDate" />
                                 <button  type="button" class="btn btn-border-success" onclick="document.querySelector('input[type=date]:not(:disabled)').showPicker()">
@@ -273,8 +270,6 @@
                                 </button>
  
                             </div>
-
-
                         @if (endDateError)
                         {
                             <div class="text-danger mt-1">End date must be before the first stage date</div>
@@ -304,7 +299,7 @@
                             <label for="expiryDate" class="form-label mb-0 fw-semibold">Expiry Date</label>
                         </div>
                         <p class="form-text text-muted mt-0 mb-2 small">Emergency date when all remaining funds can be released in case of project abandonment. Automatically set to 60 days after the last stage.</p>
-                        <div class="form-control disabled">@CalculateExpiryDate().ToString("dd/MM/yyyy")</div>
+                        <div class="form-control disabled">@CalculateExpiryDate()</div>
                         <input type="hidden" @bind="project.ProjectInfo.ExpiryDate" />
                     </div>
                 </div>
@@ -884,6 +879,8 @@
     private readonly FeeData feeData = new();
 
     private FounderProject project = new();
+
+    private bool endDateError = false;
 
     private readonly Dictionary<string, (int[] Percentages, int IntervalDays)> presets = new()
     {
@@ -1654,8 +1651,7 @@
     {
         var random = new Random();
 
-        // Set random photos for testnet
-        if (string.IsNullOrEmpty(project.Metadata.Banner))
+         if (string.IsNullOrEmpty(project.Metadata.Banner))
         {
             project.Metadata.Banner = spacePhotos[random.Next(spacePhotos.Length)];
         }
@@ -1707,10 +1703,7 @@
         };
     }
 
-    // Variable to track end date validation error
-    private bool endDateError = false;
 
-    // Validates that End Date is before first stage
     private void ValidateEndDate()
     {
         if (project.ProjectInfo.Stages.Any())
@@ -1726,12 +1719,10 @@
             }
         }
 
-        // Update hidden expiry date field
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
         StateHasChanged();
     }
 
-    // Calculate expiry date as 60 days after the last stage
     private DateTime CalculateExpiryDate()
     {
         if (project.ProjectInfo.Stages.Any())
@@ -1740,7 +1731,6 @@
             return lastStageDate.AddDays(60);
         }
 
-        // Default to 60 days after start date if no stages
         return project.ProjectInfo.StartDate.AddDays(60);
     }
 
