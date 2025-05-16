@@ -1702,8 +1702,8 @@
         return new List<(string, string, string, string, bool)>
         {
             ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}", "text-success", true),
-            ("calendar", "Start date", $"{project.ProjectInfo.StartDate} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days", "text-warning", false),
-            ("calendar", "End date", $"{project.ProjectInfo.EndDate} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days", "text-warning", false),
+            ("calendar", "Funding start date", $"{project.ProjectInfo.StartDate} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days", "text-warning", false),
+            ("calendar", "Funding end date", $"{project.ProjectInfo.EndDate} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days", "text-warning", false),
             ("unlock", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days", "text-warning", false),
             ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days", "text-warning", false)
         };
