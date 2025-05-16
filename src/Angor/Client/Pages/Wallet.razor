@@ -2013,6 +2013,9 @@ else
     {
         userVerificationInputs[wordIndex] = suggestion;
         showSuggestions[wordIndex] = false;
+        
+        invalidWordIndices[wordIndex] = false;
+        
         ValidateWordInput();
         StateHasChanged();
     }
