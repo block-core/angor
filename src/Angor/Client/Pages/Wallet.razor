@@ -1190,18 +1190,17 @@ else
             currentStep--;
         }
     }
-    private bool AnyWordInvalid() => invalidWordIndices.Values.Any(v => v);
-
-    private bool CanProceedToNextStep()
+    private bool AnyWordInvalid() => invalidWordIndices.Values.Any(v => v);    private bool CanProceedToNextStep()
     {
-        return currentStep switch
+        bool baseCondition = currentStep switch
         {
             1 => !string.IsNullOrWhiteSpace(newWalletWords) && (isNewWallet ? backupConfirmation : true),
-            2 => isNewWallet ? verificationPassed : true,
+            2 => isNewWallet ? verificationPassed && !AnyWordInvalid() : true,
             3 => true,
             _ => false
-        } 
-       // && !AnyWordInvalid();
+        };
+        
+        return baseCondition;
     }
 
     private bool CanCreateWallet()
