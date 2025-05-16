@@ -1285,6 +1285,9 @@ else
             var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
             currentUserPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
             hasMessges = false;
+            var investorProject = project as InvestorProject;
+            investorProject.LastRequestForMessagesTime = DateTime.UtcNow;
+            storage.UpdateInvestmentProject(investorProject);
             StateHasChanged();
         }
         catch (Exception ex)
@@ -1355,10 +1358,6 @@ else
 
                     return Task.CompletedTask;
                 }, new[] { project.ProjectInfo.NostrPubKey });
-
-
-            investorProject.LastRequestForMessagesTime = DateTime.UtcNow;
-            storage.UpdateInvestmentProject(investorProject);
         }
     }
 }

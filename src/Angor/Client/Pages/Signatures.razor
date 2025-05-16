@@ -599,31 +599,6 @@
             });
     }
 
-    HashSet<string> pubkeyWithMessages = new();
-
-    protected async Task ScanForDmMessages()
-    {
-        foreach (var signatureRequest in signaturesRequests)
-        {
-            if (!pubkeyWithMessages.Contains(signatureRequest.investorNostrPubKey))
-            {
-                await _RelayService.LookupDirectMessagesForPubKeyAsync(
-                    FounderProject.ProjectInfo.NostrPubKey,
-                    FounderProject.LastRequestForMessagesTime?.AddSeconds(1),
-                    1,
-                    _ =>
-                    {
-                        if (!string.IsNullOrEmpty(_.Pubkey))
-                            pubkeyWithMessages.Add(_.Pubkey);
-                        return Task.CompletedTask;
-                    }, new[] { signatureRequest.investorNostrPubKey });
-            }
-        }
-
-        FounderProject.LastRequestForMessagesTime = DateTime.UtcNow;
-        Storage.UpdateFounderProject(FounderProject);
-    }
-
     protected async Task ApproveSignatureCheckPassword(SignatureItem signature)
     {
         if (passwordComponent.HasPassword())
@@ -880,6 +855,31 @@
         {
             notificationComponent.ShowErrorMessage("Failed to retrieve NSEC: " + e.Message);
         }
+    }
+
+    HashSet<string> pubkeyWithMessages = new();
+
+    protected async Task ScanForDmMessages()
+    {
+        foreach (var signatureRequest in signaturesRequests)
+        {
+            if (!pubkeyWithMessages.Contains(signatureRequest.investorNostrPubKey))
+            {
+                await _RelayService.LookupDirectMessagesForPubKeyAsync(
+                    FounderProject.ProjectInfo.NostrPubKey,
+                    FounderProject.LastRequestForMessagesTime?.AddSeconds(1),
+                    1,
+                    _ =>
+                    {
+                        if (!string.IsNullOrEmpty(_.Pubkey))
+                            pubkeyWithMessages.Add(_.Pubkey);
+                        return Task.CompletedTask;
+                    }, new[] { signatureRequest.investorNostrPubKey });
+            }
+        }
+
+        FounderProject.LastRequestForMessagesTime = DateTime.UtcNow;
+        Storage.UpdateFounderProject(FounderProject);
     }
 
     private string GetShortenedNpub(string npub)
