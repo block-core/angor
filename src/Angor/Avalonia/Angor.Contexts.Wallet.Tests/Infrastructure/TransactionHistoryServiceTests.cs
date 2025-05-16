@@ -1,5 +1,4 @@
 using Angor.Contexts.Wallet.Domain;
-using Angor.Contexts.Wallet.Infrastructure.History;
 using Angor.Contexts.Wallet.Infrastructure.Impl.History;
 using Angor.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,15 +21,7 @@ public class TransactionHistoryServiceTests(ITestOutputHelper outputHelper)
         
         Assert.True(getAddressesResult.IsSuccess);
     }
-    
-    [Fact]
-    public async Task Get_transactionIds()
-    {
-        var sut = CreateSut();
-        var getAddressesResult = await sut.GetTransactions("tb1qp8mux3kkqzxys60eu8r867kyvf9p67vuj6mkl2");
-        
-        Assert.True(getAddressesResult.IsSuccess);
-    }
+
     
     [Fact]
     public async Task Get_transactions()

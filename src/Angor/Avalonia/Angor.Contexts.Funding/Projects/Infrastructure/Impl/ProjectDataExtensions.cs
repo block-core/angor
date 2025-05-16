@@ -34,11 +34,15 @@ public static class ProjectDataExtensions
 
             Picture = string.IsNullOrWhiteSpace(data.NostrMetadata.Picture)
                 ? null
-                : new Uri(data.NostrMetadata.Picture),
+                : Uri.TryCreate(data.NostrMetadata.Picture, UriKind.RelativeOrAbsolute, out var pictureUri)
+                    ? pictureUri
+                    : null,
 
             Banner = string.IsNullOrWhiteSpace(data.NostrMetadata.Banner)
                 ? null
-                : new Uri(data.NostrMetadata.Banner),
+                : Uri.TryCreate(data.NostrMetadata.Banner, UriKind.RelativeOrAbsolute, out var bannerUri)
+                    ? bannerUri
+                    : null,
 
             TargetAmount = data.ProjectInfo.TargetAmount,
             StartingDate = data.ProjectInfo.StartDate,
@@ -46,7 +50,9 @@ public static class ProjectDataExtensions
             
             InformationUri = string.IsNullOrWhiteSpace(data.NostrMetadata.Website)
                 ? null
-                : new Uri(data.NostrMetadata.Website)
+                : Uri.TryCreate(data.NostrMetadata.Website, UriKind.RelativeOrAbsolute, out var uri)
+                    ? uri
+                    : null,
         };
 
         project.Stages = data.ProjectInfo.Stages

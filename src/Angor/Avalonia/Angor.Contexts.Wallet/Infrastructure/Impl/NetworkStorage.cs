@@ -15,7 +15,7 @@ public class NetworkStorage : INetworkStorage
                 {
                     Name = "test",
                     IsPrimary = true,
-                    Url = "https://tbtc.indexer.angor.io",
+                    Url = "https://mempool.thedude.pro",
                 }
             },
             Relays = new List<SettingsUrl>()

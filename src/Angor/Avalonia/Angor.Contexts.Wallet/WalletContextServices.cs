@@ -30,7 +30,9 @@ public static class WalletContextServices
         services.AddSingleton<INetworkConfiguration>(networkConfiguration);
         services.AddSingleton<INetworkService, NetworkService>();
         services.AddSingleton<INetworkStorage, NetworkStorage>();
-        services.TryAddSingleton<IIndexerService>(provider => new IndexerService(provider.GetRequiredService<INetworkConfiguration>(), provider.GetRequiredService<IHttpClientFactory>().CreateClient(), provider.GetRequiredService<INetworkService>()));
+        //TODO change the call to use the factory
+        services.TryAddScoped<HttpClient>(x => x.GetRequiredService<IHttpClientFactory>().CreateClient());
+        services.TryAddSingleton<IIndexerService,MempoolSpaceIndexerApi>();
         services.AddSingleton<IWalletFactory, WalletFactory>();
         services.AddSingleton<IWalletOperations, WalletOperations>();
         services.TryAddSingleton<ISensitiveWalletDataProvider, SensitiveWalletDataProvider>();

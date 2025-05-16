@@ -1,14 +1,11 @@
 using Angor.Contexts.Funding;
-using Angor.Contexts.Funding.Projects.Infrastructure;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Integration.WalletFunding;
 using Angor.Contexts.Wallet;
 using Angor.Contexts.Wallet.Domain;
-using Angor.Contexts.Wallet.Infrastructure;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using AngorApp.Composition.Registrations;
-using AngorApp.Design;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder;
 using AngorApp.Sections.Home;
