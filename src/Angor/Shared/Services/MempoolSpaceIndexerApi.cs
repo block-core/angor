@@ -314,12 +314,15 @@ public class MempoolSpaceIndexerApi : IIndexerService
         return utxoDataList;
     }
 
-    public async Task<List<QueryTransaction>?> FetchAddressHistoryAsync(string address, int limit, int offset) //TODO check the paging (I think it is 50 by default 
+    public async Task<List<QueryTransaction>?> FetchAddressHistoryAsync(string address, string? afterTrxId = null) //TODO check the paging (I think it is 50 by default 
     {
         var indexer = _networkService.GetPrimaryIndexer();
 
         var txsUrl = $"{MempoolApiRoute}/address/{address}/txs";
 
+        if (!string.IsNullOrEmpty(afterTrxId))
+            txsUrl += $"?after_txid={afterTrxId}";
+        
         var response = await _httpClient.GetAsync(indexer.Url + txsUrl);
         _networkService.CheckAndHandleError(response);
 
@@ -471,7 +474,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
                     ScriptPubKeyAsm = vout.ScriptpubkeyAsm,
                     SpentInTransaction = spends?.ElementAtOrDefault(i)?.Txid ?? string.Empty
                 }).ToList(),
-            Timestamp = x.Locktime,
+            Timestamp = x.Status.BlockTime,
             TransactionId = x.Txid,
             TransactionIndex = null,
             Version = (uint)x.Version,

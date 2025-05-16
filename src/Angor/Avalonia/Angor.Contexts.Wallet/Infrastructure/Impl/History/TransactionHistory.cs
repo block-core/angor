@@ -27,10 +27,9 @@ public class TransactionHistory(
         });
     }
     
-    private Task<Result<List<QueryTransaction>>> LookupAddressTransactions(string address, int offset = 0,
-        int limit = 50)
+    private Task<Result<List<QueryTransaction>>> LookupAddressTransactions(string address)
     {
-        return Result.Try(() => indexerService.FetchAddressHistoryAsync(address, offset, limit))
+        return Result.Try(() => indexerService.FetchAddressHistoryAsync(address)) //TODO handle paging with sending the last received transaciton id
             .Map(txns => txns ?? new List<QueryTransaction>());
     }
 

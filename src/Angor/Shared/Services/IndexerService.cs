@@ -145,7 +145,7 @@ namespace Angor.Shared.Services
             return utxo;
         }
 
-        public Task<List<QueryTransaction>?> FetchAddressHistoryAsync(string address, int limit, int offset)
+        public Task<List<QueryTransaction>?> FetchAddressHistoryAsync(string address, string? afterTrxId)
         {
             throw new NotImplementedException();
         }
