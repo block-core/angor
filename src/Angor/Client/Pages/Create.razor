@@ -449,7 +449,7 @@
             <div class="row g-4 mt-0">
                 @foreach (var info in GetAdditionalProjectInfo())
                 {
-                    <div class="col-md-6 col-12">
+                    <div class="@(info.fullWidth ? "col-12" : "col-md-6 col-12")">
                         <div class="stat-card p-3 rounded-3 border hover-effect">
                             <div class="d-flex justify-content-between">
                                 <div>
@@ -484,7 +484,7 @@
                             <Icon IconName="calendar" Height="32" Width="32" />
                         </div>
                         <div class="stage-info">
-                            <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
+                            <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate) - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
                         </div>
                     </div>
                 </div>
@@ -745,13 +745,13 @@
                                 <div class="col-md-6">
                                     <div class="info-card h-100">
                                         <div class="info-label">Start Date</div>
-                                        <div class="info-value">@project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") (in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days)</div>
+                                        <div class="info-value">@project.ProjectInfo.StartDate) (in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days)</div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="info-card h-100">
                                         <div class="info-label">Expiry Date</div>
-                                        <div class="info-value text-warning">@project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy") (in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days)</div>
+                                        <div class="info-value text-warning">@project.ProjectInfo.ExpiryDate) (in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days)</div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -800,7 +800,7 @@
                                             <Icon IconName="calendar" Height="32" Width="32" />
                                         </div>
                                         <div class="stage-info">
-                                            <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate.ToString("dd/MM/yyyy") - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
+                                            <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate) - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
                                         </div>
                                     </div>
                                 </div>
@@ -1697,18 +1697,17 @@
         };
     }
 
-    private IEnumerable<(string IconName, string Label, string Value, string color)> GetAdditionalProjectInfo()
+    private IEnumerable<(string IconName, string Label, string Value, string color, bool fullWidth)> GetAdditionalProjectInfo()
     {
-        return new List<(string, string, string, string)>
+        return new List<(string, string, string, string, bool)>
         {
-            ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}","text-success"),
-            ("calendar", "Start date", $"{project.ProjectInfo.StartDate:dd/MM/yyyy} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days","text-warning"),
-            ("calendar", "End date", $"{project.ProjectInfo.EndDate:dd/MM/yyyy} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days","text-warning"),
-            ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate:dd/MM/yyyy} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days","text-warning"),
-            ("unlock", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days","text-warning")
+            ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}", "text-success", true),
+            ("calendar", "Start date", $"{project.ProjectInfo.StartDate} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days", "text-warning", false),
+            ("calendar", "End date", $"{project.ProjectInfo.EndDate} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days", "text-warning", false),
+            ("unlock", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days", "text-warning", false),
+            ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days", "text-warning", false)
         };
     }
-
 
     private void ValidateEndDate()
     {
