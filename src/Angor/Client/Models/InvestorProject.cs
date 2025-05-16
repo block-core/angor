@@ -31,6 +31,8 @@ public class InvestorProject : Project
 
     public string AdditionalNpub { get; set; }
 
+    public DateTime? LastRequestForMessagesTime { get; set; }
+
     public bool WaitingForFounderResponse()
     {
         return ReceivedFounderSignatures() == false && SignaturesInfo?.TimeOfSignatureRequest != null;

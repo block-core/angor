@@ -443,7 +443,14 @@ else
                         </button>
                         <button class="btn btn-border-success ms-2" @onclick="ShowMessageWithPassword">
                             <Icon IconName="chat" Width="16" Height="16" class="me-1" />
-                            <span class="button-text ms-2">Message</span>
+                            @if (hasMessges)
+                            {
+                                <span class="button-text ms-2">Pending Message</span>
+                            }
+                            else
+                            {
+                                <span class="button-text ms-2">Message</span>
+                            }
                         </button>
                     </div>
                 </div>
@@ -631,6 +638,8 @@ else
             if (passwordComponent.HasPassword())
             {
                 await ScanForPendingSignatures();
+
+                await ScanForDmMessages();
             }
             else
             {
@@ -1275,6 +1284,7 @@ else
             var words = await passwordComponent.GetWalletAsync();
             var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
             currentUserPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
+            hasMessges = false;
             StateHasChanged();
         }
         catch (Exception ex)
@@ -1321,4 +1331,34 @@ else
         }
     }
 
+    bool hasMessges = false;
+   
+    protected async Task ScanForDmMessages()
+    {
+        if (project is InvestorProject)
+        {
+            var investorProject = project as InvestorProject;
+
+            await _RelayService.LookupDirectMessagesForPubKeyAsync(
+                investorProject.InvestorNPub,
+                investorProject.LastRequestForMessagesTime?.AddSeconds(1),
+                1,
+                _ =>
+                {
+                    if (!string.IsNullOrEmpty(_.Pubkey))
+                    {
+                        hasMessges = true;
+                        InvokeAsync(StateHasChanged);
+                    }
+
+                    InvokeAsync(StateHasChanged);
+
+                    return Task.CompletedTask;
+                }, new[] { project.ProjectInfo.NostrPubKey });
+
+
+            investorProject.LastRequestForMessagesTime = DateTime.UtcNow;
+            storage.UpdateInvestmentProject(investorProject);
+        }
+    }
 }

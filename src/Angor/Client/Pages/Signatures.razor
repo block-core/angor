@@ -212,7 +212,7 @@
                                                     <button class="btn btn-sm btn-border-success animate-scale"
                                                             @onclick="() => ShowMessageModal(signature.investorNostrPubKey)"
                                                             aria-label="Message investor">
-                                                        @if (pubkeyWithMessages.ContainsKey(signature.investorNostrPubKey))
+                                                        @if (pubkeyWithMessages.Contains(signature.investorNostrPubKey))
                                                         {
                                                             <Icon IconName="chat" Width="16" Height="16" Class="me-1" />
                                                             <p>Has messages</p>
@@ -599,21 +599,25 @@
             });
     }
 
-    Dictionary<string, string> pubkeyWithMessages = new();
+    HashSet<string> pubkeyWithMessages = new();
 
     protected async Task ScanForDmMessages()
     {
         foreach (var signatureRequest in signaturesRequests)
         {
-            await _RelayService.LookupDirectMessagesForPubKeyAsync(
-                FounderProject.ProjectInfo.NostrPubKey,
-                FounderProject.LastRequestForMessagesTime?.AddSeconds(1),
-                1,
-                _ =>
-                {
-                    pubkeyWithMessages.TryAdd(_.Pubkey, String.Empty);
-                    return Task.CompletedTask;
-                }, new[] { signatureRequest.investorNostrPubKey });
+            if (!pubkeyWithMessages.Contains(signatureRequest.investorNostrPubKey))
+            {
+                await _RelayService.LookupDirectMessagesForPubKeyAsync(
+                    FounderProject.ProjectInfo.NostrPubKey,
+                    FounderProject.LastRequestForMessagesTime?.AddSeconds(1),
+                    1,
+                    _ =>
+                    {
+                        if (!string.IsNullOrEmpty(_.Pubkey))
+                            pubkeyWithMessages.Add(_.Pubkey);
+                        return Task.CompletedTask;
+                    }, new[] { signatureRequest.investorNostrPubKey });
+            }
         }
 
         FounderProject.LastRequestForMessagesTime = DateTime.UtcNow;
