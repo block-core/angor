@@ -6,6 +6,7 @@
 @using Angor.Shared
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin.DataEncoders
+@using Nostr.Client.Messages.Direct
 
 @inject ILogger<Investor> _Logger
 @inject NavMenuState NavMenuState
@@ -259,6 +260,21 @@
                                     }
                                 </div>
                             </div>
+                       
+                            <div class="stat-row">
+                                <span class="stat-label">Messages</span>
+                                <div class="stat-value-group">
+                                    @if (pubkeyWithMessages.Contains(project.InvestorNPub))
+                                    {
+                                        <span class="status-badge status-success">Pending Messages</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-inactive">None</span>
+                                    }
+                                </div>
+                            </div>
+
                         </div>
                         <div class="project-actions d-flex flex-column flex-lg-row gap-2">
                             @if (hasInvestmentReleaseRequests && project.UnfundedReleaseTransactionId == null)
@@ -335,6 +351,7 @@
             var refreshTask = RefreshBalance();
             CheckSignatureFromFounder();
             CheckReleaseFromFounder();
+            await ScanForDmMessages();
             await refreshTask;
         }
     }
@@ -504,7 +521,7 @@
                 {
                     _Logger.LogError(e, "failed to get handle investment list event from relay");
                 }
-            }, storageAccountKey);
+            }, new[] { storageAccountKey });
     }
 
     //TODO David check if we should replace the logic to get all projects first and then get signatures for them?
@@ -630,5 +647,29 @@
         NavigationManager.NavigateTo("/penalties");
     }
 
+    HashSet<string> pubkeyWithMessages = new();
 
+    protected async Task ScanForDmMessages()
+    {
+        foreach (var project in projects)
+        {
+            if (!pubkeyWithMessages.Contains(project.InvestorNPub))
+            {
+                await _RelayService.LookupDirectMessagesForPubKeyAsync(
+                    project.InvestorNPub,
+                    project.LastRequestForMessagesTime?.AddSeconds(1),
+                    1,
+                    _ =>
+                    {
+                        NostrEncryptedEvent nostrEncryptedEvent = (NostrEncryptedEvent)_;
+                        if (!string.IsNullOrEmpty(nostrEncryptedEvent.RecipientPubkey))
+                        {
+                            pubkeyWithMessages.Add(nostrEncryptedEvent.RecipientPubkey);
+                            InvokeAsync(StateHasChanged);
+                        }
+                        return Task.CompletedTask;
+                    }, new[] { project.ProjectInfo.NostrPubKey });
+            }
+        }
+    }
 }

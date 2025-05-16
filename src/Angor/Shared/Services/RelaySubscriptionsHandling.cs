@@ -117,8 +117,6 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
     public void CloseSubscription(string subscriptionKey)
     {
-        relaySubscriptionsKeepActive.Remove(subscriptionKey);
-
         if (!relaySubscriptions.ContainsKey(subscriptionKey))
             return;
         
@@ -128,7 +126,8 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
        
         relaySubscriptions[subscriptionKey].Dispose();
         relaySubscriptions.Remove(subscriptionKey);
-        
+        relaySubscriptionsKeepActive.Remove(subscriptionKey);
+
         _logger.LogDebug($"subscription disposed - {subscriptionKey}");
     }
 

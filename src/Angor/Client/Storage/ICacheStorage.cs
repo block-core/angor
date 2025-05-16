@@ -22,4 +22,6 @@ public interface ICacheStorage
     void SetCurrencyRate(string currencyCode, RateCacheEntry rateCacheEntry);
     RateCacheEntry? GetCurrencyRate(string currencyCode);
     void WipeSession();
+    void SetFounderMessagesTimes(Dictionary<string, DateTime?> dictionary);
+    Dictionary<string, DateTime?> GetFounderMessagesTimes();
 }

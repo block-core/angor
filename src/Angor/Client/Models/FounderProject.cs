@@ -6,6 +6,7 @@ public class FounderProject : Project
 {
     public int ProjectIndex { get; set; }
     public DateTime? LastRequestForSignaturesTime { get; set; }
+    public DateTime? LastRequestForMessagesTime { get; set; }
 
     public string ProjectInfoEventId { get; set; }
     public bool NostrProfileCreated { get; set; }
