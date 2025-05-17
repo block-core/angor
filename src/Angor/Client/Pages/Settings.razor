@@ -105,11 +105,12 @@
                                             <div class="info-card mb-3">
                                                 <label for="networkSelection" class="info-label m-0">Select Network:</label>
                                                 <select class="form-control mt-2" id="networkSelection"
-                                                        @bind="selectedNetwork">
-                                                    <option value="Angornet" selected>Angornet</option>
-                                                    <option value="TestNet4" disabled selected>Testnet4</option>
-                                                    <option value="Signet" disabled selected>Signet</option>
-                                                    <option value="TestNet" disabled selected>Testnet</option>
+                                                        value="@selectedNetwork"
+                                                        @onchange="(e) => OnNetworkChange(e.Value?.ToString())">
+                                                    <option value="Angornet">Angornet</option>
+                                                    <option value="TestNet4" disabled>Testnet4</option>
+                                                    <option value="Signet" disabled>Signet</option>
+                                                    <option value="TestNet" disabled>Testnet</option>
                                                     <option value="Main">Mainnet</option>
                                                     <option value="Liquid" disabled>Liquid</option>
                                                 </select>
@@ -556,6 +557,10 @@
         _featureFlagService.SetFeatureFlag(key, value);
         _featureFlags[key] = value;
     }
+    private void OnNetworkChange(string network){
+        selectedNetwork = network;
+        _featureFlags = _featureFlagService.GetDefaultFeatureFlags(network);
+    }
     private void UpdateUI()
     {
         settingsInfo = _clientStorage.GetSettingsInfo();
@@ -908,16 +913,6 @@
     }
     private void ChangeFeatureFlags()
     {
-        var newFlags = _featureFlagService.GetAllFeatureFlags();
-
-        foreach (var (key, value) in newFlags)
-        {
-            if (_featureFlags.TryGetValue(key, out var currentValue))
-            {
-                newFlags[key] = currentValue;
-            }
-        }
-        _featureFlags = newFlags;
         _featureFlagService.SetAllFeatureFlags(_featureFlags);
     }
 
@@ -944,7 +939,6 @@
             _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
             _networkService.AddSettingsIfNotExist();
 
-            // save the new feature flags if not overridden by network changes
             ChangeFeatureFlags();
 
             // Refresh UI data

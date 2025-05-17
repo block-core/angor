@@ -31,6 +31,6 @@ namespace Angor.Client.Storage
         void SetCurrencyDisplaySetting(string setting);
 
         void setFeatureFlags(Dictionary<string, bool> featureFlags);
-        Dictionary<string, bool> getFeatureFlags();
+        Dictionary<string, bool>? getFeatureFlags();
     }
 }
