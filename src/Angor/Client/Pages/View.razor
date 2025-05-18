@@ -787,8 +787,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        NavMenuState.SetActivePage("browse");
-
         projectStats.Loading = true;
         findInProgress = false;
         error = string.Empty;
@@ -801,10 +799,13 @@
             if (project != null)
             {
                 founder = true;
+                NavMenuState.SetActivePage("founder");
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
                 return;
             }
+
+            NavMenuState.SetActivePage("browse");
 
             project = storage.GetInvestmentProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
             if (project is InvestorProject investorProject)
@@ -887,6 +888,20 @@
             error = $"An error occurred: {ex.Message}";
             projectStats.Loading = false;
             StateHasChanged();
+        }
+    }
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        // Update navigation state when parameters change
+        if(founder)
+        {
+            NavMenuState.SetActivePage("founder");
+        }
+        else
+        {
+            NavMenuState.SetActivePage("browse");
         }
     }
 

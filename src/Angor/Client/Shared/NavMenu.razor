@@ -5,7 +5,6 @@
 @inject IWalletStorage _walletStorage;
 @inject NavMenuState NavMenuState;
 @inject INetworkService _networkService;
-@inject NavigationManager NavigationManager
 
 <aside class="sidebar @(IsCollapsed ? "collapsed" : "") @(IsDarkTheme ? "" : "white")">
     <header class="sidebar-header">
@@ -23,13 +22,13 @@
     <nav class="sidebar-nav">
         <ul class="nav-list primary-nav">
             <li class="nav-item">
-                <NavLink class="@GetNavLinkClass("wallet")" href="wallet" Match="NavLinkMatch.All">
+                <NavLink class="@GetNavLinkClass("wallet")" href="wallet">
                     <span class="nav-icon"><Icon IconName="wallet" /></span>
                     <span class="nav-label">Wallet</span>
                 </NavLink>
             </li>
             <li class="nav-item">
-                <NavLink class="@GetNavLinkClass("browse")" href="browse" Match="NavLinkMatch.All">
+                <NavLink class="@GetNavLinkClass("browse")" href="browse">
                     <span class="nav-icon"><Icon IconName="browse" /></span>
                     <span class="nav-label">Browse</span>
                 </NavLink>
@@ -38,14 +37,14 @@
             @if (hasWallet)
             {
                 <li class="nav-item">
-                    <NavLink class="@GetNavLinkClassForInvestor()" href="investor" Match="NavLinkMatch.Prefix">
+                    <NavLink class="@GetNavLinkClassForInvestor()" href="investor">
                         <span class="nav-icon"><Icon IconName="portfolio" /></span>
                         <span class="nav-label">Portfolio</span>
                     </NavLink>
                 </li>
 
                 <li class="nav-item">
-                    <NavLink class="@GetNavLinkClass("founder")" href="founder" Match="NavLinkMatch.Prefix">
+                    <NavLink class="@GetNavLinkClass("founder")" href="founder">
                         <span class="nav-icon"><Icon IconName="founder" /></span>
                         <span class="nav-label">Founder</span>
                     </NavLink>
@@ -53,7 +52,7 @@
             }
 
             <li class="nav-item">
-                <NavLink class="@GetNavLinkClass("settings")" href="settings" Match="NavLinkMatch.All">
+                <NavLink class="@GetNavLinkClass("settings")" href="settings">
                     <span class="nav-icon"><Icon IconName="settings" /></span>
                     <span class="nav-label">Settings</span>
                 </NavLink>
@@ -136,28 +135,12 @@
 
     private string GetNavLinkClass(string page)
     {
-        var rel = NavigationManager
-            .ToBaseRelativePath(NavigationManager.Uri)
-            .Split(new[] { '?', '#' })[0]
-            .Split('/', StringSplitOptions.RemoveEmptyEntries)
-            .FirstOrDefault()?
-            .ToLowerInvariant() ?? "";
-
-        var isActive = rel == page;
-        return $"nav-link menu-text {(isActive ? "active" : "")}";
+        return $"nav-link menu-text {(NavMenuState.ActivePage == page ? "active" : "")}";
     }
 
     private string GetNavLinkClassForInvestor()
     {
-        var rel = NavigationManager
-            .ToBaseRelativePath(NavigationManager.Uri)
-            .Split(new[] { '?', '#' })[0]
-            .Split('/', StringSplitOptions.RemoveEmptyEntries)
-            .FirstOrDefault()?
-            .ToLowerInvariant() ?? "";
-
-        var isActive = IsInvestorPage(rel);
-        return $"nav-link menu-text {(isActive ? "active" : "")}";
+        return $"nav-link menu-text {(IsInvestorPage(NavMenuState.ActivePage) ? "active" : "")}";
     }
 
     private async Task ToggleCollapse()
