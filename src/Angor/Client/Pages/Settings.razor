@@ -554,7 +554,6 @@
     }
     private void OnFeatureFlagChanged(string key, bool value)
     {
-        _featureFlagService.SetFeatureFlag(key, value);
         _featureFlags[key] = value;
     }
     private void OnNetworkChange(string network){
@@ -911,10 +910,6 @@
             notificationComponent.ShowErrorMessage("Failed to wipe data: " + e.Message);
         }
     }
-    private void ChangeFeatureFlags()
-    {
-        _featureFlagService.SetAllFeatureFlags(_featureFlags);
-    }
 
     private void ChangeNetwork()
     {
@@ -939,7 +934,7 @@
             _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
             _networkService.AddSettingsIfNotExist();
 
-            ChangeFeatureFlags();
+            _featureFlagService.SetAllFeatureFlags(_featureFlags);
 
             // Refresh UI data
             networkType = _networkConfiguration.GetNetwork().Name;

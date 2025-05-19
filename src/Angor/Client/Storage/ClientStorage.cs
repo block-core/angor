@@ -83,7 +83,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         _storage.SetItem("founder-projects", ret.OrderBy(_ => _.ProjectIndex));
     }
-    
+
     public List<FounderProject> GetFounderProjects()
     {
         var ret = _storage.GetItem<List<FounderProject>>("founder-projects");

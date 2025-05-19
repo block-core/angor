@@ -12,7 +12,6 @@ public class FeatureFlagService : IFeatureFlagService
     {
         _storage = storage;
         _networkConfiguration = networkConfiguration;
-        _featureFlags = _storage.getFeatureFlags() ?? [];
     }
 
     public bool IsFeatureEnabled(string featureName)
@@ -20,19 +19,12 @@ public class FeatureFlagService : IFeatureFlagService
         return _featureFlags.TryGetValue(featureName, out var isEnabled) && isEnabled;
     }
 
-    public void SetFeatureFlag(string featureName, bool isEnabled)
-    {
-        if (_featureFlags.ContainsKey(featureName))
-        {
-            _featureFlags[featureName] = isEnabled;
-            _storage.setFeatureFlags(_featureFlags);
-        }
-    }
-
     public Dictionary<string, bool> GetAllFeatureFlags()
     {
+        _featureFlags = _storage.GetFeatureFlags() ?? [];
         return _featureFlags;
     }
+
     public Dictionary<string, bool> GetDefaultFeatureFlags(string network)
     {
         return _networkConfiguration.GetDefaultFeatureFlags(network);
