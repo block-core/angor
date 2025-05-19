@@ -41,7 +41,7 @@ public class FeatureFlagService : IFeatureFlagService
     public void SetAllFeatureFlags(Dictionary<string, bool> featureFlags)
     {
         _featureFlags = featureFlags;
-        _storage.setFeatureFlags(featureFlags);
+        _storage.SetFeatureFlags(featureFlags);
     }
 
     public bool IsFeatureHWSupportEnabled() => IsFeatureEnabled("HW_Support");

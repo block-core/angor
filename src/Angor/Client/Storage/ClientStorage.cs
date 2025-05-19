@@ -222,12 +222,12 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.RemoveItem("recovery-signatures");
     }
 
-    public void setFeatureFlags(Dictionary<string, bool> featureFlags)
+    public void SetFeatureFlags(Dictionary<string, bool> featureFlags)
     {
         _storage.SetItem("FeatureFlags", featureFlags); 
     }
 
-    public Dictionary<string, bool>? getFeatureFlags()
+    public Dictionary<string, bool>? GetFeatureFlags()
     {
         return _storage.GetItem<Dictionary<string, bool>>("FeatureFlags");
     }
