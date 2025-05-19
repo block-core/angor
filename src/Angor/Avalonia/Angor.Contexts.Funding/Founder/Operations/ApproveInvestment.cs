@@ -92,7 +92,7 @@ public static class ApproveInvestment
         }
     }
 
-    public class SignatureItem
+    private class SignatureItem
     {
         public string investorNostrPubKey { get; set; }
         public SignRecoveryRequest? SignRecoveryRequest { get; set; }

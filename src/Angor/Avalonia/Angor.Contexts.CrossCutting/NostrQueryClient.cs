@@ -48,6 +48,7 @@ public class NostrQueryClient
         var perClientStreams = clients.Select(client =>
             client.Streams.EventStream
                 .Where(evt => evt.Subscription == subscriptionId)
+                .DistinctUntilChanged(x =>x.Event?.Id)
                 .TakeUntil(
                     client.Streams.EoseStream
                         .Where(eose => eose.Subscription == subscriptionId)
