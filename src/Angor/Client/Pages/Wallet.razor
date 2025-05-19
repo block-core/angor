@@ -169,6 +169,10 @@
                                                                        @oninput="(e) => HandleWordInput(wordIndex, e)"
                                                                        @onfocus="() => ShowSuggestionsIfNeeded(wordIndex)"
                                                                        placeholder="Enter word #@wordIndex" />
+                                                                @if (invalidWordIndices.TryGetValue(wordIndex, out var isInvalid) && isInvalid)
+                                                                {
+                                                                    <div class="text-danger small mt-1">Not a valid BIP-39 word</div>
+                                                                }
                                                                 @if (showSuggestions.TryGetValue(wordIndex, out bool showForWord) &&
                                                                showForWord &&
                                                                !string.IsNullOrWhiteSpace(userVerificationInputs[wordIndex]))
@@ -256,7 +260,23 @@
 
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <textarea class="form-control" rows="3" placeholder="Enter your wallet words"
-                                                          @bind="newWalletWords"></textarea>
+                                                    @bind="newWalletWords" @oninput="OnImportWordsInput"></textarea>
+                                                @if (!string.IsNullOrWhiteSpace(newWalletWords))
+                                                {
+                                                    var words = newWalletWords.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                                                    <div class="mt-2">
+                                                        @for (int i = 0; i < words.Length; i++)
+                                                        {
+                                                            var word = words[i];
+                                                            var isInvalid = !NBitcoin.Wordlist.English.GetWords().Contains(word.ToLowerInvariant());
+                                                            <span class="badge @(isInvalid ? "bg-danger" : "bg-success") m-1">@word</span>
+                                                        }
+                                                    </div>
+                                                    @if (words.Any(w => !NBitcoin.Wordlist.English.GetWords().Contains(w.ToLowerInvariant())))
+                                                    {
+                                                        <div class="text-danger mt-1">One or more words are not valid BIP-39 words.</div>
+                                                    }
+                                                }
                                             </div>
                                             break;
 
@@ -1081,6 +1101,8 @@ else
 
     private Dictionary<int, bool> showSuggestions = new();
 
+    private Dictionary<int, bool> invalidWordIndices = new();
+
     private decimal sendAmount
     {
         get => Money.Satoshis(_sendInfo.SendAmount).ToUnit(MoneyUnit.BTC);
@@ -1169,15 +1191,19 @@ else
         }
     }
 
+    private bool AnyWordInvalid() => invalidWordIndices.Values.Any(v => v);    
+    
     private bool CanProceedToNextStep()
     {
-        return currentStep switch
+        bool baseCondition = currentStep switch
         {
             1 => !string.IsNullOrWhiteSpace(newWalletWords) && (isNewWallet ? backupConfirmation : true),
-            2 => isNewWallet ? verificationPassed : true,
+            2 => isNewWallet ? verificationPassed && !AnyWordInvalid() : true,
             3 => true,
             _ => false
         };
+        
+        return baseCondition;
     }
 
     private bool CanCreateWallet()
@@ -1316,6 +1342,7 @@ else
 
             hasWallet = _walletStorage.HasWallet();
             ClearWalletWords();
+            ResetWalletCreationState();
 
             walletWordsCreateModal = false;
 
@@ -1930,6 +1957,7 @@ else
         // Reset verification state
         selectedWordsToVerify.Clear();
         userVerificationInputs.Clear();
+        invalidWordIndices.Clear();
         shuffledWordIndices.Clear();
         verificationPassed = false;
         showVerificationError = false;
@@ -1954,6 +1982,17 @@ else
         userVerificationInputs[wordIndex] = input;
         showSuggestions[wordIndex] = !string.IsNullOrWhiteSpace(input);
         ValidateWordInput();
+        ValidateWordInstant(wordIndex, input);
+    }
+
+    private void ValidateWordInstant(int wordIndex, string input)
+    {
+        var wordlist = NBitcoin.Wordlist.English;
+        var words = wordlist.GetWords();
+        if (!string.IsNullOrWhiteSpace(input) && !words.Contains(input.ToLowerInvariant()))
+            invalidWordIndices[wordIndex] = true;
+        else
+            invalidWordIndices[wordIndex] = false;
     }
 
     private void ShowDropdown(int wordIndex)
@@ -1979,6 +2018,9 @@ else
     {
         userVerificationInputs[wordIndex] = suggestion;
         showSuggestions[wordIndex] = false;
+        
+        invalidWordIndices[wordIndex] = false;
+        
         ValidateWordInput();
         StateHasChanged();
     }
@@ -1988,5 +2030,11 @@ else
         var wordlist = NBitcoin.Wordlist.English;
         var words = wordlist.GetWords();
         return words.Where(word => word.StartsWith(input, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void OnImportWordsInput(ChangeEventArgs e)
+    {
+        newWalletWords = e.Value?.ToString() ?? string.Empty;
+        StateHasChanged();
     }
 }
