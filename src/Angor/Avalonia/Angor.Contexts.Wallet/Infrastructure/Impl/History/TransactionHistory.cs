@@ -29,7 +29,7 @@ public class TransactionHistory(
     
     private Task<Result<List<QueryTransaction>>> LookupAddressTransactions(string address)
     {
-        return Result.Try(() => indexerService.FetchAddressHistoryAsync(address)) //TODO handle paging with sending the last received transaciton id
+        return Result.Try(() => indexerService.FetchAddressHistoryAsync(address)) //TODO handle paging with sending the last received transaction id
             .Map(txns => txns ?? new List<QueryTransaction>());
     }
 
@@ -45,7 +45,7 @@ public class TransactionHistory(
                 .Select(s => LookupAddressTransactions(s))
                 .Combine())
             .Map(transactions => transactions
-                .SelectMany(t => t))
+                .SelectMany(x => x))
             .Bind(transactions =>
             {
                 var addresses = result.Value.Select(x => new Address(x)).ToList();
@@ -59,8 +59,8 @@ public class TransactionHistory(
     private static Task<Result<BroadcastedTransaction>> MapToBroadcastedTransaction(QueryTransaction tx,
         List<Address> walletAddresses)
     {
-        var inputs = MapToUiModelInputs(tx.Inputs);
-        var outputs = MapToUiModelOutputs(tx.Outputs);
+        var inputs = MapToTransactionInputs(tx.Inputs);
+        var outputs = MapToTransactionOutputs(tx.Outputs);
 
         return Task.FromResult(Result.Try(() => new BroadcastedTransaction(
             Id: tx.TransactionId,
@@ -77,14 +77,14 @@ public class TransactionHistory(
         )));
     }
 
-    private static List<TransactionInput> MapToUiModelInputs(IEnumerable<QueryTransactionInput> inputs)
+    private static List<TransactionInput> MapToTransactionInputs(IEnumerable<QueryTransactionInput> inputs)
     {
         return inputs.Select(i => 
                 new TransactionInput(new Amount(i.InputAmount), new Address(i.InputAddress)))
             .ToList();
     }
 
-    private static List<TransactionOutput> MapToUiModelOutputs(IEnumerable<QueryTransactionOutput> outputs)
+    private static List<TransactionOutput> MapToTransactionOutputs(IEnumerable<QueryTransactionOutput> outputs)
     {
         return outputs.Select(output => new TransactionOutput(new Amount(output.Balance), new Address(output.Address)))
             .ToList();
