@@ -29,7 +29,6 @@
             <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Encryption Password:">
                 <TextBlock Text="[Set]" />
             </HeaderedContentControl>
-            <Button Command="{Binding CreateWallet}" Content="{Binding CreateWalletText}" HorizontalAlignment="Center" />
         </StackPanel>
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" IsVisible="{Binding CreateWallet.IsExecuting^}">
             <pr:ProgressRing Width="30" Height="30" IsIndeterminate="True" />

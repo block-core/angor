@@ -9,7 +9,8 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
 {
     [Reactive] private long? amount;
     [ObservableAsProperty] private IEnumerable<Breakdown> stageBreakdowns;
-
+    [ObservableAsProperty] private long walletBalance;
+    
     public AmountViewModel(IWallet wallet, IProject project)
     {
         Project = project;
@@ -29,12 +30,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
             .ToProperty(this, x => x.StageBreakdowns);
     }
 
-    public Maybe<string> Title => $"Invest in {Project.Name}";
-
     public IProject Project { get; }
-
     public IObservable<bool> IsValid => this.IsValid();
     public bool AutoAdvance => false;
-    [ObservableAsProperty] private long walletBalance;
-    public IObservable<bool> IsBusy => Observable.Return(false);
 }

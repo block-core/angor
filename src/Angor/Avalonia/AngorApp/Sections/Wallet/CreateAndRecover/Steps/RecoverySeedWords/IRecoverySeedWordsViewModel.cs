@@ -1,9 +1,6 @@
-using Angor.UI.Model;
-using Zafiro.Avalonia.Controls.Wizards.Builder;
-
 namespace AngorApp.Sections.Wallet.CreateAndRecover.Steps.RecoverySeedWords;
 
-public interface IRecoverySeedWordsViewModel : IStep
+public interface IRecoverySeedWordsViewModel
 {
     string? RawWordList { get; set; }
     SeedWords SeedWords { get; }

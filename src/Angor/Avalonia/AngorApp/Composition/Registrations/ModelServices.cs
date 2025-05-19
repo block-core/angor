@@ -16,6 +16,7 @@ public static class ModelServices
             .AddSingleton<IWalletProvider, WalletProviderDesign>()
             .AddSingleton<IWalletBuilder, WalletProvider>()
             .AddSingleton<InvestWizard>()
-            .AddSingleton<IWalletWizard, WalletWizard>();
+            .AddSingleton<WalletCreationWizard>()
+            .AddSingleton<WalletRecoveryWizard>();
     }
 }

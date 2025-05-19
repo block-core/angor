@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Investor;
-using AngorApp.Features.Invest.Commit;
 using AngorApp.UI.Controls.Common.Success;
 using AngorApp.UI.Services;
-using Zafiro.Avalonia.Controls.Wizards.Builder;
-using Zafiro.Avalonia.Dialogs;
+using Zafiro.Avalonia.Dialogs.Wizards.Slim;
+using Zafiro.UI.Commands;
+using Zafiro.UI.Wizards.Slim.Builder;
 using AmountViewModel = AngorApp.Features.Invest.Amount.AmountViewModel;
 using DraftViewModel = AngorApp.Features.Invest.Draft.DraftViewModel;
 
@@ -14,12 +14,11 @@ public class InvestWizard(IInvestmentAppService investmentAppService, UIServices
 {
     public Task<Maybe<Unit>> Invest(IWallet wallet, IProject project)
     {
-        var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project))
-            .Then(amountViewModel => new DraftViewModel(investmentAppService, wallet, amountViewModel.Amount!.Value, project, uiServices))
-            .Then(draftViewModel => new CommitViewModel(investmentAppService, uiServices, wallet, draftViewModel.SatsToInvest, project, draftViewModel.Draft!.DraftModel))
-            .Then(_ => new SuccessViewModel($"Invested in {project.Name}", "Success"))
-            .FinishWith(_ => Unit.Default);
-
+        var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project), model => ReactiveCommand.Create(() => Result.Success(model.Amount), model.IsValid).Enhance("Next"), $"Invest in {project.Name}")
+            .Then(amount => new DraftViewModel(investmentAppService, wallet, amount!.Value, project, uiServices), model => model.Confirm.Enhance("Invest"), "Amount")
+            .Then(_ => new SuccessViewModel($"Invested in {project.Name}"), _ => ReactiveCommand.Create(() => Result.Success(Unit.Default)).Enhance("Close"), "Investment Successful")
+            .WithCompletionFinalStep();
+        
         return uiServices.Dialog.ShowWizard(wizard, @$"Invest in ""{project}""");
     }
 }
