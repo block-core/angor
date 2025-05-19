@@ -1190,7 +1190,10 @@ else
             currentStep--;
         }
     }
-    private bool AnyWordInvalid() => invalidWordIndices.Values.Any(v => v);    private bool CanProceedToNextStep()
+
+    private bool AnyWordInvalid() => invalidWordIndices.Values.Any(v => v);    
+    
+    private bool CanProceedToNextStep()
     {
         bool baseCondition = currentStep switch
         {
@@ -1339,6 +1342,7 @@ else
 
             hasWallet = _walletStorage.HasWallet();
             ClearWalletWords();
+            ResetWalletCreationState();
 
             walletWordsCreateModal = false;
 
@@ -1953,6 +1957,7 @@ else
         // Reset verification state
         selectedWordsToVerify.Clear();
         userVerificationInputs.Clear();
+        invalidWordIndices.Clear();
         shuffledWordIndices.Clear();
         verificationPassed = false;
         showVerificationError = false;
