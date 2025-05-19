@@ -11,11 +11,9 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
     private const string utxoKey = "utxo:{0}";
     private readonly ISyncLocalStorageService _storage;
-    private readonly INetworkConfiguration _networkConfiguration;
-    public ClientStorage(ISyncLocalStorageService storage, INetworkConfiguration networkConfiguration)
+    public ClientStorage(ISyncLocalStorageService storage)
     {
         _storage = storage;
-        _networkConfiguration = networkConfiguration;
     }
 
     public AccountInfo GetAccountInfo(string network)
@@ -85,7 +83,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
         _storage.SetItem("founder-projects", ret.OrderBy(_ => _.ProjectIndex));
     }
-    
+
     public List<FounderProject> GetFounderProjects()
     {
         var ret = _storage.GetItem<List<FounderProject>>("founder-projects");
@@ -224,13 +222,13 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.RemoveItem("recovery-signatures");
     }
 
-    public void setFeatureFlags(Dictionary<string, bool> featureFlags)
+    public void SetFeatureFlags(Dictionary<string, bool> featureFlags)
     {
         _storage.SetItem("FeatureFlags", featureFlags); 
     }
 
-    public Dictionary<string, bool> getFeatureFlags()
+    public Dictionary<string, bool>? GetFeatureFlags()
     {
-        return _storage.GetItem<Dictionary<string, bool>>("FeatureFlags") ?? _networkConfiguration.GetFeatureFlags();
+        return _storage.GetItem<Dictionary<string, bool>>("FeatureFlags");
     }
 }

@@ -79,7 +79,7 @@
                                     <div class="modal-body modal-body-scroll py-4">
                                         <div class="transaction-info-section">
                                             <div class="alert alert-danger" role="alert">
-                                                <p>This will wipe your wallet!</p>
+                                                <p>Changing these settings will wipe your wallet!</p>
                                             </div>
 
                                             <div class="" role="alert">
@@ -105,11 +105,12 @@
                                             <div class="info-card mb-3">
                                                 <label for="networkSelection" class="info-label m-0">Select Network:</label>
                                                 <select class="form-control mt-2" id="networkSelection"
-                                                        @bind="selectedNetwork">
-                                                    <option value="Angornet" selected>Angornet</option>
-                                                    <option value="TestNet4" disabled selected>Testnet4</option>
-                                                    <option value="Signet" disabled selected>Signet</option>
-                                                    <option value="TestNet" disabled selected>Testnet</option>
+                                                        value="@selectedNetwork"
+                                                        @onchange="(e) => OnNetworkChange(e.Value?.ToString())">
+                                                    <option value="Angornet">Angornet</option>
+                                                    <option value="TestNet4" disabled>Testnet4</option>
+                                                    <option value="Signet" disabled>Signet</option>
+                                                    <option value="TestNet" disabled>Testnet</option>
                                                     <option value="Main">Mainnet</option>
                                                     <option value="Liquid" disabled>Liquid</option>
                                                 </select>
@@ -141,7 +142,7 @@
                                     }
                                     <div class="modal-footer border-0 pt-0">
                                         <button class="btn btn-border-success w-100 w-md-auto" @onclick="ChangeNetwork">
-                                            Change Network
+                                            Change Network Settings
                                         </button>
                                     </div>
                                 </div>
@@ -553,8 +554,11 @@
     }
     private void OnFeatureFlagChanged(string key, bool value)
     {
-        _featureFlagService.SetFeatureFlag(key, value);
         _featureFlags[key] = value;
+    }
+    private void OnNetworkChange(string network){
+        selectedNetwork = network;
+        _featureFlags = _featureFlagService.GetDefaultFeatureFlags(network);
     }
     private void UpdateUI()
     {
@@ -929,7 +933,8 @@
             // Update network settings
             _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
             _networkService.AddSettingsIfNotExist();
-            _featureFlags = _featureFlagService.GetAllFeatureFlags();
+
+            _featureFlagService.SetAllFeatureFlags(_featureFlags);
 
             // Refresh UI data
             networkType = _networkConfiguration.GetNetwork().Name;
