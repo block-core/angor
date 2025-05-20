@@ -8,7 +8,7 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:pt="https://github.com/projektanker/icons.avalonia"
              xmlns:details="clr-namespace:AngorApp.Sections.Founder.Details"
-             mc:Ignorable="d" d:DesignWidth="800" 
+             mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.Details.FounderProjectDetailsView" x:DataType="details:IFounderProjectDetailsViewModel">
 
     <Design.DataContext>
@@ -56,11 +56,29 @@
                             <sdg:Column Header="Amount" Binding="{Binding Content.Amount.BtcString}" />
                             <sdg:Column Header="Date" Binding="{Binding Content.Created, Converter={x:Static controls:MiscConverters.HumanizeDate}}" />
                             <sdg:Column Header="Investor" Binding="{Binding Content.InvestorNostrPubKey}" />
-                            <sdg:Column Header="Approved" Binding="{Binding Content.IsApproved}" />
+                            <sdg:Column Header="Status" Binding="{Binding Content.IsApproved}">
+                                <sdg:Column.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <StackPanel.Styles>
+                                                <Style Selector="Border">
+                                                    <Setter Property="Width" Value="140" />
+                                                </Style>
+                                            </StackPanel.Styles>
+                                            <Border HorizontalAlignment="Center" IsVisible="{Binding }" CornerRadius="10" Background="Blue" Padding="10 5">
+                                                <TextBlock Text="Approved" Foreground="White" />
+                                            </Border>
+                                            <Border HorizontalAlignment="Center" IsVisible="{Binding !.}" CornerRadius="10" Background="Green" Padding="10 5">
+                                                <TextBlock Text="Pending approval" Foreground="White" />
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </sdg:Column.CellTemplate>
+                            </sdg:Column>
                             <sdg:Column Header="" Binding="{Binding}">
                                 <sdg:Column.CellTemplate>
                                     <DataTemplate>
-                                        <Button Command="{Binding Content.Approve}" Content="Approve" IsVisible="{Binding !Content.IsApproved}" />
+                                        <Button HorizontalAlignment="Center" Command="{Binding Content.Approve}" Content="Approve" IsVisible="{Binding !Content.IsApproved}" />
                                     </DataTemplate>
                                 </sdg:Column.CellTemplate>
                             </sdg:Column>

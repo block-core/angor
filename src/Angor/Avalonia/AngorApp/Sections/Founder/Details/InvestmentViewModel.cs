@@ -11,17 +11,17 @@ public partial class InvestmentViewModel : ReactiveObject, IInvestmentViewModel
     [Reactive] private bool isApproved;
     private readonly GetInvestments.Investment investment;
 
-    public InvestmentViewModel(GetInvestments.Investment investment, Func<Task<Maybe<Result>>> onApprove)
+    public InvestmentViewModel(GetInvestments.Investment investment, Func<Task<Maybe<Result<bool>>>> onApprove)
     {
         this.investment = investment;
         IsApproved = investment.IsApproved;
         Approve = ReactiveCommand.CreateFromTask(onApprove).Enhance();
-        Approve.Values().Successes().Do(_ => IsApproved = true).Subscribe();
+        Approve.Values().Successes().Do(approved => IsApproved = approved).Subscribe();
     }
 
     public IAmountUI Amount => new AmountUI(investment.Amount);
     public string InvestorNostrPubKey => investment.InvestorNostrPubKey;
     public DateTimeOffset Created => investment.Created;
     
-    public IEnhancedCommand<Unit, Maybe<Result>> Approve { get; }
+    public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
 }

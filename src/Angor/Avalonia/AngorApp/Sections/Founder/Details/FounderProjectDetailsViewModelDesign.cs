@@ -22,7 +22,7 @@ public class FounderProjectDetailsViewModelDesign : IFounderProjectDetailsViewMo
 
 public record InvestmentViewModelDesign(IAmountUI Amount, string InvestorNostrPubKey, DateTimeOffset Created, bool IsApproved) : IInvestmentViewModel
 {
-    public IEnhancedCommand<Unit, Maybe<Result>> Approve { get; }
+    public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
 }
 
 public interface IInvestmentViewModel
@@ -31,5 +31,5 @@ public interface IInvestmentViewModel
     public string InvestorNostrPubKey { get; }
     public DateTimeOffset Created { get; }
     public bool IsApproved { get; }
-    public IEnhancedCommand<Unit, Maybe<Result>> Approve { get; }
+    public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
 }
