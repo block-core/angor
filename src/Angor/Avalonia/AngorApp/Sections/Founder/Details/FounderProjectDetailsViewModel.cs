@@ -38,11 +38,11 @@ public class FounderProjectDetailsViewModel : IFounderProjectDetailsViewModel
         Investments = pendingInvestments;
     }
 
-    private static Task<Maybe<Result>> Approve(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices, IWallet wallet, GetInvestments.Investment investment)
+    private static Task<Maybe<Result<bool>>> Approve(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices, IWallet wallet, GetInvestments.Investment investment)
     {
         return uiServices.Dialog
-            .ShowConfirmation("Do you want to approve this investment?", "Approve investment")
-            .Map(isConfirmed => isConfirmed ? investmentAppService.ApproveInvestment(wallet.Id.Value, project.Id, investment) : Task.FromResult(Result.Success()));
+            .ShowConfirmation("Approve investment", "Do you want to approve this investment?")
+            .Map(isConfirmed => isConfirmed ? investmentAppService.ApproveInvestment(wallet.Id.Value, project.Id, investment).Map(() => true) : Task.FromResult(Result.Success(false)));
     }
 
     public IEnumerable<IdentityContainer<IInvestmentViewModel>> Investments { get; }
