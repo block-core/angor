@@ -50,7 +50,7 @@ public static class GetInvestments
                     .Map(a => CombineInvestmentsAndApprovals(request.WalletId, projectResult.Value, i, a))); 
         }
 
-        private async Task<Result<IEnumerable<Investment>>> CombineInvestmentsAndApprovals(Guid walletId, Project project, IList<InvestmentMessage> messages, IList<ApprovalMessage> approvals)
+        private async Task<Result<IEnumerable<Investment>>> CombineInvestmentsAndApprovals(Guid walletId, Project project, IList<DirectMessage> messages, IList<ApprovalMessage> approvals)
         {
             var combineInvestmentsAndApprovals = messages.Select(message =>
             {
@@ -87,18 +87,18 @@ public static class GetInvestments
             }
         }
 
-        private async Task<Result<IList<InvestmentMessage>>> InvestmentMessages(string nostrPubKey)
+        private async Task<Result<IList<DirectMessage>>> InvestmentMessages(string nostrPubKey)
         {
             return await InvestmentMessagesObs()
                 .ToList()
                 .ToResult();
 
-            IObservable<InvestmentMessage> InvestmentMessagesObs()
+            IObservable<DirectMessage> InvestmentMessagesObs()
             {
-                return Observable.Create<InvestmentMessage>(observer =>
+                return Observable.Create<DirectMessage>(observer =>
                 {
                     signService.LookupInvestmentRequestsAsync(nostrPubKey, null, null,
-                        (id, pubKey, content, created) => observer.OnNext(new InvestmentMessage(id, pubKey, content, created)),
+                        (id, pubKey, content, created) => observer.OnNext(new DirectMessage(id, pubKey, content, created)),
                         observer.OnCompleted
                     );
 
