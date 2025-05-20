@@ -1354,8 +1354,6 @@ else
                         InvokeAsync(StateHasChanged);
                     }
 
-                    InvokeAsync(StateHasChanged);
-
                     return Task.CompletedTask;
                 }, new[] { project.ProjectInfo.NostrPubKey });
         }
