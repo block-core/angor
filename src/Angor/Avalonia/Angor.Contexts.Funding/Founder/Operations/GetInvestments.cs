@@ -7,6 +7,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using MediatR;
+using NBitcoin.Protocol;
 using Nostr.Client.Messages;
 using Nostr.Client.Requests;
 using Zafiro.CSharpFunctionalExtensions;
@@ -31,7 +32,7 @@ public static class GetInvestments
     {
         public Task<Result<IEnumerable<Investment>>> Handle(GetInvestmentsRequest request, CancellationToken cancellationToken)
         {
-            return GetInvestments(request).WithTimeout(TimeSpan.FromSeconds(5));
+            return GetInvestments(request);
         }
 
         private async Task<Result<IEnumerable<Investment>>> GetInvestments(GetInvestmentsRequest request)
@@ -42,35 +43,75 @@ public static class GetInvestments
                 return Result.Failure<IEnumerable<Investment>>(projectResult.Error);
             }
 
-            // TODO: This needs to be done in a better way using the NostrQueryClient 
             var nostrPubKey = projectResult.Value.NostrPubKey;
-            var investingMessages = await InvestmentMessages(nostrPubKey)
-                .ToList()
-                .ToResult();
 
-            var decryptedInvestments = new List<Result<Investment>>();
-            foreach (var investingMessage in investingMessages.Value)
-            {
-                var msg = await DecryptInvestmentMessage(request.WalletId, projectResult.Value, investingMessage);
+            var investments = await InvestmentMessages(nostrPubKey);
+            var approvals = await ApprovalMessages(nostrPubKey);
 
-                decryptedInvestments.Add(msg);
-            }
-
-            return decryptedInvestments.Combine();
+            var combineAndMap = await investments.Bind(i => approvals.Map(a => CombineInvestmentsAndApprovals(request.WalletId, projectResult.Value, i, a)));
+            return combineAndMap; 
         }
 
-        private Task<Result<Investment>> DecryptInvestmentMessage(Guid walletId, Project project, NostrMessage nostrMessage)
+        private async Task<Result<IEnumerable<Investment>>> CombineInvestmentsAndApprovals(Guid walletId, Project project, IList<NostrMessage> messages, IList<NostrMessage> approvals)
         {
-            return
-                from decrypted in nostrDecrypter.Decrypt(walletId, project.Id, nostrMessage)
-                from signRecoveryRequest in Result.Try(() => serializer.Deserialize<SignRecoveryRequest>(decrypted))
-                from isApproved in IsApproved(nostrMessage, project)
-                select new Investment(nostrMessage.Created,
-                    GetAmount(signRecoveryRequest),
-                    signRecoveryRequest.InvestmentTransactionHex,
-                    nostrMessage.InvestorNostrPubKey,
-                    nostrMessage.Id,
-                    isApproved);
+            var combineInvestmentsAndApprovals = messages.Select(message =>
+            {
+                return nostrDecrypter.Decrypt(walletId, project.Id, message)
+                    .MapTry(serializer.Deserialize<SignRecoveryRequest>)
+                    .Map(async request =>
+                    {
+                        var isApproved = approvals.Any(a => a.Id == message.Id);
+                        return new Investment(message.Created, GetAmount(request.InvestmentTransactionHex), request.InvestmentTransactionHex, message.InvestorNostrPubKey, message.Id, isApproved);;
+                    });
+            }).CombineInOrder(", ");
+
+            var result = await combineInvestmentsAndApprovals;
+            return result;
+        }
+
+        private bool IsApproved(NostrMessage investmentMessage, IList<NostrMessage> approvedMessages)
+        {
+            return false;
+        }
+
+        private async Task<Result<IList<NostrMessage>>> ApprovalMessages(string nostrPubKey)
+        {
+            IObservable<NostrMessage> GetApprovedStatusObs(string nostrPubKey)
+            {
+                return Observable.Create<NostrMessage>(observer =>
+                {
+                    signService.LookupInvestmentRequestApprovals(nostrPubKey,
+                        (id, created, content) => observer.OnNext(new NostrMessage(id, nostrPubKey, content, created)),
+                        observer.OnCompleted
+                    );
+
+                    return Disposable.Empty;
+                });
+            }
+            
+            return await GetApprovedStatusObs(nostrPubKey)
+                .ToList()
+                .ToResult();
+        }
+
+        private async Task<Result<IList<NostrMessage>>> InvestmentMessages(string nostrPubKey)
+        {
+            IObservable<NostrMessage> InvesmentMessagesObs(string nostrPubKey)
+            {
+                return Observable.Create<NostrMessage>(observer =>
+                {
+                    signService.LookupInvestmentRequestsAsync(nostrPubKey, null, null,
+                        (id, pubKey, content, created) => observer.OnNext(new NostrMessage(id, pubKey, content, created)),
+                        observer.OnCompleted
+                    );
+
+                    return Disposable.Empty;
+                });
+            }
+            
+            return await InvesmentMessagesObs(nostrPubKey)
+                .ToList()
+                .ToResult();
         }
 
         private async Task<Result<bool>> IsApproved(NostrMessage nostrMessage, Project project)
@@ -91,23 +132,10 @@ public static class GetInvestments
 
             return approved;
         }
-
-        private IObservable<NostrMessage> InvestmentMessages(string nostrPubKey)
+        
+        private long GetAmount(string transactionHex)
         {
-            return Observable.Create<NostrMessage>(observer =>
-            {
-                signService.LookupInvestmentRequestsAsync(nostrPubKey, null, null,
-                    (id, pubKey, content, created) => observer.OnNext(new NostrMessage(id, pubKey, content, created)),
-                    observer.OnCompleted
-                );
-
-                return Disposable.Empty;
-            });
-        }
-
-        private long GetAmount(SignRecoveryRequest signRecoveryRequest)
-        {
-            var investorTrx = networkConfiguration.GetNetwork().CreateTransaction(signRecoveryRequest.InvestmentTransactionHex);
+            var investorTrx = networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
 
             return investorTrx.Outputs.AsIndexedOutputs()
                 .Skip(2)

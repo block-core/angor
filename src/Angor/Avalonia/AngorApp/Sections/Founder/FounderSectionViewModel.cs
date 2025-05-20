@@ -13,7 +13,7 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel
 {
     public FounderSectionViewModel(UIServices uiServices, IProjectAppService projectAppService, Func<ProjectDto, IFounderProjectViewModel> projectViewModelFactory)
     {
-        LoadProjects = EnhancedCommand.Create(ReactiveCommand.CreateFromObservable(() => Func(uiServices, projectAppService)));
+        LoadProjects = ReactiveCommand.CreateFromObservable(() => Func(uiServices, projectAppService)).Enhance();
         
         LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Failed to get investments");
         LoadProjects.Successes()

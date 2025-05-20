@@ -15,7 +15,7 @@ public partial class InvestmentViewModel : ReactiveObject, IInvestmentViewModel
     {
         this.investment = investment;
         IsApproved = investment.IsApproved;
-        Approve = EnhancedCommand.Create(ReactiveCommand.CreateFromTask(onApprove));
+        Approve = ReactiveCommand.CreateFromTask(onApprove).Enhance();
         Approve.Values().Successes().Do(_ => IsApproved = true).Subscribe();
     }
 
