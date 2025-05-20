@@ -20,6 +20,7 @@
 @inject ILogger<Signatures> Logger
 @inject IDerivationOperations DerivationOperations
 @inject IClientStorage Storage;
+@inject ICacheStorage SessionStorage;
 @inject ISignService SignService
 @inject IInvestorTransactionActions InvestorTransactionActions
 @inject IFounderTransactionActions FounderTransactionActions
@@ -212,7 +213,15 @@
                                                     <button class="btn btn-sm btn-border-success animate-scale"
                                                             @onclick="() => ShowMessageModal(signature.investorNostrPubKey)"
                                                             aria-label="Message investor">
-                                                        <Icon IconName="chat" Width="16" Height="16" Class="me-1" />
+                                                        @if (pubkeyWithMessages.Contains(signature.investorNostrPubKey))
+                                                        {
+                                                            <Icon IconName="chat" Width="16" Height="16" Class="me-1" />
+                                                            <p>Has messages</p>
+                                                        }
+                                                        else
+                                                        {
+                                                            <Icon IconName="chat" Width="16" Height="16" Class="me-1" />
+                                                        }
                                                     </button>
                                                     <span class="animate-scale"
                                                           @onclick="() => ToggleAccordion(accordionId)"
@@ -353,7 +362,7 @@
             await FetchPendingSignatures(FounderProject);
 
             investments = await indexerService.GetInvestmentsAsync(FounderProject.ProjectInfo.ProjectIdentifier);
-
+            
         }
         Logger.LogDebug("End of OnInitializedAsync");
     }
@@ -527,6 +536,8 @@
             () =>
             {
                 Logger.LogDebug($"End of messages");
+                
+                ScanForDmMessages();
 
                 if (!messagesReceived)
                     return;
@@ -758,6 +769,14 @@
         // Get founder's npub
         founderNpub = NostrHelper.ConvertHexToNpub(FounderProject.ProjectInfo.NostrPubKey) ??
                       FounderProject.ProjectInfo.NostrPubKey;
+
+        // Remove this npub from the HashSet of pubkeys with messages
+        pubkeyWithMessages.Remove(investorNostrPubKey);
+
+        var lastScanList = SessionStorage.GetFounderMessagesTimes();
+        lastScanList[investorNostrPubKey] = DateTime.UtcNow;
+        SessionStorage.SetFounderMessagesTimes(lastScanList);
+
         // Show Message
         ShowMessageAndCheckPassword();
     }
@@ -786,7 +805,6 @@
             var words = await passwordComponent.GetWalletAsync();
             var founderNostrPrivateKey = DerivationOperations.DeriveProjectNostrPrivateKey(words, FounderProject.ProjectInfo.FounderKey);
             currentUserPrivateKeyHex = Encoders.Hex.EncodeData(founderNostrPrivateKey.ToBytes());
-
             StateHasChanged();
         }
         catch (Exception ex)
@@ -841,6 +859,30 @@
         catch (Exception e)
         {
             notificationComponent.ShowErrorMessage("Failed to retrieve NSEC: " + e.Message);
+        }
+    }
+
+    HashSet<string> pubkeyWithMessages = new();
+
+    protected async Task ScanForDmMessages()
+    {
+        var lastScanList = SessionStorage.GetFounderMessagesTimes();
+
+        foreach (var signatureRequest in signaturesRequests)
+        {
+            await _RelayService.LookupDirectMessagesForPubKeyAsync(
+                FounderProject.ProjectInfo.NostrPubKey,
+                lastScanList.TryGet(signatureRequest.investorNostrPubKey)?.AddSeconds(1),
+                1,
+                _ =>
+                {
+                    if (!string.IsNullOrEmpty(_.Pubkey))
+                    {
+                        pubkeyWithMessages.Add(_.Pubkey);
+                    }
+                    return Task.CompletedTask;
+                }, new[] { signatureRequest.investorNostrPubKey });
+
         }
     }
 
