@@ -1,6 +1,5 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
@@ -9,8 +8,6 @@ using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using MediatR;
 using NBitcoin.Protocol;
-using Nostr.Client.Messages;
-using Nostr.Client.Requests;
 using Zafiro.CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
@@ -25,7 +22,6 @@ public static class GetInvestments
 
     public class GetInvestmentsHandler(
         IProjectRepository projectRepository,
-        NostrQueryClient nostrQueryClient,
         ISignService signService,
         INostrDecrypter nostrDecrypter,
         INetworkConfiguration networkConfiguration,
@@ -49,8 +45,9 @@ public static class GetInvestments
             var investments = await InvestmentMessages(nostrPubKey);
             var approvals = await ApprovalMessages(nostrPubKey);
 
-            var combineAndMap = await investments.Bind(i => approvals.Map(a => CombineInvestmentsAndApprovals(request.WalletId, projectResult.Value, i, a)));
-            return combineAndMap; 
+            return await investments
+                .Bind(i => approvals
+                    .Map(a => CombineInvestmentsAndApprovals(request.WalletId, projectResult.Value, i, a))); 
         }
 
         private async Task<Result<IEnumerable<Investment>>> CombineInvestmentsAndApprovals(Guid walletId, Project project, IList<InvestmentMessage> messages, IList<ApprovalMessage> approvals)
@@ -72,7 +69,11 @@ public static class GetInvestments
 
         private async Task<Result<IList<ApprovalMessage>>> ApprovalMessages(string nostrPubKey)
         {
-            IObservable<ApprovalMessage> GetApprovedStatusObs(string nostrPubKey)
+            return await GetApprovedStatusObs()
+                .ToList()
+                .ToResult();
+
+            IObservable<ApprovalMessage> GetApprovedStatusObs()
             {
                 return Observable.Create<ApprovalMessage>(observer =>
                 {
@@ -84,15 +85,15 @@ public static class GetInvestments
                     return Disposable.Empty;
                 });
             }
-            
-            return await GetApprovedStatusObs(nostrPubKey)
-                .ToList()
-                .ToResult();
         }
 
         private async Task<Result<IList<InvestmentMessage>>> InvestmentMessages(string nostrPubKey)
         {
-            IObservable<InvestmentMessage> InvesmentMessagesObs(string nostrPubKey)
+            return await InvestmentMessagesObs()
+                .ToList()
+                .ToResult();
+
+            IObservable<InvestmentMessage> InvestmentMessagesObs()
             {
                 return Observable.Create<InvestmentMessage>(observer =>
                 {
@@ -104,31 +105,8 @@ public static class GetInvestments
                     return Disposable.Empty;
                 });
             }
-            
-            return await InvesmentMessagesObs(nostrPubKey)
-                .ToList()
-                .ToResult();
         }
 
-        private async Task<Result<bool>> IsApproved(InvestmentMessage nostrMessage, Project project)
-        {
-            var filter = new NostrFilter
-            {
-                Kinds = new[] { NostrKind.EncryptedDm },
-                Authors = new[] { project.NostrPubKey }
-            };
-
-            filter.AddTag("p", nostrMessage.InvestorNostrPubKey);
-            filter.AddTag("e", nostrMessage.Id);
-
-            var approved = await nostrQueryClient.Query(filter, TimeSpan.FromSeconds(5))
-                .Any(r => r.Event?.Tags?.FindFirstTagValue("subject") == "Re:Investment offer")
-                .ToResult("Failed to query events")
-                .WithTimeout(TimeSpan.FromSeconds(7), "Timeout while waiting for the approval");
-
-            return approved;
-        }
-        
         private long GetAmount(string transactionHex)
         {
             var investorTrx = networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
@@ -141,5 +119,6 @@ public static class GetInvestments
     }
 
     public record Investment(DateTime Created, long Amount, string InvestmentTransactionHex, string InvestorNostrPubKey, string NostrEventId, bool IsApproved);
-    internal record ApprovalMessage(string ProfileIdentifier, DateTime Created, string EventIdentifier);
+
+    private record ApprovalMessage(string ProfileIdentifier, DateTime Created, string EventIdentifier);
 }
