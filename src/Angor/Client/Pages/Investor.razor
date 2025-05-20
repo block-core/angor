@@ -635,11 +635,21 @@
                                             StateHasChanged();
                                         }
                                     });
+
+                                ScanInvestmentSpends(investorProject);
+
                             }).GetAwaiter().GetResult();
                     },
                     investorProject.ProjectInfo.NostrPubKey);
             },
             projectIndexerData.NostrEventId);
+    }
+
+    private Task ScanInvestmentSpends(InvestorProject investorProject)
+    {
+        // todo:
+
+        return Task.CompletedTask;
     }
 
     private void NavigateToPenalties()
