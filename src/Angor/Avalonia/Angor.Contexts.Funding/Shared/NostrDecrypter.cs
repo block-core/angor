@@ -11,7 +11,7 @@ namespace Angor.Contexts.Funding.Shared;
 
 public class NostrDecrypter(IDerivationOperations derivationOperations, IEncryptionService encryptionService, ISeedwordsProvider provider, IProjectRepository projectRepository) : INostrDecrypter
 {
-    public Task<Result<string>> Decrypt(Guid walletId, ProjectId projectId, InvestmentMessage nostrMessage)
+    public Task<Result<string>> Decrypt(Guid walletId, ProjectId projectId, DirectMessage nostrMessage)
     {
         return from sensitiveData in provider.GetSensitiveData(walletId)
             from project in projectRepository.Get(projectId)
