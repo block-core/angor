@@ -59,26 +59,8 @@ public static class FundingContextServices
         services.TryAddSingleton<IInvestmentTransactionBuilder, InvestmentTransactionBuilder>();
         services.TryAddSingleton<ITaprootScriptBuilder, TaprootScriptBuilder>();
         services.TryAddSingleton<IWalletOperations, WalletOperations>();
-        services.AddSingleton(GetNostrQueryClient);
         services.AddHttpClient();
 
         return services;
-    }
-
-    private static NostrQueryClient GetNostrQueryClient(IServiceProvider provider)
-    {
-        var nc = provider.GetRequiredService<INetworkConfiguration>();
-        var relayUrls = nc.GetDefaultRelayUrls();
-            
-        List<INostrClient> nostrClients = new();
-        foreach (var url in relayUrls.Select(x => x.Url))
-        {
-            var nostrWebsocketCommunicator = new NostrWebsocketCommunicator(new Uri(url));
-            nostrWebsocketCommunicator.Start().Wait();
-            var client = ActivatorUtilities.CreateInstance<NostrWebsocketClient>(provider, nostrWebsocketCommunicator);
-            nostrClients.Add(client);
-        }
-            
-        return new NostrQueryClient(nostrClients.ToArray());
     }
 }
