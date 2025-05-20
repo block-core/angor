@@ -23,7 +23,7 @@ public class NostrQueryClientTests(ITestOutputHelper output)
                 E = new[]{"6c71f1e03f0b965306f35904cab5f8c6326524e9958ad6ef54b8a093730bad84"},
             };
         
-            var result = await queryClient.Query(nostrFilter, TimeSpan.FromSeconds(5)).ToList();
+            var result = await queryClient.Query(nostrFilter).ToList();
             Assert.NotEmpty(result);
         });
     }
@@ -52,7 +52,7 @@ public class NostrQueryClientTests(ITestOutputHelper output)
             var result = await list.ToObservable().SelectMany(s => queryClient.Query(new NostrFilter()
             {
                 Ids = [s],
-            }, TimeSpan.FromSeconds(5)))
+            }))
             .ToList();
         });
     }
