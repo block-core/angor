@@ -109,7 +109,7 @@
         <Setter Property="MinHeight" Value="340" />
     </Style>
     
-    <Style Selector="views|DialogControl wizards|WizardControl">
+    <Style Selector="views|DialogControl classic|WizardControl">
         <Setter Property="Width" Value="500" />
         <Setter Property="MinHeight" Value="340" />
     </Style>
