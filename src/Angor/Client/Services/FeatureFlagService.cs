@@ -16,6 +16,9 @@ public class FeatureFlagService : IFeatureFlagService
 
     public bool IsFeatureEnabled(string featureName)
     {
+        if (_featureFlags == null)
+            GetAllFeatureFlags();
+
         return _featureFlags.TryGetValue(featureName, out var isEnabled) && isEnabled;
     }
 
