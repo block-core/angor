@@ -4300,7 +4300,7 @@ fieldset:disabled .btn {
     padding: var(--angor-dropdown-item-padding-y) var(--angor-dropdown-item-padding-x);
     clear: both;
     font-weight: 400;
-    color: var(--angor-secondary);
+    color: var(--angor-primary);
     text-align: inherit;
     white-space: nowrap;
     background-color: transparent;
@@ -4493,7 +4493,6 @@ fieldset:disabled .btn {
 .nav-link {
     display: block;
     padding: var(--angor-nav-link-padding-y) var(--angor-nav-link-padding-x);
-    padding-left:11px !important;
     font-size: var(--angor-nav-link-font-size);
     font-weight: var(--angor-nav-link-font-weight);
     color: var(--angor-nav-link-color);
@@ -22283,7 +22282,6 @@ body.dark {
     .form-check:not(.form-switch) .form-check-input[type="checkbox"],
     .form-check:not(.form-switch) .form-check-input[type="radio"] {
         border: 1px solid #d1d7e1;
-        margin-top: 0.25rem;
         position: relative;
     }
 
