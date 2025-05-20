@@ -2,6 +2,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
@@ -52,15 +53,15 @@ public static class GetInvestments
             return combineAndMap; 
         }
 
-        private async Task<Result<IEnumerable<Investment>>> CombineInvestmentsAndApprovals(Guid walletId, Project project, IList<NostrMessage> messages, IList<NostrMessage> approvals)
+        private async Task<Result<IEnumerable<Investment>>> CombineInvestmentsAndApprovals(Guid walletId, Project project, IList<InvestmentMessage> messages, IList<ApprovalMessage> approvals)
         {
             var combineInvestmentsAndApprovals = messages.Select(message =>
             {
                 return nostrDecrypter.Decrypt(walletId, project.Id, message)
                     .MapTry(serializer.Deserialize<SignRecoveryRequest>)
-                    .Map(async request =>
+                    .Map(request =>
                     {
-                        var isApproved = approvals.Any(a => a.Id == message.Id);
+                        var isApproved = approvals.Any(a => a.EventIdentifier == message.Id);
                         return new Investment(message.Created, GetAmount(request.InvestmentTransactionHex), request.InvestmentTransactionHex, message.InvestorNostrPubKey, message.Id, isApproved);;
                     });
             }).CombineInOrder(", ");
@@ -69,19 +70,14 @@ public static class GetInvestments
             return result;
         }
 
-        private bool IsApproved(NostrMessage investmentMessage, IList<NostrMessage> approvedMessages)
+        private async Task<Result<IList<ApprovalMessage>>> ApprovalMessages(string nostrPubKey)
         {
-            return false;
-        }
-
-        private async Task<Result<IList<NostrMessage>>> ApprovalMessages(string nostrPubKey)
-        {
-            IObservable<NostrMessage> GetApprovedStatusObs(string nostrPubKey)
+            IObservable<ApprovalMessage> GetApprovedStatusObs(string nostrPubKey)
             {
-                return Observable.Create<NostrMessage>(observer =>
+                return Observable.Create<ApprovalMessage>(observer =>
                 {
                     signService.LookupInvestmentRequestApprovals(nostrPubKey,
-                        (id, created, content) => observer.OnNext(new NostrMessage(id, nostrPubKey, content, created)),
+                        (profileIdentifier, created, content) => observer.OnNext(new ApprovalMessage(profileIdentifier, created, content)),
                         observer.OnCompleted
                     );
 
@@ -94,14 +90,14 @@ public static class GetInvestments
                 .ToResult();
         }
 
-        private async Task<Result<IList<NostrMessage>>> InvestmentMessages(string nostrPubKey)
+        private async Task<Result<IList<InvestmentMessage>>> InvestmentMessages(string nostrPubKey)
         {
-            IObservable<NostrMessage> InvesmentMessagesObs(string nostrPubKey)
+            IObservable<InvestmentMessage> InvesmentMessagesObs(string nostrPubKey)
             {
-                return Observable.Create<NostrMessage>(observer =>
+                return Observable.Create<InvestmentMessage>(observer =>
                 {
                     signService.LookupInvestmentRequestsAsync(nostrPubKey, null, null,
-                        (id, pubKey, content, created) => observer.OnNext(new NostrMessage(id, pubKey, content, created)),
+                        (id, pubKey, content, created) => observer.OnNext(new InvestmentMessage(id, pubKey, content, created)),
                         observer.OnCompleted
                     );
 
@@ -114,7 +110,7 @@ public static class GetInvestments
                 .ToResult();
         }
 
-        private async Task<Result<bool>> IsApproved(NostrMessage nostrMessage, Project project)
+        private async Task<Result<bool>> IsApproved(InvestmentMessage nostrMessage, Project project)
         {
             var filter = new NostrFilter
             {
@@ -145,4 +141,5 @@ public static class GetInvestments
     }
 
     public record Investment(DateTime Created, long Amount, string InvestmentTransactionHex, string InvestorNostrPubKey, string NostrEventId, bool IsApproved);
+    internal record ApprovalMessage(string ProfileIdentifier, DateTime Created, string EventIdentifier);
 }
