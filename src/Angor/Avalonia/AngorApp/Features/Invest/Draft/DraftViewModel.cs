@@ -47,7 +47,7 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
             .NotNull()
             .CombineLatest(IsCalculating, (hasDraft, calculating) => hasDraft && !calculating);
 
-        Confirm = ReactiveCommand.CreateFromTask(() => Draft!.Confirm(), canConfirm).DisposeWith(disposable);
+        Confirm = ReactiveCommand.CreateFromTask(() => Draft!.Confirm().Map(() => Unit.Default), canConfirm).DisposeWith(disposable);
         IsSending = Confirm.IsExecuting;
         feeHelper = this.WhenAnyValue(model => model.Draft!.TotalFee).ToProperty(this, model => model.Fee).DisposeWith(disposable);
         createDraft.Connect().DisposeWith(disposable);
@@ -55,7 +55,7 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
 
     public IObservable<bool> IsCalculating { get; }
     public IObservable<bool> IsSending { get; }
-    public ReactiveCommand<Unit, Result<Guid>> Confirm { get; }
+    public ReactiveCommand<Unit, Result<Unit>> Confirm { get; }
     public IEnumerable<IFeeratePreset> Presets => uiServices.FeeratePresets;
 
     public void Dispose()

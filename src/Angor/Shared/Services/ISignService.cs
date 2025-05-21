@@ -1,26 +1,25 @@
 using Angor.Shared.Models;
+using CSharpFunctionalExtensions;
 using Nostr.Client.Responses;
 
 namespace Angor.Shared.Services;
 
 public interface ISignService
 {
-    (DateTime eventTime, string eventId) RequestInvestmentSigs(string encryptedContent, string investorNostrPrivateKey,
-        string founderNostrPubKey, Action<NostrOkResponse> okResponse);
-    void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action);
-
-    Task LookupInvestmentRequestsAsync(string nostrPubKey, string? senderNpub, DateTime? since, Action<string, string, string, DateTime> action,
-        Action onAllMessagesReceived);
+    (DateTime eventTime, string eventId) PostInvestmentRequest(string encryptedContent, string investorNostrPrivateKey, string founderNostrPubKey, Action<NostrOkResponse> okResponse);
     
-    void LookupInvestmentRequestApprovals(string nostrPubKey, Action<string, DateTime, string> action,
-        Action onAllMessagesReceived);
+    void GetInvestmentRequestApproval(string investorNostrPubKey, string projectNostrPubKey, DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action);
 
-    DateTime SendSignaturesToInvestor(string encryptedSignatureInfo, string nostrPrivateKey,
-        string investorNostrPubKey, string eventId);
+    Task GetAllInvestmentRequests(string nostrPubKey, string? senderNpub, DateTime? since, Action<string, string, string, DateTime> action, Action onAllMessagesReceived);
+    
+    void GetAllInvestmentRequestApprovals(string nostrPubKey, Action<string, DateTime, string> action, Action onAllMessagesReceived);
 
-    DateTime SendReleaseSigsToInvestor(string encryptedReleaseSigInfo, string nostrPrivateKeyHex, string investorNostrPubKey, string eventId);
+    DateTime PostInvestmentRequestApproval(string encryptedSignatureInfo, string nostrPrivateKey, string investorNostrPubKey, string eventId);
+    
+    DateTime PostInvestmentRevocation(string encryptedReleaseSigInfo, string nostrPrivateKeyHex, string investorNostrPubKey, string eventId);
 
-    void LookupReleaseSigs(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Action<string> action, Action onAllMessagesReceived);
+    void GetInvestmentRevocation(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Action<string> action, Action onAllMessagesReceived);
 
-    void LookupSignedReleaseSigs(string projectNostrPubKey, Action<SignServiceLookupItem> action, Action onAllMessagesReceived);
+    void GetAllInvestmentRevocations(string projectNostrPubKey, Action<SignServiceLookupItem> action, Action onAllMessagesReceived);
+    Task<Result<EventSendResponse>> PostInvestmentRequest2<T>(KeyIdentifier keyIdentifier, T content, string founderNostrPubKey);
 }

@@ -34,6 +34,7 @@ builder.Services.AddScoped<ICacheStorage, LocalSessionStorage>();
 builder.Services.AddTransient<IWalletOperations, WalletOperations>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
+builder.Services.AddScoped<INostrEncryption, WasmNostrEncryption>();
 builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();
 builder.Services.AddScoped<NavMenuState>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
@@ -45,6 +46,10 @@ builder.Services.AddScoped<INetworkService, NetworkService>();
 
 builder.Services.AddTransient<IRelayService, RelayService>();
 builder.Services.AddTransient<ISignService, SignService>();
+builder.Services.AddTransient<INostrService, NostrService>();
+
+// TODO: Inject the correct implementation
+builder.Services.AddTransient<ISensitiveNostrData, SensitiveNostrData>();
 
 builder.Services.AddTransient<IFounderTransactionActions, FounderTransactionActions>();
 builder.Services.AddTransient<ISeederTransactionActions, SeederTransactionActions>();

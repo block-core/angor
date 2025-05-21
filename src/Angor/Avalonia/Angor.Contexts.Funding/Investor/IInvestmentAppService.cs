@@ -1,5 +1,8 @@
+using Angor.Contexts.Funding.Founder.Operations;
+using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Investment = Angor.Contexts.Funding.Founder.Operations.Investment;
 
