@@ -4,6 +4,7 @@
 @using Blockcore.NBitcoin
 @using Angor.Client.Models
 @using Angor.Shared
+@using Angor.Shared.Protocol
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin.DataEncoders
 @using Nostr.Client.Messages.Direct
@@ -20,6 +21,7 @@
 @inject ISignService _SignService
 @inject ISerializer serializer
 @inject IEncryptionService _encryptionService
+@inject IInvestorTransactionActions _InvestorTransactionActions
 
 @inherits BaseComponent
 
@@ -631,12 +633,14 @@
                                             projects.Add(investorProject);
                                             storage.AddInvestmentProject(investorProject);
 
+                                            await ScanInvestmentSpends(investorProject);
+
                                             RefreshBalanceTriggered = false;
                                             StateHasChanged();
                                         }
                                     });
 
-                                ScanInvestmentSpends(investorProject);
+                             
 
                             }).GetAwaiter().GetResult();
                     },
@@ -645,11 +649,84 @@
             projectIndexerData.NostrEventId);
     }
 
-    private Task ScanInvestmentSpends(InvestorProject investorProject)
+    private async Task ScanInvestmentSpends(InvestorProject investorProject)
     {
-        // todo:
+        var trxInfo = await _IndexerService.GetTransactionInfoByIdAsync(investorProject.TransactionId);
 
-        return Task.CompletedTask;
+        if (trxInfo == null)
+            return;
+
+        var trxHex = await _IndexerService.GetTransactionHexByIdAsync(investorProject.TransactionId);
+        Blockcore.Consensus.TransactionInfo.Transaction investmentTransaction = network.CreateTransaction(trxHex);
+
+        int stageIndex = 0;
+        foreach (Stage stage in investorProject.ProjectInfo.Stages)
+        {
+            bool resolved = false;
+            var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
+
+            if (!string.IsNullOrEmpty(output.SpentInTransaction))
+            {
+                var spentInfo = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+
+                if (spentInfo == null)
+                    continue;
+
+                var spentInput = spentInfo.Inputs.FirstOrDefault(input => (input.InputTransactionId == investorProject.TransactionId) && (input.InputIndex == output.Index));
+
+                if (spentInput != null)
+                {
+                    var scriptType = _InvestorTransactionActions.DiscoverUsedScript(investorProject.ProjectInfo, investmentTransaction, stageIndex, spentInput.WitScript);
+
+                    switch (scriptType.ScriptType)
+                    {
+                        case ProjectScriptTypeEnum.Founder:
+                        {
+                            // check the next stage
+                            continue;
+                        }
+
+                        case ProjectScriptTypeEnum.EndOfProject:
+                        {
+                            resolved = true;
+                            investorProject.EndOfProjectTransactionId = output.SpentInTransaction;
+                            break;
+                        }
+
+                        case ProjectScriptTypeEnum.InvestorWithPenalty:
+                        {
+                            resolved = true;
+                            investorProject.RecoveryTransactionId = output.SpentInTransaction;
+
+                            var spentRecoveryInfo = await _IndexerService.GetTransactionInfoByIdAsync(investorProject.RecoveryTransactionId);
+
+                            if (spentRecoveryInfo != null)
+                            {
+                                if (spentRecoveryInfo.Outputs.Any(_ => !string.IsNullOrEmpty(_.SpentInTransaction)))
+                                {
+                                    investorProject.RecoveryReleaseTransactionId = spentRecoveryInfo.Outputs.First(_ => !string.IsNullOrEmpty(_.SpentInTransaction)).SpentInTransaction;
+                                }
+                            }
+
+                            break;
+                        }
+
+                        case ProjectScriptTypeEnum.InvestorNoPenalty:
+                        {
+                            resolved = true;
+                            investorProject.UnfundedReleaseTransactionId = output.SpentInTransaction;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (resolved)
+            {
+                storage.UpdateInvestmentProject(investorProject);
+                break;
+            }
+        }
     }
 
     private void NavigateToPenalties()
