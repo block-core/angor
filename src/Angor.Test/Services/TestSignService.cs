@@ -29,8 +29,15 @@ namespace Angor.Test.Services
                 },
             });
 
+            var mockIHttpClientFactory = new Mock<IHttpClientFactory>();
+            mockIHttpClientFactory.Setup(x => x.CreateClient(It.IsAny<string>()))
+                .Returns(new HttpClient(new HttpClientHandler())
+                {
+                    BaseAddress = new Uri("https://mempool.space/api/v1/")
+                });
+            
             var communicationFactory = new NostrCommunicationFactory(new NullLogger<NostrWebsocketClient>(), new NullLogger<NostrCommunicationFactory>()); 
-            var networkService = new NetworkService(mockNetworkStorage.Object, new HttpClient { BaseAddress = new Uri("https://angor.io") }, new NullLogger<NetworkService>(), mockNetworkConfiguration.Object); 
+            var networkService = new NetworkService(mockNetworkStorage.Object, mockIHttpClientFactory.Object, new NullLogger<NetworkService>(), mockNetworkConfiguration.Object); 
             var subscriptionsHanding = new RelaySubscriptionsHandling(new NullLogger<RelaySubscriptionsHandling>(), communicationFactory, networkService); 
 
             _signService = new SignService(communicationFactory, networkService, subscriptionsHanding);

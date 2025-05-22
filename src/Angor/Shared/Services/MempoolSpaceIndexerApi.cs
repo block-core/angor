@@ -11,19 +11,17 @@ namespace Angor.Shared.Services;
 public class MempoolSpaceIndexerApi : IIndexerService
 {
     private readonly ILogger<MempoolSpaceIndexerApi> _logger;
-    
-    private readonly INetworkConfiguration _networkConfiguration;
-    private readonly HttpClient _httpClient;
+
+    private readonly IHttpClientFactory _clientFactory;
     private readonly INetworkService _networkService;
 
     private const string AngorApiRoute = "/api/v1/query/Angor";
     private const string MempoolApiRoute = "/api/v1";
 
-    public MempoolSpaceIndexerApi(ILogger<MempoolSpaceIndexerApi> logger, INetworkConfiguration networkConfiguration, HttpClient httpClient, INetworkService networkService)
+    public MempoolSpaceIndexerApi(ILogger<MempoolSpaceIndexerApi> logger, IHttpClientFactory clientFactory, INetworkService networkService)
     {
         _logger = logger;
-        _networkConfiguration = networkConfiguration;
-        _httpClient = httpClient;
+        _clientFactory = clientFactory;
         _networkService = networkService;
     }
 
@@ -112,13 +110,22 @@ public class MempoolSpaceIndexerApi : IIndexerService
         public UtxoStatus Status { get; set; }
     }
     
-    public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
+    private HttpClient GetIndexerClient()
     {
         var indexer = _networkService.GetPrimaryIndexer();
+        var client = _clientFactory.CreateClient();
+        client.BaseAddress = new Uri(indexer.Url);
+        return client;
+    }
+    
+    public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
+    {
         var url = offset == null ? 
-            $"{indexer.Url}{AngorApiRoute}/projects?limit={limit}" : 
-            $"{indexer.Url}{AngorApiRoute}/projects?offset={offset}&limit={limit}";
-        var response = await _httpClient.GetAsync(url);
+            $"{AngorApiRoute}/projects?limit={limit}" : 
+            $"{AngorApiRoute}/projects?offset={offset}&limit={limit}";
+        
+        var response = await GetIndexerClient()
+            .GetAsync(url);
         _networkService.CheckAndHandleError(response);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>() ?? new List<ProjectIndexerData>();
@@ -136,8 +143,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
             return null;
         }
 
-        var indexer = _networkService.GetPrimaryIndexer();
-        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects/{projectId}");
+        var response = await GetIndexerClient()
+            .GetAsync($"{AngorApiRoute}/projects/{projectId}");
         _networkService.CheckAndHandleError(response);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
@@ -155,8 +162,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
             return null;
         }
 
-        var indexer = _networkService.GetPrimaryIndexer();
-        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects/{projectId}/stats");
+        var response = await GetIndexerClient()
+            .GetAsync($"{AngorApiRoute}/projects/{projectId}/stats");
         _networkService.CheckAndHandleError(response);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
@@ -169,8 +176,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)
     {
-        var indexer = _networkService.GetPrimaryIndexer();
-        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects/{projectId}/investments");
+        var response = await GetIndexerClient()
+            .GetAsync($"{AngorApiRoute}/projects/{projectId}/investments");
         _networkService.CheckAndHandleError(response);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
@@ -178,8 +185,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     public async Task<ProjectInvestment?> GetInvestmentAsync(string projectId, string investorPubKey)
     {
-        var indexer = _networkService.GetPrimaryIndexer();
-        var response = await _httpClient.GetAsync($"{indexer.Url}{AngorApiRoute}/projects/{projectId}/investments/{investorPubKey}");
+        var response = await GetIndexerClient()
+            .GetAsync($"{AngorApiRoute}/projects/{projectId}/investments/{investorPubKey}");
         _networkService.CheckAndHandleError(response);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<ProjectInvestment>();
@@ -187,9 +194,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     public async Task<string> PublishTransactionAsync(string trxHex)
     {
-        var indexer = _networkService.GetPrimaryIndexer();
-
-        var response = await _httpClient.PostAsync($"{indexer.Url}{MempoolApiRoute}/tx", new StringContent(trxHex));
+        var response = await GetIndexerClient()
+            .PostAsync($"{MempoolApiRoute}/tx", new StringContent(trxHex));
         
         _networkService.CheckAndHandleError(response);
             
@@ -213,8 +219,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
         {
             //check all new addresses for balance or a history
 
-            var indexer = _networkService.GetPrimaryIndexer();
-            return _httpClient.GetAsync(indexer.Url + urlBalance + x.Address);
+            return GetIndexerClient()
+                .GetAsync(urlBalance + x.Address);
         });
 
         var results = await Task.WhenAll(tasks);
@@ -247,11 +253,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
     
     public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset)
     {
-        var indexer = _networkService.GetPrimaryIndexer();
-
         var txsUrl = $"{MempoolApiRoute}/address/{address}/txs";
 
-        var response = await _httpClient.GetAsync(indexer.Url + txsUrl);
+        var response = await GetIndexerClient()
+            .GetAsync(txsUrl);
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
@@ -272,7 +277,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
             var outspendsUrl = $"{MempoolApiRoute}/tx/" + mempoolTransaction.Txid + "/outspends";
 
-            var resultsOutputs = await _httpClient.GetAsync(indexer.Url + outspendsUrl);
+            var resultsOutputs = await GetIndexerClient().GetAsync(outspendsUrl);
         
             var spentOutputsStatus = await resultsOutputs.Content.ReadFromJsonAsync<List<Outspent>>(new JsonSerializerOptions()
                 { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
@@ -316,14 +321,13 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     public async Task<List<QueryTransaction>?> FetchAddressHistoryAsync(string address, string? afterTrxId = null) //TODO check the paging (I think it is 50 by default 
     {
-        var indexer = _networkService.GetPrimaryIndexer();
-
         var txsUrl = $"{MempoolApiRoute}/address/{address}/txs";
 
         if (!string.IsNullOrEmpty(afterTrxId))
             txsUrl += $"?after_txid={afterTrxId}";
         
-        var response = await _httpClient.GetAsync(indexer.Url + txsUrl);
+        var response = await GetIndexerClient()
+            .GetAsync( txsUrl);
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
@@ -337,11 +341,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     public async Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations)
     {
-        var indexer = _networkService.GetPrimaryIndexer();
-
         var url = $"{MempoolApiRoute}/fees/recommended";
-
-        var response = await _httpClient.GetAsync(indexer.Url + url);
+        
+        var response = await GetIndexerClient()
+            .GetAsync(url);
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
@@ -369,11 +372,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     public async Task<string> GetTransactionHexByIdAsync(string transactionId)
     {
-        var indexer = _networkService.GetPrimaryIndexer();
-
         var url = $"{MempoolApiRoute}/tx/{transactionId}/hex";
             
-        var response = await _httpClient.GetAsync(indexer.Url + url);
+        var response = await GetIndexerClient()
+            .GetAsync(url);
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
@@ -384,11 +386,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     public async Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId)
     {
-        var indexer = _networkService.GetPrimaryIndexer();
-
         var url = $"{MempoolApiRoute}/tx/{transactionId}";
             
-        var response = await _httpClient.GetAsync(indexer.Url + url);
+        var response = await GetIndexerClient()
+            .GetAsync(url);
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
@@ -403,7 +404,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
         var urlSpent = $"{MempoolApiRoute}/tx/{transactionId}/outspends";
 
-        var responseSpent = await _httpClient.GetAsync(indexer.Url + urlSpent);
+        var responseSpent = await GetIndexerClient()
+            .GetAsync(urlSpent);
         _networkService.CheckAndHandleError(responseSpent);
 
         if (!responseSpent.IsSuccessStatusCode)
@@ -462,8 +464,6 @@ public class MempoolSpaceIndexerApi : IIndexerService
     
     private async Task PopulateSpentMissingData(List<Outspent> outspents, MempoolTransaction mempoolTransaction)
     {
-        var indexer = _networkService.GetPrimaryIndexer();
-
         for (int index = 0; index < outspents.Count; index++)
         {
             var outspent = outspents[index];
@@ -475,7 +475,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
                 {
                     var txsUrl = $"{MempoolApiRoute}/address/{output.ScriptpubkeyAddress}/txs";
 
-                    var response = await _httpClient.GetAsync(indexer.Url + txsUrl);
+                    var response = await GetIndexerClient()
+                        .GetAsync(txsUrl);
                     _networkService.CheckAndHandleError(response);
 
                     if (!response.IsSuccessStatusCode)
@@ -514,9 +515,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
         try
         {
             // fetch block 0 (Genesis Block)
-            var blockUrl = $"{indexerUrl}{MempoolApiRoute}/block-height/0";
-        
-            var blockResponse = await _httpClient.GetAsync(blockUrl);
+            var blockUrl = $"{MempoolApiRoute}/block-height/0";
+                    
+            var blockResponse = await GetIndexerClient()
+                .GetAsync(blockUrl);
         
             if (!blockResponse.IsSuccessStatusCode)
             {

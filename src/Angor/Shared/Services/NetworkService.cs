@@ -11,16 +11,16 @@ namespace Angor.Shared.Services
     public class NetworkService : INetworkService
     {
         private readonly INetworkStorage _networkStorage;
-        private readonly HttpClient _httpClient;
+        private readonly IHttpClientFactory _clientFactory;
         private readonly ILogger<NetworkService> _logger;
         private readonly INetworkConfiguration _networkConfiguration;
         public event Action OnStatusChanged;
 
 
-        public NetworkService(INetworkStorage networkStorage, HttpClient httpClient, ILogger<NetworkService> logger, INetworkConfiguration networkConfiguration)
+        public NetworkService(INetworkStorage networkStorage, IHttpClientFactory clientFactory, ILogger<NetworkService> logger, INetworkConfiguration networkConfiguration)
         {
             _networkStorage = networkStorage;
-            _httpClient = httpClient;
+            _clientFactory = clientFactory;
             _logger = logger;
             _networkConfiguration = networkConfiguration;
         }
@@ -113,7 +113,8 @@ namespace Angor.Shared.Services
                         
                         var blockUrl = Path.Combine(uri.AbsoluteUri, "api", "v1", "block-height", "0");
 
-                        var response = await _httpClient.GetAsync(blockUrl);
+                        var response = await _clientFactory.CreateClient()
+                            .GetAsync(blockUrl);
 
                         if (response.IsSuccessStatusCode)
                         {
@@ -165,7 +166,8 @@ namespace Angor.Shared.Services
             //}
 
             var nostrHeaderMediaType = new MediaTypeWithQualityHeaderValue("application/nostr+json");
-            _httpClient.DefaultRequestHeaders.Accept.Add(nostrHeaderMediaType);
+            var client = _clientFactory.CreateClient();
+            client.DefaultRequestHeaders.Accept.Add(nostrHeaderMediaType);
             foreach (var relayUrl in settings.Relays)
             {
                 if (force || (DateTime.UtcNow - relayUrl.LastCheck).Minutes > 1)
@@ -179,7 +181,7 @@ namespace Angor.Shared.Services
                             ? new Uri($"https://{uri.Host}/")
                             : new Uri($"http://{uri.Host}/");
 
-                        var response = await _httpClient.GetAsync(httpUri);
+                        var response = await client.GetAsync(httpUri);
 
                         if (response.IsSuccessStatusCode)
                         {
@@ -201,7 +203,7 @@ namespace Angor.Shared.Services
                 }
             }
 
-            _httpClient.DefaultRequestHeaders.Accept.Remove(nostrHeaderMediaType);
+            client.DefaultRequestHeaders.Accept.Remove(nostrHeaderMediaType);
             _networkStorage.SetSettings(settings);
         }
 
