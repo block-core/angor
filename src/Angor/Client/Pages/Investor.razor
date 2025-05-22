@@ -697,12 +697,14 @@
                         {
                             resolved = true;
                             investorProject.RecoveryTransactionId = output.SpentInTransaction;
+                            var totalsats = trxInfo.Outputs.SkipLast(1).Sum(s => s.Balance);
+                            investorProject.AmountInRecovery = totalsats;
 
                             var spentRecoveryInfo = await _IndexerService.GetTransactionInfoByIdAsync(investorProject.RecoveryTransactionId);
 
                             if (spentRecoveryInfo != null)
                             {
-                                if (spentRecoveryInfo.Outputs.Any(_ => !string.IsNullOrEmpty(_.SpentInTransaction)))
+                                if (spentRecoveryInfo.Outputs.SkipLast(1).Any(_ => !string.IsNullOrEmpty(_.SpentInTransaction)))
                                 {
                                     investorProject.RecoveryReleaseTransactionId = spentRecoveryInfo.Outputs.First(_ => !string.IsNullOrEmpty(_.SpentInTransaction)).SpentInTransaction;
                                 }
