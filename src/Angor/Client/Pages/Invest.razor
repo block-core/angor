@@ -7,7 +7,7 @@
 @using Money = Blockcore.NBitcoin.Money
 @using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
 @using Angor.Shared.Services
-@using Nostr.Client.Keys  @*TODO remove this dependency *@
+@using Nostr.Client.Keys  //TODO remove this dependency
 @using System.Diagnostics
 @using Angor.Client.Models
 @using Blockcore.Networks
@@ -218,12 +218,28 @@
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-1">
                             <small class="text-muted">Enter your investment amount</small>
-                            <small class="text-muted">
-                                Balance:
-                                <span role="button" @onclick="SetMaxInvestment" class="fw-bold">@WalletBalanceDisplay @network.CoinTicker</span>
+                            <small class="text-muted" role="button">
+                                Max Balance:
+                                <span @onclick="SetMaxInvestment" class="fw-bold text-warning">@WalletBalanceDisplay @network.CoinTicker</span>
                             </small>
                         </div>
                     </div>
+
+                    <div class="field-container mb-4">
+                        <label for="additionalNpub" class="form-label d-flex align-items-center gap-2 mb-2">
+                            <Icon IconName="key" Width="20" Height="20" />
+                            <span>Additional npub</span>
+                        </label>
+                        <div class="input-container position-relative">
+                            <InputText @bind-Value="@Investment.AdditionalNpub"
+                                       id="additionalNpub"
+                                       type="text"
+                                       placeholder="npub1..."
+                                       class="angor-input" />
+                        </div>
+                        <small class="text-muted mt-1">Optional: Enter additional Nostr public key</small>
+                    </div>
+
                 </div>
 
                 <button type="submit" class="btn btn-border-success w-100 d-flex align-items-center justify-content-center" disabled="@buildSpinner">
@@ -829,7 +845,7 @@ else
                 var seederHash = _derivationOperations.DeriveLeadInvestorSecretHash(words, project.ProjectInfo.FounderKey);
             }
 
-            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc ).Satoshi);
+            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
 
             if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
