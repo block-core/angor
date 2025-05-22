@@ -13,6 +13,7 @@
 @using Blockcore.Networks
 @using System.Text.Json
 @using Angor.Shared.Utilities
+@using Angor.Client.Shared
 @using Angor.Shared.Protocol
 
 @inherits BaseComponent
@@ -215,22 +216,13 @@
                                          class="angor-input input-with-ticker" />
                             <span class="currency-ticker-inside">@network.CoinTicker</span>
                         </div>
-                        <small class="text-muted mt-1">Enter your investment amount</small>
-                    </div>
-
-                    <div class="field-container mb-4">
-                        <label for="additionalNpub" class="form-label d-flex align-items-center gap-2 mb-2">
-                            <Icon IconName="key" Width="20" Height="20" />
-                            <span>Additional npub</span>
-                        </label>
-                        <div class="input-container position-relative">
-                            <InputText @bind-Value="@Investment.AdditionalNpub"
-                                       id="additionalNpub"
-                                       type="text"
-                                       placeholder="npub1..."
-                                       class="angor-input" />
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <small class="text-muted">Enter your investment amount</small>
+                            <small class="text-muted">
+                                Balance:
+                                <span role="button" @onclick="SetMaxInvestment" class="fw-bold">@WalletBalanceDisplay @network.CoinTicker</span>
+                            </small>
                         </div>
-                        <small class="text-muted mt-1">Optional: Enter additional Nostr public key</small>
                     </div>
                 </div>
 
@@ -322,7 +314,11 @@
                                     <div class="info-card flex-grow-1 me-2">
                                         <div class="info-label">Amount to Invest</div>
                                         <div class="info-value text-success">
-                                            @Investment.InvestmentAmountBtc @network.CoinTicker
+                                            @DisplayNetInvestment() @network.CoinTicker
+                                            @if (IsMaxInvestment)
+                                            {
+                                                <span class="badge bg-info ms-2">Max (fee deducted)</span>
+                                            }
                                         </div>
                                     </div>
                                     <div class="info-card flex-grow-1 ms-2">
@@ -557,8 +553,13 @@ else
     Transaction unSignedTransaction;
     string InvestorPubKey;
 
+    private decimal WalletBalanceBtc = 0;
+    private string WalletBalanceDisplay => WalletBalanceBtc.ToString("0.########");
 
     private FeeData feeData = new();
+
+    private bool IsMaxInvestment = false;
+    private decimal LastMaxInvestmentValue = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -610,6 +611,8 @@ else
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmountBtc });
+
+        await LoadWalletBalance();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -623,6 +626,18 @@ else
         }
     }
 
+    private async Task LoadWalletBalance()
+    {
+        try
+        {
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+            WalletBalanceBtc = accountBalanceInfo.TotalBalance.ToUnitBtc();
+        }
+        catch
+        {
+            WalletBalanceBtc = 0;
+        }
+    }
 
     private async Task RefreshSignatures()
     {
@@ -698,6 +713,9 @@ else
         if (decimal.TryParse(e.Value.ToString(), out decimal amountBtc))
         {
             Investment.InvestmentAmountBtc = amountBtc;
+
+            if (IsMaxInvestment && LastMaxInvestmentValue != amountBtc)
+                IsMaxInvestment = false;
 
             StagesBreakdown.Clear();
             int index = 1;
@@ -982,6 +1000,8 @@ else
                 investorProject.SignaturesInfo.TimeOfSignatureRequest.Value,
                 investorProject.SignaturesInfo.SignatureRequestEventId,
                 signatures => HandleSignatureReceivedAsync(nostrPrivateKeyHex, signatures));
+
+            notificationComponent.ShowNotificationMessage("Signature request sent", 5);
         }
         catch (Exception e)
         {
@@ -1232,6 +1252,39 @@ else
         }
 
         return false;
+    }
+
+    private async Task SetMaxInvestment()
+    {
+        decimal feeBtc = 0;
+        try
+        {
+            if (feeData?.SelectedFeeEstimation != null)
+            {
+                feeBtc = Money.Satoshis(feeData.SelectedFeeEstimation.FeeRate * 250).ToUnit(MoneyUnit.BTC); // تخمین سایز تراکنش
+            }
+        }
+        catch { feeBtc = 0; }
+
+        var maxAmount = WalletBalanceBtc - feeBtc;
+        if (maxAmount < 0) maxAmount = 0;
+
+        Investment.InvestmentAmountBtc = Math.Round(maxAmount, 8, MidpointRounding.ToZero);
+        LastMaxInvestmentValue = Investment.InvestmentAmountBtc;
+        IsMaxInvestment = true;
+        UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmountBtc });
+        StateHasChanged();
+    }
+
+    private string DisplayNetInvestment()
+    {
+        if (IsMaxInvestment && signedTransaction != null && signedTransaction.TransactionFee > 0)
+        {
+            var net = Investment.InvestmentAmountBtc - Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC);
+            if (net < 0) net = 0;
+            return net.ToString("0.########");
+        }
+        return Investment.InvestmentAmountBtc.ToString("0.########");
     }
 
     private void ShowMessageWithPassword()
