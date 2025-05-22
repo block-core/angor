@@ -220,7 +220,7 @@
                             <small class="text-muted">Enter your investment amount</small>
                             <small class="text-muted" role="button">
                                 Max Balance:
-                                <span @onclick="SetMaxInvestment" class="fw-bold text-warning">@WalletBalanceDisplay.ToString("0.########") @network.CoinTicker</span>
+                                <span @onclick="SetMaxInvestment" class="fw-bold text-warning">@WalletBalanceBtc.ToString("0.########") @network.CoinTicker</span>
                             </small>
                         </div>
                     </div>
@@ -570,8 +570,7 @@ else
     string InvestorPubKey;
 
     private decimal WalletBalanceBtc = 0;
-    private string WalletBalanceDisplay => WalletBalanceBtc;
-
+ 
     private FeeData feeData = new();
 
     private bool IsMaxInvestment = false;
