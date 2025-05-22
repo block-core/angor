@@ -7,7 +7,7 @@
 @using Money = Blockcore.NBitcoin.Money
 @using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
 @using Angor.Shared.Services
-@using Nostr.Client.Keys //TODO remove this dependency
+@using Nostr.Client.Keys  @*TODO remove this dependency *@
 @using System.Diagnostics
 @using Angor.Client.Models
 @using Blockcore.Networks
@@ -1256,17 +1256,7 @@ else
 
     private async Task SetMaxInvestment()
     {
-        decimal feeBtc = 0;
-        try
-        {
-            if (feeData?.SelectedFeeEstimation != null)
-            {
-                feeBtc = Money.Satoshis(feeData.SelectedFeeEstimation.FeeRate * 250).ToUnit(MoneyUnit.BTC); // تخمین سایز تراکنش
-            }
-        }
-        catch { feeBtc = 0; }
-
-        var maxAmount = WalletBalanceBtc - feeBtc;
+        var maxAmount = WalletBalanceBtc ;
         if (maxAmount < 0) maxAmount = 0;
 
         Investment.InvestmentAmountBtc = Math.Round(maxAmount, 8, MidpointRounding.ToZero);
