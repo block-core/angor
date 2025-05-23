@@ -7,12 +7,13 @@
 @using Money = Blockcore.NBitcoin.Money
 @using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
 @using Angor.Shared.Services
-@using Nostr.Client.Keys //TODO remove this dependency
+@using Nostr.Client.Keys  //TODO remove this dependency
 @using System.Diagnostics
 @using Angor.Client.Models
 @using Blockcore.Networks
 @using System.Text.Json
 @using Angor.Shared.Utilities
+@using Angor.Client.Shared
 @using Angor.Shared.Protocol
 
 @inherits BaseComponent
@@ -215,7 +216,13 @@
                                          class="angor-input input-with-ticker" />
                             <span class="currency-ticker-inside">@network.CoinTicker</span>
                         </div>
-                        <small class="text-muted mt-1">Enter your investment amount</small>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <small class="text-muted">Enter your investment amount</small>
+                            <small class="text-muted" role="button">
+                                Max Balance:
+                                <span @onclick="SetMaxInvestment" class="fw-bold text-warning">@WalletBalanceBtc.ToUnitBtc() @network.CoinTicker</span>
+                            </small>
+                        </div>
                     </div>
 
                     <div class="field-container mb-4">
@@ -232,6 +239,7 @@
                         </div>
                         <small class="text-muted mt-1">Optional: Enter additional Nostr public key</small>
                     </div>
+
                 </div>
 
                 <button type="submit" class="btn btn-border-success w-100 d-flex align-items-center justify-content-center" disabled="@buildSpinner">
@@ -564,8 +572,11 @@ else
     Transaction unSignedTransaction;
     string InvestorPubKey;
 
-
+    private long WalletBalanceBtc = 0;
+ 
     private FeeData feeData = new();
+
+    private bool IsMaxInvestment = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -617,6 +628,8 @@ else
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmountBtc });
+
+        await LoadWalletBalance();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -630,6 +643,19 @@ else
         }
     }
 
+    private async Task LoadWalletBalance()
+    {
+        try
+        {
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+            WalletBalanceBtc = accountBalanceInfo.TotalBalance;
+        }
+        catch (Exception e)
+        {
+            WalletBalanceBtc = 0;
+            notificationComponent.ShowErrorMessage(e.Message, e);
+        }
+    }
 
     private async Task RefreshSignatures()
     {
@@ -708,6 +734,8 @@ else
         {
             Investment.InvestmentAmountBtc = amountBtc;
 
+            IsMaxInvestment = false;
+
             StagesBreakdown.Clear();
             int index = 1;
 
@@ -741,7 +769,7 @@ else
     private async Task InvestFunds()
     {
         bool isTestnet = network.NetworkType == NetworkType.Testnet;
-        decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.2m; // 0.1 BTC for mainnet, unlimited for testnet
+        decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.2m; // 0.2 BTC for mainnet, unlimited for testnet
         decimal minInvestmentBtc = 0.001m; // Minimum investment for all networks
 
         if (Investment.IsSeeder)
@@ -991,6 +1019,8 @@ else
                 investorProject.SignaturesInfo.TimeOfSignatureRequest.Value,
                 investorProject.SignaturesInfo.SignatureRequestEventId,
                 signatures => HandleSignatureReceivedAsync(nostrPrivateKeyHex, signatures));
+
+            notificationComponent.ShowNotificationMessage("Signature request sent", 5);
         }
         catch (Exception e)
         {
@@ -1242,6 +1272,30 @@ else
 
         return false;
     }
+
+    private void SetMaxInvestment()
+    {
+        if (WalletBalanceBtc == 0)
+        {
+            return;
+        }
+
+        Investment.InvestmentAmountBtc = WalletBalanceBtc.ToUnitBtc();
+        IsMaxInvestment = true;
+        UpdateStagesBreakdown(new ChangeEventArgs { Value = WalletBalanceBtc });
+        StateHasChanged();
+    }
+
+    // private string DisplayNetInvestment()
+    // {
+    //     if (IsMaxInvestment && signedTransaction != null && signedTransaction.TransactionFee > 0)
+    //     {
+    //         var net = Investment.InvestmentAmountBtc - Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC);
+    //         if (net < 0) net = 0;
+    //         return net.ToString("0.########");
+    //     }
+    //     return Investment.InvestmentAmountBtc.ToString("0.########");
+    // }
 
     private void ShowMessageWithPassword()
     {
