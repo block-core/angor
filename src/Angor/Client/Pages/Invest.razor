@@ -220,7 +220,7 @@
                             <small class="text-muted">Enter your investment amount</small>
                             <small class="text-muted" role="button">
                                 Max Balance:
-                                <span @onclick="SetMaxInvestment" class="fw-bold text-warning">@WalletBalanceBtc.ToString("0.########") @network.CoinTicker</span>
+                                <span @onclick="SetMaxInvestment" class="fw-bold text-warning">@WalletBalanceBtc.ToUnitBtc() @network.CoinTicker</span>
                             </small>
                         </div>
                     </div>
@@ -330,11 +330,7 @@
                                     <div class="info-card flex-grow-1 me-2">
                                         <div class="info-label">Amount to Invest</div>
                                         <div class="info-value text-success">
-                                            @DisplayNetInvestment() @network.CoinTicker
-                                            @if (IsMaxInvestment)
-                                            {
-                                                <span class="badge bg-info ms-2">Max (fee deducted)</span>
-                                            }
+                                            @Investment.InvestmentAmountBtc @network.CoinTicker
                                         </div>
                                     </div>
                                     <div class="info-card flex-grow-1 ms-2">
@@ -569,12 +565,11 @@ else
     Transaction unSignedTransaction;
     string InvestorPubKey;
 
-    private decimal WalletBalanceBtc = 0;
+    private long WalletBalanceBtc = 0;
  
     private FeeData feeData = new();
 
     private bool IsMaxInvestment = false;
-    private decimal LastMaxInvestmentValue = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -648,9 +643,10 @@ else
             var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
             WalletBalanceBtc = accountBalanceInfo.TotalBalance;
         }
-        catch
+        catch (Exception e)
         {
             WalletBalanceBtc = 0;
+            notificationComponent.ShowErrorMessage(e.Message, e);
         }
     }
 
@@ -729,8 +725,7 @@ else
         {
             Investment.InvestmentAmountBtc = amountBtc;
 
-            if (IsMaxInvestment && LastMaxInvestmentValue != amountBtc)
-                IsMaxInvestment = false;
+            IsMaxInvestment = false;
 
             StagesBreakdown.Clear();
             int index = 1;
@@ -1269,28 +1264,29 @@ else
         return false;
     }
 
-    private async Task SetMaxInvestment()
+    private void SetMaxInvestment()
     {
-        var maxAmount = WalletBalanceBtc ;
-        if (maxAmount < 0) maxAmount = 0;
+        if (WalletBalanceBtc == 0)
+        {
+            return;
+        }
 
-        Investment.InvestmentAmountBtc = Math.Round(maxAmount, 8, MidpointRounding.ToZero);
-        LastMaxInvestmentValue = Investment.InvestmentAmountBtc;
+        Investment.InvestmentAmountBtc = WalletBalanceBtc.ToUnitBtc();
         IsMaxInvestment = true;
-        UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmountBtc });
+        UpdateStagesBreakdown(new ChangeEventArgs { Value = WalletBalanceBtc });
         StateHasChanged();
     }
 
-    private string DisplayNetInvestment()
-    {
-        if (IsMaxInvestment && signedTransaction != null && signedTransaction.TransactionFee > 0)
-        {
-            var net = Investment.InvestmentAmountBtc - Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC);
-            if (net < 0) net = 0;
-            return net.ToString("0.########");
-        }
-        return Investment.InvestmentAmountBtc.ToString("0.########");
-    }
+    // private string DisplayNetInvestment()
+    // {
+    //     if (IsMaxInvestment && signedTransaction != null && signedTransaction.TransactionFee > 0)
+    //     {
+    //         var net = Investment.InvestmentAmountBtc - Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC);
+    //         if (net < 0) net = 0;
+    //         return net.ToString("0.########");
+    //     }
+    //     return Investment.InvestmentAmountBtc.ToString("0.########");
+    // }
 
     private void ShowMessageWithPassword()
     {
