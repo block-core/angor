@@ -625,6 +625,8 @@
 
                                         if (res.ProjectIdentifier == investorProject.ProjectInfo.ProjectIdentifier)
                                         {
+                                            res.SignatureRequestEventId = eventId;
+                                            res.TimeOfSignatureRequest = createdAt;
                                             investorProject.SignaturesInfo = res;
                                         }
 
