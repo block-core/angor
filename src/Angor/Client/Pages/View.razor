@@ -668,14 +668,14 @@
                     }
 
                     <div class="action-buttons d-flex flex-wrap justify-content-center mt-4">
-                        <button @onclick="OpenInHUBAsync" class="btn btn-border-success m-2">
+                        <button @onclick="OpenInHUBAsync" class="btn btn-border-success animate-scale">
                             <Icon IconName="link" Class="me-2" />
                             Open in Angor Hub
                         </button>
 
                         @if (invested)
                         {
-                            <button @onclick="OpenMessagingWithFounder" class="btn btn-border-success m-2">
+                            <button @onclick="OpenMessagingWithFounder" class="btn btn-border-success animate-scale">
                                 <Icon IconName="chat" Class="me-2" />
                                 Message Project Founder
                             </button>
@@ -683,7 +683,7 @@
 
                         @if (founder)
                         {
-                            <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning m-2">
+                            <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning animate-scale">
                                 <Icon IconName="edit" Class="me-2" />
                                 Edit project profile
                             </button>
@@ -691,7 +691,7 @@
 
                         @if (invested || founder)
                         {
-                            <button @onclick="ShowNsecAsync" class="btn btn-border-danger m-2">
+                            <button @onclick="ShowNsecAsync" class="btn btn-border-danger animate-scale">
                                 <Icon IconName="shield" Class="me-2" />
                                 View Private Keys (nsec)
                             </button>
@@ -766,7 +766,7 @@
                 @if (founder)
                 {
                     <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                        <button @onclick="RepublishToNostr" class="btn btn-border mt-4" disabled="@isRepublishing">
+                        <button type="button" @onclick="RepublishToNostr" class="btn btn-border animate-scale mt-4" disabled="@isRepublishing">
                             @if (isRepublishing)
                             {
                                 <span class="spinner-border spinner-border-sm me-2"></span>

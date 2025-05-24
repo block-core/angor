@@ -1264,7 +1264,7 @@ button:hover:not(:disabled) {
 }
 
 .animate-scale:hover {
-    transform: scale(1.05)
+    transform: scale(1.05) !important
 }
 
 .action-buttons a {
