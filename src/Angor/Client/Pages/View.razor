@@ -156,7 +156,7 @@
                 </div>
 
                 <div class="row g-4">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="stat-card p-3 rounded-3 border hover-effect h-100">
                             <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="explorer" Height="24" Width="24" Class="me-3" />
@@ -178,6 +178,10 @@
                             <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="view" Height="24" Width="24" Class="me-3" />
                                 <h6 class="mb-0">Project Identifier</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="Unique identifier for this project">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
                             </div>
                             <div class="d-flex align-items-center mt-2">
                                 <p class="text-break mb-0 text-truncate flex-grow-1" title="@project.ProjectInfo.ProjectIdentifier">
@@ -195,6 +199,10 @@
                             <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="key" Height="24" Width="24" Class="me-3" />
                                 <h6 class="mb-0">Founder Key</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="Public key of the project founder">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
                             </div>
                             <div class="d-flex align-items-center mt-2">
                                 <p class="text-break mb-0 text-truncate flex-grow-1" title="@project.ProjectInfo.FounderKey">
@@ -207,11 +215,15 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="stat-card p-3 rounded-3 border hover-effect h-100">
                             <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="balance" Height="24" Width="24" Class="me-3" />
                                 <h6 class="mb-0">Target Amount</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="The minimum amount of @network.CoinTicker this project is trying to raise.">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
                             </div>
                             <div class="d-flex flex-column justify-content-center">
                                 <p class="text-break mb-0 mt-2">
@@ -224,8 +236,65 @@
                     <div class="col-md-6">
                         <div class="stat-card p-3 rounded-3 border hover-effect h-100">
                             <div class="d-flex align-items-center mb-2">
+                                <Icon IconName="date" Height="24" Width="24" Class="me-3" />
+                                <h6 class="mb-0">Project Start Date</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="This is when the investment period begins">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-column justify-content-center">
+                                <p class="text-break mb-0 mt-2">
+                                    <b>@project.ProjectInfo.StartDate</b>
+                                </p>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="stat-card p-3 rounded-3 border hover-effect h-100">
+                            <div class="d-flex align-items-center mb-2">
+                                <Icon IconName="date" Height="24" Width="24" Class="me-3" />
+                                <h6 class="mb-0">Project End Date</h6>
+
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="This is when the investment period ends">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-column justify-content-center">
+                                <p class="text-break mb-0 mt-2">
+                                    <b>
+                                        @{
+                                            var endDate = project.ProjectInfo.EndDate;
+                                            if (endDate == default(DateTime) || endDate == DateTime.MinValue)
+                                            {
+                                                // If EndDate is not set, use the first stage date
+                                                if (project.ProjectInfo.Stages?.Any() == true)
+                                                {
+                                                    endDate = project.ProjectInfo.Stages.First().ReleaseDate;
+                                                }
+                                            }
+                                        }
+                                        @endDate
+                                    </b>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="stat-card p-3 rounded-3 border hover-effect h-100">
+                            <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="calendar" Height="24" Width="24" Class="me-3" />
                                 <h6 class="mb-0">Penalty Duration</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="Number of days to lock funds for departing investors who wish to withdraw early.">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
                             </div>
                             <div class="d-flex flex-column justify-content-center">
                                 <p class="text-break mb-0 mt-2">
@@ -239,11 +308,15 @@
                         <div class="stat-card p-3 rounded-3 border hover-effect h-100">
                             <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="date" Height="24" Width="24" Class="me-3" />
-                                <h6 class="mb-0">Project Dates</h6>
+                                <h6 class="mb-0">Project Expiry Date</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="Emergency date when all remaining funds can be released in case of project abandonment.">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
                             </div>
                             <div class="d-flex flex-column justify-content-center">
                                 <p class="text-break mb-0 mt-2">
-                                    <b>@project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") - @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")</b>
+                                    <b>@project.ProjectInfo.ExpiryDate</b>
                                 </p>
                             </div>
                         </div>
@@ -645,8 +718,8 @@
                             <h6 class="mb-3 text-danger"><Icon IconName="shield" Class="me-2" />@(invested ? "Investor" : "Project") NOSTR Private Keys</h6>
                             <label for="NostrNsecSecKey" class="form-label">NOSTR private key (nsec)</label>
                             <div class="input-group mb-3">
-                                <input type="@(showPrivateKeys ? "text" : "password")" id="NostrNsecSecKey" value="@NostrNsecSecKey" 
-                                    class="form-control nsec-box" readonly />
+                                <input type="@(showPrivateKeys ? "text" : "password")" id="NostrNsecSecKey" value="@NostrNsecSecKey"
+                                       class="form-control nsec-box" readonly />
                                 <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
                                     <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" />
                                 </button>
@@ -658,7 +731,7 @@
                             <label for="NostrHexSecKey" class="form-label">NOSTR private key (hex)</label>
                             <div class="input-group">
                                 <input type="@(showPrivateKeys ? "text" : "password")" id="NostrHexSecKey" value="@NostrHexSecKey"
-                                    class="form-control nsec-box" readonly />
+                                       class="form-control nsec-box" readonly />
                                 <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
                                     <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" />
                                 </button>
@@ -707,7 +780,7 @@
                         </button>
                     </div>
                 }
-            </div>       
+            </div>
         </div>
     }
 </div>
@@ -716,11 +789,11 @@
 {
     <MessageComponent 
         OtherUserPubkeyHex="@project.ProjectInfo.NostrPubKey"
-        CurrentUserPrvKeyHex="@NostrHexSecKey"
-        MessageTitle="Founder"
-        OnClose="@OnMessageModalClose"
-        OnNsecRequest="@ShowNsecAsync"
-        OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
+                      CurrentUserPrvKeyHex="@NostrHexSecKey"
+                      MessageTitle="Founder"
+                      OnClose="@OnMessageModalClose"
+                      OnNsecRequest="@ShowNsecAsync"
+                      OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
 }
 
 @code {
@@ -1008,10 +1081,10 @@
                 var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
                 NostrHexSecKey = Encoders.Hex.EncodeData(nostrKey.ToBytes());
                 NostrNsecSecKey = NostrHelper.ConvertHexToNsec(NostrHexSecKey)!;
-                
+
                 // Execute the callback if provided and keys were generated successfully
                 onSuccessCallback?.Invoke();
-                
+
                 StateHasChanged();
             }
         }
@@ -1092,17 +1165,17 @@
 
         await Js.InvokeVoidAsync("window.open", url, "_blank");
     }
-    
+
     private void OpenMessagingWithFounder()
     {
         if (project?.ProjectInfo != null && project is InvestorProject invProject)
         {
             Action showMessageAction = () => {
                 // Set message parameters
-                founderNpub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey) ?? 
+                founderNpub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey) ??
                               project.ProjectInfo.NostrPubKey;
                 npubValue = NostrHelper.ConvertHexToNpub(invProject.InvestorNPub) ?? invProject.InvestorNPub;
-                
+
                 // Show message component
                 showMessageModal = true;
                 InvokeAsync(StateHasChanged); // Use InvokeAsync for UI updates from callbacks
@@ -1222,4 +1295,4 @@
         }
     }
 }
- 
+

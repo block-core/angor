@@ -4127,6 +4127,64 @@ body.dark .message-item.outgoing .message-bubble {
     min-height:130px;
 }
 
+.info-icon-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.info-icon-container:hover {
+    opacity: 1;
+}
+
+.info-icon {
+    transition: transform 0.2s ease;
+}
+
+.info-icon-container:hover .info-icon {
+    transform: scale(1.1);
+}
+
+.info-icon-container::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -140%;
+    right: 10%;
+    background-color: rgba(2,34,41,.5);
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: .9rem;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: normal;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: opacity .3s ease,transform .3s ease,visibility .3s ease;
+    z-index: 10;
+    pointer-events: none;
+    min-width: 200px;
+    max-width: 350px;
+    width: max-content;
+    word-wrap: break-word;
+    text-align: left;
+}
+
+.info-icon-container:hover::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dark .info-icon-container::before {
+    background-color: rgba(8, 59, 70, 0.9);
+    color: var(--angor-light);
+}
+
 @-webkit-keyframes spin {
     0% {
         -webkit-transform: rotate(0deg)
