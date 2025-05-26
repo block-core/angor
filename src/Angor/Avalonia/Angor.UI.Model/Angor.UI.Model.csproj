@@ -7,10 +7,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Zafiro.UI"/>
+<!--        <PackageReference Include="Zafiro.UI"/>-->
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro\src\Zafiro.UI\Zafiro.UI.csproj" />
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj"/>
     </ItemGroup>
 

@@ -28,7 +28,7 @@ public class ShellDesign : IShell
         throw new NotImplementedException();
     }
 
-    public object Header { get; set; } = "Angor";
+    public object Header { get; set; }
 
     public IObservable<object> ContentHeader => Observable.Return(new object());
     public IEnumerable<ISection> Sections { get; }
