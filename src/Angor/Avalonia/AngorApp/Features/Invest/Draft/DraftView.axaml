@@ -21,10 +21,10 @@
 
 
     <StackPanel Spacing="8" IsEnabled="{Binding !IsSending^}">
-        <z:Pane Header="Select transaction speed:">
+        <z:Card Header="Select transaction speed:">
             <controls:FeerateSelector Feerate="{Binding Feerate}"
                                       Presets="{Binding Presets}" />
-        </z:Pane>
+        </z:Card>
         <z:Loading IsLoading="{Binding IsCalculating^}" LoadingText="Calculating fee. Please wait.">
             <TextBlock Text="{Binding Fee.SatsString, StringFormat='Total fee: {0}'}" />
         </z:Loading>
