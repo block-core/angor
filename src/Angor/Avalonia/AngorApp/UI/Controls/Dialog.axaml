@@ -6,15 +6,15 @@
         xmlns:a="clr-namespace:AngorApp.Features.Invest.Amount">
     <Design.PreviewWith>
         <zd:DialogControl Width="600" Height="500">
-            <z:DialogView.Content>
+            <zd:DialogView.Content>
                 <a:AmountView VerticalAlignment="Center" />
-            </z:DialogView.Content>
-            <z:DialogView.Options>
+            </zd:DialogView.Content>
+            <zd:DialogView.Options>
                 <generic:List x:TypeArguments="z:IOption">
                     <z:OptionDesign Title="Next" />
                     <z:OptionDesign Title="Cancel" />
                 </generic:List>
-            </z:DialogView.Options>
+            </zd:DialogView.Options>
         </zd:DialogControl>
     </Design.PreviewWith>
     

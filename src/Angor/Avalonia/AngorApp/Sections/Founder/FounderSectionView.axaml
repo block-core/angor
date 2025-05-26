@@ -22,7 +22,7 @@
     </Interaction.Behaviors>
 
     <UserControl.Resources>
-        <ControlTheme TargetType="z:Pane" x:Key="RoundPane" BasedOn="{StaticResource {x:Type z:Pane}}">
+        <ControlTheme TargetType="z:Card" x:Key="RoundPane" BasedOn="{StaticResource {x:Type z:Card}}">
             <Setter Property="Background" Value="White" />
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="10" />
@@ -73,7 +73,7 @@
             </co:Pane.TitleRightContent>
         </co:Pane>
         
-        <z:Pane>
+        <z:Card>
             <z:Loading LoadingText="Loading projects. Please wait." VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" IsLoading="{Binding LoadProjects.IsExecuting^}">
                 <ItemsControl ItemsSource="{Binding Projects}">
                     <ItemsControl.ItemsPanel>
@@ -83,7 +83,7 @@
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>
             </z:Loading>
-        </z:Pane>
+        </z:Card>
 
     </StackPanel>
 </UserControl>
