@@ -16,7 +16,9 @@ public class ProjectAppServiceTests(ITestOutputHelper output)
     {
         var sut = CreateSut();
         var result = await sut.Latest();
-        Assert.NotEmpty(result);
+        
+        Assert.True(result.IsSuccess);
+        Assert.NotEmpty(result.Value);
     }
     
     [Fact]
