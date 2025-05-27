@@ -1,4 +1,4 @@
-using Angor.Client;
+using Angor.Contests.CrossCutting;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.History;
@@ -24,7 +24,7 @@ public static class WalletContextServices
         services.TryAddSingleton<IStore>(new InMemoryStore());
         services.AddSingleton<IWalletAppService, WalletAppService>();
         services.AddSingleton<IHdOperations, HdOperations>();
-        var networkConfiguration = new NetworkConfiguration();
+        var networkConfiguration = new NetworkConfiguration2();
         // TODO: set correct network
         networkConfiguration.SetNetwork(new Angornet());
         services.AddSingleton<INetworkConfiguration>(networkConfiguration);
@@ -52,3 +52,4 @@ public static class WalletContextServices
         services.TryAddSingleton(logger);
     }
 }
+

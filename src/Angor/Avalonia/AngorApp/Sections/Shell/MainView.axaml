@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
-             xmlns:s="clr-namespace:Zafiro.Avalonia.Shell;assembly=Zafiro.Avalonia"
+             xmlns:zs="clr-namespace:Zafiro.Avalonia.Controls.Shell;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="AngorApp.Sections.Shell.MainView"
              x:DataType="shell:IMainViewModel">
@@ -12,5 +12,5 @@
         <shell:MainViewModelDesign />
     </Design.DataContext>
 
-    <s:ShellView Shell="{Binding Shell}" />
+    <zs:ShellView Shell="{Binding Shell}" />
 </UserControl>

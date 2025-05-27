@@ -1,6 +1,4 @@
-﻿using Nostr.Client.Utils;
-
-namespace Angor.Client.Services
+﻿namespace Angor.Shared.Services
 {
     public interface IEncryptionService
     {
