@@ -7,7 +7,6 @@
 @using Money = Blockcore.NBitcoin.Money
 @using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
 @using Angor.Shared.Services
-@using Nostr.Client.Keys //TODO remove this dependency
 @using System.Diagnostics
 @using Angor.Client.Models
 @using Blockcore.Networks
@@ -974,7 +973,7 @@ else
 
             investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
             investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
-            investorProject.InvestorNPub = NostrPrivateKey.FromHex(nostrPrivateKeyHex).DerivePublicKey().Hex;
+            investorProject.InvestorNPub = NostrHelper.GetPubKeyHexFromPrivateKeyHex(nostrPrivateKeyHex);
             investorProject.UnfundedReleaseAddress = releaseAddress;
             investorProject.AdditionalNpub = Investment.AdditionalNpub;
 
