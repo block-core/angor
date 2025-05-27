@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Nostr.Client.Utils;
-using System;
+using Nostr.Client.Keys;
 
 namespace Angor.Shared.Utilities
 {
@@ -58,6 +58,19 @@ namespace Angor.Shared.Utilities
         public string? ConvertHexToNote(string hexKey)
         {
             return NostrConverter.ToNote(hexKey);
+        }
+        
+        public string GetPubKeyHexFromPrivateKeyHex(string privateKeyHex)
+        {
+            try
+            {
+                return NostrPrivateKey.FromHex(privateKeyHex).DerivePublicKey().Hex;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting public key from private key hex: {ex.Message}");
+                throw;
+            }
         }
 
         public string GetShortenedNpub(string npub)
