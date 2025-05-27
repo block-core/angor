@@ -74,7 +74,7 @@
                 </co:Pane.TitleRightContent>
             </co:Pane>
 
-            <z:Pane>
+            <z:Card>
                 <z:Loading LoadingText="Loading projects. Please wait." VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" IsLoading="{Binding LoadProjects.IsExecuting^}">
                     <ItemsControl ItemsSource="{Binding Projects}">
                         <ItemsControl.ItemsPanel>
@@ -84,7 +84,7 @@
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
                 </z:Loading>
-            </z:Pane>
+            </z:Card>
 
         </StackPanel>
     </ScrollViewer>
