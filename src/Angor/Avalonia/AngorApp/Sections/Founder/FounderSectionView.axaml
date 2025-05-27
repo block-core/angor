@@ -14,7 +14,7 @@
     <Design.DataContext>
         <founder:FounderSectionViewModelDesign />
     </Design.DataContext>
-    
+
     <Interaction.Behaviors>
         <DataContextChangedTrigger>
             <InvokeCommandAction Command="{Binding LoadProjects}" />
@@ -47,43 +47,45 @@
         </DataTemplate>
     </UserControl.DataTemplates>
 
-    <StackPanel Spacing="20">
+    <ScrollViewer>
+        <StackPanel Spacing="20">
 
-        <co:Pane Title="Founder" IsTitleVisible="True">
-            <co:Pane.TitleRightContent>
-                <co:IconButton DockPanel.Dock="Right" VerticalAlignment="Top">
-                    CREATE PROJECT
-                    <co:IconButton.Icon>
-                        <i:Icon Value="mdi-plus-box-outline" FontSize="20" />
-                    </co:IconButton.Icon>
-                </co:IconButton>
-            </co:Pane.TitleRightContent>
-            <co:Pane.TitleIcon>
-                <i:Icon Value="mdi-shield-account-outline" />
-            </co:Pane.TitleIcon>
-        </co:Pane>
-        
-        <co:Pane>
-            To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required
-        </co:Pane>
+            <co:Pane Title="Founder" IsTitleVisible="True">
+                <co:Pane.TitleRightContent>
+                    <co:IconButton DockPanel.Dock="Right" VerticalAlignment="Top">
+                        CREATE PROJECT
+                        <co:IconButton.Icon>
+                            <i:Icon Value="mdi-plus-box-outline" FontSize="20" />
+                        </co:IconButton.Icon>
+                    </co:IconButton>
+                </co:Pane.TitleRightContent>
+                <co:Pane.TitleIcon>
+                    <i:Icon Value="mdi-shield-account-outline" />
+                </co:Pane.TitleIcon>
+            </co:Pane>
 
-        <co:Pane Title="Projects" IsTitleVisible="True">
-            <co:Pane.TitleRightContent>
-                <Button i:Attached.Icon="fa-arrow-rotate-right" Command="{Binding LoadProjects}" Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" />
-            </co:Pane.TitleRightContent>
-        </co:Pane>
-        
-        <z:Card>
-            <z:Loading LoadingText="Loading projects. Please wait." VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" IsLoading="{Binding LoadProjects.IsExecuting^}">
-                <ItemsControl ItemsSource="{Binding Projects}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel ItemWidth="300" ItemHeight="350" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
-            </z:Loading>
-        </z:Card>
+            <co:Pane>
+                To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required
+            </co:Pane>
 
-    </StackPanel>
+            <co:Pane Title="Projects" IsTitleVisible="True">
+                <co:Pane.TitleRightContent>
+                    <Button i:Attached.Icon="fa-arrow-rotate-right" Command="{Binding LoadProjects}" Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" />
+                </co:Pane.TitleRightContent>
+            </co:Pane>
+
+            <z:Card>
+                <z:Loading LoadingText="Loading projects. Please wait." VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" IsLoading="{Binding LoadProjects.IsExecuting^}">
+                    <ItemsControl ItemsSource="{Binding Projects}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel ItemWidth="300" ItemHeight="350" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </z:Loading>
+            </z:Card>
+
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>
