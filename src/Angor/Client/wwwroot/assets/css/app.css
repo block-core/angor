@@ -645,6 +645,18 @@ tr[style*="cursor: pointer;"]:hover {
     color: #000!important
 }
 
+.text-success {
+    color: #4CAF50 !important;
+}
+
+.text-warning {
+    color: #fb8c00 !important;
+}
+
+.text-danger {
+    color: rgba(255, 71, 87, 0.8) !important;
+}
+
 .dark g[fill] {
     fill: var(--angor-primary)!important
 }

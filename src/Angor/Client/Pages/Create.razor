@@ -335,15 +335,321 @@
                     @if (isPresetMode)
                     {
                         <!-- Preset Selection -->
-                        <div class="mb-3">
-                            <label for="stagePreset" class="form-label">Select Stage Preset</label>
-                            <select id="stagePreset" class="form-control" @onchange="OnStagePresetChange" disabled="@nostrApplicationSpecificDataCreated">
-                                <option value="">Select a preset...</option>
-                                <option value="preset1" selected>Preset 1: 3 Stages (10%, 30%, 60%)</option>
-                                <option value="preset2">Preset 2: 4 Stages (25%, 25%, 25%, 25%)</option>
-                                <option value="preset3">Preset 3: 3 Stages (60%, 20%, 20%)</option>
-                            </select>
-                        </div>
+                        <h5 class="mb-3">Choose the Stage Presets</h5>
+                        <button type="button" class="btn btn-border-success mb-3" data-bs-toggle="modal" data-bs-target="#stagePresetModal" @onclick="() => projectStageModal = true" disabled="@nostrApplicationSpecificDataCreated">
+                            Choose Stage Preset
+                        </button>
+
+                        @if (isPresetMode)
+                        {
+                            @if (projectStageModal)
+                            {
+                                <div class="modal-wrapper">
+                                    <div class="modal fade show d-block">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content modern-modal p-4">
+                                                <div class="modal-header border-0 pb-0">
+                                                    <div class="d-flex align-items-center">
+                                                        <Icon IconName="server-path" Height="24" Width="24" class="me-2" />
+                                                        <h5 class="modal-title">Stage Preset Wizard</h5>
+                                                    </div>
+                                                    <button class="btn-close-custom" @onclick="CloseStageWizard">
+                                                        <Icon IconName="close-circle" Height="24" Width="24" />
+                                                    </button>
+                                                </div>
+
+                                                <div class="modal-body modal-body-scroll">
+                                                    <div class="d-flex justify-content-between mb-4 pe-2 position-relative animate-fade-in">
+                                                        @* Progress Line *@
+                                                        <div class="position-absolute" style="top: 20px; left: 40px; right: 40px; height: 2px; background-color: var(--angor-secondary); z-index: 0;">
+                                                            <div class="position-absolute" 
+                                                                 style="height: 100%; background-color: #4CAF50 ; width: @((wizardStep - 1) * 50)%; 
+                                                                        transition: width 0.5s ease-in-out; left: 0; top: 0; z-index: 1;"></div>
+                                                        </div>
+                                                        
+                                                        <div class="d-flex flex-column align-items-center position-relative z-1">
+                                                            <div class="step-circle d-flex align-items-center justify-content-center rounded-circle @(wizardStep >= 1 ? "bg-success" : " border")"
+                                                                 style="width: 40px; height: 40px; transition: all 0.3s ease; background-color: var(--angor-secondary); ">
+                                                                @if (wizardStep > 1)
+                                                                {
+                                                                    <Icon IconName="check-circle" Width="20" Height="20" />
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="fw-bold">1</span>
+                                                                }
+                                                            </div>
+                                                            <span class="step-label mt-2 small fw-semibold @(wizardStep >= 1 ? "text-success" : "text-muted")">Select</span>
+                                                        </div>
+                                                        
+                                                        <div class="d-flex flex-column align-items-center position-relative z-1">
+                                                            <div class="step-circle d-flex align-items-center justify-content-center rounded-circle @(wizardStep >= 2 ? "bg-success" : " border")"
+                                                                 style="width: 40px; height: 40px; transition: all 0.3s ease; background-color: var(--angor-secondary); ">
+                                                                @if (wizardStep > 2)
+                                                                {
+                                                                    <Icon IconName="check-circle" Width="20" Height="20" />
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="fw-bold">2</span>
+                                                                }
+                                                            </div>
+                                                            <span class="step-label mt-2 small fw-semibold @(wizardStep >= 2 ? "text-success" : "text-muted")">Preview</span>
+                                                        </div>
+                                                        
+                                                        <div class="d-flex flex-column align-items-center position-relative z-1">
+                                                            <div class="step-circle d-flex align-items-center justify-content-center rounded-circle @(wizardStep >= 3 ? "bg-success" : " border")"
+                                                                 style="width: 40px; height: 40px; transition: all 0.3s ease; background-color: var(--angor-secondary); ">
+                                                                <span class="fw-bold">3</span>
+                                                            </div>
+                                                            <span class="step-label mt-2 small fw-semibold @(wizardStep >= 3 ? "text-success" : "text-muted")">Confirm</span>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        @if (wizardStep == 1)
+                                                        {
+                                                            <div>
+                                                                <div class="d-flex g-4 flex-column">
+                                                                    <div class="mb-0 info-card">
+                                                                        <div class="h6 fw-semibold mb-3">Stage Presets</div>
+                                                                        <div class="d-flex flex-column gap-3">
+                                                                            @foreach (var preset in presets)
+                                                                            {
+                                                                                <label class="d-flex stage-card flex-column p-3 rounded border form-check-label">
+                                                                                    <div class="d-flex align-items-center">
+                                                                                        <div>
+                                                                                            <div class="fw-semibold fs-6">Preset @preset.Key.Substring(6)</div>
+                                                                                            <div class="text-secondary mt-1">
+                                                                                                (@string.Join(", ", preset.Value.Percentages.Select(p => $"{p}%")))
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div class="ms-auto">
+                                                                                            <input type="radio"
+                                                                                                   id="preset-@preset.Key"
+                                                                                                   name="stagePreset"
+                                                                                                   value="@preset.Key"
+                                                                                                   disabled="@nostrApplicationSpecificDataCreated"
+                                                                                                   checked="@(activePreset == preset.Key)"
+                                                                                                   @onclick='() => { activePreset = preset.Key; OnStagePresetChange(preset.Key); }' />
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="bg-transparent progress w-100 mt-3 d-flex rounded-pill" style="height:7px; gap:4px;">
+                                                                                        @foreach (var percentage in preset.Value.Percentages)
+                                                                                        {
+                                                                                            <div class="bg-success rounded-pill flex-shrink-0" style="width:@(percentage)%;"></div>
+                                                                                        }
+                                                                                    </div>
+                                                                                </label>
+                                                                            }
+                                                                        </div>
+                                                                    </div>
+                                                                        <div class="info-card p-3 rounded mt-3 d-flex align-items-center">
+                                                                            <div class="me-3">
+                                                                                <div class="icon-container p-2 rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                                                                    style="width: 46px; height: 46px; 
+                                                                                        background-color: var(--angor-border-color); 
+                                                                                        border: 2px solid var(--angor-secondary);
+                                                                                        transition: all 0.3s ease;">
+                                                                                    <Icon IconName="actions" Width="24" Height="24" Class="text-primary" />
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="flex-grow-1">
+                                                                                <p class="mb-0 fw-bold">
+                                                                                    Important Note
+                                                                                </p>
+                                                                                <span>
+                                                                                    You can customize any preset in the next step
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                        else if (wizardStep == 2)
+                                                        {
+                                                            <div class="step-content p-3 rounded info-card animate-fade-in">
+                                                                <h6 class="mb-4 fw-bold text-primary">Preview & Adjust Stages</h6>             
+                                                                @foreach (var stage in project.ProjectInfo.Stages)
+                                                                {
+                                                                    var idx = project.ProjectInfo.Stages.IndexOf(stage);
+                                                                    var dateInputId = $"wizardStageDate_{idx}";
+
+                                                                    <div class="mb-3 p-3 rounded stage-card">
+                                                                        <div class="mb-2 d-flex justify-content-between align-items-center">
+                                                                            <h6 class="fw-bold text-primary mb-0">Stage @(idx + 1) Allocation</h6>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <span class="badge bg-primary rounded-pill me-2">
+                                                                                    @((stage.ReleaseDate - DateTime.Today).Days) days left
+                                                                                </span>
+                                                                                <button type="button" 
+                                                                                        class="btn btn-sm btn-outline-danger"
+                                                                                        @onclick="@(() => RemoveStage(stage))"
+                                                                                        title="Remove this stage">
+                                                                                    <Icon IconName="delete" Height="14" Width="14" />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row align-items-start g-4 mt-2">
+                                                                            <div class="col-12 col-md-6 mb-3 mb-md-0">
+                                                                                <label class="fw-semibold text-primary d-block mb-1">Allocation in %</label>
+                                                                                <InputNumber @bind-Value="stage.AmountToRelease"
+                                                                                            class="form-control"
+                                                                                            step="1"
+                                                                                            min="1"
+                                                                                            max="100"
+                                                                                            style="" />
+                                                                            </div>
+                                                                            <div class="col-12 col-md-6">
+                                                                                <label class="fw-semibold text-primary d-block mb-1">Target Date</label>
+                                                                                <div class="input-group">
+                                                                                    <InputDate id="@dateInputId"
+                                                                                            @bind-Value="stage.ReleaseDate"
+                                                                                            class="form-control" />
+                                                                                    <button type="button"
+                                                                                            class="btn btn-outline-primary"
+                                                                                            @onclick="@(() => OpenDatePicker(dateInputId))">
+                                                                                        <Icon IconName="calendar" Height="16" Width="16" />
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                }
+                                                                
+                                                                <!-- Add Stage Button -->
+                                                                <button type="button" class="btn btn-border-success mb-4 w-100" @onclick="AddStage">
+                                                                    <Icon IconName="add" Height="16" Width="16" Class="me-2" />
+                                                                    Add New Stage
+                                                                </button>
+                                                                
+                                                                <!-- Stage Checking Parameters -->
+                                                                @{
+                                                                    int totalPercentage = (int)project.ProjectInfo.Stages.Sum(s => (int)s.AmountToRelease);
+                                                                    bool isValidTotal = totalPercentage == 100;
+                                                                    bool hasZeroStages = project.ProjectInfo.Stages.Any(s => s.AmountToRelease == 0);
+                                                                    string statusClass = isValidTotal ? "bg-success" : "bg-danger";
+                                                                    string textClass = isValidTotal ? "text-success" : "text-danger";
+                                                                }
+
+                                                                <div class="stage-card p-3 rounded mt-3 d-flex align-items-center">
+                                                                    <div class="me-3">
+                                                                        <div class="icon-container p-2 rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                                                            style="width: 46px; height: 46px; 
+                                                                                 background-color: @statusClass; 
+                                                                                 border: 2px solid var(--angor-secondary);
+                                                                                 box-shadow: 0 0 10px rgba(var(--angor-primary-rgb), 0.2);
+                                                                                 transition: all 0.3s ease;">
+                                                                            @if (isValidTotal && !hasZeroStages)
+                                                                            {
+                                                                                <Icon IconName="check-circle" Width="24" Height="24" class="@textClass" />
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <Icon IconName="sad-circle" Width="24" Height="24" class="@textClass" />
+                                                                            }
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex-grow-1">
+                                                                        <p class="mb-0 fw-bold">
+                                                                            Important Note
+                                                                        </p>
+
+                                                                        <span class="mt-1 fw-light">
+                                                                            The total allocation should equal 100% Currently: <span class="@(isValidTotal ? "text-success" : "text-danger")">@totalPercentage%</span>
+                                                                        </span>
+                                                                        
+                                                                        @if (hasZeroStages)
+                                                                        {
+                                                                            <div class="mt-1 text-danger">
+                                                                                <Icon IconName="alert" Width="16" Height="16" class="me-1" />
+                                                                                Warning: All stages must have allocation greater than 0%.
+                                                                            </div>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                        else if (wizardStep == 3)
+                                                        {
+                                                            <div class="info-card step-content p-3 rounded animate-fade-in">
+                                                                <h6 class="mb-4 fw-bold text-primary">Confirm Selected Stages</h6>
+                                                                
+                                                                <div class="stages-timeline mb-4">
+                                                                    @{int stageNumber = 1;}
+                                                                    @foreach (var stage in project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate))
+                                                                    {
+                                                                        <div class="stage-card mb-3">
+                                                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                                                <div class="d-flex align-items-center">
+                                                                                    <div class="d-flex align-items-center justify-content-center btn btn-outline-primary text-white me-3"
+                                                                                         style="width: 44px; height: 44px; border-radius: 5px;">
+                                                                                        @stageNumber
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <h6 class="mb-0 fw-bold">Stage @stageNumber</h6>
+                                                                                        <small class="text-muted">
+                                                                                            @stage.ReleaseDate.ToString("MMM dd, yyyy")
+                                                                                        </small>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="d-flex align-items-center">
+                                                                                    <span class="btn btn-outline-success me-2">
+                                                                                        @stage.AmountToRelease% Allocation
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                            
+                                                                            <div class="bg-primary bg-opacity-25 border progress w-100 d-flex rounded-pill" style="height:7px; gap:4px;">
+                                                                                <div class="bg-success rounded-pill flex-shrink-0" style="width:@(stage.AmountToRelease)%;"></div>
+                                                                            </div>
+
+                                                                        </div>
+                                                                        stageNumber++;
+                                                                    }
+                                                                </div>
+                                                                
+                                                            </div>
+                                                            <div class="info-card p-3 rounded mt-3 d-flex align-items-center">
+                                                                <div class="me-3">
+                                                                    <div class="icon-container p-2 rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                                                        style="width: 46px; height: 46px; 
+                                                                            background-color: var(--angor-border-color); 
+                                                                            border: 2px solid var(--angor-secondary);
+                                                                            transition: all 0.3s ease;">
+                                                                        <Icon IconName="claim" Width="24" Height="24" Class="text-primary" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex-grow-1">
+                                                                    <p class="mb-0 fw-bold">
+                                                                        Ready to Finalize
+                                                                    </p>
+                                                                    <span>
+                                                                        Once you confirm, these stages will be used for your project funding schedule.
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+
+                                                    <div class="wizard-navigation d-flex justify-content-between align-items-center flex-row mt-3 gap-2">
+                                                        <button class="btn btn-border-warning"
+                                                                @onclick="PrevWizardStep"
+                                                                disabled="@(wizardStep == 1)">
+                                                            Previous
+                                                        </button>
+                                                        <button class="btn btn-border-success"
+                                                                @onclick="NextWizardStep"
+                                                                disabled="@(wizardStep == 2 && (project.ProjectInfo.Stages.Sum(s => (int)s.AmountToRelease) != 100 || project.ProjectInfo.Stages.Any(s => s.AmountToRelease == 0)))">
+                                                            @(wizardStep < 3 ? "Next" : "Finish")
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
                     }
                     else
                     {
@@ -871,6 +1177,7 @@
 
     private bool sendConfirmModal;
     private bool showCreateModal;
+    private bool projectStageModal;
     private bool isPresetMode = true;
     private bool showConfirmationModal;
     private string confirmationMessage;
@@ -902,6 +1209,7 @@
     }
 
     private int activeTab = 1;
+    private string activePreset;
 
     private int totalDuration;
     private int numberOfStages;
@@ -918,6 +1226,43 @@
 
     private int currentStep = 1;
 
+    private int wizardStep = 1;
+
+    private void CloseStageWizard()
+    {
+        projectStageModal = false;
+        wizardStep = 1;
+    }
+
+    private void SelectPreset(string key)
+    {
+        activePreset = key;
+        OnStagePresetChange(key);
+    }
+
+    // Next button
+    private void NextWizardStep()
+    {
+        if (wizardStep < 3)
+        {
+            wizardStep++;
+        }
+        else
+        {
+            // Close the Wizard after 3rd stage
+            projectStageModal = false;
+            wizardStep = 1;
+        }
+    }
+
+    // Previous button
+    private void PrevWizardStep()
+    {
+        if (wizardStep > 1)
+        {
+            wizardStep--;
+        }
+    }
     private int GetProgressPercentage() => (currentStep - 1) * 50;
 
     private void NextStep()
@@ -982,7 +1327,9 @@
         if (!project.ProjectInfo.Stages.Any())
         {
             isPresetMode = true;
-            OnStagePresetChange(new ChangeEventArgs { Value = "preset1" }); // This might add stages
+            @* OnStagePresetChange(new ChangeEventArgs { Value = "preset1" }); // This might add stages *@
+            activePreset = "preset1";
+            OnStagePresetChange(activePreset);
         }
 
         // Set initial EndDate based on stages or today
@@ -1425,7 +1772,7 @@
     }
 
 
-    private void OnStagePresetChange(ChangeEventArgs e)
+    private void OnStagePresetChange(string selectedPreset)
     {
         if (nostrMetadataCreated)
         {
@@ -1433,7 +1780,6 @@
             return;
         }
 
-        var selectedPreset = e.Value?.ToString();
 
         if (selectedPreset != null && presets.TryGetValue(selectedPreset, out var preset))
         {
@@ -1599,7 +1945,7 @@
         {
             project.ProjectInfo.Stages.Add(new Stage
                 {
-                    AmountToRelease = stagePercentage,
+                    AmountToRelease = (int)stagePercentage,
                     ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
                 });
         }
