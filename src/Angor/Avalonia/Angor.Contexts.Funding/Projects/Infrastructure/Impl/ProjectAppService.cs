@@ -14,11 +14,9 @@ public class ProjectAppService(
     : IProjectAppService
 {
     [MemoizeTimed]
-    public async Task<IList<ProjectDto>> Latest()
+    public async Task<Result<IEnumerable<ProjectDto>>> Latest()
     {
-        var projects = await projectRepository.Latest();
-        var projectDtos = projects.Select(project => project.ToDto());
-        return projectDtos.ToList();
+        return await projectRepository.Latest().Map(t => t.AsEnumerable()).MapEach(project => project.ToDto());
     }
 
     public Task<Maybe<ProjectDto>> FindById(ProjectId projectId)
