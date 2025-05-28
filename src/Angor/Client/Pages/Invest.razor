@@ -220,7 +220,7 @@
                             <small class="text-muted">Enter your investment amount</small>
                             <small class="text-muted" role="button">
                                 Max Balance:
-                                <span @onclick="SetMaxInvestment" class="fw-bold text-warning">@WalletBalanceBtc.ToUnitBtc() @network.CoinTicker</span>
+                                <span @onclick="SetMaxInvestment" class="fw-bold text-warning">@WalletBalance.TotalBalance.ToUnitBtc() @network.CoinTicker</span>
                             </small>
                         </div>
                     </div>
@@ -565,11 +565,9 @@ else
     Transaction unSignedTransaction;
     string InvestorPubKey;
 
-    private long WalletBalanceBtc = 0;
+    private AccountBalanceInfo WalletBalance = new AccountBalanceInfo();
  
     private FeeData feeData = new();
-
-    private bool IsMaxInvestment = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -640,12 +638,10 @@ else
     {
         try
         {
-            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
-            WalletBalanceBtc = accountBalanceInfo.TotalBalance;
+            WalletBalance = await _walletUIService.RefreshWalletBalance();
         }
         catch (Exception e)
         {
-            WalletBalanceBtc = 0;
             notificationComponent.ShowErrorMessage(e.Message, e);
         }
     }
@@ -724,8 +720,6 @@ else
         if (decimal.TryParse(e.Value.ToString(), out decimal amountBtc))
         {
             Investment.InvestmentAmountBtc = amountBtc;
-
-            IsMaxInvestment = false;
 
             StagesBreakdown.Clear();
             int index = 1;
@@ -839,7 +833,15 @@ else
                 var seederHash = _derivationOperations.DeriveLeadInvestorSecretHash(words, project.ProjectInfo.FounderKey);
             }
 
-            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
+            long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+            if (investmentAmount == WalletBalance.TotalBalance)
+            {
+                int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
+                long angorFee = (WalletBalance.TotalBalance * angorFeePercentage) / 100;
+                investmentAmount -= angorFee;
+            }
+
+            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, investmentAmount);
 
             if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
@@ -912,6 +914,12 @@ else
             _Logger.LogError(ex, "Error calculating fee");
             notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
+    }
+
+    private void SetMaxInvestment()
+    {
+        UpdateStagesBreakdown(new ChangeEventArgs { Value = WalletBalance.TotalBalance.ToUnitBtc() });
+        StateHasChanged();
     }
 
     private async Task Send()
@@ -1263,30 +1271,6 @@ else
 
         return false;
     }
-
-    private void SetMaxInvestment()
-    {
-        if (WalletBalanceBtc == 0)
-        {
-            return;
-        }
-
-        Investment.InvestmentAmountBtc = WalletBalanceBtc.ToUnitBtc();
-        IsMaxInvestment = true;
-        UpdateStagesBreakdown(new ChangeEventArgs { Value = WalletBalanceBtc });
-        StateHasChanged();
-    }
-
-    // private string DisplayNetInvestment()
-    // {
-    //     if (IsMaxInvestment && signedTransaction != null && signedTransaction.TransactionFee > 0)
-    //     {
-    //         var net = Investment.InvestmentAmountBtc - Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC);
-    //         if (net < 0) net = 0;
-    //         return net.ToString("0.########");
-    //     }
-    //     return Investment.InvestmentAmountBtc.ToString("0.########");
-    // }
 
     private void ShowMessageWithPassword()
     {
