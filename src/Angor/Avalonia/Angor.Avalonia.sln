@@ -41,12 +41,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Shared", "..\Shared\A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Client", "..\Client\Angor.Client.csproj", "{504F4A1C-AB09-19C9-D3FA-AC18629CEDB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.UI", "..\..\..\..\..\SuperJMN-Zafiro\Zafiro\src\Zafiro.UI\Zafiro.UI.csproj", "{933A52BF-EB1E-45AD-9537-957AD329300F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.Avalonia", "..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\Zafiro.Avalonia.csproj", "{C2BDCBC4-9E23-431D-8BF3-44D973DB4DED}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.Avalonia.Dialogs", "..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia.Dialogs\Zafiro.Avalonia.Dialogs.csproj", "{6D883A6C-A811-4C7F-85BC-250A91644F12}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngorApp.Android", "AngorApp.Android\AngorApp.Android.csproj", "{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}"
 EndProject
 Global
@@ -103,18 +97,6 @@ Global
 		{504F4A1C-AB09-19C9-D3FA-AC18629CEDB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{504F4A1C-AB09-19C9-D3FA-AC18629CEDB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{504F4A1C-AB09-19C9-D3FA-AC18629CEDB0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{933A52BF-EB1E-45AD-9537-957AD329300F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{933A52BF-EB1E-45AD-9537-957AD329300F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{933A52BF-EB1E-45AD-9537-957AD329300F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{933A52BF-EB1E-45AD-9537-957AD329300F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C2BDCBC4-9E23-431D-8BF3-44D973DB4DED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C2BDCBC4-9E23-431D-8BF3-44D973DB4DED}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C2BDCBC4-9E23-431D-8BF3-44D973DB4DED}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C2BDCBC4-9E23-431D-8BF3-44D973DB4DED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6D883A6C-A811-4C7F-85BC-250A91644F12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6D883A6C-A811-4C7F-85BC-250A91644F12}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6D883A6C-A811-4C7F-85BC-250A91644F12}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6D883A6C-A811-4C7F-85BC-250A91644F12}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}.Release|Any CPU.ActiveCfg = Release|Any CPU

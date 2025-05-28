@@ -22,7 +22,6 @@ public static class FundingContextServices
     public static ServiceCollection Register(ServiceCollection services, ILogger logger)
     {
         var networkConfiguration = new NetworkConfiguration2();
-        networkConfiguration.SetNetwork(new Angornet());
 
         services.AddSingleton<IProjectAppService, ProjectAppService>();
         services.AddSingleton<IInvestmentAppService, InvestmentAppService>();
@@ -37,9 +36,9 @@ public static class FundingContextServices
         //TODO change the call to use the factory
         services.TryAddScoped<HttpClient>(x => x.GetRequiredService<IHttpClientFactory>().CreateClient());
         services.TryAddSingleton<IIndexerService,MempoolSpaceIndexerApi>();
-        //services.TryAddSingleton<INetworkConfiguration>(networkConfiguration);
+        services.TryAddSingleton<INetworkConfiguration>(networkConfiguration);
         services.TryAddSingleton<INetworkService, NetworkService>();
-        //services.TryAddSingleton<IEncryptionService, EncryptionService>();
+        services.TryAddSingleton<IEncryptionService, EncryptionService>();
         services.TryAddSingleton<INostrCommunicationFactory, NostrCommunicationFactory>();
         services.TryAddSingleton<IInvestorTransactionActions, InvestorTransactionActions>();
         services.TryAddSingleton<IFounderTransactionActions, FounderTransactionActions>();

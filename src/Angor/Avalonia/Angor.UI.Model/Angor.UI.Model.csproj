@@ -6,12 +6,12 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-    <ItemGroup>
-<!--        <PackageReference Include="Zafiro.UI"/>-->
+    <ItemGroup><!--        <PackageReference Include="Zafiro.UI"/>-->
+    
+      <PackageReference Include="Zafiro" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro\src\Zafiro.UI\Zafiro.UI.csproj" />
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj"/>
     </ItemGroup>
 

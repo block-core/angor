@@ -7,6 +7,8 @@ namespace Angor.Contests.CrossCutting;
 
 public class NetworkConfiguration2 : INetworkConfiguration
 {
+    public static string AngorTestKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
+    
     private Angornet network;
 
     public Network GetNetwork()
@@ -16,7 +18,7 @@ public class NetworkConfiguration2 : INetworkConfiguration
 
     public void SetNetwork(Network network)
     {
-        this.network = new Angornet();
+        throw new NotSupportedException("Cannot switch networks");
     }
 
     public string GetGenesisBlockHash()
@@ -57,7 +59,7 @@ public class NetworkConfiguration2 : INetworkConfiguration
 
     public string GetAngorKey()
     {
-        throw new NotImplementedException();
+        return AngorTestKey;
     }
 
     public Dictionary<string, bool> GetDefaultFeatureFlags(string network)
