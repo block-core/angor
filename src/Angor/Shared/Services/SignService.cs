@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using Newtonsoft.Json;
@@ -19,7 +20,8 @@ namespace Angor.Shared.Services
         INostrService nostrService)
         : ISignService
     {
-        public (DateTime, string) PostInvestmentRequest(string encryptedContent, string investorNostrPrivateKey, string founderNostrPubKey, Action<NostrOkResponse> okResponse)
+        public (DateTime, string) PostInvestmentRequest(string encryptedContent, string investorNostrPrivateKey,
+            string founderNostrPubKey, Action<NostrOkResponse> okResponse)
         {
             var sender = NostrPrivateKey.FromHex(investorNostrPrivateKey);
 
@@ -48,7 +50,8 @@ namespace Angor.Shared.Services
             return (signed.CreatedAt!.Value, signed.Id!);
         }
 
-        public void GetInvestmentRequestApproval(string investorNostrPubKey, string projectNostrPubKey, DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action)
+        public void GetInvestmentRequestApproval(string investorNostrPubKey, string projectNostrPubKey,
+            DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action)
         {
             var nostrClient = communicationFactory.GetOrCreateClient(networkService);
 
@@ -89,7 +92,11 @@ namespace Angor.Shared.Services
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Investment offer")
                     .Select(_ => _.Event)
-                    .Subscribe(nostrEvent => { action.Invoke(nostrEvent.Id, nostrEvent.Pubkey, nostrEvent.Content, nostrEvent.CreatedAt.Value); });
+                    .Subscribe(nostrEvent =>
+                    {
+                        action.Invoke(nostrEvent.Id, nostrEvent.Pubkey, nostrEvent.Content,
+                            nostrEvent.CreatedAt.Value);
+                    });
 
                 subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
             }
@@ -110,7 +117,8 @@ namespace Angor.Shared.Services
             return Task.CompletedTask;
         }
 
-        public void GetAllInvestmentRequestApprovals(string nostrPubKey, Action<string, DateTime, string> action, Action onAllMessagesReceived)
+        public void GetAllInvestmentRequestApprovals(string nostrPubKey, Action<string, DateTime, string> action,
+            Action onAllMessagesReceived)
         {
             var nostrClient = communicationFactory.GetOrCreateClient(networkService);
             var subscriptionKey = nostrPubKey + "sig_res";
@@ -121,7 +129,12 @@ namespace Angor.Shared.Services
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
                     .Select(_ => _.Event)
-                    .Subscribe(nostrEvent => { action.Invoke(nostrEvent.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier), nostrEvent.CreatedAt.Value, nostrEvent.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier)); });
+                    .Subscribe(nostrEvent =>
+                    {
+                        action.Invoke(nostrEvent.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier),
+                            nostrEvent.CreatedAt.Value,
+                            nostrEvent.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier));
+                    });
 
                 subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
             }
@@ -135,7 +148,8 @@ namespace Angor.Shared.Services
             }));
         }
 
-        public DateTime PostInvestmentRequestApproval(string encryptedSignatureInfo, string nostrPrivateKeyHex, string investorNostrPubKey, string eventId)
+        public DateTime PostInvestmentRequestApproval(string encryptedSignatureInfo, string nostrPrivateKeyHex,
+            string investorNostrPubKey, string eventId)
         {
             var nostrPrivateKey = NostrPrivateKey.FromHex(nostrPrivateKeyHex);
 
@@ -160,7 +174,8 @@ namespace Angor.Shared.Services
             return ev.CreatedAt.Value;
         }
 
-        public DateTime PostInvestmentRevocation(string encryptedReleaseSigInfo, string nostrPrivateKeyHex, string investorNostrPubKey, string eventId)
+        public DateTime PostInvestmentRevocation(string encryptedReleaseSigInfo, string nostrPrivateKeyHex,
+            string investorNostrPubKey, string eventId)
         {
             var nostrPrivateKey = NostrPrivateKey.FromHex(nostrPrivateKeyHex);
 
@@ -185,7 +200,9 @@ namespace Angor.Shared.Services
             return ev.CreatedAt.Value;
         }
 
-        public void GetInvestmentRevocation(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Action<string> action, Action onAllMessagesReceived)
+        public void GetInvestmentRevocation(string investorNostrPubKey, string projectNostrPubKey,
+            DateTime? releaseRequestSentTime, string releaseRequestEventId, Action<string> action,
+            Action onAllMessagesReceived)
         {
             var nostrClient = communicationFactory.GetOrCreateClient(networkService);
             var subscriptionKey = projectNostrPubKey.Substring(0, 20) + "rel_sigs";
@@ -214,7 +231,8 @@ namespace Angor.Shared.Services
             }));
         }
 
-        public void GetAllInvestmentRevocations(string projectNostrPubKey, Action<SignServiceLookupItem> action, Action onAllMessagesReceived)
+        public void GetAllInvestmentRevocations(string projectNostrPubKey, Action<SignServiceLookupItem> action,
+            Action onAllMessagesReceived)
         {
             var nostrClient = communicationFactory.GetOrCreateClient(networkService);
             var subscriptionKey = projectNostrPubKey.Substring(0, 20) + "sing_sigs";
@@ -255,36 +273,69 @@ namespace Angor.Shared.Services
             subscriptionsHanding.Dispose();
         }
 
-        public async Task<Result<EventSendResponse>> PostInvestmentRequest2<T>(KeyIdentifier keyIdentifier, T content, string founderNostrPubKey)
+        public async Task<Result<EventSendResponse>> PostInvestmentRequest2<T>(KeyIdentifier keyIdentifier, T content,
+            string founderNostrPubKey)
         {
             var key = await sensitiveNostrData.GetNostrPrivateKey(keyIdentifier);
             var parsedKey = NostrPrivateKey.FromHex(key.Value);
             var jsonContent = serializer.Serialize(content);
+            var encryptedContent = await nostrEncryption.Nip44Encryption(jsonContent, key.Value, founderNostrPubKey);
             var ev = new NostrEvent
             {
                 Kind = NostrKind.EncryptedDm,
                 CreatedAt = DateTime.UtcNow,
-                Content = jsonContent,
+                Content = encryptedContent,
                 Tags = new NostrEventTags(
                     NostrEventTag.Profile(founderNostrPubKey),
                     new NostrEventTag("subject", "Investment offer"))
             };
-
-            var encryptedEvent = await nostrEncryption.Encrypt(ev, key.Value, founderNostrPubKey);
-            var signed = encryptedEvent.Sign(parsedKey);
+            
+            var signed = ev.Sign(parsedKey);
 
             return await nostrService.Send(signed)
                 .Ensure(response => response.Accepted, "Failed to send event")
-                .Map(response => new EventSendResponse(response.Accepted, response.EventId, response.Message, response.ReceivedTimestamp));
+                .Map(response => new EventSendResponse(response.Accepted, response.EventId, response.Message,
+                    response.ReceivedTimestamp));
         }
-    }
 
-    public record EventSendResponse(bool IsAccepted, string? EventId, string? Message, DateTime Received);
+        public Task<Result<EventSendResponse>> PostInvestmentRequestApproval2<T>(KeyIdentifier keyIdentifier, T content,
+            string investorNostrPubKey, string eventId)
+        {
+            return sensitiveNostrData.GetNostrPrivateKey(keyIdentifier)
+                .Map(key => (Key:key, ParsedKey: NostrPrivateKey.FromHex(key), JsonContent: serializer.Serialize(content)))
+                .Bind(async data =>
+                {
+                    var encryptedContent = await nostrEncryption.Nip44Encryption(data.JsonContent, data.ParsedKey.Hex,
+                        investorNostrPubKey);
+                    var parsedKey = data.ParsedKey;
+                    return Result.Success((parsedKey, encryptedContent));
+                })
+                .Map(data =>
+                {
+                    var ev = new NostrEvent
+                    {
+                        Kind = NostrKind.EncryptedDm,
+                        CreatedAt = DateTime.UtcNow,
+                        Content = data.encryptedContent,
+                        Tags = new NostrEventTags(
+                            NostrEventTag.Profile(investorNostrPubKey),
+                            NostrEventTag.Event(eventId),
+                            new NostrEventTag("subject", "Re:Investment offer"))
+                    };
+                    return ev.Sign(data.parsedKey);
+                })
+                .Bind(data => nostrService.Send(data)
+                    .Ensure(response => response.Accepted, "Failed to send event"))
+                .Map(response => new EventSendResponse(response.Accepted, response.EventId, response.Message,
+                    response.ReceivedTimestamp));
+        }
 
-    public class NostrFilterWithSubject : NostrFilter
-    {
-        /// <summary>A list of subjects to filter by, corresponding to the "subject" tag</summary>
-        [JsonProperty("#subject")]
-        public string? Subject { get; set; }
+
+        public class NostrFilterWithSubject : NostrFilter
+        {
+            /// <summary>A list of subjects to filter by, corresponding to the "subject" tag</summary>
+            [JsonProperty("#subject")]
+            public string? Subject { get; set; }
+        }
     }
 }

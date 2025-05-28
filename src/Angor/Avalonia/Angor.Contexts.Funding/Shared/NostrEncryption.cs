@@ -1,15 +1,27 @@
+using Angor.Shared.Services;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 
 namespace Angor.Contexts.Funding.Shared;
 
-public class NostrEncryption : INostrEncryption
+public class NostrEncryption(ISerializer serializer) : INostrEncryption
 {
-    public async Task<NostrEvent> Encrypt(NostrEvent ev, string localPrivateKey, string remotePublicKey)
+    public Task<string> Nip44Encryption<T>(T content, string localPrivateKey, string remotePublicKey)
     {
         var privateKey = NostrPrivateKey.FromHex(localPrivateKey);
         var nostrPubKey = NostrPublicKey.FromHex(remotePublicKey);
 
-        return ev.Encrypt(privateKey, nostrPubKey);
+        var parsedEvent = content as NostrEvent 
+                          ?? new NostrEvent()
+        {
+            Content = serializer.Serialize(content),
+            CreatedAt = DateTime.UtcNow,
+            Kind = NostrKind.EncryptedDm,
+            Pubkey = remotePublicKey,
+        };
+
+        var encryptedContent = parsedEvent.EncryptDirect(privateKey, nostrPubKey).EncryptedContent;
+        
+        return Task.FromResult(encryptedContent!);
     }
 }
