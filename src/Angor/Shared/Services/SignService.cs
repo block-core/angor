@@ -7,6 +7,7 @@ using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 using Nostr.Client.Requests;
 using Nostr.Client.Responses;
+using Polly;
 
 namespace Angor.Shared.Services
 {
@@ -276,7 +277,7 @@ namespace Angor.Shared.Services
         public async Task<Result<EventSendResponse>> PostInvestmentRequest2<T>(KeyIdentifier keyIdentifier, T content,
             string founderNostrPubKey)
         {
-            var key = await sensitiveNostrData.GetNostrPrivateKey(keyIdentifier);
+            var key = await sensitiveNostrData.GetNostrPrivateKeyHex(keyIdentifier);
             var parsedKey = NostrPrivateKey.FromHex(key.Value);
             var jsonContent = serializer.Serialize(content);
             var encryptedContent = await nostrEncryption.Nip4Encryption(jsonContent, key.Value, founderNostrPubKey);
@@ -298,38 +299,49 @@ namespace Angor.Shared.Services
                     response.ReceivedTimestamp));
         }
 
-        public Task<Result<EventSendResponse>> PostInvestmentRequestApproval2<T>(KeyIdentifier keyIdentifier, T content,
-            string investorNostrPubKey, string eventId)
+        public Task<Result<EventSendResponse>> PostInvestmentRequestApproval2<T>(KeyIdentifier keyIdentifier, T content, string investorNostrPubKey, string eventId)
         {
-            return sensitiveNostrData.GetNostrPrivateKey(keyIdentifier)
-                .Map(key => (Key:key, ParsedKey: NostrPrivateKey.FromHex(key), JsonContent: serializer.Serialize(content)))
-                .Bind(async data =>
-                {
-                    var encryptedContent = await nostrEncryption.Nip4Encryption(data.JsonContent, data.ParsedKey.Hex,
-                        investorNostrPubKey);
-                    var parsedKey = data.ParsedKey;
-                    return Result.Success((parsedKey, encryptedContent));
-                })
-                .Map(data =>
-                {
-                    var ev = new NostrEvent
-                    {
-                        Kind = NostrKind.EncryptedDm,
-                        CreatedAt = DateTime.UtcNow,
-                        Content = data.encryptedContent,
-                        Tags = new NostrEventTags(
-                            NostrEventTag.Profile(investorNostrPubKey),
-                            NostrEventTag.Event(eventId),
-                            new NostrEventTag("subject", "Re:Investment offer"))
-                    };
-                    return ev.Sign(data.parsedKey);
-                })
-                .Bind(data => nostrService.Send(data)
-                    .Ensure(response => response.Accepted, "Failed to send event"))
-                .Map(response => new EventSendResponse(response.Accepted, response.EventId, response.Message,
-                    response.ReceivedTimestamp));
+            return 
+                from key in sensitiveNostrData.GetNostrPrivateKeyHex(keyIdentifier).Map(NostrPrivateKey.FromHex)
+                from serializedContent in Serialize(content)
+                from encryptedContent in EncryptContent(serializedContent, investorNostrPubKey, key)
+                from nostrEvent in CreateInvestmentOfferResponseEvent(investorNostrPubKey, eventId, encryptedContent, key)
+                from sent in Send(nostrEvent)
+                select new EventSendResponse(sent.Accepted, sent.EventId, sent.Message, sent.ReceivedTimestamp);
         }
 
+        private Result<string> Serialize<T>(T content)
+        {
+            return Result.Try(() => serializer.Serialize(content));
+        }
+
+        private Task<Result<NostrOkResponse>> Send(NostrEvent nostrEvent)
+        {
+            return nostrService.Send(nostrEvent).Ensure(response => response.Accepted, "Failed to send event");
+        }
+
+        private Task<Result<string>> EncryptContent(string jsonContent, string investorNostrPubKey, NostrPrivateKey parsedKey)
+        {
+            return Result.Try(() => nostrEncryption.Nip4Encryption(jsonContent, parsedKey.Hex, investorNostrPubKey));
+        }
+
+        private static Result<NostrEvent> CreateInvestmentOfferResponseEvent(string investorNostrPubKey, string eventId, string encryptedContent, NostrPrivateKey nostrPrivateKey)
+        {
+            return Result.Try(() =>
+            {
+                var ev = new NostrEvent
+                {
+                    Kind = NostrKind.EncryptedDm,
+                    CreatedAt = DateTime.UtcNow,
+                    Content = encryptedContent,
+                    Tags = new NostrEventTags(
+                        NostrEventTag.Profile(investorNostrPubKey),
+                        NostrEventTag.Event(eventId),
+                        new NostrEventTag("subject", "Re:Investment offer"))
+                };
+                return ev.Sign(nostrPrivateKey);
+            });
+        }
 
         public class NostrFilterWithSubject : NostrFilter
         {

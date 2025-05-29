@@ -4,5 +4,5 @@ namespace Angor.Shared.Services;
 
 public interface ISensitiveNostrData
 {
-    Task<Result<string>> GetNostrPrivateKey(KeyIdentifier keyIdentifier);
+    Task<Result<string>> GetNostrPrivateKeyHex(KeyIdentifier keyIdentifier);
 }

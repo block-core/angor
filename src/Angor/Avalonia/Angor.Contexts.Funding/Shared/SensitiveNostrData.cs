@@ -20,7 +20,7 @@ public class SensitiveNostrData : ISensitiveNostrData
     }
     
     // TODO: Check with David
-    public Task<Result<string>> GetNostrPrivateKey(KeyIdentifier keyIdentifier)
+    public Task<Result<string>> GetNostrPrivateKeyHex(KeyIdentifier keyIdentifier)
     {
         return seedwordsProvider.GetSensitiveData(keyIdentifier.WalletId)
             .Map(tuple => tuple.ToWalletWords())
