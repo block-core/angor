@@ -15,14 +15,14 @@ public static class ViewModels
     public static IServiceCollection Register(this IServiceCollection services)
     {
         return services
-            .AddTransient<Lazy<IMainViewModel>>(sp => new Lazy<IMainViewModel>(sp.GetRequiredService<IMainViewModel>))
-            .AddTransient<IHomeSectionViewModel, HomeSectionViewModel>()
-            .AddTransient<IWalletSectionViewModel, WalletSectionViewModel>()
+            .AddScoped<Lazy<IMainViewModel>>(sp => new Lazy<IMainViewModel>(sp.GetRequiredService<IMainViewModel>))
+            .AddScoped<IHomeSectionViewModel, HomeSectionViewModel>()
+            .AddScoped<IWalletSectionViewModel, WalletSectionViewModel>()
             .AddScoped<IBrowseSectionViewModel, BrowseSectionViewModel>()
-            .AddTransient<IPortfolioSectionViewModel, PortfolioSectionViewModel>()
-            .AddTransient<IFounderSectionViewModel, FounderSectionViewModel>()
+            .AddScoped<IPortfolioSectionViewModel, PortfolioSectionViewModel>()
+            .AddScoped<IFounderSectionViewModel, FounderSectionViewModel>()
             .AddScoped<Func<ProjectDto, IFounderProjectViewModel>>(provider => dto => ActivatorUtilities.CreateInstance<FounderProjectViewModel>(provider, dto))
             .AddScoped<Func<ProjectDto, IFounderProjectDetailsViewModel>>(provider => dto => ActivatorUtilities.CreateInstance<FounderProjectDetailsViewModel>(provider, dto))
-            .AddTransient<IMainViewModel, MainViewModel>();
+            .AddScoped<IMainViewModel, MainViewModel>();
     }
 }

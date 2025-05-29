@@ -76,7 +76,7 @@
 
             <z:Card>
                 <z:Loading LoadingText="Loading projects. Please wait." VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" IsLoading="{Binding LoadProjects.IsExecuting^}">
-                    <ItemsControl ItemsSource="{Binding Projects}">
+                    <ItemsControl ItemsSource="{Binding ProjectsList}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel ItemWidth="300" ItemHeight="350" />

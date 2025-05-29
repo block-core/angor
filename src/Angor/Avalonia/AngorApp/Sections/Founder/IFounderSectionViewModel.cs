@@ -6,5 +6,5 @@ namespace AngorApp.Sections.Founder;
 public interface IFounderSectionViewModel
 {
     IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; }
-    public IEnumerable<IFounderProjectViewModel> Projects { get; }
+    public IEnumerable<IFounderProjectViewModel> ProjectsList { get; }
 }
