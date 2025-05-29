@@ -177,7 +177,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)
     {
         var response = await GetIndexerClient()
-            .GetAsync($"{AngorApiRoute}/projects/{projectId}/investments");
+            .GetAsync($"{AngorApiRoute}/projects/{projectId}/investments?limit=50");
         _networkService.CheckAndHandleError(response);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
