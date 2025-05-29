@@ -279,7 +279,7 @@ namespace Angor.Shared.Services
             var key = await sensitiveNostrData.GetNostrPrivateKey(keyIdentifier);
             var parsedKey = NostrPrivateKey.FromHex(key.Value);
             var jsonContent = serializer.Serialize(content);
-            var encryptedContent = await nostrEncryption.Nip44Encryption(jsonContent, key.Value, founderNostrPubKey);
+            var encryptedContent = await nostrEncryption.Nip4Encryption(jsonContent, key.Value, founderNostrPubKey);
             var ev = new NostrEvent
             {
                 Kind = NostrKind.EncryptedDm,
@@ -305,7 +305,7 @@ namespace Angor.Shared.Services
                 .Map(key => (Key:key, ParsedKey: NostrPrivateKey.FromHex(key), JsonContent: serializer.Serialize(content)))
                 .Bind(async data =>
                 {
-                    var encryptedContent = await nostrEncryption.Nip44Encryption(data.JsonContent, data.ParsedKey.Hex,
+                    var encryptedContent = await nostrEncryption.Nip4Encryption(data.JsonContent, data.ParsedKey.Hex,
                         investorNostrPubKey);
                     var parsedKey = data.ParsedKey;
                     return Result.Success((parsedKey, encryptedContent));

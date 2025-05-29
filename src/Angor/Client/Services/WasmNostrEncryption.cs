@@ -13,7 +13,7 @@ public class WasmNostrEncryption : INostrEncryption
         this.serializer = serializer;
     }
 
-    public Task<string> Nip44Encryption<T>(T content, string localPrivateKey, string remotePublicKey)
+    public Task<string> Nip4Encryption<T>(T content, string localPrivateKey, string remotePublicKey)
     {
         return encryptionService.EncryptNostrContentAsync(localPrivateKey,remotePublicKey, serializer.Serialize(content));
     }

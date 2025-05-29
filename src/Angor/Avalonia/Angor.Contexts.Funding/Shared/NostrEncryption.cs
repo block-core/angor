@@ -6,7 +6,7 @@ namespace Angor.Contexts.Funding.Shared;
 
 public class NostrEncryption(ISerializer serializer) : INostrEncryption
 {
-    public Task<string> Nip44Encryption<T>(T content, string localPrivateKey, string remotePublicKey)
+    public Task<string> Nip4Encryption<T>(T content, string localPrivateKey, string remotePublicKey)
     {
         var privateKey = NostrPrivateKey.FromHex(localPrivateKey);
         var nostrPubKey = NostrPublicKey.FromHex(remotePublicKey);
