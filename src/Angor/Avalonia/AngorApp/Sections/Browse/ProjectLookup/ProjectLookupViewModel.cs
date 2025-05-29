@@ -15,7 +15,7 @@ using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse.ProjectLookup;
 
-public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupViewModel
+public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupViewModel ,IDisposable
 {
     [ObservableAsProperty] private ICommand? goToSelectedProject;
 
@@ -67,4 +67,11 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
     public ReactiveCommand<string, SafeMaybe<IList<IProjectViewModel>>> Lookup { get; }
 
     public IObservable<bool> IsBusy { get; }
+
+    public void Dispose()
+    {
+        goToSelectedProjectHelper.Dispose();
+        lookupResultsHelper.Dispose();
+        Lookup.Dispose();
+    }
 }

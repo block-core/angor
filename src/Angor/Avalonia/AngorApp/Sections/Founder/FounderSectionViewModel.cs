@@ -1,3 +1,4 @@
+using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.UI.Services;
@@ -5,27 +6,28 @@ using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
-using Angor.Contexts.Funding.Founder.Operations;
 
 namespace AngorApp.Sections.Founder;
 
-public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel
+public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel, IDisposable
 {
+    private CompositeDisposable disposable = new();
+
     public FounderSectionViewModel(UIServices uiServices, IProjectAppService projectAppService, Func<ProjectDto, IFounderProjectViewModel> projectViewModelFactory)
     {
-        LoadProjects = ReactiveCommand.CreateFromObservable(() => Func(uiServices, projectAppService)).Enhance();
-        
-        LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Failed to get investments");
+        LoadProjects = ReactiveCommand.CreateFromObservable(() => Projects(uiServices, projectAppService)).Enhance().DisposeWith(disposable);
+        LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Failed to get investments").DisposeWith(disposable);
         LoadProjects.Successes()
             .EditDiff(dto => dto.Id)
-            .Transform(projectViewModelFactory)
+            .Transform(dto => projectViewModelFactory(dto))
             .Bind(out var projectList)
-            .Subscribe();
-        
-        Projects = projectList;
+            .Subscribe()
+            .DisposeWith(disposable);
+
+        ProjectsList = projectList;
     }
 
-    private static IObservable<Result<IEnumerable<ProjectDto>>> Func(UIServices uiServices, IProjectAppService projectAppService)
+    private static IObservable<Result<IEnumerable<ProjectDto>>> Projects(UIServices uiServices, IProjectAppService projectAppService)
     {
         return Observable.FromAsync(() =>
         {
@@ -36,7 +38,13 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel
         });
     }
 
-    public IEnumerable<IFounderProjectViewModel> Projects { get; }
-    
+    public IEnumerable<IFounderProjectViewModel> ProjectsList { get; }
+
     public IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; }
+
+    public void Dispose()
+    {
+        disposable.Dispose();
+        LoadProjects.Dispose();
+    }
 }

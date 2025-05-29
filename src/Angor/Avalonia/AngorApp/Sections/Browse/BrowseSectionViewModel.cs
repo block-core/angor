@@ -13,7 +13,7 @@ using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse;
 
-public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionViewModel
+public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionViewModel, IDisposable
 {
     [Reactive] private string? projectId;
 
@@ -46,4 +46,11 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
     public ReactiveCommand<Unit, Result<IEnumerable<ProjectViewModel>>> LoadLatestProjects { get; }
 
     public ReactiveCommand<Unit, Unit> OpenHub { get; set; }
+
+    public void Dispose()
+    {
+        projectsHelper.Dispose();
+        LoadLatestProjects.Dispose();
+        OpenHub.Dispose();
+    }
 }

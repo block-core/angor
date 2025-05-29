@@ -28,6 +28,8 @@ public class ShellDesign : IShell
         throw new NotImplementedException();
     }
 
+    public object Header { get; set; } = "Angor";
+
     public IEnumerable<ISection> Sections { get; }
     public IContentSection SelectedSection { get; set; }
 }
